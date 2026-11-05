@@ -656,6 +656,10 @@ function invMemories(body) {
 /* ---------- misiones en el escenario ---------- */
 const MIS_PTS = 50;
 export const MISSIONS = [
+  { id: 'tunica', r: 2, serv: 3, kind: 'deliver', giver: { name: 'Un seguidor de Juan', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#3A2A1A', outfit: '#7A6A4A' } }, target: { name: 'un hombre sin abrigo', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#6A6A6A', outfit: '#7A6A5A' } },
+    item: { name: 'una túnica de abrigo', k: 'cloth', c: '#8A6A44' }, ask: 'Juan el Bautista nos enseñó que el que tiene dos túnicas comparta con el que no tiene. Tengo una de más: ¿se la llevás a ese hombre que pasa frío?', done: '¡Gracias! Compartir lo que tenemos es una forma de prepararle el camino al Señor.', ref: 'Lucas 3:10-11' },
+  { id: 'viuda', r: 6, serv: 3, kind: 'deliver', giver: { name: 'Una vendedora del mercado', look: { g: 'chica', age: 18, skin: '#D6A57C', hair: '#2A1B14', outfit: '#8E2E22' } }, target: { name: 'una viuda pobre', look: { g: 'chica', age: 18, skin: '#B98A62', hair: '#9A9A9A', outfit: '#5A4A6A' } },
+    item: { name: 'una canasta con pan', k: 'cloth', c: '#D9A25A' }, ask: 'Esa viuda dio todo lo que tenía en el templo y hoy no tiene qué comer. ¿Le llevás esta canasta con pan?', done: 'Dios ve cada gesto de amor hecho en silencio. ¡Gracias por servir!', ref: 'Marcos 12:41-44 · Santiago 1:27' },
   { id: 'pez', r: 8, kind: 'fetch', giver: { name: 'Juan, el discípulo', look: { g: 'chico', age: 17, skin: '#D6A57C', hair: '#3A2A1A', outfit: '#5A6E8A' } },
     item: { name: 'el pez que se escapó', k: 'fish' }, ask: 'Esta mañana echamos la red a la derecha, como dijo Jesús, y se llenó de peces. ¡Uno saltó y se escapó por la orilla! ¿Lo buscás?', done: '¡Gracias! Ciento cincuenta y tres, y la red no se rompió.', ref: 'Juan 21:6-11' },
   { id: 'emaus', r: 8, kind: 'deliver', giver: { name: 'Una vecina de Emaús', look: { g: 'chica', age: 17, skin: '#C99A72', hair: '#2A1B14', outfit: '#8A6A44' } }, target: { name: 'Cleofas', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#4A4A4A', outfit: '#7A5A3A' } },
@@ -765,7 +769,7 @@ function misDone(m) {
   const p = misState(), d = m.d; p.missions[d.id] = true; p.mact = null; G().save(); G().refreshHud && G().refreshHud(); misCarry(m, false); if (m.ring) m.ring.visible = false; if (m.pick) m.pick.visible = false;
   misPop('¡Misión cumplida! +' + MIS_PTS, d.done); tone3d();
   if (Math.random() < .5) setTimeout(() => gearGive(gearRoll(), 'Recompensa de la misión'), 3400);
-  if (S && S.hx) setTimeout(svMissionReward, 1800);
+  if (S && S.hx) setTimeout(() => svMissionReward(d), 1800);
 }
 function tone3d() { try { const A = new (window.AudioContext || window.webkitAudioContext)(); [660, 880, 1100].forEach((f, i) => { const o = A.createOscillator(), gn = A.createGain(); o.frequency.value = f; o.type = 'triangle'; gn.gain.setValueAtTime(.0001, A.currentTime + i * .12); gn.gain.exponentialRampToValueAtTime(.15, A.currentTime + i * .12 + .02); gn.gain.exponentialRampToValueAtTime(.0001, A.currentTime + i * .12 + .3); o.connect(gn); gn.connect(A.destination); o.start(A.currentTime + i * .12); o.stop(A.currentTime + i * .12 + .35); }); } catch (e) {} }
 function misTick(t) {
@@ -1218,13 +1222,14 @@ function openMap() {
 /* ---------- movimientos: saltar, orar y saludar ---------- */
 function doJump() { if (!S || S.walking || sheetUp()) return; if (S.pose === 'pray') { S.pose = null; return; } if (S.jy > .01) return; S.jv = 6.2 * Math.sqrt(agiMul()); S.jy = .001; wake(); }
 function doPray() { if (!S || S.walking || sheetUp()) return; S.pose = S.pose === 'pray' ? null : 'pray'; S.prayT = 0; S.joy.x = 0; S.joy.y = 0; wake(); actUI(); }
+function doSit() { if (!S || S.walking || sheetUp() || !S.hx) return; if (S.pose === 'pray') S.pose = null; S.sit = !S.sit; S.joy.x = 0; S.joy.y = 0; wake(); actUI(); }
 function doWave() { if (!S || S.walking || sheetUp()) return; if (S.pose === 'pray') S.pose = null; S.waveT = 2.2; wake(); actUI(); }
-function actUI() { const b = document.querySelector('#v3acts [data-a="pray"]'); if (b) b.classList.toggle('on', S && S.pose === 'pray'); document.body.classList.toggle('v3pray', !!(S && S.pose === 'pray')); }
+function actUI() { const b = document.querySelector('#v3acts [data-a="pray"]'); if (b) b.classList.toggle('on', S && S.pose === 'pray'); const bs = document.querySelector('#v3acts [data-a="sit"]'); if (bs) { bs.classList.toggle('on', !!(S && S.sit)); bs.hidden = !(S && S.hx); } document.body.classList.toggle('v3pray', !!(S && S.pose === 'pray')); }
 function wireActs() {
   let box = document.getElementById('v3acts');
   if (!box) { box = document.createElement('div'); box.id = 'v3acts'; box.className = 'v3acts';
-    box.innerHTML = '<button data-a="jump" aria-label="Saltar" title="Saltar (barra espaciadora)"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 4l7 7h-4v6H9v-6H5Z" fill="currentColor"/><path d="M6 21h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><button data-a="pray" aria-label="Arrodillarse a orar" title="Orar (tecla O)">🙏</button><button data-a="wave" aria-label="Saludar" title="Saludar (tecla H)">👋</button><button data-a="room" aria-label="Jugar con amigos" title="Jugar con amigos">👥</button><button data-a="help" aria-label="Cómo se juega" title="Cómo se juega">❔</button>';
-    document.body.appendChild(box); box.querySelectorAll('button').forEach(b => b.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); ({ jump: doJump, pray: doPray, wave: doWave, room: mpPanel, help: () => tutOpen(true) })[b.dataset.a](); }); }
+    box.innerHTML = '<button data-a="jump" aria-label="Saltar" title="Saltar (barra espaciadora)"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 4l7 7h-4v6H9v-6H5Z" fill="currentColor"/><path d="M6 21h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><button data-a="pray" aria-label="Arrodillarse a orar" title="Orar (tecla O)">🙏</button><button data-a="wave" aria-label="Saludar" title="Saludar (tecla H)">👋</button><button data-a="sit" aria-label="Sentarse" title="Sentarse (tecla X)">🪑</button><button data-a="room" aria-label="Jugar con amigos" title="Jugar con amigos">👥</button><button data-a="help" aria-label="Cómo se juega" title="Cómo se juega">❔</button>';
+    document.body.appendChild(box); box.querySelectorAll('button').forEach(b => b.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); ({ jump: doJump, pray: doPray, wave: doWave, sit: doSit, room: mpPanel, help: () => tutOpen(true) })[b.dataset.a](); }); }
   addEventListener('keydown', e => { if (!S || document.getElementById('view3d').hidden || e.repeat || /INPUT|TEXTAREA/.test((e.target || {}).tagName || '')) return; const k = e.key.toLowerCase(); if (k === ' ') { e.preventDefault(); doJump(); } else if (k === 'o') doPray(); else if (k === 'h') doWave(); else if (k === 't' && MP.code) talkStart(); else if (k === 'e') svAct(); else if (k === 'c') svEat(); else if (k === 'b') svCraft(); });
   addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 't') talkStop(); }); addEventListener('blur', () => talkStop());
 }
@@ -1736,6 +1741,7 @@ const GEAR = [
   { id: 'jordan', s: 'boots', r: 'r', t: 'boot', c: '#3E4A5A', name: 'Botas del Jordán', desc: 'Aguantan el agua y el barro de la orilla del río.' },
   { id: 'doradas', s: 'boots', r: 'e', t: 'sandal', c: '#C9A04A', name: 'Sandalias doradas', desc: 'Con hebillas de bronce que brillan al sol.' },
   { id: 'tsp', s: 'shirt', r: 'u', t: 'seamless', c: '#F4EEDC', c2: '#C9A04A', name: 'Túnica de Tras sus pasos', desc: 'Solo la tienen quienes terminaron el curso Tras sus pasos. Es única y nunca se pierde.' },
+  { id: 'servidor', s: 'hat', r: 'u', t: 'wrap', c: '#EFE6D2', c2: '#C9A04A', name: 'Pañuelo del servidor', desc: 'Por servir a los demás. Jesús estuvo entre sus discípulos como el que sirve (Lucas 22:27). Nunca se pierde.' },
   { id: 'siervo', s: 'boots', r: 'u', t: 'sandal', c: '#B07A3A', c2: '#EFE6D2', name: 'Sandalias del siervo', desc: 'Por crecer en humildad. Recuerdan que Jesús lavó los pies de sus discípulos (Juan 13:14-15). Nunca se pierden.' },
   { id: 'evangelio', s: 'boots', r: 'l', t: 'sandal', c: '#FFF2C8', name: 'Sandalias del evangelio', desc: 'Calzados con la disposición de anunciar el evangelio de la paz (Efesios 6:15).' },
   { id: 'vendaslino', s: 'gloves', r: 'c', t: 'wrap', c: '#D8CCB0', name: 'Vendas de lino', desc: 'Para proteger las manos al cosechar.' },
@@ -1990,7 +1996,9 @@ async function heroLoad() {
     const ld = u => new Promise((r, j) => L.load(H3_BASE + u, r, undefined, j));
     const [m, f, an] = await Promise.race([Promise.all([ld('hero_m.glb'), ld('hero_f.glb'), ld('hero_anims.glb')]), new Promise((_, j) => setTimeout(() => j(new Error('tiempo')), 45000))]);
     H3.skClone = mod.skClone; const all = gl => { const r = new THREE.Group(); gl.scenes.forEach(x => r.add(x)); return r; }; H3.sex.m = h3Template(all(m)); H3.sex.f = h3Template(all(f));
-    H3.clips = Object.fromEntries(an.animations.map(c => [c.name, c])); H3.ok = true;
+    H3.clips = Object.fromEntries(an.animations.map(c => [c.name, c]));
+    try { const ex = await new Promise((r, j) => L.load(new URL('../hero/hero_anims2.glb', import.meta.url).href, r, undefined, j)); ex.animations.forEach(c => { if (!H3.clips[c.name] && !/dance/i.test(c.name)) H3.clips[c.name] = c; }); } catch (e2) { console.warn('hero3d extra', e2); }
+    H3.ok = true;
   } catch (e) { console.warn('hero3d', e); H3.fail = true; }
 }
 // junta todas las piezas (cabeza, ropa, pelo) sobre un solo esqueleto
@@ -2061,9 +2069,9 @@ function buildHero3(av) {
   const gl = new THREE.Mesh(new THREE.SphereGeometry(.034, 10, 8), new THREE.MeshBasicMaterial({ color: '#FFD27A' })); lamp.add(gl); const pl = new THREE.PointLight('#FFB45A', 5, 7, 1.6); lamp.add(pl); lamp.visible = !npc; o.add(lamp);
   const age = Math.max(12, Math.min(18, av.age || 16)); o.scale.setScalar(npc ? 1 : .9 + (age - 12) / 6 * .1);
   const mixer = new THREE.AnimationMixer(o), act = {}; for (const k in H3.clips) act[k] = mixer.clipAction(H3.clips[k]);
-  act.Idle_Loop.play(); mixer.update(Math.random() * 3);
+  const idleK = npc && act.Idle_Talking_Loop && Math.random() < .45 ? 'Idle_Talking_Loop' : 'Idle_Loop'; act[idleK].play(); mixer.update(Math.random() * 3);
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(.36, 24), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: .3, depthWrite: false })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .02; o.add(shadow);
-  o.userData = { hero: true, h3: { mixer, act, cur: 'Idle_Loop', bones, lamp, npc } };
+  o.userData = { hero: true, h3: { mixer, act, cur: idleK, idleK, bones, lamp, npc } };
   if (npc) H3.npcs.push(o);
   return o;
 }
@@ -2077,8 +2085,11 @@ function h3aim(av, B, bn, cn, x, y, z, w) {
 }
 function h3pose(av, t, dt, st) {
   const u = av.userData.h3, B = u.bones, p = st.poseW || 0, q = st.waveW || 0, air = (st.jy || 0) > .02;
-  const want = st.pose === 'pray' ? 'Fixing_Kneeling' : air ? 'Jump_Loop' : u.moving ? (u.run === false ? 'Walk_Loop' : 'Jog_Fwd_Loop') : 'Idle_Loop';
-  if (want !== u.cur) { const a = u.act[want], o = u.act[u.cur]; a.reset(); a.timeScale = 1; if (want === 'Fixing_Kneeling') { a.time = a.getClip().duration * .3; a.timeScale = 0; } a.play(); if (o) a.crossFadeFrom(o, .28, false); u.cur = want; }
+  const has = k => !!u.act[k];
+  let want = st.pose === 'pray' ? 'Fixing_Kneeling' : air ? 'Jump_Loop' : u.moving ? (st.sprint && has('Sprint_Loop') ? 'Sprint_Loop' : u.run === false ? (u.npcFormal && has('Walk_Formal_Loop') ? 'Walk_Formal_Loop' : 'Walk_Loop') : 'Jog_Fwd_Loop') : (st.talk && has('Idle_Talking_Loop') ? 'Idle_Talking_Loop' : (u.idleK && has(u.idleK) ? u.idleK : 'Idle_Loop'));
+  if (!u.moving && !air && st.pose !== 'pray') { if (st.down && has('Death01')) want = 'Death01'; else if (st.actT > 0 && has(st.actK)) want = st.actK; else if (st.sit && has('Sitting_Idle_Loop')) want = 'Sitting_Idle_Loop'; }
+  if (st.actT > 0) st.actT -= dt;
+  if (want !== u.cur) { const a = u.act[want], o = u.act[u.cur]; a.reset(); a.timeScale = 1; const once = /^(Death01|Interact|PickUp_Table)$/.test(want); a.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = once; if (want === 'Fixing_Kneeling') { a.time = a.getClip().duration * .3; a.timeScale = 0; } a.play(); if (o) a.crossFadeFrom(o, want === 'Death01' ? .15 : .28, false); u.cur = want; }
   if (u.cur === 'Jog_Fwd_Loop') u.act.Jog_Fwd_Loop.timeScale = 1.15;
   u.mixer.update(dt); av.updateMatrixWorld(true);
   if (p > .01) { // de rodillas con las dos rodillas en el piso
@@ -2120,10 +2131,10 @@ function freeWalk(dt) {
   if (sheetUp()) { S.joy.x = 0; S.joy.y = 0; return; }
   let jx = S.joy.x, jy = S.joy.y; const k = S.keys;
   if (k.ArrowUp || k.w) jy -= 1; if (k.ArrowDown || k.s) jy += 1; if (k.ArrowLeft || k.a) jx -= 1; if (k.ArrowRight || k.d) jx += 1;
-  const mag = Math.min(1, Math.hypot(jx, jy)); if (mag >= .12 && S.pose === 'pray') { S.pose = null; actUI(); } if (mag < .12) { if (S.freeMoving) { S.freeMoving = false; snapToStop(); } return; }
+  const mag = Math.min(1, Math.hypot(jx, jy)); if (mag >= .12 && S.pose === 'pray') { S.pose = null; actUI(); } if (mag >= .12 && S.sit) { S.sit = false; actUI(); } S.fullT = mag > .96 ? (S.fullT || 0) + dt : 0; S.sprint = !!S.hx && (!!k.Shift || S.fullT > 1.2); if (mag < .12) { if (S.freeMoving) { S.freeMoving = false; snapToStop(); } return; }
   const C = S.yaw + S.camYaw, fx = Math.sin(C), fz = Math.cos(C), rx = -Math.cos(C), rz = Math.sin(C);
   let mx = fx * -jy + rx * jx, mz = fz * -jy + rz * jx; const ml = Math.hypot(mx, mz) || 1; mx /= ml; mz /= ml;
-  const sp = 5 * mag * dt * agiMul(), a = S.av.position, fr = frontier(), z0 = 6;
+  const sp = 5 * mag * dt * agiMul() * (S.sprint ? 1.55 : 1), a = S.av.position, fr = frontier(), z0 = 6;
   const ok = (x, z) => Math.abs(x) < XB && z > fr && z < z0 && !blockedAt(x, z);
   let nx = a.x + mx * sp, nz = a.z + mz * sp;
   if (!ok(nx, nz)) { if (nz <= fr && performance.now() - (S.wallT || 0) > 6000) { S.wallT = performance.now(); G().toast('Hasta acá llega el camino por ahora.'); } if (ok(nx, a.z)) nz = a.z; else if (ok(a.x, nz)) nx = a.x; else { nx = a.x; nz = a.z; } }
@@ -2145,7 +2156,7 @@ function wireJoy() {
   base.onpointerdown = e => { e.preventDefault(); wake(); e.stopPropagation(); id = e.pointerId; const r = base.getBoundingClientRect(); cx = r.left + r.width / 2; cy = r.top + r.height / 2; try { base.setPointerCapture(id); } catch (er) {} set(e.clientX, e.clientY); };
   base.onpointermove = e => { if (e.pointerId === id) set(e.clientX, e.clientY); };
   base.onpointerup = base.onpointercancel = e => { if (e.pointerId !== id) return; id = null; knob.style.transform = ''; S.joy.x = 0; S.joy.y = 0; };
-  addEventListener('keydown', e => { if (!S || document.getElementById('view3d').hidden) return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(k)) { S.keys[k] = true; e.preventDefault(); } });
+  addEventListener('keydown', e => { if (!S || document.getElementById('view3d').hidden) return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', 'Shift'].includes(k)) { S.keys[k] = true; if (k !== 'Shift') e.preventDefault(); } if (k === 'x' && !e.repeat) doSit(); });
   addEventListener('keyup', e => { if (!S) return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; S.keys[k] = false; });
   document.getElementById('v3bag').onclick = openBag; bagBtn();
 }
@@ -2314,8 +2325,8 @@ function svGiveTool(t, why) {
   const el = document.getElementById('v3pop'); if (el) { el.innerHTML = `<span class="ic sv-ic">${TOOLS[t][1]}</span><span class="tx"><small>${esc(why)}</small><b>${esc(TOOLS[t][0])}</b><em class="gp-tip">${esc(TOOLS[t][2])}</em></span>`; el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); clearTimeout(pop.t); pop.t = setTimeout(() => { el.classList.remove('on'); el.hidden = true; }, 4200); }
   svUI(); return true;
 }
-function svMissionReward() {
-  if (!svOn()) return; const s = svP(), t = TOOL_ORDER.find(x => !s.tools.includes(x)); if (t) svGiveTool(t, 'Recompensa de la misión');
+function svMissionReward(d) {
+  if (!svOn()) return; { const cash = 5 + (servV() >= 8 ? 5 : 0); svAdd('money', cash); servAdd((d && d.serv) || 1); svToast('🪙 +' + cash + ' denarios · Tu Servicio creció a ' + atP().serv + '.'); } const s = svP(), t = TOOL_ORDER.find(x => !s.tools.includes(x)); if (t) svGiveTool(t, 'Recompensa de la misión');
   const g = atr('gen'); if (g > 0) { svAdd('fruit', 1 + Math.floor(g / 2)); svAdd('wood', g); svToast('Por tu generosidad te regalaron ' + (1 + Math.floor(g / 2)) + ' granadas y ' + g + ' de madera.'); G().save(); svUI(); }
 }
 
@@ -2346,6 +2357,7 @@ function svBuild(scene, W) {
   // tu casa, si ya la construiste
   const s = svP(); if (s.house) svPlaceHouse(scene, s.house, true);
   if (s.bag && s.bag.left > 0) svDropBag(s.bag, true);
+  try { econBuild(scene, W); } catch (e) { console.warn('econ', e); }
   svUI();
 }
 function svToolMesh(t) {
@@ -2361,6 +2373,9 @@ function svToolMesh(t) {
 function svNear() {
   if (!svOn() || !S.sv) return null; const a = S.av.position, st = S.sv, s = svP(), d2 = (x, z) => (x - a.x) ** 2 + (z - a.z) ** 2;
   if (st.fishing) return { k: 'fishing' };
+  for (const b of (st.beggars || [])) if (d2(b.x, b.z) < 6) return { k: 'beg', b, label: 'Ayudar' };
+  for (const m of (st.stalls || [])) if (d2(m.x, m.z) < 9) return { k: 'shop', shop: 'mercado', label: 'Comprar y vender' };
+  if (S.inRoom && SHOPS[S.inRoom.trade]) return { k: 'shop', shop: S.inRoom.trade, label: 'Comprar y vender' };
   if (st.bag && d2(st.bag.x, st.bag.z) < 4) return { k: 'bag', label: 'Recoger tus cosas' };
   const fire = svFireNear(); if (fire && (s.inv.fish || 0) > 0) return { k: 'cook', label: 'Cocinar pescado', fire };
   let best = null, bd = 2.6 * 2.6;
@@ -2383,7 +2398,7 @@ function svFireNear() {
 }
 
 /* ---------- acciones ---------- */
-function svSwing() { S.waveT = .5; try { const A = svSwing.A = svSwing.A || new (window.AudioContext || window.webkitAudioContext)(), o = A.createOscillator(), g = A.createGain(); o.type = 'square'; o.frequency.value = 140 + Math.random() * 40; g.gain.setValueAtTime(.08, A.currentTime); g.gain.exponentialRampToValueAtTime(.0001, A.currentTime + .12); o.connect(g); g.connect(A.destination); o.start(); o.stop(A.currentTime + .13); } catch (e) {} }
+function svSwing() { S.actT = 1.1; S.actK = 'Interact'; try { const A = svSwing.A = svSwing.A || new (window.AudioContext || window.webkitAudioContext)(), o = A.createOscillator(), g = A.createGain(); o.type = 'square'; o.frequency.value = 140 + Math.random() * 40; g.gain.setValueAtTime(.08, A.currentTime); g.gain.exponentialRampToValueAtTime(.0001, A.currentTime + .12); o.connect(g); g.connect(A.destination); o.start(); o.stop(A.currentTime + .13); } catch (e) {} }
 function svHide(im, i, on) { im.getMatrixAt(i, svHide.m = svHide.m || new THREE.Matrix4()); if (!on) { svHide.store.set(im.uuid + i, svHide.m.clone()); im.setMatrixAt(i, M4zero()); } else { const m = svHide.store.get(im.uuid + i); if (m) im.setMatrixAt(i, m); } im.instanceMatrix.needsUpdate = true; }
 svHide.store = new Map();
 function svAct() {
@@ -2391,8 +2406,10 @@ function svAct() {
   if (!n) { svToast('No hay nada para hacer acá. Buscá árboles, rocas, granados o agua.'); return; }
   if (n.need) { svToast(n.label + '. Las herramientas se consiguen en misiones o brillando en el mapa.'); return; }
   if (n.k === 'fishing') { svFishTap(); return; }
+  if (n.k === 'shop') { svShop(n.shop); return; }
+  if (n.k === 'beg') { svGive(n.b); return; }
   if (n.k === 'bag') { svPickBag(); return; }
-  if (n.k === 'fruit') { const o = st.fruit.trees[n.i], c = o.n; for (let k = 0; k < 5; k++) st.fruit.FR.setMatrixAt(n.i * 5 + k, M4zero()); st.fruit.FR.instanceMatrix.needsUpdate = true; o.n = 0; o.t = SV.FRUIT; svAdd('fruit', c); svXP(1); G().save(); svToast('🍎 Recogiste ' + c + ' granadas.'); svUI(); return; }
+  if (n.k === 'fruit') { const o = st.fruit.trees[n.i], c = o.n; for (let k = 0; k < 5; k++) st.fruit.FR.setMatrixAt(n.i * 5 + k, M4zero()); st.fruit.FR.instanceMatrix.needsUpdate = true; o.n = 0; o.t = SV.FRUIT; S.actT = 1.3; S.actK = 'PickUp_Table'; svAdd('fruit', c); svXP(1); G().save(); svToast('🍎 Recogiste ' + c + ' granadas.'); svUI(); return; }
   if (n.k === 'tree' || n.k === 'rock') { const key = n.k + n.i; st.hits = st.hitKey === key ? st.hits + 1 : 1; st.hitKey = key; svSwing(); const need = Math.max(1, 3 - Math.floor(atr('fue') / 2));
     if (st.hits < need) { svToast((n.k === 'tree' ? '🪓 ' : '⛏️ ') + 'Golpe ' + st.hits + ' de ' + need); return; } st.hits = 0;
     if (n.k === 'tree') { svHide(FLORA.oT, n.i, false); for (let j = 0; j < 6; j++) svHide(FLORA.oB, n.i * 6 + j, false); st.felled.set(n.i, SV.TREE); const w = 2 + (atr('fue') >= 3 ? 1 : 0); svAdd('wood', w); svXP(2); svToast('🪵 Conseguiste ' + w + ' de madera. El árbol vuelve a crecer en unos minutos.'); }
@@ -2404,9 +2421,9 @@ function svAct() {
 }
 function svFishTap() { const f = S.sv.fishing; if (!f || f.mode !== 'rod') return; if (f.t >= f.bite && f.t <= f.bite + f.win) { const n = 1 + (Math.random() < atr('pac') * .06 ? 1 : 0); svAdd('fish', n); svXP(2); G().save(); svToast('🐟 ¡Sacaste ' + (n > 1 ? 'dos peces!' : 'un pez!') + ' Cocinalo en una fogata antes de comerlo.'); } else svToast('Muy rápido. Esperá a que pique.'); S.sv.fishing = null; svUI(); }
 function svEat() {
-  if (!svOn() || S.down) return; const s = svP(), k = (s.inv.cooked || 0) > 0 ? 'cooked' : (s.inv.fruit || 0) > 0 ? 'fruit' : null;
+  if (!svOn() || S.down) return; const s = svP(), k = (s.inv.cooked || 0) > 0 ? 'cooked' : (s.inv.bread || 0) > 0 ? 'bread' : (s.inv.fruit || 0) > 0 ? 'fruit' : null;
   if (!k) { svToast((s.inv.fish || 0) > 0 ? 'El pescado crudo hay que cocinarlo primero en una fogata.' : 'No tenés comida. Buscá granados o pescá.'); return; }
-  svAdd(k, -1); s.sat = Math.min(SV.FULL, s.sat + FOOD[k]); s.warned = 0; G().save(); if (humV() >= 1 && MP.code) xSend({ k: 'share', by: meInfo().name, x: S.av.position.x, z: S.av.position.z }); svToast(k === 'cooked' ? '🍢 Comiste pescado asado. ¡Recuperaste fuerzas!' : '🍎 Comiste una granada.'); svUI();
+  svAdd(k, -1); s.sat = Math.min(SV.FULL, s.sat + FOOD[k]); s.warned = 0; G().save(); if (humV() >= 1 && MP.code) xSend({ k: 'share', by: meInfo().name, x: S.av.position.x, z: S.av.position.z }); svToast(k === 'cooked' ? '🍢 Comiste pescado asado. ¡Recuperaste fuerzas!' : k === 'bread' ? '🥖 Comiste pan.' : '🍎 Comiste una granada.'); svUI();
 }
 
 /* ---------- fabricar y construir ---------- */
@@ -2486,7 +2503,7 @@ function svDropBag(bag, silent) {
   g.position.set(bag.x, y, bag.z); S.scene.add(g); S.sv.bag = { ...bag, g };
 }
 function svPickBag() {
-  const s = svP(), b = s.bag, gs = gearState(); if (!b) return; Object.entries(b.inv).forEach(([k, n]) => svAdd(k, n)); b.tools.forEach(t => { if (!s.tools.includes(t)) s.tools.push(t); });
+  S.actT = 1.3; S.actK = 'PickUp_Table'; const s = svP(), b = s.bag, gs = gearState(); if (!b) return; Object.entries(b.inv).forEach(([k, n]) => svAdd(k, n)); b.tools.forEach(t => { if (!s.tools.includes(t)) s.tools.push(t); });
   b.own.forEach(id => { if (!gs.own.includes(id)) gs.own.push(id); }); Object.assign(gs.eq, b.eq); s.bag = null; if (S.sv.bag) S.scene.remove(S.sv.bag.g); S.sv.bag = null; G().save(); reLook && reLook(); svToast('🎒 ¡Recuperaste tus cosas!'); svUI();
 }
 
@@ -2495,10 +2512,11 @@ function survTick(dt, t) {
   if (!svOn() || !S.sv) return; const st = S.sv, s = svP();
   svTickHunger(dt);
   if (humV() >= 10 && !S.av.getObjectByName('humHalo')) S.av.add(humHalo());
+  S.talk = !!document.querySelector('#v3sheet:not([hidden]) .mis-in');
   // gris por hambre
   const gray = s.sat < SV.WARN ? Math.min(.9, (1 - s.sat / SV.WARN) * .9 + .15) : 0; if (Math.abs((st.gray || 0) - gray) > .01) { st.gray = gray; S.cv.style.filter = gray ? `grayscale(${gray}) brightness(${1 - gray * .25})` : ''; }
   // caído
-  const tgt = S.down ? -1.45 : 0; S.av.rotation.x += (tgt - S.av.rotation.x) * Math.min(1, dt * 4);
+  const tgt = S.down && !(S.av.userData.h3 && H3.clips.Death01) ? -1.45 : 0; S.av.rotation.x += (tgt - S.av.rotation.x) * Math.min(1, dt * 4);
   // regenerar árboles, rocas y frutos
   for (const [i, left] of st.felled) { if (left - dt <= 0) { st.felled.delete(i); svHide(FLORA.oT, i, true); for (let j = 0; j < 6; j++) svHide(FLORA.oB, i * 6 + j, true); } else st.felled.set(i, left - dt); }
   for (const [i, left] of st.mined) { if (left - dt <= 0) { st.mined.delete(i); svHide(FLORA.rI, i, true); } else st.mined.set(i, left - dt); }
@@ -2520,10 +2538,10 @@ function survTick(dt, t) {
 function svUI() {
   if (!svOn()) { const e = document.getElementById('v3surv'); if (e) e.hidden = true; return; }
   let el = document.getElementById('v3surv'); if (!el) { el = document.createElement('div'); el.id = 'v3surv'; el.className = 'v3surv';
-    el.innerHTML = '<div class="sv-day"></div><div class="sv-food" title="Alimento"><i></i><span></span></div><button class="sv-do" data-a="do"><b>✋</b><span></span></button><button class="sv-btn" data-a="eat" title="Comer (C)">🍽️</button><button class="sv-btn" data-a="craft" title="Fabricar y construir (B)">🔨</button>';
+    el.innerHTML = '<div class="sv-day"></div><div class="sv-day sv-money" title="Denarios"></div><div class="sv-food" title="Alimento"><i></i><span></span></div><button class="sv-do" data-a="do"><b>✋</b><span></span></button><button class="sv-btn" data-a="eat" title="Comer (C)">🍽️</button><button class="sv-btn" data-a="craft" title="Fabricar y construir (B)">🔨</button>';
     document.body.appendChild(el); el.querySelector('[data-a="do"]').onclick = svAct; el.querySelector('[data-a="eat"]').onclick = svEat; el.querySelector('[data-a="craft"]').onclick = svCraft; }
   el.hidden = document.getElementById('view3d').hidden; const s = svP(), k = Math.max(0, s.sat) / SV.FULL, mins = Math.ceil(Math.max(0, s.sat) / 60);
-  el.querySelector('.sv-day').textContent = 'Día ' + (Math.floor(s.play / SV.DAY) + 1);
+  el.querySelector('.sv-day').textContent = 'Día ' + (Math.floor(s.play / SV.DAY) + 1); el.querySelector('.sv-money').textContent = '🪙 ' + (s.inv.money || 0);
   const fi = el.querySelector('.sv-food i'); fi.style.width = (k * 100).toFixed(1) + '%'; fi.className = s.sat < SV.WARN ? 'low' : ''; el.querySelector('.sv-food span').textContent = s.sat < SV.WARN ? '¡Comé algo! ' + mins + ' min' : '🍞 ' + mins + ' min';
   const n = S.sv && !S.down ? svNear() : null, b = el.querySelector('.sv-do'); b.hidden = !n; if (n) { b.querySelector('span').textContent = n.k === 'fishing' ? (S.sv.fishing.mode === 'rod' ? 'Tirar' : 'Esperando…') : n.label + ' (E)'; b.classList.toggle('need', !!n.need); }
 }
@@ -2548,7 +2566,9 @@ function invAttr(body) {
     <div class="sv-bulk"><span>Sumar de a</span>${[1, 5, 10].map(n => `<button data-n="${n}" class="${(S.bulk || 1) === n ? 'on' : ''}">${n}</button>`).join('')}</div>
     ${ATTR.map(([k, n, d]) => `<div class="sv-attr"><div><b>${n} <em>${a[k]}</em></b><small>${d}</small><span class="sv-pips">${Array.from({ length: 10 }, (_, i) => `<i class="${i < Math.floor(a[k] / 5) ? 'on' : ''}"></i>`).join('')}</span></div><button data-k="${k}" ${free > 0 && a[k] < ATTR_MAX ? '' : 'disabled'} aria-label="Subir ${n}">+</button></div>`).join('')}
     <div class="sv-attr sv-hum"><div><b>Humildad <em>${h}</em></b><small>Es la única que no se compra con puntos: crece solo cuando le das puntos tuyos a otros en una sala con amigos. Jesús enseñó que el que se humilla será enaltecido (Lucas 14:11).</small></div></div>
-    <ul class="sv-perks">${HUM_PERKS.map(([n, t, d]) => `<li class="${h >= n ? 'on' : ''}"><b>${n} · ${t}</b><small>${d}</small></li>`).join('')}</ul></div>`;
+    <ul class="sv-perks">${HUM_PERKS.map(([n, t, d]) => `<li class="${h >= n ? 'on' : ''}"><b>${n} · ${t}</b><small>${d}</small></li>`).join('')}</ul>
+    <div class="sv-attr sv-hum"><div><b>Servicio <em>${a.serv || 0}</em></b><small>También es único: crece solo haciendo obras para los demás, como ayudar a los mendigos del camino o cumplir misiones.</small></div></div>
+    <ul class="sv-perks">${SERV_PERKS.map(([n, t, d]) => `<li class="${(a.serv || 0) >= n ? 'on' : ''}"><b>${n} · ${t}</b><small>${d}</small></li>`).join('')}</ul></div>`;
   body.querySelectorAll('[data-n]').forEach(b => b.onclick = () => { S.bulk = +b.dataset.n; invAttr(body); });
   body.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k, n = Math.min(S.bulk || 1, ptsFree(), ATTR_MAX - a[k]); if (n <= 0) return; a[k] += n; a.spent = (a.spent || 0) + n; G().save(); invAttr(body); });
 }
@@ -2579,7 +2599,7 @@ function playerPick(title, onPick) {
 }
 
 /* ---------- intercambio de materiales y comida (Hero) ---------- */
-const XRES = ['wood', 'stone', 'plank', 'block', 'fruit', 'fish', 'cooked'];
+const XRES = ['money', 'wood', 'stone', 'plank', 'block', 'fruit', 'bread', 'fish', 'cooked'];
 function xTrade() {
   playerPick('¿Con quién querés intercambiar?', to => {
     const el = document.getElementById('v3sheet'), s = svP(), give = {}, want = {};
@@ -2746,4 +2766,91 @@ function prayTogetherTick(dt) {
   misPop('Oración en grupo · +30', 'Jesús prometió estar presente donde dos o tres se reúnen en su nombre (Mateo 18:20).');
 }
 
-window.W3 = { enter, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM }, openBag, gearGive: id => gearGive(GBY[id], id === 'tsp' ? 'Terminaste el curso' : 'Regalo'), GEAR, reLook };
+
+/* =====================================================================
+   DENARIOS, MERCADOS Y MENDIGOS (Hero)
+   - Se gana dinero vendiendo en los oficios y en los puestos del mercado, y con las misiones.
+   - Se compra pan, herramientas, materiales y ropa.
+   - A los mendigos del camino se les puede dar dinero o comida: suma experiencia y Servicio.
+   - Servicio: atributo único que solo crece haciendo obras para los demás.
+   ===================================================================== */
+RES.money = ['Denarios', '🪙']; RES.bread = ['Pan', '🥖']; FOOD.bread = 15 * 60;
+const SELL = { wood: 1, stone: 1, plank: 3, block: 3, fruit: 1, fish: 2, cooked: 3, bread: 1 };
+const SHOPS = {
+  carpintero: { name: 'La carpintería', buy: [['t', 'axe', 15], ['t', 'pick', 18], ['r', 'plank', 4]], sell: ['wood', 'plank'] },
+  alfarero: { name: 'El alfarero', buy: [['r', 'block', 4], ['t', 'flint', 6]], sell: ['stone', 'block'] },
+  panadero: { name: 'La panadería', buy: [['r', 'bread', 2]], sell: ['fruit'] },
+  pescador: { name: 'La casa del pescador', buy: [['t', 'rod', 12], ['t', 'net', 20], ['r', 'cooked', 4]], sell: ['fish', 'cooked'] },
+  tejedora: { name: 'La tejedora', buy: [['g', 'c', 10], ['g', 'r', 30]], sell: [] },
+  posada: { name: 'La posada', buy: [['r', 'bread', 2], ['r', 'cooked', 4]], sell: ['fruit', 'fish'] },
+  mercado: { name: 'Puesto del mercado', buy: [['r', 'bread', 2], ['r', 'fruit', 2], ['t', 'flint', 6]], sell: ['wood', 'stone', 'plank', 'block', 'fruit', 'fish', 'cooked'] }
+};
+const SERV_PERKS = [
+  [3, 'Te conocen en el mercado', 'Los comerciantes te hacen precio: todo cuesta un 10% menos.'],
+  [8, 'Manos abiertas', 'Cada misión cumplida te deja 5 denarios más.'],
+  [15, 'Pañuelo del servidor', 'Una prenda única que nunca se pierde. Recuerda que Jesús estuvo entre sus discípulos como el que sirve (Lucas 22:27).'],
+  [25, 'Tesoro en el cielo', 'Cada vez que das a alguien que lo necesita, ganás el doble de experiencia.']
+];
+function servV() { return svOn() ? (atP().serv || 0) : 0; }
+function servAdd(n, why) { const a = atP(); a.serv = (a.serv || 0) + n; G().save(); if (a.serv >= 15 && GBY.servidor && !gearState().own.includes('servidor')) gearGive(GBY.servidor, 'Por tu servicio'); }
+function price(n) { return Math.max(1, Math.round(n * (servV() >= 3 ? .9 : 1))); }
+function money() { return svP().inv.money || 0; }
+
+/* puestos del mercado y mendigos a lo largo del camino */
+function econBuild(scene, W) {
+  const g = G(), R = rng(2027), st = S.sv; st.stalls = []; st.beggars = [];
+  const regNodes = r => Object.keys(g.NODES).filter(id => id.startsWith(g.REGIONS[r].id + '-') && !/gate|fA|fB/.test(id)).map(id => S.markers[id]).filter(Boolean).sort((a, b) => b.position.z - a.position.z);
+  g.REGIONS.forEach((Rg, r) => { const ns = regNodes(r); if (ns.length < 4) return;
+    // puesto del mercado
+    { const m = ns[2], side = r % 2 ? 1 : -1, x = m.position.x + side * 5.5, z = m.position.z + 1.5; if (!blockedAt(x, z)) { const y = W.hAt(x, z), gr = new THREE.Group(), cloth = ['#8E2E22', '#3E5A8A', '#C9A04A', '#66763E'][r % 4];
+      bx(2.4, .1, 1.1, WOODL(), 0, .85, 0, gr); [[-1.1, -.45], [1.1, -.45], [-1.1, .45], [1.1, .45]].forEach(([a, b]) => cy(.05, .05, 2.2, WOOD(), a, 1.1, b, gr, 6)); const roof = bx(2.7, .06, 1.5, tm('awn' + r, cloth, { side: THREE.DoubleSide }), 0, 2.2, 0, gr); roof.rotation.x = .12;
+      for (let i = 0; i < 6; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(.09, 8, 6), tm('fr' + (i % 3), ['#C0392B', '#E9A52C', '#66763E'][i % 3])); f.position.set(-.9 + i * .36, .97, (i % 2 - .5) * .3); gr.add(f); } jar(gr, .9, .2, .95, '#B4704A', .7);
+      gr.position.set(x, y, z); gr.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; gr.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(gr); S.cols.push({ x0: x - .7, x1: x + .7, z0: z - 1.3, z1: z + 1.3 });
+      const sell = buildHeroAvatar({ g: R() < .5 ? 'chico' : 'chica', age: 18, skin: '#C99A72', hair: '#2A1B14', outfit: cloth }); const sx = x + side * 1.2; sell.position.set(sx, W.hAt(sx, z), z); sell.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; scene.add(sell);
+      const lb = textSprite('Mercado', true); lb.scale.multiplyScalar(.7); lb.position.set(x, y + 2.9, z); scene.add(lb); st.stalls.push({ x, z }); } }
+    // mendigo junto al camino
+    { const m = ns[Math.min(ns.length - 1, 4)], side = r % 2 ? -1 : 1, x = m.position.x + side * 3.2, z = m.position.z - 2; if (!blockedAt(x, z)) {
+      const o = buildHeroAvatar({ g: R() < .6 ? 'chico' : 'chica', age: 18, skin: '#B98A62', hair: '#6A6A6A', outfit: '#7A6A5A' }); o.position.set(x, W.hAt(x, z), z); o.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; const u = o.userData.h3; if (u && u.act.Crouch_Idle_Loop) { u.act[u.cur].stop(); u.act.Crouch_Idle_Loop.play(); u.cur = u.idleK = 'Crouch_Idle_Loop'; } scene.add(o);
+      const bowl = new THREE.Mesh(new THREE.SphereGeometry(.16, 12, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), tm('clay', '#A8784A')); bowl.position.set(x - side * .55, W.hAt(x, z) + .16, z); scene.add(bowl);
+      st.beggars.push({ x, z, r, id: 'beg' + r }); } }
+  });
+}
+
+/* tienda */
+function svShop(kind) {
+  const sh = SHOPS[kind]; if (!sh) return; const el = document.getElementById('v3sheet'), s = svP(); S.joy.x = 0; S.joy.y = 0;
+  const draw = () => {
+    const rows = sh.buy.map(([t, k, p], i) => { const cost = price(p); let label = '', ico = '', owned = false;
+      if (t === 't') { label = TOOLS[k][0]; ico = TOOLS[k][1]; owned = s.tools.includes(k); }
+      else if (t === 'r') { label = RES[k][0]; ico = RES[k][1]; }
+      else { const left = GEAR.filter(x => x.r === k && !gearState().own.includes(x.id)); owned = !left.length; label = 'Prenda ' + RAR[k][0].toLowerCase() + (left.length ? ' (al azar)' : ''); ico = '🧵'; }
+      return `<div class="sv-rec${owned || money() < cost ? ' off' : ''}"><div><b>${ico} ${esc(label)}</b><small>${owned ? 'Ya lo tenés' : cost + ' denarios'}</small></div><button data-b="${i}" ${owned || money() < cost ? 'disabled' : ''}>Comprar</button></div>`; }).join('');
+    const sells = sh.sell.filter(k => (s.inv[k] || 0) > 0).map(k => `<div class="sv-rec"><div><b>${RES[k][1]} ${RES[k][0]}</b><small>Tenés ${s.inv[k]} · ${SELL[k]} denario${SELL[k] > 1 ? 's' : ''} cada uno</small></div><button data-s="${k}">Vender 1</button><button data-sa="${k}">Todo</button></div>`).join('');
+    el.innerHTML = `<div class="inv hx sv-sheet"><div class="inv-h"><b>${esc(sh.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="sv-have"><span class="sv-chip">🪙 ${money()} denarios</span>${servV() >= 3 ? '<span class="sv-chip">10% menos por tu servicio</span>' : ''}</div>
+      <h4 class="x-h">Comprar</h4>${rows}${sh.sell.length ? `<h4 class="x-h">Vender</h4>${sells || '<p class="sv-tip">No tenés nada que te compren acá.</p>'}` : ''}<p class="sv-tip">En tiempos de Jesús se pagaba con denarios: un denario era el jornal de un día de trabajo (Mateo 20:2).</p></div>`;
+    el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
+    el.querySelectorAll('[data-b]').forEach(b => b.onclick = () => { const [t, k, p] = sh.buy[+b.dataset.b], cost = price(p); if (money() < cost) return;
+      if (t === 't') { if (s.tools.includes(k)) return; svAdd('money', -cost); svGiveTool(k, 'Compraste'); }
+      else if (t === 'r') { svAdd('money', -cost); svAdd(k, 1); }
+      else { const left = GEAR.filter(x => x.r === k && !gearState().own.includes(x.id)); if (!left.length) return; svAdd('money', -cost); gearGive(left[Math.floor(Math.random() * left.length)], 'Compraste'); }
+      tone3d(); G().save(); svUI(); draw(); });
+    const sell = (k, n) => { n = Math.min(n, s.inv[k] || 0); if (!n) return; svAdd(k, -n); svAdd('money', n * SELL[k]); G().save(); svUI(); draw(); };
+    el.querySelectorAll('[data-s]').forEach(b => b.onclick = () => sell(b.dataset.s, 1)); el.querySelectorAll('[data-sa]').forEach(b => b.onclick = () => sell(b.dataset.sa, 999));
+  };
+  el.hidden = false; el.onclick = e => { if (e.target === el) el.hidden = true; }; draw();
+}
+
+/* dar a quien lo necesita */
+function svGive(bg) {
+  const el = document.getElementById('v3sheet'), s = svP(), a = atP(), day = Math.floor(s.play / SV.DAY); a.alms = a.alms || {}; S.joy.x = 0; S.joy.y = 0;
+  if (a.alms[bg.id] === day) { svToast('Hoy ya ayudaste a esta persona. Mañana (en el juego) vas a poder volver a ayudarla.'); return; }
+  const opts = [['money', 1], ['money', 5], ['bread', 1], ['fruit', 1], ['cooked', 1]].filter(([k, n]) => (s.inv[k] || 0) >= n);
+  el.innerHTML = `<div class="inv hx sv-sheet"><div class="inv-h"><b>Alguien que necesita ayuda</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="sv-tip">«Por favor… ¿tenés algo para darme? Hoy no comí nada.»</p>
+    ${opts.length ? `<div class="x-list">${opts.map(([k, n], i) => `<button data-i="${i}">${RES[k][1]} Dar ${n} ${RES[k][0].toLowerCase()}</button>`).join('')}</div>` : '<p class="sv-tip">No tenés dinero ni comida para dar. Podés vender algo en el mercado o recoger granadas.</p>'}
+    <p class="sv-tip">Jesús enseñó que lo que hacemos por el que tiene hambre, lo hacemos por él (Mateo 25:35-40).</p></div>`;
+  el.hidden = false; el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
+  el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const [k, n] = opts[+b.dataset.i]; if ((s.inv[k] || 0) < n) return; svAdd(k, -n); a.alms[bg.id] = day; const mult = servV() >= 25 ? 2 : 1; svXP((k === 'money' ? 4 + n * 2 : 10) * mult); servAdd(1); S.actT = 1.3; S.actK = 'PickUp_Table'; tone3d(); svUI();
+    el.innerHTML = `<div class="inv hx sv-sheet sv-faint"><h3>¡Gracias! Que Dios te bendiga.</h3><p>Tu Servicio creció a <b>${atP().serv}</b> y ganaste experiencia.</p><p class="sv-verse">El que ayuda al pobre le presta al Señor, y él se lo va a recompensar (Proverbios 19:17).</p><button class="sv-up">Seguir el camino</button></div>`; el.querySelector('.sv-up').onclick = () => { el.hidden = true; }; });
+}
+
+window.W3 = { enter, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => gearGive(GBY[id], id === 'tsp' ? 'Terminaste el curso' : 'Regalo'), GEAR, reLook };
