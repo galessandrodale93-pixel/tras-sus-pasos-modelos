@@ -4,8 +4,8 @@ const { subscribeMember, getMemberState, login, register, verifyEmail, logout, r
 const { wixRequest, mintTokens, setTokens } = await import(location.origin + "/js/wix/client.js");
 const { WIX_CLIENT_ID } = await import(location.origin + "/js/wix/config.js");
 const { queryItems, insertItem, patchItemFields } = await import(location.origin + "/js/wix/items.js");
-const REGIONS=[{id:'nacimiento',name:'Nacimiento'},{id:'infancia',name:'Infancia'},{id:'bautismo',name:'Bautismo'},{id:'galilea',name:'Galilea'},{id:'milagros',name:'Milagros'}];
-const SOON=['Parábolas','Jerusalén','Cruz','Resurrección','Pentecostés'];
+const REGIONS=[{id:'nacimiento',name:'Nacimiento'},{id:'infancia',name:'Infancia'},{id:'bautismo',name:'Bautismo'},{id:'galilea',name:'Galilea'},{id:'milagros',name:'Milagros'},{id:'parabolas',name:'Parábolas'}];
+const SOON=['Jerusalén','Cruz','Resurrección','Pentecostés'];
 const LOCAL={n1:[96,180],n2:[262,276],n3:[152,376],fA:[66,486],fB:[292,486],n4:[180,596],n5:[92,690]};
 const ORDER=['n1','n2','n3','fA','fB','n4','n5'];
 const STORY={
@@ -158,6 +158,36 @@ milagros:{
   text:'Mirá todo lo que Jesús hizo: calmó el mar, sanó, alimentó a miles y caminó sobre el agua.',
   game:{type:'sort',title:'Clasificá los milagros',how:'Tocá a la izquierda o a la derecha según dónde va cada milagro.',sky:['#BFE0FF','#FFF3DD']},
   ch:{t:'order',q:'Ordená lo que pasó esa noche en el lago',items:['Jesús camina sobre el agua hacia la barca','Pedro le pide ir hacia él','Pedro mira el viento, tiene miedo y se hunde','Jesús lo toma de la mano y suben a la barca'],exp:'Mateo lo cuenta así, y termina con los discípulos adorando a Jesús como el Hijo de Dios.',ref:'Mateo 14:25-33'}}
+},
+parabolas:{
+ n1:{place:'Junto al lago',title:'El sembrador',scene:'par_n1',
+  text:'{name}, tanta gente se junta a escuchar a Jesús que él sube a una barca y les enseña desde el agua. Les cuenta historias de la vida de todos los días: parábolas.',
+  game:{type:'sow',title:'Semillas en buena tierra',how:'Arrastrá hacia abajo y soltá para tirar las semillas. Que caigan en la tierra fértil.',sky:['#BFE0FF','#FFF3DD']},
+  ch:{t:'verse',parts:['Pero otras semillas cayeron en ',0,', ¡y produjeron una cosecha que fue treinta, sesenta y hasta ',1,' veces más numerosa de lo que se había sembrado!'],blanks:['tierra fértil','cien'],bank:['tierra fértil','el camino','cien','mil','las rocas','diez'],exp:'La semilla es la Palabra de Dios. La tierra fértil es quien la escucha, la entiende y la vive: ahí da fruto.',ref:'Mateo 13:8, 23'}},
+ n2:{place:'Las colinas',title:'La oveja perdida',scene:'par_n2',
+  text:'Jesús cuenta de un pastor que tiene cien ovejas. Una se pierde… y él deja las noventa y nueve para salir a buscarla hasta encontrarla.',
+  game:{type:'hotcold',title:'La oveja perdida',how:'Tocá los arbustos para buscar la oveja. Te voy diciendo si estás frío o caliente.',sky:['#C9E6A8','#FFF6DC']},
+  ch:{t:'verse',parts:['De la misma manera, ¡hay más ',0,' en el cielo por un pecador perdido que se arrepiente y regresa a Dios que por noventa y ',1,' justos que no se extraviaron!'],blanks:['alegría','nueve'],bank:['alegría','tristeza','nueve','diez','paz','ocho'],exp:'Para Dios cada persona importa. Él sale a buscar a quien se perdió y hace fiesta cuando vuelve.',ref:'Lucas 15:4-7'}},
+ n3:{place:'Camino a Jericó',title:'El buen samaritano',scene:'par_n3',
+  text:'Un maestro de la ley le pregunta a Jesús quién es su prójimo. Jesús le cuenta de un hombre herido al costado del camino… y de quién se detuvo a ayudarlo.',
+  game:{type:'kind',title:'Ser un buen prójimo',how:'Leé cada situación y tocá rápido la respuesta que muestra amor.',sky:['#F6D28E','#FFF2D6']},
+  ch:{t:'who',quote:'El que mostró compasión.',options:['El experto en la ley','Un sacerdote','Un levita','Pedro'],answer:'El experto en la ley',exp:'Jesús le preguntó cuál de los tres había sido el prójimo del herido, y el experto en la ley respondió bien. Jesús le pidió que hiciera lo mismo.',ref:'Lucas 10:36-37'}},
+ fA:{place:'Lejos de casa',title:'El hijo pródigo',fork:1,scene:'par_fA',
+  text:'Un hijo pide su herencia, se va lejos y la gasta toda. Con hambre y sin nada, decide volver a la casa de su padre, pensando qué le va a decir.',
+  game:{type:'rotate',title:'El camino a casa',how:'Tocá cada pieza para girarla hasta armar la imagen.',sky:['#F7B99A','#FFE6CF']},
+  ch:{t:'verse',parts:['Lleno de ',0,' y de compasión, ',1,' hacia su hijo, lo abrazó y lo besó.'],blanks:['amor','corrió'],bank:['amor','enojo','corrió','caminó','miedo','gritó'],exp:'El padre lo vio cuando todavía estaba lejos. Así es Dios: nos espera y corre a recibirnos cuando volvemos a él.',ref:'Lucas 15:20'}},
+ fB:{place:'El mercado',title:'La perla',fork:1,scene:'par_fB',
+  text:'Un comerciante busca perlas finas. Un día encuentra una de muchísimo valor… y hace algo que sorprende a todos.',
+  game:{type:'scale',title:'La perla de gran valor',how:'Una perla pesa más que las otras. Usá la balanza y descubrí cuál es.',sky:['#E9D7B4','#FFF6E4']},
+  ch:{t:'mc',q:'¿Qué hizo el comerciante cuando encontró la perla de gran valor?',options:['Vendió todo lo que tenía y la compró','La escondió y se fue','La regaló enseguida','La rompió para ver qué tenía adentro'],answer:'Vendió todo lo que tenía y la compró',exp:'El reino de Dios vale más que cualquier otra cosa. Quien lo descubre lo pone primero.',ref:'Mateo 13:45-46'}},
+ n4:{place:'La ladera',title:'La casa sobre la roca',scene:'par_n4',
+  text:'Jesús termina su enseñanza con dos casas: una construida sobre la roca y otra sobre la arena. Llega la tormenta…',
+  game:{type:'blocks',title:'Construí sobre la roca',how:'Tocá a los costados para mover, al centro para girar y abajo para soltar. Completá filas.',sky:['#8C8FDB','#C9D3F0']},
+  ch:{t:'mc',q:'Según Jesús, ¿quién es como el que construye su casa sobre la roca?',options:['El que escucha sus enseñanzas y las pone en práctica','El que tiene mucho dinero','El que va al templo una vez al año','El que sabe muchos versículos pero no los vive'],answer:'El que escucha sus enseñanzas y las pone en práctica',exp:'Escuchar y obedecer a Jesús es construir sobre la roca: cuando vienen las tormentas, la casa no se cae.',ref:'Mateo 7:24-27'}},
+ n5:{place:'Hito del camino',title:'Repasá la etapa',scene:'hito6',
+  text:'Repasá las historias que contó Jesús y lo que nos enseñan sobre Dios y su reino.',
+  game:{type:'emoji',title:'Adiviná la parábola',how:'Mirá las pistas con dibujitos y tocá de qué parábola se trata.',sky:['#BFE0FF','#FFF3DD']},
+  ch:{t:'order',q:'Ordená la historia del hijo pródigo',items:['El hijo menor pide su herencia y se va lejos','Gasta todo y pasa hambre cuidando cerdos','Decide volver a la casa de su padre','El padre corre a abrazarlo y hace una fiesta'],exp:'La historia termina con una fiesta: el que estaba perdido fue encontrado.',ref:'Lucas 15:11-24'}}
 }};
 const MAP_PLACES=[
  {id:'nazaret',name:'Nazaret',x:165,y:112,lx:-50,ly:4},{id:'capernaum',name:'Capernaum',x:196,y:86,lx:-62,ly:-8},
@@ -478,7 +508,42 @@ const SCENES={
   bg:T(60,46,1,A.cloud(u,80))+T(260,34,1,A.cloud(u,60,.9))+T(70,156,1,A.cloud(u,150))+T(260,160,1,A.cloud(u,150))+T(160,178,1,A.cloud(u,230)),
   actors:{scroll:u=>A.scroll(u),spk:u=>A.sparkles(u,9,70)},
   tl:[['scroll',.4,2.2,{x:180,y:92,sx:.08,o:.4},{x:180,y:92,sx:1,o:1}],['spk',2,3.2,{x:180,y:92,o:0},{x:180,y:92,o:1}]],
-  caps:[[0,'El mar, los enfermos, la multitud y las olas.'],[2.4,'Todo le obedece a Jesús.'],[4.6,'Repasá lo que viviste.']]})
+  caps:[[0,'El mar, los enfermos, la multitud y las olas.'],[2.4,'Todo le obedece a Jesús.'],[4.6,'Repasá lo que viviste.']]}),
+ par_n1:u=>({sky:'day',dur:8,
+  bg:T(70,40,1,A.cloud(u,64))+A.hills(u,118,'#BFCB8C','#93A262',20)+`<path d="M-20 140 Q180 132 380 142 V200 H-20Z" fill="#7B5A3A"/>`+`<path d="M-20 150 Q180 144 380 152" stroke="#5A3E24" stroke-width="2" fill="none"/><path d="M-20 164 Q180 158 380 166" stroke="#5A3E24" stroke-width="2" fill="none"/>`,
+  actors:{sower:u=>A.figure(u,'#9B7650',{scarf:'#E8D6B8'}),seeds:u=>A.sparkles(u,8,30),wheat:u=>`<g>${[0,1,2,3,4,5,6,7,8].map(i=>`<path d="M${i*20-80} 0 V-20" stroke="#C9A04A" stroke-width="2"/><ellipse cx="${i*20-80}" cy="-22" rx="3" ry="6" fill="#E6C46A"/>`).join('')}</g>`},
+  tl:[['sower',0,5,{x:40,y:150,s:.9},{x:240,y:150,s:.9}],['seeds',.6,5,{x:80,y:140,o:1},{x:260,y:140,o:1}],['wheat',5.2,8,{x:220,y:168,o:0,s:.4},{x:220,y:168,o:1,s:1}]],
+  caps:[[0,'Un sembrador sale a sembrar.'],[2.6,'Algunas semillas caen en el camino, entre piedras y espinos.'],[5.2,'Otras caen en tierra fértil y dan mucho fruto.']]}),
+ par_n2:u=>({sky:'dusk',dur:8,
+  bg:A.hills(u,120,'#D9A9C4','#B07BA6',26)+A.hills(u,150,'#C3B07A','#A08A5A',12,3)+T(70,156,.8,A.sheep(u))+T(100,160,.8,A.sheep(u))+T(130,154,.8,A.sheep(u)),
+  actors:{shep:u=>A.figure(u,'#8A7A5A',{staff:1}),lost:u=>A.sheep(u),spk:u=>A.sparkles(u,6,30)},
+  tl:[['shep',.4,4.6,{x:120,y:158,s:.9},{x:280,y:132,s:.8}],['lost',0,8,{x:300,y:128,s:.8},{x:300,y:128,s:.8}],['shep',4.6,8,{x:280,y:132,s:.8},{x:200,y:150,s:.9}],['spk',5,8,{x:290,y:120,o:0},{x:290,y:120,o:1}]],
+  caps:[[0,'Un pastor tiene cien ovejas y una se pierde.'],[2.6,'Deja las noventa y nueve y sale a buscarla.'],[5.2,'Cuando la encuentra, vuelve feliz con ella en los hombros.']]}),
+ par_n3:u=>({sky:'desert',dur:8.5,
+  bg:T(250,46,1,A.sun(u,20))+A.hills(u,126,'#E9BE84','#C98F52',22)+A.ground(u,158,'#E6C99A','#C9A877')+T(90,160,1,A.rocks(u)),
+  actors:{hurt:u=>`<g><ellipse cx="0" cy="0" rx="18" ry="6" fill="#9A8A7A"/><circle cx="-16" cy="-4" r="5" fill="#D6A57C"/></g>`,priest:u=>A.figure(u,'#E8E0D0',{}),sam:u=>A.figure(u,'#5A7A9A',{scarf:'#C9B48A'}),donk:u=>A.donkey(u)},
+  tl:[['hurt',0,8.5,{x:180,y:166},{x:180,y:166}],['priest',.2,2.8,{x:380,y:160,s:.85},{x:-40,y:160,s:.85}],['sam',3,5.6,{x:380,y:160,s:.9},{x:210,y:160,s:.9}],['donk',3,5.6,{x:420,y:162},{x:250,y:162}]],
+  caps:[[0,'Un hombre herido queda tirado al costado del camino.'],[2.6,'Un sacerdote y un levita pasan de largo.'],[5.2,'Un samaritano se detiene, lo cura y lo lleva a una posada.']]}),
+ par_fA:u=>({sky:'dawn',dur:8,
+  bg:A.hills(u,124,'#B5CF8E','#89A964',20)+A.ground(u,160,'#C3D98E','#9FBF6C')+T(290,150,1.2,A.house(u)),
+  actors:{son:u=>A.figure(u,'#7A6A5A',{}),dad:u=>A.figure(u,'#8A6A9A',{scarf:'#E8D6B8'}),hug:u=>A.glow(u,50)},
+  tl:[['son',0,5,{x:40,y:162,s:.85},{x:180,y:160,s:.85}],['dad',2.4,5,{x:300,y:160,s:.9},{x:196,y:160,s:.9}],['hug',5,8,{x:188,y:130,o:0},{x:188,y:130,o:1}]],
+  caps:[[0,'El hijo vuelve a casa, cansado y con hambre.'],[2.6,'Cuando todavía está lejos, su padre lo ve.'],[5.2,'Corre hacia él, lo abraza y lo besa.']]}),
+ par_fB:u=>({sky:'temple',dur:8,
+  bg:A.columns(u)+T(120,162,.9,A.people(u,3)),
+  actors:{pearl:u=>`<g>${A.glow(u,30)}<circle r="8" fill="#FFFFFF" stroke="#D8D0C4"/></g>`,merchant:u=>A.figure(u,'#5A2A6A',{scarf:'#E6B04A'})},
+  tl:[['merchant',0,4,{x:-30,y:160,s:.9},{x:200,y:160,s:.9}],['pearl',3,8,{x:240,y:120,o:0,s:.5},{x:240,y:120,o:1,s:1.3}]],
+  caps:[[0,'Un comerciante busca perlas finas.'],[2.6,'Encuentra una de muchísimo valor.'],[5.2,'Vende todo lo que tiene para comprarla.']]}),
+ par_n4:u=>({sky:'night',dur:8,
+  bg:A.hills(u,128,'#4A5FA8','#2E3F86',20)+`<rect x="-20" y="160" width="400" height="40" fill="#3E4A6A"/>`+T(110,150,1,A.rocks(u))+T(110,138,1,A.house(u)),
+  actors:{rain:u=>`<g stroke="#BFD3F0" stroke-width="1.4" opacity=".7">${Array.from({length:30},(_,i)=>`<path d="M${(i*37)%360} ${(i*53)%160} l-4 12"/>`).join('')}</g>`,sand:u=>A.house(u),bolt:u=>`<path d="M0 0 L-10 30 L4 30 L-8 64 L18 22 L4 22 L14 0Z" fill="#FFF6C8"/>`},
+  tl:[['rain',0,8,{x:0,y:0},{x:-20,y:40}],['sand',0,4.6,{x:260,y:150},{x:262,y:152,r:0}],['sand',4.6,8,{x:262,y:152,r:0,o:1},{x:290,y:190,r:40,o:0}],['bolt',3.8,4.3,{x:240,y:10,o:1},{x:240,y:10,o:0}]],
+  caps:[[0,'Dos casas: una sobre la roca y otra sobre la arena.'],[2.6,'Llegan la lluvia, los ríos y el viento.'],[5.2,'La casa sobre la roca sigue en pie.']]}),
+ hito6:u=>({sky:'gold',dur:7,
+  bg:T(60,46,1,A.cloud(u,80))+T(260,34,1,A.cloud(u,60,.9))+T(70,156,1,A.cloud(u,150))+T(260,160,1,A.cloud(u,150))+T(160,178,1,A.cloud(u,230)),
+  actors:{scroll:u=>A.scroll(u),spk:u=>A.sparkles(u,9,70)},
+  tl:[['scroll',.4,2.2,{x:180,y:92,sx:.08,o:.4},{x:180,y:92,sx:1,o:1}],['spk',2,3.2,{x:180,y:92,o:0},{x:180,y:92,o:1}]],
+  caps:[[0,'Semillas, ovejas, perlas y casas.'],[2.4,'Historias simples con verdades enormes.'],[4.6,'Repasá lo que enseñó Jesús.']]})
 };
 const ease=k=>k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
 const DEF={x:0,y:0,s:1,sx:1,r:0,o:1};
@@ -541,6 +606,13 @@ const NICON={
  start:'<path d="M0 -9 Q1.2 -1.2 9 0 Q1.2 1.2 0 9 Q-1.2 1.2 -9 0 Q-1.2 -1.2 0 -9Z" fill="currentColor"/>'
 };
 const GICON={
+ sow:'<circle cx="-6" cy="-5" r="2" fill="currentColor"/><circle cx="0" cy="-2" r="2" fill="currentColor"/><circle cx="6" cy="1" r="2" fill="currentColor"/><path d="M-9 8 Q0 2 9 8" stroke="currentColor" stroke-width="2.2" fill="none"/>',
+ hotcold:'<path d="M-2 -9 h4 v10 a5 5 0 1 1 -4 0z" fill="none" stroke="currentColor" stroke-width="2"/><circle cy="5" r="2.6" fill="currentColor"/>',
+ kind:'<path d="M0 8 C-12 0 -8 -10 0 -4 C8 -10 12 0 0 8Z" fill="currentColor"/>',
+ rotate:'<path d="M7 -3 A7 7 0 1 0 6 4" stroke="currentColor" stroke-width="2.4" fill="none"/><path d="M7 -9 V-3 H1" stroke="currentColor" stroke-width="2.4" fill="none"/>',
+ scale:'<path d="M0 -9 V8 M-9 -5 H9 M-9 -5 L-12 2 H-6Z M9 -5 L6 2 H12Z" stroke="currentColor" stroke-width="2" fill="none"/>',
+ blocks:'<rect x="-9" y="1" width="6" height="6" fill="currentColor"/><rect x="-3" y="1" width="6" height="6" fill="currentColor"/><rect x="3" y="1" width="6" height="6" fill="currentColor"/><rect x="-3" y="-5" width="6" height="6" fill="currentColor" opacity=".55"/>',
+ emoji:'<circle r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="-3" cy="-2" r="1.4" fill="currentColor"/><circle cx="3" cy="-2" r="1.4" fill="currentColor"/><path d="M-4 3 Q0 6 4 3" stroke="currentColor" stroke-width="1.8" fill="none"/>',
  flood:'<rect x="-9" y="-9" width="8" height="8" fill="currentColor"/><rect x="1" y="-9" width="8" height="8" fill="currentColor" opacity=".5"/><rect x="-9" y="1" width="8" height="8" fill="currentColor" opacity=".5"/><rect x="1" y="1" width="8" height="8" fill="currentColor"/>',
  roof:'<path d="M-10 0 L0 -9 L10 0" stroke="currentColor" stroke-width="2.4" fill="none"/><rect x="-7" y="0" width="14" height="9" fill="none" stroke="currentColor" stroke-width="2"/><rect x="-2" y="-4" width="4" height="4" fill="currentColor"/>',
  count:'<ellipse cx="-4" cy="-3" rx="6" ry="3.6" fill="currentColor"/><ellipse cx="4" cy="5" rx="6" ry="3" fill="currentColor" opacity=".55"/>',
@@ -578,7 +650,7 @@ const GICON={
  connect:'<path d="M-8 6L-2 -7 4 4 9 -6" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="-8" cy="6" r="2.4" fill="currentColor"/><circle cx="-2" cy="-7" r="2.4" fill="currentColor"/><circle cx="4" cy="4" r="2.4" fill="currentColor"/><circle cx="9" cy="-6" r="2.4" fill="currentColor"/>'
 };
 function rng(seed){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
-const VIGN=[[4,262,176,'riv',1],[4,74,292,'house',1],[4,272,676,'palms',.8],[3,262,176,'house',1],[3,74,292,'riv',1],[3,272,676,'palms',.8],[0,258,170,'house',1],[0,74,292,'stable',.7],[0,272,676,'camels',.6],[1,262,178,'temple',.55],[1,76,290,'pyr',.7],[1,272,676,'tree',.8],[2,262,176,'palms',.8],[2,74,292,'riv',1],[2,272,676,'rocks',1]];
+const VIGN=[[5,262,176,'tree',.8],[5,74,292,'house',1],[5,272,676,'rocks',1],[4,262,176,'riv',1],[4,74,292,'house',1],[4,272,676,'palms',.8],[3,262,176,'house',1],[3,74,292,'riv',1],[3,272,676,'palms',.8],[0,258,170,'house',1],[0,74,292,'stable',.7],[0,272,676,'camels',.6],[1,262,178,'temple',.55],[1,76,290,'pyr',.7],[1,272,676,'tree',.8],[2,262,176,'palms',.8],[2,74,292,'riv',1],[2,272,676,'rocks',1]];
 function vign(u,k){
   if(k==='house')return T(-14,0,.9,A.house(u))+T(16,2,.7,A.house(u));
   if(k==='stable')return T(0,0,.9,A.stable(u))+T(0,-62,1,A.star(u,3));
@@ -1491,8 +1563,141 @@ function Sort(th, f) {
       lab(c, th, 'Tocá a la izquierda o a la derecha', GW / 2, GH - 18, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.5); else banner(c, th, 'Ronda ' + round, ban); } };
 }
 
-const ENGINES={flood:Flood,roof:Roof,count:Count,trace:Trace,reveal:Reveal,hop:Hop,sort:Sort,pour:Pour,spell:Spell,net:Net,row:Row,pipes:Pipes,lights:Lights,match:Match,run:Runner,fly:Flyer,cross:Crosser,catch:Catcher,memo:Memo,maze:Maze,simon:Simon,verso:Verso,herd:Herd,pop:Pop,swarm:Swarm,slide:Slide,balance:Balance,order:Order,words:Words,stack:Stack,diff:Diff,tf:TrueFalse,lantern:Lantern,rhythm:Rhythm,connect:Connect};
-const TAPG=['flood','roof','count','reveal','hop','sort','spell','net','row','pipes','lights','match','memo','simon','verso','pop','slide','order','diff','tf','rhythm','connect','stack','balance'],DRAGG=['trace','pour','herd','swarm','words','lantern'];
+/* ===== juegos de las parábolas: sembrar, buscar la oveja, ser prójimo, volver a casa, la perla, la roca y adivinar ===== */
+// 1. Sembrador (arrastrá y soltá para tirar la semilla en la tierra fértil)
+function Sow(th, f) {
+  const zones = [['El camino', '#C9B48A', 0], ['Entre piedras', '#8C8374', 0], ['Entre espinos', '#6E7A4A', 0], ['Tierra fértil', '#6B4A2C', 1]];
+  let seeds = [], aim = null, score = 0, left = 50 / f, full = 50 / f, over = false, order = [], grow = [], wind = 0, tt = 0, fb = '', fT = 0;
+  function layout() { order = shuffle([0, 1, 2, 3]); }
+  layout();
+  const zy = 140, zh = 60, zoneAt = y => { const i = Math.floor((y - zy) / zh); return i >= 0 && i < 4 ? order[i] : -1; };
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over) return; if (k === 'down' && d.y > 400) aim = { x0: d.x, y0: d.y, x: d.x, y: d.y }; if (k === 'move' && aim) { aim.x = d.x; aim.y = d.y; } if (k === 'up' && aim) { const dx = aim.x0 - aim.x, dy = aim.y0 - aim.y; if (Math.hypot(dx, dy) > 14) { seeds.push({ x: 180, y: 470, vx: dx * 2.4 + wind * 20, vy: dy * 2.4, t: 0 }); tone(420, .05); } aim = null; } },
+    update(dt) { if (over) return; tt += dt; fT = Math.max(0, fT - dt); left -= dt; if (left <= 0) { left = 0; over = true; } wind = Math.sin(tt * .7) * 1.6;
+      seeds.forEach(s => { s.t += dt; s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 220 * dt; s.vx *= .995; if (s.t > .55 && !s.done) { s.done = true; const z = zoneAt(s.y); if (z === 3) { score += 25; grow.push({ x: s.x, y: s.y, g: 0 }); fb = '¡Buena tierra!'; tone(700, .15); burstAt(s.x, s.y); } else if (z >= 0) { fb = zones[z][0]; tone(200, .15); } fT = .6; } });
+      seeds = seeds.filter(s => !s.done); grow.forEach(g => g.g = Math.min(1, g.g + dt * .8)); if (grow.length > 18) { order = shuffle(order); grow = []; score += 40; fb = '¡Cosecha! Nuevo campo'; fT = 1; left += 10 / f; full = Math.max(full, left); } },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'VIENTO ' + (wind > 0 ? '→' : '←'), 16, 27);
+      order.forEach((z, i) => { const [n, col] = zones[z]; c.fillStyle = col; c.fillRect(0, zy + i * zh, GW, zh); c.fillStyle = 'rgba(255,255,255,.85)'; c.font = '800 12px Nunito,sans-serif'; c.fillText(n, 10, zy + i * zh + 18);
+        if (z === 1) for (let k = 0; k < 9; k++) { c.fillStyle = '#6E665A'; c.beginPath(); c.ellipse(30 + k * 40, zy + i * zh + 36, 12, 8, 0, 0, 7); c.fill(); } if (z === 2) for (let k = 0; k < 10; k++) { c.strokeStyle = '#3E4A22'; c.lineWidth = 2; c.beginPath(); c.moveTo(20 + k * 36, zy + i * zh + 52); c.lineTo(26 + k * 36, zy + i * zh + 30); c.lineTo(32 + k * 36, zy + i * zh + 52); c.stroke(); } });
+      grow.forEach(g => { c.strokeStyle = '#7AA84A'; c.lineWidth = 2; c.beginPath(); c.moveTo(g.x, g.y + 10); c.lineTo(g.x, g.y + 10 - 22 * g.g); c.stroke(); c.fillStyle = '#E6C46A'; c.beginPath(); c.ellipse(g.x, g.y + 8 - 22 * g.g, 3, 6 * g.g, 0, 0, 7); c.fill(); });
+      seeds.forEach(s => { c.fillStyle = '#F3E3B0'; c.beginPath(); c.arc(s.x, s.y, 4, 0, 7); c.fill(); });
+      c.fillStyle = th.hx ? '#3A2E20' : '#E9D7B4'; c.fillRect(0, 400, GW, GH - 400); c.fillStyle = '#B89A5E'; c.beginPath(); c.arc(180, 470, 22, 0, 7); c.fill(); c.fillStyle = '#F3E3B0'; for (let k = 0; k < 6; k++) { c.beginPath(); c.arc(172 + (k % 3) * 8, 464 + Math.floor(k / 3) * 8, 3, 0, 7); c.fill(); }
+      if (aim) { c.strokeStyle = th.hx ? '#E9C37A' : '#FF9636'; c.lineWidth = 3; c.setLineDash([5, 5]); c.beginPath(); c.moveTo(180, 470); c.lineTo(180 + (aim.x0 - aim.x) * 1.4, 470 + (aim.y0 - aim.y) * 1.4); c.stroke(); c.setLineDash([]); }
+      lab(c, th, 'Arrastrá hacia abajo y soltá para tirar la semilla', GW / 2, GH - 14, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.6); } };
+}
+// 2. La oveja perdida (frío o caliente)
+function HotCold(th, f) {
+  const N = 7, S = 44, ox = (GW - N * S) / 2, oy = 130; let sheep = null, tried = [], tries = 0, score = 0, over = false, round = 0, left = 0, full = 0, found = 0, fb = '', fT = 0;
+  function deal() { round++; sheep = [Math.floor(Math.random() * N), Math.floor(Math.random() * N)]; tried = []; tries = 0; found = 0; const add = 22 / f; left = round === 1 ? add + 6 : left + add; full = Math.max(full, left); }
+  deal();
+  const heat = (x, y) => Math.abs(x - sheep[0]) + Math.abs(y - sheep[1]);
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap' || found) return; const x = Math.floor((d.x - ox) / S), y = Math.floor((d.y - oy) / S); if (x < 0 || y < 0 || x >= N || y >= N || tried.some(q => q[0] === x && q[1] === y)) return; tries++; const h = heat(x, y); tried.push([x, y, h]);
+      if (h === 0) { found = 1.5; score += Math.max(20, 120 - tries * 10); fb = '¡La encontraste!'; tone(990, .45); burstAt(ox + x * S + S / 2, oy + y * S + S / 2); setTimeout(() => { if (!over) deal(); }, 1500); } else { fb = h <= 1 ? '¡Muy caliente!' : h <= 2 ? 'Caliente' : h <= 4 ? 'Tibio' : 'Frío'; tone(200 + (8 - h) * 60, .1); } fT = .8; },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); if (!found) left -= dt; else found = Math.max(0, found - dt); if (left <= 0) { left = 0; over = true; } },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'OVEJA ' + round, 16, 27); lab(c, th, 'Intentos: ' + tries, GW / 2, oy + N * S + 52, 'center'); lab(c, th, 'Tocá un arbusto. Te digo si estás frío o caliente', GW / 2, 110, 'center');
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const cx = ox + x * S + S / 2, cy = oy + y * S + S / 2, q = tried.find(q => q[0] === x && q[1] === y);
+        if (q) { const h = q[2], col = h === 0 ? '#FFE79A' : h <= 1 ? '#EF6F61' : h <= 2 ? '#F2A93B' : h <= 4 ? '#E6D27A' : '#7FB7F5'; c.fillStyle = col; rr(c, cx - S / 2 + 3, cy - S / 2 + 3, S - 6, S - 6, 10); c.fill(); if (h === 0) DRAW.sheep(c, cx, cy + 4, t); }
+        else { c.fillStyle = th.hx ? '#2E4A28' : '#6DB862'; c.beginPath(); c.arc(cx - 6, cy + 2, 11, 0, 7); c.arc(cx + 6, cy + 2, 11, 0, 7); c.arc(cx, cy - 6, 12, 0, 7); c.fill(); } }
+      lab(c, th, '🔵 frío · 🟡 tibio · 🟠 caliente · 🔴 muy caliente', GW / 2, oy + N * S + 30, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.6); } };
+}
+// 3. Ser un buen prójimo (elegí la respuesta con amor, rápido)
+const KIND_Q = [
+  ['Un compañero se cae en el recreo y todos se ríen.', 'Lo ayudás a levantarse', 'Te reís con los demás'],
+  ['Hay un chico nuevo que no conoce a nadie.', 'Lo invitás a jugar', 'Esperás a que se arregle solo'],
+  ['Tu hermano rompió sin querer algo tuyo.', 'Lo perdonás', 'Le gritás y le rompés algo suyo'],
+  ['Una vecina mayor carga bolsas pesadas.', 'Te ofrecés a ayudarla', 'Mirás para otro lado'],
+  ['Alguien del grupo está triste y callado.', 'Le preguntás cómo está', 'Hablás de él a sus espaldas'],
+  ['Encontrás una billetera en la vereda.', 'Buscás a su dueño', 'Te quedás con la plata'],
+  ['Un compañero no entiende la tarea.', 'Le explicás con paciencia', 'Le decís que es un tonto'],
+  ['Te enterás de que un amigo no tiene para la merienda.', 'Compartís la tuya', 'No es tu problema'],
+  ['Alguien piensa distinto que vos y lo atacan en el chat.', 'Lo defendés con respeto', 'Te sumás a las burlas'],
+  ['Tu mamá llega cansada del trabajo.', 'Ayudás a poner la mesa', 'Seguís con el celular'],
+  ['Un chico del barrio está solo en su cumpleaños.', 'Lo saludás y lo acompañás', 'Pasás de largo, como el sacerdote']];
+function Kind(th, f) {
+  let q = null, sideGood = 0, tq = 0, score = 0, streak = 0, lives = 3, over = false, n = 0, fb = '', fT = 0, lock = false; const order = shuffle(KIND_Q.slice());
+  function deal() { q = order[n % order.length]; n++; sideGood = Math.random() < .5 ? 0 : 1; tq = Math.max(3, 7 - n * .25) / f; lock = false; }
+  deal();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap' || lock) return; if (d.y < 330 || d.y > 470) return; const s = d.x < GW / 2 ? 0 : 1; lock = true;
+      if (s === sideGood) { streak++; score += 15 + streak * 3 + Math.round(tq * 3); fb = '¡Eso es ser prójimo!'; tone(700 + streak * 25, .12); } else { streak = 0; lives--; fb = 'Así pasaron de largo…'; tone(170, .3); if (lives <= 0) { over = true; return; } } fT = .9; setTimeout(() => { if (!over) deal(); }, 900); },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); if (!lock) { tq -= dt; if (tq <= 0) { lock = true; lives--; streak = 0; fb = '¡Se te pasó el tiempo!'; fT = .9; tone(170, .3); if (lives <= 0) { over = true; return; } setTimeout(() => { if (!over) deal(); }, 900); } } },
+    draw(c, t) { skyBg(c, th, t); hearts(c, lives, 3); lab(c, th, 'SITUACIÓN ' + n + (streak > 1 ? ' · RACHA ' + streak : ''), GW - 16, 27, 'right');
+      card(c, th, 16, 90, GW - 32, 200); c.fillStyle = INK(th); c.font = '800 17px Nunito,sans-serif'; c.textAlign = 'center'; const w = q[0].split(' '); let lines = [''], L = 0; w.forEach(x => { if ((lines[L] + ' ' + x).trim().length > 28) { L++; lines[L] = ''; } lines[L] = (lines[L] + ' ' + x).trim(); }); lines.forEach((l, i) => c.fillText(l, GW / 2, 160 + i * 24 - (lines.length - 1) * 12)); c.textAlign = 'left';
+      c.fillStyle = th.hx ? 'rgba(233,195,122,.3)' : 'rgba(34,64,127,.15)'; rr(c, 30, 300, (GW - 60) * Math.max(0, tq) / 7 * f, 8, 4); c.fill();
+      [0, 1].forEach(s => { const txt = s === sideGood ? q[1] : q[2], x = s ? GW / 2 + 6 : 16, w2 = GW / 2 - 22; c.fillStyle = th.hx ? '#2A2418' : '#FFFFFF'; rr(c, x, 330, w2, 140, 18); c.fill(); c.fillStyle = INK(th); c.font = '800 14px Nunito,sans-serif'; c.textAlign = 'center'; const ww = txt.split(' '); let l1 = [''], k2 = 0; ww.forEach(y => { if ((l1[k2] + ' ' + y).trim().length > 15) { k2++; l1[k2] = ''; } l1[k2] = (l1[k2] + ' ' + y).trim(); }); l1.forEach((l, i) => c.fillText(l, x + w2 / 2, 400 + i * 18 - (l1.length - 1) * 9)); c.textAlign = 'left'; });
+      lab(c, th, 'Sé un buen prójimo · Lucas 10:36-37', GW / 2, GH - 14, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.6); } };
+}
+// 4. El camino a casa (girá las piezas hasta armar la imagen)
+function Rotate(th, f) {
+  const N = 3, S = 100, ox = (GW - N * S) / 2, oy = 120, img = document.createElement('canvas'); img.width = img.height = 300; let rot = [], score = 0, over = false, round = 0, left = 0, full = 0, done = 0, moves = 0;
+  function paint(k) { const x = img.getContext('2d'), g = x.createLinearGradient(0, 0, 0, 300); const skies = [['#F7B99A', '#FFE6CF'], ['#86C1F4', '#EAF5FF'], ['#8C8FDB', '#FFC59C']][k % 3]; g.addColorStop(0, skies[0]); g.addColorStop(1, skies[1]); x.fillStyle = g; x.fillRect(0, 0, 300, 300); x.fillStyle = '#FFD25E'; x.beginPath(); x.arc(240, 60, 26, 0, 7); x.fill(); x.fillStyle = '#9AB072'; x.beginPath(); x.moveTo(0, 200); x.quadraticCurveTo(150, 150, 300, 210); x.lineTo(300, 300); x.lineTo(0, 300); x.fill(); x.fillStyle = '#E9D7B4'; x.fillRect(30, 140, 70, 60); x.fillStyle = '#B88A55'; x.beginPath(); x.moveTo(20, 140); x.lineTo(65, 108); x.lineTo(110, 140); x.fill(); x.fillStyle = '#6B4A2C'; x.fillRect(55, 170, 18, 30);
+    x.strokeStyle = '#C9A877'; x.lineWidth = 14; x.beginPath(); x.moveTo(110, 300); x.quadraticCurveTo(160, 240, 150, 200); x.stroke(); const fig = (fx, fy, col, sc) => { x.fillStyle = col; x.beginPath(); x.ellipse(fx, fy, 12 * sc, 26 * sc, 0, 0, 7); x.fill(); x.fillStyle = '#E6B691'; x.beginPath(); x.arc(fx, fy - 30 * sc, 9 * sc, 0, 7); x.fill(); }; fig(150, 210, '#8A6A9A', 1.1); fig(172, 214, '#9A7A5A', 1); x.strokeStyle = '#8A6A9A'; x.lineWidth = 6; x.beginPath(); x.moveTo(158, 200); x.lineTo(176, 196); x.stroke(); }
+  function deal() { round++; done = 0; moves = 0; paint(round); rot = Array.from({ length: N * N }, () => 1 + Math.floor(Math.random() * 3)); const add = 24 / f; left = round === 1 ? add : left + add; full = Math.max(full, left); }
+  deal();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap' || done) return; const x = Math.floor((d.x - ox) / S), y = Math.floor((d.y - oy) / S); if (x < 0 || y < 0 || x >= N || y >= N) return; rot[y * N + x] = (rot[y * N + x] + 1) % 4; moves++; tone(480, .05);
+      if (rot.every(r => r === 0)) { done = 1.6; score += 50 + Math.round(left) * 2; tone(990, .45); burstAt(GW / 2, oy + 150); setTimeout(() => { if (!over) deal(); }, 1600); } },
+    update(dt) { if (over) return; done = Math.max(0, done - dt); if (!done) left -= dt; if (left <= 0) { left = 0; over = true; } },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'IMAGEN ' + round, 16, 27); lab(c, th, 'Tocá cada pieza para girarla y armá el reencuentro', GW / 2, 100, 'center');
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { c.save(); c.translate(ox + x * S + S / 2, oy + y * S + S / 2); c.rotate(rot[y * N + x] * Math.PI / 2); c.drawImage(img, x * 100, y * 100, 100, 100, -S / 2 + 1, -S / 2 + 1, S - 2, S - 2); c.restore(); }
+      c.strokeStyle = INK(th); c.lineWidth = 2; c.strokeRect(ox, oy, N * S, N * S); lab(c, th, 'Lucas 15:20', GW / 2, oy + N * S + 26, 'center'); banner(c, th, done ? '¡El padre corrió a abrazarlo!' : 'Imagen ' + round, done); } };
+}
+// 5. La perla de gran valor (encontrá la perla que pesa distinto con la balanza)
+function Scale(th, f) {
+  let N = 6, real = 0, L = [], R = [], weigh = null, uses = 0, maxU = 2, score = 0, over = false, round = 0, fb = '', fT = 0, guess = false, left = 0, full = 0;
+  function deal() { round++; N = round > 2 ? 9 : 6; maxU = round > 2 ? 2 : 2; real = Math.floor(Math.random() * N); L = []; R = []; weigh = null; uses = 0; guess = false; const add = 30 / f; left = round === 1 ? add : left + add; full = Math.max(full, left); }
+  deal();
+  const pos = i => ({ x: 40 + (i % 5) * 70, y: 400 + Math.floor(i / 5) * 56 });
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap') return; for (let i = 0; i < N; i++) { const p = pos(i); if (Math.hypot(d.x - p.x, d.y - p.y) < 24) {
+          if (guess) { if (i === real) { score += 60 + (maxU - uses) * 20; fb = '¡La perla de gran valor!'; tone(990, .45); burstAt(p.x, p.y); } else { left = Math.max(0, left - 8); fb = 'Esa no era…'; tone(170, .3); } fT = 1.2; setTimeout(() => { if (!over) deal(); }, 1200); return; }
+          if (L.includes(i)) L = L.filter(x => x !== i); else if (R.includes(i)) R = R.filter(x => x !== i); else if (L.length <= R.length) L.push(i); else R.push(i); weigh = null; tone(520, .04); return; } }
+      if (d.y > 330 && d.y < 380) { if (d.x < GW / 2) { if (uses >= maxU || !L.length || L.length !== R.length) { fb = L.length !== R.length ? 'Poné la misma cantidad de cada lado' : 'No quedan pesadas'; fT = 1; return; } uses++; const wl = L.includes(real) ? 1 : 0, wr = R.includes(real) ? 1 : 0; weigh = wl - wr; tone(600, .1); } else { guess = true; fb = 'Tocá la perla que elegís'; fT = 1; } } },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); left -= dt; if (left <= 0) { left = 0; over = true; } },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'PESADAS ' + uses + '/' + maxU, 16, 27); lab(c, th, 'Una perla pesa más. Usá la balanza para descubrirla', GW / 2, 70, 'center');
+      const tilt = weigh == null ? 0 : weigh > 0 ? .18 : weigh < 0 ? -.18 : 0; c.save(); c.translate(GW / 2, 160); c.fillStyle = INK(th); c.fillRect(-4, 0, 8, 120); c.rotate(tilt); c.fillRect(-120, -4, 240, 8); [-1, 1].forEach(s => { c.strokeStyle = INK(th); c.lineWidth = 2; c.beginPath(); c.moveTo(s * 110, 0); c.lineTo(s * 110 - 30, 60); c.moveTo(s * 110, 0); c.lineTo(s * 110 + 30, 60); c.stroke(); c.fillStyle = th.hx ? '#8A6A44' : '#C9A04A'; c.beginPath(); c.ellipse(s * 110, 62, 40, 10, 0, 0, 7); c.fill(); }); c.restore();
+      const plate = (arr, s) => arr.forEach((i, k) => { c.fillStyle = '#F4F0E8'; c.beginPath(); c.arc(GW / 2 + s * 110 - 24 + (k % 4) * 16, 210 + tilt * s * 110 * .9 - Math.floor(k / 4) * 14, 8, 0, 7); c.fill(); }); plate(L, -1); plate(R, 1);
+      for (let i = 0; i < N; i++) { if (L.includes(i) || R.includes(i)) continue; const p = pos(i); const g = c.createRadialGradient(p.x - 6, p.y - 6, 2, p.x, p.y, 20); g.addColorStop(0, '#FFFFFF'); g.addColorStop(1, '#D8D0C4'); c.fillStyle = g; c.beginPath(); c.arc(p.x, p.y, 18, 0, 7); c.fill(); c.fillStyle = INK(th); c.font = '800 11px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText(i + 1, p.x, p.y + 4); c.textAlign = 'left'; }
+      [['Pesar', 16], [guess ? 'Elegí una perla' : 'Ya sé cuál es', GW / 2 + 6]].forEach(([s, x]) => { c.fillStyle = th.hx ? '#2A2418' : '#FFFFFF'; rr(c, x, 334, GW / 2 - 22, 42, 14); c.fill(); c.fillStyle = INK(th); c.font = '900 14px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText(s, x + (GW / 2 - 22) / 2, 361); c.textAlign = 'left'; });
+      lab(c, th, 'Tocá perlas para ponerlas en la balanza', GW / 2, GH - 14, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.4); } };
+}
+// 6. La casa sobre la roca (encastrá bloques y completá filas)
+function Blocks(th, f) {
+  const C = 8, R = 12, S = 30, ox = (GW - C * S) / 2, oy = 70, SH = [[[0, 0], [1, 0], [2, 0]], [[0, 0], [0, 1], [1, 1]], [[0, 0], [1, 0], [0, 1], [1, 1]], [[0, 0], [1, 0]], [[1, 0], [0, 1], [1, 1], [2, 1]]];
+  let grid = Array(C * R).fill(0), pc = null, px = 0, py = 0, drop = 0, score = 0, over = false, lines = 0, rain = 0, fb = '', fT = 0;
+  const fits = (sh, x, y) => sh.every(([a, b]) => { const X = x + a, Y = y + b; return X >= 0 && X < C && Y < R && (Y < 0 || !grid[Y * C + X]); });
+  function spawn() { pc = SH[Math.floor(Math.random() * SH.length)].map(p => p.slice()); px = Math.floor(C / 2) - 1; py = -1; if (!fits(pc, px, py + 1)) over = true; }
+  spawn();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || !pc) return; let a = k; if (k === 'tap') a = d.x < GW / 3 ? 'left' : d.x > GW * 2 / 3 ? 'right' : d.y > 380 ? 'down' : 'up';
+      if (a === 'left' && fits(pc, px - 1, py)) px--; if (a === 'right' && fits(pc, px + 1, py)) px++; if (a === 'down') { while (fits(pc, px, py + 1)) py++; drop = 1; }
+      if (a === 'up') { const r = pc.map(([x, y]) => [-y, x]), mx = Math.min(...r.map(p => p[0])), my = Math.min(...r.map(p => p[1])), n = r.map(([x, y]) => [x - mx, y - my]); if (fits(n, px, py)) pc = n; } tone(420, .03); },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); rain += dt; drop += dt * (1.6 + lines * .08) * f; if (drop >= 1) { drop = 0; if (fits(pc, px, py + 1)) py++; else { pc.forEach(([a, b]) => { if (py + b >= 0) grid[(py + b) * C + px + a] = 1 + (lines % 3); }); let cl = 0; for (let y = R - 1; y >= 0; y--) { if (grid.slice(y * C, y * C + C).every(Boolean)) { grid.splice(y * C, C); grid.unshift(...Array(C).fill(0)); cl++; y++; } } if (cl) { lines += cl; score += cl * cl * 40; fb = cl > 1 ? '¡Firme sobre la roca!' : '¡Fila completa!'; fT = .8; tone(880, .3); burstAt(GW / 2, oy + R * S - 40); } else score += 2; spawn(); } } },
+    draw(c, t) { skyBg(c, th, t); lab(c, th, 'FILAS ' + lines, 16, 27); lab(c, th, 'Construí sobre la roca · Mateo 7:24', GW - 16, 27, 'right');
+      c.fillStyle = 'rgba(160,190,230,.35)'; for (let i = 0; i < 40; i++) { const x = (i * 53 + rain * 160) % GW, y = (i * 97 + rain * 420) % GH; c.fillRect(x, y, 1.5, 10); }
+      c.fillStyle = th.hx ? 'rgba(0,0,0,.35)' : 'rgba(255,255,255,.55)'; c.fillRect(ox, oy, C * S, R * S); c.fillStyle = '#8C8374'; rr(c, ox - 10, oy + R * S, C * S + 20, 26, 8); c.fill(); c.fillStyle = '#FFFFFF'; c.font = '900 11px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText('ROCA', GW / 2, oy + R * S + 17); c.textAlign = 'left';
+      const cols = ['', '#C9A877', '#B88A55', '#D8C8A6']; grid.forEach((v, i) => { if (!v) return; c.fillStyle = cols[v]; rr(c, ox + (i % C) * S + 1, oy + Math.floor(i / C) * S + 1, S - 2, S - 2, 4); c.fill(); });
+      if (pc) pc.forEach(([a, b]) => { if (py + b < 0) return; c.fillStyle = th.hx ? '#E9C37A' : '#FF9636'; rr(c, ox + (px + a) * S + 1, oy + (py + b) * S + 1, S - 2, S - 2, 4); c.fill(); });
+      lab(c, th, '◀ mover · ⟳ girar · ▶ mover', GW / 2, GH - 14, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.6); } };
+}
+// 7. Adiviná la parábola (pistas con emojis)
+const EMOJI_Q = [['🌱🪨🌵🌾', 'El sembrador'], ['🐑🔦9️⃣9️⃣', 'La oveja perdida'], ['🏃‍♂️🐖💔🤗🎉', 'El hijo pródigo'], ['🤕🛣️🫏🏠', 'El buen samaritano'], ['🪨🏠🌧️💪', 'La casa sobre la roca'], ['💎🛍️💰', 'La perla de gran valor'], ['🪙🧹🕯️🎉', 'La moneda perdida'], ['🌱➡️🌳🐦', 'La semilla de mostaza'], ['🍞🌾🫓', 'La levadura'], ['🗝️🏞️⛏️', 'El tesoro escondido']];
+function Emoji(th, f) {
+  let q = null, opts = [], score = 0, lives = 3, over = false, n = 0, fb = '', fT = 0, lock = false, tq = 0; const order = shuffle(EMOJI_Q.slice());
+  function deal() { q = order[n % order.length]; n++; const o = new Set([q[1]]); while (o.size < 4) o.add(EMOJI_Q[Math.floor(Math.random() * EMOJI_Q.length)][1]); opts = shuffle([...o]); lock = false; tq = 9 / f; }
+  deal();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap' || lock) return; const i = Math.floor((d.y - 280) / 54); if (i < 0 || i > 3) return; lock = true;
+      if (opts[i] === q[1]) { score += 20 + Math.round(tq * 4); fb = '¡Correcto!'; tone(880, .2); } else { lives--; fb = 'Era: ' + q[1]; tone(170, .3); if (lives <= 0) { over = true; return; } } fT = 1; setTimeout(() => { if (!over) deal(); }, 1000); },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); if (!lock) { tq -= dt; if (tq <= 0) { lock = true; lives--; fb = 'Era: ' + q[1]; fT = 1; if (lives <= 0) { over = true; return; } setTimeout(() => { if (!over) deal(); }, 1000); } } },
+    draw(c, t) { skyBg(c, th, t); hearts(c, lives, 3); lab(c, th, 'PARÁBOLA ' + n, GW - 16, 27, 'right'); card(c, th, 16, 70, GW - 32, 180); c.font = '48px sans-serif'; c.textAlign = 'center'; c.fillText(q[0], GW / 2, 175); c.font = '800 13px Nunito,sans-serif'; c.fillStyle = INK(th); c.fillText('¿Qué parábola es?', GW / 2, 225); c.textAlign = 'left';
+      opts.forEach((o, i) => { c.fillStyle = th.hx ? '#2A2418' : '#FFFFFF'; rr(c, 30, 280 + i * 54, GW - 60, 46, 14); c.fill(); c.fillStyle = INK(th); c.font = '800 15px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText(o, GW / 2, 308 + i * 54); c.textAlign = 'left'; });
+      if (fT > 0) banner(c, th, fb, fT * 1.4); } };
+}
+
+const ENGINES={sow:Sow,hotcold:HotCold,kind:Kind,rotate:Rotate,scale:Scale,blocks:Blocks,emoji:Emoji,flood:Flood,roof:Roof,count:Count,trace:Trace,reveal:Reveal,hop:Hop,sort:Sort,pour:Pour,spell:Spell,net:Net,row:Row,pipes:Pipes,lights:Lights,match:Match,run:Runner,fly:Flyer,cross:Crosser,catch:Catcher,memo:Memo,maze:Maze,simon:Simon,verso:Verso,herd:Herd,pop:Pop,swarm:Swarm,slide:Slide,balance:Balance,order:Order,words:Words,stack:Stack,diff:Diff,tf:TrueFalse,lantern:Lantern,rhythm:Rhythm,connect:Connect};
+const TAPG=['hotcold','kind','rotate','scale','blocks','emoji','flood','roof','count','reveal','hop','sort','spell','net','row','pipes','lights','match','memo','simon','verso','pop','slide','order','diff','tf','rhythm','connect','stack','balance'],DRAGG=['sow','trace','pour','herd','swarm','words','lantern'];
 let ar=null;const bursts=[];
 function burstAt(x,y){bursts.push({x,y,t:0});}
 function splash(x,y){bursts.push({x,y,t:0,w:1});}
@@ -1622,7 +1827,20 @@ milagros:[
  {t:'mc',q:'¿Qué hizo Bartimeo después de recuperar la vista?',o:['Siguió a Jesús por el camino','Volvió a pedir limosna','Se fue sin decir nada','Se enojó con la multitud'],a:0,exp:'Bartimeo no solo recuperó la vista: se convirtió en seguidor de Jesús.',ref:'Marcos 10:52'},
  {t:'mc',q:'¿Para qué fueron escritas las señales de Jesús, según el evangelio de Juan?',o:['Para que creamos que Jesús es el Mesías, el Hijo de Dios, y tengamos vida','Para entretener a la gente','Para mostrar que Jesús era un mago','Para asustar a los romanos'],a:0,exp:'Juan explica que escribió estas señales para que creamos en Jesús y, al creer, tengamos vida en su nombre.',ref:'Juan 20:30-31'},
  {t:'app',q:'Una amiga está pasando por algo muy difícil y tiene miedo. ¿Qué hacés?',o:['La escuchás, orás con ella y la animás a confiar en Jesús','Le decís que no es para tanto','Cambiás de tema para no ponerte triste','Le contás a todos lo que le pasa'],a:0,exp:'Como los amigos del paralítico, podemos acercar a otros a Jesús con amor y oración.',ref:'Marcos 2:3-5'},
- {t:'reflect',q:'Pedro empezó a hundirse cuando dejó de mirar a Jesús. ¿Qué cosas te distraen de mirarlo a él y cómo podés volver a enfocarte?',ref:'Mateo 14:30-31'}]
+ {t:'reflect',q:'Pedro empezó a hundirse cuando dejó de mirar a Jesús. ¿Qué cosas te distraen de mirarlo a él y cómo podés volver a enfocarte?',ref:'Mateo 14:30-31'}],
+parabolas:[
+ {t:'mc',q:'¿Qué es una parábola?',o:['Una historia de la vida diaria que enseña una verdad sobre Dios y su reino','Un milagro de sanidad','Una oración del templo','Un salmo de David'],a:0,exp:'Jesús usaba semillas, ovejas, monedas y casas para enseñar verdades profundas de una forma que todos podían entender.',ref:'Mateo 13:34-35'},
+ {t:'verse',parts:['Pero otras semillas cayeron en ',0,', ¡y produjeron una cosecha que fue treinta, sesenta y hasta ',1,' veces más numerosa de lo que se había sembrado!'],blanks:['tierra fértil','cien'],bank:['tierra fértil','el camino','cien','mil','las rocas','diez'],exp:'La tierra fértil es el corazón que escucha la Palabra, la entiende y la vive.',ref:'Mateo 13:8, 23'},
+ {t:'match',q:'Uní cada tipo de tierra con lo que significa',p:[['El camino','Escucha pero no entiende, y la Palabra se pierde'],['Entre piedras','Recibe con alegría pero abandona cuando hay problemas'],['Entre espinos','Las preocupaciones y la riqueza ahogan la Palabra'],['Tierra fértil','Escucha, entiende y da mucho fruto']],exp:'Jesús mismo explicó la parábola del sembrador a sus discípulos.',ref:'Mateo 13:18-23'},
+ {t:'tf',q:'En la parábola, el pastor se queda con las noventa y nueve ovejas y espera que la perdida vuelva sola.',a:false,exp:'El pastor deja las noventa y nueve y sale a buscar a la perdida hasta encontrarla.',ref:'Lucas 15:4'},
+ {t:'mc',q:'En la parábola del buen samaritano, ¿quiénes pasaron de largo sin ayudar?',o:['Un sacerdote y un levita','Dos soldados romanos','Dos pescadores','Un rey y su siervo'],a:0,exp:'Los que parecían más religiosos pasaron de largo. El samaritano, alguien despreciado en esa época, mostró compasión.',ref:'Lucas 10:31-33'},
+ {t:'mc',q:'Según el experto en la ley, ¿quién fue el prójimo del hombre herido?',o:['El que mostró compasión','El sacerdote','El levita','El dueño de la posada'],a:0,exp:'«—El que mostró compasión.» Jesús le pidió que hiciera lo mismo.',ref:'Lucas 10:37'},
+ {t:'verse',parts:['Lleno de ',0,' y de compasión, ',1,' hacia su hijo, lo abrazó y lo besó.'],blanks:['amor','corrió'],bank:['amor','enojo','corrió','caminó','miedo','gritó'],exp:'El padre de la parábola muestra cómo es el corazón de Dios con quien vuelve a él.',ref:'Lucas 15:20'},
+ {t:'order',q:'Ordená la historia del hijo pródigo',items:['Pide su herencia y se va lejos','Gasta todo y pasa hambre','Decide volver a la casa de su padre','El padre corre a abrazarlo','Hacen una gran fiesta'],exp:'El padre celebra porque el hijo que estaba perdido volvió a casa: así es la alegría de Dios.',ref:'Lucas 15:11-24'},
+ {t:'mc',q:'¿Qué enseñan las parábolas del tesoro escondido y de la perla?',o:['Que el reino de Dios vale más que todo lo demás','Que hay que buscar riquezas','Que conviene guardar secretos','Que los comerciantes son sabios'],a:0,exp:'Quien descubre el reino de Dios lo pone en primer lugar, con alegría.',ref:'Mateo 13:44-46'},
+ {t:'mc',q:'¿Qué diferencia a la casa sobre la roca de la casa sobre la arena?',o:['Su dueño escuchó a Jesús y puso en práctica lo que enseñó','Tenía paredes más gruesas','Estaba más lejos del río','Era más grande y cara'],a:0,exp:'Los dos escucharon. La diferencia fue obedecer.',ref:'Mateo 7:24-27'},
+ {t:'app',q:'En el grupo de tu escuela se burlan de un compañero que siempre está solo. ¿Qué haría un buen prójimo?',o:['Se acerca, lo defiende con respeto y lo incluye','Se ríe para no quedar mal','Hace como que no ve nada','Lo graba y lo comparte'],a:0,exp:'Ser prójimo es acercarse al que sufre, aunque sea incómodo, como el samaritano.',ref:'Lucas 10:33-37'},
+ {t:'reflect',q:'¿Con qué personaje de las parábolas te identificás hoy (la oveja, el hijo que vuelve, el samaritano, el sembrador…)? ¿Por qué?',ref:'Lucas 15 · Lucas 10'}]
 };
 function openExam(r,onPass){
   const R=REGIONS[r],E=EXAMS[R.id];if(!E){onPass();return;}
