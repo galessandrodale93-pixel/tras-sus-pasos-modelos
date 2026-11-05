@@ -65,6 +65,7 @@
       var q = new URLSearchParams(location.hash.slice(1));
       if (!q.get('code') && !q.get('error')) return false;
       history.replaceState(null, '', location.pathname);
+      try { sessionStorage.setItem('habitat:cb', JSON.stringify({ e: q.get('error'), d: q.get('error_description'), c: !!q.get('code'), s: q.get('state') })); } catch (e) {}
       if (q.get('error')) throw new Error(q.get('error_description') || q.get('error'));
       var p = get(KP); set(KP, null);
       if (!p || p.s !== q.get('state')) throw new Error('state');

@@ -58,7 +58,7 @@
 var A=window.HabitatAuth,f=document.getElementById('lgForm'),m=document.getElementById('lgMsg'),go=document.getElementById('lgGo'),fg=document.getElementById('lgForgot'),pw=document.getElementById('pwRow'),rec=false;
 function msg(t,ok){m.textContent=t||'';m.className='lg-msg'+(ok?' ok':'');}
 function busy(b,t){go.disabled=b;go.textContent=b?'Entrando…':(t||'Entrar al Campus');}
-A.callback().then(function(done){if(done)location.replace('/campus.html');else if(A.loggedIn())location.replace('/campus.html');}).catch(function(){msg('No pudimos completar el ingreso. Probá de nuevo.');});
+A.callback().then(function(done){if(done)location.replace('/campus.html');else if(A.loggedIn())location.replace('/campus.html');}).catch(function(x){msg('No pudimos completar el ingreso'+(x&&x.message&&x.message!=='state'?' ('+x.message+')':'')+'. Probá de nuevo.');});
 document.getElementById('gBtn').onclick=function(){msg('');A.loginGoogle().catch(function(){msg('No pudimos abrir Google. Probá de nuevo en un momento.');});};
 fg.onclick=function(){rec=!rec;pw.hidden=rec;go.textContent=rec?'Enviarme el link':'Entrar al Campus';fg.textContent=rec?'Volver a ingresar':'¿Olvidaste tu contraseña?';msg(rec?'Te mandamos un mail con un link para crear una contraseña nueva.':'',rec);};
 f.onsubmit=async function(e){e.preventDefault();var em=document.getElementById('lgEmail').value.trim(),p=document.getElementById('lgPw').value;
