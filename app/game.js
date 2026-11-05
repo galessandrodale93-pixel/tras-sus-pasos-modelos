@@ -301,7 +301,7 @@ const OUTFITS=['#5B8DEF','#EF6F61','#2FAE7C','#F2B33D','#9B7BE8'];
 const CACHE='tsp-cache-v4';
 let branch=null,profiles=[],current=null,saveT=null;
 const P=()=>current;
-const blank=()=>({done:{},visited:['start'],pos:'start',regions:{},medals:[],maps:[],verses:[],games:{},trivia:0,streak:0,best:0,rankId:null,items:{},gear:{own:[],eq:{}},missions:{},mact:null,exams:{},want:{},lvSeen:0,photo:'',surv:null,attr:null,bonus:0,ins:null});
+const blank=()=>({done:{},visited:['start'],pos:'start',regions:{},medals:[],maps:[],verses:[],games:{},trivia:0,streak:0,best:0,rankId:null,items:{},gear:{own:[],eq:{}},missions:{},mact:null,exams:{},want:{},lvSeen:0,photo:'',surv:null,attr:null,bonus:0,ins:null,glow:null});
 const KEYS=Object.keys(blank());
 function serialize(p){const o={};KEYS.forEach(k=>o[k]=p[k]);return JSON.stringify(o);}
 function save(){
@@ -1053,7 +1053,7 @@ function resolve(ok,extra){
   save();
   const fb=document.createElement('div');fb.className='feedback';
   fb.innerHTML=`<div class="res ${ok?'ok':'bad'}"><span class="badge">${ok?'<svg width="22" height="22" viewBox="0 0 22 22"><path d="M5 11.5l4 4 8-9" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':'<svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 4v7M10 15v.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>'}</span><h3>${ok?(p.streak>=3?`¡Racha de ${p.streak}!`:'¡Correcto!'):'Casi'}</h3>${ok?`<span class="pts" id="ptsBadge">+${pts}</span>`:''}</div>${extra}<p>${esc(c.exp)}</p><span class="ref"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 2h4a1 1 0 0 1 1 1v8a1 1 0 0 0-1-1H1zM11 2H7a1 1 0 0 0-1 1v8a1 1 0 0 1 1-1h4z" fill="currentColor"/></svg>${esc(c.ref)}</span><button class="primary" id="cont">Seguir el camino</button>`;
-  $('#chal').appendChild(fb);vo(ok?'¡Correcto!':'Casi');vo(c.exp,'narrador',{queue:1});if(c.t==='verse'&&c.parts)vo(c.parts.map(x=>typeof x==='number'?c.blanks[x]:x).join(''),'narrador',{queue:1});
+  $('#chal').appendChild(fb);try{if(ok&&window.W3&&W3.glowAdd)W3.glowAdd(c.t==='verse'?3:2,'respuesta');}catch(e){}vo(ok?'¡Correcto!':'Casi');vo(c.exp,'narrador',{queue:1});if(c.t==='verse'&&c.parts)vo(c.parts.map(x=>typeof x==='number'?c.blanks[x]:x).join(''),'narrador',{queue:1});
   setTimeout(()=>{fb.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});if(ok)setTimeout(()=>{const b=$('#ptsBadge');if(!b)return;const r=b.getBoundingClientRect();sparks(r.left+r.width/2,r.top+r.height/2,30);floatText('+'+pts,r.left,r.top-6);},350);},120);
   $('#cont').onclick=()=>{closeStop();if(n.k==='n3')toast('El camino se bifurca. Elegí por dónde seguir.');else if(n.k==='n5')toast('¡Se abrió la puerta de la etapa!');};
 }
@@ -2517,7 +2517,7 @@ function openExam(r,onPass){
   const intro=()=>{box.innerHTML=`<div class="ex-card ex-intro"><div class="ex-seal">✦</div><small>Antes de seguir el camino</small><h2>Examen de la etapa<br><em>${esc(R.name)}</em></h2><p>Repasá todo lo que viviste en esta etapa. Son ${items.length} desafíos: preguntas, pasajes para completar, personajes para unir, una situación real para resolver y una reflexión personal.</p><p class="ex-note">Para pasar a la etapa siguiente necesitás ${need} respuestas correctas de ${graded}. Si no llegás, podés repasar y volver a intentarlo.</p><div class="ex-btns"><button class="ex-go">Empezar</button><button class="ex-later">Más tarde</button></div></div>`;
     box.querySelector('.ex-go').onclick=()=>show();box.querySelector('.ex-later').onclick=()=>{box.remove();refreshMap();};};
   const next=good=>{if(good===true)ok++;else if(good===false)wrong.push(items[i]);i++;i<items.length?show():end();};
-  const feedback=(card,good,x)=>{const f=document.createElement('div');f.className='ex-fb '+(good?'ok':'no');f.innerHTML=`<b>${good?'¡Correcto!':'No es esa'}</b><p>${esc(x.exp||'')}</p><small>${esc(x.ref||'')}</small><button class="ex-next">${i+1<items.length?'Siguiente':'Ver resultado'}</button>`;card.appendChild(f);vo(good?'¡Correcto!':'No es esa');vo(x.exp,'narrador',{queue:1});f.querySelector('.ex-next').onclick=()=>next(good);f.scrollIntoView({behavior:'smooth',block:'nearest'});};
+  const feedback=(card,good,x)=>{const f=document.createElement('div');f.className='ex-fb '+(good?'ok':'no');f.innerHTML=`<b>${good?'¡Correcto!':'No es esa'}</b><p>${esc(x.exp||'')}</p><small>${esc(x.ref||'')}</small><button class="ex-next">${i+1<items.length?'Siguiente':'Ver resultado'}</button>`;card.appendChild(f);try{if(good&&window.W3&&W3.glowAdd)W3.glowAdd(1,'examen');}catch(e){}vo(good?'¡Correcto!':'No es esa');vo(x.exp,'narrador',{queue:1});f.querySelector('.ex-next').onclick=()=>next(good);f.scrollIntoView({behavior:'smooth',block:'nearest'});};
   const show=()=>{const x=items[i];let h=head()+'<div class="ex-card">';const tag={mc:'Opción múltiple',tf:'Verdadero o falso',match:'Unir',verse:'Completá el pasaje',order:'Ordená',app:'Situación ministerial',reflect:'Reflexión personal'}[x.t];
     h+=`<span class="ex-tag t-${x.t}">${tag}</span><h3>${esc(x.q||'Completá el versículo')}</h3>`;
     if(x.t==='mc'||x.t==='app'){const o=shuf(x.o.map((t,k)=>({t,k})));h+='<div class="ex-opts">'+o.map(v=>`<button data-k="${v.k}">${esc(v.t)}</button>`).join('')+'</div>';}

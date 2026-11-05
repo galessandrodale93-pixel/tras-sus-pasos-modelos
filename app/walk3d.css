@@ -428,3 +428,18 @@ body:not(.v3on) .v3surv,body:has(#v3sheet:not([hidden])) .v3surv{display:none}
 .ins-ok{margin-left:auto;font-weight:900;color:#F2C14E}
 .inv:not(.hx) .ins-row{background:rgba(34,64,127,.06);border-color:rgba(34,64,127,.12)}
 .inv:not(.hx) .ins-row.on{background:linear-gradient(90deg,rgba(242,193,78,.25),rgba(255,255,255,.6))}
+/* Resplandor */
+.v3glow{position:fixed;z-index:6;right:max(70px,calc(env(safe-area-inset-right,0px) + 70px));bottom:calc(128px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:auto 1fr;align-items:center;gap:2px 8px;padding:6px 12px;border-radius:14px;background:rgba(10,14,26,.62);border:1px solid rgba(255,214,120,.35);color:#FFE6A8;font:800 12px/1.1 Nunito,system-ui,sans-serif;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:none}
+.v3glow b{font-size:15px;text-shadow:0 0 10px rgba(255,210,120,.8);grid-row:span 2}
+.v3glow span{opacity:.8;letter-spacing:.06em;text-transform:uppercase;font-size:10px}
+.v3glow i{display:block;height:4px;border-radius:3px;background:rgba(255,255,255,.15);overflow:hidden;min-width:70px}
+.v3glow em{display:block;height:100%;background:linear-gradient(90deg,#F2C14E,#FFF0B8)}
+body:not(.v3on) .v3glow,body:not(.v3on) .v3poses,body:not(.v3on) .v3photo{display:none}
+.v3poses{position:fixed;z-index:9;right:max(70px,calc(env(safe-area-inset-right,0px) + 70px));bottom:calc(180px + env(safe-area-inset-bottom,0px));display:grid;gap:6px;width:min(250px,calc(100vw - 100px));padding:12px;border-radius:18px;background:rgba(14,12,9,.88);border:1px solid rgba(255,214,120,.35);color:#F1D7A2;font:700 13px/1.25 Nunito,system-ui,sans-serif;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.v3poses b{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#FFD98A}
+.v3poses button{display:flex;align-items:center;gap:10px;text-align:left;padding:9px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#FFF4DC;font:800 14px Nunito,system-ui,sans-serif}
+.v3poses button span{font-size:18px}
+.v3poses small{opacity:.7;font-weight:600}
+.v3photo{position:fixed;z-index:9;left:50%;transform:translateX(-50%);bottom:calc(28px + env(safe-area-inset-bottom,0px));padding:12px 20px;border-radius:999px;border:1px solid rgba(255,214,120,.6);background:linear-gradient(135deg,#F7D27A,#E9A93A);color:#3A2606;font:900 15px Nunito,system-ui,sans-serif;box-shadow:0 10px 30px rgba(233,169,58,.45)}
+body.v3cine .v3joy,body.v3cine .v3surv,body.v3cine .v3mis{opacity:.15}
+body.v3cine .v3go,body.v3cine #v3go{opacity:0;pointer-events:none}

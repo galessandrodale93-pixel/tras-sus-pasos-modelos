@@ -441,7 +441,7 @@ const KL = {};
   S = { renderer, scene, camera, hx, av, markers, edgePts, allPts, items, joy: { x: 0, y: 0 }, keys: {}, flies, ground, yaw: Math.PI, camYaw: 0, camDist: 6.6, camPitch: .4, walking: false, moving: false, t: 0, root, cv, sig: '', onStop: g.P().pos, W: HW, uGrass, KL, zEnd: zMax };
   // orientar al personaje hacia la próxima parada
   buildPois(scene, pois, hx, HW, rng(77), ribbon); S.pois = pois; buildTowns(scene, g, hx, HW, pois); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; setTimeout(() => tutOpen(), 1500); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); }, 0);
-  S0 = S; insMigrate(); S.mis = buildMissions(scene, g, hx, HW); { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
+  S0 = S; insMigrate(); setTimeout(glowUI, 400); S.mis = buildMissions(scene, g, hx, HW); { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
   const nx = nextList()[0]; if (nx) { const N = g.NODES[nx], [bx, bz] = toV(N.x, N.y); S.yaw = Math.atan2(bx - ax, bz - az); }
   av.rotation.y = S.yaw;
   camera.position.set(ax - Math.sin(S.yaw) * 6.6, 3.3, az - Math.cos(S.yaw) * 6.6);
@@ -767,7 +767,7 @@ function misCarry(m, on) {
 }
 function misDone(m) {
   const p = misState(), d = m.d; p.missions[d.id] = true; p.mact = null; G().save(); G().refreshHud && G().refreshHud(); misCarry(m, false); if (m.ring) m.ring.visible = false; if (m.pick) m.pick.visible = false;
-  misPop('¡Misión cumplida! +' + MIS_PTS, d.done); tone3d(); try { const who = d.target || d.giver; G().vo(d.done, who.look && who.look.g === 'chica' ? 'mujer' : 'varon'); } catch (e) {} h3npcPlay(m.target || m.giver, ['M_Thankful', 'M_Cheering'], 3); if (m.target && m.giver) setTimeout(() => h3npcPlay(m.giver, ['M_Clapping', 'M_Thankful'], 2.5), 600);
+  misPop('¡Misión cumplida! +' + MIS_PTS, d.done); tone3d(); try { const who = d.target || d.giver; G().vo(d.done, who.look && who.look.g === 'chica' ? 'mujer' : 'varon'); } catch (e) {} glowAdd(10, 'mision'); h3npcPlay(m.target || m.giver, ['M_Thankful', 'M_Cheering'], 3); if (m.target && m.giver) setTimeout(() => h3npcPlay(m.giver, ['M_Clapping', 'M_Thankful'], 2.5), 600);
   if (Math.random() < .5) setTimeout(() => gearGive(gearRoll(), 'Recompensa de la misión'), 3400);
   if (S && S.hx) setTimeout(() => svMissionReward(d), 1800);
 }
@@ -1221,16 +1221,16 @@ function openMap() {
 
 /* ---------- movimientos: saltar, orar y saludar ---------- */
 function doJump() { if (!S || S.walking || sheetUp()) return; if (S.pose === 'pray') { S.pose = null; return; } if (S.jy > .01) return; S.jv = 6.2 * Math.sqrt(agiMul()); S.jy = .001; wake(); }
-function doPray() { if (!S || S.walking || sheetUp()) return; S.pose = S.pose === 'pray' ? null : 'pray'; S.prayT = 0; S.joy.x = 0; S.joy.y = 0; wake(); actUI(); }
-function doSit() { if (!S || S.walking || sheetUp() || !S.hx) return; if (S.pose === 'pray') S.pose = null; S.sit = !S.sit; S.joy.x = 0; S.joy.y = 0; wake(); actUI(); }
+function doPray() { if (!S || S.walking || sheetUp()) return; poseEnd(); S.pose = S.pose === 'pray' ? null : 'pray'; S.prayT = 0; S.joy.x = 0; S.joy.y = 0; wake(); actUI(); }
+function doSit() { if (!S || S.walking || sheetUp() || !S.hx) return; poseEnd(); if (S.pose === 'pray') S.pose = null; S.sit = !S.sit; S.joy.x = 0; S.joy.y = 0; wake(); actUI(); }
 function doWave() { if (!S || S.walking || sheetUp()) return; if (S.pose === 'pray') S.pose = null; S.waveT = 2.2; wake(); actUI(); }
 function actUI() { const b = document.querySelector('#v3acts [data-a="pray"]'); if (b) b.classList.toggle('on', S && S.pose === 'pray'); const bs = document.querySelector('#v3acts [data-a="sit"]'); if (bs) { bs.classList.toggle('on', !!(S && S.sit)); bs.hidden = !(S && S.hx); } document.body.classList.toggle('v3pray', !!(S && S.pose === 'pray')); }
 function wireActs() {
   let box = document.getElementById('v3acts');
   if (!box) { box = document.createElement('div'); box.id = 'v3acts'; box.className = 'v3acts';
-    box.innerHTML = '<button data-a="jump" aria-label="Saltar" title="Saltar (barra espaciadora)"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 4l7 7h-4v6H9v-6H5Z" fill="currentColor"/><path d="M6 21h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><button data-a="pray" aria-label="Arrodillarse a orar" title="Orar (tecla O)">🙏</button><button data-a="wave" aria-label="Saludar" title="Saludar (tecla H)">👋</button><button data-a="sit" aria-label="Sentarse" title="Sentarse (tecla X)">🪑</button><button data-a="room" aria-label="Jugar con amigos" title="Jugar con amigos">👥</button><button data-a="help" aria-label="Cómo se juega" title="Cómo se juega">❔</button>';
-    document.body.appendChild(box); box.querySelectorAll('button').forEach(b => b.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); ({ jump: doJump, pray: doPray, wave: doWave, sit: doSit, room: mpPanel, help: () => tutOpen(true) })[b.dataset.a](); }); }
-  addEventListener('keydown', e => { if (!S || document.getElementById('view3d').hidden || e.repeat || /INPUT|TEXTAREA/.test((e.target || {}).tagName || '')) return; const k = e.key.toLowerCase(); if (k === ' ') { e.preventDefault(); doJump(); } else if (k === 'o') doPray(); else if (k === 'h') doWave(); else if (k === 't' && MP.code) talkStart(); else if (k === 'e') svAct(); else if (k === 'c') svEat(); else if (k === 'b') svCraft(); });
+    box.innerHTML = '<button data-a="jump" aria-label="Saltar" title="Saltar (barra espaciadora)"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 4l7 7h-4v6H9v-6H5Z" fill="currentColor"/><path d="M6 21h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><button data-a="pray" aria-label="Arrodillarse a orar" title="Orar (tecla O)">🙏</button><button data-a="wave" aria-label="Saludar" title="Saludar (tecla H)">👋</button><button data-a="sit" aria-label="Sentarse" title="Sentarse (tecla X)">🪑</button><button data-a="glow" aria-label="Resplandor" title="Resplandor (tecla P)">🌟</button><button data-a="room" aria-label="Jugar con amigos" title="Jugar con amigos">👥</button><button data-a="help" aria-label="Cómo se juega" title="Cómo se juega">❔</button>';
+    document.body.appendChild(box); box.querySelectorAll('button').forEach(b => b.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); ({ jump: doJump, pray: doPray, wave: doWave, sit: doSit, glow: () => S && (S.hx ? poseMenu() : kidsShine()), room: mpPanel, help: () => tutOpen(true) })[b.dataset.a](); }); }
+  addEventListener('keydown', e => { if (!S || document.getElementById('view3d').hidden || e.repeat || /INPUT|TEXTAREA/.test((e.target || {}).tagName || '')) return; const k = e.key.toLowerCase(); if (k === ' ') { e.preventDefault(); doJump(); } else if (k === 'o') doPray(); else if (k === 'h') doWave(); else if (k === 't' && MP.code) talkStart(); else if (k === 'e') svAct(); else if (k === 'c') svEat(); else if (k === 'b') svCraft(); else if (k === 'p' && S) (S.hx ? poseMenu() : kidsShine()); });
   addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 't') talkStop(); }); addEventListener('blur', () => talkStop());
 }
 function lerpR(o, k, v, w) { o[k] += (v - o[k]) * w; }
@@ -1604,7 +1604,7 @@ function mpLeave(silent) {
 }
 function mpAdd(id, info) {
   if (!S || MP.players[id]) return; const hx = S.hx, rig = hx || H3.ok, av = rig ? buildHeroAvatar(info.avatar || {}) : buildAvatar(info.avatar || {}, false); av.traverse(o => { if (o.isPointLight) o.intensity = 2; if (o.isMesh && rig) o.castShadow = true; });
-  const tag = tagSprite(info.name, (info.avatar && info.avatar.ins) || [], hx); tag.scale.multiplyScalar(.42); tag.position.y = 2.55 * (av.userData.h3 ? av.userData.h3.tagK || 1 : 1); av.add(tag); if ((info.hum || 0) >= 10) av.add(humHalo()); av.position.copy(S.av.position); av.position.x += 1.5; S.scene.add(av);
+  const tag = tagSprite(info.name, (info.avatar && info.avatar.ins) || [], hx, (info.avatar && info.avatar.glow) || 0); tag.scale.multiplyScalar(.42); tag.position.y = 2.55 * (av.userData.h3 ? av.userData.h3.tagK || 1 : 1); av.add(tag); if ((info.hum || 0) >= 10) av.add(humHalo()); av.position.copy(S.av.position); av.position.x += 1.5; S.scene.add(av);
   if (TALK.stream) setTimeout(talkCallAll, 600);
   MP.players[id] = { info, av, tag, tgt: { x: av.position.x, y: 0, z: av.position.z, yaw: 0 }, st: { pose: null, waveT: 0, jy: 0 }, moving: false, bubble: null, bT: 0 };
 }
@@ -1751,7 +1751,7 @@ const GEAR = [
 ];
 const GBY = Object.fromEntries(GEAR.map(x => [x.id, x]));
 function gearState() { const p = G().P(); p.gear = p.gear || { own: [], eq: {} }; p.gear.own = p.gear.own || []; p.gear.eq = p.gear.eq || {}; return p.gear; }
-function lookOf(p) { const gs = p.gear || {}, eq = {}; for (const k in (gs.eq || {})) if (GBY[gs.eq[k]]) eq[k] = gs.eq[k]; return Object.assign({}, p.avatar || {}, { gear: eq, ins: Object.keys((p.ins && typeof p.ins === 'object') ? p.ins : {}).filter(k => CBY[k]) }); }
+function lookOf(p) { const gs = p.gear || {}, eq = {}; for (const k in (gs.eq || {})) if (GBY[gs.eq[k]]) eq[k] = gs.eq[k]; return Object.assign({}, p.avatar || {}, { gear: eq, ins: Object.keys((p.ins && typeof p.ins === 'object') ? p.ins : {}).filter(k => CBY[k]), glow: glowLv((p.glow && p.glow.pts) || 0) }); }
 function gearOn(av) { const o = {}, e = (av && av.gear) || {}; SLOTS.forEach(([s]) => { if (GBY[e[s]]) o[s] = GBY[e[s]]; }); return o; }
 function gearRoll() {
   const st = gearState(), left = GEAR.filter(x => !st.own.includes(x.id) && x.r !== 'u'); if (!left.length) return null;
@@ -2072,6 +2072,7 @@ function buildHero3(av) {
   const gl = new THREE.Mesh(new THREE.SphereGeometry(.034, 10, 8), new THREE.MeshBasicMaterial({ color: '#FFD27A' })); lamp.add(gl); const pl = new THREE.PointLight('#FFB45A', 5, 7, 1.6); lamp.add(pl); lamp.visible = !npc; o.add(lamp);
   const age = Math.max(12, Math.min(18, av.age || 16)); o.scale.setScalar(npc ? 1 : kid ? .74 + Math.max(0, Math.min(5, (av.age || 8) - 6)) * .02 : .9 + (age - 12) / 6 * .1);
   if (!npc || av.ins) insBelt(o, bones, av.ins || []);
+  if (av.glow) glowApply(o, av.glow);
   const mixer = new THREE.AnimationMixer(o), act = new Proxy({}, { get: (c, k) => c[k] || (typeof k === 'string' && H3.clips[k] ? (c[k] = mixer.clipAction(H3.clips[k])) : undefined) });
   const idleK = h3idleFor(av, npc); act[idleK].play(); mixer.update(Math.random() * 3);
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(.36, 24), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: .3, depthWrite: false })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .02; o.add(shadow);
@@ -2292,8 +2293,8 @@ function insBelt(o, bones, ins) {
   g.position.set(0, wp.y + .08, wp.z + .01); o.add(g); o.updateMatrixWorld(true); pv.attach(g); g.userData.belt = 1;
 }
 // cartel del nombre con los emblemas al lado (lo ven los demás en las salas)
-function tagSprite(name, ins, hx) {
-  const list = (ins || []).filter(id => CBY[id]); if (!list.length) return textSprite(name, hx);
+function tagSprite(name, ins, hx, glow) {
+  const list = (ins || []).filter(id => CBY[id]); if (hx && glow) name = name + '  ✦' + glow; if (!list.length) return textSprite(name, hx);
   const c = document.createElement('canvas'), x = c.getContext('2d'), f = 44; x.font = `800 ${f}px Nunito, Arial, sans-serif`;
   const tw = Math.ceil(x.measureText(name).width), ew = list.length * 58, w = tw + ew + 60; c.width = w; c.height = 76; x.font = `800 ${f}px Nunito, Arial, sans-serif`;
   x.fillStyle = hx ? 'rgba(14,12,9,.82)' : 'rgba(255,255,255,.9)'; const r = 30; x.beginPath(); x.moveTo(r, 4); x.arcTo(w - 4, 4, w - 4, 72, r); x.arcTo(w - 4, 72, 4, 72, r); x.arcTo(4, 72, 4, 4, r); x.arcTo(4, 4, w - 4, 4, r); x.fill();
@@ -2321,6 +2322,101 @@ function invCourses(body) {
     return `<div class="ins-row${d ? ' on' : ''}"><img alt="" src="${emblemURL(c.id, 72)}" width="44" height="44"><div><b>${esc(c.name)}</b><small>${d ? 'Terminado el ' + fmt(d.at) + (d.of ? ` · Exámenes ${d.ok}/${d.of} · ${d.pct}%` : '') : c.soon ? 'Próximamente' : 'Todavía no terminado'}</small></div>${d ? '<span class="ins-ok">✓</span>' : ''}</div>`; }).join('')}</div>`;
 }
 
+/* ---------- Resplandor: poses quietas, modo cinemático y la luz que crece con las buenas obras ----------
+   No es vanidad: es reflejar a Dios (como el rostro de Moisés que brillaba después de estar con el Señor, Éxodo 34)
+   y dejar que las buenas obras alumbren a otros (Mateo 5). Nada de bailes. */
+const POSES = [
+  { id: 'brazos', name: 'Brazos cruzados', ico: '🙅', clip: 'M_Idle' },
+  { id: 'capa', name: 'Capa al viento', ico: '🧣', clip: 'Idle_Loop', cape: 1 },
+  { id: 'horizonte', name: 'Mirar el horizonte', ico: '🌅', clip: 'M_Looking' },
+  { id: 'lampara', name: 'Levantar la lámpara', ico: '🪔', clip: 'Idle_Torch_Loop', lamp: 1 },
+  { id: 'espada', name: 'La espada del Espíritu', ico: '🗡️', clip: 'Sword_Idle', sword: 1, hx: 1 }];
+const GLW = { lvMax: 10 };
+function glowState() { const p = G().P(); if (!p.glow || typeof p.glow !== 'object') p.glow = { pts: 0 }; return p.glow; }
+const glowLv = pts => Math.min(GLW.lvMax, Math.floor(Math.sqrt(Math.max(0, pts) / 12)));
+function glowAdd(n, why) { try { const g = glowState(), before = glowLv(g.pts); g.pts = (g.pts || 0) + n; G().save(); const lv = glowLv(g.pts); glowUI(); if (lv > before && S) { if (S.hx) G().toast('✦ Tu resplandor creció: nivel ' + lv); glowApply(S.av, lv); if (MP.code) mpSend({ t: 'look', id: MP.peer && MP.peer.id, avatar: lookOf(G().P()) }); } } catch (e) {} }
+// halo de luz suave alrededor del personaje (lo ven todos en la sala)
+let _glowTex = null;
+function glowTex() { if (_glowTex) return _glowTex; const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 4, 64, 64, 62); g.addColorStop(0, 'rgba(255,244,200,1)'); g.addColorStop(.35, 'rgba(255,214,120,.55)'); g.addColorStop(1, 'rgba(255,200,90,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); _glowTex = new THREE.CanvasTexture(c); return _glowTex; }
+function glowApply(o, lv) {
+  if (!o) return; let g = o.userData.glow; const kid = G().branch !== 'ados';
+  if (!lv) { if (g) g.visible = false; return; }
+  if (!g) { g = new THREE.Group(); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })); sp.position.y = 1.05; g.add(sp); g.userData.sp = sp; const pl = new THREE.PointLight('#FFE2A0', 0, 5, 2); pl.position.y = 1.3; g.add(pl); g.userData.pl = pl; o.add(g); o.userData.glow = g; }
+  g.visible = true; const k = lv / GLW.lvMax; g.userData.sp.scale.setScalar(1.6 + k * 1.4); g.userData.sp.material.opacity = (kid ? .18 : .12) + k * .38; g.userData.pl.intensity = .4 + k * (kid ? 2 : 2.6); g.userData.lv = lv;
+}
+function glowUI() {
+  if (!S || !S.hx) return; let el = document.getElementById('v3glow'); if (!el) { el = document.createElement('div'); el.id = 'v3glow'; el.className = 'v3glow'; el.title = 'Resplandor: crece con misiones de servicio, compartir con quien lo necesita, respuestas correctas y versículos'; document.body.appendChild(el); }
+  const g = glowState(), lv = glowLv(g.pts), a = 12 * lv * lv, b = 12 * (lv + 1) * (lv + 1), pc = lv >= GLW.lvMax ? 100 : Math.round((g.pts - a) / (b - a) * 100);
+  el.innerHTML = `<b>✦ ${lv}</b><span>Resplandor</span><i><em style="width:${pc}%"></em></i>`; el.hidden = !!document.getElementById('view3d').hidden;
+}
+// capa: tela que flamea con el viento, colgada de la espalda
+function poseCape(o) {
+  const u = o.userData.h3; if (!u || u.cape) return u && u.cape; const B = u.bones; if (!B.spine_03) return null;
+  const geo = new THREE.PlaneGeometry(.62, 1.15, 6, 10); geo.translate(0, -.575, 0);
+  const m = new THREE.MeshStandardMaterial({ color: '#8E2E22', roughness: .85, side: THREE.DoubleSide }); m.onBeforeCompile = sh => { sh.uniforms.uT = PH.uT; sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nfloat k=-position.y/1.15;transformed.z-=k*k*.55+sin(uT*3.2+position.y*5.+position.x*3.)*.09*k;transformed.x+=sin(uT*2.1+position.y*4.)*.04*k;'); };
+  const c = new THREE.Mesh(geo, m); c.castShadow = true; o.updateMatrixWorld(true); const w = new THREE.Vector3(); B.spine_03.getWorldPosition(w); o.worldToLocal(w); c.position.set(0, w.y + .08, w.z - .14); c.rotation.x = .12; o.add(c); B.spine_03.attach(c); c.visible = false; u.cape = c; return c;
+}
+// espada sencilla (la Palabra de Dios es la espada del Espíritu, Efesios 6)
+function poseSword(o) {
+  const u = o.userData.h3; if (!u || u.sword) return u && u.sword; const B = u.bones; if (!B.hand_r) return null; const g = new THREE.Group();
+  const steel = new THREE.MeshStandardMaterial({ color: '#D8DCE2', metalness: .85, roughness: .25 }), gold = new THREE.MeshStandardMaterial({ color: '#D9A93E', metalness: .8, roughness: .35 });
+  const bl = new THREE.Mesh(new THREE.BoxGeometry(.035, .78, .012), steel); bl.position.y = .47; g.add(bl); const gd = new THREE.Mesh(new THREE.BoxGeometry(.2, .03, .04), gold); gd.position.y = .07; g.add(gd); const hd = new THREE.Mesh(new THREE.CylinderGeometry(.016, .016, .13, 8), new THREE.MeshStandardMaterial({ color: '#4A3020', roughness: .8 })); g.add(hd);
+  g.scale.setScalar(1 / Math.max(.5, o.scale.x)); B.hand_r.add(g); g.rotation.set(0, 0, Math.PI / 2); g.visible = false; u.sword = g; return g;
+}
+const POSE = { cine: 0, rays: null, menu: null };
+function poseSet(id) {
+  if (!S || S.walking) return; const P0 = POSES.find(p => p.id === id); if (S.pose === 'pray') S.pose = null; S.sit = false;
+  S.poseK = P0 ? id : null; S.poseT = 0; S.joy.x = 0; S.joy.y = 0; const u = S.av.userData.h3;
+  if (u) { const c = poseCape(S.av), sw = poseSword(S.av); if (c) c.visible = !!(P0 && P0.cape); if (sw) sw.visible = !!(P0 && P0.sword); u.poseLamp = !!(P0 && P0.lamp); }
+  if (P0) { S.actK = H3.clips && H3.clips[P0.clip] ? P0.clip : 'Idle_Loop'; S.actT = 9999; S.actO = 0; S.actS = 1; } else { S.actT = 0; }
+  poseMenu(false); wake(); actUI();
+}
+function poseEnd() { if (!S || !S.poseK) return; poseOff(); S.poseK = null; S.actT = 0; POSE.cine = 0; const u = S.av.userData.h3; if (u) { if (u.cape) u.cape.visible = false; if (u.sword) u.sword.visible = false; u.poseLamp = false; } cineUI(false); }
+function poseMenu(show) {
+  let el = POSE.menu; if (!el) { el = document.createElement('div'); el.className = 'v3poses'; el.hidden = true; document.body.appendChild(el); POSE.menu = el; }
+  if (show === undefined) show = el.hidden; if (!show) { el.hidden = true; return; }
+  const list = POSES.filter(p => !p.hx || S.hx); el.innerHTML = `<b>Resplandor · elegí una pose</b>${list.map(p => `<button data-p="${p.id}"><span>${p.ico}</span>${p.name}</button>`).join('')}<small>Quedate quieto unos segundos y la cámara te rodea. La luz que tenés crece con tus buenas obras.</small>`;
+  el.querySelectorAll('[data-p]').forEach(b => b.onclick = () => poseSet(b.dataset.p)); el.hidden = false;
+}
+// Kids: un solo botón que brilla con chispas
+function kidsShine() { if (!S || S.walking) return; poseSet('lampara'); S.shineT = 4.5; sparkBurst(); setTimeout(() => { if (S && S.poseK === 'lampara') poseEnd(); }, 4600); }
+let _spk = null;
+function sparkTex() { if (_spk) return _spk; const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.25, 'rgba(255,240,200,.8)'); g.addColorStop(1, 'rgba(255,220,150,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); x.fillStyle = 'rgba(255,255,255,.9)'; x.fillRect(30, 4, 4, 56); x.fillRect(4, 30, 56, 4); _spk = new THREE.CanvasTexture(c); return _spk; }
+function sparkBurst() {
+  if (!S) return; const n = 70, pos = new Float32Array(n * 3), vel = []; for (let i = 0; i < n; i++) { pos.set([0, 1.2, 0], i * 3); const a = Math.random() * 6.28, up = .6 + Math.random() * 1.6, r = .4 + Math.random() * .9; vel.push([Math.cos(a) * r, up, Math.sin(a) * r]); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); const m = new THREE.PointsMaterial({ color: '#FFE38A', size: .16, map: sparkTex(), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+  const p = new THREE.Points(g, m); p.position.copy(S.av.position); S.scene.add(p); let t = 0; const tick = () => { t += .016; const a = g.attributes.position; for (let i = 0; i < n; i++) { a.array[i * 3] += vel[i][0] * .016; a.array[i * 3 + 1] += (vel[i][1] - t * 1.4) * .016; a.array[i * 3 + 2] += vel[i][2] * .016; } a.needsUpdate = true; m.opacity = Math.max(0, 1 - t / 2.4); if (t < 2.4 && S) requestAnimationFrame(tick); else { S && S.scene.remove(p); g.dispose(); m.dispose(); } }; requestAnimationFrame(tick);
+  glowApply(S.av, Math.max(4, glowLv(glowState().pts))); setTimeout(() => S && glowApply(S.av, glowLv(glowState().pts)), 4500);
+}
+// rayos de luz que bajan del cielo cuando la pose se sostiene
+function cineRays(on) {
+  if (!S) return; if (!POSE.rays) { const g = new THREE.Group(), ac = document.createElement('canvas'); ac.width = 4; ac.height = 64; const ax = ac.getContext('2d'), ag = ax.createLinearGradient(0, 0, 0, 64); ag.addColorStop(0, '#000'); ag.addColorStop(.25, '#fff'); ag.addColorStop(.75, '#888'); ag.addColorStop(1, '#000'); ax.fillStyle = ag; ax.fillRect(0, 0, 4, 64);
+    const m = new THREE.MeshBasicMaterial({ color: '#FFE9B8', alphaMap: new THREE.CanvasTexture(ac), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.FrontSide, toneMapped: false });
+    for (let i = 0; i < 4; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(.18 + i * .04, .7 + i * .15, 14, 16, 1, true), m); c.position.set((i - 1.5) * .45, 7, (i % 2 - .5) * .6); c.rotation.z = -.2 + i * .03; g.add(c); } g.userData.m = m; S.scene.add(g); POSE.rays = g; }
+  POSE.rays.userData.want = on ? .05 : 0;
+}
+function cineUI(on) {
+  let b = document.getElementById('v3photo'); if (!b) { b = document.createElement('button'); b.id = 'v3photo'; b.className = 'v3photo'; b.textContent = '📸 Foto épica'; b.onclick = cinePhoto; document.body.appendChild(b); }
+  b.hidden = !on || !S || !S.hx; document.body.classList.toggle('v3cine', !!on);
+}
+function cinePhoto() {
+  const nm = 'resplandor-' + (G().P().name || 'heroe').replace(/[^\wáéíóúñ]+/gi, '-') + '.jpg', fail = () => G().toast('No se pudo guardar la foto en este aparato');
+  const save = url => { const a = document.createElement('a'); a.href = url; a.download = nm; document.body.appendChild(a); a.click(); a.remove(); G().toast('📸 Guardaste tu foto épica'); };
+  try { S.renderer.render(S.scene, S.camera);
+    if (S.cv.toBlob) S.cv.toBlob(b => { if (!b) return fail(); const u = URL.createObjectURL(b); save(u); setTimeout(() => URL.revokeObjectURL(u), 8000); }, 'image/jpeg', .92);
+    else save(S.cv.toDataURL('image/jpeg', .92)); } catch (e) { fail(); }
+}
+function cineSting() { try { if (!AU.ctx || !AU.on) return; const t = AU.ctx.currentTime + .05; [62, 66, 69, 74].forEach((m, i) => play('harp', m, t + i * .09, .16, 3, AU.adv)); play('horn', 62, t + .35, .24, 2.6, AU.adv, .9); play('horn', 69, t + .35, .18, 2.6, AU.adv, .9); } catch (e) {} }
+function poseTick(dt) {
+  if (!S) return; if (POSE.rays) { const m = POSE.rays.userData.m; m.opacity += ((POSE.rays.userData.want || 0) - m.opacity) * Math.min(1, dt * 1.5); POSE.rays.visible = m.opacity > .003; POSE.rays.position.set(S.av.position.x, S.av.position.y, S.av.position.z); }
+  if (!S.poseK) return; if (S.moving || S.freeMoving || S.walking || (S.jy || 0) > .02) { poseEnd(); return; }
+  S.poseT += dt; const u = S.av.userData.h3;
+  if (S.poseK === 'brazos' && u) { const B = u.bones, w = Math.min(1, S.poseT * 3); h3aim(S.av, B, 'upperarm_r', 'lowerarm_r', -.18, -.82, .5, w); h3aim(S.av, B, 'lowerarm_r', 'hand_r', .95, .2, .25, w); h3aim(S.av, B, 'upperarm_l', 'lowerarm_l', .18, -.82, .5, w); h3aim(S.av, B, 'lowerarm_l', 'hand_l', -.95, .28, .3, w); }
+  if (S.poseT > 3 && !POSE.cine && S.hx) { POSE.cine = 1; S.cineKeep = { d: S.camDist, p: S.camPitch }; cineRays(true); cineSting(); cineUI(true); }
+  if (POSE.cine) { S.camYaw += dt * .28; S.camDist += (4.2 - S.camDist) * Math.min(1, dt); S.camPitch += (.16 - S.camPitch) * Math.min(1, dt); if (u) u.mixer.timeScale = .6; }
+}
+function poseOff() { if (POSE.cine) { POSE.cine = 0; cineRays(false); cineUI(false); if (S && S.cineKeep) { S.camDist = S.cineKeep.d; S.camPitch = S.cineKeep.p; } } const u = S && S.av.userData.h3; if (u) u.mixer.timeScale = 1; }
+
 /* ---------- caminar libre ---------- */
 function nearestPath(x, z) { let d = Infinity; for (const p of S.allPts) { const q = (p[0] - x) ** 2 + (p[1] - z) ** 2; if (q < d) d = q; } return Math.sqrt(d); }
 /* mundo abierto: se puede caminar por todo el terreno; las historias de cada etapa siguen en orden */
@@ -2344,7 +2440,7 @@ function freeWalk(dt) {
   if (sheetUp()) { S.joy.x = 0; S.joy.y = 0; return; }
   let jx = S.joy.x, jy = S.joy.y; const k = S.keys;
   if (k.ArrowUp || k.w) jy -= 1; if (k.ArrowDown || k.s) jy += 1; if (k.ArrowLeft || k.a) jx -= 1; if (k.ArrowRight || k.d) jx += 1;
-  const mag = Math.min(1, Math.hypot(jx, jy)); if (mag >= .12 && S.pose === 'pray') { S.pose = null; actUI(); } if (mag >= .12 && S.sit) { S.sit = false; actUI(); } S.fullT = mag > .96 ? (S.fullT || 0) + dt : 0; S.sprint = !!S.hx && (!!k.Shift || S.fullT > 1.2); if (mag < .12) { if (S.freeMoving) { S.freeMoving = false; snapToStop(); } return; }
+  const mag = Math.min(1, Math.hypot(jx, jy)); if (mag >= .12 && S.pose === 'pray') { S.pose = null; actUI(); } if (mag >= .12 && S.sit) { S.sit = false; actUI(); } if (mag >= .12 && S.poseK) poseEnd(); S.fullT = mag > .96 ? (S.fullT || 0) + dt : 0; S.sprint = !!S.hx && (!!k.Shift || S.fullT > 1.2); if (mag < .12) { if (S.freeMoving) { S.freeMoving = false; snapToStop(); } return; }
   const C = S.yaw + S.camYaw, fx = Math.sin(C), fz = Math.cos(C), rx = -Math.cos(C), rz = Math.sin(C);
   let mx = fx * -jy + rx * jx, mz = fz * -jy + rz * jx; const ml = Math.hypot(mx, mz) || 1; mx /= ml; mz /= ml;
   const sp = 5 * mag * dt * agiMul() * (S.sprint ? 1.55 : 1), a = S.av.position, fr = frontier(), z0 = 6;
@@ -2411,7 +2507,7 @@ function loop(now) {
   if (!S) return;
   const root = S.root; if (!root || root.hidden || root.closest('main').hidden || document.hidden) return;
   const t = now / 1000, dt = Math.min(.05, (now - (S.last || now)) / 1000); S.last = now; S.t = t;
-  freeWalk(dt); refresh(); phTick(dt); animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt);
+  freeWalk(dt); refresh(); phTick(dt); animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt);
   for (const [id, m] of Object.entries(S.items)) {
     if (m.userData.gone) { m.userData.gone += dt; const k = m.userData.gone / .5; m.scale.setScalar(1 + k); m.position.y += dt * 2; m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = Math.max(0, 1 - k); } }); if (k >= 1) { S.scene.remove(m); delete S.items[id]; } continue; }
     m.rotation.y = t * 1.6; m.position.y = (m.userData.by || 0) + .85 + Math.sin(t * 2.4 + id.length) * .12;
@@ -3064,8 +3160,8 @@ function svGive(bg) {
     ${opts.length ? `<div class="x-list">${opts.map(([k, n], i) => `<button data-i="${i}">${RES[k][1]} Dar ${n} ${RES[k][0].toLowerCase()}</button>`).join('')}</div>` : '<p class="sv-tip">No tenés dinero ni comida para dar. Podés vender algo en el mercado o recoger granadas.</p>'}
     <p class="sv-tip">Jesús enseñó que lo que hacemos por el que tiene hambre, lo hacemos por él (Mateo 25:35-40).</p></div>`;
   el.hidden = false; el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
-  el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const [k, n] = opts[+b.dataset.i]; if ((s.inv[k] || 0) < n) return; svAdd(k, -n); a.alms[bg.id] = day; const mult = servV() >= 25 ? 2 : 1; svXP((k === 'money' ? 4 + n * 2 : 10) * mult); servAdd(1); h3do(['M_Reaching_Out', 'PickUp_Table'], 2.6, 1.2); h3npcPlay(bg.o, ['M_Thankful', 'M_Lengthy_Head_Nod'], 3); tone3d(); svUI();
+  el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const [k, n] = opts[+b.dataset.i]; if ((s.inv[k] || 0) < n) return; svAdd(k, -n); a.alms[bg.id] = day; const mult = servV() >= 25 ? 2 : 1; svXP((k === 'money' ? 4 + n * 2 : 10) * mult); servAdd(1); glowAdd(8, 'compartir'); h3do(['M_Reaching_Out', 'PickUp_Table'], 2.6, 1.2); h3npcPlay(bg.o, ['M_Thankful', 'M_Lengthy_Head_Nod'], 3); tone3d(); svUI();
     el.innerHTML = `<div class="inv hx sv-sheet sv-faint"><h3>¡Gracias! Que Dios te bendiga.</h3><p>Tu Servicio creció a <b>${atP().serv}</b> y ganaste experiencia.</p><p class="sv-verse">El que ayuda al pobre le presta al Señor, y él se lo va a recompensar (Proverbios 19:17).</p><button class="sv-up">Seguir el camino</button></div>`; el.querySelector('.sv-up').onclick = () => { el.hidden = true; }; });
 }
 
-window.W3 = { enter, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
+window.W3 = { enter, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
