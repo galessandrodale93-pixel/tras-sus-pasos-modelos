@@ -122,7 +122,7 @@ function island(w,i){
 }
 var box=document.getElementById('worlds');
 if(box){
-  box.innerHTML=W_.map(function(w,i){return '<article class="world '+(w.on?'on':'off')+'">'+island(w,i)+'<h3>'+w.t+'</h3><p>'+w.s+'</p><span class="st">'+(w.on?'Disponible':'Próximamente')+'</span></article>';}).join('');
+  box.innerHTML=W_.map(function(w,i){return '<article class="world '+(w.on?'on':'off')+'">'+island(w,i)+'<h3>'+w.t+'</h3><p>'+w.s+'</p><span class="st">'+(w.on?'Muy pronto':'Próximamente')+'</span></article>';}).join('');
   var first=box.querySelector('.world.on');
   if(first){first.setAttribute('data-play','kids');first.style.cursor='pointer';}
 }
