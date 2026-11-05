@@ -1609,12 +1609,12 @@ function mpPanel() {
   const list = [`<li>${esc(meInfo().name)} <small>(vos${MP.host ? ', creaste la sala' : ''})</small></li>`].concat(Object.values(MP.players).map(p => `<li>${esc(p.info.name)}</li>`)).join('');
   el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>Sala ${MP.code}</b><span>${1 + Object.keys(MP.players).length} de 5 personas</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
     <div class="r-big">${MP.code}</div><ul class="r-list">${list}</ul>
-    <div class="x-acts"><button class="r-esp1">⚔️ Espaldeo mano a mano</button><button class="r-espA">📖 Espaldeo todos contra todos</button>${S.hx ? '<button class="r-trade">🤝 Intercambiar o regalar</button><button class="r-gift">🙏 Dar un punto (humildad)</button>' : ''}</div>
+    <div class="x-acts"><button class="r-esp1">⚔️ Espadeo mano a mano</button><button class="r-espA">📖 Espadeo todos contra todos</button><button class="r-quien">🕵️ ¿Quién soy?</button><button class="r-cad">🔗 Versículo en cadena</button><button class="r-race">🏁 Carrera a un lugar</button>${S.hx ? '<button class="r-trade">🤝 Intercambiar o regalar</button><button class="r-gift">🙏 Dar un punto (humildad)</button>' : ''}</div>
     <div class="mis-btns"><button class="mis-yes r-share">📨 Invitar con el link</button><button class="mis-no r-leave">Salir de la sala</button></div>
-    <p class="cap-note">Mandá el link solo a personas que conocés. Para hablar mantené apretado 🎙️${matchMedia('(pointer: coarse)').matches ? '' : ' o la tecla T'}; al soltar se apaga el micrófono. ${MP.host ? 'Si salís, la sala se cierra para todos.' : ''}</p></div>`;
+    <p class="cap-note">🙏 Si se arrodillan a orar juntos, cerca, reciben una bendición una vez por día.</p><p class="cap-note">Mandá el link solo a personas que conocés. Para hablar mantené apretado 🎙️${matchMedia('(pointer: coarse)').matches ? '' : ' o la tecla T'}; al soltar se apaga el micrófono. ${MP.host ? 'Si salís, la sala se cierra para todos.' : ''}</p></div>`;
   el.hidden = false; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   el.querySelector('.r-leave').onclick = () => { close(); mpLeave(); };
-  el.querySelector('.r-esp1').onclick = () => espStart('1v1'); el.querySelector('.r-espA').onclick = () => espStart('all'); if (S.hx) { el.querySelector('.r-trade').onclick = xTrade; el.querySelector('.r-gift').onclick = xGift; }
+  el.querySelector('.r-esp1').onclick = () => espStart('1v1'); el.querySelector('.r-espA').onclick = () => espStart('all'); el.querySelector('.r-quien').onclick = () => gmInvite('quien', '¿Quién soy?'); el.querySelector('.r-cad').onclick = () => gmInvite('cadena', 'Versículo en cadena'); el.querySelector('.r-race').onclick = () => gmInvite('carrera', 'Carrera a un lugar'); if (S.hx) { el.querySelector('.r-trade').onclick = xTrade; el.querySelector('.r-gift').onclick = xGift; }
   el.querySelector('.r-share').onclick = async () => { const url = roomLink(), text = `¡Sumate a mi sala en Tras Sus Pasos! Código ${MP.code}`; try { if (navigator.share) { await navigator.share({ title: 'Tras Sus Pasos', text, url }); return; } } catch (e) { if (e && e.name === 'AbortError') return; } try { await navigator.clipboard.writeText(text + ' ' + url); G().toast('Link copiado. Pegalo en WhatsApp para invitar.'); } catch (e) { G().toast(url); } };
 }
 function mpAuto() { let j = null; try { j = sessionStorage.getItem('tsp:join'); sessionStorage.removeItem('tsp:join'); } catch (e) {} if (j) setTimeout(() => mpJoin(j), 800); }
@@ -2170,7 +2170,7 @@ function loop(now) {
   if (window.__camFix) { const f = window.__camFix; S.camera.position.set(...f.p); S.camera.lookAt(...f.l); }
   fxWatch(now); if (S.W) { const u = S.W.sky.material.uniforms; u.inv.value = S.fx ? 1 : 0; u.ex.value = S.renderer.toneMappingExposure; }
   if (S.fx) S.fx.render(dt); else S.renderer.render(S.scene, S.camera);
-  idle(dt); misTick(t); voiceTick(dt); wpTick(t); mpTick(t, dt); dayTick(dt); gearDropTick(dt, t); doorTick(t); h3npcTick(dt); roomTick(dt); survTick(dt, t);
+  idle(dt); misTick(t); voiceTick(dt); wpTick(t); mpTick(t, dt); dayTick(dt); gearDropTick(dt, t); doorTick(t); h3npcTick(dt); roomTick(dt); survTick(dt, t); prayTogetherTick(dt);
 }
 
 /* ---------- cuando el jugador se queda quieto ---------- */
@@ -2520,7 +2520,7 @@ function invAttr(body) {
 
 
 /* =====================================================================
-   SALA: intercambio, humildad y espaldeo bíblico
+   SALA: intercambio, humildad y espadeo bíblico
    Mensajes { t:'x', k, to?, id } que el anfitrión reenvía al destinatario (o a todos).
    ===================================================================== */
 const HUM = { DAYMAX: 3 };
@@ -2534,6 +2534,7 @@ function mpX(m) {
   if (m.k === 'offerNo') { const s = svP(); Object.entries(m.give || {}).forEach(([k, n]) => svAdd(k, n)); G().save(); svUI && svUI(); G().toast(pName(m.id) + ' no aceptó el intercambio. Te devolvimos tus cosas.'); return; }
   if (m.k === 'gift') return xGiftIn(m);
   if (m.k === 'esp') return espIn(m);
+  if (m.k === 'g') return gmIn(m);
   if (m.k === 'share' && svOn() && !S.down && (S.av.position.x - m.x) ** 2 + (S.av.position.z - m.z) ** 2 < 100) { const s = svP(); s.sat = Math.min(SV.FULL, s.sat + 300); G().save(); svUI(); G().toast('🍞 ' + m.by + ' compartió su comida: +5 minutos de alimento.'); }
 }
 function playerPick(title, onPick) {
@@ -2587,12 +2588,12 @@ const HUM_PERKS = [
   [5, 'Lo que no se pierde', 'Por cada 5 de humildad, un objeto más que nunca se pierde si te quedás sin fuerzas.'],
   [10, 'Siervo de todos', 'Una luz dorada te acompaña y todos en la sala la ven.'],
   [20, 'Sandalias del siervo', 'Una prenda única, que nunca se pierde: recuerda que Jesús lavó los pies de sus discípulos (Juan 13:14-15).'],
-  [30, 'Primero los demás', 'En el espaldeo bíblico ganás el doble de puntos de experiencia.']
+  [30, 'Primero los demás', 'En el espadeo bíblico ganás el doble de puntos de experiencia.']
 ];
 function humV() { return svOn() ? (atP().hum || 0) : 0; }
 function humCheck() { const h = humV(); if (h >= 20 && GBY['siervo'] && !gearState().own.includes('siervo')) gearGive(GBY['siervo'], 'Por tu humildad'); }
 
-/* ---------- espaldeo bíblico: preguntas rápidas, 1 contra 1 o todos contra todos ---------- */
+/* ---------- espadeo bíblico: preguntas rápidas, 1 contra 1 o todos contra todos ---------- */
 const ESP = { on: null };
 function espPool() { const E = G().EXAMS || {}, out = []; G().REGIONS.forEach(R => (E[R.id] || []).forEach(q => { if (q.t === 'mc') out.push({ q: q.q, o: q.o.slice(), a: q.a, exp: q.exp, ref: q.ref }); else if (q.t === 'tf') out.push({ q: q.q, o: ['Verdadero', 'Falso'], a: q.a ? 0 : 1, exp: q.exp, ref: q.ref }); })); return out; }
 function espStart(mode) {
@@ -2603,14 +2604,14 @@ function espStart(mode) {
     espSheet(`<p class="sv-tip">Esperando que acepten… (10 segundos)</p>`); setTimeout(() => { const E = ESP.on; if (!E || !E.host) return; if (E.who.length < 2) { ESP.on = null; espSheet('<p class="sv-tip">Nadie aceptó esta vez. Probá de nuevo en un ratito.</p>', true); return; } espNext(); }, 10000); };
   if (mode === '1v1') playerPick('¿A quién desafiás?', id => go(id)); else go(null);
 }
-function espSheet(html, closable) { const el = document.getElementById('v3sheet'); el.innerHTML = `<div class="inv${S.hx ? ' hx' : ''} esp"><div class="inv-h"><b>Espaldeo bíblico</b>${closable ? '<button class="bag-x" aria-label="Cerrar">✕</button>' : ''}</div>${html}</div>`; el.hidden = false; el.onclick = null; const x = el.querySelector('.bag-x'); if (x) x.onclick = () => { el.hidden = true; }; return el; }
+function espSheet(html, closable) { const el = document.getElementById('v3sheet'); el.innerHTML = `<div class="inv${S.hx ? ' hx' : ''} esp"><div class="inv-h"><b>Espadeo bíblico</b>${closable ? '<button class="bag-x" aria-label="Cerrar">✕</button>' : ''}</div>${html}</div>`; el.hidden = false; el.onclick = null; const x = el.querySelector('.bag-x'); if (x) x.onclick = () => { el.hidden = true; }; return el; }
 function espTo(m) { ESP.on.who.forEach(id => { if (id !== myId()) xSend(Object.assign({}, m, { to: id })); }); espIn(Object.assign({ id: myId() }, m)); }
 function espNext() { const E = ESP.on; E.n++; if (E.n >= E.qs.length) { espTo({ k: 'esp', ev: 'end', score: E.score, names: Object.fromEntries(E.who.map(id => [id, pName(id)])) }); return; } E.ans = {}; espTo({ k: 'esp', ev: 'q', i: E.n, tot: E.qs.length, q: E.qs[E.n].q, o: E.qs[E.n].o }); E.timer = setTimeout(espReveal, 15500); }
 function espReveal() { const E = ESP.on; if (!E || !E.host || E.revealed === E.n) return; E.revealed = E.n; clearTimeout(E.timer); const Q = E.qs[E.n]; const right = Object.entries(E.ans).filter(([, v]) => v.a === Q.a).sort((x, y) => x[1].ms - y[1].ms);
   right.forEach(([id], i) => { E.score[id] = (E.score[id] || 0) + (i === 0 ? 3 : 2); });
   espTo({ k: 'esp', ev: 'res', a: Q.a, exp: Q.exp, ref: Q.ref, first: right[0] ? pName(right[0][0]) : null, score: E.score, names: Object.fromEntries(E.who.map(id => [id, pName(id)])) }); setTimeout(espNext, 5500); }
 function espIn(m) {
-  if (m.ev === 'inv') { const el = espSheet(`<p class="sv-tip"><b>${esc(pName(m.id))}</b> te invita a un espaldeo bíblico ${m.mode === '1v1' ? 'mano a mano' : 'de todos contra todos'}: ${m.n} preguntas, gana quien responde bien y primero.</p><div class="sv-row"><button class="x-ok">¡Juego!</button><button class="x-no">Ahora no</button></div>`);
+  if (m.ev === 'inv') { const el = espSheet(`<p class="sv-tip"><b>${esc(pName(m.id))}</b> te invita a un espadeo bíblico ${m.mode === '1v1' ? 'mano a mano' : 'de todos contra todos'}: ${m.n} preguntas, gana quien responde bien y primero.</p><div class="sv-row"><button class="x-ok">¡Juego!</button><button class="x-no">Ahora no</button></div>`);
     el.querySelector('.x-ok').onclick = () => { ESP.on = { host: false, from: m.id }; xSend({ k: 'esp', ev: 'yes', to: m.id }); espSheet('<p class="sv-tip">¡Listo! Esperando la primera pregunta…</p>'); }; el.querySelector('.x-no').onclick = () => { document.getElementById('v3sheet').hidden = true; }; return; }
   if (m.ev === 'yes' && ESP.on && ESP.on.host && ESP.on.n < 0) { if (!ESP.on.who.includes(m.id)) { ESP.on.who.push(m.id); ESP.on.score[m.id] = 0; } return; }
   if (m.ev === 'ans' && ESP.on && ESP.on.host) { if (m.i === ESP.on.n && !ESP.on.ans[m.id]) { ESP.on.ans[m.id] = { a: m.a, ms: m.ms }; if (ESP.on.who.every(id => ESP.on.ans[id])) espReveal(); } return; }
@@ -2619,7 +2620,95 @@ function espIn(m) {
     el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { if (done) return; done = true; b.classList.add('pick'); const msg = { k: 'esp', ev: 'ans', i: m.i, a: +b.dataset.i, ms: performance.now() - t0 }; if (ESP.on && ESP.on.host) espIn(Object.assign({ id: myId() }, msg)); else xSend(Object.assign({ to: ESP.on && ESP.on.from }, msg)); }); return; }
   if (m.ev === 'res') { const el = document.getElementById('v3sheet'); el.querySelectorAll('.esp-o button').forEach((b, i) => { b.disabled = true; b.classList.toggle('ok', i === m.a); }); const box = document.createElement('div'); box.className = 'esp-exp'; box.innerHTML = `${m.first ? `<p><b>${esc(m.first)}</b> respondió bien primero.</p>` : '<p>Nadie acertó esta vez.</p>'}<p>${esc(m.exp || '')}</p><p class="esp-ref">${esc(m.ref || '')}</p>`; el.querySelector('.esp') && el.querySelector('.esp').appendChild(box); return; }
   if (m.ev === 'end') { const rows = Object.entries(m.score).sort((a, b) => b[1] - a[1]); const mine = m.score[myId()] || 0, xp = mine * 4 * (humV() >= 30 ? 2 : 1); const p = G().P(); p.bonus = (p.bonus || 0) + xp; G().save(); G().refreshHud && G().refreshHud(); ESP.on = null;
-    espSheet(`<p class="sv-tip">¡Terminó el espaldeo! Cada respuesta te ayuda a conocer más la Palabra.</p><ol class="esp-rank">${rows.map(([id, n]) => `<li><span>${esc(m.names[id] || 'Alguien')}</span><b>${n}</b></li>`).join('')}</ol><p class="sv-tip">Ganaste <b>${xp}</b> puntos de experiencia.</p>`, true); return; }
+    espSheet(`<p class="sv-tip">¡Terminó el espadeo! Cada respuesta te ayuda a conocer más la Palabra.</p><ol class="esp-rank">${rows.map(([id, n]) => `<li><span>${esc(m.names[id] || 'Alguien')}</span><b>${n}</b></li>`).join('')}</ol><p class="sv-tip">Ganaste <b>${xp}</b> puntos de experiencia.</p>`, true); return; }
 }
 
-window.W3 = { enter, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool }, openBag, gearGive: id => gearGive(GBY[id], id === 'tsp' ? 'Terminaste el curso' : 'Regalo'), GEAR, reLook };
+
+/* =====================================================================
+   MÁS JUEGOS EN LA SALA
+   ¿Quién soy? (carrera de pistas) · Versículo en cadena (en equipo) · Carrera a un lugar · Orar juntos
+   El que invita hace de anfitrión del juego; los demás aceptan la invitación.
+   ===================================================================== */
+const QUIEN = [
+  ['Zaqueo', ['Cobraba impuestos en Jericó', 'Era bajito', 'Se subió a un árbol para ver a Jesús', 'Devolvió lo que había robado'], 'Lucas 19:1-10'],
+  ['Pedro', ['Era pescador en Galilea', 'Caminó sobre el agua un momento', 'Negó a Jesús tres veces', 'Jesús resucitado le pidió que cuidara a sus ovejas'], 'Mateo 14:28-29 · Juan 21:15-17'],
+  ['María, la madre de Jesús', ['Vivía en Nazaret', 'Un ángel le dio una noticia', 'Dio a luz en Belén', 'Estuvo al pie de la cruz'], 'Lucas 1–2 · Juan 19:25'],
+  ['Juan el Bautista', ['Vivía en el desierto', 'Comía langostas y miel silvestre', 'Preparó el camino del Señor', 'Bautizó a Jesús en el Jordán'], 'Mateo 3'],
+  ['Bartimeo', ['Era ciego', 'Pedía limosna junto al camino de Jericó', 'Gritó más fuerte cuando lo mandaron callar', 'Jesús le devolvió la vista'], 'Marcos 10:46-52'],
+  ['Simón de Cirene', ['Venía del campo', 'Estaba en Jerusalén para la Pascua', 'Los soldados lo obligaron a ayudar', 'Llevó la cruz detrás de Jesús'], 'Lucas 23:26'],
+  ['La mujer samaritana', ['Fue a buscar agua al mediodía', 'Habló con Jesús junto a un pozo', 'Jesús le habló del agua viva', 'Corrió a contarle a su pueblo'], 'Juan 4'],
+  ['Nicodemo', ['Era fariseo y maestro', 'Fue a ver a Jesús de noche', 'Jesús le habló de nacer de nuevo', 'Llevó especias para la sepultura de Jesús'], 'Juan 3 · Juan 19:39'],
+  ['José de Arimatea', ['Era un hombre rico', 'Era miembro del concilio', 'Le pidió a Pilato el cuerpo de Jesús', 'Lo puso en una tumba nueva'], 'Mateo 27:57-60'],
+  ['Lázaro', ['Vivía en Betania', 'Tenía dos hermanas, Marta y María', 'Jesús lloró cerca de su tumba', 'Salió vivo de la tumba'], 'Juan 11'],
+  ['Simeón', ['Vivía en Jerusalén', 'Esperaba al Mesías', 'El Espíritu le prometió que lo vería', 'Tomó al bebé Jesús en brazos en el templo'], 'Lucas 2:25-35'],
+  ['Marta', ['Vivía en Betania', 'Estaba muy ocupada atendiendo', 'Se quejó de que su hermana no la ayudaba', 'Jesús le dijo que su hermana eligió lo mejor'], 'Lucas 10:38-42'],
+  ['Mateo', ['Cobraba impuestos', 'Estaba sentado en su puesto de trabajo', 'Jesús lo llamó a seguirlo', 'Hizo una comida con Jesús en su casa'], 'Mateo 9:9-10'],
+  ['Pilato', ['Era gobernador romano', 'Interrogó a Jesús', 'No encontró delito en él', 'Se lavó las manos delante de la gente'], 'Mateo 27:11-24']
+];
+const GM = { on: null };
+function gmInvite(game, label, setup) {
+  const ids = Object.keys(MP.players); if (!ids.length) { G().toast('Hace falta al menos otra persona en la sala.'); return; }
+  GM.on = Object.assign({ host: true, game, who: [myId()], score: { [myId()]: 0 }, started: false }, setup || {});
+  ids.forEach(id => xSend({ k: 'g', ev: 'inv', to: id, game, label }));
+  gmSheet(`<p class="sv-tip">Invitaste a la sala a <b>${esc(label)}</b>. Esperando que acepten… (10 segundos)</p>`);
+  setTimeout(() => { const E = GM.on; if (!E || !E.host || E.started) return; if (E.who.length < 2) { GM.on = null; gmSheet('<p class="sv-tip">Nadie aceptó esta vez. Probá en un ratito.</p>', true); return; } E.started = true; GMH[game].start(E); }, 10000);
+}
+function gmSheet(html, closable, title) { const el = document.getElementById('v3sheet'); el.innerHTML = `<div class="inv${S.hx ? ' hx' : ''} esp"><div class="inv-h"><b>${esc(title || 'Juegos en la sala')}</b>${closable ? '<button class="bag-x" aria-label="Cerrar">✕</button>' : ''}</div>${html}</div>`; el.hidden = false; el.onclick = null; const x = el.querySelector('.bag-x'); if (x) x.onclick = () => { el.hidden = true; }; return el; }
+function gmTo(m) { m.k = 'g'; GM.on.who.forEach(id => { if (id !== myId()) xSend(Object.assign({}, m, { to: id })); }); gmIn(Object.assign({ id: myId() }, m)); }
+function gmUp(m) { m.k = 'g'; if (GM.on && GM.on.host) gmIn(Object.assign({ id: myId() }, m)); else xSend(Object.assign({ to: GM.on && GM.on.from }, m)); }
+function gmXP(n) { const p = G().P(); p.bonus = (p.bonus || 0) + n; G().save(); G().refreshHud && G().refreshHud(); }
+function gmRank(score, names) { return `<ol class="esp-rank">${Object.entries(score).sort((a, b) => b[1] - a[1]).map(([id, n]) => `<li><span>${esc(names[id] || 'Alguien')}</span><b>${n}</b></li>`).join('')}</ol>`; }
+function gmNames() { return Object.fromEntries(GM.on.who.map(id => [id, pName(id)])); }
+function gmIn(m) {
+  if (m.ev === 'inv') { const el = gmSheet(`<p class="sv-tip"><b>${esc(pName(m.id))}</b> te invita a jugar <b>${esc(m.label)}</b>.</p><div class="sv-row"><button class="x-ok">¡Juego!</button><button class="x-no">Ahora no</button></div>`);
+    el.querySelector('.x-ok').onclick = () => { GM.on = { host: false, from: m.id, game: m.game }; xSend({ k: 'g', ev: 'yes', to: m.id }); gmSheet('<p class="sv-tip">¡Listo! Esperando que empiece…</p>'); }; el.querySelector('.x-no').onclick = () => { document.getElementById('v3sheet').hidden = true; }; return; }
+  if (m.ev === 'yes' && GM.on && GM.on.host && !GM.on.started) { if (!GM.on.who.includes(m.id)) { GM.on.who.push(m.id); GM.on.score[m.id] = 0; } return; }
+  const H = GMH[(GM.on && GM.on.game) || m.game]; if (H) H.on(m);
+}
+const GMH = {
+  /* ¿Quién soy? las pistas aparecen de a una: cuanto antes adivinás, más sumás */
+  quien: {
+    start(E) { E.rounds = QUIEN.slice().sort(() => Math.random() - .5).slice(0, 5); E.r = -1; this.next(E); },
+    next(E) { E.r++; if (E.r >= E.rounds.length) { gmTo({ ev: 'end', score: E.score, names: gmNames() }); return; } const [who, clues, ref] = E.rounds[E.r], opts = [who].concat(QUIEN.filter(q => q[0] !== who).sort(() => Math.random() - .5).slice(0, 3).map(q => q[0])).sort(() => Math.random() - .5);
+      E.cur = { who, ref, clues, k: 1, out: {}, won: null }; gmTo({ ev: 'q', i: E.r, tot: E.rounds.length, opts, clues: clues.slice(0, 1) }); E.tm = setInterval(() => { const c = E.cur; if (c.won) return; c.k++; if (c.k > 4) { clearInterval(E.tm); this.reveal(E); return; } gmTo({ ev: 'clue', clues: c.clues.slice(0, c.k) }); }, 6000); },
+    reveal(E) { clearInterval(E.tm); const c = E.cur; gmTo({ ev: 'res', who: c.who, ref: c.ref, first: c.won ? pName(c.won) : null, score: E.score, names: gmNames() }); setTimeout(() => this.next(E), 5000); },
+    on(m) { const E = GM.on;
+      if (m.ev === 'q' || m.ev === 'clue') { if (m.ev === 'q') { E.mine = null; E.opts = m.opts; E.i = m.i; E.tot = m.tot; } const el = gmSheet(`<div class="esp-top"><span>Personaje ${E.i + 1} de ${E.tot}</span></div><h3 class="esp-q">¿Quién soy?</h3><ol class="qs-clues">${m.clues.map(c => `<li>${esc(c)}</li>`).join('')}</ol><div class="esp-o">${E.opts.map(o => `<button data-o="${esc(o)}" ${E.mine ? 'disabled' : ''} class="${E.mine === o ? 'pick' : ''}">${esc(o)}</button>`).join('')}</div>`, false, '¿Quién soy?');
+        el.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { if (E.mine) return; E.mine = b.dataset.o; el.querySelectorAll('[data-o]').forEach(x => { x.disabled = true; }); b.classList.add('pick'); gmUp({ ev: 'guess', o: E.mine }); }); return; }
+      if (m.ev === 'guess' && E.host) { const c = E.cur; if (!c || c.out[m.id]) return; c.out[m.id] = 1; if (m.o === c.who) { E.score[m.id] = (E.score[m.id] || 0) + (c.won ? 1 : 5 - c.k); if (!c.won) c.won = m.id; } if (E.who.every(id => c.out[id])) this.reveal(E); return; }
+      if (m.ev === 'res') { const el = document.getElementById('v3sheet'); el.querySelectorAll('[data-o]').forEach(b => b.classList.toggle('ok', b.dataset.o === m.who)); const box = document.createElement('div'); box.className = 'esp-exp'; box.innerHTML = `<p>Era <b>${esc(m.who)}</b>. ${m.first ? esc(m.first) + ' lo adivinó primero.' : 'Nadie lo adivinó.'}</p><p class="esp-ref">Leelo en ${esc(m.ref)}</p>`; el.querySelector('.esp').appendChild(box); return; }
+      if (m.ev === 'end') { const xp = (m.score[myId()] || 0) * 4; gmXP(xp); GM.on = null; gmSheet(`<p class="sv-tip">¡Terminó ¿Quién soy?! Ahora conocés mejor a las personas que se encontraron con Jesús.</p>${gmRank(m.score, m.names)}<p class="sv-tip">Ganaste <b>${xp}</b> puntos de experiencia.</p>`, true, '¿Quién soy?'); } }
+  },
+  /* Versículo en cadena: en equipo, cada uno a su turno toca la palabra que sigue */
+  cadena: {
+    start(E) { const vs = []; G().REGIONS.forEach(R => ((G().EXAMS || {})[R.id] || []).forEach(q => { if (q.t === 'verse') vs.push({ txt: q.parts.map(x => typeof x === 'number' ? q.blanks[x] : x).join('').replace(/\s+/g, ' ').trim(), ref: q.ref }); }));
+      E.vs = vs.filter(v => v.txt.split(' ').length <= 22).sort(() => Math.random() - .5).slice(0, 3); E.v = -1; E.errs = 0; E.turn = 0; this.next(E); },
+    next(E) { E.v++; if (E.v >= E.vs.length) { gmTo({ ev: 'end', errs: E.errs, n: E.vs.length }); return; } const w = E.vs[E.v].txt.split(' '); E.words = w; E.done = 0; E.bank = w.map((t, i) => ({ i, t })).sort(() => Math.random() - .5); this.push(E); },
+    push(E) { gmTo({ ev: 'st', v: E.v, tot: E.vs.length, bank: E.bank.map(b => ({ i: b.i, t: b.t, u: b.i < E.done })), done: E.words.slice(0, E.done).join(' '), turn: E.who[E.turn % E.who.length], tname: pName(E.who[E.turn % E.who.length]), errs: E.errs, ref: E.done >= E.words.length ? E.vs[E.v].ref : null }); },
+    on(m) { const E = GM.on;
+      if (m.ev === 'st') { const mine = m.turn === myId() && !m.ref; const el = gmSheet(`<div class="esp-top"><span>Versículo ${m.v + 1} de ${m.tot} · errores del equipo: ${m.errs}</span></div><p class="vc-done">${esc(m.done) || '<i>Empiecen por la primera palabra…</i>'}</p>${m.ref ? `<p class="esp-ref">${esc(m.ref)} · ¡Lo armaron juntos!</p>` : `<p class="sv-tip">${mine ? '<b>¡Es tu turno!</b> Tocá la palabra que sigue.' : 'Turno de <b>' + esc(m.tname) + '</b>.'}</p>`}<div class="vc-bank">${m.bank.map(b => `<button data-i="${b.i}" ${b.u || !mine ? 'disabled' : ''} class="${b.u ? 'used' : ''}">${esc(b.t)}</button>`).join('')}</div>`, false, 'Versículo en cadena');
+        el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { gmUp({ ev: 'pick', i: +b.dataset.i }); el.querySelectorAll('[data-i]').forEach(x => { x.disabled = true; }); }); return; }
+      if (m.ev === 'pick' && E.host) { if (m.id !== E.who[E.turn % E.who.length]) return; const want = E.words[E.done], got = E.bank.find(b => b.i === m.i); if (got && (got.i === E.done || got.t === want)) { if (got.i !== E.done) { const real = E.bank.find(b => b.i === E.done); real.i = got.i; got.i = E.done; } E.done++; } else E.errs++; E.turn++; this.push(E); if (E.done >= E.words.length) setTimeout(() => this.next(E), 4500); return; }
+      if (m.ev === 'end') { const xp = Math.max(10, 40 * m.n - m.errs * 5); gmXP(xp); GM.on = null; gmSheet(`<p class="sv-tip">¡Armaron ${m.n} versículos en equipo! Repetir la Palabra juntos ayuda a guardarla en el corazón.</p><p class="sv-tip">Errores del equipo: ${m.errs}. Cada uno ganó <b>${xp}</b> puntos de experiencia.</p>`, true, 'Versículo en cadena'); } }
+  },
+  /* Carrera a un lugar: todos ven el destino con la flecha del piso */
+  carrera: {
+    start(E) { const g = G(), ok = (S.pois || []).filter(q => q.k !== 'river' && regionOpen(q.r)), a = S.av.position; const near = ok.filter(q => Math.hypot(q.x - a.x, q.z - a.z) > 30 && Math.hypot(q.x - a.x, q.z - a.z) < 220); const q = (near.length ? near : ok)[Math.floor(Math.random() * (near.length || ok.length))]; if (!q) { GM.on = null; G().toast('No hay un lugar para correr.'); return; }
+      E.goal = q; E.arr = {}; gmTo({ ev: 'go', x: q.x, z: q.z, name: q.name }); E.tm = setTimeout(() => this.finish(E), 150000); },
+    finish(E) { if (E.fin) return; E.fin = 1; clearTimeout(E.tm); const order = Object.entries(E.arr).sort((a, b) => a[1] - b[1]); order.forEach(([id], i) => { E.score[id] = [5, 3, 2][i] || 1; }); gmTo({ ev: 'end', score: E.score, names: gmNames(), name: E.goal.name, trade: E.goal.k }); },
+    on(m) { const E = GM.on;
+      if (m.ev === 'go') { E.goal = { x: m.x, z: m.z, name: m.name }; E.t0 = performance.now(); E.sent = 0; S.wp = { x: m.x, z: m.z, name: m.name }; wpSync(); document.getElementById('v3sheet').hidden = true; G().toast('🏁 ¡Carrera hasta ' + m.name + '! Seguí la flecha del piso.'); clearInterval(E.ck); E.ck = setInterval(() => { if (!GM.on || E.sent) { clearInterval(E.ck); return; } const a = S.av.position; if (Math.hypot(a.x - m.x, a.z - m.z) < 9) { E.sent = 1; clearInterval(E.ck); gmUp({ ev: 'arr', ms: performance.now() - E.t0 }); G().toast('¡Llegaste a ' + m.name + '! Esperá a los demás.'); } }, 300); return; }
+      if (m.ev === 'arr' && E.host) { if (E.arr[m.id] == null) E.arr[m.id] = m.ms; if (E.who.every(id => E.arr[id] != null)) this.finish(E); return; }
+      if (m.ev === 'end') { const xp = (m.score[myId()] || 0) * 4; gmXP(xp); GM.on = null; gmSheet(`<p class="sv-tip">Carrera hasta <b>${esc(m.name)}</b>.</p>${gmRank(m.score, m.names)}<p class="sv-tip">Ganaste <b>${xp}</b> puntos de experiencia. Mirá la tarjeta del lugar para saber qué pasó ahí.</p>`, true, 'Carrera'); } }
+  }
+};
+/* Orar juntos: si dos o más de la sala se arrodillan cerca, reciben una bendición (una vez por día de juego) */
+function prayTogetherTick(dt) {
+  if (!S || !MP.code || S.pose !== 'pray') { if (S) S.prayTog = 0; return; }
+  const a = S.av.position, near = Object.values(MP.players).filter(p => p.st.pose === 'pray' && (p.av.position.x - a.x) ** 2 + (p.av.position.z - a.z) ** 2 < 100).length;
+  if (!near) { S.prayTog = 0; return; } S.prayTog = (S.prayTog || 0) + dt; if (S.prayTog < 6) return;
+  const p = G().P(), day = Math.floor(((p.surv && p.surv.play) || 0) / 900) + ':' + new Date().toDateString(); if (p.prayDay === day) return; p.prayDay = day; gmXP(30);
+  misPop('Oración en grupo · +30', 'Jesús prometió estar presente donde dos o tres se reúnen en su nombre (Mateo 18:20).');
+}
+
+window.W3 = { enter, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM }, openBag, gearGive: id => gearGive(GBY[id], id === 'tsp' ? 'Terminaste el curso' : 'Regalo'), GEAR, reLook };

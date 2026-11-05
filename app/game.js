@@ -2269,6 +2269,7 @@ cruz:[
 };
 function openExam(r,onPass){
   const R=REGIONS[r],E=EXAMS[R.id];if(!E){onPass();return;}
+  {const need=humNeed(r),have=(P().attr&&P().attr.hum)||0;if(need>have){const g=document.createElement('div');g.className='exam hx';g.innerHTML=`<div class="ex-card ex-hum"><small>Examen de etapa · ${esc(R.name)}</small><h3>Este examen pide Humildad ${need}</h3><p>Tenés ${have}. La humildad crece solo dando: invitá a un amigo a una sala y regalale un punto de alguno de tus atributos. Jesús enseñó que el más grande es el que sirve a los demás.</p><p class="ex-ref">Mateo 23:11</p><div class="ex-btns"><button class="ex-room">👥 Invitar a un amigo</button><button class="ex-later">Más tarde</button></div></div>`;document.body.appendChild(g);g.querySelector('.ex-later').onclick=()=>g.remove();g.querySelector('.ex-room').onclick=()=>{g.remove();try{window.W3&&W3.room&&W3.room();}catch(e){}};return;}}
   const p=P(),items=E.map(x=>x),graded=items.filter(x=>x.t!=='reflect').length,need=Math.ceil(graded*(branch==='kids'?.6:.7));
   let i=0,ok=0,wrong=[],reflect='';
   const box=document.createElement('div');box.className='exam'+(branch==='ados'?' hx':'');document.body.appendChild(box);
@@ -2543,10 +2544,12 @@ const LEARN=[
  ['🤝','Misiones de servicio','Ayudan a personajes bíblicos: llevar el pan, buscar la oveja perdida, orar en el huerto. Aprenden a servir haciendo.'],
  ['🪵','Oficios y supervivencia (Hero)','Pescan, talan, cocinan y construyen su casa con las herramientas de la época. Si no se alimentan, no pueden seguir: cuidar el cuerpo también es parte del camino.'],
  ['🌱','Virtudes que crecen (Hero)','Al subir de nivel reparten puntos en Fuerza, Paciencia, Dominio propio, Sabiduría y Generosidad. La Humildad solo crece dando a otros.'],
- ['⚔️','Espaldeo bíblico con amigos','En salas privadas compiten a ver quién responde bien y primero. Después de cada pregunta, todos leen la explicación y el pasaje.'],
+ ['⚔️','Espadeo bíblico con amigos','En salas privadas compiten a ver quién responde bien y primero. Después de cada pregunta, todos leen la explicación y el pasaje.'],
  ['🏅','Progreso que se nota','Niveles, medallas, recuerdos y una prenda única para quienes terminan el curso. Los puntos se suman de un curso a otro.'],
  ['🛡️','Un lugar cuidado','Las salas son privadas y solo entra quien tiene el código. Cada chico juega con su propio perfil.']];
 function hubLearn(){const st=document.querySelector('#hubView .stage');if(!st||document.getElementById('learn'))return;st.insertAdjacentHTML('afterend',`<section class="learn" id="learn"><div class="wrap"><span class="why-k">Cómo se aprende jugando</span><h2>Cada juego es una puerta a <em>la Palabra</em></h2><p class="learn-l">Todo está pensado para que salgan sabiendo más de la Biblia: historias, versículos, preguntas y desafíos que se repasan una y otra vez mientras juegan.</p><div class="learn-g">${LEARN.map(([i,t,d])=>`<article><span class="learn-i" aria-hidden="true">${i}</span><b>${t}</b><p>${d}</p></article>`).join('')}</div></div></section>`);}
+/* Hero: desde la etapa 4, los exámenes piden algo de humildad (sale de la zona de confort: invitar a un amigo y dar) */
+function humNeed(r){return branch==='ados'&&r>=3?Math.floor((r-1)/2):0;}
 /* prenda única del curso: solo para quien termina todas las etapas (cuando ya no quedan etapas por venir) */
 function courseDone(){const p=P(),ex=p.exams||{};if(SOON.length||!REGIONS.every(R=>ex[R.id]&&ex[R.id].passed))return;setTimeout(()=>{try{window.W3&&W3.gearGive&&W3.gearGive('tsp');}catch(e){}},2500);}
 window.GAME={NODES,EDGES,ADJ,REGIONS,VIGN,TOP,RH,WIDTH,get branch(){return branch},level:()=>lvOf(total(P())),EXAMS,P,reachable,visited,isDone,bfs,arrive,save,toast,refreshHud,syncMap(){refreshMap();const n=NODES[P().pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));}};
