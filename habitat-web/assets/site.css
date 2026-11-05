@@ -295,3 +295,8 @@ section[id]{scroll-margin-top:140px}
 .foot .ver{margin-top:0;padding-top:26px;border-top:1px solid rgba(246,240,228,.12);font-size:1.15rem;line-height:1.55;max-width:28ch}
 .foot .ver span{display:block;margin-top:12px;font:600 .66rem/1 var(--sans);letter-spacing:.3em;text-transform:uppercase;font-style:normal;color:var(--gold-2)}
 .book .word-s{letter-spacing:.06em}
+
+/* menú en una sola línea */
+.nav-main{align-items:center}
+.nav-main>a,.nav .dd>.ddt{display:inline-flex;align-items:center;height:38px;padding:0 12px;line-height:1}
+.dd{display:flex;align-items:center}
