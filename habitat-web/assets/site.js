@@ -7,5 +7,6 @@
   var els=document.querySelectorAll('.rv');
   if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12,rootMargin:'0px 0px -40px 0px'});els.forEach(function(el){io.observe(el);});}
   else els.forEach(function(el){el.classList.add('in');});
+  var v=document.querySelector('.bgv');if(v&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)){v.src=window.innerWidth>900?v.dataset.hd:v.dataset.sd;v.addEventListener('playing',function(){v.classList.add('on');});var p=v.play();if(p&&p.catch)p.catch(function(){});}
   var y=document.getElementById('yr');if(y)y.textContent=new Date().getFullYear();
 })();
