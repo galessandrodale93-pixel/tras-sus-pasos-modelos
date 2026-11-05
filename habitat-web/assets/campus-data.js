@@ -1,7 +1,7 @@
 /* Campus Habitat · datos reales del alumno (Programas Online de la web de Habitat). Requiere /assets/auth.js */
 (function () {
   var A = window.HabitatAuth;
-  var FN = 'https://www.habitat-cfm.org/_functions/video';
+  var FN = '/api/video';
   var MEDIA = 'https://static.wixstatic.com/media/';
 
   function img(id, w, h) {
