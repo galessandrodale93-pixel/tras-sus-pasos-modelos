@@ -61,5 +61,14 @@
 <div class="bt"><span>© <span id="yr">2026</span> Habitat · Centro de Formación Ministerial</span><span>Hecho con amor para Su presencia</span></div>
 </div></footer>
 <script src="/assets/site.js"></script>
-</body>
+<script src="/assets/auth.js"></script>
+<script>
+(async function(){var A=window.HabitatAuth;if(!A.loggedIn())return;
+try{var r=await A.api('GET','/members/v1/members/my?fieldsets=FULL');var m=r.member||{};var c=m.contact||{};var n=c.firstName||(m.profile&&m.profile.nickname)||'';
+ var h=document.querySelector('.cx-hero h1 em');if(h&&n)h.textContent=n;
+ var hi=document.querySelector('.cx-hero .hi');if(hi){var b=document.createElement('button');b.type='button';b.className='out';b.textContent='Cerrar sesión';b.onclick=function(){A.logout();};hi.appendChild(b);}
+ window.__member=m;
+}catch(e){console.log('campus',e.status,e.body);}
+})();
+</script></body>
 </html>
