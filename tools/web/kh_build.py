@@ -225,6 +225,7 @@ body{{margin:0;font-family:Nunito,system-ui,sans-serif;-webkit-font-smoothing:an
 .hbx-cg .im::after{{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,11,28,0) 40%,rgba(9,11,28,.55))}}
 .hbx-cg .im .st{{z-index:1}}
 .hbx-split{{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:26px}}
+.hbx-col p,.hbx-col.hero p,.hbx-col.kids p{{max-width:none;margin:0}}
 .hbx-col{{display:grid;gap:14px;align-content:start;padding:20px;border-radius:24px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08)}}
 .hbx-col.kids{{background:linear-gradient(160deg,rgba(91,141,239,.14),rgba(255,176,137,.08))}}
 .hbx-col.hero{{background:linear-gradient(160deg,rgba(226,172,85,.12),rgba(59,31,74,.18))}}

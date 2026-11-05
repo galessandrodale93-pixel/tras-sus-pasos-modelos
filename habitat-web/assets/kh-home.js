@@ -94,12 +94,12 @@ window.LAMP={kid:kid,cloud:cloud,spark:spark};
 /* ===== Mundos flotantes ===== */
 var W_=[
  {k:'jesus',t:'La vida de Jesús',s:'Del pesebre al Jordán',on:1},
+ {k:'hechos',t:'Hechos',s:'El fuego de Pentecostés'},
+ {k:'apoc',t:'Maranata',s:'¡Cristo viene!'},
  {k:'genesis',t:'Génesis',s:'El principio de todo'},
  {k:'exodo',t:'Éxodo',s:'El mar se abre'},
  {k:'david',t:'David',s:'Del campo al trono'},
- {k:'daniel',t:'Daniel',s:'Fe en Babilonia'},
- {k:'hechos',t:'Hechos',s:'El fuego de Pentecostés'},
- {k:'apoc',t:'Apocalipsis',s:'El Rey que vuelve'}
+ {k:'daniel',t:'Daniel',s:'Fe en Babilonia'}
 ];
 function land(k){
   if(k==='jesus')return '<path d="M70 64 Q110 40 150 64Z" fill="#A27447"/><rect x="76" y="64" width="68" height="34" fill="#4A3A66"/><rect x="74" y="64" width="5" height="34" fill="#7E5634"/><rect x="141" y="64" width="5" height="34" fill="#7E5634"/><circle cx="110" cy="86" r="16" fill="#FFE9A8" opacity=".7"/><path d="M98 90 h24 l-4 8 h-16z" fill="#C38E58"/>'+spark(110,26,6,'#FFE39A')+'<path d="M110 30 L92 64 L128 64Z" fill="#FFF3C4" opacity=".25"/>';

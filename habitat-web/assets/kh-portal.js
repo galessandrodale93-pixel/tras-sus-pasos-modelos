@@ -166,12 +166,12 @@ var SIG={
 };
 var EXP=[
   {k:'jesus',n:'I',t:'Tras Sus Pasos',s:'La vida de Jesús, de Belén a la tumba vacía.',on:1},
-  {k:'genesis',n:'II',t:'El Origen',s:'Génesis: la luz, el jardín y la promesa.'},
-  {k:'exodo',n:'III',t:'El Éxodo',s:'Un pueblo libre cruzando el mar.'},
-  {k:'david',n:'IV',t:'El Rey Pastor',s:'David, de las ovejas al trono.'},
-  {k:'daniel',n:'V',t:'Fieles en Babilonia',s:'Daniel y sus amigos frente al imperio.'},
-  {k:'hechos',n:'VI',t:'Fuego',s:'Hechos: la iglesia que salió a la calle.'},
-  {k:'apoc',n:'VII',t:'El Final',s:'Apocalipsis: todo se hace nuevo.'}
+  {k:'hechos',n:'II',t:'Fuego',s:'Hechos: la iglesia que salió a la calle.'},
+  {k:'apoc',n:'III',t:'Maranata',s:'¡Cristo viene! Apocalipsis contado para adolescentes.'},
+  {k:'genesis',n:'IV',t:'El Origen',s:'Génesis: la luz, el jardín y la promesa.'},
+  {k:'exodo',n:'V',t:'El Éxodo',s:'Un pueblo libre cruzando el mar.'},
+  {k:'david',n:'VI',t:'El Rey Pastor',s:'David, de las ovejas al trono.'},
+  {k:'daniel',n:'VII',t:'Fieles en Babilonia',s:'Daniel y sus amigos frente al imperio.'}
 ];
 var box=document.getElementById('adosExp');
 if(box){box.innerHTML=EXP.map(function(e){return '<article class="ex '+(e.on?'on':'off')+'"'+(e.on?' data-play="ados"':'')+'><svg class="sig" viewBox="0 0 120 120" aria-hidden="true">'+SIG[e.k]+'</svg><span class="n">Expedición '+e.n+'</span><b>'+e.t+'</b><span>'+e.s+'</span><span class="st">'+(e.on?'Abierta':'Sellada')+'</span></article>';}).join('');}

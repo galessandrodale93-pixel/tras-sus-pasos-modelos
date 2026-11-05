@@ -59,22 +59,22 @@ function scene(k){
   // pinturas de fondo por expedición (gradientes, sin fotos externas)
   var S={
     jesus:"url('"+IMG_S+"') 64% 30%/cover",
-    genesis:'radial-gradient(60% 40% at 50% 20%,rgba(255,236,170,.55),transparent),linear-gradient(180deg,#2E3B1E,#141A0D 60%,#0B0907)',
-    exodo:'radial-gradient(70% 30% at 50% 18%,rgba(120,180,220,.4),transparent),linear-gradient(180deg,#1D3346,#3A2F22 55%,#0B0907)',
-    david:'radial-gradient(50% 30% at 70% 20%,rgba(255,200,120,.45),transparent),linear-gradient(180deg,#3B2A18,#22180F 60%,#0B0907)',
-    daniel:'radial-gradient(50% 35% at 50% 25%,rgba(255,150,60,.45),transparent),linear-gradient(180deg,#2A1A12,#1A110B 60%,#0B0907)',
-    hechos:'radial-gradient(45% 35% at 50% 22%,rgba(255,120,50,.55),transparent),linear-gradient(180deg,#2B140E,#160C08 60%,#0B0907)',
-    apoc:'radial-gradient(55% 35% at 50% 20%,rgba(220,200,255,.4),transparent),linear-gradient(180deg,#1A1630,#100D1C 60%,#0B0907)'
+    genesis:"url('https://static.wixstatic.com/media/43ca3b_381edc8e4ac54b50a607c1c4412da369~mv2.png/v1/fill/w_640,h_860,al_c,q_82/e.jpg') center/cover",
+    exodo:"url('https://static.wixstatic.com/media/43ca3b_10454b8b8e1b4e0e9f5e177c06c1e13a~mv2.png/v1/fill/w_640,h_860,al_c,q_82/e.jpg') center/cover",
+    david:"url('https://static.wixstatic.com/media/43ca3b_3b6bc9afaa844f79af14003e253e0716~mv2.png/v1/fill/w_640,h_860,al_c,q_82/e.jpg') center/cover",
+    daniel:"url('https://static.wixstatic.com/media/43ca3b_4f8bfa7877244031822cad7d4ce7be8f~mv2.png/v1/fill/w_640,h_860,al_c,q_82/e.jpg') center/cover",
+    hechos:"url('https://static.wixstatic.com/media/43ca3b_f35d178b971a42c09527b4e8523f6d25~mv2.png/v1/fill/w_640,h_860,al_c,q_82/e.jpg') center/cover",
+    apoc:"url('https://static.wixstatic.com/media/43ca3b_810adf3b57cf45b394ad1f6e88501d70~mv2.png/v1/fill/w_640,h_860,al_c,q_82/e.jpg') center/cover"
   };return S[k];
 }
 var EXP=[
   {k:'jesus',n:'I',t:'Tras Sus Pasos',s:'La vida de Jesús, de Belén a la tumba vacía.',on:1},
-  {k:'genesis',n:'II',t:'El Origen',s:'Génesis: la luz, el jardín y la promesa.'},
-  {k:'exodo',n:'III',t:'El Éxodo',s:'Un pueblo libre cruzando el mar.'},
-  {k:'david',n:'IV',t:'El Rey Pastor',s:'David, de las ovejas al trono.'},
-  {k:'daniel',n:'V',t:'Fieles en Babilonia',s:'Daniel y sus amigos frente al imperio.'},
-  {k:'hechos',n:'VI',t:'Fuego',s:'Hechos: la iglesia que salió a la calle.'},
-  {k:'apoc',n:'VII',t:'El Final',s:'Apocalipsis: todo se hace nuevo.'}
+  {k:'hechos',n:'II',t:'Fuego',s:'Hechos: la iglesia que salió a la calle.'},
+  {k:'apoc',n:'III',t:'Maranata',s:'¡Cristo viene! Apocalipsis contado para adolescentes.'},
+  {k:'genesis',n:'IV',t:'El Origen',s:'Génesis: la luz, el jardín y la promesa.'},
+  {k:'exodo',n:'V',t:'El Éxodo',s:'Un pueblo libre cruzando el mar.'},
+  {k:'david',n:'VI',t:'El Rey Pastor',s:'David, de las ovejas al trono.'},
+  {k:'daniel',n:'VII',t:'Fieles en Babilonia',s:'Daniel y sus amigos frente al imperio.'}
 ];
 var box=document.getElementById('heroExp');
 if(box)box.innerHTML=EXP.map(function(e){return '<article class="hx-card '+(e.on?'on':'off')+'"'+(e.on?' data-play="ados"':'')+'><div class="bg" style="background:'+scene(e.k)+'"></div><span class="n">Expedición '+e.n+'</span><b>'+e.t+'</b><span class="s">'+e.s+'</span><span class="st">'+(e.on?LOCK+'Muy pronto':LOCK+'Sellada')+'</span></article>';}).join('');
