@@ -271,7 +271,7 @@ const OUTFITS=['#5B8DEF','#EF6F61','#2FAE7C','#F2B33D','#9B7BE8'];
 const CACHE='tsp-cache-v4';
 let branch=null,profiles=[],current=null,saveT=null;
 const P=()=>current;
-const blank=()=>({done:{},visited:['start'],pos:'start',regions:{},medals:[],maps:[],verses:[],games:{},trivia:0,streak:0,best:0,rankId:null,items:{},gear:{own:[],eq:{}},missions:{},mact:null,exams:{},want:{},lvSeen:0,photo:''});
+const blank=()=>({done:{},visited:['start'],pos:'start',regions:{},medals:[],maps:[],verses:[],games:{},trivia:0,streak:0,best:0,rankId:null,items:{},gear:{own:[],eq:{}},missions:{},mact:null,exams:{},want:{},lvSeen:0,photo:'',surv:null,attr:null,bonus:0});
 const KEYS=Object.keys(blank());
 function serialize(p){const o={};KEYS.forEach(k=>o[k]=p[k]);return JSON.stringify(o);}
 function save(){
@@ -303,7 +303,7 @@ const mult=s=>s>=5?2:s>=3?1.5:1;
 const fmt=n=>Math.round(n).toLocaleString('es-AR');
 const ageFactor=a=>.7+(Math.min(18,Math.max(6,a||12))-6)/12*.42;
 const gamesTotal=p=>Object.values(p.games).reduce((a,b)=>a+b,0);
-const total=p=>p.trivia+gamesTotal(p)+Object.keys(p.items||{}).length*25+Object.keys(p.missions||{}).length*50+Object.values(p.exams||{}).reduce((s,e)=>s+(e.pts||0),0);
+const total=p=>p.trivia+gamesTotal(p)+Object.keys(p.items||{}).length*25+Object.keys(p.missions||{}).length*50+Object.values(p.exams||{}).reduce((s,e)=>s+(e.pts||0),0)+(p.bonus||0);
 function shade(hex,amt){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const t=amt<0?0:255,k=Math.abs(amt);r=Math.round(r+(t-r)*k);g=Math.round(g+(t-g)*k);b=Math.round(b+(t-b)*k);return '#'+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);}
 const STAR=on=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z" fill="${on?'#F2B33D':'#DCE6F7'}" stroke="${on?'#FFE39A':'#C9D6EC'}" stroke-width="1"/></svg>`;
 const coin=(m,size=52)=>`<svg class="coin" width="${size}" height="${size}" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" fill="${m.c}"/><circle cx="26" cy="26" r="19" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2"/><path d="${m.g}" fill="${m.f?'#22407F':'none'}" stroke="#22407F" stroke-width="${m.w||0}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -843,11 +843,11 @@ const reachable=id=>visited(id)||id===P().pos||(ADJ[id]||[]).some(visited);
 function regionReq(r){const R=REGIONS[r].id,ids=k=>`${R}-${k}`;const main=['n1','n2','n3','n4','n5'].filter(k=>isDone(ids(k))).length,forks=['fA','fB'].filter(k=>isDone(ids(k))).length;return {done:main+Math.min(1,forks),total:6};}
 const curRegion=()=>{const n=NODES[P().pos];return n.kind==='start'?0:n.r;};
 const LV_T=['Peregrino','Caminante','Aprendiz','Discípulo','Servidor','Mensajero','Testigo','Sembrador','Pescador de personas','Embajador','Atalaya','Pionero'];
-const lvOf=t=>Math.max(1,Math.floor((1+Math.sqrt(1+4*t/60))/2)),lvNeed=n=>60*n*(n-1);
+const LV_MAX=50,lvOf=t=>Math.min(LV_MAX,Math.max(1,Math.floor((1+Math.sqrt(1+4*t/60))/2))),lvNeed=n=>60*n*(n-1);
 function lvUp(n){const d=document.createElement('div');d.className='lvup';d.innerHTML=`<div><small>¡Subiste de nivel!</small><b>${n}</b><span>${LV_T[Math.min(n-1,LV_T.length-1)]}</span></div>`;document.body.appendChild(d);setTimeout(()=>d.classList.add('out'),2600);setTimeout(()=>d.remove(),3300);}
 function refreshHud(){
   const p=P(),r=curRegion(),q=regionReq(r);
-  {const T=total(p),n=lvOf(T),a=lvNeed(n),b=lvNeed(n+1),el=$('#hudLv');el.style.setProperty('--xp',Math.round((T-a)/(b-a)*100));$('#lvN').textContent=n;$('#hudName').textContent=`Nivel ${n}`;$('#lvT').textContent=LV_T[Math.min(n-1,LV_T.length-1)];el.title=`Nivel ${n}: ${T-a} de ${b-a} puntos para el próximo`;if(p.lvSeen&&n>p.lvSeen)lvUp(n);if(p.lvSeen!==n){p.lvSeen=n;save();}}
+  {const T=total(p),n=lvOf(T),a=lvNeed(n),b=lvNeed(n+1),el=$('#hudLv');el.style.setProperty('--xp',n>=LV_MAX?100:Math.min(100,Math.round((T-a)/(b-a)*100)));$('#lvN').textContent=n;$('#hudName').textContent=`Nivel ${n}`;$('#lvT').textContent=LV_T[Math.min(n-1,LV_T.length-1)];el.title=`Nivel ${n}: ${T-a} de ${b-a} puntos para el próximo`;if(p.lvSeen&&n>p.lvSeen)lvUp(n);if(p.lvSeen!==n){p.lvSeen=n;save();}}
   $('#hudStage').textContent=`Etapa ${r+1} de 10`;hudPhoto();
   $('#barFill').style.width=(q.done/q.total*100)+'%';$('#count').textContent=`${q.done}/${q.total}`;
   $('#score').textContent=fmt(total(p));$('#streakN').textContent=p.streak;
@@ -896,7 +896,7 @@ function arrive(id){
   if(n.kind==='ch'){setTimeout(()=>openStop(n),160);return;}
   if(!p.visited.includes(id)){p.visited.push(id);save();}
   if(n.kind==='gate'&&!REGIONS[n.r+1]){const m=p.missions||{},rd=['leer23','leer1'].filter(k=>m[k]).length,ph=['fotopastores','fotofelipe'].filter(k=>m[k]).length;if(rd<2||ph<2){const f=[];if(rd<2)f.push(`${2-rd} ${2-rd>1?'lecturas':'lectura'} en voz alta`);if(ph<2)f.push(`${2-ph} ${2-ph>1?'testimonios':'testimonio'}`);toast('Para terminar el recorrido te falta: '+f.join(' y ')+'. Buscá en el mapa a los personajes con «!».');refreshMap();return;}}
-  if(n.kind==='gate'){const R=REGIONS[n.r].id;p.regions[R]=p.regions[R]||{};if(!p.regions[R].complete){if((p.exams||{})[R]&&p.exams[R].passed)finishRegion(n.r);else openExam(n.r,()=>finishRegion(n.r));return;}}
+  if(n.kind==='gate'){const R=REGIONS[n.r].id;p.regions[R]=p.regions[R]||{};if(!p.regions[R].complete){if((p.exams||{})[R]&&p.exams[R].passed)finishRegion(n.r);else openExam(n.r,()=>{finishRegion(n.r);courseDone();});return;}}
   refreshMap();
 }
 
@@ -2361,7 +2361,7 @@ const LANDING={kids:'homeView',ados:'adosView'};
 const onLanding=()=>['hubView','homeView','adosView'].some(v=>$('#'+v).hidden===false);
 function play(b){setBranch(b);const s=getMemberState();if(s.loading){setTimeout(()=>play(b),150);return;}if(s.loggedIn)loadProfiles();else openAuth();}
 function landing(b){current=null;setBranch(b);show(LANDING[b]);renderSession(getMemberState());}
-function goHome(){current=null;branch=null;delete document.body.dataset.branch;try{history.replaceState(null,'',location.pathname);}catch(e){}show('hubView');renderSession(getMemberState());renderFamily();renderPulse();}
+function goHome(){current=null;branch=null;delete document.body.dataset.branch;try{history.replaceState(null,'',location.pathname);}catch(e){}show('hubView');hubLearn();renderSession(getMemberState());renderFamily();renderPulse();}
 function goBack(){if(branch&&LANDING[branch])landing(branch);else goHome();}
 function startDemo(b){setBranch(b);const id='demo-'+b;let loc=null;try{loc=JSON.parse(localStorage.getItem(CACHE+':'+id)||'null');}catch(e){}current={...blank(),...(loc||{}),id,name:'Invitado',rama:b,demo:true,avatar:{g:b==='ados'?'chico':'chica',age:b==='ados'?14:9,skin:'#E6B691',hair:'#2A1B14',outfit:b==='ados'?'#2FAE7C':'#FF8A2B'}};profiles=[current];enterMap();}
 function route(){const raw=location.hash.replace('#','');const sala=/^sala-(kids|hero)-([A-Za-z0-9]{6})$/.exec(raw);if(sala){try{sessionStorage.setItem('tsp:join',sala[2].toUpperCase());}catch(e){}history.replaceState(null,'',location.pathname+'#'+sala[1]);landing(fromHash(sala[1]));setTimeout(()=>toast('Elegí tu perfil y entrá al mapa para unirte a la sala '+sala[2].toUpperCase()+'.'),600);return;}if(raw==='jugar-kids'||raw==='jugar-hero'){startDemo(raw==='jugar-kids'?'kids':'ados');return;}const h=fromHash(raw);if(h)landing(h);else goHome();}
@@ -2532,7 +2532,24 @@ $('#createBack').onclick=()=>{if(editing)enterMap();else loadProfiles();};
 $('#newPlayer').onclick=()=>openCreate(false);
 
 /* mapa */
-window.GAME={NODES,EDGES,ADJ,REGIONS,VIGN,TOP,RH,WIDTH,get branch(){return branch},P,reachable,visited,isDone,bfs,arrive,save,toast,refreshHud,syncMap(){refreshMap();const n=NODES[P().pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));}};
+/* portada: cómo se aprende jugando (se agrega debajo de las dos puertas) */
+const LEARN=[
+ ['📜','Historias que se ven','Cada etapa recorre la vida de Jesús con escenas animadas y narración, de Belén hasta la cruz.'],
+ ['📖','La Palabra, palabra por palabra','Completan versículos de la Nueva Traducción Viviente y los escuchan en voz alta. Cada respuesta trae su cita para ir a buscarla en la Biblia.'],
+ ['🧩','Desafíos en cada parada','Después de cada historia hay una pregunta para pensar: elegir, ordenar los hechos o completar el versículo.'],
+ ['🎮','Minijuegos que nunca se repiten','Más de cincuenta juegos distintos, cada uno nacido de su historia: llenar las tinajas de Caná, echar las redes, lavar los pies.'],
+ ['📝','Exámenes por etapa','Para avanzar hay un examen de 12 preguntas. Si se equivocan, el juego explica la respuesta y muestra el pasaje.'],
+ ['🗺️','Un mapa para explorar','Caminan libres por Nazaret, el templo, el mar de Galilea y el Gólgota. Cada lugar muestra cómo se vivía en tiempos de Jesús.'],
+ ['🤝','Misiones de servicio','Ayudan a personajes bíblicos: llevar el pan, buscar la oveja perdida, orar en el huerto. Aprenden a servir haciendo.'],
+ ['🪵','Oficios y supervivencia (Hero)','Pescan, talan, cocinan y construyen su casa con las herramientas de la época. Si no se alimentan, no pueden seguir: cuidar el cuerpo también es parte del camino.'],
+ ['🌱','Virtudes que crecen (Hero)','Al subir de nivel reparten puntos en Fuerza, Paciencia, Dominio propio, Sabiduría y Generosidad. La Humildad solo crece dando a otros.'],
+ ['⚔️','Espaldeo bíblico con amigos','En salas privadas compiten a ver quién responde bien y primero. Después de cada pregunta, todos leen la explicación y el pasaje.'],
+ ['🏅','Progreso que se nota','Niveles, medallas, recuerdos y una prenda única para quienes terminan el curso. Los puntos se suman de un curso a otro.'],
+ ['🛡️','Un lugar cuidado','Las salas son privadas y solo entra quien tiene el código. Cada chico juega con su propio perfil.']];
+function hubLearn(){const st=document.querySelector('#hubView .stage');if(!st||document.getElementById('learn'))return;st.insertAdjacentHTML('afterend',`<section class="learn" id="learn"><div class="wrap"><span class="why-k">Cómo se aprende jugando</span><h2>Cada juego es una puerta a <em>la Palabra</em></h2><p class="learn-l">Todo está pensado para que salgan sabiendo más de la Biblia: historias, versículos, preguntas y desafíos que se repasan una y otra vez mientras juegan.</p><div class="learn-g">${LEARN.map(([i,t,d])=>`<article><span class="learn-i" aria-hidden="true">${i}</span><b>${t}</b><p>${d}</p></article>`).join('')}</div></div></section>`);}
+/* prenda única del curso: solo para quien termina todas las etapas (cuando ya no quedan etapas por venir) */
+function courseDone(){const p=P(),ex=p.exams||{};if(SOON.length||!REGIONS.every(R=>ex[R.id]&&ex[R.id].passed))return;setTimeout(()=>{try{window.W3&&W3.gearGive&&W3.gearGive('tsp');}catch(e){}},2500);}
+window.GAME={NODES,EDGES,ADJ,REGIONS,VIGN,TOP,RH,WIDTH,get branch(){return branch},level:()=>lvOf(total(P())),EXAMS,P,reachable,visited,isDone,bfs,arrive,save,toast,refreshHud,syncMap(){refreshMap();const n=NODES[P().pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));}};
 function enterMap(){
   if(worldFor!==branch)buildWorld();
   const p=P();
