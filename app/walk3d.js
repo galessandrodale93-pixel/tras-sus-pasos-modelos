@@ -762,12 +762,12 @@ function openMission(m) {
 }
 function misCarry(m, on) {
   if (S.carry) { S.av.remove(S.carry); S.carry = null; }
-  if (on && !['act', 'record', 'photo'].includes(m.d.kind)) { const c = misMesh(m.d.item); c.scale.setScalar(.7); c.position.y = 2.25; S.av.add(c); S.carry = c; }
+  if (on && !['act', 'record', 'photo'].includes(m.d.kind)) { const c = misMesh(m.d.item); c.scale.setScalar(.7); c.position.y = 2.25; if (S.av.userData.h3 && H3.clips.M_Holding_Idle) { c.scale.setScalar(.45); c.position.set(0, 1.08, .34); } S.av.add(c); S.carry = c; }
   if (m.pick) m.pick.visible = !on && !!misState().mact; 
 }
 function misDone(m) {
   const p = misState(), d = m.d; p.missions[d.id] = true; p.mact = null; G().save(); G().refreshHud && G().refreshHud(); misCarry(m, false); if (m.ring) m.ring.visible = false; if (m.pick) m.pick.visible = false;
-  misPop('¡Misión cumplida! +' + MIS_PTS, d.done); tone3d();
+  misPop('¡Misión cumplida! +' + MIS_PTS, d.done); tone3d(); h3npcPlay(m.target || m.giver, ['M_Thankful', 'M_Cheering'], 3); if (m.target && m.giver) setTimeout(() => h3npcPlay(m.giver, ['M_Clapping', 'M_Thankful'], 2.5), 600);
   if (Math.random() < .5) setTimeout(() => gearGive(gearRoll(), 'Recompensa de la misión'), 3400);
   if (S && S.hx) setTimeout(() => svMissionReward(d), 1800);
 }
@@ -1997,7 +1997,8 @@ async function heroLoad() {
     const [m, f, an] = await Promise.race([Promise.all([ld('hero_m.glb'), ld('hero_f.glb'), ld('hero_anims.glb')]), new Promise((_, j) => setTimeout(() => j(new Error('tiempo')), 45000))]);
     H3.skClone = mod.skClone; const all = gl => { const r = new THREE.Group(); gl.scenes.forEach(x => r.add(x)); return r; }; H3.sex.m = h3Template(all(m)); H3.sex.f = h3Template(all(f));
     H3.clips = Object.fromEntries(an.animations.map(c => [c.name, c]));
-    try { const ex = await new Promise((r, j) => L.load(new URL('../hero/hero_anims2.glb', import.meta.url).href, r, undefined, j)); ex.animations.forEach(c => { if (!H3.clips[c.name] && !/dance/i.test(c.name)) H3.clips[c.name] = c; }); } catch (e2) { console.warn('hero3d extra', e2); }
+    const xl = f => new Promise((r, j) => L.load(new URL('../hero/' + f, import.meta.url).href, r, undefined, j)).then(ex => ex.animations.forEach(c => { if (!H3.clips[c.name] && !/dance/i.test(c.name)) H3.clips[c.name] = c; })).catch(e2 => console.warn('hero3d extra', f, e2));
+    await Promise.all([xl('hero_anims2.glb'), xl('hero_anims3.glb')]);
     H3.ok = true;
   } catch (e) { console.warn('hero3d', e); H3.fail = true; }
 }
@@ -2068,13 +2069,29 @@ function buildHero3(av) {
   const lamp = new THREE.Group(), lb = new THREE.Mesh(new THREE.CylinderGeometry(.045, .055, .12, 8), new THREE.MeshStandardMaterial({ color: '#B8862E', roughness: .4, metalness: .6 })); lamp.add(lb);
   const gl = new THREE.Mesh(new THREE.SphereGeometry(.034, 10, 8), new THREE.MeshBasicMaterial({ color: '#FFD27A' })); lamp.add(gl); const pl = new THREE.PointLight('#FFB45A', 5, 7, 1.6); lamp.add(pl); lamp.visible = !npc; o.add(lamp);
   const age = Math.max(12, Math.min(18, av.age || 16)); o.scale.setScalar(npc ? 1 : .9 + (age - 12) / 6 * .1);
-  const mixer = new THREE.AnimationMixer(o), act = {}; for (const k in H3.clips) act[k] = mixer.clipAction(H3.clips[k]);
-  const idleK = npc && act.Idle_Talking_Loop && Math.random() < .45 ? 'Idle_Talking_Loop' : 'Idle_Loop'; act[idleK].play(); mixer.update(Math.random() * 3);
+  const mixer = new THREE.AnimationMixer(o), act = new Proxy({}, { get: (c, k) => c[k] || (typeof k === 'string' && H3.clips[k] ? (c[k] = mixer.clipAction(H3.clips[k])) : undefined) });
+  const idleK = h3idleFor(av, npc); act[idleK].play(); mixer.update(Math.random() * 3);
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(.36, 24), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: .3, depthWrite: false })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .02; o.add(shadow);
   o.userData = { hero: true, h3: { mixer, act, cur: idleK, idleK, bones, lamp, npc } };
   if (npc) H3.npcs.push(o);
   return o;
 }
+/* idles de los personajes: cada uno con su manera de estar (Mixamo + Quaternius) */
+const H3_IDLES = ['Idle_Loop', 'Idle_Talking_Loop', 'M_Idle', 'M_Thinking', 'M_Looking', 'M_Holding_Idle', 'M_Lengthy_Head_Nod', 'M_Idle', 'Idle_Talking_Loop', 'M_Looking_Around'];
+const H3_ONCE = /^(Death01|Interact|PickUp_Table|M_Standing_Up|M_Kneeling_Down|M_Throw|M_Picking_Up|M_Quick_Formal_Bow|M_Sit_To_Stand|M_Stand_To_Sit|M_Lifting_Object|M_Pick_Fruit.*|M_Yawn|M_Looking_Around|M_Shaking_Hands_2|M_Drinking|M_Thankful|M_Cheering|M_Kneeling_Inspecting)$/;
+function h3idleFor(av, npc) {
+  const ok = k => !!H3.clips[k];
+  if (av.anim) { const l = [].concat(av.anim).filter(ok); if (l.length) return l[Math.floor(Math.random() * l.length)]; }
+  if (!npc) return 'Idle_Loop';
+  const l = H3_IDLES.filter(ok); return l[Math.floor(Math.random() * l.length)] || 'Idle_Loop';
+}
+// un NPC hace un gesto y vuelve a su idle
+function h3npcPlay(o, keys, secs) {
+  const u = o && o.userData && o.userData.h3; if (!u) return; const k = [].concat(keys).find(x => H3.clips[x]); if (!k) return;
+  const a = u.act[k], b = u.act[u.cur]; a.reset(); a.setLoop(H3_ONCE.test(k) ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = true; a.play(); if (b && b !== a) a.crossFadeFrom(b, .3, false); u.cur = k; u.backT = secs || Math.min(4, H3.clips[k].duration);
+}
+// el jugador hace una acción con su animación (la primera que exista de la lista)
+function h3do(keys, secs, off, speed) { if (!S) return; const k = [].concat(keys).find(x => H3.clips && H3.clips[x]) || [].concat(keys).pop(); S.actK = k; S.actT = secs; S.actO = off || 0; S.actS = speed || 1; S.idleT = 0; }
 let _V = null;
 function h3vec() { if (!_V) _V = { a: new THREE.Vector3(), b: new THREE.Vector3(), q: new THREE.Quaternion(), pq: new THREE.Quaternion(), bq: new THREE.Quaternion(), rq: new THREE.Quaternion(), d: new THREE.Vector3(), m: new THREE.Matrix4() }; return _V; }
 // gira un hueso para que apunte hacia una dirección (en el espacio del personaje)
@@ -2085,27 +2102,38 @@ function h3aim(av, B, bn, cn, x, y, z, w) {
 }
 function h3pose(av, t, dt, st) {
   const u = av.userData.h3, B = u.bones, p = st.poseW || 0, q = st.waveW || 0, air = (st.jy || 0) > .02;
-  const has = k => !!u.act[k];
-  let want = st.pose === 'pray' ? 'Fixing_Kneeling' : air ? 'Jump_Loop' : u.moving ? (st.sprint && has('Sprint_Loop') ? 'Sprint_Loop' : u.run === false ? (u.npcFormal && has('Walk_Formal_Loop') ? 'Walk_Formal_Loop' : 'Walk_Loop') : 'Jog_Fwd_Loop') : (st.talk && has('Idle_Talking_Loop') ? 'Idle_Talking_Loop' : (u.idleK && has(u.idleK) ? u.idleK : 'Idle_Loop'));
-  if (!u.moving && !air && st.pose !== 'pray') { if (st.down && has('Death01')) want = 'Death01'; else if (st.actT > 0 && has(st.actK)) want = st.actK; else if (st.sit && has('Sitting_Idle_Loop')) want = 'Sitting_Idle_Loop'; }
+  const has = k => !!H3.clips[k], me = st === S, mxPray = st.pose === 'pray' && has('M_Praying'), mxWave = (st.waveT || 0) > 0 && !u.moving && has('M_Waving');
+  const fish = me && st.sv && st.sv.fishing, weak = me && st.sv && (st.sv.gray || 0) > .35, carry = me && !!st.carry;
+  let want = st.pose === 'pray' ? (mxPray ? 'M_Praying' : 'Fixing_Kneeling') : air ? 'Jump_Loop' : u.moving ? (st.sprint && has('Sprint_Loop') ? 'Sprint_Loop' : u.run === false ? (u.npcFormal && has('Walk_Formal_Loop') ? 'Walk_Formal_Loop' : 'Walk_Loop') : 'Jog_Fwd_Loop') : (st.talk && has('Idle_Talking_Loop') ? 'Idle_Talking_Loop' : (u.idleK && has(u.idleK) ? u.idleK : 'Idle_Loop'));
+  if (u.moving && !air) { if (carry && has('M_Holding_Walk') && !st.sprint) want = 'M_Holding_Walk'; else if (weak && has('M_Sad_Walk')) want = 'M_Sad_Walk'; }
+  if (!u.moving && !air && st.pose !== 'pray') {
+    if (st.down && has('Death01')) want = 'Death01'; else if (st.actT > 0 && has(st.actK)) want = st.actK; else if (st.sit && has('Sitting_Idle_Loop')) want = 'Sitting_Idle_Loop';
+    else if (fish) want = fish.mode === 'net' ? (has('M_Pulling_A_Rope') ? 'M_Pulling_A_Rope' : want) : (fish.t < 2.4 && has('M_Fishing_Cast') ? 'M_Fishing_Cast' : has('M_Fishing_Idle') ? 'M_Fishing_Idle' : want);
+    else if (mxWave) want = 'M_Waving';
+    else if (carry && has('M_Holding_Idle')) want = 'M_Holding_Idle';
+    else if (weak && has('M_Injured_Hurting_Idle')) want = 'M_Injured_Hurting_Idle';
+    else if (me && !st.talk) { st.idleT = (st.idleT || 0) + dt; if (st.idleT > 14) { st.idleT = 0; const l = ['M_Looking_Around', 'M_Yawn', 'M_Thinking', 'M_Lengthy_Head_Nod'].filter(has); if (l.length) { const k = l[Math.floor(Math.random() * l.length)]; st.actK = k; st.actT = Math.min(5, H3.clips[k].duration); st.actO = 0; st.actS = 1; want = k; } } }
+  } else if (me) st.idleT = 0;
   if (st.actT > 0) st.actT -= dt;
-  if (want !== u.cur) { const a = u.act[want], o = u.act[u.cur]; a.reset(); a.timeScale = 1; const once = /^(Death01|Interact|PickUp_Table)$/.test(want); a.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = once; if (want === 'Fixing_Kneeling') { a.time = a.getClip().duration * .3; a.timeScale = 0; } a.play(); if (o) a.crossFadeFrom(o, want === 'Death01' ? .15 : .28, false); u.cur = want; }
+  if (want !== u.cur) { const a = u.act[want], o = u.act[u.cur]; a.reset(); a.timeScale = 1; const once = H3_ONCE.test(want); a.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = once; if (want === 'Fixing_Kneeling') { a.time = a.getClip().duration * .3; a.timeScale = 0; } if (want === st.actK && st.actT > 0) { a.time = st.actO || 0; a.timeScale = st.actS || 1; } a.play(); if (o) a.crossFadeFrom(o, want === 'Death01' ? .15 : .28, false); u.cur = want; }
   if (u.cur === 'Jog_Fwd_Loop') u.act.Jog_Fwd_Loop.timeScale = 1.15;
   u.mixer.update(dt); av.updateMatrixWorld(true);
-  if (p > .01) { // de rodillas con las dos rodillas en el piso
+  if (p > .01 && !mxPray) { // de rodillas con las dos rodillas en el piso
     ['l', 'r'].forEach(sd => { const sx = sd === 'l' ? .1 : -.1; h3aim(av, B, 'thigh_' + sd, 'calf_' + sd, sx, -1, .32, p); h3aim(av, B, 'calf_' + sd, 'foot_' + sd, sx * .4, -.1, -1, p); h3aim(av, B, 'foot_' + sd, 'ball_' + sd, 0, -.12, -1, p); });
     const V = h3vec(), pv = B.pelvis, kl = B.calf_l, kr = B.calf_r;
     if (pv && kl && kr) { kl.getWorldPosition(V.a); kr.getWorldPosition(V.b); const knee = Math.min(V.a.y, V.b.y); av.getWorldPosition(V.d); const dy = (V.d.y + .07 * av.scale.y - knee) * Math.min(1, p);
       pv.getWorldPosition(V.a); V.a.y += dy; pv.parent.worldToLocal(V.a); pv.position.copy(V.a); pv.updateMatrixWorld(true); }
   }
-  if (p > .01) { h3aim(av, B, 'spine_01', 'spine_02', 0, 1, .05, p); h3aim(av, B, 'spine_02', 'spine_03', 0, 1, .05, p); h3aim(av, B, 'spine_03', 'neck_01', 0, 1, .08, p); h3aim(av, B, 'neck_01', 'Head', 0, 1, .3, p);
+  if (p > .01 && !mxPray) { h3aim(av, B, 'spine_01', 'spine_02', 0, 1, .05, p); h3aim(av, B, 'spine_02', 'spine_03', 0, 1, .05, p); h3aim(av, B, 'spine_03', 'neck_01', 0, 1, .08, p); h3aim(av, B, 'neck_01', 'Head', 0, 1, .3, p);
     h3aim(av, B, 'upperarm_r', 'lowerarm_r', .18, -.88, .48, p); h3aim(av, B, 'lowerarm_r', 'hand_r', .38, .8, .45, p); h3aim(av, B, 'upperarm_l', 'lowerarm_l', -.18, -.88, .48, p); h3aim(av, B, 'lowerarm_l', 'hand_l', -.38, .8, .45, p); }
-  if (q > .01) { h3aim(av, B, 'upperarm_r', 'lowerarm_r', -.85, .38, .18, q); h3aim(av, B, 'lowerarm_r', 'hand_r', -.15 + Math.sin(t * 11) * .38, 1, .15, q); }
+  if (q > .01 && !mxWave && u.cur !== 'M_Waving') { h3aim(av, B, 'upperarm_r', 'lowerarm_r', -.85, .38, .18, q); h3aim(av, B, 'lowerarm_r', 'hand_r', -.15 + Math.sin(t * 11) * .38, 1, .15, q); }
   if (u.lamp.visible) { const V = h3vec(); B.hand_r.getWorldPosition(V.a); av.worldToLocal(V.a); u.lamp.position.copy(V.a); u.lamp.position.y -= .1 / av.scale.y; }
 }
 function h3npcTick(dt) {
   if (!S || !H3.npcs.length) return; const a = S.av.position;
-  for (const o of H3.npcs) { if (!o.parent) continue; const d = (o.position.x - a.x) ** 2 + (o.position.z - a.z) ** 2; if (d < 1600) o.userData.h3.mixer.update(dt); }
+  for (const o of H3.npcs) { if (!o.parent) continue; const u = o.userData.h3;
+    if (u.backT > 0 && (u.backT -= dt) <= 0) { const a = u.act[u.idleK], b = u.act[u.cur]; a.reset(); a.setLoop(THREE.LoopRepeat); a.play(); if (b && b !== a) a.crossFadeFrom(b, .4, false); u.cur = u.idleK; }
+    const d = (o.position.x - a.x) ** 2 + (o.position.z - a.z) ** 2; if (d < 1600) u.mixer.update(dt); }
 }
 
 /* ---------- caminar libre ---------- */
@@ -2398,7 +2426,7 @@ function svFireNear() {
 }
 
 /* ---------- acciones ---------- */
-function svSwing() { S.actT = 1.1; S.actK = 'Interact'; try { const A = svSwing.A = svSwing.A || new (window.AudioContext || window.webkitAudioContext)(), o = A.createOscillator(), g = A.createGain(); o.type = 'square'; o.frequency.value = 140 + Math.random() * 40; g.gain.setValueAtTime(.08, A.currentTime); g.gain.exponentialRampToValueAtTime(.0001, A.currentTime + .12); o.connect(g); g.connect(A.destination); o.start(); o.stop(A.currentTime + .13); } catch (e) {} }
+function svSwing(k) { if (k === 'rock') h3do(['M_Digging', 'Interact'], 1.5, .9); else h3do(['M_Pull_Heavy_Object', 'Interact'], 1.1); try { const A = svSwing.A = svSwing.A || new (window.AudioContext || window.webkitAudioContext)(), o = A.createOscillator(), g = A.createGain(); o.type = 'square'; o.frequency.value = 140 + Math.random() * 40; g.gain.setValueAtTime(.08, A.currentTime); g.gain.exponentialRampToValueAtTime(.0001, A.currentTime + .12); o.connect(g); g.connect(A.destination); o.start(); o.stop(A.currentTime + .13); } catch (e) {} }
 function svHide(im, i, on) { im.getMatrixAt(i, svHide.m = svHide.m || new THREE.Matrix4()); if (!on) { svHide.store.set(im.uuid + i, svHide.m.clone()); im.setMatrixAt(i, M4zero()); } else { const m = svHide.store.get(im.uuid + i); if (m) im.setMatrixAt(i, m); } im.instanceMatrix.needsUpdate = true; }
 svHide.store = new Map();
 function svAct() {
@@ -2409,13 +2437,13 @@ function svAct() {
   if (n.k === 'shop') { svShop(n.shop); return; }
   if (n.k === 'beg') { svGive(n.b); return; }
   if (n.k === 'bag') { svPickBag(); return; }
-  if (n.k === 'fruit') { const o = st.fruit.trees[n.i], c = o.n; for (let k = 0; k < 5; k++) st.fruit.FR.setMatrixAt(n.i * 5 + k, M4zero()); st.fruit.FR.instanceMatrix.needsUpdate = true; o.n = 0; o.t = SV.FRUIT; S.actT = 1.3; S.actK = 'PickUp_Table'; svAdd('fruit', c); svXP(1); G().save(); svToast('🍎 Recogiste ' + c + ' granadas.'); svUI(); return; }
-  if (n.k === 'tree' || n.k === 'rock') { const key = n.k + n.i; st.hits = st.hitKey === key ? st.hits + 1 : 1; st.hitKey = key; svSwing(); const need = Math.max(1, 3 - Math.floor(atr('fue') / 2));
+  if (n.k === 'fruit') { const o = st.fruit.trees[n.i], c = o.n; for (let k = 0; k < 5; k++) st.fruit.FR.setMatrixAt(n.i * 5 + k, M4zero()); st.fruit.FR.instanceMatrix.needsUpdate = true; o.n = 0; o.t = SV.FRUIT; h3do([['M_Pick_Fruit', 'M_Pick_Fruit_1', 'M_Pick_Fruit_2'][Math.floor(Math.random() * 3)], 'PickUp_Table'], 2.4, .4); svAdd('fruit', c); svXP(1); G().save(); svToast('🍎 Recogiste ' + c + ' granadas.'); svUI(); return; }
+  if (n.k === 'tree' || n.k === 'rock') { const key = n.k + n.i; st.hits = st.hitKey === key ? st.hits + 1 : 1; st.hitKey = key; svSwing(n.k); const need = Math.max(1, 3 - Math.floor(atr('fue') / 2));
     if (st.hits < need) { svToast((n.k === 'tree' ? '🪓 ' : '⛏️ ') + 'Golpe ' + st.hits + ' de ' + need); return; } st.hits = 0;
     if (n.k === 'tree') { svHide(FLORA.oT, n.i, false); for (let j = 0; j < 6; j++) svHide(FLORA.oB, n.i * 6 + j, false); st.felled.set(n.i, SV.TREE); const w = 2 + (atr('fue') >= 3 ? 1 : 0); svAdd('wood', w); svXP(2); svToast('🪵 Conseguiste ' + w + ' de madera. El árbol vuelve a crecer en unos minutos.'); }
     else { svHide(FLORA.rI, n.i, false); st.mined.set(n.i, SV.ROCK); svAdd('stone', 2); svXP(2); svToast('🪨 Conseguiste 2 piedras.'); }
     G().save(); svUI(); return; }
-  if (n.k === 'cook') { const k = s.inv.fish; svAdd('fish', -k); svAdd('cooked', k); svXP(k); G().save(); svToast('🍢 Cocinaste ' + k + (k > 1 ? ' pescados.' : ' pescado.') + ' Ya se pueden comer (tecla C o el botón de comer).'); svUI(); return; }
+  if (n.k === 'cook') { h3do(['M_Kneeling_Idle', 'PickUp_Table'], 2.6); const k = s.inv.fish; svAdd('fish', -k); svAdd('cooked', k); svXP(k); G().save(); svToast('🍢 Cocinaste ' + k + (k > 1 ? ' pescados.' : ' pescado.') + ' Ya se pueden comer (tecla C o el botón de comer).'); svUI(); return; }
   if (n.k === 'fish') { if (svTool('rod')) { st.fishing = { mode: 'rod', t: 0, bite: Math.max(1.2, 2 + Math.random() * 4 - atr('pac') * .35), win: 1.1 + atr('pac') * .15 }; svToast('🎣 Tiraste la caña. Cuando pique, tocá la acción (E).'); }
     else { st.fishing = { mode: 'net', t: 0, bite: 5 - atr('pac') * .2 }; svToast('🕸️ Tiraste la red. Esperá un momento…'); } S.joy.x = 0; S.joy.y = 0; svUI(); }
 }
@@ -2423,7 +2451,7 @@ function svFishTap() { const f = S.sv.fishing; if (!f || f.mode !== 'rod') retur
 function svEat() {
   if (!svOn() || S.down) return; const s = svP(), k = (s.inv.cooked || 0) > 0 ? 'cooked' : (s.inv.bread || 0) > 0 ? 'bread' : (s.inv.fruit || 0) > 0 ? 'fruit' : null;
   if (!k) { svToast((s.inv.fish || 0) > 0 ? 'El pescado crudo hay que cocinarlo primero en una fogata.' : 'No tenés comida. Buscá granados o pescá.'); return; }
-  svAdd(k, -1); s.sat = Math.min(SV.FULL, s.sat + FOOD[k]); s.warned = 0; G().save(); if (humV() >= 1 && MP.code) xSend({ k: 'share', by: meInfo().name, x: S.av.position.x, z: S.av.position.z }); svToast(k === 'cooked' ? '🍢 Comiste pescado asado. ¡Recuperaste fuerzas!' : k === 'bread' ? '🥖 Comiste pan.' : '🍎 Comiste una granada.'); svUI();
+  h3do(['M_Drinking', 'PickUp_Table'], 2.4, .6, 1.2); svAdd(k, -1); s.sat = Math.min(SV.FULL, s.sat + FOOD[k]); s.warned = 0; G().save(); if (humV() >= 1 && MP.code) xSend({ k: 'share', by: meInfo().name, x: S.av.position.x, z: S.av.position.z }); svToast(k === 'cooked' ? '🍢 Comiste pescado asado. ¡Recuperaste fuerzas!' : k === 'bread' ? '🥖 Comiste pan.' : '🍎 Comiste una granada.'); svUI();
 }
 
 /* ---------- fabricar y construir ---------- */
@@ -2437,10 +2465,10 @@ function svCraft() {
     el.innerHTML = `<div class="inv hx sv-sheet"><div class="inv-h"><b>Fabricar y construir</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="sv-have">${have}</div><p class="sv-tip">Talá árboles y picá piedras. Con la madera hacé tablones y con la piedra, bloques. Con eso construís tu casa y después los muebles.</p>${rows}${s.house ? '' : '<p class="sv-tip">Cuando tengas tu casa, vas a poder hacer muebles: cama, mesa, banco, horno, cofre y lámpara.</p>'}</div>`;
     el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
     el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { const r = RECIPES.find(x => x.id === b.dataset.r); if (!svHas(r.need)) return;
-      if (r.place === 'fire') { svPay(r.need); svFire(); el.hidden = true; }
-      else if (r.place === 'house') { const spot = svHouseSpot(); if (!spot) { svToast('Acá no se puede construir. Alejate del camino y de otras construcciones.'); return; } svPay(r.need); s.house = spot; svPlaceHouse(S.scene, spot); svXP(30); svToast('🏠 ¡Construiste tu casa! Ahora podés hacerle muebles.'); el.hidden = true; }
-      else if (r.furn) { svPay(r.need); s.furn.push(r.id); svFurnish(r.id); svXP(8); svToast('Agregaste: ' + r.name + '.'); draw(); }
-      else { Object.entries(r.out).forEach(([k, n]) => svAdd(k, n)); svPay(r.need); svXP(1); draw(); }
+      if (r.place === 'fire') { svPay(r.need); svFire(); h3do(['M_Kneeling_Idle', 'PickUp_Table'], 2.4); el.hidden = true; }
+      else if (r.place === 'house') { const spot = svHouseSpot(); if (!spot) { svToast('Acá no se puede construir. Alejate del camino y de otras construcciones.'); return; } svPay(r.need); s.house = spot; svPlaceHouse(S.scene, spot); h3do(['M_Lifting_Object', 'PickUp_Table'], 3, .8, 1.2); svXP(30); svToast('🏠 ¡Construiste tu casa! Ahora podés hacerle muebles.'); el.hidden = true; }
+      else if (r.furn) { svPay(r.need); s.furn.push(r.id); svFurnish(r.id); h3do(['M_Box_Idle', 'PickUp_Table'], 2); svXP(8); svToast('Agregaste: ' + r.name + '.'); draw(); }
+      else { Object.entries(r.out).forEach(([k, n]) => svAdd(k, n)); svPay(r.need); h3do(['M_Pull_Heavy_Object', 'Interact'], 1.4); svXP(1); draw(); }
       G().save(); svUI(); });
   };
   el.hidden = false; el.onclick = e => { if (e.target === el) el.hidden = true; }; draw();
@@ -2495,7 +2523,7 @@ function svFaint() {
   s.inv = {}; s.tools = []; gs.own = [...keep]; gs.eq = Object.fromEntries(Object.entries(gs.eq).filter(([, id]) => keep.has(id))); s.bag = bag; s.sat = 20 * 60; s.warned = 0; G().save(); reLook && reLook();
   const el = document.getElementById('v3sheet'); el.innerHTML = `<div class="inv hx sv-faint"><h3>Sin alimento, ${esc(p.name || 'tu personaje')} no pudo seguir el camino.</h3><p>Se quedó sin fuerzas y cayó al suelo. Todo lo que llevaba quedó en ese lugar: tenés <b>5 minutos de juego</b> para volver a buscarlo.</p>${lost.length ? `<p class="sv-lost">Se perdió para siempre: <b>${lost.map(x => esc(x.name)).join(' y ')}</b>.</p>` : ''}<p class="sv-verse">Un buen samaritano te ayudó a levantarte y te dio algo de comer. Desde ahora, no te olvides de alimentarte.</p><button class="sv-up">Levantarme</button></div>`;
   el.hidden = false; el.onclick = null; svDropBag(bag); svUI();
-  el.querySelector('.sv-up').onclick = () => { el.hidden = true; S.down = 0; const b = S.sv.bed; if (b) { S.av.position.x = b.x + 1; S.av.position.z = b.z; svToast('Te despertaste en tu cama. Tus cosas están donde caíste.'); } else svToast('Tus cosas quedaron donde caíste. ¡Andá a buscarlas!'); svUI(); };
+  el.querySelector('.sv-up').onclick = () => { el.hidden = true; S.down = 0; h3do(['M_Standing_Up'], 4, 0, 1.6); const b = S.sv.bed; if (b) { S.av.position.x = b.x + 1; S.av.position.z = b.z; svToast('Te despertaste en tu cama. Tus cosas están donde caíste.'); } else svToast('Tus cosas quedaron donde caíste. ¡Andá a buscarlas!'); svUI(); };
 }
 function svDropBag(bag, silent) {
   const y = S.W.hAt(bag.x, bag.z), g = new THREE.Group(), cm = tm('sack', '#8A6A44'); const b = new THREE.Mesh(new THREE.SphereGeometry(.35, 14, 10), cm); b.scale.set(1.1, .8, 1); b.position.y = .28; g.add(b); const k = new THREE.Mesh(new THREE.ConeGeometry(.12, .25, 8), cm); k.position.y = .62; g.add(k);
@@ -2503,7 +2531,7 @@ function svDropBag(bag, silent) {
   g.position.set(bag.x, y, bag.z); S.scene.add(g); S.sv.bag = { ...bag, g };
 }
 function svPickBag() {
-  S.actT = 1.3; S.actK = 'PickUp_Table'; const s = svP(), b = s.bag, gs = gearState(); if (!b) return; Object.entries(b.inv).forEach(([k, n]) => svAdd(k, n)); b.tools.forEach(t => { if (!s.tools.includes(t)) s.tools.push(t); });
+  h3do(['M_Picking_Up', 'PickUp_Table'], 2.4, .8, 1.3); const s = svP(), b = s.bag, gs = gearState(); if (!b) return; Object.entries(b.inv).forEach(([k, n]) => svAdd(k, n)); b.tools.forEach(t => { if (!s.tools.includes(t)) s.tools.push(t); });
   b.own.forEach(id => { if (!gs.own.includes(id)) gs.own.push(id); }); Object.assign(gs.eq, b.eq); s.bag = null; if (S.sv.bag) S.scene.remove(S.sv.bag.g); S.sv.bag = null; G().save(); reLook && reLook(); svToast('🎒 ¡Recuperaste tus cosas!'); svUI();
 }
 
@@ -2806,19 +2834,19 @@ function econBuild(scene, W) {
       bx(2.4, .1, 1.1, WOODL(), 0, .85, 0, gr); [[-1.1, -.45], [1.1, -.45], [-1.1, .45], [1.1, .45]].forEach(([a, b]) => cy(.05, .05, 2.2, WOOD(), a, 1.1, b, gr, 6)); const roof = bx(2.7, .06, 1.5, tm('awn' + r, cloth, { side: THREE.DoubleSide }), 0, 2.2, 0, gr); roof.rotation.x = .12;
       for (let i = 0; i < 6; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(.09, 8, 6), tm('fr' + (i % 3), ['#C0392B', '#E9A52C', '#66763E'][i % 3])); f.position.set(-.9 + i * .36, .97, (i % 2 - .5) * .3); gr.add(f); } jar(gr, .9, .2, .95, '#B4704A', .7);
       gr.position.set(x, y, z); gr.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; gr.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(gr); S.cols.push({ x0: x - .7, x1: x + .7, z0: z - 1.3, z1: z + 1.3 });
-      const sell = buildHeroAvatar({ g: R() < .5 ? 'chico' : 'chica', age: 18, skin: '#C99A72', hair: '#2A1B14', outfit: cloth }); const sx = x + side * 1.2; sell.position.set(sx, W.hAt(sx, z), z); sell.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; scene.add(sell);
+      const sell = buildHeroAvatar({ g: R() < .5 ? 'chico' : 'chica', age: 18, skin: '#C99A72', hair: '#2A1B14', outfit: cloth, anim: ['Idle_Talking_Loop', 'M_Holding_Idle', 'M_Box_Idle'] }); const sx = x + side * 1.2; sell.position.set(sx, W.hAt(sx, z), z); sell.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; scene.add(sell);
       const lb = textSprite('Mercado', true); lb.scale.multiplyScalar(.7); lb.position.set(x, y + 2.9, z); scene.add(lb); st.stalls.push({ x, z }); } }
     // mendigo junto al camino
     { const m = ns[Math.min(ns.length - 1, 4)], side = r % 2 ? -1 : 1, x = m.position.x + side * 3.2, z = m.position.z - 2; if (!blockedAt(x, z)) {
-      const o = buildHeroAvatar({ g: R() < .6 ? 'chico' : 'chica', age: 18, skin: '#B98A62', hair: '#6A6A6A', outfit: '#7A6A5A' }); o.position.set(x, W.hAt(x, z), z); o.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; const u = o.userData.h3; if (u && u.act.Crouch_Idle_Loop) { u.act[u.cur].stop(); u.act.Crouch_Idle_Loop.play(); u.cur = u.idleK = 'Crouch_Idle_Loop'; } scene.add(o);
+      const o = buildHeroAvatar({ g: R() < .6 ? 'chico' : 'chica', age: 18, skin: '#B98A62', hair: '#6A6A6A', outfit: '#7A6A5A', anim: ['M_Kneeling_Idle', 'Crouch_Idle_Loop', 'M_Sad_Idle'] }); o.position.set(x, W.hAt(x, z), z); o.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; scene.add(o);
       const bowl = new THREE.Mesh(new THREE.SphereGeometry(.16, 12, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), tm('clay', '#A8784A')); bowl.position.set(x - side * .55, W.hAt(x, z) + .16, z); scene.add(bowl);
-      st.beggars.push({ x, z, r, id: 'beg' + r }); } }
+      st.beggars.push({ x, z, r, id: 'beg' + r, o }); } }
   });
 }
 
 /* tienda */
 function svShop(kind) {
-  const sh = SHOPS[kind]; if (!sh) return; const el = document.getElementById('v3sheet'), s = svP(); S.joy.x = 0; S.joy.y = 0;
+  const sh = SHOPS[kind]; if (!sh) return; const el = document.getElementById('v3sheet'), s = svP(); S.joy.x = 0; S.joy.y = 0; h3do(['M_Lengthy_Head_Nod'], 1.7);
   const draw = () => {
     const rows = sh.buy.map(([t, k, p], i) => { const cost = price(p); let label = '', ico = '', owned = false;
       if (t === 't') { label = TOOLS[k][0]; ico = TOOLS[k][1]; owned = s.tools.includes(k); }
@@ -2849,7 +2877,7 @@ function svGive(bg) {
     ${opts.length ? `<div class="x-list">${opts.map(([k, n], i) => `<button data-i="${i}">${RES[k][1]} Dar ${n} ${RES[k][0].toLowerCase()}</button>`).join('')}</div>` : '<p class="sv-tip">No tenés dinero ni comida para dar. Podés vender algo en el mercado o recoger granadas.</p>'}
     <p class="sv-tip">Jesús enseñó que lo que hacemos por el que tiene hambre, lo hacemos por él (Mateo 25:35-40).</p></div>`;
   el.hidden = false; el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
-  el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const [k, n] = opts[+b.dataset.i]; if ((s.inv[k] || 0) < n) return; svAdd(k, -n); a.alms[bg.id] = day; const mult = servV() >= 25 ? 2 : 1; svXP((k === 'money' ? 4 + n * 2 : 10) * mult); servAdd(1); S.actT = 1.3; S.actK = 'PickUp_Table'; tone3d(); svUI();
+  el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const [k, n] = opts[+b.dataset.i]; if ((s.inv[k] || 0) < n) return; svAdd(k, -n); a.alms[bg.id] = day; const mult = servV() >= 25 ? 2 : 1; svXP((k === 'money' ? 4 + n * 2 : 10) * mult); servAdd(1); h3do(['M_Reaching_Out', 'PickUp_Table'], 2.6, 1.2); h3npcPlay(bg.o, ['M_Thankful', 'M_Lengthy_Head_Nod'], 3); tone3d(); svUI();
     el.innerHTML = `<div class="inv hx sv-sheet sv-faint"><h3>¡Gracias! Que Dios te bendiga.</h3><p>Tu Servicio creció a <b>${atP().serv}</b> y ganaste experiencia.</p><p class="sv-verse">El que ayuda al pobre le presta al Señor, y él se lo va a recompensar (Proverbios 19:17).</p><button class="sv-up">Seguir el camino</button></div>`; el.querySelector('.sv-up').onclick = () => { el.hidden = true; }; });
 }
 
