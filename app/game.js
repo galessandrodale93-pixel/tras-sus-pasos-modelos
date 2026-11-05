@@ -4,8 +4,8 @@ const { subscribeMember, getMemberState, login, register, verifyEmail, logout, r
 const { wixRequest, mintTokens, setTokens } = await import(location.origin + "/js/wix/client.js");
 const { WIX_CLIENT_ID } = await import(location.origin + "/js/wix/config.js");
 const { queryItems, insertItem, patchItemFields } = await import(location.origin + "/js/wix/items.js");
-const REGIONS=[{id:'nacimiento',name:'Nacimiento'},{id:'infancia',name:'Infancia'},{id:'bautismo',name:'Bautismo'},{id:'galilea',name:'Galilea'},{id:'milagros',name:'Milagros'},{id:'parabolas',name:'Parábolas'}];
-const SOON=['Jerusalén','Cruz','Resurrección','Pentecostés'];
+const REGIONS=[{id:'nacimiento',name:'Nacimiento'},{id:'infancia',name:'Infancia'},{id:'bautismo',name:'Bautismo'},{id:'galilea',name:'Galilea'},{id:'milagros',name:'Milagros'},{id:'parabolas',name:'Parábolas'},{id:'jerusalen',name:'Jerusalén'}];
+const SOON=['Cruz','Resurrección','Pentecostés'];
 const LOCAL={n1:[96,180],n2:[262,276],n3:[152,376],fA:[66,486],fB:[292,486],n4:[180,596],n5:[92,690]};
 const ORDER=['n1','n2','n3','fA','fB','n4','n5'];
 const STORY={
@@ -188,6 +188,36 @@ parabolas:{
   text:'Repasá las historias que contó Jesús y lo que nos enseñan sobre Dios y su reino.',
   game:{type:'emoji',title:'Adiviná la parábola',how:'Mirá las pistas con dibujitos y tocá de qué parábola se trata.',sky:['#BFE0FF','#FFF3DD']},
   ch:{t:'order',q:'Ordená la historia del hijo pródigo',items:['El hijo menor pide su herencia y se va lejos','Gasta todo y pasa hambre cuidando cerdos','Decide volver a la casa de su padre','El padre corre a abrazarlo y hace una fiesta'],exp:'La historia termina con una fiesta: el que estaba perdido fue encontrado.',ref:'Lucas 15:11-24'}}
+},
+jerusalen:{
+ n1:{place:'Jericó',title:'Zaqueo',scene:'jer_n1',
+  text:'{name}, de camino a Jerusalén pasás por Jericó. Un hombre bajito y muy rico, jefe de los cobradores de impuestos, quiere ver a Jesús… pero la multitud no lo deja.',
+  game:{type:'spot',title:'Desde el sicómoro',how:'La multitud se mueve. Tocá a Jesús (el de la luz suave) lo más rápido que puedas.',sky:['#F6D28E','#FFF2D6']},
+  ch:{t:'verse',parts:['Pues el Hijo del Hombre vino a ',0,' y a salvar a los que están ',1,'.'],blanks:['buscar','perdidos'],bank:['buscar','juzgar','perdidos','sanos','castigar','lejos'],exp:'Jesús se invitó a la casa de Zaqueo, y Zaqueo cambió: devolvió lo que había robado y dio la mitad a los pobres.',ref:'Lucas 19:1-10'}},
+ n2:{place:'Monte de los Olivos',title:'La entrada',scene:'jer_n2',
+  text:'Jesús llega a Jerusalén montado en un burrito. La gente extiende sus mantos y ramas de palmera en el camino, y todos gritan de alegría.',
+  game:{type:'pave',title:'Mantos y palmas',how:'Tocá cada lugar del camino antes de que pase el burrito para extender un manto o una palma.',sky:['#BFE0FF','#FFF3DD']},
+  ch:{t:'verse',parts:['¡Alaben a Dios por el ',0,' de David! ¡Bendiciones al que viene en el ',1,' del Señor!'],blanks:['Hijo','nombre'],bank:['Hijo','rey','nombre','templo','poder','pueblo'],exp:'La multitud reconoció a Jesús como el Mesías prometido, el Hijo de David. Él eligió llegar humilde, en un burrito.',ref:'Mateo 21:8-9'}},
+ n3:{place:'El templo',title:'La ofrenda de la viuda',scene:'jer_n3',
+  text:'En el templo, Jesús mira cómo la gente pone sus ofrendas. Los ricos echan mucho dinero. Entonces llega una viuda pobre con dos monedas pequeñas.',
+  game:{type:'coins',title:'La ofrenda justa',how:'Tocá monedas hasta juntar exactamente el monto que se pide.',sky:['#E9D7B4','#FFF6E4']},
+  ch:{t:'mc',q:'¿Por qué Jesús dijo que la viuda dio más que todos?',options:['Porque dio todo lo que tenía para vivir','Porque sus monedas eran de oro','Porque llegó primera','Porque lo hizo delante de todos'],answer:'Porque dio todo lo que tenía para vivir',exp:'Los demás dieron de lo que les sobraba. Ella, de su pobreza, dio todo. Para Dios cuenta el corazón.',ref:'Marcos 12:41-44'}},
+ fA:{place:'El aposento alto',title:'Los pies',fork:1,scene:'jer_fA',
+  text:'Antes de la cena de la Pascua, Jesús se levanta, toma una toalla y una palangana, y empieza a lavarles los pies a sus discípulos.',
+  game:{type:'wash',title:'Lavar los pies',how:'Frotá con el dedo hasta que los pies queden limpios.',sky:['#F3D3B0','#FFF2E2']},
+  ch:{t:'verse',parts:['Así que ahora les doy un nuevo ',0,': ámense unos a otros. Tal como yo los he ',1,', ustedes deben amarse unos a otros.'],blanks:['mandamiento','amado'],bank:['mandamiento','consejo','amado','enseñado','juzgado','castigo'],exp:'Jesús, el Maestro, hizo el trabajo de un sirviente. Así nos enseñó a amar y a servir.',ref:'Juan 13:4-5, 34'}},
+ fB:{place:'La mesa',title:'La última cena',fork:1,scene:'jer_fB',
+  text:'Jesús celebra la Pascua con sus doce discípulos. Toma el pan, da gracias, lo parte y se lo da. Después hace lo mismo con la copa.',
+  game:{type:'missing',title:'Los doce',how:'Memorizá quiénes están en la mesa. Después descubrí quién falta.',sky:['#8C8FDB','#FFC59C']},
+  ch:{t:'mc',q:'¿Qué les pidió Jesús a sus discípulos al compartir el pan?',options:['Que lo hicieran en memoria de él','Que lo guardaran para el viaje','Que lo vendieran en el mercado','Que lo dieran a los sacerdotes'],answer:'Que lo hicieran en memoria de él',exp:'Por eso la iglesia celebra la Cena del Señor: para recordar su cuerpo entregado y su sangre derramada por nosotros.',ref:'Lucas 22:19-20'}},
+ n4:{place:'Getsemaní',title:'El huerto',scene:'jer_n4',
+  text:'De noche, Jesús va al huerto de Getsemaní a orar. Les pide a sus discípulos que velen con él, pero ellos se duermen una y otra vez.',
+  game:{type:'awake',title:'Velar y orar',how:'Tocá las lámparas para mantenerlas encendidas. Si se apagan tres, termina.',sky:['#1E2C66','#4A5A9A'],night:true},
+  ch:{t:'verse',parts:['Padre, si quieres, te pido que quites esta ',0,' de sufrimiento de mí. Sin embargo, quiero que se haga tu ',1,', no la mía.'],blanks:['copa','voluntad'],bank:['copa','carga','voluntad','fuerza','gloria','noche'],exp:'Jesús sintió una angustia enorme, y aun así eligió obedecer al Padre por amor a nosotros.',ref:'Lucas 22:42'}},
+ n5:{place:'Hito del camino',title:'Repasá la etapa',scene:'hito7',
+  text:'Repasá los días de Jesús en Jerusalén, desde Jericó hasta el huerto.',
+  game:{type:'guess',title:'Adiviná la palabra',how:'Tocá letras para descubrir la palabra escondida. Tenés seis errores.',sky:['#BFE0FF','#FFF3DD']},
+  ch:{t:'order',q:'Ordená estos momentos en Jerusalén',items:['Jesús entra en un burrito y la gente lo aclama','Jesús ve la ofrenda de la viuda en el templo','Lava los pies de sus discípulos y comparte la cena','Ora en el huerto de Getsemaní'],exp:'Así fue la última semana de Jesús antes de la cruz.',ref:'Mateo 21 · Marcos 12 · Juan 13 · Lucas 22'}}
 }};
 const MAP_PLACES=[
  {id:'nazaret',name:'Nazaret',x:165,y:112,lx:-50,ly:4},{id:'capernaum',name:'Capernaum',x:196,y:86,lx:-62,ly:-8},
@@ -543,7 +573,42 @@ const SCENES={
   bg:T(60,46,1,A.cloud(u,80))+T(260,34,1,A.cloud(u,60,.9))+T(70,156,1,A.cloud(u,150))+T(260,160,1,A.cloud(u,150))+T(160,178,1,A.cloud(u,230)),
   actors:{scroll:u=>A.scroll(u),spk:u=>A.sparkles(u,9,70)},
   tl:[['scroll',.4,2.2,{x:180,y:92,sx:.08,o:.4},{x:180,y:92,sx:1,o:1}],['spk',2,3.2,{x:180,y:92,o:0},{x:180,y:92,o:1}]],
-  caps:[[0,'Semillas, ovejas, perlas y casas.'],[2.4,'Historias simples con verdades enormes.'],[4.6,'Repasá lo que enseñó Jesús.']]})
+  caps:[[0,'Semillas, ovejas, perlas y casas.'],[2.4,'Historias simples con verdades enormes.'],[4.6,'Repasá lo que enseñó Jesús.']]}),
+ jer_n1:u=>({sky:'desert',dur:8,
+  bg:T(250,46,1,A.sun(u,20))+A.hills(u,126,'#E9BE84','#C98F52',18)+A.ground(u,160,'#E6C99A','#C9A877')+`<g transform="translate(90,160)"><rect x="-5" y="-60" width="10" height="60" fill="#6A4A2E"/><circle cx="0" cy="-70" r="36" fill="#5E8A4A"/></g>`,
+  actors:{zaq:u=>A.figure(u,'#8E2E22',{}),crowd:u=>A.people(u,5),jesus:u=>A.presence(u)},
+  tl:[['crowd',0,8,{x:380,y:166,s:.85},{x:200,y:166,s:.85}],['jesus',0,8,{x:420,y:160},{x:240,y:160}],['zaq',0,3.4,{x:140,y:166,s:.7},{x:96,y:110,s:.6}],['zaq',3.4,8,{x:96,y:110,s:.6},{x:150,y:166,s:.7}]],
+  caps:[[0,'Zaqueo quiere ver a Jesús, pero la multitud no lo deja.'],[2.6,'Se sube a un árbol sicómoro.'],[5.2,'Jesús lo mira y le dice que va a ir a su casa.']]}),
+ jer_n2:u=>({sky:'day',dur:8.5,
+  bg:T(70,40,1,A.cloud(u,64))+A.hills(u,118,'#BFCB8C','#93A262',18)+T(300,120,.9,A.walls(u))+A.ground(u,160,'#E6D2A0','#C9B07A')+T(60,150,1,A.palm(u))+T(320,154,1,A.palm(u)),
+  actors:{donk:u=>A.donkey(u),jesus:u=>A.presence(u),crowd:u=>A.people(u,4),crowd2:u=>A.people(u,4),spk:u=>A.sparkles(u,8,50)},
+  tl:[['donk',0,8.5,{x:-30,y:166},{x:220,y:164}],['jesus',0,8.5,{x:-30,y:146},{x:220,y:144}],['crowd',0,8.5,{x:110,y:176,s:.8},{x:110,y:176,s:.8}],['crowd2',0,8.5,{x:280,y:176,s:.8},{x:280,y:176,s:.8}],['spk',4,8.5,{x:200,y:120,o:0},{x:200,y:120,o:1}]],
+  caps:[[0,'Jesús llega a Jerusalén montado en un burrito.'],[2.6,'La gente extiende mantos y ramas en el camino.'],[5.2,'«¡Bendiciones al que viene en el nombre del Señor!»']]}),
+ jer_n3:u=>({sky:'temple',dur:8,
+  bg:A.columns(u)+`<g transform="translate(180,160)"><path d="M-26 0 L-20 -30 H20 L26 0Z" fill="#B07A3A"/><path d="M-12 -30 Q0 -44 12 -30" fill="#8A5A2A"/></g>`+T(300,162,.9,A.people(u,3)),
+  actors:{widow:u=>A.figure(u,'#5A4A6A',{scarf:'#9A9A9A'}),coins:u=>`<g><circle cx="-4" r="3" fill="#C8CCD4"/><circle cx="4" r="3" fill="#C8CCD4"/></g>`,glow:u=>A.glow(u,40)},
+  tl:[['widow',0,3.6,{x:-30,y:162,s:.85},{x:140,y:162,s:.85}],['coins',3.4,4.6,{x:160,y:120,o:1},{x:180,y:132,o:1}],['glow',4.6,8,{x:180,y:130,o:0},{x:180,y:130,o:1}]],
+  caps:[[0,'Los ricos echan mucho dinero en las ofrendas del templo.'],[2.6,'Una viuda pobre pone dos monedas pequeñas.'],[5.2,'Jesús dice que ella dio más que todos.']]}),
+ jer_fA:u=>({sky:'dusk',dur:8,
+  bg:`<rect x="-20" y="100" width="400" height="100" fill="#C9A877"/><rect x="40" y="128" width="280" height="14" rx="4" fill="#8A6A44"/>`+T(110,150,.9,A.people(u,4))+T(250,150,.9,A.people(u,4)),
+  actors:{jesus:u=>A.presence(u),bowl:u=>`<ellipse cx="0" cy="0" rx="16" ry="5" fill="#B07A3A"/>`,glow:u=>A.glow(u,40)},
+  tl:[['jesus',0,4,{x:330,y:166},{x:190,y:170}],['bowl',2,8,{x:210,y:178,o:0},{x:210,y:178,o:1}],['glow',4.4,8,{x:200,y:160,o:0},{x:200,y:160,o:1}]],
+  caps:[[0,'Jesús se levanta de la mesa y toma una toalla.'],[2.6,'Les lava los pies a sus discípulos.'],[5.2,'Les pide que se amen unos a otros como él los amó.']]}),
+ jer_fB:u=>({sky:'night',dur:8,
+  bg:`<rect x="-20" y="110" width="400" height="90" fill="#5A4632"/><rect x="40" y="130" width="280" height="14" rx="4" fill="#8A6A44"/>`+T(110,152,.9,A.people(u,5))+T(260,152,.9,A.people(u,5))+T(180,150,.9,A.presence(u)),
+  actors:{bread:u=>`<ellipse cx="0" cy="0" rx="12" ry="6" fill="#D9A25A"/>`,cup:u=>`<path d="M-7 -10 H7 L4 0 H-4Z M-1 0 V8 M-6 8 H6" fill="#C9A04A" stroke="#C9A04A" stroke-width="2"/>`,lamp:u=>A.glow(u,60,.7)},
+  tl:[['lamp',0,8,{x:180,y:110,o:.7},{x:180,y:110,o:1}],['bread',1,4,{x:166,y:126,o:0},{x:166,y:126,o:1}],['cup',4,8,{x:196,y:126,o:0},{x:196,y:126,o:1}]],
+  caps:[[0,'Jesús celebra la Pascua con sus doce discípulos.'],[2.6,'Parte el pan y les dice que es su cuerpo entregado por ellos.'],[5.2,'Comparte la copa: es el nuevo pacto.']]}),
+ jer_n4:u=>({sky:'night',dur:8.5,
+  bg:A.stars(u)+A.hills(u,130,'#2E4A2E','#1C2A1C',18)+`<g fill="#3E5A3A">${[40,110,250,320].map(x=>`<circle cx="${x}" cy="120" r="28"/>`).join('')}</g>`+T(80,166,.8,A.people(u,3)),
+  actors:{jesus:u=>A.presence(u),moon:u=>A.moon(u),glow:u=>A.glow(u,50,.6)},
+  tl:[['moon',0,8.5,{x:290,y:40},{x:300,y:34}],['jesus',0,8.5,{x:220,y:160},{x:222,y:162}],['glow',3,8.5,{x:222,y:130,o:0},{x:222,y:130,o:.9}]],
+  caps:[[0,'De noche, Jesús va a orar al huerto de Getsemaní.'],[2.6,'Sus discípulos se duermen una y otra vez.'],[5.2,'«Quiero que se haga tu voluntad, no la mía.»']]}),
+ hito7:u=>({sky:'gold',dur:7,
+  bg:T(60,46,1,A.cloud(u,80))+T(260,34,1,A.cloud(u,60,.9))+T(70,156,1,A.cloud(u,150))+T(260,160,1,A.cloud(u,150))+T(160,178,1,A.cloud(u,230)),
+  actors:{scroll:u=>A.scroll(u),spk:u=>A.sparkles(u,9,70)},
+  tl:[['scroll',.4,2.2,{x:180,y:92,sx:.08,o:.4},{x:180,y:92,sx:1,o:1}],['spk',2,3.2,{x:180,y:92,o:0},{x:180,y:92,o:1}]],
+  caps:[[0,'Palmas, monedas, una toalla y una copa.'],[2.4,'La última semana antes de la cruz.'],[4.6,'Repasá lo que viviste.']]})
 };
 const ease=k=>k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
 const DEF={x:0,y:0,s:1,sx:1,r:0,o:1};
@@ -606,6 +671,13 @@ const NICON={
  start:'<path d="M0 -9 Q1.2 -1.2 9 0 Q1.2 1.2 0 9 Q-1.2 1.2 -9 0 Q-1.2 -1.2 0 -9Z" fill="currentColor"/>'
 };
 const GICON={
+ pave:'<path d="M-10 5 H10" stroke="currentColor" stroke-width="3"/><path d="M-6 3 L-2 -8 M2 3 L6 -8" stroke="currentColor" stroke-width="2" fill="none"/>',
+ spot:'<circle cx="-2" cy="-2" r="6" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M3 3 L9 9" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>',
+ coins:'<circle cx="-4" cy="2" r="5" fill="currentColor"/><circle cx="4" cy="-2" r="5" fill="none" stroke="currentColor" stroke-width="2"/>',
+ wash:'<path d="M-8 4 Q0 12 8 4" stroke="currentColor" stroke-width="2.4" fill="none"/><path d="M0 -9 Q4 -4 0 -1 Q-4 -4 0 -9Z" fill="currentColor"/>',
+ missing:'<circle cx="-5" cy="-4" r="3" fill="currentColor"/><circle cx="5" cy="-4" r="3" fill="currentColor"/><circle cx="-5" cy="5" r="3" fill="currentColor"/><circle cx="5" cy="5" r="3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 2"/>',
+ awake:'<path d="M-6 6 Q0 10 6 6 L4 2 H-4Z" fill="currentColor"/><path d="M4 0 Q8 -6 5 -10 Q3 -5 4 0Z" fill="currentColor"/>',
+ guess:'<rect x="-10" y="-6" width="5" height="12" rx="1" fill="currentColor"/><rect x="-3" y="-6" width="5" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="-6" width="5" height="12" rx="1" fill="currentColor"/>',
  sow:'<circle cx="-6" cy="-5" r="2" fill="currentColor"/><circle cx="0" cy="-2" r="2" fill="currentColor"/><circle cx="6" cy="1" r="2" fill="currentColor"/><path d="M-9 8 Q0 2 9 8" stroke="currentColor" stroke-width="2.2" fill="none"/>',
  hotcold:'<path d="M-2 -9 h4 v10 a5 5 0 1 1 -4 0z" fill="none" stroke="currentColor" stroke-width="2"/><circle cy="5" r="2.6" fill="currentColor"/>',
  kind:'<path d="M0 8 C-12 0 -8 -10 0 -4 C8 -10 12 0 0 8Z" fill="currentColor"/>',
@@ -650,7 +722,7 @@ const GICON={
  connect:'<path d="M-8 6L-2 -7 4 4 9 -6" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="-8" cy="6" r="2.4" fill="currentColor"/><circle cx="-2" cy="-7" r="2.4" fill="currentColor"/><circle cx="4" cy="4" r="2.4" fill="currentColor"/><circle cx="9" cy="-6" r="2.4" fill="currentColor"/>'
 };
 function rng(seed){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
-const VIGN=[[5,262,176,'tree',.8],[5,74,292,'house',1],[5,272,676,'rocks',1],[4,262,176,'riv',1],[4,74,292,'house',1],[4,272,676,'palms',.8],[3,262,176,'house',1],[3,74,292,'riv',1],[3,272,676,'palms',.8],[0,258,170,'house',1],[0,74,292,'stable',.7],[0,272,676,'camels',.6],[1,262,178,'temple',.55],[1,76,290,'pyr',.7],[1,272,676,'tree',.8],[2,262,176,'palms',.8],[2,74,292,'riv',1],[2,272,676,'rocks',1]];
+const VIGN=[[6,262,176,'temple',.55],[6,74,292,'palms',.8],[6,272,676,'tree',.8],[5,262,176,'tree',.8],[5,74,292,'house',1],[5,272,676,'rocks',1],[4,262,176,'riv',1],[4,74,292,'house',1],[4,272,676,'palms',.8],[3,262,176,'house',1],[3,74,292,'riv',1],[3,272,676,'palms',.8],[0,258,170,'house',1],[0,74,292,'stable',.7],[0,272,676,'camels',.6],[1,262,178,'temple',.55],[1,76,290,'pyr',.7],[1,272,676,'tree',.8],[2,262,176,'palms',.8],[2,74,292,'riv',1],[2,272,676,'rocks',1]];
 function vign(u,k){
   if(k==='house')return T(-14,0,.9,A.house(u))+T(16,2,.7,A.house(u));
   if(k==='stable')return T(0,0,.9,A.stable(u))+T(0,-62,1,A.star(u,3));
@@ -1696,8 +1768,108 @@ function Emoji(th, f) {
       if (fT > 0) banner(c, th, fb, fT * 1.4); } };
 }
 
-const ENGINES={sow:Sow,hotcold:HotCold,kind:Kind,rotate:Rotate,scale:Scale,blocks:Blocks,emoji:Emoji,flood:Flood,roof:Roof,count:Count,trace:Trace,reveal:Reveal,hop:Hop,sort:Sort,pour:Pour,spell:Spell,net:Net,row:Row,pipes:Pipes,lights:Lights,match:Match,run:Runner,fly:Flyer,cross:Crosser,catch:Catcher,memo:Memo,maze:Maze,simon:Simon,verso:Verso,herd:Herd,pop:Pop,swarm:Swarm,slide:Slide,balance:Balance,order:Order,words:Words,stack:Stack,diff:Diff,tf:TrueFalse,lantern:Lantern,rhythm:Rhythm,connect:Connect};
-const TAPG=['hotcold','kind','rotate','scale','blocks','emoji','flood','roof','count','reveal','hop','sort','spell','net','row','pipes','lights','match','memo','simon','verso','pop','slide','order','diff','tf','rhythm','connect','stack','balance'],DRAGG=['sow','trace','pour','herd','swarm','words','lantern'];
+/* ===== juegos de Jerusalén: mantos y palmas, Zaqueo, las monedas, lavar los pies, los doce, velar y adivinar ===== */
+// 1. Mantos y palmas (tocá el camino justo antes de que pase el burrito)
+function Pave(th, f) {
+  let marks = [], dx = 0, score = 0, miss = 0, over = false, tt = 0, sp = 0, combo = 0, fb = '', fT = 0; const DY = 300;
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap') return; const m = marks.find(q => !q.done && Math.abs(q.x - d.x) < 34); if (!m) { combo = 0; return; } m.done = true; m.kind = Math.random() < .5 ? 'palm' : 'cloak'; const dist = m.x - 90; const good = dist > 0 && dist < 120; if (good) { combo++; score += 10 + combo * 2; tone(520 + combo * 20, .07); } else { score += 3; } fb = combo > 4 ? '¡Hosanna! ×' + combo : ''; fT = combo > 4 ? .5 : 0; },
+    update(dt) { if (over) return; tt += dt; fT = Math.max(0, fT - dt); const v = (110 + tt * 2.4) * f; marks.forEach(m => m.x -= v * dt); sp -= dt; if (sp <= 0) { sp = Math.max(.35, .9 - tt * .01) / f; marks.push({ x: GW + 30, done: false }); }
+      marks.forEach(m => { if (!m.done && !m.lost && m.x < 90) { m.lost = true; miss++; combo = 0; tone(160, .15); if (miss >= 6) over = true; } }); marks = marks.filter(m => m.x > -60); },
+    draw(c, t) { skyBg(c, th, t); c.fillStyle = th.hx ? '#3A2E20' : '#E9D7B4'; c.fillRect(0, DY - 20, GW, 70); c.fillStyle = th.hx ? '#2A2418' : '#C9B48A'; c.fillRect(0, DY + 50, GW, GH);
+      for (let i = 0; i < 6; i++) { const x = (i * 70 - tt * 30) % (GW + 80) + GW + 40 - GW - 40; c.save(); c.translate(((x % (GW + 80)) + GW + 80) % (GW + 80) - 40, DY + 110); c.scale(.8, .8); DRAW.dove(c, 0, 0, t); c.restore(); }
+      marks.forEach(m => { if (m.done) { if (m.kind === 'palm') { c.strokeStyle = '#4E8A3A'; c.lineWidth = 3; c.beginPath(); c.moveTo(m.x - 20, DY + 14); c.lineTo(m.x + 20, DY + 6); c.stroke(); for (let k = -3; k <= 3; k++) { c.beginPath(); c.moveTo(m.x + k * 6, DY + 10); c.lineTo(m.x + k * 6 - 4, DY - 2); c.stroke(); } } else { c.fillStyle = ['#8E2E22', '#3E5A8A', '#C9A04A'][Math.floor(m.x) % 3 >= 0 ? Math.abs(Math.floor(m.x)) % 3 : 0]; rr(c, m.x - 24, DY + 2, 48, 18, 4); c.fill(); } } else { c.strokeStyle = th.hx ? 'rgba(233,195,122,.6)' : 'rgba(34,64,127,.35)'; c.setLineDash([4, 4]); c.lineWidth = 2; c.strokeRect(m.x - 24, DY, 48, 22); c.setLineDash([]); } });
+      c.save(); c.translate(60, DY - 4); c.fillStyle = '#8A7A6A'; c.beginPath(); c.ellipse(0, 0, 30, 14, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(30, -14, 10, 6, -.6, 0, 7); c.fill(); [-18, -8, 10, 20].forEach(x => c.fillRect(x - 2, 8 + Math.sin(t * 10 + x) * 2, 4, 16)); c.restore(); c.fillStyle = 'rgba(255,240,190,.9)'; c.beginPath(); c.arc(60, DY - 40, 10, 0, 7); c.fill(); c.fillStyle = '#FFF8E2'; c.beginPath(); c.ellipse(60, DY - 22, 7, 12, 0, 0, 7); c.fill();
+      lab(c, th, 'FALTAN ' + Math.max(0, 6 - miss) + ' · COMBO ' + combo, 16, 27); lab(c, th, 'Tocá cada lugar del camino antes de que llegue Jesús', GW / 2, 80, 'center'); lab(c, th, 'Mateo 21:8-9', GW / 2, GH - 14, 'center'); if (fT > 0) banner(c, th, fb, fT * 2); } };
+}
+// 2. Zaqueo (encontrá a Jesús entre la multitud desde el árbol)
+function Spot(th, f) {
+  let crowd = [], jx = 0, jy = 0, score = 0, over = false, round = 0, left = 0, full = 0, found = 0, miss = null, mT = 0;
+  function deal() { round++; found = 0; crowd = []; const n = Math.min(60, 18 + round * 6); for (let i = 0; i < n; i++) crowd.push({ x: Math.random() * GW, y: 200 + Math.random() * 280, v: (Math.random() - .5) * (30 + round * 6) * f, c: ['#7E9BD0', '#C9876A', '#9AB072', '#B08CC9', '#D3A35E', '#E8E0D0'][i % 6], j: false }); const J = crowd[Math.floor(Math.random() * n)]; J.j = true; const add = 14 / f; left = round === 1 ? add + 6 : left + add; full = Math.max(full, left); }
+  deal();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap' || found) return; const J = crowd.find(q => q.j); if (Math.hypot(J.x - d.x, J.y - 6 - d.y) < 24) { found = 1.4; score += 30 + Math.round(left) * 3; tone(990, .4); burstAt(J.x, J.y); setTimeout(() => { if (!over) deal(); }, 1400); } else { miss = d; mT = .4; left = Math.max(0, left - 2); tone(170, .2); } },
+    update(dt) { if (over) return; mT = Math.max(0, mT - dt); crowd.forEach(q => { q.x += q.v * dt; if (q.x < -10) q.x = GW + 10; if (q.x > GW + 10) q.x = -10; }); if (found) found = Math.max(0, found - dt); else left -= dt; if (left <= 0) { left = 0; over = true; } },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'MULTITUD ' + round, 16, 27); c.fillStyle = '#5A4A32'; c.fillRect(0, 100, 22, 110); c.fillStyle = '#4E7A3A'; c.beginPath(); c.arc(22, 112, 38, 0, 7); c.fill(); c.fillStyle = '#7A5A3A'; c.beginPath(); c.arc(32, 140, 8, 0, 7); c.fill();
+      lab(c, th, '¿Dónde está Jesús? Es el de la luz suave', GW / 2 + 20, 150, 'center');
+      crowd.slice().sort((a, b) => a.y - b.y).forEach(q => { if (q.j) { c.fillStyle = 'rgba(255,240,190,' + (.25 + Math.sin(t * 3) * .1) + ')'; c.beginPath(); c.arc(q.x, q.y - 10, 18, 0, 7); c.fill(); c.fillStyle = '#FFF8E2'; } else c.fillStyle = q.c; c.beginPath(); c.ellipse(q.x, q.y, 9, 16, 0, 0, 7); c.fill(); c.fillStyle = '#D6A57C'; c.beginPath(); c.arc(q.x, q.y - 20, 6.5, 0, 7); c.fill(); });
+      if (mT > 0 && miss) { c.strokeStyle = `rgba(239,111,97,${mT * 2})`; c.lineWidth = 3; c.beginPath(); c.arc(miss.x, miss.y, 18, 0, 7); c.stroke(); }
+      lab(c, th, 'Lucas 19:1-10', GW / 2, GH - 14, 'center'); banner(c, th, found ? '¡Zaqueo, bajá enseguida!' : '', found); } };
+}
+// 3. Las monedas (juntá el monto justo)
+function Coins(th, f) {
+  const VAL = [1, 2, 5, 10, 20]; let target = 0, got = 0, picks = [], coins = [], score = 0, over = false, round = 0, left = 0, full = 0, done = 0, fb = '', fT = 0;
+  function deal() { round++; done = 0; picks = []; got = 0; coins = shuffle(Array.from({ length: 10 }, (_, i) => ({ v: VAL[Math.floor(Math.random() * VAL.length)], i }))).map((q, j) => ({ ...q, x: 50 + (j % 5) * 65, y: 340 + Math.floor(j / 5) * 70, used: false })); const sub = shuffle(coins.slice()).slice(0, 2 + Math.floor(Math.random() * Math.min(3, round))); target = sub.reduce((s, q) => s + q.v, 0); const add = 16 / f; left = round === 1 ? add + 8 : left + add; full = Math.max(full, left); }
+  deal();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap' || done) return; if (d.y > 470 && d.x > GW / 2 - 70 && d.x < GW / 2 + 70) { coins.forEach(q => q.used = false); got = 0; picks = []; tone(300, .05); return; } const q = coins.find(q => !q.used && Math.hypot(q.x - d.x, q.y - d.y) < 26); if (!q) return; q.used = true; got += q.v; picks.push(q); tone(500 + q.v * 20, .06);
+      if (got === target) { done = 1.2; score += 30 + Math.round(left) * 2 + Math.max(0, 6 - picks.length) * 3; fb = '¡Justo!'; fT = 1; tone(990, .4); burstAt(GW / 2, 200); setTimeout(() => { if (!over) deal(); }, 1200); } else if (got > target) { fb = '¡Te pasaste!'; fT = .8; left = Math.max(0, left - 3); coins.forEach(q => q.used = false); got = 0; picks = []; tone(170, .25); } },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); if (done) done = Math.max(0, done - dt); else left -= dt; if (left <= 0) { left = 0; over = true; } },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'OFRENDA ' + round, 16, 27); card(c, th, 16, 70, GW - 32, 210);
+      c.fillStyle = INK(th); c.font = '800 15px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText('Juntá exactamente', GW / 2, 110); c.font = '900 46px Nunito,sans-serif'; c.fillText(target + ' monedas', GW / 2, 168); c.font = '800 16px Nunito,sans-serif'; c.fillText('Llevás: ' + got, GW / 2, 210); c.font = '700 12px Nunito,sans-serif'; c.fillText('La viuda dio todo lo que tenía · Marcos 12:41-44', GW / 2, 254); c.textAlign = 'left';
+      coins.forEach(q => { c.globalAlpha = q.used ? .25 : 1; const g = c.createRadialGradient(q.x - 6, q.y - 6, 2, q.x, q.y, 24); g.addColorStop(0, '#FFF2B0'); g.addColorStop(1, q.v >= 10 ? '#C9A04A' : '#A8A8A8'); c.fillStyle = g; c.beginPath(); c.arc(q.x, q.y, 24, 0, 7); c.fill(); c.fillStyle = '#3A2A1A'; c.font = '900 16px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText(q.v, q.x, q.y + 6); c.textAlign = 'left'; c.globalAlpha = 1; });
+      c.fillStyle = th.hx ? '#2A2418' : '#FFFFFF'; rr(c, GW / 2 - 70, 476, 140, 34, 12); c.fill(); lab(c, th, 'Empezar de nuevo', GW / 2, 497, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.6); } };
+}
+// 4. Lavar los pies (frotá hasta que quede limpio)
+function Wash(th, f) {
+  const W = 30, H = 18, cs = 10, ox = (GW - W * cs) / 2, oy = 150; let dirt = [], score = 0, over = false, round = 0, left = 0, full = 0, down = false, done = 0;
+  function deal() { round++; done = 0; dirt = Array.from({ length: W * H }, (_, i) => { const x = i % W, y = Math.floor(i / W), fx = (x - W / 2) / (W / 2), fy = (y - H / 2) / (H / 2); return fx * fx + fy * fy * 1.6 < 1 ? .6 + Math.random() * .4 : 0; }); const add = 14 / f; left = round === 1 ? add + 6 : left + add; full = Math.max(full, left); }
+  deal();
+  const rub = d => { const cx = Math.floor((d.x - ox) / cs), cy2 = Math.floor((d.y - oy) / cs); for (let y = cy2 - 2; y <= cy2 + 2; y++) for (let x = cx - 2; x <= cx + 2; x++) { if (x < 0 || y < 0 || x >= W || y >= H) continue; const i = y * W + x; if (dirt[i] > 0) { dirt[i] = Math.max(0, dirt[i] - .18 * f); } } };
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || done) return; if (k === 'down') { down = true; rub(d); } if (k === 'move' && down) rub(d); if (k === 'up') down = false;
+      const rest = dirt.reduce((s, v) => s + v, 0); if (rest < 2) { done = 1.4; score += 40 + Math.round(left) * 3; tone(990, .4); burstAt(GW / 2, oy + 90); setTimeout(() => { if (!over) deal(); }, 1400); } else if (Math.random() < .1) tone(300 + Math.random() * 200, .03); },
+    update(dt) { if (over) return; if (done) done = Math.max(0, done - dt); else left -= dt; if (left <= 0) { left = 0; over = true; } },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'PIES ' + round, 16, 27); lab(c, th, 'Frotá con el dedo para lavar los pies', GW / 2, 110, 'center');
+      c.fillStyle = '#E6B691'; c.beginPath(); c.ellipse(GW / 2 - 40, oy + 90, 60, 80, -.2, 0, 7); c.fill(); c.beginPath(); c.ellipse(GW / 2 + 40, oy + 90, 60, 80, .2, 0, 7); c.fill();
+      dirt.forEach((v, i) => { if (v <= 0) return; c.fillStyle = `rgba(110,80,50,${v * .85})`; c.fillRect(ox + (i % W) * cs, oy + Math.floor(i / W) * cs, cs, cs); });
+      c.fillStyle = '#B07A3A'; c.beginPath(); c.ellipse(GW / 2, oy + 260, 140, 28, 0, 0, 7); c.fill(); c.fillStyle = '#5FA8D8'; c.beginPath(); c.ellipse(GW / 2, oy + 256, 120, 18, 0, 0, 7); c.fill();
+      lab(c, th, '«Ámense unos a otros» · Juan 13:34', GW / 2, GH - 14, 'center'); banner(c, th, done ? '¡Como Jesús, servir con amor!' : '', done); } };
+}
+// 5. Los doce (¿quién falta?)
+const TWELVE = ['Pedro', 'Andrés', 'Santiago', 'Juan', 'Felipe', 'Bartolomé', 'Mateo', 'Tomás', 'Santiago, hijo de Alfeo', 'Tadeo', 'Simón, el zelote', 'Judas Iscariote'];
+function Missing(th, f) {
+  let shown = [], gone = null, phase = 'show', pT = 0, opts = [], score = 0, lives = 3, over = false, round = 0, fb = '', fT = 0;
+  function deal() { round++; const n = Math.min(12, 5 + round); shown = shuffle(TWELVE.slice()).slice(0, n); gone = shown[Math.floor(Math.random() * n)]; const o = new Set([gone]); while (o.size < 4) o.add(shown[Math.floor(Math.random() * n)]); opts = shuffle([...o]); phase = 'show'; pT = (2.5 + n * .25) / f; }
+  deal();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap' || phase !== 'ask') return; const i = Math.floor((d.y - 340) / 42); if (i < 0 || i > 3) return; if (opts[i] === gone) { score += 20 + round * 4; fb = '¡Bien visto!'; tone(880, .2); } else { lives--; fb = 'Faltaba: ' + gone; tone(170, .3); if (lives <= 0) { over = true; return; } } phase = 'fb'; fT = 1; setTimeout(() => { if (!over) deal(); }, 1000); },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); if (phase === 'show') { pT -= dt; if (pT <= 0) phase = 'ask'; } },
+    draw(c, t) { skyBg(c, th, t); hearts(c, lives, 3); lab(c, th, 'RONDA ' + round, GW - 16, 27, 'right'); card(c, th, 16, 60, GW - 32, 260);
+      c.fillStyle = INK(th); c.font = '800 14px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText(phase === 'show' ? 'Memorizá quiénes están en la mesa' : '¿Quién falta?', GW / 2, 88);
+      const list = phase === 'show' ? shown : shown.filter(x => x !== gone); list.forEach((nm, i) => { const col = i % 2, row = Math.floor(i / 2); c.font = '700 13px Nunito,sans-serif'; c.fillText(nm, GW / 2 + (col ? 78 : -78), 118 + row * 30); }); c.textAlign = 'left';
+      if (phase !== 'show') opts.forEach((o, i) => { c.fillStyle = th.hx ? '#2A2418' : '#FFFFFF'; rr(c, 30, 340 + i * 42, GW - 60, 36, 12); c.fill(); c.fillStyle = INK(th); c.font = '800 14px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText(o, GW / 2, 363 + i * 42); c.textAlign = 'left'; });
+      lab(c, th, 'Los doce apóstoles · Mateo 10:2-4', GW / 2, GH - 14, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.4); } };
+}
+// 6. Velar en Getsemaní (mantené encendidas las lámparas)
+function Awake(th, f) {
+  const P = [[70, 240], [180, 200], [290, 240], [110, 360], [250, 360]]; let lamps = P.map(() => 1), score = 0, over = false, tt = 0, out = 0;
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap') return; P.forEach(([x, y], i) => { if (Math.hypot(d.x - x, d.y - y) < 40 && lamps[i] < .95) { score += Math.round((1 - lamps[i]) * 20) + 2; lamps[i] = 1; tone(560, .06); } }); },
+    update(dt) { if (over) return; tt += dt; score += dt * 2; lamps = lamps.map((v, i) => Math.max(0, v - dt * (.08 + tt * .004 + (i % 3) * .02) * f * (.6 + Math.random() * .8))); out = lamps.filter(v => v <= 0).length; if (out >= 3) over = true; },
+    draw(c, t) { skyBg(c, th, t); c.fillStyle = th.hx ? '#1C2A1C' : '#2E4A2E'; c.beginPath(); c.moveTo(0, 170); for (let x = 0; x <= GW; x += 30) c.lineTo(x, 160 + Math.sin(x * .05) * 12); c.lineTo(GW, GH); c.lineTo(0, GH); c.fill();
+      for (let i = 0; i < 5; i++) { c.fillStyle = '#3E5A3A'; c.beginPath(); c.arc(30 + i * 75, 150, 26, 0, 7); c.fill(); }
+      P.forEach(([x, y], i) => { const v = lamps[i]; if (v > 0) { const g = c.createRadialGradient(x, y - 10, 2, x, y - 10, 40 * v + 6); g.addColorStop(0, `rgba(255,214,120,${.8 * v})`); g.addColorStop(1, 'rgba(255,214,120,0)'); c.fillStyle = g; c.beginPath(); c.arc(x, y - 10, 46, 0, 7); c.fill(); } c.fillStyle = '#B4704A'; c.beginPath(); c.ellipse(x, y + 6, 20, 9, 0, 0, 7); c.fill(); if (v > 0) { c.fillStyle = '#FFC94A'; c.beginPath(); c.ellipse(x + 16, y - 6 * v, 4, 10 * v, 0, 0, 7); c.fill(); } c.fillStyle = INK(th); c.globalAlpha = .7; rr(c, x - 20, y + 20, 40 * v, 4, 2); c.fill(); c.globalAlpha = 1; });
+      lab(c, th, 'APAGADAS ' + out + '/3', 16, 27); lab(c, th, 'Tocá las lámparas antes de que se apaguen', GW / 2, 120, 'center'); lab(c, th, '«Quiero que se haga tu voluntad, no la mía» · Lucas 22:42', GW / 2, GH - 14, 'center'); } };
+}
+// 7. Adiviná la palabra (letra por letra)
+const GUESS_W = [['HOSANNA', 'Lo gritaba la gente con palmas'], ['BURRITO', 'Jesús entró montado en uno'], ['ZAQUEO', 'Se subió a un sicómoro'], ['VIUDA', 'Dio dos monedas, todo lo que tenía'], ['TOALLA', 'Jesús la usó para secar los pies'], ['PAN', 'Jesús lo partió en la última cena'], ['COPA', 'La compartió con sus discípulos'], ['GETSEMANI', 'El huerto donde oró'], ['MANDAMIENTO', 'Nuevo: ámense unos a otros'], ['PASCUA', 'La fiesta que celebraban en Jerusalén']];
+function Guess(th, f) {
+  const AB = 'ABCDEFGHIJLMNOPQRSTUVZ'; let w = null, hit = new Set(), wrong = 0, score = 0, over = false, n = 0, lives = 3, fb = '', fT = 0, lock = false; const order = shuffle(GUESS_W.slice());
+  function deal() { w = order[n % order.length]; n++; hit = new Set(); wrong = 0; lock = false; }
+  deal();
+  const kb = i => ({ x: 22 + (i % 8) * 40, y: 330 + Math.floor(i / 8) * 46 });
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap' || lock) return; for (let i = 0; i < AB.length; i++) { const p = kb(i); if (d.x > p.x && d.x < p.x + 36 && d.y > p.y && d.y < p.y + 40) { const L = AB[i]; if (hit.has(L)) return; hit.add(L); if (w[0].includes(L)) { tone(600, .06); if ([...w[0]].every(ch => hit.has(ch))) { lock = true; score += 30 + Math.max(0, 6 - wrong) * 8; fb = '¡' + w[0] + '!'; fT = 1.2; tone(990, .35); setTimeout(() => { if (!over) deal(); }, 1200); } } else { wrong++; tone(200, .1); if (wrong >= 6) { lock = true; lives--; fb = 'Era ' + w[0]; fT = 1.2; if (lives <= 0) { over = true; return; } setTimeout(() => { if (!over) deal(); }, 1200); } } return; } } },
+    update(dt) { fT = Math.max(0, fT - dt); },
+    draw(c, t) { skyBg(c, th, t); hearts(c, lives, 3); lab(c, th, 'PALABRA ' + n + ' · ERRORES ' + wrong + '/6', GW - 16, 27, 'right'); card(c, th, 16, 60, GW - 32, 240);
+      c.fillStyle = INK(th); c.font = '700 14px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText('Pista: ' + w[1], GW / 2, 100); c.font = '900 28px Nunito,sans-serif'; c.fillText([...w[0]].map(ch => hit.has(ch) ? ch : '_').join(' '), GW / 2, 190); c.textAlign = 'left';
+      for (let i = 0; i < AB.length; i++) { const p = kb(i), L = AB[i], used = hit.has(L), ok = used && w[0].includes(L); c.fillStyle = used ? (ok ? '#9AD08A' : 'rgba(127,127,127,.3)') : (th.hx ? '#2A2418' : '#FFFFFF'); rr(c, p.x, p.y, 36, 40, 8); c.fill(); c.fillStyle = INK(th); c.font = '900 16px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText(L, p.x + 18, p.y + 26); c.textAlign = 'left'; }
+      if (fT > 0) banner(c, th, fb, fT * 1.4); } };
+}
+
+const ENGINES={pave:Pave,spot:Spot,coins:Coins,wash:Wash,missing:Missing,awake:Awake,guess:Guess,sow:Sow,hotcold:HotCold,kind:Kind,rotate:Rotate,scale:Scale,blocks:Blocks,emoji:Emoji,flood:Flood,roof:Roof,count:Count,trace:Trace,reveal:Reveal,hop:Hop,sort:Sort,pour:Pour,spell:Spell,net:Net,row:Row,pipes:Pipes,lights:Lights,match:Match,run:Runner,fly:Flyer,cross:Crosser,catch:Catcher,memo:Memo,maze:Maze,simon:Simon,verso:Verso,herd:Herd,pop:Pop,swarm:Swarm,slide:Slide,balance:Balance,order:Order,words:Words,stack:Stack,diff:Diff,tf:TrueFalse,lantern:Lantern,rhythm:Rhythm,connect:Connect};
+const TAPG=['pave','spot','coins','missing','awake','guess','hotcold','kind','rotate','scale','blocks','emoji','flood','roof','count','reveal','hop','sort','spell','net','row','pipes','lights','match','memo','simon','verso','pop','slide','order','diff','tf','rhythm','connect','stack','balance'],DRAGG=['wash','sow','trace','pour','herd','swarm','words','lantern'];
 let ar=null;const bursts=[];
 function burstAt(x,y){bursts.push({x,y,t:0});}
 function splash(x,y){bursts.push({x,y,t:0,w:1});}
@@ -1840,7 +2012,20 @@ parabolas:[
  {t:'mc',q:'¿Qué enseñan las parábolas del tesoro escondido y de la perla?',o:['Que el reino de Dios vale más que todo lo demás','Que hay que buscar riquezas','Que conviene guardar secretos','Que los comerciantes son sabios'],a:0,exp:'Quien descubre el reino de Dios lo pone en primer lugar, con alegría.',ref:'Mateo 13:44-46'},
  {t:'mc',q:'¿Qué diferencia a la casa sobre la roca de la casa sobre la arena?',o:['Su dueño escuchó a Jesús y puso en práctica lo que enseñó','Tenía paredes más gruesas','Estaba más lejos del río','Era más grande y cara'],a:0,exp:'Los dos escucharon. La diferencia fue obedecer.',ref:'Mateo 7:24-27'},
  {t:'app',q:'En el grupo de tu escuela se burlan de un compañero que siempre está solo. ¿Qué haría un buen prójimo?',o:['Se acerca, lo defiende con respeto y lo incluye','Se ríe para no quedar mal','Hace como que no ve nada','Lo graba y lo comparte'],a:0,exp:'Ser prójimo es acercarse al que sufre, aunque sea incómodo, como el samaritano.',ref:'Lucas 10:33-37'},
- {t:'reflect',q:'¿Con qué personaje de las parábolas te identificás hoy (la oveja, el hijo que vuelve, el samaritano, el sembrador…)? ¿Por qué?',ref:'Lucas 15 · Lucas 10'}]
+ {t:'reflect',q:'¿Con qué personaje de las parábolas te identificás hoy (la oveja, el hijo que vuelve, el samaritano, el sembrador…)? ¿Por qué?',ref:'Lucas 15 · Lucas 10'}],
+jerusalen:[
+ {t:'mc',q:'¿Qué hizo Zaqueo para poder ver a Jesús?',o:['Se subió a un árbol sicómoro','Se puso en primera fila','Pagó para entrar','Esperó en el templo'],a:0,exp:'Zaqueo era bajito y la multitud no lo dejaba ver. Su curiosidad lo llevó a un encuentro que le cambió la vida.',ref:'Lucas 19:3-4'},
+ {t:'verse',parts:['Pues el Hijo del Hombre vino a ',0,' y a salvar a los que están ',1,'.'],blanks:['buscar','perdidos'],bank:['buscar','juzgar','perdidos','sanos','castigar','lejos'],exp:'Jesús terminó el encuentro con Zaqueo con esta frase que resume su misión.',ref:'Lucas 19:10'},
+ {t:'tf',q:'Después de conocer a Jesús, Zaqueo devolvió lo que había robado y dio la mitad de sus bienes a los pobres.',a:true,exp:'El encuentro con Jesús cambió su corazón y su bolsillo.',ref:'Lucas 19:8'},
+ {t:'mc',q:'¿En qué animal entró Jesús a Jerusalén?',o:['Un burrito','Un caballo blanco','Un camello','Un carro de guerra'],a:0,exp:'Así se cumplió lo anunciado por el profeta Zacarías: el rey llega humilde.',ref:'Mateo 21:5 · Zacarías 9:9'},
+ {t:'mc',q:'¿Qué gritaba la gente cuando Jesús entró a Jerusalén?',o:['¡Bendiciones al que viene en el nombre del Señor!','¡Crucifícalo!','¡Viva el César!','¡Fuera de aquí!'],a:0,exp:'«¡Alaben a Dios por el Hijo de David! ¡Bendiciones al que viene en el nombre del Señor!»',ref:'Mateo 21:9'},
+ {t:'match',q:'Uní cada personaje con lo que hizo',p:[['Zaqueo','Recibió a Jesús en su casa'],['La viuda','Dio dos monedas, todo lo que tenía'],['Jesús','Lavó los pies de sus discípulos'],['La multitud','Extendió mantos y palmas en el camino']],exp:'Cada encuentro de esa semana muestra cómo responder a Jesús.',ref:'Lucas 19 · Marcos 12 · Juan 13 · Mateo 21'},
+ {t:'mc',q:'¿Qué les enseñó Jesús al lavarles los pies a sus discípulos?',o:['A servirse unos a otros con humildad','Que había que bañarse antes de comer','Que él era el sirviente de la casa','Que los pies sucios eran pecado'],a:0,exp:'Si el Maestro sirve, sus seguidores también deben servirse unos a otros.',ref:'Juan 13:12-15'},
+ {t:'verse',parts:['Así que ahora les doy un nuevo ',0,': ámense unos a otros. Tal como yo los he ',1,', ustedes deben amarse unos a otros.'],blanks:['mandamiento','amado'],bank:['mandamiento','consejo','amado','enseñado','juzgado','castigo'],exp:'El amor entre los discípulos es la señal de que seguimos a Jesús.',ref:'Juan 13:34'},
+ {t:'order',q:'Ordená los momentos de la última cena',items:['Jesús lava los pies de los discípulos','Toma el pan, da gracias y lo parte','Comparte la copa del nuevo pacto','Van al huerto de Getsemaní a orar'],exp:'Después de la cena salieron hacia el monte de los Olivos.',ref:'Juan 13 · Lucas 22:19-39'},
+ {t:'mc',q:'¿Qué oró Jesús en Getsemaní?',o:['Que se hiciera la voluntad del Padre, no la suya','Que sus enemigos fueran castigados','Que lo dejaran escapar esa noche','Que sus discípulos se fueran a dormir'],a:0,exp:'«Quiero que se haga tu voluntad, no la mía.» Jesús obedeció por amor.',ref:'Lucas 22:42'},
+ {t:'app',q:'En casa hay que ordenar y limpiar después de comer, y nadie quiere hacerlo. ¿Qué harías siguiendo el ejemplo de Jesús?',o:['Me ofrezco a ayudar primero, con buena actitud','Espero a que lo haga otro','Me escondo hasta que terminen','Lo hago pero quejándome todo el tiempo'],a:0,exp:'Servir en lo cotidiano es una forma concreta de amar como Jesús.',ref:'Juan 13:14-15'},
+ {t:'reflect',q:'Jesús le dijo al Padre: «que se haga tu voluntad». ¿En qué decisión de tu vida necesitás orar así esta semana?',ref:'Lucas 22:42'}]
 };
 function openExam(r,onPass){
   const R=REGIONS[r],E=EXAMS[R.id];if(!E){onPass();return;}
