@@ -2,8 +2,8 @@
 (function(){
 var view=document.getElementById('adosView');if(!view)return;
 var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-var IMG='https://static.wixstatic.com/media/43ca3b_24a79c78c0cf49eca8326edd8664632b~mv2.jpg/v1/fill/w_2000,h_1200,al_c,q_82/h.jpg';
-var IMG_S='https://static.wixstatic.com/media/43ca3b_24a79c78c0cf49eca8326edd8664632b~mv2.jpg/v1/fill/w_900,h_1400,al_c,q_80/hs.jpg';
+var IMG='https://static.wixstatic.com/media/43ca3b_c2893c07131d413c9222c23cadca4572~mv2.png/v1/fill/w_2000,h_1200,al_c,q_82/h.jpg';
+var IMG_S='https://static.wixstatic.com/media/43ca3b_c2893c07131d413c9222c23cadca4572~mv2.png/v1/fill/w_900,h_1400,al_c,q_80/hs.jpg';
 document.documentElement.style.setProperty('--hx-img','url("'+(innerWidth<700?IMG_S:IMG)+'")');
 function rnd(a,b){return a+Math.random()*(b-a);}
 function seeded(s){return function(){s=(s*16807)%2147483647;return (s-1)/2147483646;};}
