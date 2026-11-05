@@ -65,7 +65,7 @@ try{
  document.getElementById('csTitle').textContent=t;document.getElementById('csKind').textContent=K[D.kind(t)];
  document.getElementById('csDesc').textContent=p.description&&p.description.details||'';
  var im=p.description&&p.description.image&&p.description.image.id;
- if(im){document.getElementById('csImg').src=D.img(im,900,900);document.getElementById('csBg').style.backgroundImage='url('+D.img(im,1600,900)+')';}
+ if(im){document.getElementById('csImg').src=D.img(im,1200,675);document.getElementById('csBg').style.backgroundImage='url('+D.img(im,1600,900)+')';}
  var cs=p.contentSummary||{},price=p.price&&+p.price.value;
  document.getElementById('csMeta').innerHTML=[cs.sectionCount?cs.sectionCount+' secciones':'',cs.stepCount?cs.stepCount+' clases':'',p.timeline&&p.timeline.selfPaced?'A tu ritmo':'','Online'].filter(Boolean).map(function(x){return '<span>'+x+'</span>';}).join('');
  if(price)document.getElementById('csPrice').textContent='$'+price.toLocaleString('es-AR');
@@ -88,7 +88,7 @@ try{
    if(inside(ja)){location.href='/clase.html?p='+PID;return;}
    var pp=await A.api('POST',JA+'/'+ja.id+'/prepare-payment',{paymentType:'PAID_PLANS'});ja=pp.joinApplication||ja;
    if(inside(ja)){location.href='/clase.html?p='+PID;return;}
-   var plan=(ja.paymentInfo&&ja.paymentInfo.paidPlanIds||[])[0]||PLAN[PID];
+   var ids=ja.paymentInfo&&ja.paymentInfo.paidPlanIds||[];var plan=(PLAN[PID]&&(!ids.length||ids.indexOf(PLAN[PID])>=0))?PLAN[PID]:ids[0];
    if(!plan)throw new Error('sin plan');
    var back=location.origin+'/curso.html?p='+PID+'&pago=1';
    var rs=await A.api('POST','/_api/redirects-api/v1/redirect-session',{paidPlansCheckout:{planId:plan},callbacks:{postFlowUrl:back,thankYouPageUrl:back}});
