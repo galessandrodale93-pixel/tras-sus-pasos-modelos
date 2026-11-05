@@ -284,3 +284,4 @@ section[id]{scroll-margin-top:140px}
 .hero.sky .bgv{transform:scale(1.04);animation:skyzoom 26s ease-in-out infinite alternate}
 @keyframes skyzoom{from{transform:scale(1.04)}to{transform:scale(1.14) translateX(-2%)}}
 .hero.sky h1,.hero.sky .lead{text-shadow:0 2px 24px rgba(10,26,22,.45)}
+.hero.sky .kick{color:#fff;text-shadow:0 1px 14px rgba(10,26,22,.6)}
