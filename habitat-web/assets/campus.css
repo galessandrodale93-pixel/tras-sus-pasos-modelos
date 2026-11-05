@@ -295,3 +295,4 @@ a.rg,a.rg *{text-decoration:none}
 .cs-sec li{display:flex;justify-content:space-between;gap:12px;color:var(--text)}
 .cs-sec li small{color:var(--muted);white-space:nowrap}
 @media (max-width:820px){.cs-in{grid-template-columns:1fr}.cs-img{order:-1;max-width:280px}}
+.cs-tx h1{color:#fff}.cs-tx .kick{color:var(--gold-2)}
