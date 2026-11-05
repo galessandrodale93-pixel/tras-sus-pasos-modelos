@@ -348,7 +348,7 @@ function heroFlora(scene, W, allPts, zMax, R, Q) {
 
 /* ---------- construcción ---------- */
 async function build() {
-  H3.npcs = []; if (G().branch === 'ados') await heroLoad();
+  H3.npcs = []; await heroLoad();
   const g = G(), hx = g.branch === 'ados', root = document.getElementById('view3d'), _c = root.classList.toggle('hx', hx), cv = document.getElementById('c3d');
   const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(1.75, devicePixelRatio || 1)); renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -436,18 +436,18 @@ const KL = {};
     scene.add(grp); markers[n.id] = grp;
   });
   // personaje
-  const av = hx ? buildHeroAvatar(lookOf(g.P())) : buildAvatar(lookOf(g.P()), hx); if (hx) av.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(av);
+  const av = (hx || H3.ok) ? buildHeroAvatar(lookOf(g.P())) : buildAvatar(lookOf(g.P()), hx); if (hx || H3.ok) av.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(av);
   const n0 = g.NODES[g.P().pos], [ax, az] = toV(n0.x, n0.y); av.position.set(ax, 0, az);
   S = { renderer, scene, camera, hx, av, markers, edgePts, allPts, items, joy: { x: 0, y: 0 }, keys: {}, flies, ground, yaw: Math.PI, camYaw: 0, camDist: 6.6, camPitch: .4, walking: false, moving: false, t: 0, root, cv, sig: '', onStop: g.P().pos, W: HW, uGrass, KL, zEnd: zMax };
   // orientar al personaje hacia la próxima parada
   buildPois(scene, pois, hx, HW, rng(77), ribbon); S.pois = pois; buildTowns(scene, g, hx, HW, pois); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; setTimeout(() => tutOpen(), 1500); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); }, 0);
-  S0 = S; S.mis = buildMissions(scene, g, hx, HW); { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
+  S0 = S; insMigrate(); S.mis = buildMissions(scene, g, hx, HW); { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
   const nx = nextList()[0]; if (nx) { const N = g.NODES[nx], [bx, bz] = toV(N.x, N.y); S.yaw = Math.atan2(bx - ax, bz - az); }
   av.rotation.y = S.yaw;
   camera.position.set(ax - Math.sin(S.yaw) * 6.6, 3.3, az - Math.cos(S.yaw) * 6.6);
   S.fill = new THREE.DirectionalLight(hx ? '#FFD9B0' : '#FFFFFF', hx ? .5 : .5); scene.add(S.fill); scene.add(S.fill.target);
   wireInput(); wireJoy(); if (!window.__acts) { window.__acts = 1; wireActs(); auButtons(); } resize(); addEventListener('resize', resize);
-  fxInit(); if (hx) svBuild(scene, HW, R);
+  fxInit(); if (hx) svBuild(scene, HW, R); try { phWorld(scene, HW, allPts, zMax, hx, R); } catch (e) { console.warn('ph', e); }
   const me = S, run = n => { if (S !== me) return; requestAnimationFrame(run); loop(n); }; requestAnimationFrame(run);
 }
 function resize() { if (!S) return; const r = S.root.getBoundingClientRect(); const w = r.width || innerWidth, h = r.height || innerHeight; S.renderer.setSize(w, h, false); S.camera.aspect = w / h; S.camera.updateProjectionMatrix(); if (S.fx) { S.fx.setPixelRatio(S.renderer.getPixelRatio()); S.fx.setSize(w, h); } }
@@ -525,7 +525,7 @@ function walkEdge(a, b) {
     let len = 0; for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
     const speed = 5, dur = len / speed * 1000, t0 = performance.now(); S.moving = true;
     const step = now => {
-      const k = Math.min(1, (now - t0) / dur), f = k * (pts.length - 1), i = Math.min(pts.length - 2, Math.floor(f)), u = f - i;
+      const k = Math.max(0, Math.min(1, (now - t0) / dur)), f = k * (pts.length - 1), i = Math.min(pts.length - 2, Math.floor(f)), u = f - i;
       const x = pts[i][0] + (pts[i + 1][0] - pts[i][0]) * u, z = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * u;
       const ty = Math.atan2(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]);
       let d = ty - S.yaw; while (d > Math.PI) d -= 6.283; while (d < -Math.PI) d += 6.283; S.yaw += d * .2;
@@ -552,11 +552,11 @@ function bagBtn() { const b = document.getElementById('v3bag'); if (!b) return; 
 function openBag() {
   const el = document.getElementById('v3sheet'); if (!el) return; S.joy.x = 0; S.joy.y = 0;
   el.innerHTML = `<div class="inv${S.hx ? ' hx' : ''}"><div class="inv-h"><b>Mochila</b><button class="bag-x" aria-label="Cerrar">✕</button></div>
-    <div class="inv-tabs" role="tablist"><button data-t="eq" class="on">Equipo</button><button data-t="ob">Objetos</button><button data-t="me">Recuerdos</button>${S.hx ? '<button data-t="su">Trabajo</button><button data-t="at">Atributos</button>' : ''}</div>
+    <div class="inv-tabs" role="tablist"><button data-t="eq" class="on">Equipo</button><button data-t="ob">Objetos</button><button data-t="me">Recuerdos</button><button data-t="cu">Cursos hechos</button>${S.hx ? '<button data-t="su">Trabajo</button><button data-t="at">Atributos</button>' : ''}</div>
     <div class="inv-body"></div></div>`;
   el.hidden = false; const close = () => { el.hidden = true; }; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   const tabs = el.querySelectorAll('.inv-tabs button'), body = el.querySelector('.inv-body');
-  const show = t => { tabs.forEach(b => b.classList.toggle('on', b.dataset.t === t)); body.innerHTML = ''; if (t === 'eq') invEquip(body); else if (t === 'ob') invItems(body); else if (t === 'su') invSurv(body); else if (t === 'at') invAttr(body); else invMemories(body); };
+  const show = t => { tabs.forEach(b => b.classList.toggle('on', b.dataset.t === t)); body.innerHTML = ''; if (t === 'eq') invEquip(body); else if (t === 'ob') invItems(body); else if (t === 'su') invSurv(body); else if (t === 'at') invAttr(body); else if (t === 'cu') invCourses(body); else invMemories(body); };
   tabs.forEach(b => b.onclick = () => show(b.dataset.t)); show('eq');
 }
 /* ícono dibujado de cada prenda: su forma, su color real y su detalle (rayas, vendas, bordado, metal) */
@@ -622,8 +622,8 @@ function invPreview(cv) {
   sc.add(new THREE.HemisphereLight('#FFF4E0', '#3A2A1C', 1.5)); const key = new THREE.DirectionalLight('#FFE2B8', 2.4); key.position.set(2, 4, 4); sc.add(key); const rim = new THREE.DirectionalLight('#9EC2FF', 1.6); rim.position.set(-3, 2.5, -3); sc.add(rim);
   const base = new THREE.Mesh(new THREE.CylinderGeometry(.62, .66, .06, 40), new THREE.MeshStandardMaterial({ color: '#3A2C1E', roughness: .7, metalness: .2 })); base.position.y = -.03; sc.add(base);
   let av = null, rot = .5, vel = 0, drag = null, last = performance.now(); const sheet = document.getElementById('v3sheet');
-  const set = () => { if (av) sc.remove(av); const look = lookOf(G().P()); av = S.hx ? buildHeroAvatar(look) : buildAvatar(look, false); av.traverse(o => { if (o.isPointLight) o.intensity = 0; }); if (av.userData.h3) av.userData.h3.lamp.visible = false; av.position.set(0, 0, 0); sc.add(av);
-    const h = S.hx ? 1.85 * av.scale.y : 2.1; cam.position.set(0, h * .55, h * 2.75); cam.lookAt(0, h * .5, 0); };
+  const set = () => { if (av) sc.remove(av); const look = lookOf(G().P()); av = (S.hx || H3.ok) ? buildHeroAvatar(look) : buildAvatar(look, false); av.traverse(o => { if (o.isPointLight) o.intensity = 0; }); if (av.userData.h3) av.userData.h3.lamp.visible = false; av.position.set(0, 0, 0); sc.add(av);
+    const h = av.userData.h3 ? 1.85 * av.scale.y : 2.1; cam.position.set(0, h * .55, h * 2.75); cam.lookAt(0, h * .5, 0); };
   const size = () => { const w = cv.clientWidth || 160, h = cv.clientHeight || 220; R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); };
   cv.addEventListener('pointerdown', e => { drag = e.clientX; vel = 0; try { cv.setPointerCapture(e.pointerId); } catch (x) {} });
   cv.addEventListener('pointermove', e => { if (drag === null) return; const d = (e.clientX - drag) * .012; rot += d; vel = d; drag = e.clientX; });
@@ -726,7 +726,7 @@ function bangSprite() { const c = document.createElement('canvas'); c.width = c.
 function buildMissions(scene, g, hx, HW, rr) {
   const yAt = (x, z) => Math.max(HW ? HW.hAt(x, z) : 0, floorH(x, z)), M = {};
   const regNodes = r => Object.keys(g.NODES).filter(id => id.startsWith(g.REGIONS[r].id + '-') && !/gate|fA|fB/.test(id)).map(id => S0.markers[id]).sort((a, b) => b.position.z - a.position.z);
-  const npc = (look, x, z, face) => { const o = hx ? buildHeroAvatar(look) : buildAvatar(look, false); if (!hx) o.scale.setScalar(1.08); o.position.set(x, yAt(x, z), z); o.rotation.y = face; if (hx) o.traverse(q => { if (q.isMesh) q.castShadow = true; }); o.traverse(q => { if (q.isPointLight) q.intensity = 0; }); scene.add(o); return o; };
+  const npc = (look, x, z, face) => { const rig = hx || H3.ok, o = rig ? buildHeroAvatar(look) : buildAvatar(look, false); if (!rig) o.scale.setScalar(1.08); o.position.set(x, yAt(x, z), z); o.rotation.y = face; if (rig) o.traverse(q => { if (q.isMesh) q.castShadow = true; }); o.traverse(q => { if (q.isPointLight) q.intensity = 0; }); scene.add(o); return o; };
   const ring = (x, z) => { const m = new THREE.Mesh(new THREE.RingGeometry(.55, .7, 36), new THREE.MeshBasicMaterial({ color: '#FFD873', transparent: true, opacity: .7, side: THREE.DoubleSide, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(x, yAt(x, z) + .05, z); m.visible = false; scene.add(m); return m; };
   const per = new Array(16).fill(0);
   MISSIONS.forEach((d, i) => {
@@ -756,7 +756,7 @@ function openMission(m) {
   const el = document.getElementById('v3sheet'), d = m.d; if (!el) return;
   const hNeed = S.hx && d.hum ? d.hum : 0, hOk = humV() >= hNeed;
   el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>${esc(d.giver.name)}</b><span>Misión · +${MIS_PTS} puntos${hNeed ? ' · Humildad ' + hNeed : ''}</span><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="mis-ask">“${esc(d.ask)}”</p><small class="mis-ref">${esc(d.ref)}</small>${hOk ? '' : `<p class="cap-note">Esta misión pide <b>Humildad ${hNeed}</b> (tenés ${humV()}). La humildad crece cuando le das puntos de tus atributos a otros en una sala con amigos.</p>`}<div class="mis-btns">${hOk ? '<button class="mis-yes">¡Dale!</button>' : ''}<button class="mis-no">Ahora no</button></div></div>`;
-  el.hidden = false; const close = () => { el.hidden = true; S.misSkip = d.id; };
+  el.hidden = false; const close = () => { el.hidden = true; S.misSkip = d.id; try { G().voStop(); } catch (e) {} }; try { G().vo(d.ask, d.giver.look && d.giver.look.g === 'chica' ? 'mujer' : 'varon'); } catch (e) {}
   el.querySelector('.bag-x').onclick = close; el.querySelector('.mis-no').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   if (hOk) el.querySelector('.mis-yes').onclick = () => { const p = misState(); p.mact = { id: d.id, has: d.kind !== 'fetch' }; G().save(); el.hidden = true; misCarry(m, p.mact.has); if (d.kind === 'record' || d.kind === 'photo') setTimeout(() => openCapture(m), 250); };
 }
@@ -767,7 +767,7 @@ function misCarry(m, on) {
 }
 function misDone(m) {
   const p = misState(), d = m.d; p.missions[d.id] = true; p.mact = null; G().save(); G().refreshHud && G().refreshHud(); misCarry(m, false); if (m.ring) m.ring.visible = false; if (m.pick) m.pick.visible = false;
-  misPop('¡Misión cumplida! +' + MIS_PTS, d.done); tone3d(); h3npcPlay(m.target || m.giver, ['M_Thankful', 'M_Cheering'], 3); if (m.target && m.giver) setTimeout(() => h3npcPlay(m.giver, ['M_Clapping', 'M_Thankful'], 2.5), 600);
+  misPop('¡Misión cumplida! +' + MIS_PTS, d.done); tone3d(); try { const who = d.target || d.giver; G().vo(d.done, who.look && who.look.g === 'chica' ? 'mujer' : 'varon'); } catch (e) {} h3npcPlay(m.target || m.giver, ['M_Thankful', 'M_Cheering'], 3); if (m.target && m.giver) setTimeout(() => h3npcPlay(m.giver, ['M_Clapping', 'M_Thankful'], 2.5), 600);
   if (Math.random() < .5) setTimeout(() => gearGive(gearRoll(), 'Recompensa de la misión'), 3400);
   if (S && S.hx) setTimeout(() => svMissionReward(d), 1800);
 }
@@ -1090,7 +1090,7 @@ function roomTick(dt) {
 function placeCard(info) {
   let el = document.getElementById('v3place'); if (!el) { el = document.createElement('div'); el.id = 'v3place'; el.className = 'v3place'; document.body.appendChild(el); }
   el.innerHTML = `<small>Lugar de la época</small><b>${esc(info[0])}</b><p>${esc(info[1])}</p><em>${esc(info[2])}</em><button aria-label="Cerrar">✕</button>`;
-  el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); el.querySelector('button').onclick = () => { el.hidden = true; };
+  el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); el.querySelector('button').onclick = () => { el.hidden = true; try { G().voStop(); } catch (e) {} }; try { G().vo(info[0]); G().vo(info[1], 'narrador', { queue: 1 }); } catch (e) {}
   clearTimeout(placeCard.t); placeCard.t = setTimeout(() => { el.hidden = true; }, 14000); tone3d();
 }
 // arma todo: Nazaret con sus talleres, el templo y el lago (si existe la etapa de Galilea)
@@ -1334,7 +1334,7 @@ function musTick() {
   const m = AU.mus; if (!m) return false; if (S && (S.hx ? 'hero' : 'kids') !== m.br) { m.adv.el.pause(); m.adv = musTrack(MUS[S.hx ? 'hero' : 'kids']); m.br = S.hx ? 'hero' : 'kids'; m.adv.primed = false; }
   if (!m.adv.ok && !m.pray.ok) return false;
   const shown = !document.getElementById('view3d').hidden && document.getElementById('arcade').hidden, pray = S && S.pose === 'pray', on = AU.on && shown;
-  m.adv.want = on && !pray ? (AU.speaking ? .22 : .55) : 0; m.pray.want = on && pray ? (AU.speaking ? .35 : .7) : 0;
+  m.adv.want = on && !pray ? (AU.speaking || AU.narr ? .22 : .55) : 0; m.pray.want = on && pray ? (AU.speaking || AU.narr ? .35 : .7) : 0;
   for (const t of [m.adv, m.pray]) {
     if (!t.ok) continue; const step = t.want > t.v ? .045 : .07; t.v += Math.max(-step, Math.min(step, t.want - t.v));
     try { t.el.volume = Math.max(0, Math.min(1, t.v)); } catch (e) {}
@@ -1383,7 +1383,7 @@ function auTick() {
   if (musTick()) { AU.master.gain.setTargetAtTime(0, c.currentTime, .2); AU.next = c.currentTime + .1; AU.snext = c.currentTime + .1; return; }
   if (AU.mus && !AU.bank) Object.keys(SMP).forEach(loadInst); // si la música grabada falla, vuelve la orquesta sintetizada
   AU.master.gain.setTargetAtTime(AU.on && shown ? .9 : 0, c.currentTime, .4);
-  AU.adv.gain.setTargetAtTime(pray ? 0 : (AU.speaking ? .45 : 1), c.currentTime, pray ? .8 : 1.6);
+  AU.adv.gain.setTargetAtTime(pray ? 0 : (AU.speaking || AU.narr ? .45 : 1), c.currentTime, pray ? .8 : 1.6);
   AU.soak.gain.setTargetAtTime(pray ? (AU.speaking ? .7 : 1) : 0, c.currentTime, pray ? 2.2 : .9);
   if (!AU.on || !shown) { AU.next = Math.max(AU.next, c.currentTime + .1); AU.snext = Math.max(AU.snext, c.currentTime + .1); return; }
   const song = S.hx ? SONG.hx : SONG.kids, e8 = 60 / song.bpm / 2, L = song.prog.length, O = AU.adv, ep = song.epic;
@@ -1432,6 +1432,7 @@ function esVoice() {
     return vs.sort((a, b) => sc(b) - sc(a))[0]; } catch (e) { return null; }
 }
 function say(txt, ref, onend) {
+  if (AU.voice && G().vo && G().voOn()) { caption(txt, ref, 60); AU.speaking = true; AU.voSay = true; G().vo(txt, 'narrador', { onend: () => { AU.speaking = false; AU.voSay = false; caption(null); onend && onend(); } }); return; }
   if (!AU.voice || !('speechSynthesis' in window)) { caption(txt, ref, 9); onend && setTimeout(onend, 9000); return; }
   try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt.replace(/SEÑOR/g, 'Señor') + '. ' + ref.replace(/(\d+):(\d+)-(\d+)/, '$1, versículos $2 al $3').replace(/(\d+):(\d+)/, '$1, versículo $2')); const v = esVoice(); if (v) u.voice = v; u.lang = v ? v.lang : 'es-419'; u.rate = 1.06; u.pitch = .96; u.volume = .85;
     AU.speaking = true; caption(txt, ref, 60); const t0 = performance.now(), minMs = 2500 + txt.length * 55; u.onend = u.onerror = () => { setTimeout(() => { AU.speaking = false; caption(null); onend && onend(); }, Math.max(0, minMs - (performance.now() - t0))); }; speechSynthesis.speak(u); } catch (e) { AU.speaking = false; }
@@ -1441,7 +1442,7 @@ function caption(txt, ref, secs) {
   clearTimeout(caption.t); if (!txt) { el.classList.remove('on'); return; }
   el.innerHTML = `<p>${esc(txt)}</p><small>${esc(ref)} · NTV</small>`; el.classList.add('on'); caption.t = setTimeout(() => el.classList.remove('on'), secs * 1000);
 }
-function stopVoice() { try { speechSynthesis.cancel(); } catch (e) {} AU.speaking = false; caption(null); }
+function stopVoice() { try { speechSynthesis.cancel(); } catch (e) {} try { if (AU.voSay) { AU.voSay = false; G().voStop && G().voStop(); } } catch (e) {} AU.speaking = false; caption(null); }
 function topicUI(show) {
   let el = document.getElementById('v3topics');
   if (!el) { el = document.createElement('div'); el.id = 'v3topics'; el.className = 'v3topics'; el.innerHTML = '<span>Elegí un tema para meditar</span><div>' + Object.entries(VERSOS).map(([k, t]) => `<button data-t="${k}">${t.name}</button>`).join('') + '</div>'; document.body.appendChild(el);
@@ -1452,9 +1453,9 @@ function voiceTick(dt) {
   if (!S) return; const pray = S.pose === 'pray';
   if (pray !== AU.wasPray) { AU.wasPray = pray; topicUI(pray); if (!pray && AU.prayVoice) { stopVoice(); AU.prayVoice = false; } AU.nextSay = pray ? 3.5 : AU.nextSay; }
   if (sheetUp() || document.getElementById('view3d').hidden) { if (AU.speaking) stopVoice(); return; }
-  if (pray) { if (AU.speaking) return; AU.nextSay -= dt; if (AU.nextSay <= 0) { const T = VERSOS[AU.topic] || VERSOS.paz, v = T.v[(AU.vi = (AU.vi ?? -1) + 1) % T.v.length]; AU.prayVoice = true; AU.nextSay = 99; say(v[0], v[1], () => { AU.nextSay = 5; }); } return; }
+  if (pray) { if (AU.speaking || AU.narr) return; AU.nextSay -= dt; if (AU.nextSay <= 0) { const T = VERSOS[AU.topic] || VERSOS.paz, v = T.v[(AU.vi = (AU.vi ?? -1) + 1) % T.v.length]; AU.prayVoice = true; AU.nextSay = 99; say(v[0], v[1], () => { AU.nextSay = 5; }); } return; }
   if (S.moving || S.freeMoving) AU.walkT = (AU.walkT || 0) + dt;
-  if (AU.walkT > 75 && !AU.speaking) { AU.walkT = 0; const all = PASO.concat(...Object.values(VERSOS).map(t => t.v)), v = all[Math.floor(Math.random() * all.length)]; say(v[0], v[1]); }
+  if (AU.walkT > 75 && !AU.speaking && !AU.narr) { AU.walkT = 0; const all = PASO.concat(...Object.values(VERSOS).map(t => t.v)), v = all[Math.floor(Math.random() * all.length)]; say(v[0], v[1]); }
 }
 function auButtons() {
   const box = document.getElementById('v3acts'); if (!box || box.querySelector('[data-a="music"]')) return;
@@ -1602,8 +1603,8 @@ function mpLeave(silent) {
   for (const id in MP.players) mpDel(id); MP.peer = null; MP.conn = null; MP.conns = {}; MP.code = null; MP.host = false; if (!silent) mpUI();
 }
 function mpAdd(id, info) {
-  if (!S || MP.players[id]) return; const hx = S.hx, av = hx ? buildHeroAvatar(info.avatar || {}) : buildAvatar(info.avatar || {}, false); av.traverse(o => { if (o.isPointLight) o.intensity = 2; if (o.isMesh && hx) o.castShadow = true; });
-  const tag = textSprite(info.name, hx); tag.scale.multiplyScalar(.42); tag.position.y = 2.55; av.add(tag); if ((info.hum || 0) >= 10) av.add(humHalo()); av.position.copy(S.av.position); av.position.x += 1.5; S.scene.add(av);
+  if (!S || MP.players[id]) return; const hx = S.hx, rig = hx || H3.ok, av = rig ? buildHeroAvatar(info.avatar || {}) : buildAvatar(info.avatar || {}, false); av.traverse(o => { if (o.isPointLight) o.intensity = 2; if (o.isMesh && rig) o.castShadow = true; });
+  const tag = tagSprite(info.name, (info.avatar && info.avatar.ins) || [], hx); tag.scale.multiplyScalar(.42); tag.position.y = 2.55 * (av.userData.h3 ? av.userData.h3.tagK || 1 : 1); av.add(tag); if ((info.hum || 0) >= 10) av.add(humHalo()); av.position.copy(S.av.position); av.position.x += 1.5; S.scene.add(av);
   if (TALK.stream) setTimeout(talkCallAll, 600);
   MP.players[id] = { info, av, tag, tgt: { x: av.position.x, y: 0, z: av.position.z, yaw: 0 }, st: { pose: null, waveT: 0, jy: 0 }, moving: false, bubble: null, bT: 0 };
 }
@@ -1740,7 +1741,7 @@ const GEAR = [
   { id: 'desierto', s: 'boots', r: 'c', t: 'boot', c: '#A8865A', name: 'Botas del desierto', desc: 'Para la arena caliente del camino a Jericó.' },
   { id: 'jordan', s: 'boots', r: 'r', t: 'boot', c: '#3E4A5A', name: 'Botas del Jordán', desc: 'Aguantan el agua y el barro de la orilla del río.' },
   { id: 'doradas', s: 'boots', r: 'e', t: 'sandal', c: '#C9A04A', name: 'Sandalias doradas', desc: 'Con hebillas de bronce que brillan al sol.' },
-  { id: 'tsp', s: 'shirt', r: 'u', t: 'seamless', c: '#F4EEDC', c2: '#C9A04A', name: 'Túnica de Tras sus pasos', desc: 'Solo la tienen quienes terminaron el curso Tras sus pasos. Es única y nunca se pierde.' },
+  { id: 'tsp', s: 'shirt', r: 'u', t: 'seamless', c: '#F4EEDC', c2: '#C9A04A', name: 'Túnica de Tras sus pasos', desc: 'La recibieron quienes terminaron Tras sus pasos antes del cinturón de la verdad. Es única y nunca se pierde.' },
   { id: 'servidor', s: 'hat', r: 'u', t: 'wrap', c: '#EFE6D2', c2: '#C9A04A', name: 'Pañuelo del servidor', desc: 'Por servir a los demás. Jesús estuvo entre sus discípulos como el que sirve (Lucas 22:27). Nunca se pierde.' },
   { id: 'siervo', s: 'boots', r: 'u', t: 'sandal', c: '#B07A3A', c2: '#EFE6D2', name: 'Sandalias del siervo', desc: 'Por crecer en humildad. Recuerdan que Jesús lavó los pies de sus discípulos (Juan 13:14-15). Nunca se pierden.' },
   { id: 'evangelio', s: 'boots', r: 'l', t: 'sandal', c: '#FFF2C8', name: 'Sandalias del evangelio', desc: 'Calzados con la disposición de anunciar el evangelio de la paz (Efesios 6:15).' },
@@ -1750,7 +1751,7 @@ const GEAR = [
 ];
 const GBY = Object.fromEntries(GEAR.map(x => [x.id, x]));
 function gearState() { const p = G().P(); p.gear = p.gear || { own: [], eq: {} }; p.gear.own = p.gear.own || []; p.gear.eq = p.gear.eq || {}; return p.gear; }
-function lookOf(p) { const gs = p.gear || {}, eq = {}; for (const k in (gs.eq || {})) if (GBY[gs.eq[k]]) eq[k] = gs.eq[k]; return Object.assign({}, p.avatar || {}, { gear: eq }); }
+function lookOf(p) { const gs = p.gear || {}, eq = {}; for (const k in (gs.eq || {})) if (GBY[gs.eq[k]]) eq[k] = gs.eq[k]; return Object.assign({}, p.avatar || {}, { gear: eq, ins: Object.keys((p.ins && typeof p.ins === 'object') ? p.ins : {}).filter(k => CBY[k]) }); }
 function gearOn(av) { const o = {}, e = (av && av.gear) || {}; SLOTS.forEach(([s]) => { if (GBY[e[s]]) o[s] = GBY[e[s]]; }); return o; }
 function gearRoll() {
   const st = gearState(), left = GEAR.filter(x => !st.own.includes(x.id) && x.r !== 'u'); if (!left.length) return null;
@@ -1793,7 +1794,7 @@ function dressKid(d, P) {
 }
 // cambiar la ropa del personaje en el momento
 function reLook() {
-  if (!S) return; const p = G().P(), look = lookOf(p), old = S.av, av = S.hx ? buildHeroAvatar(look) : buildAvatar(look, S.hx); if (S.hx) av.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  if (!S) return; const p = G().P(), look = lookOf(p), old = S.av, rig = S.hx || H3.ok, av = rig ? buildHeroAvatar(look) : buildAvatar(look, S.hx); if (rig) av.traverse(o => { if (o.isMesh) o.castShadow = true; });
   av.position.copy(old.position); av.rotation.copy(old.rotation); if (S.carry) av.add(S.carry); if (S.meP) { S.meP.av = av; if (S.meP.bubble) av.add(S.meP.bubble); }
   S.scene.remove(old); S.scene.add(av); S.av = av; if (MP.code) mpSend({ t: 'look', id: MP.peer && MP.peer.id, avatar: look });
 }
@@ -1981,7 +1982,7 @@ function tutOpen(force) {
     el.innerHTML = `<div class="tut-hole"${r ? ` style="left:${r.left - 8}px;top:${r.top - 8}px;width:${r.width + 16}px;height:${r.height + 16}px"` : ' data-none'}></div>
       <div class="tut-card${r && r.top + r.height / 2 > innerHeight / 2 ? ' up' : ''}${r ? '' : ' mid'}"><small>${i + 1} de ${steps.length}</small><b>${esc(t)}</b><p>${esc(txt)}</p>
       <div class="tut-b"><button class="tut-skip">${i === steps.length - 1 ? '' : 'Saltear'}</button>${i ? '<button class="tut-prev">Atrás</button>' : ''}<button class="tut-next">${i === steps.length - 1 ? '¡A jugar!' : 'Siguiente'}</button></div></div>`;
-    el.hidden = false; el.querySelector('.tut-next').onclick = () => { if (++i >= steps.length) el.hidden = true; else draw(); };
+    el.hidden = false; try { G().vo(txt); } catch (e) {} el.querySelector('.tut-next').onclick = () => { if (++i >= steps.length) { el.hidden = true; try { G().voStop(); } catch (e) {} } else draw(); };
     const pv = el.querySelector('.tut-prev'); if (pv) pv.onclick = () => { i--; draw(); }; el.querySelector('.tut-skip').onclick = () => { el.hidden = true; }; };
   draw();
 }
@@ -2037,6 +2038,7 @@ function buildHero3(av) {
   const sx = av.g === 'chica' ? 'f' : 'm', tpl = H3.sex[sx], o = H3.skClone(tpl.T), D = gearOn(av), npc = !('gear' in av), hx = (it) => it && H3_GEAR[it.id];
   const pick = { body: (hx(D.shirt) || {}).p || 'Peasant', legs: (hx(D.pants) || {}).p || 'Peasant', feet: (hx(D.boots) || {}).p || 'Peasant' };
   const tint = { body: (hx(D.shirt) || {}).t || (npc && av.outfit ? new THREE.Color(av.outfit).lerp(new THREE.Color('#FFFFFF'), .35).getStyle() : null), legs: (hx(D.pants) || {}).t, feet: (hx(D.boots) || {}).t, bracer: (hx(D.gloves) || {}).t, hood: (hx(D.hat) || {}).hood };
+  const kid = G().branch !== 'ados'; if (kid && !tint.body && av.outfit) tint.body = new THREE.Color(av.outfit).lerp(new THREE.Color('#FFFFFF'), npc ? .45 : .12).getStyle();
   const hood = !!(hx(D.hat) || {}).hood, hatProc = D.hat && !hood ? D.hat : null, gray = /^#(9|A|B|C|D)/i.test(av.hair || ''), drop = [];
   const skinC = new THREE.Color(av.skin || '#D9A57E').multiplyScalar(1.28), hairC = new THREE.Color(av.hair || '#2A1B14').multiplyScalar(1.15);
   const recolor = (m, c, opt) => { m.material = m.material.clone(); m.material.color.set(c); if (opt && opt.metal) { m.material.metalness = opt.metal; m.material.roughness = .4; } if (opt && opt.glow) { m.material.emissive = new THREE.Color(opt.glow); m.material.emissiveIntensity = .6; } if (opt && opt.cloth) h3cloth(m.material, opt.rb); };
@@ -2068,11 +2070,12 @@ function buildHero3(av) {
     dressHero({ hat: hatProc }, (c, r, op) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: r ?? .9 }, op || {})), 1, { head: k, hideHair: () => {} }); }
   const lamp = new THREE.Group(), lb = new THREE.Mesh(new THREE.CylinderGeometry(.045, .055, .12, 8), new THREE.MeshStandardMaterial({ color: '#B8862E', roughness: .4, metalness: .6 })); lamp.add(lb);
   const gl = new THREE.Mesh(new THREE.SphereGeometry(.034, 10, 8), new THREE.MeshBasicMaterial({ color: '#FFD27A' })); lamp.add(gl); const pl = new THREE.PointLight('#FFB45A', 5, 7, 1.6); lamp.add(pl); lamp.visible = !npc; o.add(lamp);
-  const age = Math.max(12, Math.min(18, av.age || 16)); o.scale.setScalar(npc ? 1 : .9 + (age - 12) / 6 * .1);
+  const age = Math.max(12, Math.min(18, av.age || 16)); o.scale.setScalar(npc ? 1 : kid ? .74 + Math.max(0, Math.min(5, (av.age || 8) - 6)) * .02 : .9 + (age - 12) / 6 * .1);
+  if (!npc || av.ins) insBelt(o, bones, av.ins || []);
   const mixer = new THREE.AnimationMixer(o), act = new Proxy({}, { get: (c, k) => c[k] || (typeof k === 'string' && H3.clips[k] ? (c[k] = mixer.clipAction(H3.clips[k])) : undefined) });
   const idleK = h3idleFor(av, npc); act[idleK].play(); mixer.update(Math.random() * 3);
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(.36, 24), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: .3, depthWrite: false })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .02; o.add(shadow);
-  o.userData = { hero: true, h3: { mixer, act, cur: idleK, idleK, bones, lamp, npc } };
+  o.userData = { hero: true, h3: { mixer, act, cur: idleK, idleK, bones, lamp, npc, headS: kid ? (npc ? 1.05 : 1.16) : 0, tagK: kid && !npc ? .8 : 1 } };
   if (npc) H3.npcs.push(o);
   return o;
 }
@@ -2091,7 +2094,7 @@ function h3npcPlay(o, keys, secs) {
   const a = u.act[k], b = u.act[u.cur]; a.reset(); a.setLoop(H3_ONCE.test(k) ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = true; a.play(); if (b && b !== a) a.crossFadeFrom(b, .3, false); u.cur = k; u.backT = secs || Math.min(4, H3.clips[k].duration);
 }
 // el jugador hace una acción con su animación (la primera que exista de la lista)
-function h3do(keys, secs, off, speed) { if (!S) return; const k = [].concat(keys).find(x => H3.clips && H3.clips[x]) || [].concat(keys).pop(); S.actK = k; S.actT = secs; S.actO = off || 0; S.actS = speed || 1; S.idleT = 0; }
+function h3do(keys, secs, off, speed) { if (!S) return; const k = [].concat(keys).find(x => H3.clips && H3.clips[x]) || [].concat(keys).pop(); S.actK = k; S.actT = secs; S.actO = off || 0; S.actS = speed || 1; S.fidT = 0; }
 let _V = null;
 function h3vec() { if (!_V) _V = { a: new THREE.Vector3(), b: new THREE.Vector3(), q: new THREE.Quaternion(), pq: new THREE.Quaternion(), bq: new THREE.Quaternion(), rq: new THREE.Quaternion(), d: new THREE.Vector3(), m: new THREE.Matrix4() }; return _V; }
 // gira un hueso para que apunte hacia una dirección (en el espacio del personaje)
@@ -2112,12 +2115,12 @@ function h3pose(av, t, dt, st) {
     else if (mxWave) want = 'M_Waving';
     else if (carry && has('M_Holding_Idle')) want = 'M_Holding_Idle';
     else if (weak && has('M_Injured_Hurting_Idle')) want = 'M_Injured_Hurting_Idle';
-    else if (me && !st.talk) { st.idleT = (st.idleT || 0) + dt; if (st.idleT > 14) { st.idleT = 0; const l = ['M_Looking_Around', 'M_Yawn', 'M_Thinking', 'M_Lengthy_Head_Nod'].filter(has); if (l.length) { const k = l[Math.floor(Math.random() * l.length)]; st.actK = k; st.actT = Math.min(5, H3.clips[k].duration); st.actO = 0; st.actS = 1; want = k; } } }
-  } else if (me) st.idleT = 0;
+    else if (me && !st.talk) { st.fidT = (st.fidT || 0) + dt; if (st.fidT > 14) { st.fidT = 0; const l = ['M_Looking_Around', 'M_Yawn', 'M_Thinking', 'M_Lengthy_Head_Nod'].filter(has); if (l.length) { const k = l[Math.floor(Math.random() * l.length)]; st.actK = k; st.actT = Math.min(5, H3.clips[k].duration); st.actO = 0; st.actS = 1; want = k; } } }
+  } else if (me) st.fidT = 0;
   if (st.actT > 0) st.actT -= dt;
   if (want !== u.cur) { const a = u.act[want], o = u.act[u.cur]; a.reset(); a.timeScale = 1; const once = H3_ONCE.test(want); a.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = once; if (want === 'Fixing_Kneeling') { a.time = a.getClip().duration * .3; a.timeScale = 0; } if (want === st.actK && st.actT > 0) { a.time = st.actO || 0; a.timeScale = st.actS || 1; } a.play(); if (o) a.crossFadeFrom(o, want === 'Death01' ? .15 : .28, false); u.cur = want; }
   if (u.cur === 'Jog_Fwd_Loop') u.act.Jog_Fwd_Loop.timeScale = 1.15;
-  u.mixer.update(dt); av.updateMatrixWorld(true);
+  u.mixer.update(dt); if (u.headS && B.Head) B.Head.scale.setScalar(u.headS); av.updateMatrixWorld(true);
   if (p > .01 && !mxPray) { // de rodillas con las dos rodillas en el piso
     ['l', 'r'].forEach(sd => { const sx = sd === 'l' ? .1 : -.1; h3aim(av, B, 'thigh_' + sd, 'calf_' + sd, sx, -1, .32, p); h3aim(av, B, 'calf_' + sd, 'foot_' + sd, sx * .4, -.1, -1, p); h3aim(av, B, 'foot_' + sd, 'ball_' + sd, 0, -.12, -1, p); });
     const V = h3vec(), pv = B.pelvis, kl = B.calf_l, kr = B.calf_r;
@@ -2133,7 +2136,189 @@ function h3npcTick(dt) {
   if (!S || !H3.npcs.length) return; const a = S.av.position;
   for (const o of H3.npcs) { if (!o.parent) continue; const u = o.userData.h3;
     if (u.backT > 0 && (u.backT -= dt) <= 0) { const a = u.act[u.idleK], b = u.act[u.cur]; a.reset(); a.setLoop(THREE.LoopRepeat); a.play(); if (b && b !== a) a.crossFadeFrom(b, .4, false); u.cur = u.idleK; }
-    const d = (o.position.x - a.x) ** 2 + (o.position.z - a.z) ** 2; if (d < 1600) u.mixer.update(dt); }
+    const d = (o.position.x - a.x) ** 2 + (o.position.z - a.z) ** 2; if (d < 1600) { u.mixer.update(dt); if (u.headS && u.bones.Head) u.bones.Head.scale.setScalar(u.headS); } }
+}
+
+/* ---------- Poly Haven (CC0): árboles, rocas, plantas y objetos reales escaneados ----------
+   Cada modelo se baja recién cuando el jugador se acerca a la zona donde aparece (por franjas),
+   se dibuja con instancias y las franjas lejanas se apagan, para que ande fluido en el celular. */
+const PHB = new URL('../ph/', import.meta.url).href;
+const PH = { L: null, cache: {}, bands: [], one: [], uT: { value: 0 }, kids: false, near: 0 };
+const PH_BAND = 60;
+async function phLoader() { if (!PH.L) PH.L = (async () => { globalThis.__THREE = THREE; const mod = await import(H3_BASE + 'gltf.js'); return new mod.GLTFLoader(); })(); return PH.L; }
+function phGet(id) {
+  if (!PH.cache[id]) PH.cache[id] = phLoader().then(L => new Promise((r, j) => L.load(PHB + id + '.glb', r, undefined, j))).then(g => {
+    g.scene.updateMatrixWorld(true); const vars = (g.scene.children.length ? g.scene.children : [g.scene]).map(c => { const ms = []; c.traverse(o => { if (o.isMesh) ms.push({ geo: o.geometry, mat: o.material, m: o.matrixWorld.clone() }); }); return ms; }).filter(v => v.length);
+    return vars;
+  }).catch(e => { console.warn('ph', id, e); return []; });
+  return PH.cache[id];
+}
+function phMat(m, o) {
+  const k = '_ph' + (o.wind ? 'w' : '') + (PH.kids ? 'k' : ''); if (m[k]) return m[k];
+  const c = m.clone(); if (PH.kids && c.color) c.color.multiplyScalar(1.12);
+  if (o.wind) { c.side = THREE.DoubleSide; c.onBeforeCompile = sh => { sh.uniforms.uT = PH.uT; sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <project_vertex>', 'vec4 mvPosition=vec4(transformed,1.);\n#ifdef USE_INSTANCING\nmvPosition=instanceMatrix*mvPosition;\n#endif\nfloat k=clamp(position.y*' + (o.wind > 1 ? '.6' : '3.') + ',0.,1.);k*=k;mvPosition.x+=sin(uT*1.7+mvPosition.x*.4+mvPosition.z*.3)*' + (o.wind > 1 ? '.12' : '.06') + '*k;mvPosition.z+=cos(uT*1.3+mvPosition.x*.25)*.04*k;\nmvPosition=modelViewMatrix*mvPosition;gl_Position=projectionMatrix*mvPosition;'); }; c.customProgramCacheKey = () => 'phw' + o.wind; }
+  m[k] = c; return c;
+}
+// registra un grupo de instancias; se construye cuando el jugador se acerca a su franja
+function phPlace(id, items, o) {
+  o = o || {}; const by = new Map();
+  items.forEach(it => { const b = Math.floor(it.z / PH_BAND); if (!by.has(b)) by.set(b, []); by.get(b).push(it); });
+  by.forEach((list, b) => PH.bands.push({ id, list, o, zc: (b + .5) * PH_BAND, built: false, ims: [] }));
+}
+let _phM, _phQ, _phE, _phV, _phS;
+async function phBuild(B) {
+  B.built = true; if (!_phM) { _phM = new THREE.Matrix4(); _phQ = new THREE.Quaternion(); _phE = new THREE.Euler(); _phV = new THREE.Vector3(); _phS = new THREE.Vector3(); } const vars = await phGet(B.id); if (!vars.length || !S) return; const per = vars.map(() => []);
+  B.list.forEach((it, i) => per[it.v != null ? it.v % vars.length : i % vars.length].push(it));
+  vars.forEach((ms, vi) => { const L = per[vi]; if (!L.length) return;
+    ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, B.o), L.length);
+      L.forEach((it, i) => { _phE.set(it.rx || 0, it.ry || 0, it.rz || 0, 'YXZ'); _phQ.setFromEuler(_phE); _phS.set(it.s, it.sy ?? it.s, it.s); _phM.compose(_phV.set(it.x, it.y, it.z), _phQ, _phS).multiply(mm.m); im.setMatrixAt(i, _phM); });
+      im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.castShadow = !!B.o.shadow; im.receiveShadow = true; S.scene.add(im); B.ims.push(im); }); });
+}
+// un objeto suelto (muebles, fogatas): se agrega a un grupo cuando el modelo llega
+function phOne(id, parent, x, y, z, ry, s, o) {
+  phGet(id).then(vars => { if (!vars.length) return; const v = vars[(o && o.v) || 0] || vars[0], g = new THREE.Group(); v.forEach(mm => { const m = new THREE.Mesh(mm.geo, phMat(mm.mat, o || {})); m.matrixAutoUpdate = false; m.matrix.copy(mm.m); m.castShadow = true; m.receiveShadow = true; g.add(m); });
+    g.position.set(x, y, z); g.rotation.set((o && o.rx) || 0, ry || 0, 0); g.scale.setScalar(s || 1); parent.add(g); if (o && o.done) o.done(g); });
+}
+function phTick(dt) {
+  if (!S || !PH.bands.length) return; PH.uT.value = S.t || 0; PH.near -= dt; if (PH.near > 0) return; PH.near = .5;
+  const cz = S.av.position.z, see = S.hx ? 120 : 140, pre = see + 50;
+  for (const B of PH.bands) { const d = Math.abs(B.zc - cz) - PH_BAND / 2, lim = B.o.far ? see * 1.6 : B.o.near ? see * .55 : see; if (!B.built && d < (B.o.far ? pre * 1.6 : pre)) phBuild(B); for (const im of B.ims) im.visible = d < lim; }
+}
+function phWorld(scene, W, allPts, zMax, hx, R0) {
+  const R = rng(9091), coarse = matchMedia('(pointer: coarse)').matches, k = (hx ? 1 : .8) * (coarse ? .7 : 1); PH.kids = !hx; PH.bands = [];
+  const yAt = (x, z) => W.hAt(x, z), Z0 = zMax + 30, Z1 = 25;
+  const scatter = (n, test) => { const out = []; for (let i = 0; i < n * 4 && out.length < n; i++) { const x = (R() - .5) * (XB * 2 + 60), z = Z0 + R() * (Z1 - Z0), d = W.dAt(x, z), h = yAt(x, z); if (blockedAt(x, z) || (S_poiPts || []).some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < 30)) continue; const r = test(x, z, d, h); if (r) out.push(Object.assign({ x, z, y: h - .04, ry: R() * 6.28 }, r)); } return out; };
+  const nearPath = (n, r0, r1, s0, s1) => { const out = []; for (let i = 0; i < n * 3 && out.length < n; i++) { const p = allPts[Math.floor(R() * allPts.length)], a = R() * 6.28, r = r0 + Math.pow(R(), 1.3) * (r1 - r0), x = p[0] + Math.cos(a) * r, z = p[1] + Math.sin(a) * r; if (W.dAt(x, z) < r0 || yAt(x, z) > 7 || blockedAt(x, z)) continue; out.push({ x, z, y: yAt(x, z) - .03, ry: R() * 6.28, s: s0 + R() * (s1 - s0) }); } return out; };
+  const S2 = (a, b) => ({ s: a + R() * (b - a) });
+  // árboles
+  phPlace('island_tree_01', scatter(50 * k, (x, z, d) => d > 7 && Math.abs(x) < XB + 6 && S2(.75, 1.15)), { shadow: true });
+  phPlace('island_tree_03', scatter(60 * k, (x, z, d) => d > 5 && Math.abs(x) < XB + 6 && S2(.9, 1.4)), { shadow: true });
+  phPlace('tree_small_02', scatter(55 * k, (x, z, d) => d > 4.5 && S2(.8, 1.2)), { shadow: true });
+  phPlace('quiver_tree_01', scatter(28 * k, (x, z, d, h) => d > 6 && h > 1.5 && S2(.9, 1.4)), { shadow: true });
+  phPlace('quiver_tree_02', scatter(28 * k, (x, z, d, h) => d > 5 && h > 1 && S2(1.2, 1.8)), { shadow: true });
+  phPlace('pine_sapling_small', scatter(70 * k, (x, z, d) => d > 3.5 && S2(1, 1.6)), { wind: 2 });
+  phPlace('dead_tree_trunk', scatter(30 * k, (x, z, d) => d > 3 && Object.assign(S2(.8, 1.1), { y: yAt(x, z) + .1, rz: Math.PI / 2 })), { shadow: true });
+  phPlace('dead_tree_trunk_02', scatter(25 * k, (x, z, d) => d > 3.5 && S2(.7, 1)), { shadow: true });
+  phPlace('tree_stump_01', scatter(40 * k, (x, z, d) => d > 2.6 && S2(.6, .9)), { shadow: true });
+  // jacarandá: pocos, en las plazas de los pueblos
+  const towns = (S.pois || []).filter(p => /taller|inn|upper|roofhouse|lake|feeding/.test(p.k)), jac = [];
+  towns.forEach(p => { for (let t = 0; t < 8 && jac.filter(j => j.p === p).length < 1; t++) { const a = R() * 6.28, r = 16 + R() * 8, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (blockedAt(x, z) || W.dAt(x, z) < 6) continue; jac.push({ p, x, z, y: yAt(x, z) - .05, ry: R() * 6.28, s: .36 + R() * .08 }); } });
+  phPlace('jacaranda_tree', jac, { shadow: true, far: 1 });
+  // arbustos y flores con viento
+  phPlace('searsia_burchellii', scatter(45 * k, (x, z, d) => d > 7 && S2(.55, .85)), { wind: 2, shadow: true });
+  phPlace('wild_rooibos_bush', nearPath(260 * k, 2.5, 16, 1, 1.5), { wind: 1, near: 1 });
+  phPlace('leipoldtia_schultzei', nearPath(220 * k, 2, 14, 1.1, 1.7), { wind: 1, near: 1 });
+  phPlace('flower_heliophila', nearPath((hx ? 180 : 320) * k, 1.8, 13, 1.2, 1.8), { wind: 1, near: 1 });
+  phPlace('dandelion_01', nearPath((hx ? 320 : 520) * k, 1.6, 12, 2, 3), { wind: 1, near: 1 });
+  phPlace('nettle_plant', nearPath(340 * k, 1.8, 14, 2.6, 3.6), { wind: 1, near: 1 });
+  phPlace('grass_medium_02', nearPath(700 * k, 1.4, 14, 2.6, 3.6), { wind: 1, near: 1 });
+  phPlace('grass_medium_01', nearPath(300 * k, 1.6, 12, 2.4, 3.4), { wind: 1, near: 1 });
+  phPlace('celandine_01', nearPath(260 * k, 2, 14, 2.2, 3), { wind: 1, near: 1 });
+  phPlace('grass_bermuda_01', nearPath(900 * k, 1.3, 14, 3.4, 4.6), { wind: 1, near: 1 });
+  // rocas
+  phPlace('namaqualand_boulder_02', scatter(80 * k, (x, z, d) => d > 3 && S2(.6, 1.3)), { shadow: true });
+  phPlace('sand_rocks_small_01', scatter(45 * k, (x, z, d) => d > 2.6 && S2(.6, 1)), {});
+  ['coast_land_rocks_02', 'coast_land_rocks_03', 'coast_land_rocks_04'].forEach(id => phPlace(id, scatter(16 * k, (x, z, d, h) => d > 9 && h > 2.5 && S2(.7, 1.1)), { shadow: true }));
+  ['rock_face_01', 'rock_face_02'].forEach(id => phPlace(id, scatter(22 * k, (x, z, d, h) => Math.abs(x) > XB * .55 && d > 8 && Object.assign(S2(1, 1.7), { ry: (x > 0 ? -1 : 1) * Math.PI / 2 + (R() - .5) * .6 })), { shadow: true }));
+  const edge = (n, a, b, s0, s1, ry) => { const out = []; for (let i = 0; i < n; i++) { const sd = i % 2 ? 1 : -1, x = sd * (XB + a + R() * (b - a)), z = Z0 + (i + R()) / n * (Z1 - Z0); out.push({ x, z, y: yAt(x, z) - .6, ry: ry != null ? ry * sd : R() * 6.28, s: s0 + R() * (s1 - s0) }); } return out; };
+  phPlace('mountainside', edge(Math.round(30 * k), 4, 16, .9, 1.4).map(o => Object.assign(o, { y: o.y - 2.2 })), { shadow: true, far: 1 });
+  phPlace('coastal_cliff_02', edge(8, 34, 46, .8, 1.1, -Math.PI / 2).map(o => Object.assign(o, { y: o.y - 3 })), { far: 1 });
+  phPlace('coastal_cliff_04', edge(6, 44, 58, .7, .9, -Math.PI / 2).map(o => Object.assign(o, { y: o.y - 3 })), { far: 1 });
+  // orilla y lago: rocas de costa y muelle
+  const shoreRocks = []; (S.pois || []).filter(p => p.k === 'shore' || p.k === 'lake').forEach(p => { const cx = p.k === 'shore' ? p.x + p.side * 7 : p.x - p.side * 4, rr = p.k === 'shore' ? 8.4 : 36; for (let i = 0; i < (p.k === 'shore' ? 5 : 9); i++) { const a = R() * 6.28, x = cx + Math.cos(a) * rr, z = p.z + Math.sin(a) * rr * (p.k === 'shore' ? 1 : .9); if (W.dAt(x, z) < 2.5) continue; shoreRocks.push({ x, z, y: yAt(x, z) - .2, ry: R() * 6.28, s: .35 + R() * .3 }); } });
+  phPlace('coast_rocks_05', shoreRocks, { shadow: true });
+  (S.pois || []).filter(p => p.k === 'shore').forEach(p => { const y = yAt(p.x, p.z), ry = p.side > 0 ? Math.PI / 2 : -Math.PI / 2; const dock = []; for (let i = 0; i < 3; i++) dock.push({ x: p.x + p.side * (1.2 + i * 2.4), z: p.z + 3.2, y: y + .22, ry, s: 1, v: 0 }); phPlace('modular_wooden_pier', dock, { shadow: true });
+    phPlace('stone_fire_pit', [{ x: p.x - p.side * 2, z: p.z - 1, y: y - .02, ry: 0, s: .6 }], {}); phPlace('wicker_basket_01', [{ x: p.x - p.side * 3.2, z: p.z + .4, y, ry: .4, s: 1.4 }], {}); phPlace('wooden_bucket_02', [{ x: p.x - p.side * .6, z: p.z + 3.6, y, ry: 0, s: .9 }], {}); });
+  // pueblos: baldes, banquitos, canastas con fruta, hachas y un cofre de ofrendas en el templo
+  const props = { wooden_bucket_02: [], wooden_stool_02: [], wicker_basket_01: [], food_pears_asian_01: [], lemon: [], food_avocado_01: [], food_kiwi_01: [], wooden_axe: [], wooden_cutting_board: [], wooden_spoon: [], wooden_bowl_02: [], Lantern_01: [], brass_candleholders: [], treasure_chest: [], carrot_cake: [], wooden_candlestick: [], stone_fire_pit: [] };
+  const free = (x, z) => !blockedAt(x, z) && W.dAt(x, z) > 1.3;
+  const ring = (p, r0, r1, fn, n) => { let c = 0; for (let t = 0; t < n * 6 && c < n; t++) { const a = R() * 6.28, r = r0 + R() * (r1 - r0), x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (!free(x, z)) continue; fn(x, z, yAt(x, z) - .02, R() * 6.28); c++; } };
+  const basket = (x, z, y, ry) => { props.wicker_basket_01.push({ x, z, y, ry, s: 1.5 }); const fr = ['food_pears_asian_01', 'lemon', 'food_avocado_01', 'food_kiwi_01'][Math.floor(R() * 4)]; for (let i = 0; i < 4; i++) props[fr].push({ x: x + (R() - .5) * .25, z: z + (R() - .5) * .18, y: y + .1, ry: R() * 6.28, s: 1.4 }); };
+  for (const p of towns) {
+    ring(p, 2.4, 5, (x, z, y, ry) => props.wooden_bucket_02.push({ x, z, y, ry, s: .85 }), p.k === 'taller' ? 3 : 2);
+    ring(p, 4, 9, (x, z, y, ry) => props.wooden_stool_02.push({ x, z, y, ry, s: 2.2 }), 3);
+    ring(p, 4, 10, basket, 2);
+    ring(p, 5, 10, (x, z, y, ry) => props.wooden_axe.push({ x, z, y: y + .03, ry, rz: Math.PI / 2, s: 1.3 }), p.k === 'taller' ? 2 : 1);
+    ring(p, 5, 9, (x, z, y, ry) => props.stone_fire_pit.push({ x, z, y, ry, s: .55 }), 1);
+    if (p.k === 'inn' || p.k === 'upper') { ring(p, 5, 8, (x, z, y, ry) => props.Lantern_01.push({ x, z, y, ry, s: 1.6 }), 2); ring(p, 5, 8, (x, z, y, ry) => { props.wooden_stool_02.push({ x, z, y, ry, s: 2.6 }); props.carrot_cake.push({ x, z, y: y + .47, ry, s: 1 }); }, 1); }
+    if (p.k === 'upper') ring(p, 5, 8, (x, z, y, ry) => props.brass_candleholders.push({ x, z, y, ry, s: 1.2, v: 1 }), 1);
+  }
+  (S.pois || []).filter(p => p.k === 'temple').forEach(p => { const x = p.x - p.side * 8.5, z = p.z + 4; if (free(x, z)) props.treasure_chest.push({ x, z, y: yAt(x, z), ry: p.side > 0 ? -Math.PI / 2 : Math.PI / 2, s: 1 }); ring({ x: p.x - p.side * 9, z: p.z }, 1, 4, (x2, z2, y2, ry) => props.brass_candleholders.push({ x: x2, z: z2, y: y2, ry, s: 1.6, v: 0 }), 2); });
+  // puestos del mercado (Hero): fruta, tabla, cuchara y cuenco sobre la mesa
+  ((S.sv && S.sv.stalls) || []).forEach(s => { const y = yAt(s.x, s.z) + .9; basket(s.x, s.z, y - .02, R() * 6.28); props.wooden_cutting_board.push({ x: s.x, z: s.z + .7, y, ry: Math.PI / 2, s: 1 }); props.wooden_spoon.push({ x: s.x + .05, z: s.z + .7, y: y + .03, ry: Math.PI / 2, s: 1.2 }); props.wooden_bowl_02.push({ x: s.x, z: s.z - .7, y, ry: 0, s: 1.6 }); props.wooden_candlestick.push({ x: s.x + .2, z: s.z - .35, y, ry: 0, s: 1.2 }); });
+  ((S.sv && S.sv.beggars) || []).forEach(b => { if (b.bowl) b.bowl.visible = false; const x = b.bx ?? b.x, z = b.bz ?? b.z; props.wooden_bowl_02.push({ x, z, y: yAt(x, z) + .02, ry: 0, s: 2 }); });
+  for (const id in props) if (props[id].length) phPlace(id, props[id], { shadow: /chest|bucket|stool|basket|fire/.test(id) });
+}
+
+/* ---------- Cinturón de la verdad: una insignia por cada curso terminado ----------
+   Se ve siempre sobre cualquier ropa (no depende de lo que tengas puesto), en el personaje y junto al nombre.
+   Idea de Efesios 6:14: estar firmes, ceñidos con la verdad. */
+const COURSES = [
+  { id: 'tsp', name: 'Tras sus pasos', em: 'cross', c: '#F2C14E', g: '#FFE7A0' },
+  { id: 'hechos', name: 'Hechos', em: 'flame', c: '#FF8A3A', g: '#FFD08A', soon: 1 },
+  { id: 'maranata', name: 'Maranata', em: 'star', c: '#FFD86A', g: '#FFF3C2', soon: 1 },
+  { id: 'principio', name: 'En el principio', em: 'tree', c: '#6FCF6A', g: '#CFF5C0', soon: 1 },
+  { id: 'heroes', name: 'Héroes de la fe', em: 'shield', c: '#7FB2FF', g: '#D6E6FF', soon: 1 }];
+const CBY = Object.fromEntries(COURSES.map(c => [c.id, c]));
+// dibuja el emblema de un curso en un canvas (sirve para el cinturón, el nombre y la mochila)
+function emblemDraw(x, id, cx, cy, r) {
+  const c = CBY[id]; if (!c) return; x.save(); x.translate(cx, cy);
+  const gl = x.createRadialGradient(0, 0, r * .2, 0, 0, r * 1.25); gl.addColorStop(0, c.g); gl.addColorStop(1, 'rgba(255,220,140,0)'); x.fillStyle = gl; x.beginPath(); x.arc(0, 0, r * 1.25, 0, 7); x.fill();
+  x.fillStyle = '#3A2410'; x.beginPath(); x.arc(0, 0, r * .92, 0, 7); x.fill(); x.lineWidth = r * .14; x.strokeStyle = c.c; x.stroke();
+  x.fillStyle = c.c; x.strokeStyle = c.c; x.lineCap = 'round'; x.lineJoin = 'round'; const k = r * .55;
+  if (c.em === 'cross') { // sandalia con una cruz: caminar tras sus pasos
+    x.beginPath(); x.ellipse(0, k * .25, k * .45, k * .85, 0, 0, 7); x.lineWidth = r * .1; x.stroke(); x.fillRect(-k * .11, -k * .95, k * .22, k * 1.5); x.fillRect(-k * .5, -k * .55, k * 1, k * .22); }
+  else if (c.em === 'flame') { x.beginPath(); x.moveTo(0, -k); x.bezierCurveTo(k * .9, -k * .2, k * .7, k * .9, 0, k * .9); x.bezierCurveTo(-k * .7, k * .9, -k * .9, -k * .1, 0, -k); x.fill(); }
+  else if (c.em === 'star') { x.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? k * .42 : k; x.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } x.closePath(); x.fill(); }
+  else if (c.em === 'tree') { x.fillRect(-k * .12, k * .1, k * .24, k * .8); x.beginPath(); x.arc(0, -k * .15, k * .62, 0, 7); x.fill(); }
+  else if (c.em === 'shield') { x.beginPath(); x.moveTo(0, -k); x.lineTo(k * .8, -k * .6); x.lineTo(k * .6, k * .4); x.lineTo(0, k); x.lineTo(-k * .6, k * .4); x.lineTo(-k * .8, -k * .6); x.closePath(); x.fill(); }
+  x.restore();
+}
+const _emTex = {};
+function emblemTex(id) { if (_emTex[id]) return _emTex[id]; const cv = document.createElement('canvas'); cv.width = cv.height = 128; emblemDraw(cv.getContext('2d'), id, 64, 64, 50); const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return (_emTex[id] = t); }
+function emblemURL(id, px) { const cv = document.createElement('canvas'); cv.width = cv.height = px || 64; emblemDraw(cv.getContext('2d'), id, cv.width / 2, cv.height / 2, cv.width * .38); return cv.toDataURL(); }
+// el cinturón: cuero con hebilla dorada y un emblema brillante por curso, sujeto a la cadera
+function insBelt(o, bones, ins) {
+  const list = (ins || []).filter(id => CBY[id]); if (!list.length || !bones.pelvis) return;
+  o.updateMatrixWorld(true); const pv = bones.pelvis, wp = new THREE.Vector3(); pv.getWorldPosition(wp); o.worldToLocal(wp);
+  const g = new THREE.Group(), leather = new THREE.MeshStandardMaterial({ color: '#5A3A22', roughness: .75 }), gold = new THREE.MeshStandardMaterial({ color: '#E2B44A', roughness: .3, metalness: .75, emissive: '#5A3A08', emissiveIntensity: .4 });
+  const band = new THREE.Mesh(new THREE.TorusGeometry(1, .14, 6, 28), leather); band.rotation.x = Math.PI / 2; band.scale.set(.165, .13, .2); g.add(band);
+  const n = list.length; list.forEach((id, i) => {
+    const a = (i - (n - 1) / 2) * .42, px = Math.sin(a) * .17, pz = Math.cos(a) * .135;
+    const disc = new THREE.Mesh(new THREE.CylinderGeometry(.034, .034, .012, 18), gold); disc.rotation.x = Math.PI / 2; disc.position.set(px, 0, pz + .004); disc.rotation.z = 0; disc.rotation.y = a; g.add(disc);
+    const sp = new THREE.Mesh(new THREE.PlaneGeometry(.075, .075), new THREE.MeshBasicMaterial({ map: emblemTex(id), transparent: true, depthWrite: false, toneMapped: false })); sp.position.set(px * 1.06, 0, pz + .014); sp.rotation.y = a; g.add(sp);
+    const glow = new THREE.Mesh(new THREE.PlaneGeometry(.16, .16), new THREE.MeshBasicMaterial({ map: emblemTex(id), transparent: true, opacity: .35, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false })); glow.position.set(px * 1.08, 0, pz + .02); glow.rotation.y = a; glow.userData.glow = 1; g.add(glow);
+  });
+  g.position.set(0, wp.y + .08, wp.z + .01); o.add(g); o.updateMatrixWorld(true); pv.attach(g); g.userData.belt = 1;
+}
+// cartel del nombre con los emblemas al lado (lo ven los demás en las salas)
+function tagSprite(name, ins, hx) {
+  const list = (ins || []).filter(id => CBY[id]); if (!list.length) return textSprite(name, hx);
+  const c = document.createElement('canvas'), x = c.getContext('2d'), f = 44; x.font = `800 ${f}px Nunito, Arial, sans-serif`;
+  const tw = Math.ceil(x.measureText(name).width), ew = list.length * 58, w = tw + ew + 60; c.width = w; c.height = 76; x.font = `800 ${f}px Nunito, Arial, sans-serif`;
+  x.fillStyle = hx ? 'rgba(14,12,9,.82)' : 'rgba(255,255,255,.9)'; const r = 30; x.beginPath(); x.moveTo(r, 4); x.arcTo(w - 4, 4, w - 4, 72, r); x.arcTo(w - 4, 72, 4, 72, r); x.arcTo(4, 72, 4, 4, r); x.arcTo(4, 4, w - 4, 4, r); x.fill();
+  x.fillStyle = hx ? '#F1D7A2' : '#22407F'; x.textBaseline = 'middle'; x.textAlign = 'left'; x.fillText(name, 26, 40); list.forEach((id, i) => emblemDraw(x, id, 26 + tw + 32 + i * 58, 38, 24));
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true })); sp.scale.set(w / 76 * .5, .5, 1); sp.renderOrder = 6; return sp;
+}
+function insState() { const p = G().P(); if (!p.ins || typeof p.ins !== 'object') p.ins = {}; return p.ins; }
+// puntaje del curso: promedio de los mejores exámenes de cada etapa
+function insScore() { const p = G().P(), ex = p.exams || {}, R = (G().REGIONS || []); let ok = 0, sum = 0, of = 0; R.forEach(r => { const e = ex[r.id]; if (e && e.passed) { ok++; sum += +(e.best ?? e.ok ?? 0); of += +(e.of || 12); } }); return { ok, total: R.length, pct: of ? Math.round(sum / of * 100) : 0 }; }
+function insGive(id, silent) {
+  const I = insState(); if (!CBY[id] || I[id]) return false; const sc = insScore(); I[id] = { at: new Date().toISOString(), pct: sc.pct, ok: sc.ok, of: sc.total }; G().save();
+  if (S) reLook(); if (!silent) { const el = document.getElementById('v3pop'); if (el) { el.innerHTML = `<span class="ic" style="background:#3A2410;border:1px solid ${CBY[id].c}"><img alt="" src="${emblemURL(id, 64)}" width="34" height="34"></span><span class="tx"><small style="color:${CBY[id].c}">Cinturón de la verdad · Curso terminado</small><b>${esc(CBY[id].name)}</b><em class="gp-tip">Tu insignia brilla en tu cinturón y junto a tu nombre</em></span>`; el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); clearTimeout(pop.t); pop.t = setTimeout(() => { el.classList.remove('on'); el.hidden = true; }, 5200); tone3d(); } }
+  return true;
+}
+// quienes ya tenían la túnica del curso o aprobaron todos los exámenes reciben la insignia
+function insMigrate() {
+  try { const p = G().P(), I = insState(), own = ((p.gear || {}).own || []), R = G().REGIONS || [], ex = p.exams || {};
+    const all = R.some(r => r.id === 'resurreccion') && R.every(r => ex[r.id] && ex[r.id].passed);
+    if (!I.tsp && (own.includes('tsp') || all)) insGive('tsp', true); } catch (e) { console.warn('ins', e); }
+}
+function invCourses(body) {
+  const I = insState(); const fmt = d => { try { return new Date(d).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return ''; } };
+  body.innerHTML = `<div class="ins-wrap"><p class="ins-lead">Cada curso que terminás suma una insignia a tu <b>cinturón de la verdad</b>. Se ve siempre, con cualquier ropa, y los demás la ven junto a tu nombre.</p>${COURSES.map(c => { const d = I[c.id];
+    return `<div class="ins-row${d ? ' on' : ''}"><img alt="" src="${emblemURL(c.id, 72)}" width="44" height="44"><div><b>${esc(c.name)}</b><small>${d ? 'Terminado el ' + fmt(d.at) + (d.of ? ` · Exámenes ${d.ok}/${d.of} · ${d.pct}%` : '') : c.soon ? 'Próximamente' : 'Todavía no terminado'}</small></div>${d ? '<span class="ins-ok">✓</span>' : ''}</div>`; }).join('')}</div>`;
 }
 
 /* ---------- caminar libre ---------- */
@@ -2226,7 +2411,7 @@ function loop(now) {
   if (!S) return;
   const root = S.root; if (!root || root.hidden || root.closest('main').hidden || document.hidden) return;
   const t = now / 1000, dt = Math.min(.05, (now - (S.last || now)) / 1000); S.last = now; S.t = t;
-  freeWalk(dt); refresh(); animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt);
+  freeWalk(dt); refresh(); phTick(dt); animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt);
   for (const [id, m] of Object.entries(S.items)) {
     if (m.userData.gone) { m.userData.gone += dt; const k = m.userData.gone / .5; m.scale.setScalar(1 + k); m.position.y += dt * 2; m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = Math.max(0, 1 - k); } }); if (k >= 1) { S.scene.remove(m); delete S.items[id]; } continue; }
     m.rotation.y = t * 1.6; m.position.y = (m.userData.by || 0) + .85 + Math.sin(t * 2.4 + id.length) * .12;
@@ -2262,7 +2447,7 @@ function idle(dt) {
   const sheetOpen = !document.getElementById('v3sheet').hidden || document.querySelector('.sheet:not([hidden])');
   if (S.walking || S.moving || S.freeMoving || sheetOpen) { if (S.idleT) wake(); return; }
   S.idleT = (S.idleT || 0) + dt;
-  if (S.idleT > 30 && !S.think.classList.contains('on')) { const L = S.hx ? THINK.hx : THINK.kids; S.think.firstChild.textContent = L[Math.floor(Math.random() * L.length)]; S.think.classList.add('on'); }
+  if (S.idleT > 30 && !S.think.classList.contains('on')) { const L = S.hx ? THINK.hx : THINK.kids; S.think.firstChild.textContent = L[Math.floor(Math.random() * L.length)]; if (!S.hx) try { G().vo(S.think.firstChild.textContent, 'narrador', { queue: 1, tts: false }); } catch (e) {} S.think.classList.add('on'); }
   if (S.idleT > 60) { S.hint.classList.add('on'); if (S.quiet) { S.quiet = false; S.sig = ''; } }
   if (S.think.classList.contains('on')) {
     if (!HV.v) HV.v = new THREE.Vector3();
@@ -2476,7 +2661,7 @@ function svCraft() {
 function svFire(x, z) {
   const a = S.av.position; x = x ?? a.x + Math.sin(S.yaw) * 1.6; z = z ?? a.z + Math.cos(S.yaw) * 1.6; const y = S.W.hAt(x, z), g = new THREE.Group();
   for (let i = 0; i < 5; i++) { const l = cy(.06, .07, .8, tm('wd', '#6A4A2E'), 0, .1, 0, g); l.rotation.z = Math.PI / 2 - .25; l.rotation.y = i / 5 * 6.28; }
-  for (let i = 0; i < 8; i++) { const r = new THREE.Mesh(new THREE.DodecahedronGeometry(.12, 0), tm('st', '#8C8374')); r.position.set(Math.cos(i / 8 * 6.28) * .5, .06, Math.sin(i / 8 * 6.28) * .5); g.add(r); }
+  { const old = new THREE.Group(); for (let i = 0; i < 8; i++) { const r = new THREE.Mesh(new THREE.DodecahedronGeometry(.12, 0), tm('st', '#8C8374')); r.position.set(Math.cos(i / 8 * 6.28) * .5, .06, Math.sin(i / 8 * 6.28) * .5); old.add(r); } g.add(old); phOne('stone_fire_pit', g, 0, -.03, 0, 0, .55, { done: () => { old.visible = false; } }); }
   const fl = new THREE.Mesh(new THREE.ConeGeometry(.22, .6, 8), new THREE.MeshBasicMaterial({ color: '#FFB347', transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false })); fl.position.y = .4; g.add(fl);
   g.position.set(x, y, z); S.scene.add(g); const f = { x, z, y, g, fl, left: SV.FIRE }; S.sv.fires.push(f); svXP(2); svToast('🔥 Encendiste una fogata. Acercate con pescado crudo para cocinarlo.');
 }
@@ -2495,10 +2680,12 @@ function svFurnish(id, silent) {
   const H = S.sv && S.sv.house; if (!H) return; const g = new THREE.Group(), [fx, fz] = FURN_AT[id], WD = WOOD(), WL = WOODL();
   if (id === 'cama') { bx(1.0, .3, 2.0, WD, 0, .15, 0, g); bx(.9, .14, 1.85, tm('mat', '#E8DDC6'), 0, .36, 0, g); bx(.7, .12, .4, tm('pil', '#C9B48A'), 0, .48, -.7, g); bx(.92, .06, 1.1, tm('wool', '#8E2E22'), 0, .45, .3, g); }
   if (id === 'mesa') { bx(1.4, .08, .8, WL, 0, .72, 0, g); [[-.6, -.32], [.6, -.32], [-.6, .32], [.6, .32]].forEach(([a, b]) => bx(.07, .72, .07, WD, a, .36, b, g)); jar(g, -.3, 0, .76, '#B4704A', .7); const br = new THREE.Mesh(new THREE.SphereGeometry(.12, 10, 8), tm('pan', '#D9A25A')); br.scale.y = .5; br.position.set(.3, .8, 0); g.add(br); }
-  if (id === 'banco') { bx(1.3, .07, .32, WL, 0, .42, 0, g); [-.55, .55].forEach(a => bx(.08, .42, .28, WD, a, .21, 0, g)); }
+  if (id === 'banco') { bx(1.3, .07, .32, WL, 0, .42, 0, g); [-.55, .55].forEach(a => bx(.08, .42, .28, WD, a, .21, 0, g)); [-1.05, 1.05].forEach(a => phOne('wooden_stool_02', g, a, 0, .1, a, 2.2)); }
   if (id === 'horno') { const o = new THREE.Mesh(new THREE.SphereGeometry(.7, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), tm('clay', '#A8784A')); o.scale.y = 1.2; g.add(o); bx(.4, .35, .1, tm('ash', '#2A1A12'), 0, .25, .66, g); const fl = new THREE.Mesh(new THREE.SphereGeometry(.12, 8, 6), tm('fire', '#FF8A3A', { emissive: '#FFB347', emissiveIntensity: 3 })); fl.position.set(0, .2, .55); g.add(fl); }
-  if (id === 'cofre') { bx(.9, .5, .55, WD, 0, .25, 0, g); bx(.92, .1, .57, WL, 0, .52, 0, g); bx(.12, .14, .04, tm('gold2', '#C9A04A', { metalness: .7, roughness: .35 }), 0, .42, .29, g); }
-  if (id === 'lampara') { const l = new THREE.Mesh(new THREE.SphereGeometry(.1, 10, 8), tm('lmp', '#FFD27A', { emissive: '#FFB347', emissiveIntensity: 3 })); l.position.set(0, 1.4, 0); g.add(l); bx(.3, .06, .2, tm('clay', '#A8784A'), 0, 1.3, 0, g); cy(.03, .03, 1.3, WD, 0, .65, 0, g); }
+  if (id === 'cofre') { const old = new THREE.Group(); bx(.9, .5, .55, WD, 0, .25, 0, old); bx(.92, .1, .57, WL, 0, .52, 0, old); bx(.12, .14, .04, tm('gold2', '#C9A04A', { metalness: .7, roughness: .35 }), 0, .42, .29, old); g.add(old); phOne('treasure_chest', g, 0, 0, 0, 0, .95, { done: () => { old.visible = false; } }); }
+  if (id === 'lampara') { phOne('Lantern_01', g, .18, 1.33, 0, 0, 1.3); const l = new THREE.Mesh(new THREE.SphereGeometry(.1, 10, 8), tm('lmp', '#FFD27A', { emissive: '#FFB347', emissiveIntensity: 3 })); l.position.set(0, 1.4, 0); g.add(l); bx(.3, .06, .2, tm('clay', '#A8784A'), 0, 1.3, 0, g); cy(.03, .03, 1.3, WD, 0, .65, 0, g); }
+  if (id === 'mesa') { phOne('wooden_candlestick', g, .45, .76, -.15, 0, 1.3); phOne('wooden_bowl_02', g, .1, .76, .18, 0, 1.6); phOne('wooden_cutting_board', g, -.1, .76, -.2, .3, 1); }
+  if (id === 'horno') phOne('wooden_bucket_02', g, 1.1, 0, .2, 0, .8);
   g.position.set(fx, 0, fz); g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); H.g.add(g);
   if (id === 'horno') { const w = new THREE.Vector3(); H.g.updateMatrixWorld(true); g.getWorldPosition(w); S.sv.oven = { x: w.x, z: w.z }; }
   if (id === 'cama') { const w = new THREE.Vector3(); H.g.updateMatrixWorld(true); g.getWorldPosition(w); S.sv.bed = { x: w.x, z: w.z + 0 }; }
@@ -2840,7 +3027,7 @@ function econBuild(scene, W) {
     { const m = ns[Math.min(ns.length - 1, 4)], side = r % 2 ? -1 : 1, x = m.position.x + side * 3.2, z = m.position.z - 2; if (!blockedAt(x, z)) {
       const o = buildHeroAvatar({ g: R() < .6 ? 'chico' : 'chica', age: 18, skin: '#B98A62', hair: '#6A6A6A', outfit: '#7A6A5A', anim: ['M_Kneeling_Idle', 'Crouch_Idle_Loop', 'M_Sad_Idle'] }); o.position.set(x, W.hAt(x, z), z); o.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; scene.add(o);
       const bowl = new THREE.Mesh(new THREE.SphereGeometry(.16, 12, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), tm('clay', '#A8784A')); bowl.position.set(x - side * .55, W.hAt(x, z) + .16, z); scene.add(bowl);
-      st.beggars.push({ x, z, r, id: 'beg' + r, o }); } }
+      st.beggars.push({ x, z, r, id: 'beg' + r, o, bowl, bx: x - side * .55, bz: z }); } }
   });
 }
 
@@ -2881,4 +3068,4 @@ function svGive(bg) {
     el.innerHTML = `<div class="inv hx sv-sheet sv-faint"><h3>¡Gracias! Que Dios te bendiga.</h3><p>Tu Servicio creció a <b>${atP().serv}</b> y ganaste experiencia.</p><p class="sv-verse">El que ayuda al pobre le presta al Señor, y él se lo va a recompensar (Proverbios 19:17).</p><button class="sv-up">Seguir el camino</button></div>`; el.querySelector('.sv-up').onclick = () => { el.hidden = true; }; });
 }
 
-window.W3 = { enter, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => gearGive(GBY[id], id === 'tsp' ? 'Terminaste el curso' : 'Regalo'), GEAR, reLook };
+window.W3 = { enter, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };

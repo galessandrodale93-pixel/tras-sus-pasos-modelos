@@ -301,7 +301,7 @@ const OUTFITS=['#5B8DEF','#EF6F61','#2FAE7C','#F2B33D','#9B7BE8'];
 const CACHE='tsp-cache-v4';
 let branch=null,profiles=[],current=null,saveT=null;
 const P=()=>current;
-const blank=()=>({done:{},visited:['start'],pos:'start',regions:{},medals:[],maps:[],verses:[],games:{},trivia:0,streak:0,best:0,rankId:null,items:{},gear:{own:[],eq:{}},missions:{},mact:null,exams:{},want:{},lvSeen:0,photo:'',surv:null,attr:null,bonus:0});
+const blank=()=>({done:{},visited:['start'],pos:'start',regions:{},medals:[],maps:[],verses:[],games:{},trivia:0,streak:0,best:0,rankId:null,items:{},gear:{own:[],eq:{}},missions:{},mact:null,exams:{},want:{},lvSeen:0,photo:'',surv:null,attr:null,bonus:0,ins:null});
 const KEYS=Object.keys(blank());
 function serialize(p){const o={};KEYS.forEach(k=>o[k]=p[k]);return JSON.stringify(o);}
 function save(){
@@ -986,7 +986,7 @@ function openStop(n){
   const el=$('#stop');el.hidden=false;document.body.style.overflow='hidden';
   el.innerHTML=`<div class="sheet-in"><div class="video" id="video"></div><div class="sheet-body"><span class="kicker">Etapa ${n.r+1} · ${esc(n.place)}</span><h2>${esc(n.title)}</h2><p class="story">${esc(n.text.replace('{name}',p.name))}</p><div id="flow">${gameCard(n)}${flowButtons(n)}</div></div></div>`;
   el.scrollTop=0;
-  video=mountVideo($('#video'),n.scene,p.avatar);
+  video=mountVideo($('#video'),n.scene,p.avatar);vo(n.text.replace('{name}',p.name));if(n.game&&n.game.how&&!isDone(n.id))vo(n.game.how,'narrador',{queue:1});
   const x=document.createElement('button');x.className='close';x.setAttribute('aria-label','Volver al mapa');x.innerHTML='<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="#22407F" stroke-width="2.6" stroke-linecap="round"/></svg>';x.onclick=closeStop;$('#video').appendChild(x);
   wireFlow(n);
 }
@@ -997,19 +997,20 @@ function afterGame(n){
   ({mc:renderMC,who:renderMC,order:renderOrder,verse:renderVerse,map:renderMap})[n.ch.t](n.ch,$('#chal'));
   setTimeout(()=>$('#chal').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'}),80);
 }
-function closeStop(){if(video)video.stop();video=null;const el=$('#stop');el.hidden=true;el.innerHTML='';document.body.style.overflow='';active=null;refreshMap();}
+function closeStop(){voStop();if(video)video.stop();video=null;const el=$('#stop');el.hidden=true;el.innerHTML='';document.body.style.overflow='';active=null;refreshMap();}
 
 const KIND={mc:'Opción múltiple',who:'¿Quién lo dijo?',order:'Línea de tiempo',verse:'Completá el versículo',map:'Mapa'};
 const kindLabel=t=>`<span class="kicker kind"><svg viewBox="-9 -9 18 18" aria-hidden="true" style="color:#E9A52C">${NICON[t]}</svg>Desafío · ${KIND[t]}</span>`;
 function renderMC(c,el){
   const opts=shuffle(c.options.slice()),head=c.t==='who'?`<div class="quote">${esc(c.quote)}</div>`:`<h3>${esc(c.q)}</h3>`;
   el.innerHTML=`<div class="card">${kindLabel(c.t)}${head}<div class="opts">${opts.map((o,k)=>`<button class="opt" data-v="${esc(o)}"><span class="k">${'ABCD'[k]}</span><span>${esc(o)}</span></button>`).join('')}</div></div>`;
+  vo(c.t==='who'?c.quote:c.q,c.t==='who'?(FEMV.test(c.answer||'')?'mujer':'varon'):'narrador');if(voKids())opts.forEach(o=>vo(o,'narrador',{queue:1}));
   el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(locked)return;locked=true;const ok=b.dataset.v===c.answer;el.querySelectorAll('.opt').forEach(x=>{x.disabled=true;if(x.dataset.v===c.answer)x.classList.add('correct');});if(!ok)b.classList.add('wrong');resolve(ok,`<p>Respuesta: <span class="answer">${esc(c.answer)}</span></p>`);});
 }
 function renderOrder(c,el){
   const items=shuffle(c.items.map((t,i)=>({t,i})));let picked=[];
   el.innerHTML=`<div class="card order">${kindLabel('order')}<h3>${esc(c.q)}</h3><p class="hint">Tocá los hechos del primero al último. Tocá uno marcado para corregir.</p><div class="opts">${items.map(it=>`<button class="opt" data-i="${it.i}"><span class="k"></span><span>${esc(it.t)}</span></button>`).join('')}</div><button class="primary" id="check" disabled>Comprobar</button></div>`;
-  const btns=[...el.querySelectorAll('.opt')];
+  const btns=[...el.querySelectorAll('.opt')];vo(c.q);
   const paint=()=>{btns.forEach(b=>{const p=picked.indexOf(+b.dataset.i);b.classList.toggle('picked',p>=0);b.querySelector('.k').textContent=p>=0?p+1:'';});$('#check').disabled=picked.length!==c.items.length;};
   btns.forEach(b=>b.onclick=()=>{if(locked)return;const i=+b.dataset.i,p=picked.indexOf(i);if(p>=0)picked=picked.slice(0,p);else picked.push(i);paint();});
   $('#check').onclick=()=>{if(locked)return;locked=true;const ok=picked.every((v,k)=>v===k);btns.forEach(b=>{b.disabled=true;const i=+b.dataset.i;b.classList.remove('picked');b.classList.add(picked.indexOf(i)===i?'correct':'wrong');});$('#check').hidden=true;resolve(ok,ok?'':`<p>El orden correcto:</p><ol class="ordered">${c.items.map(t=>`<li>${esc(t)}</li>`).join('')}</ol>`);};
@@ -1024,7 +1025,7 @@ function renderVerse(c,el){
     $('#vtext').querySelectorAll('.blank').forEach(x=>x.onclick=()=>{if(locked)return;fill[+x.dataset.b]=null;draw();});
     $('#bank').querySelectorAll('.chip').forEach(x=>x.onclick=()=>{if(locked)return;const e=fill.indexOf(null);if(e<0)return;fill[e]=+x.dataset.k;draw();});
   };
-  draw();
+  draw();vo('Elegí las palabras que faltan');
   $('#check').onclick=()=>{if(locked)return;locked=true;const ok=fill.every((k,i)=>c.bank[k]===c.blanks[i]);$('#vtext').querySelectorAll('.blank').forEach(x=>{const i=+x.dataset.b;x.disabled=true;x.classList.add(c.bank[fill[i]]===c.blanks[i]?'correct':'wrong');});$('#bank').querySelectorAll('.chip').forEach(x=>x.disabled=true);$('#check').hidden=true;if(ok){const p=P();if(!p.verses.includes(active.id))p.verses.push(active.id);}resolve(ok,`<p>“${c.parts.map(p=>typeof p==='number'?`<b class="answer">${esc(c.blanks[p])}</b>`:esc(p)).join('')}”</p>`);};
 }
 function renderMap(c,el){
@@ -1039,7 +1040,7 @@ function renderMap(c,el){
       <text x="148" y="150" font-size="10">GALILEA</text><text x="138" y="200" font-size="10">SAMARIA</text><text x="118" y="336" font-size="10">JUDEA</text>
       <text x="34" y="170" font-size="9" fill="#fff" transform="rotate(-62 34 170)">MAR MEDITERRÁNEO</text><text x="224" y="300" font-size="8" fill="#3F7FC2" transform="rotate(90 224 300)">MAR MUERTO</text>
       <text x="224" y="74" font-size="8" fill="#3F7FC2">MAR DE GALILEA</text><text x="221" y="168" font-size="8" fill="#3F7FC2" transform="rotate(80 221 168)">JORDÁN</text>
-    </g>${dots}</svg></div><p class="hint">Cada punto es un lugar de los evangelios. Elegí uno.</p></div>`;
+    </g>${dots}</svg></div><p class="hint">Cada punto es un lugar de los evangelios. Elegí uno.</p></div>`;vo(c.q);
   el.querySelectorAll('.dot').forEach(d=>{const act=()=>{if(locked)return;locked=true;const ok=d.dataset.id===c.target;$('#qmap').classList.add('revealed');el.querySelector(`.dot[data-id="${c.target}"]`).classList.add('correct');if(!ok)d.classList.add('wrong');if(ok){const p=P();if(!p.maps.includes(active.id))p.maps.push(active.id);}const t=MAP_PLACES.find(p=>p.id===c.target);resolve(ok,ok?'':`<p>El lugar marcado en verde es <span class="answer">${esc(t.name)}</span>.</p>`);};d.onclick=act;d.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}};});
 }
 let pendingMedals=[];
@@ -1052,7 +1053,7 @@ function resolve(ok,extra){
   save();
   const fb=document.createElement('div');fb.className='feedback';
   fb.innerHTML=`<div class="res ${ok?'ok':'bad'}"><span class="badge">${ok?'<svg width="22" height="22" viewBox="0 0 22 22"><path d="M5 11.5l4 4 8-9" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>':'<svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 4v7M10 15v.5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>'}</span><h3>${ok?(p.streak>=3?`¡Racha de ${p.streak}!`:'¡Correcto!'):'Casi'}</h3>${ok?`<span class="pts" id="ptsBadge">+${pts}</span>`:''}</div>${extra}<p>${esc(c.exp)}</p><span class="ref"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 2h4a1 1 0 0 1 1 1v8a1 1 0 0 0-1-1H1zM11 2H7a1 1 0 0 0-1 1v8a1 1 0 0 1 1-1h4z" fill="currentColor"/></svg>${esc(c.ref)}</span><button class="primary" id="cont">Seguir el camino</button>`;
-  $('#chal').appendChild(fb);
+  $('#chal').appendChild(fb);vo(ok?'¡Correcto!':'Casi');vo(c.exp,'narrador',{queue:1});if(c.t==='verse'&&c.parts)vo(c.parts.map(x=>typeof x==='number'?c.blanks[x]:x).join(''),'narrador',{queue:1});
   setTimeout(()=>{fb.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});if(ok)setTimeout(()=>{const b=$('#ptsBadge');if(!b)return;const r=b.getBoundingClientRect();sparks(r.left+r.width/2,r.top+r.height/2,30);floatText('+'+pts,r.left,r.top-6);},350);},120);
   $('#cont').onclick=()=>{closeStop();if(n.k==='n3')toast('El camino se bifurca. Elegí por dónde seguir.');else if(n.k==='n5')toast('¡Se abrió la puerta de la etapa!');};
 }
@@ -2364,7 +2365,7 @@ function runGame(){
 function showArCard(kind,data={}){
   const card=$('#arCard'),th=ar.th;card.hidden=false;
   if(kind==='intro'){const best=P().games[ar.n.id]||0;
-    card.innerHTML=`<div class="box glass"><span class="kicker">Minijuego</span><h3>${esc(th.title)}</h3><p>${esc(th.how)}</p><p>${['memo','maze','verso','herd','slide','order','words','diff','lantern','connect'].includes(th.type)?'Se juega contra reloj: cada ronda que superás te da más tiempo.':th.type==='simon'?'Tenés dos vidas. Cada secuencia es una luz más larga.':['pop','swarm','balance','tf'].includes(th.type)?'Tenés tres vidas.':th.type==='rhythm'?'Si se te pasan seis notas, se termina.':th.type==='stack'?'Se termina cuando una tabla cae afuera.':'Se juega hasta perder.'} Tu mejor marca suma puntos${best?` (ahora: ${fmt(best)})`:''}.</p><button class="primary" id="arGo">Jugar</button></div>`;
+    vo(th.how);card.innerHTML=`<div class="box glass"><span class="kicker">Minijuego</span><h3>${esc(th.title)}</h3><p>${esc(th.how)}</p><p>${['memo','maze','verso','herd','slide','order','words','diff','lantern','connect'].includes(th.type)?'Se juega contra reloj: cada ronda que superás te da más tiempo.':th.type==='simon'?'Tenés dos vidas. Cada secuencia es una luz más larga.':['pop','swarm','balance','tf'].includes(th.type)?'Tenés tres vidas.':th.type==='rhythm'?'Si se te pasan seis notas, se termina.':th.type==='stack'?'Se termina cuando una tabla cae afuera.':'Se juega hasta perder.'} Tu mejor marca suma puntos${best?` (ahora: ${fmt(best)})`:''}.</p><button class="primary" id="arGo">Jugar</button></div>`;
     $('#arGo').onclick=()=>{card.hidden=true;runGame();};}
   else{card.innerHTML=`<div class="box glass"><span class="kicker">¡Se terminó!</span><div class="bigscore">${fmt(data.score)}</div>${data.gain>0?`<span class="newbest">Nueva mejor marca · +${fmt(data.gain)} puntos</span>`:`<p>Tu mejor marca sigue en ${fmt(data.best)}.</p>`}<button class="primary" id="arAgain">Jugar de nuevo</button><button class="ghost" id="arNext">${isDone(ar.n.id)?'Volver a la parada':'Ir al desafío'}</button></div>`;
     $('#arAgain').onclick=()=>{card.hidden=true;runGame();};$('#arNext').onclick=()=>endArcade(false);
@@ -2516,7 +2517,7 @@ function openExam(r,onPass){
   const intro=()=>{box.innerHTML=`<div class="ex-card ex-intro"><div class="ex-seal">✦</div><small>Antes de seguir el camino</small><h2>Examen de la etapa<br><em>${esc(R.name)}</em></h2><p>Repasá todo lo que viviste en esta etapa. Son ${items.length} desafíos: preguntas, pasajes para completar, personajes para unir, una situación real para resolver y una reflexión personal.</p><p class="ex-note">Para pasar a la etapa siguiente necesitás ${need} respuestas correctas de ${graded}. Si no llegás, podés repasar y volver a intentarlo.</p><div class="ex-btns"><button class="ex-go">Empezar</button><button class="ex-later">Más tarde</button></div></div>`;
     box.querySelector('.ex-go').onclick=()=>show();box.querySelector('.ex-later').onclick=()=>{box.remove();refreshMap();};};
   const next=good=>{if(good===true)ok++;else if(good===false)wrong.push(items[i]);i++;i<items.length?show():end();};
-  const feedback=(card,good,x)=>{const f=document.createElement('div');f.className='ex-fb '+(good?'ok':'no');f.innerHTML=`<b>${good?'¡Correcto!':'No es esa'}</b><p>${esc(x.exp||'')}</p><small>${esc(x.ref||'')}</small><button class="ex-next">${i+1<items.length?'Siguiente':'Ver resultado'}</button>`;card.appendChild(f);f.querySelector('.ex-next').onclick=()=>next(good);f.scrollIntoView({behavior:'smooth',block:'nearest'});};
+  const feedback=(card,good,x)=>{const f=document.createElement('div');f.className='ex-fb '+(good?'ok':'no');f.innerHTML=`<b>${good?'¡Correcto!':'No es esa'}</b><p>${esc(x.exp||'')}</p><small>${esc(x.ref||'')}</small><button class="ex-next">${i+1<items.length?'Siguiente':'Ver resultado'}</button>`;card.appendChild(f);vo(good?'¡Correcto!':'No es esa');vo(x.exp,'narrador',{queue:1});f.querySelector('.ex-next').onclick=()=>next(good);f.scrollIntoView({behavior:'smooth',block:'nearest'});};
   const show=()=>{const x=items[i];let h=head()+'<div class="ex-card">';const tag={mc:'Opción múltiple',tf:'Verdadero o falso',match:'Unir',verse:'Completá el pasaje',order:'Ordená',app:'Situación ministerial',reflect:'Reflexión personal'}[x.t];
     h+=`<span class="ex-tag t-${x.t}">${tag}</span><h3>${esc(x.q||'Completá el versículo')}</h3>`;
     if(x.t==='mc'||x.t==='app'){const o=shuf(x.o.map((t,k)=>({t,k})));h+='<div class="ex-opts">'+o.map(v=>`<button data-k="${v.k}">${esc(v.t)}</button>`).join('')+'</div>';}
@@ -2525,7 +2526,7 @@ function openExam(r,onPass){
     if(x.t==='verse')h+=`<p class="ex-verse">${x.parts.map(v=>typeof v==='number'?`<button class="ex-blank" data-b="${v}">______</button>`:esc(v)).join('')}</p><div class="ex-bank">${shuf(x.bank).map(w=>`<button>${esc(w)}</button>`).join('')}</div><button class="ex-check" disabled>Comprobar</button>`;
     if(x.t==='order'){x._o=shuf(x.items.map((t,k)=>({t,k})));h+='<ol class="ex-order"></ol><button class="ex-check">Comprobar</button>';}
     if(x.t==='reflect')h+=`<textarea class="ex-ta" rows="4" maxlength="500" placeholder="Escribí tu respuesta…"></textarea><p class="ex-note">Esta respuesta no tiene nota: es para vos. Queda guardada en tu perfil.</p><button class="ex-check" disabled>Guardar y seguir</button>`;
-    h+=`<small class="ex-ref">${esc(x.ref||'')}</small></div>`;box.innerHTML=h;const card=box.querySelector('.ex-card');box.scrollTop=0;
+    h+=`<small class="ex-ref">${esc(x.ref||'')}</small></div>`;box.innerHTML=h;const card=box.querySelector('.ex-card');box.scrollTop=0;vo(x.q||'Completá el versículo');if(voKids())card.querySelectorAll('.ex-opts button').forEach(b=>vo(b.textContent,'narrador',{queue:1}));
     const lock=()=>card.querySelectorAll('button:not(.ex-next),select,textarea').forEach(b=>b.disabled=true);
     if(x.t==='mc'||x.t==='app')card.querySelectorAll('.ex-opts button').forEach(b=>b.onclick=()=>{const good=+b.dataset.k===x.a;lock();b.classList.add(good?'ok':'no');if(!good)card.querySelector(`.ex-opts button[data-k="${x.a}"]`).classList.add('ok');feedback(card,good,x);});
     if(x.t==='tf')card.querySelectorAll('.ex-opts button').forEach(b=>b.onclick=()=>{const good=(b.dataset.v==='1')===x.a;lock();b.classList.add(good?'ok':'no');if(!good)card.querySelector(`.ex-opts button[data-v="${x.a?1:0}"]`).classList.add('ok');feedback(card,good,x);});
@@ -2784,14 +2785,14 @@ const LEARN=[
  ['🌱','Virtudes que crecen (Hero)','Al subir de nivel reparten puntos en Fuerza, Agilidad, Paciencia, Dominio propio, Sabiduría y Generosidad. Hay dos virtudes únicas: la Humildad, que crece solo dando a otros, y el Servicio, que crece solo haciendo obras por los demás.'],
  ['🪙','Denarios y obras de amor (Hero)','Venden lo que cosechan en los mercados y compran en la carpintería o la panadería. En el camino hay mendigos: compartir con ellos les enseña lo que Jesús dijo en Mateo 25.'],
  ['⚔️','Espadeo bíblico y juegos con amigos','En salas privadas juegan al Espadeo bíblico, a ¿Quién soy?, al Versículo en cadena y a carreras por la tierra de Jesús. Después de cada pregunta, todos leen la explicación y el pasaje. Si oran juntos, reciben una bendición.'],
- ['🏅','Progreso que se nota','Niveles, medallas, recuerdos y una prenda única para quienes terminan el curso. Los puntos se suman de un curso a otro.'],
+ ['🏅','Progreso que se nota','Niveles, medallas, recuerdos y una insignia en el cinturón de la verdad por cada curso terminado, que todos ven junto a tu nombre. Los puntos se suman de un curso a otro.'],
  ['🛡️','Un lugar cuidado','Las salas son privadas y solo entra quien tiene el código. Cada chico juega con su propio perfil.']];
 function hubLearn(){const st=document.querySelector('#hubView .stage');if(!st||document.getElementById('learn'))return;st.insertAdjacentHTML('afterend',`<section class="learn" id="learn"><div class="wrap"><span class="why-k">Cómo se aprende jugando</span><h2>Cada juego es una puerta a <em>la Palabra</em></h2><p class="learn-l">Todo está pensado para que salgan sabiendo más de la Biblia: historias, versículos, preguntas y desafíos que se repasan una y otra vez mientras juegan.</p><div class="learn-g">${LEARN.map(([i,t,d])=>`<article><span class="learn-i" aria-hidden="true">${i}</span><b>${t}</b><p>${d}</p></article>`).join('')}</div></div></section>`);}
 /* Hero: desde la etapa 4, los exámenes piden algo de humildad (sale de la zona de confort: invitar a un amigo y dar) */
 function humNeed(r){return branch==='ados'&&r>=3?Math.floor((r-1)/2):0;}
-/* prenda única del curso: solo para quien termina todas las etapas (cuando ya no quedan etapas por venir) */
-function courseDone(){const p=P(),ex=p.exams||{};if(!REGIONS.some(R=>R.id==='resurreccion')||!REGIONS.every(R=>ex[R.id]&&ex[R.id].passed))return;setTimeout(()=>{try{window.W3&&W3.gearGive&&W3.gearGive('tsp');}catch(e){}},2500);}
-window.GAME={NODES,EDGES,ADJ,REGIONS,VIGN,TOP,RH,WIDTH,get branch(){return branch},level:()=>lvOf(total(P())),EXAMS,P,reachable,visited,isDone,bfs,arrive,save,toast,refreshHud,syncMap(){refreshMap();const n=NODES[P().pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));}};
+/* insignia del curso en el cinturón de la verdad: para quien termina todas las etapas */
+function courseDone(){const p=P(),ex=p.exams||{};if(!REGIONS.some(R=>R.id==='resurreccion')||!REGIONS.every(R=>ex[R.id]&&ex[R.id].passed))return;setTimeout(()=>{try{window.W3&&(W3.insGive?W3.insGive('tsp'):W3.gearGive&&W3.gearGive('tsp'));}catch(e){}},2500);}
+window.GAME={vo:(t,v,o)=>vo(t,v,o),voState:()=>({log:VO.log.slice(-12),on:VO.on,src:VO.el&&VO.el.src,paused:VO.el?VO.el.paused:null,cur:VO.cur&&VO.cur.t,q:VO.q.length}),voStop:()=>voStop(),voOn:()=>VO.on,NODES,EDGES,ADJ,REGIONS,VIGN,TOP,RH,WIDTH,get branch(){return branch},level:()=>lvOf(total(P())),EXAMS,P,reachable,visited,isDone,bfs,arrive,save,toast,refreshHud,syncMap(){refreshMap();const n=NODES[P().pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));}};
 function enterMap(){
   if(worldFor!==branch)buildWorld();
   const p=P();
@@ -2801,7 +2802,7 @@ function enterMap(){
   if(p.pos==='start'&&!isDone('nacimiento-n1'))setTimeout(()=>toast(`¡Hola, ${p.name}! Tocá la parada que brilla para empezar.`),500);
   import(new URL('./walk3d.js', import.meta.url).href).then(m=>m.enter()).catch(e=>console.warn(e));
 }
-$('#menuBtn').onclick=()=>$('#menu').hidden=false;
+$('#menuBtn').onclick=()=>{voMenu();$('#menu').hidden=false;};
 $('#hudLv').onclick=$('#hudTitle').onclick=()=>openProg();
 /* foto de la cuenta en el HUD (Hero: cada chico entra con su propia cuenta) */
 const myPhoto=()=>{const p=current&&P(),m=getMemberState().member;return (p&&p.photo)||(branch==='ados'&&m&&m.photoUrl)||'';};
@@ -2827,7 +2828,7 @@ function openProg(){
   el.onclick=e=>{if(e.target===el||e.target.closest('.prog-x')){el.hidden=true;return;}if(e.target.closest('[data-a="med"]')){el.hidden=true;renderMedals();show('medalsView');}};
 }
 $('#menu').onclick=e=>{const a=e.target.closest('[data-a]');if(e.target.id==='menu'||a)$('#menu').hidden=true;if(!a)return;
-  ({prog:()=>openProg(),medals:()=>{renderMedals();show('medalsView');},rank:()=>{renderRank();show('rankView');},edit:()=>openCreate(true),who:()=>{pushCloud();loadProfiles();},home:()=>{pushCloud();goHome();},logout:()=>{pushCloud().then(doLogout);},close:()=>{}})[a.dataset.a]();};
+  ({narr:()=>voToggle(),prog:()=>openProg(),medals:()=>{renderMedals();show('medalsView');},rank:()=>{renderRank();show('rankView');},edit:()=>openCreate(true),who:()=>{pushCloud();loadProfiles();},home:()=>{pushCloud();goHome();},logout:()=>{pushCloud().then(doLogout);},close:()=>{}})[a.dataset.a]();};
 document.querySelectorAll('.back').forEach(b=>b.onclick=enterMap);
 function renderMedals(){const p=P();$('#medals').innerHTML=MEDALS.map(m=>`<div class="medal glass ${p.medals.includes(m.id)?'':'off'}">${coin(m)}<b>${m.name}</b><span>${m.desc}</span></div>`).join('');}
 async function renderRank(){
@@ -2872,7 +2873,32 @@ document.body.appendChild(d);d.querySelectorAll('button').forEach(b=>b.onclick=(
 function save(){try{sessionStorage.setItem(K,JSON.stringify(st));}catch(e){}}
 setInterval(()=>{const n=Date.now();if(document.hidden){if(n-st.last>6e5){st.s=0;st.next=LIM;}return;}const gap=(n-st.last)/1000;if(gap>600){st.s=0;st.next=LIM;}else st.s+=gap;st.last=n;save();if(st.s>=st.next){st.next=st.s+AGAIN;save();note(st.s/60);}},20000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){const n=Date.now();if(n-st.last>6e5){st.s=0;st.next=LIM;}st.last=n;save();}});})();
-function toast(txt,m){const t=$('#toast');t.innerHTML=(m?coin(m,28):'')+`<span>${esc(txt)}</span>`;t.style.paddingLeft=m?'8px':'16px';t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2800);}
+/* ---------- Narración grabada: narrador, varón y mujer (voces aprobadas, Kokoro es-419) ----------
+   Cada texto tiene su MP3 en app/voice/<hash>.mp3 (hash FNV-1a de "voz|texto"); se baja recién cuando hace falta.
+   Si un texto no tiene archivo (por ejemplo, porque lleva el nombre del jugador), lo lee la voz del aparato. */
+const VO={log:[],on:(()=>{try{return localStorage.getItem('tsp:narr')!=='0';}catch(e){return true;}})(),base:new URL('./voice/',import.meta.url).href,idx:null,el:null,q:[],cur:null,ok:false};
+const voH=s=>{let x=0x811c9dc5;for(let i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,0x01000193)>>>0;}return x.toString(16).padStart(8,'0');};
+function voIdx(){if(!VO.idx)VO.idx=fetch(VO.base+'index.json').then(r=>r.ok?r.json():[]).then(a=>new Set(a)).catch(()=>new Set());return VO.idx;}
+// los celulares solo dejan sonar audio después de un toque: se "abre" un reproductor en el primer toque y se reusa
+function voUnlock(){if(VO.ok)return;VO.ok=true;try{VO.el=new Audio();VO.el.preload='auto';VO.el.src='data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NwwAAAAAAAAAAAAEluZm8AAAAPAAAACAAAA/oAR0dHR0dHR0dHR0dHYmJiYmJiYmJiYmJifHx8fHx8fHx8fHx8fJaWlpaWlpaWlpaWlrGxsbGxsbGxsbGxsbHLy8vLy8vLy8vLy8vl5eXl5eXl5eXl5eXl////////////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQC1AAAAAAAAAP6yysejgAAAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NCxKMAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NAxKQAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/80LEowAAA0gAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/80DEpAAAA0gAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsSjAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==';const pr=VO.el.play();if(pr)pr.then(()=>VO.el.pause()).catch(()=>{});}catch(e){}voIdx();}
+['pointerdown','keydown','touchstart'].forEach(k=>addEventListener(k,voUnlock,{capture:true,passive:true}));
+const voDuck=on=>{try{if(window.W3&&W3.AU)W3.AU.narr=on;}catch(e){}};
+function voClean(t){t=String(t||'').replace(/\s+/g,' ').trim();const nm=current&&current.name;if(nm&&t.startsWith(nm)){t=t.slice(nm.length).replace(/^[,!¡\s]+/,'');t=t.charAt(0).toUpperCase()+t.slice(1);}return t;}
+// vo(texto, voz, {queue, tts:false, onend})
+function vo(text,voice,o){o=o||{};if(!text)return;const t=voClean(text);if(!t)return;const it={t,v:voice||'narrador',o};if(!VO.on){o.onend&&setTimeout(o.onend,0);return;}
+  if(o.queue)VO.q.push(it);else{voStop(true);VO.q=[it];}if(!VO.cur)voNext();}
+async function voNext(){const it=VO.q.shift();if(!it){VO.cur=null;voDuck(false);return;}VO.cur=it;const idx=await voIdx();if(VO.cur!==it)return;const k=voH(it.v+'|'+it.t);voDuck(true);
+  const done=()=>{if(VO.cur!==it)return;it.o.onend&&it.o.onend();voNext();};
+  if(idx.has(k)&&VO.el){try{VO.el.onended=()=>{VO.log.push('end '+k);done();};VO.el.onerror=()=>{VO.log.push('err '+k);done();};VO.el.src=VO.base+k+'.mp3';VO.log.push('play '+k);const pr=VO.el.play();if(pr)pr.catch(e=>{VO.log.push('rej '+k+' '+(e&&e.name));if(e&&e.name==='AbortError')return;it.o.tts===false?done():voSpeak(it,done);});return;}catch(e){}}
+  VO.log.push('tts '+it.t.slice(0,30));
+  if(it.o.tts===false)return done();voSpeak(it,done);}
+function voSpeak(it,done){try{if(!('speechSynthesis' in window))return done();speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(it.t);u.lang='es-419';const vs=speechSynthesis.getVoices().filter(v=>/^es/i.test(v.lang));const want=it.v==='mujer'?/female|mujer|paulina|monica|sabina|helena|laura|elena/i:/male|hombre|jorge|diego|juan|pablo|carlos/i;u.voice=vs.find(v=>want.test(v.name))||vs.find(v=>/419|MX|US|AR/.test(v.lang))||vs[0]||null;u.rate=1;u.onend=u.onerror=done;speechSynthesis.speak(u);}catch(e){done();}}
+function voStop(keep){VO.q=[];const c=VO.cur;VO.cur=null;try{if(VO.el){VO.el.onended=VO.el.onerror=null;VO.el.pause();}}catch(e){}try{if(c)speechSynthesis.cancel();}catch(e){}if(!keep)voDuck(false);}
+const voKids=()=>branch==='kids';
+function voToggle(){VO.on=!VO.on;try{localStorage.setItem('tsp:narr',VO.on?'1':'0');}catch(e){}if(!VO.on)voStop();voMenu();toast(VO.on?'Narración activada':'Narración apagada');}
+function voMenu(){const m=document.querySelector('#menu .menu-in');if(!m)return;let b=m.querySelector('[data-a="narr"]');if(!b){b=document.createElement('button');b.className='item';b.dataset.a='narr';const c=m.querySelector('[data-a="close"]');m.insertBefore(b,c);}b.textContent='Narración: '+(VO.on?'Sí 🔊':'No 🔇');}
+const FEMV=/^(María|Elisabet|Ana|Marta|la viuda|una viuda|una vecina|la vecina|Una vecina|María Magdalena|la mujer|una mujer|Una vendedora|Juana|Susana)/i;
+function toast(txt,m){try{vo(txt,'narrador',{queue:1,tts:voKids()});}catch(e){}const t=$('#toast');t.innerHTML=(m?coin(m,28):'')+`<span>${esc(txt)}</span>`;t.style.paddingLeft=m?'8px':'16px';t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2800);}
 
 buildWorld();
 subscribeMember(st=>{if(onLanding()){renderSession(st);if(!st.loading&&$('#hubView').hidden===false)renderFamily();}});

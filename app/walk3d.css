@@ -416,3 +416,15 @@ body:not(.v3on) .v3surv,body:has(#v3sheet:not([hidden])) .v3surv{display:none}
 .ex-hum h3{margin:8px 0 10px}.ex-hum p{line-height:1.5}
 .v3surv .sv-money{color:#F3E6CC}
 .sv-rec button+button{margin-left:6px}
+/* cursos hechos: cinturón de la verdad */
+.ins-wrap{display:grid;gap:10px;padding:4px 2px}
+.ins-lead{margin:0 0 4px;font-size:.92rem;opacity:.85;line-height:1.4}
+.ins-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);opacity:.55}
+.ins-row.on{opacity:1;background:linear-gradient(90deg,rgba(242,193,78,.18),rgba(255,255,255,.04));border-color:rgba(242,193,78,.5)}
+.ins-row img{flex:none;filter:drop-shadow(0 0 6px rgba(255,210,120,.55))}
+.ins-row:not(.on) img{filter:grayscale(1)}
+.ins-row div{display:grid;gap:2px;min-width:0}
+.ins-row small{opacity:.75}
+.ins-ok{margin-left:auto;font-weight:900;color:#F2C14E}
+.inv:not(.hx) .ins-row{background:rgba(34,64,127,.06);border-color:rgba(34,64,127,.12)}
+.inv:not(.hx) .ins-row.on{background:linear-gradient(90deg,rgba(242,193,78,.25),rgba(255,255,255,.6))}
