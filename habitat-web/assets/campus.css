@@ -258,3 +258,16 @@ body.campus{background:var(--paper)}
 .g-btn:hover{border-color:var(--gold)}
 #lgGo[disabled]{opacity:.7;cursor:wait}
 .cx-hero .out{margin-top:14px;background:none;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:99px;padding:8px 16px;font:600 .74rem/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+/* ---- Campus real ---- */
+.cx-empty{color:var(--muted);padding:20px 0}
+.hi-act{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.hi-act .out{margin-top:0;text-decoration:none;display:inline-block}
+.v-msg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(16,37,29,.7);padding:10px 16px;border-radius:99px;font-size:.9rem}
+.stage{position:relative}
+.stage .art{background:#fff;border:1px solid var(--line);border-radius:18px;padding:clamp(18px,4vw,36px)}
+.rich p{line-height:1.7;margin:0 0 12px}.rich h3,.rich h4{font-family:var(--serif);color:var(--ink);margin:18px 0 8px}
+.rich img{max-width:100%;border-radius:12px;margin:10px 0}
+.rich .mt{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--paper);margin:10px 0}
+.rich .mt a{color:var(--sea);font-weight:600}
+.pm-pane .muted{color:var(--muted)}
+.btn-done[disabled]{opacity:.5;cursor:not-allowed}
