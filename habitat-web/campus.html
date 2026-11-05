@@ -101,7 +101,7 @@ try{
  var mins=0;for(var j=0;j<rows.length;j++){if(!rows[j].done)continue;var oo=await D.outline(rows[j].prog.id).catch(function(){return[];});var rr=await D.resolved(rows[j].part.id).catch(function(){return[];});var dd={};rr.forEach(function(x){dd[x.programStepId]=1;});oo.forEach(function(s){s.steps.forEach(function(st){if(dd[st.id])mins+=D.stepMinutes(st);});});}
  document.getElementById('sHrs').textContent=mins>=60?Math.round(mins/60)+' h':mins+' min';
  var all=await D.allPrograms().catch(function(){return[];});var mineIds={};rows.forEach(function(r){mineIds[r.prog.id]=1;});
- document.getElementById('more').innerHTML=all.filter(function(p){return !mineIds[p.id]&&!/adri|business plan/i.test(p.description&&p.description.title||'');}).slice(0,6).map(function(p){var t=p.description&&p.description.title||'';var im=p.description&&p.description.image&&p.description.image.id;return '<a class="cm" href="/formacion.html"><img loading="lazy" src="'+(im?D.img(im,600,338):'')+'" alt=""><span><small>'+K[D.kind(t)]+'</small><b>'+esc(t)+'</b></span></a>';}).join('');
+ document.getElementById('more').innerHTML=all.filter(function(p){return !mineIds[p.id]&&!/adri|business plan/i.test(p.description&&p.description.title||'');}).slice(0,6).map(function(p){var t=p.description&&p.description.title||'';var im=p.description&&p.description.image&&p.description.image.id;return '<a class="cm" href="/curso.html?p='+p.id+'"><img loading="lazy" src="'+(im?D.img(im,600,338):'')+'" alt=""><span><small>'+K[D.kind(t)]+'</small><b>'+esc(t)+'</b></span></a>';}).join('');
 }catch(e){console.log(e);document.getElementById('hiLine').textContent='No pudimos cargar tus cursos. Probá de nuevo en un momento.';}
 })();
 </script></body>
