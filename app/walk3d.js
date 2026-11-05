@@ -620,6 +620,10 @@ function invMemories(body) {
 /* ---------- misiones en el escenario ---------- */
 const MIS_PTS = 50;
 export const MISSIONS = [
+  { id: 'canasta', r: 4, kind: 'deliver', giver: { name: 'Felipe', look: { g: 'chico', age: 17, skin: '#C99A72', hair: '#2A1B14', outfit: '#5A7A5A' } }, target: { name: 'una familia que llegó tarde', look: { g: 'chica', age: 18, skin: '#B98A62', hair: '#2A1B14', outfit: '#8A5A4A' } },
+    item: { name: 'una de las doce canastas', k: 'honey', c: '#D9A25A' }, ask: '¡Comieron todos y todavía sobraron doce canastas! ¿Le llevás una a aquella familia que llegó tarde?', done: '¡Gracias! Con Jesús alcanzó para todos y sobró.', ref: 'Juan 6:12-13' },
+  { id: 'amigos', r: 4, kind: 'act', act: 'wave', place: 'roofhouse', giver: { name: 'Uno de los cuatro amigos', look: { g: 'chico', age: 18, skin: '#D6A57C', hair: '#3A2A1A', outfit: '#7A6A4A' } }, target: { name: 'el hombre que volvió a caminar', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#2A1B14', outfit: '#C9B48A' } },
+    item: { name: 'el hombre sanado' }, hint: 'Andá a la casa del techo abierto y saludá al hombre sanado (👋)', ask: 'Bajamos a nuestro amigo por el techo y Jesús lo sanó. ¿Vas a saludarlo? ¡Ahora camina!', done: 'Jesús vio nuestra fe. ¡Gracias por alegrarte con nosotros!', ref: 'Marcos 2:5, 12' },
   { id: 'cantaro', r: 3, kind: 'fetch', well: true, giver: { name: 'Un sirviente de la boda', look: { g: 'chico', age: 17, skin: '#C99A72', hair: '#2A1B14', outfit: '#8A6A4A' } },
     item: { name: 'el cántaro', k: 'jar' }, ask: 'Jesús nos pidió que llenemos de agua las tinajas, ¡y se me perdió el cántaro! ¿Me ayudás a encontrarlo junto al pozo?', done: '¡Gracias! Ahora a llenar las tinajas, tal como él dijo.', ref: 'Juan 2:7' },
   { id: 'lago', r: 3, kind: 'act', act: 'pray', place: 'lake', giver: { name: 'Santiago, hijo de Zebedeo', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#2A1B14', outfit: '#3E5A6A' } },
@@ -675,7 +679,7 @@ function buildMissions(scene, g, hx, HW, rr) {
     const gx = a.position.x + side * 8, gz = a.position.z - .6, giver = npc(d.giver.look, gx, gz, -side * Math.PI / 2);
     const bang = bangSprite(); bang.position.set(gx, yAt(gx, gz) + 2.35, gz); scene.add(bang);
     const m = { d, giver, bang, gp: [gx, gz] };
-    if (d.kind === 'act') { const poi = (S0.pois || []).find(q => q.k === (d.place || 'temple')); let tx = poi ? poi.x : b.position.x - side * 8, tz = poi ? poi.z : b.position.z; if (poi && poi.k === 'river') { const q = poi.pts[Math.floor(poi.pts.length / 2)]; tx = q[0] - 3.3; tz = q[1]; } if (poi && poi.k === 'temple') { tx = poi.x - poi.side * 6.5; tz = poi.z; } if (poi && poi.k === 'lake') { tx = poi.x - poi.side * 33; tz = poi.z + 9; } if (poi && poi.k === 'village') { tx = poi.x - poi.side * 1.6; tz = poi.z + 1.6; }
+    if (d.kind === 'act') { const poi = (S0.pois || []).find(q => q.k === (d.place || 'temple')); let tx = poi ? poi.x : b.position.x - side * 8, tz = poi ? poi.z : b.position.z; if (poi && poi.k === 'river') { const q = poi.pts[Math.floor(poi.pts.length / 2)]; tx = q[0] - 3.3; tz = q[1]; } if (poi && poi.k === 'temple') { tx = poi.x - poi.side * 6.5; tz = poi.z; } if (poi && poi.k === 'lake') { tx = poi.x - poi.side * 33; tz = poi.z + 9; } if (poi && poi.k === 'roofhouse') { tx = poi.x - poi.side * 6; tz = poi.z + 1.5; } if (poi && poi.k === 'village') { tx = poi.x - poi.side * 1.6; tz = poi.z + 1.6; }
       if (d.target) { m.target = npc(d.target.look, tx, tz, poi ? -poi.side * Math.PI / 2 : 0); } m.tp = [tx, tz]; m.ring = ring(tx, tz); }
     else if (d.kind === 'deliver') { const tx = b.position.x - side * 8, tz = b.position.z - .4; m.target = npc(d.target.look, tx, tz, side * Math.PI / 2); m.tp = [tx, tz]; m.ring = ring(tx, tz); }
     else { const px = b.position.x - side * (12 + R() * 6), pz = b.position.z + 3 + R() * 6; m.pp = [px, pz]; m.pick = misMesh(d.item); m.pick.position.set(px, yAt(px, pz) + (d.item.k === 'jar' || d.item.k === 'honey' ? .5 : 0), pz); m.pick.visible = false; scene.add(m.pick); m.ring = ring(px, pz);
@@ -747,13 +751,15 @@ const POIS = [
   { r: 2, k: 'river', name: 'Río Jordán', side: 1, f: .5, dx: 21 * WS },
   { r: 2, k: 'desert', name: 'Desierto de Judea', side: -1, f: .72, dx: 19 * WS },
   { r: 3, k: 'lake', name: 'Mar de Galilea', side: 1, f: .42, dx: 24 * WS },
-  { r: 3, k: 'village', name: 'Caná', side: -1, f: .2, dx: 17 * WS }
+  { r: 3, k: 'village', name: 'Caná', side: -1, f: .2, dx: 17 * WS },
+  { r: 4, k: 'roofhouse', name: 'Casa en Capernaúm', side: -1, f: .3, dx: 17 * WS },
+  { r: 4, k: 'feeding', name: 'La colina de los cinco mil', side: 1, f: .62, dx: 20 * WS }
 ];
 function regionZ(g, r) { let a = -Infinity, b = Infinity; for (const id in g.NODES) if (id.startsWith(g.REGIONS[r].id + '-')) { const [, z] = toV(g.NODES[id].x, g.NODES[id].y); a = Math.max(a, z); b = Math.min(b, z); } return [a, b]; }
 function planPois(g) {
   return POIS.filter(p => p.r < g.REGIONS.length).map(p => { const [a, b] = regionZ(g, p.r), z = a + (b - a) * p.f, x = p.side * p.dx, q = { ...p, x, z, a, b, pts: [] };
     if (p.k === 'river') { for (let zz = a + 4; zz >= b - 4; zz -= 1.5) q.pts.push([x + Math.sin(zz * .04) * 9, zz]); q.flat = q.pts; }
-    else if (p.k === 'taller' || p.k === 'temple' || p.k === 'lake') { const rx = p.k === 'temple' ? 21 : p.k === 'lake' ? 40 : 19, rz = p.k === 'temple' ? 23 : p.k === 'lake' ? 36 : 17, cx2 = p.k === 'lake' ? x - p.side * 4 : x; q.flat = []; for (let u = -rx; u <= rx; u += 3) for (let v = -rz; v <= rz; v += 3) q.flat.push([cx2 + u, z + v]); }
+    else if (p.k === 'taller' || p.k === 'temple' || p.k === 'lake' || p.k === 'roofhouse' || p.k === 'feeding') { const rx = p.k === 'temple' ? 21 : p.k === 'lake' ? 40 : 19, rz = p.k === 'temple' ? 23 : p.k === 'lake' ? 36 : 17, cx2 = p.k === 'lake' ? x - p.side * 4 : x; q.flat = []; for (let u = -rx; u <= rx; u += 3) for (let v = -rz; v <= rz; v += 3) q.flat.push([cx2 + u, z + v]); }
     else { q.flat = [[x, z]]; for (let i = 0; i < 10; i++) { const an = i / 10 * 6.28; q.flat.push([x + Math.cos(an) * 5, z + Math.sin(an) * 5]); } }
     return q; });
 }
@@ -780,7 +786,7 @@ function buildPois(scene, pois, hx, HW, R, ribbon) {
       const reed = new THREE.InstancedMesh(new THREE.CylinderGeometry(.015, .02, 1, 4), M('#6E8A44'), 160), m4 = new THREE.Matrix4(); let n = 0; for (let i = 0; i < 160; i++) { const q = p.pts[Math.floor(R() * p.pts.length)], s = R() < .5 ? -1 : 1, x = q[0] + s * (2.4 + R() * .8), z = q[1] + (R() - .5); m4.makeScale(1, .6 + R() * .7, 1); m4.setPosition(x, yAt(x, z) + .4, z); reed.setMatrixAt(n++, m4); } reed.instanceMatrix.needsUpdate = true; scene.add(reed); }
     if (p.k === 'desert') { const sand = new THREE.Mesh(new THREE.CircleGeometry(7, 28), M('#C9A86E', { flatShading: false })); sand.rotation.x = -Math.PI / 2; sand.position.set(p.x, yAt(p.x, p.z) + .03, p.z); sand.receiveShadow = true; scene.add(sand);
       for (let i = 0; i < 9; i++) { const rk = new THREE.Mesh(new THREE.DodecahedronGeometry(.6 + R() * 1.1, 0), M('#A88E66')); rk.scale.y = .6 + R() * .5; const a = R() * 6.28, r = 2 + R() * 4.5; const gr = new THREE.Group(); rk.position.y = .3; gr.add(rk); add(gr, p.x + Math.cos(a) * r, p.z + Math.sin(a) * r, R() * 6); } }
-    if (p.k !== 'taller' && p.k !== 'temple' && p.k !== 'lake') sign(p);
+    if (!['taller', 'temple', 'lake', 'roofhouse', 'feeding'].includes(p.k)) sign(p);
   }
 }
 /* ---------- pueblos de la época: casas grandes con oficios, el templo y el lago ---------- */
@@ -848,6 +854,11 @@ const TRADES = {
     for (let i = 0; i < 5; i++) { const c = new THREE.Mesh(new THREE.PlaneGeometry(.8, 1.2), tm('cl' + i, wool[i + 1], { side: THREE.DoubleSide })); c.position.set(-w / 2 + 1.4 + i * 1.05, 1.6, d / 2 - 1.4); g.add(c); }
     const sp = cy(.02, .02, .5, WOOD(), w / 2 - 2, .6, 0, g); sp.rotation.z = .3; const wh = new THREE.Mesh(new THREE.SphereGeometry(.07, 8, 6), tm('wo', '#E8DDC6')); wh.position.set(w / 2 - 2.08, .82, 0); g.add(wh);
   },
+  techo(g, w, d) {
+    const st = new THREE.Group(); bx(1.9, .08, .8, tm('mat', '#C9B48A'), 0, 0, 0, st); [-1, 1].forEach(s2 => bx(2.1, .06, .06, WOOD(), 0, .02, s2 * .42, st)); [[-.9, -.4], [.9, -.4], [-.9, .4], [.9, .4]].forEach(([a, b]) => { const r = cy(.012, .012, 1.9, tm('rp', '#C9B48A'), a, .95, b, st, 4); r.castShadow = false; }); st.position.set(0, 1.2, 0); g.add(st); st.name = 'stretcher';
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.6, 3.3, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#FFF2C8', transparent: true, opacity: .12, depthWrite: false, side: THREE.DoubleSide })); shaft.position.set(0, 1.65, 0); g.add(shaft);
+    for (let i = 0; i < 6; i++) { const a = i / 6 * 6.28, p = new THREE.Group(); cy(.2, .26, 1.1, tm('rb' + i, ['#7E9BD0', '#C9876A', '#9AB072', '#B08CC9', '#D3A35E', '#8A7A5A'][i]), 0, .55, 0, p, 8); const hd = new THREE.Mesh(new THREE.SphereGeometry(.15, 10, 8), tm('sk', '#D6A57C')); hd.position.y = 1.25; p.add(hd); p.position.set(Math.cos(a) * 2.1, 0, Math.sin(a) * 1.6 - .2); if (Math.abs(p.position.x) < 1 && p.position.z > 1) continue; g.add(p); }
+  },
   pescador(g, w, d) {
     const net = new THREE.Mesh(new THREE.PlaneGeometry(3, 2), new THREE.MeshStandardMaterial({ map: townTex().net, transparent: true, alphaTest: .3, side: THREE.DoubleSide, roughness: 1 })); net.position.set(0, 1.4, -d / 2 + .3); g.add(net);
     for (let i = 0; i < 3; i++) { const bk = cy(.35, .28, .35, tm('bk', '#B89A5E'), -w / 2 + 1 + i * .9, .18, d / 2 - 1.2, g, 12); for (let f = 0; f < 3; f++) { const fi = new THREE.Mesh(new THREE.SphereGeometry(.12, 8, 6), tm('fi', '#9AA6A8', { metalness: .3, roughness: .5 })); fi.scale.set(2, .5, .6); fi.position.set(bk.position.x + (f - 1) * .14, .4, bk.position.z); fi.rotation.y = f; g.add(fi); } }
@@ -857,6 +868,8 @@ const TRADES = {
   }
 };
 const TRADE_INFO = {
+  techo: ['La casa del techo abierto', 'La casa estaba tan llena que cuatro amigos subieron al techo, abrieron un hueco y bajaron a su amigo paralítico en una camilla. Jesús vio la fe de ellos, le perdonó los pecados y lo sanó.', 'Marcos 2:1-12'],
+  cestas: ['La colina de los cinco mil', 'Acá comieron miles de personas con cinco panes y dos pescados que un muchachito compartió. Todos quedaron satisfechos y con lo que sobró llenaron doce canastas.', 'Juan 6:5-13'],
   carpintero: ['Carpintería', 'Acá se hacían puertas, mesas, arados y yugos para los bueyes. José era carpintero y Jesús aprendió el oficio en Nazaret. Por eso la gente lo conocía como «el carpintero».', 'Mateo 13:55 · Marcos 6:3'],
   alfarero: ['Alfarería', 'Con barro, agua y un torno se hacían las vasijas para el agua, el aceite y la harina. Dios usa esta imagen: como el barro en las manos del alfarero, así somos nosotros en sus manos.', 'Jeremías 18:1-6'],
   panadero: ['Panadería', 'El pan se horneaba todos los días en hornos de barro. Jesús dijo de sí mismo que él es el pan de vida: el que va a él nunca más tendrá hambre.', 'Juan 6:35'],
@@ -875,7 +888,10 @@ function bigHouse(trade, hx) {
   [-1, 1].forEach(sx => { const wf = bx(.7, .6, .08, tm('wf', '#3A2A1A'), sx * (w / 2 - 1.5), 2, d / 2 + .01, g); wf.castShadow = false; });
   bx(w + .2, 1.6, d + .2, tm('fnd', hx ? '#8C7A62' : '#D8C6A4'), 0, -.78, 0, g);
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(w - t * 2, d - t * 2), new THREE.MeshStandardMaterial({ map: T.floor, roughness: 1 })); floor.rotation.x = -Math.PI / 2; floor.position.y = .04; floor.receiveShadow = true; g.add(floor);
-  const roof = []; roof.push(bx(w + .3, .26, d + .3, tm('roof', hx ? '#A88E6A' : '#E6CFA4'), 0, h + .13, 0, g));
+  const roof = [], rm = tm('roof', hx ? '#A88E6A' : '#E6CFA4');
+  if (trade === 'techo') { const hw = 1.2, hd = .8; roof.push(bx(w + .3, .26, (d + .3) / 2 - hd, rm, 0, h + .13, -(d + .3) / 4 - hd / 2, g), bx(w + .3, .26, (d + .3) / 2 - hd, rm, 0, h + .13, (d + .3) / 4 + hd / 2, g), bx((w + .3) / 2 - hw, .26, hd * 2, rm, -(w + .3) / 4 - hw / 2, h + .13, 0, g), bx((w + .3) / 2 - hw, .26, hd * 2, rm, (w + .3) / 4 + hw / 2, h + .13, 0, g));
+    for (let i = 0; i < 9; i++) roof.push(bx(.35 + Math.random() * .3, .08, .25, rm, (Math.random() - .5) * 2, h + .3, (Math.random() - .5) * 1.6, g)); }
+  else roof.push(bx(w + .3, .26, d + .3, rm, 0, h + .13, 0, g));
   [[0, -d / 2 - .05, w + .3, .14], [0, d / 2 + .05, w + .3, .14]].forEach(([x, z, W, D]) => roof.push(bx(W, .4, D, wm, x, h + .45, z, g)));
   [-1, 1].forEach(sx => roof.push(bx(.14, .4, d + .3, wm, sx * (w / 2 + .08), h + .45, 0, g)));
   for (let i = 0; i < 7; i++) { const b = cy(.09, .09, .5, WOOD(), -w / 2 + .6 + i * (w - 1.2) / 6, h - .18, d / 2 + .18, g, 7); b.rotation.x = Math.PI / 2; roof.push(b); }
@@ -884,7 +900,7 @@ function bigHouse(trade, hx) {
   const lamp = new THREE.Mesh(new THREE.SphereGeometry(.07, 8, 6), tm('lmp', '#FFD27A', { emissive: '#FFB347', emissiveIntensity: 2.5 })); lamp.position.set(0, 2.1, -d / 2 + t + .08); g.add(lamp);
   const info = TRADE_INFO[trade]; if (info) { const lb = textSprite(info[0], hx); lb.position.set(0, h + 1.4, d / 2 + .3); lb.scale.multiplyScalar(1.05); g.add(lb); }
   const cols = [[-w / 2, w / 2, -d / 2, -d / 2 + t], [-w / 2, -w / 2 + t, -d / 2, d / 2], [w / 2 - t, w / 2, -d / 2, d / 2], [-w / 2, -dw / 2, d / 2 - t, d / 2], [dw / 2, w / 2, d / 2 - t, d / 2], [w / 2 + .1, w / 2 + .8, d / 2 - 1.6, d / 2 - .8]];
-  const solid = { carpintero: [[-w / 2 + 1, -w / 2 + 3.4, -d / 2 + 1.1, -d / 2 + 2.1], [w / 2 - 3.1, w / 2 - .5, -d / 2 + .8, -d / 2 + 1.5]], alfarero: [[-w / 2 + 1.4, -w / 2 + 2.6, -d / 2 + 1.4, -d / 2 + 2.6], [w / 2 - 3.1, w / 2 - .5, -d / 2 + .2, -d / 2 + .7], [w / 2 - 2.2, w / 2 - .4, d / 2 - 2.4, d / 2 - .6]], panadero: [[-w / 2 + .6, -w / 2 + 2.6, -d / 2 + .6, -d / 2 + 2.6], [w / 2 - 2.9, w / 2 - .7, -d / 2 + 1.1, -d / 2 + 1.9]], tejedora: [[-w / 2 + .6, -w / 2 + 3, -d / 2 + .7, -d / 2 + 1.1]], pescador: [] }[trade] || [];
+  const solid = { techo: [], carpintero: [[-w / 2 + 1, -w / 2 + 3.4, -d / 2 + 1.1, -d / 2 + 2.1], [w / 2 - 3.1, w / 2 - .5, -d / 2 + .8, -d / 2 + 1.5]], alfarero: [[-w / 2 + 1.4, -w / 2 + 2.6, -d / 2 + 1.4, -d / 2 + 2.6], [w / 2 - 3.1, w / 2 - .5, -d / 2 + .2, -d / 2 + .7], [w / 2 - 2.2, w / 2 - .4, d / 2 - 2.4, d / 2 - .6]], panadero: [[-w / 2 + .6, -w / 2 + 2.6, -d / 2 + .6, -d / 2 + 2.6], [w / 2 - 2.9, w / 2 - .7, -d / 2 + 1.1, -d / 2 + 1.9]], tejedora: [[-w / 2 + .6, -w / 2 + 3, -d / 2 + .7, -d / 2 + 1.1]], pescador: [] }[trade] || [];
   return { g, cols: cols.concat(solid), roof, room: [-w / 2 + t, w / 2 - t, -d / 2 + t, d / 2 - t], trade, w, d };
 }
 // coloca una casa en el mundo: rot en múltiplos de 90° para que las cajas de choque sigan alineadas
@@ -1001,6 +1017,11 @@ function buildTowns(scene, g, hx, HW, pois) {
       [['carpintero', -6, -8.5, 0], ['alfarero', 6, -8.5, 0], ['panadero', -6, 8.5, Math.PI], ['tejedora', 6, 8.5, Math.PI]].forEach(([k, ox, oz, rot]) => { const H = bigHouse(k, hx), x = p.x + ox * 1.25, z = p.z + oz, y = Math.max(yAt(x, z), yAt(x - 3, z - 3), yAt(x + 3, z + 3)) - .02; placeHouse(scene, H, x, z, rot, y); });
     }
     if (p.k === 'temple') S.temple = bigTemple(scene, p.x, p.z, p.side, hx, yAt);
+    if (p.k === 'roofhouse') { const H = bigHouse('techo', hx); placeHouse(scene, H, p.x, p.z, p.side > 0 ? -Math.PI / 2 : Math.PI / 2, yAt(p.x, p.z) - .02); }
+    if (p.k === 'feeding') { const y = yAt(p.x, p.z), R = rng(66); const cl = ['#C9B48A', '#8E2E22', '#3E5A8A', '#E8DDC6', '#66763E'];
+      for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283, r = 6.5, bk = new THREE.Group(); cy(.42, .32, .45, tm('bk', '#B89A5E'), 0, .22, 0, bk, 12); for (let k = 0; k < 4; k++) { const l = new THREE.Mesh(new THREE.SphereGeometry(.16, 10, 8), tm('pan', '#D9A25A')); l.scale.y = .5; l.position.set((k % 2 - .5) * .26, .5, ((k >> 1) - .5) * .22); bk.add(l); } bk.position.set(p.x + Math.cos(a) * r, y, p.z + Math.sin(a) * r); bk.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(bk); }
+      for (let i = 0; i < 10; i++) { const a = R() * 6.28, r = 9 + R() * 6, m = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.6), tm('cloth' + (i % 5), cl[i % 5], { side: THREE.DoubleSide })); m.rotation.x = -Math.PI / 2; m.rotation.z = R() * 3; m.position.set(p.x + Math.cos(a) * r, y + .04, p.z + Math.sin(a) * r); m.receiveShadow = true; scene.add(m); for (let k = 0; k < 4; k++) { const pp = new THREE.Group(), robe = ['#7E9BD0', '#C9876A', '#9AB072', '#B08CC9', '#D3A35E', '#8A7A5A'][(i + k) % 6]; cy(.24, .3, .55, tm('rb' + robe, robe), 0, .28, 0, pp, 8); const hd = new THREE.Mesh(new THREE.SphereGeometry(.14, 10, 8), tm('sk', '#D6A57C')); hd.position.y = .68; pp.add(hd); const b2 = a + (k - 1.5) * .35; pp.position.set(m.position.x + Math.cos(b2) * 1.5, y, m.position.z + Math.sin(b2) * 1.5); pp.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(pp); } }
+      const rr2 = { x0: p.x - 16, x1: p.x + 16, z0: p.z - 16, z1: p.z + 16, trade: 'cestas', roof: [], open: true, y }; S.rooms.push(rr2); const lb = textSprite(p.name, hx); lb.scale.multiplyScalar(1.2); lb.position.set(p.x, y + 4, p.z); scene.add(lb); }
     if (p.k === 'lake') { S.lake = buildLake(scene, p.x, p.z, p.side, hx, yAt); const H = bigHouse('pescador', hx), hx2 = p.x - p.side * 36, hz = p.z - 6; placeHouse(scene, H, hx2, hz, p.side > 0 ? Math.PI / 2 : -Math.PI / 2, yAt(hx2, hz)); }
   }
 }

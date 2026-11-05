@@ -4,8 +4,8 @@ const { subscribeMember, getMemberState, login, register, verifyEmail, logout, r
 const { wixRequest, mintTokens, setTokens } = await import(location.origin + "/js/wix/client.js");
 const { WIX_CLIENT_ID } = await import(location.origin + "/js/wix/config.js");
 const { queryItems, insertItem, patchItemFields } = await import(location.origin + "/js/wix/items.js");
-const REGIONS=[{id:'nacimiento',name:'Nacimiento'},{id:'infancia',name:'Infancia'},{id:'bautismo',name:'Bautismo'},{id:'galilea',name:'Galilea'}];
-const SOON=['Parábolas','Milagros','Jerusalén','Cruz','Resurrección','Pentecostés'];
+const REGIONS=[{id:'nacimiento',name:'Nacimiento'},{id:'infancia',name:'Infancia'},{id:'bautismo',name:'Bautismo'},{id:'galilea',name:'Galilea'},{id:'milagros',name:'Milagros'}];
+const SOON=['Parábolas','Jerusalén','Cruz','Resurrección','Pentecostés'];
 const LOCAL={n1:[96,180],n2:[262,276],n3:[152,376],fA:[66,486],fB:[292,486],n4:[180,596],n5:[92,690]};
 const ORDER=['n1','n2','n3','fA','fB','n4','n5'];
 const STORY={
@@ -128,6 +128,36 @@ galilea:{
   text:'Mirá todo lo que viviste en Galilea, desde la boda de Caná hasta el monte.',
   game:{type:'match',title:'Lugares y momentos',how:'Tocá un momento a la izquierda y después su pareja a la derecha. Uní todos los pares.',sky:['#BFE0FF','#FFF3DD']},
   ch:{t:'order',q:'Ordená estos momentos en Galilea',items:['Jesús convierte el agua en vino en Caná','Lee el rollo de Isaías en la sinagoga de Nazaret','Llama a los pescadores a la orilla del lago','Enseña a la multitud en el monte'],exp:'Juan cuenta la boda de Caná como la primera señal. Lucas sigue con la sinagoga de Nazaret y el llamado de los pescadores, y Mateo reúne sus grandes enseñanzas en el monte.',ref:'Juan 2 · Lucas 4–5 · Mateo 5'}}
+},
+milagros:{
+ n1:{place:'El lago',title:'La tormenta',scene:'mil_n1',
+  text:'{name}, al atardecer cruzás el lago con Jesús y sus discípulos. Se levanta una tormenta terrible y las olas empiezan a llenar la barca. Jesús duerme en la parte de atrás.',
+  game:{type:'flood',title:'Calmá el mar',how:'Elegí colores para pintar el mar desde la esquina de arriba, hasta que quede todo de un solo color.',sky:['#5A6E8A','#A9BCD0']},
+  ch:{t:'mc',q:'¿Qué pasó cuando Jesús le habló al viento y a las olas?',options:['El viento se detuvo y hubo una gran calma','La barca se hundió','Llovió todavía más fuerte','Los discípulos remaron hasta la orilla'],answer:'El viento se detuvo y hubo una gran calma',exp:'Los discípulos, asombrados, se preguntaban: «¿Quién es este hombre?». Hasta el viento y las olas le obedecen.',ref:'Marcos 4:37-41'}},
+ n2:{place:'Capernaúm',title:'El techo abierto',scene:'mil_n2',
+  text:'La casa donde está Jesús está repleta y no entra nadie más. Cuatro amigos traen a un hombre paralítico en una camilla… y se les ocurre una idea: subir al techo.',
+  game:{type:'roof',title:'El techo abierto',how:'Tocá solo las tejas marcadas para abrir el hueco y bajar la camilla.',sky:['#BFE0FF','#FFF3DD']},
+  ch:{t:'mc',q:'¿Qué hicieron los amigos para llegar hasta Jesús?',options:['Abrieron el techo y bajaron la camilla','Esperaron afuera hasta el otro día','Le pidieron a la gente que se fuera','Llamaron a Jesús por la ventana'],answer:'Abrieron el techo y bajaron la camilla',exp:'Jesús vio la fe de ellos. Primero le perdonó los pecados al hombre y después lo sanó: se levantó, tomó su camilla y salió caminando delante de todos.',ref:'Marcos 2:1-12'}},
+ n3:{place:'Una colina',title:'Cinco panes',scene:'mil_n3',
+  text:'Miles de personas siguieron a Jesús hasta un lugar alejado y se hizo tarde. No hay comida para tanta gente… pero un muchachito tiene algo para compartir.',
+  game:{type:'count',title:'Panes y pescados',how:'Mirá rápido la imagen y contá cuántos panes o cuántos pescados hay.',sky:['#C9E6A8','#FFF6DC']},
+  ch:{t:'who',quote:'Aquí hay un muchachito que tiene cinco panes de cebada y dos pescados. ¿Pero de qué sirven ante esta enorme multitud?',options:['Andrés','Felipe','Pedro','Judas'],answer:'Andrés',exp:'Lo dijo Andrés, el hermano de Simón Pedro. Jesús dio gracias, repartió los panes y los pescados, y comieron todos hasta quedar satisfechos. ¡Sobraron doce canastas!',ref:'Juan 6:8-13'}},
+ fA:{place:'Entre la multitud',title:'El manto',fork:1,scene:'mil_fA',
+  text:'Una mujer que estaba enferma desde hacía doce años se abre paso entre la gente. Está segura de que, si toca la ropa de Jesús, va a quedar sana.',
+  game:{type:'trace',title:'Tocá el manto',how:'Arrastrá el dedo desde la mujer hasta el manto de Jesús sin chocar con nadie.',sky:['#F3D3B0','#FFF2E2']},
+  ch:{t:'mc',q:'Según Jesús, ¿qué sanó a la mujer?',options:['Su fe en él','El dinero que gastó en médicos','Un remedio nuevo','Ser de una familia importante'],answer:'Su fe en él',exp:'Jesús la llamó «hija» y le dijo que su fe la había sanado. Ella se acercó con miedo, pero con confianza, y Jesús no la rechazó.',ref:'Marcos 5:25-34'}},
+ fB:{place:'Camino de Jericó',title:'Bartimeo',fork:1,scene:'mil_fB',
+  text:'Un ciego llamado Bartimeo pide limosna al costado del camino. Cuando escucha que pasa Jesús de Nazaret, empieza a gritar con todas sus fuerzas.',
+  game:{type:'reveal',title:'Recuperar la vista',how:'La imagen se va aclarando. Tocá lo que es antes de que se vea del todo.',sky:['#F6D28E','#FFF2D6']},
+  ch:{t:'who',quote:'¡Jesús, Hijo de David, ten compasión de mí!',options:['Bartimeo','Zaqueo','Jairo','Lázaro'],answer:'Bartimeo',exp:'Muchos le decían que se callara, pero él gritó todavía más fuerte. Jesús lo llamó, le devolvió la vista y Bartimeo lo siguió por el camino.',ref:'Marcos 10:46-52'}},
+ n4:{place:'De noche en el lago',title:'Sobre el agua',scene:'mil_n4',
+  text:'De madrugada, los discípulos ven a alguien caminando sobre el agua: ¡es Jesús! Pedro le pide ir hacia él… y baja de la barca.',
+  game:{type:'hop',title:'Caminar sobre el agua',how:'Tocá para saltar las olas. Mantené la mirada en Jesús y llegá hasta él.',sky:['#26357A','#5F6DB5'],night:true},
+  ch:{t:'mc',q:'¿Por qué Pedro empezó a hundirse?',options:['Porque vio el viento fuerte y tuvo miedo','Porque se cansó de caminar','Porque la barca se alejó','Porque Jesús se fue'],answer:'Porque vio el viento fuerte y tuvo miedo',exp:'Mientras miraba a Jesús, Pedro caminó sobre el agua. Cuando se fijó en el viento, tuvo miedo y empezó a hundirse. Jesús le extendió la mano enseguida.',ref:'Mateo 14:28-31'}},
+ n5:{place:'Hito del camino',title:'Repasá la etapa',scene:'hito5',
+  text:'Mirá todo lo que Jesús hizo: calmó el mar, sanó, alimentó a miles y caminó sobre el agua.',
+  game:{type:'sort',title:'Clasificá los milagros',how:'Tocá a la izquierda o a la derecha según dónde va cada milagro.',sky:['#BFE0FF','#FFF3DD']},
+  ch:{t:'order',q:'Ordená lo que pasó esa noche en el lago',items:['Jesús camina sobre el agua hacia la barca','Pedro le pide ir hacia él','Pedro mira el viento, tiene miedo y se hunde','Jesús lo toma de la mano y suben a la barca'],exp:'Mateo lo cuenta así, y termina con los discípulos adorando a Jesús como el Hijo de Dios.',ref:'Mateo 14:25-33'}}
 }};
 const MAP_PLACES=[
  {id:'nazaret',name:'Nazaret',x:165,y:112,lx:-50,ly:4},{id:'capernaum',name:'Capernaum',x:196,y:86,lx:-62,ly:-8},
@@ -413,7 +443,42 @@ const SCENES={
   bg:T(60,46,1,A.cloud(u,80))+T(260,34,1,A.cloud(u,60,.9))+T(70,156,1,A.cloud(u,150))+T(260,160,1,A.cloud(u,150))+T(160,178,1,A.cloud(u,230)),
   actors:{scroll:u=>A.scroll(u),spk:u=>A.sparkles(u,9,70)},
   tl:[['scroll',.4,2.2,{x:180,y:92,sx:.08,o:.4},{x:180,y:92,sx:1,o:1}],['spk',2,3.2,{x:180,y:92,o:0},{x:180,y:92,o:1}]],
-  caps:[[0,'De la boda de Caná al monte, pasando por el lago.'],[2.4,'Cada encuentro con Jesús cambió una vida.'],[4.6,'Repasá todo lo que viviste.']]})
+  caps:[[0,'De la boda de Caná al monte, pasando por el lago.'],[2.4,'Cada encuentro con Jesús cambió una vida.'],[4.6,'Repasá todo lo que viviste.']]}),
+ mil_n1:u=>({sky:'night',dur:8.5,
+  bg:`<path d="M-20 120 Q180 110 380 122 V200 H-20Z" fill="#2E4A6E"/>`,
+  actors:{boat:u=>`<g><path d="M-44 0 Q0 18 44 0Z" fill="#6A4A2E"/><path d="M0 0 V-44" stroke="#4A3220" stroke-width="2.4"/><path d="M1 -42 L26 -8 L1 -8Z" fill="#D8D0C0"/>${T(-26,-4,.55,A.presence(u))}</g>`,w:u=>A.waves(u),bolt:u=>`<path d="M0 0 L-10 30 L4 30 L-8 64 L18 22 L4 22 L14 0Z" fill="#FFF6C8"/>`,calm:u=>A.glow(u,120,.6)},
+  tl:[['w',0,5,{x:-10,y:118},{x:30,y:118}],['boat',0,5,{x:180,y:136,r:-8},{x:182,y:132,r:8}],['boat',5,8.5,{x:182,y:132,r:0},{x:182,y:132,r:0}],['bolt',1.2,1.6,{x:90,y:10,o:1},{x:90,y:10,o:0}],['bolt',2.6,3,{x:270,y:16,o:1},{x:270,y:16,o:0}],['calm',5.2,8.5,{x:180,y:90,o:0},{x:180,y:90,o:1}]],
+  caps:[[0,'Una tormenta terrible sacude la barca.'],[2.6,'Los discípulos despiertan a Jesús, llenos de miedo.'],[5.2,'Jesús le habla al viento y a las olas, y todo queda en calma.']]}),
+ mil_n2:u=>({sky:'day',dur:8,
+  bg:T(70,40,1,A.cloud(u,64))+A.hills(u,128,'#BFCB8C','#93A262',16)+A.ground(u,160,'#E6D2A0','#C9B07A')+T(180,150,1.9,A.house(u))+T(70,164,1,A.people(u,4))+T(300,166,1,A.people(u,3)),
+  actors:{mat:u=>`<g><rect x="-22" y="-5" width="44" height="10" rx="3" fill="#E8DDC6" stroke="#9C8A6A"/><path d="M-20 -5 V-60 M20 -5 V-60" stroke="#9C8A6A" stroke-width="1.4"/></g>`,friends:u=>A.people(u,4),spk:u=>A.sparkles(u,8,40)},
+  tl:[['friends',.4,2.8,{x:360,y:166,s:.8},{x:240,y:120,s:.6}],['mat',3,6,{x:180,y:96,o:0},{x:180,y:132,o:1}],['spk',6,8,{x:180,y:120,o:0},{x:180,y:120,o:1}]],
+  caps:[[0,'La casa está tan llena que no se puede entrar.'],[2.6,'Cuatro amigos suben al techo y abren un hueco.'],[5.2,'Bajan a su amigo en la camilla hasta Jesús.']]}),
+ mil_n3:u=>({sky:'gold',dur:8.5,
+  bg:A.hills(u,110,'#B5CF8E','#89A964',30)+A.hills(u,150,'#A9C98A','#7FA463',12,3)+T(180,124,.8,A.presence(u))+T(60,160,.9,A.people(u,5))+T(290,160,.9,A.people(u,5)),
+  actors:{bread:u=>`<g>${[0,1,2,3,4].map(i=>`<ellipse cx="${i*12-24}" cy="0" rx="6" ry="3.6" fill="#D9A25A"/>`).join('')}${[0,1].map(i=>`<ellipse cx="${i*14-7}" cy="10" rx="7" ry="3" fill="#B8C8D0"/>`).join('')}</g>`,baskets:u=>`<g>${[0,1,2,3,4,5,6,7,8,9,10,11].map(i=>`<path d="M${i*22-121} 0 h14 l-2 10 h-10z" fill="#B89A5E"/>`).join('')}</g>`},
+  tl:[['bread',1.6,4,{x:180,y:142,o:0,s:.6},{x:180,y:142,o:1,s:1}],['baskets',5,8.5,{x:180,y:176,o:0},{x:180,y:176,o:1}]],
+  caps:[[0,'Miles de personas siguieron a Jesús y se hizo tarde.'],[2.6,'Un muchachito comparte cinco panes y dos pescados.'],[5.2,'Comen todos, y sobran doce canastas llenas.']]}),
+ mil_fA:u=>({sky:'dusk',dur:8,
+  bg:A.hills(u,126,'#D9A9C4','#B07BA6',18)+A.ground(u,158,'#E6C99A','#C9A877')+T(250,156,.9,A.presence(u))+T(130,162,1,A.people(u,5)),
+  actors:{wom:u=>A.figure(u,'#9A5A6A',{scarf:'#E8C9B0'}),glow:u=>A.glow(u,40)},
+  tl:[['wom',.4,4.6,{x:40,y:168,s:.85},{x:226,y:160,s:.85}],['glow',4.6,8,{x:236,y:140,o:0,s:.5},{x:236,y:140,o:1,s:1.2}]],
+  caps:[[0,'Una mujer enferma desde hace doce años se abre paso.'],[2.6,'Con fe, toca la ropa de Jesús.'],[5.2,'Jesús la mira y le dice que su fe la sanó.']]}),
+ mil_fB:u=>({sky:'desert',dur:8,
+  bg:T(250,46,1,A.sun(u,20))+A.hills(u,130,'#E9BE84','#C98F52',16)+A.ground(u,158,'#E6C99A','#C9A877')+T(470,126,.9,A.walls(u)),
+  actors:{bart:u=>A.figure(u,'#7A6A5A',{scarf:'#C9B48A'}),jesus:u=>A.presence(u),light:u=>A.glow(u,60),crowd:u=>A.people(u,4)},
+  tl:[['crowd',.4,4,{x:400,y:166,s:.8},{x:260,y:166,s:.8}],['jesus',.4,4,{x:360,y:160},{x:220,y:160}],['bart',0,8,{x:110,y:164,s:.9},{x:120,y:164,s:.9}],['light',4.8,8,{x:120,y:110,o:0,s:.4},{x:120,y:110,o:1,s:1}]],
+  caps:[[0,'Bartimeo, un ciego, pide limosna junto al camino.'],[2.6,'Grita: «¡Jesús, Hijo de David, ten compasión de mí!».'],[5.2,'Jesús lo llama y le devuelve la vista.']]}),
+ mil_n4:u=>({sky:'night',dur:8.5,
+  bg:A.stars(u)+`<path d="M-20 122 Q180 114 380 124 V200 H-20Z" fill="#2E4A6E"/>`+`<g transform="translate(70,132)"><path d="M-40 0 Q0 16 40 0Z" fill="#6A4A2E"/><path d="M0 0 V-40" stroke="#4A3220" stroke-width="2.4"/></g>`,
+  actors:{jesus:u=>A.presence(u),peter:u=>A.figure(u,'#6E8A9A',{}),moon:u=>A.moon(u)},
+  tl:[['moon',0,8.5,{x:290,y:40},{x:300,y:30}],['jesus',0,4,{x:360,y:130},{x:240,y:126}],['jesus',4,8.5,{x:240,y:126},{x:240,y:126}],['peter',3,6.4,{x:90,y:128,s:.75},{x:190,y:128,s:.75}],['peter',6.4,8.5,{x:190,y:128,s:.75},{x:196,y:136,s:.75}]],
+  caps:[[0,'De madrugada, Jesús camina sobre el agua hacia la barca.'],[2.6,'Pedro baja de la barca y camina hacia él.'],[5.4,'Cuando mira el viento se asusta… y Jesús le extiende la mano.']]}),
+ hito5:u=>({sky:'gold',dur:7,
+  bg:T(60,46,1,A.cloud(u,80))+T(260,34,1,A.cloud(u,60,.9))+T(70,156,1,A.cloud(u,150))+T(260,160,1,A.cloud(u,150))+T(160,178,1,A.cloud(u,230)),
+  actors:{scroll:u=>A.scroll(u),spk:u=>A.sparkles(u,9,70)},
+  tl:[['scroll',.4,2.2,{x:180,y:92,sx:.08,o:.4},{x:180,y:92,sx:1,o:1}],['spk',2,3.2,{x:180,y:92,o:0},{x:180,y:92,o:1}]],
+  caps:[[0,'El mar, los enfermos, la multitud y las olas.'],[2.4,'Todo le obedece a Jesús.'],[4.6,'Repasá lo que viviste.']]})
 };
 const ease=k=>k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
 const DEF={x:0,y:0,s:1,sx:1,r:0,o:1};
@@ -476,6 +541,13 @@ const NICON={
  start:'<path d="M0 -9 Q1.2 -1.2 9 0 Q1.2 1.2 0 9 Q-1.2 1.2 -9 0 Q-1.2 -1.2 0 -9Z" fill="currentColor"/>'
 };
 const GICON={
+ flood:'<rect x="-9" y="-9" width="8" height="8" fill="currentColor"/><rect x="1" y="-9" width="8" height="8" fill="currentColor" opacity=".5"/><rect x="-9" y="1" width="8" height="8" fill="currentColor" opacity=".5"/><rect x="1" y="1" width="8" height="8" fill="currentColor"/>',
+ roof:'<path d="M-10 0 L0 -9 L10 0" stroke="currentColor" stroke-width="2.4" fill="none"/><rect x="-7" y="0" width="14" height="9" fill="none" stroke="currentColor" stroke-width="2"/><rect x="-2" y="-4" width="4" height="4" fill="currentColor"/>',
+ count:'<ellipse cx="-4" cy="-3" rx="6" ry="3.6" fill="currentColor"/><ellipse cx="4" cy="5" rx="6" ry="3" fill="currentColor" opacity=".55"/>',
+ trace:'<path d="M-9 8 C-4 -8 4 8 9 -8" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/>',
+ reveal:'<circle r="8" fill="none" stroke="currentColor" stroke-width="2"/><circle r="3.4" fill="currentColor"/>',
+ hop:'<path d="M-10 6 Q-5 -2 0 6 Q5 -2 10 6" stroke="currentColor" stroke-width="2.2" fill="none"/><circle cy="-6" r="3" fill="currentColor"/>',
+ sort:'<path d="M0 -9 V0 M0 0 L-8 8 M0 0 L8 8" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/>',
  pour:'<path d="M-6 9 Q-9 0 -6 -6 H6 Q9 0 6 9Z" fill="currentColor"/><path d="M-1 -12 V-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
  spell:'<rect x="-10" y="-7" width="8" height="10" rx="2" fill="currentColor"/><rect x="2" y="-4" width="8" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>',
  net:'<path d="M-9 -4 Q0 12 9 -4 M-6 0 L-2 8 M0 1 V9 M6 0 L2 8 M-8 3 H8" stroke="currentColor" stroke-width="1.8" fill="none"/>',
@@ -506,7 +578,7 @@ const GICON={
  connect:'<path d="M-8 6L-2 -7 4 4 9 -6" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="-8" cy="6" r="2.4" fill="currentColor"/><circle cx="-2" cy="-7" r="2.4" fill="currentColor"/><circle cx="4" cy="4" r="2.4" fill="currentColor"/><circle cx="9" cy="-6" r="2.4" fill="currentColor"/>'
 };
 function rng(seed){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
-const VIGN=[[3,262,176,'house',1],[3,74,292,'riv',1],[3,272,676,'palms',.8],[0,258,170,'house',1],[0,74,292,'stable',.7],[0,272,676,'camels',.6],[1,262,178,'temple',.55],[1,76,290,'pyr',.7],[1,272,676,'tree',.8],[2,262,176,'palms',.8],[2,74,292,'riv',1],[2,272,676,'rocks',1]];
+const VIGN=[[4,262,176,'riv',1],[4,74,292,'house',1],[4,272,676,'palms',.8],[3,262,176,'house',1],[3,74,292,'riv',1],[3,272,676,'palms',.8],[0,258,170,'house',1],[0,74,292,'stable',.7],[0,272,676,'camels',.6],[1,262,178,'temple',.55],[1,76,290,'pyr',.7],[1,272,676,'tree',.8],[2,262,176,'palms',.8],[2,74,292,'riv',1],[2,272,676,'rocks',1]];
 function vign(u,k){
   if(k==='house')return T(-14,0,.9,A.house(u))+T(16,2,.7,A.house(u));
   if(k==='stable')return T(0,0,.9,A.stable(u))+T(0,-62,1,A.star(u,3));
@@ -1292,8 +1364,135 @@ function Match(th, f) {
       L.forEach(q => box(q, 0)); Rr.forEach(q => box(q, 1)); banner(c, th, 'Ronda ' + round, ban); } };
 }
 
-const ENGINES={pour:Pour,spell:Spell,net:Net,row:Row,pipes:Pipes,lights:Lights,match:Match,run:Runner,fly:Flyer,cross:Crosser,catch:Catcher,memo:Memo,maze:Maze,simon:Simon,verso:Verso,herd:Herd,pop:Pop,swarm:Swarm,slide:Slide,balance:Balance,order:Order,words:Words,stack:Stack,diff:Diff,tf:TrueFalse,lantern:Lantern,rhythm:Rhythm,connect:Connect};
-const TAPG=['spell','net','row','pipes','lights','match','memo','simon','verso','pop','slide','order','diff','tf','rhythm','connect','stack','balance'],DRAGG=['pour','herd','swarm','words','lantern'];
+/* ===== juegos de los milagros: calma, techo, panes, manto, vista, agua y clasificar ===== */
+DRAW.bread = (c, x, y) => { c.save(); c.translate(x, y); c.fillStyle = '#D9A25A'; c.beginPath(); c.ellipse(0, 0, 15, 9, 0, 0, 7); c.fill(); c.strokeStyle = '#A8733A'; c.lineWidth = 2; c.beginPath(); c.moveTo(-6, -5); c.lineTo(-3, 4); c.moveTo(1, -6); c.lineTo(4, 4); c.stroke(); c.restore(); };
+// 1. Calmá la tormenta (pintá todo el mar de un solo color)
+function Flood(th, f) {
+  const PAL = ['#2E4A6E', '#4A6E8A', '#7FA8C4', '#5A5A72', '#9AC8D8'];
+  let N = 8, K = 4, grid = [], moves = 0, maxM = 0, score = 0, over = false, round = 0, ban = 0, done = 0, left = 60 / f, full = 60 / f;
+  function deal() { round++; N = Math.min(11, 7 + round); K = Math.min(5, 3 + round); grid = Array.from({ length: N * N }, () => Math.floor(Math.random() * K)); moves = 0; maxM = Math.round(N * 1.9 + K * 1.4); ban = 1.3; done = 0; left += round > 1 ? 18 / f : 0; full = Math.max(full, left); }
+  function paint(col) { const old = grid[0]; if (old === col) return; const st = [0], seen = new Set([0]); while (st.length) { const i = st.pop(); grid[i] = col; const x = i % N, y = Math.floor(i / N); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const a = x + dx, b = y + dy; if (a < 0 || b < 0 || a >= N || b >= N) return; const j = b * N + a; if (!seen.has(j) && grid[j] === old) { seen.add(j); st.push(j); } }); } }
+  deal();
+  const cs = () => Math.floor(300 / N), ox = () => (GW - cs() * N) / 2, oy = 92;
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap' || ban > .7 || done) return; const by = oy + cs() * N + 22; if (d.y < by || d.y > by + 54) return; const bw = (GW - 32) / K, i = Math.floor((d.x - 16) / bw); if (i < 0 || i >= K) return; paint(i); moves++; tone(330 + i * 70, .07);
+      if (grid.every(v => v === grid[0])) { done = 1.6; score += 60 + Math.max(0, maxM - moves) * 8; tone(990, .45); burstAt(GW / 2, 220); setTimeout(() => { if (!over) deal(); }, 1600); } else if (moves >= maxM) { left = Math.max(0, left - 10); moves = 0; tone(160, .3); grid = Array.from({ length: N * N }, () => Math.floor(Math.random() * K)); } },
+    update(dt) { if (over) return; ban = Math.max(0, ban - dt); done = Math.max(0, done - dt); if (ban < .7 && !done) left -= dt; if (left <= 0) { left = 0; over = true; } },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'MAR ' + round + ' · ' + moves + '/' + maxM, 16, 27); lab(c, th, 'Empezá arriba a la izquierda y calmá todo el mar', GW / 2, 78, 'center');
+      const s = cs(), x0 = ox(); grid.forEach((v, i) => { c.fillStyle = PAL[v]; c.fillRect(x0 + (i % N) * s, oy + Math.floor(i / N) * s, s + .5, s + .5); }); c.strokeStyle = INK(th); c.lineWidth = 2; c.strokeRect(x0, oy, s * N, s * N);
+      const by = oy + s * N + 22, bw = (GW - 32) / K; for (let i = 0; i < K; i++) { c.fillStyle = PAL[i]; rr(c, 16 + i * bw + 4, by, bw - 8, 50, 14); c.fill(); }
+      banner(c, th, done ? '¡Hubo una gran calma!' : 'Mar ' + round, done || ban); } };
+}
+// 2. El techo abierto (sacá solo las tejas marcadas)
+function Roof(th, f) {
+  const C = 6, R = 6, S = 52, ox = (GW - C * S) / 2, oy = 120; let tiles = [], tgt = null, score = 0, over = false, round = 0, ban = 0, done = 0, left = 0, full = 0, bad = null, bT = 0, low = 0;
+  function deal() { round++; done = 0; low = 0; const w = 2 + Math.floor(Math.random() * 2), h = 2 + (round > 2 ? 1 : 0); const x = Math.floor(Math.random() * (C - w + 1)), y = Math.floor(Math.random() * (R - h + 1)); tgt = { x, y, w, h }; tiles = Array.from({ length: C * R }, () => true); const add = (10 + w * h * 1.2) / f; left = round === 1 ? add + 6 : left + add; full = Math.max(full, left); ban = 1.2; }
+  deal();
+  const inT = (x, y) => x >= tgt.x && x < tgt.x + tgt.w && y >= tgt.y && y < tgt.y + tgt.h;
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap' || ban > .7 || done) return; const x = Math.floor((d.x - ox) / S), y = Math.floor((d.y - oy) / S); if (x < 0 || y < 0 || x >= C || y >= R || !tiles[y * C + x]) return;
+      if (inT(x, y)) { tiles[y * C + x] = false; score += 6; tone(500 + Math.random() * 200, .05); burstAt(ox + x * S + S / 2, oy + y * S + S / 2); let all = true; for (let j = 0; j < R; j++) for (let i = 0; i < C; i++) if (inT(i, j) && tiles[j * C + i]) all = false; if (all) { done = 2; score += 40 + Math.round(left); tone(880, .4); setTimeout(() => { if (!over) deal(); }, 2000); } }
+      else { bad = [x, y]; bT = .5; left = Math.max(0, left - 3); tone(150, .25); } },
+    update(dt) { if (over) return; ban = Math.max(0, ban - dt); bT = Math.max(0, bT - dt); if (done) { done = Math.max(0, done - dt); low = Math.min(1, low + dt * .8); } if (ban < .7 && !done) left -= dt; if (left <= 0) { left = 0; over = true; } },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'CASA ' + round, 16, 27); lab(c, th, 'Sacá solo las tejas marcadas para bajar la camilla', GW / 2, 100, 'center');
+      c.fillStyle = th.hx ? '#3A2E20' : '#E9D7B4'; c.fillRect(ox, oy, C * S, R * S); const g = c.createRadialGradient(ox + C * S / 2, oy + R * S / 2, 10, ox + C * S / 2, oy + R * S / 2, 160); g.addColorStop(0, 'rgba(255,240,190,.9)'); g.addColorStop(1, 'rgba(255,240,190,0)'); c.fillStyle = g; c.fillRect(ox, oy, C * S, R * S);
+      for (let j = 0; j < R; j++) for (let i = 0; i < C; i++) { if (!tiles[j * C + i]) continue; const x = ox + i * S, y = oy + j * S, sx = bad && bad[0] === i && bad[1] === j && bT > 0 ? Math.sin(bT * 60) * 3 : 0; c.fillStyle = (i + j) % 2 ? '#A8724A' : '#B8805A'; rr(c, x + 2 + sx, y + 2, S - 4, S - 4, 6); c.fill(); c.strokeStyle = 'rgba(0,0,0,.18)'; c.lineWidth = 1; c.beginPath(); c.moveTo(x + 4 + sx, y + S / 2); c.lineTo(x + S - 4 + sx, y + S / 2); c.stroke(); }
+      c.setLineDash([6, 5]); c.strokeStyle = '#FFF2B0'; c.lineWidth = 3; c.strokeRect(ox + tgt.x * S + 2, oy + tgt.y * S + 2, tgt.w * S - 4, tgt.h * S - 4); c.setLineDash([]);
+      if (done) { const cx = ox + (tgt.x + tgt.w / 2) * S, top = oy - 40 + low * (tgt.y * S + tgt.h * S / 2 + 40); c.strokeStyle = '#C9B48A'; c.lineWidth = 2; [-1, 1].forEach(s => { c.beginPath(); c.moveTo(cx + s * 26, oy - 40); c.lineTo(cx + s * 26, top); c.stroke(); }); c.fillStyle = '#E8DDC6'; rr(c, cx - 30, top - 8, 60, 16, 4); c.fill(); }
+      banner(c, th, done ? '¡Lo bajaron hasta Jesús!' : 'Casa ' + round, done ? Math.min(1, done) : ban); } };
+}
+// 3. Panes y pescados (contá rápido)
+function Count(th, f) {
+  let items = [], ask = 'bread', ans = 0, opts = [], phase = 'show', pT = 0, score = 0, lives = 3, over = false, round = 0, streak = 0, fb = '', fT = 0;
+  function deal() { round++; const nb = 2 + Math.floor(Math.random() * Math.min(9, 3 + round)), nf = 1 + Math.floor(Math.random() * Math.min(7, 2 + round)); items = []; const put = k => { for (let tries = 0; tries < 60; tries++) { const x = 40 + Math.random() * (GW - 80), y = 120 + Math.random() * 260; if (items.every(q => Math.hypot(q.x - x, q.y - y) > 36)) { items.push({ k, x, y }); return; } } }; for (let i = 0; i < nb; i++) put('bread'); for (let i = 0; i < nf; i++) put('fish');
+    ask = Math.random() < .5 ? 'bread' : 'fish'; ans = items.filter(q => q.k === ask).length; const s = new Set([ans]); while (s.size < 3) s.add(Math.max(0, ans + Math.floor(Math.random() * 5) - 2)); opts = shuffle([...s]); phase = 'show'; pT = Math.max(1.1, 2.4 - round * .08) / f; }
+  deal();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap' || phase !== 'ask') return; const i = Math.floor((d.x - 16) / ((GW - 32) / 3)); if (d.y < 400 || d.y > 470 || i < 0 || i > 2) return;
+      if (opts[i] === ans) { streak++; score += 20 + streak * 4; fb = '¡Correcto!'; tone(700 + streak * 30, .15); } else { streak = 0; lives--; fb = 'Eran ' + ans; tone(170, .3); if (lives <= 0) { over = true; return; } } fT = .9; phase = 'fb'; setTimeout(() => { if (!over) deal(); }, 900); },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); if (phase === 'show') { pT -= dt; if (pT <= 0) phase = 'ask'; } },
+    draw(c, t) { skyBg(c, th, t); hearts(c, lives, 3); lab(c, th, 'RONDA ' + round + (streak > 1 ? ' · RACHA ' + streak : ''), GW - 16, 27, 'right');
+      card(c, th, 16, 100, GW - 32, 290);
+      if (phase === 'show') items.forEach(q => q.k === 'bread' ? DRAW.bread(c, q.x, q.y) : DRAW.fish(c, q.x, q.y, t, 1)); else { c.fillStyle = INK(th); c.font = '900 20px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText(ask === 'bread' ? '¿Cuántos panes había?' : '¿Cuántos pescados había?', GW / 2, 250); c.textAlign = 'left'; }
+      if (phase !== 'show') { const bw = (GW - 32) / 3; opts.forEach((o, i) => { c.fillStyle = th.hx ? '#2A2418' : '#FFFFFF'; rr(c, 16 + i * bw + 6, 404, bw - 12, 60, 16); c.fill(); c.fillStyle = INK(th); c.font = '900 26px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText(o, 16 + i * bw + bw / 2, 444); c.textAlign = 'left'; }); }
+      else lab(c, th, 'Mirá bien…', GW / 2, 430, 'center');
+      if (fT > 0) banner(c, th, fb, fT * 1.5); lab(c, th, 'Cinco panes y dos pescados · Juan 6:9', GW / 2, GH - 18, 'center'); } };
+}
+// 4. Tocá el manto (dibujá un camino entre la gente sin chocar)
+function Trace(th, f) {
+  let people = [], path = [], drawing = false, score = 0, over = false, round = 0, ban = 0, left = 0, full = 0, done = 0, hit = 0; const A = { x: 40, y: 470 }; let B = { x: 300, y: 110 };
+  function deal() { round++; done = 0; path = []; B = { x: 60 + Math.random() * (GW - 120), y: 100 }; people = []; const n = Math.min(16, 7 + round * 2); for (let i = 0; i < n * 8 && people.length < n; i++) { const p = { x: 30 + Math.random() * (GW - 60), y: 150 + Math.random() * 280, r: 16 + Math.random() * 8, ph: Math.random() * 6 }; if (Math.hypot(p.x - A.x, p.y - A.y) > 60 && Math.hypot(p.x - B.x, p.y - B.y) > 60 && people.every(q => Math.hypot(q.x - p.x, q.y - p.y) > q.r + p.r + 16)) people.push(p); } const add = 16 / f; left = round === 1 ? add + 6 : left + add; full = Math.max(full, left); ban = 1.2; }
+  deal();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || ban > .7 || done) return; if (k === 'down') { if (Math.hypot(d.x - A.x, d.y - A.y) < 40) { drawing = true; path = [{ x: A.x, y: A.y }]; } return; } if (k === 'move' && drawing) { const l = path[path.length - 1]; if (Math.hypot(d.x - l.x, d.y - l.y) < 6) return; path.push({ x: d.x, y: d.y });
+        if (people.some(p => Math.hypot(p.x - d.x, p.y + Math.sin(p.ph) * 3 - d.y) < p.r + 6)) { drawing = false; hit = .5; path = []; left = Math.max(0, left - 2); tone(150, .25); return; }
+        if (Math.hypot(d.x - B.x, d.y - B.y) < 26) { drawing = false; done = 1.4; score += 50 + Math.round(left) * 2; tone(990, .4); burstAt(B.x, B.y); setTimeout(() => { if (!over) deal(); }, 1400); } return; }
+      if (k === 'up') { if (drawing && !done) { drawing = false; path = []; } } },
+    update(dt) { if (over) return; ban = Math.max(0, ban - dt); hit = Math.max(0, hit - dt); done = Math.max(0, done - dt); people.forEach(p => p.ph += dt * 2); if (ban < .7 && !done) left -= dt; if (left <= 0) { left = 0; over = true; } },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'MULTITUD ' + round, 16, 27); lab(c, th, 'Arrastrá desde la mujer hasta el manto sin tocar a nadie', GW / 2, 72, 'center');
+      c.fillStyle = th.hx ? 'rgba(233,195,122,.25)' : 'rgba(255,214,120,.45)'; c.beginPath(); c.arc(B.x, B.y, 26 + Math.sin(t * 4) * 3, 0, 7); c.fill(); c.fillStyle = '#E8DDC6'; c.beginPath(); c.moveTo(B.x - 14, B.y - 10); c.lineTo(B.x + 14, B.y - 10); c.lineTo(B.x + 18, B.y + 14); c.lineTo(B.x - 18, B.y + 14); c.fill(); c.fillStyle = '#3E5A9A'; c.fillRect(B.x - 18, B.y + 8, 36, 4);
+      people.forEach((p, i) => { const y = p.y + Math.sin(p.ph) * 3; c.fillStyle = ['#C9876A', '#7E9BD0', '#9AB072', '#B08CC9', '#D3A35E'][i % 5]; c.beginPath(); c.arc(p.x, y, p.r, 0, 7); c.fill(); c.fillStyle = '#E6B691'; c.beginPath(); c.arc(p.x, y - p.r * .5, p.r * .42, 0, 7); c.fill(); });
+      c.fillStyle = '#9A5A6A'; c.beginPath(); c.arc(A.x, A.y, 18, 0, 7); c.fill(); c.fillStyle = '#E6B691'; c.beginPath(); c.arc(A.x, A.y - 9, 8, 0, 7); c.fill();
+      if (path.length > 1) { c.strokeStyle = th.hx ? '#E9C37A' : '#FF9636'; c.lineWidth = 5; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); path.forEach((p, i) => i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y)); c.stroke(); }
+      if (hit > 0) { c.fillStyle = `rgba(239,111,97,${hit * .5})`; c.fillRect(0, 0, GW, GH); }
+      banner(c, th, done ? '¡Tu fe te ha sanado!' : 'Multitud ' + round, done || ban); } };
+}
+// 5. Bartimeo ve (adiviná la imagen mientras se aclara)
+const REVEAL_K = [['star', 'Estrella'], ['dove', 'Paloma'], ['lamb', 'Cordero'], ['sheep', 'Oveja'], ['lantern', 'Lámpara'], ['scroll', 'Rollo'], ['fish', 'Pescado'], ['bread', 'Pan'], ['honey', 'Panal'], ['gift', 'Cofre'], ['plank', 'Tabla'], ['bee', 'Abeja']];
+function Reveal(th, f) {
+  const off = document.createElement('canvas'), sm = document.createElement('canvas'); off.width = off.height = 200; let item = null, opts = [], clear = 0, score = 0, lives = 3, over = false, round = 0, fb = '', fT = 0, lock = false; const order = shuffle(REVEAL_K.slice());
+  function deal() { item = order[round % order.length]; round++; clear = 0; lock = false; const o = new Set([item[1]]); while (o.size < 4) o.add(REVEAL_K[Math.floor(Math.random() * REVEAL_K.length)][1]); opts = shuffle([...o]); const x = off.getContext('2d'); x.clearRect(0, 0, 200, 200); x.fillStyle = th.hx ? '#F1D7A2' : '#FFF8E8'; x.fillRect(0, 0, 200, 200); x.save(); x.translate(100, 100); x.scale(4, 4); DRAW[item[0]](x, 0, 0, 0, 1); x.restore(); }
+  deal();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap' || lock) return; const i = Math.floor((d.y - 380) / 34); if (i < 0 || i > 3 || d.x < 30 || d.x > GW - 30) return; lock = true;
+      if (opts[i] === item[1]) { const pts = Math.round(20 + (1 - clear) * 60); score += pts; fb = '¡Ahora veo! +' + pts; tone(880, .3); } else { lives--; fb = 'Era: ' + item[1]; tone(170, .3); if (lives <= 0) { over = true; return; } } clear = 1; fT = 1; setTimeout(() => { if (!over) deal(); }, 1000); },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); if (!lock) { clear = Math.min(1, clear + dt * .12 * f); if (clear >= 1) { lock = true; lives--; fb = 'Era: ' + item[1]; fT = 1; tone(170, .3); if (lives <= 0) { over = true; return; } setTimeout(() => { if (!over) deal(); }, 1000); } } },
+    draw(c, t) { skyBg(c, th, t); hearts(c, lives, 3); lab(c, th, 'IMAGEN ' + round, GW - 16, 27, 'right'); lab(c, th, '¿Qué es? Cuanto antes lo adivines, más puntos', GW / 2, 64, 'center');
+      const res = Math.max(4, Math.round(4 + clear * clear * 196)); sm.width = sm.height = res; const sx = sm.getContext('2d'); sx.imageSmoothingEnabled = true; sx.drawImage(off, 0, 0, res, res); c.save(); c.imageSmoothingEnabled = clear > .95; rr(c, 60, 90, 240, 240, 24); c.clip(); c.drawImage(sm, 60, 90, 240, 240); c.restore(); c.imageSmoothingEnabled = true; c.strokeStyle = INK(th); c.lineWidth = 2; rr(c, 60, 90, 240, 240, 24); c.stroke();
+      opts.forEach((o, i) => { c.fillStyle = th.hx ? '#2A2418' : '#FFFFFF'; rr(c, 30, 380 + i * 34, GW - 60, 30, 12); c.fill(); c.fillStyle = INK(th); c.font = '800 15px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText(o, GW / 2, 400 + i * 34); c.textAlign = 'left'; });
+      if (fT > 0) banner(c, th, fb, fT * 1.5); } };
+}
+// 6. Caminar sobre el agua (saltá las olas con la mirada en Jesús)
+function Hop(th, f) {
+  let y = 0, vy = 0, waves = [], sp = 1, dist = 0, goal = 600, faith = 3, score = 0, over = false, tt = 0, hit = 0, round = 1, ban = 1.2; const GY = 400;
+  return { get score() { return score }, get over() { return over },
+    input(k) { if (over || ban > .6) return; if ((k === 'tap' || k === 'up') && y <= 0) { vy = 520; tone(520, .06); } },
+    update(dt) { if (over) return; tt += dt; ban = Math.max(0, ban - dt); hit = Math.max(0, hit - dt); if (ban > .6) return; const v = (150 + round * 22) * f; dist += v * dt * .2; vy -= 1300 * dt; y = Math.max(0, y + vy * dt); if (y === 0) vy = 0;
+      sp -= dt; if (sp <= 0) { sp = (.9 + Math.random() * 1.1) / f; waves.push({ x: GW + 30, h: 22 + Math.random() * 26 }); } waves.forEach(w => w.x -= v * dt);
+      waves.forEach(w => { if (!w.hit && Math.abs(w.x - 90) < 20 && y < w.h - 4) { w.hit = true; faith--; hit = .6; tone(150, .3); if (faith <= 0) over = true; } }); waves = waves.filter(w => w.x > -40);
+      score = Math.floor(dist / 4) + (round - 1) * 80; if (dist >= goal) { round++; goal = dist + 600 + round * 60; faith = Math.min(3, faith + 1); ban = 1.4; score += 80; burstAt(GW - 60, GY - 60); tone(990, .4); } },
+    draw(c, t) { skyBg(c, th, t); const sea = c.createLinearGradient(0, GY, 0, GH); sea.addColorStop(0, th.hx ? '#1E3E48' : '#5FB4E6'); sea.addColorStop(1, th.hx ? '#0C1C22' : '#2E6E9A'); c.fillStyle = sea; c.fillRect(0, GY, GW, GH - GY);
+      c.strokeStyle = 'rgba(255,255,255,.4)'; c.lineWidth = 2; c.beginPath(); for (let x = 0; x <= GW; x += 8) c.lineTo(x, GY + Math.sin(x * .06 + t * 3) * 3); c.stroke();
+      const jx = GW - 50 + Math.sin(t) * 4; c.fillStyle = 'rgba(255,240,190,.55)'; c.beginPath(); c.arc(jx, GY - 40, 34, 0, 7); c.fill(); c.fillStyle = '#FFF8E2'; c.beginPath(); c.ellipse(jx, GY - 30, 9, 22, 0, 0, 7); c.fill(); c.beginPath(); c.arc(jx, GY - 58, 7, 0, 7); c.fill();
+      waves.forEach(w => { c.fillStyle = th.hx ? '#2E5C6A' : '#3E86B8'; c.beginPath(); c.moveTo(w.x - 24, GY + 2); c.quadraticCurveTo(w.x - 6, GY - w.h * 1.4, w.x + 10, GY - w.h); c.quadraticCurveTo(w.x + 4, GY - w.h * .4, w.x + 24, GY + 2); c.fill(); c.fillStyle = 'rgba(255,255,255,.75)'; c.beginPath(); c.arc(w.x + 8, GY - w.h + 2, 4, 0, 7); c.fill(); });
+      c.save(); c.translate(90, GY - y); if (hit > 0) c.rotate(Math.sin(hit * 40) * .15); c.fillStyle = '#6E8A9A'; c.beginPath(); c.ellipse(0, -22, 10, 20, 0, 0, 7); c.fill(); c.fillStyle = '#E6B691'; c.beginPath(); c.arc(0, -46, 8, 0, 7); c.fill(); c.restore();
+      for (let i = 0; i < 3; i++) { c.fillStyle = i < faith ? '#FFC94A' : 'rgba(127,127,127,.3)'; c.beginPath(); c.arc(24 + i * 22, 28, 7, 0, 7); c.fill(); } lab(c, th, 'FE', 90, 32);
+      c.fillStyle = th.hx ? 'rgba(233,195,122,.25)' : 'rgba(255,255,255,.5)'; rr(c, 120, 22, GW - 140, 8, 4); c.fill(); c.fillStyle = th.hx ? '#E9C37A' : '#FF9636'; rr(c, 120, 22, Math.max(8, (GW - 140) * Math.min(1, dist / goal)), 8, 4); c.fill();
+      lab(c, th, 'Tocá para saltar las olas · mirá a Jesús', GW / 2, GH - 18, 'center'); banner(c, th, round > 1 ? '¡Seguí caminando!' : 'Vení', ban); } };
+}
+// 7. Clasificá (izquierda o derecha)
+const SORT_SETS = [
+  { a: 'Sanó a alguien', b: 'Poder sobre la naturaleza', items: [['Bartimeo ve otra vez', 'a'], ['Calma la tormenta', 'b'], ['El paralítico camina', 'a'], ['Camina sobre el agua', 'b'], ['La mujer que tocó su manto', 'a'], ['Multiplica panes y pescados', 'b'], ['La suegra de Pedro', 'a'], ['La pesca milagrosa', 'b']] },
+  { a: 'Pasó en el agua', b: 'Pasó en tierra', items: [['Pedro camina hacia Jesús', 'a'], ['El techo abierto en Capernaúm', 'b'], ['La tormenta se calma', 'a'], ['Comen cinco mil personas', 'b'], ['Las redes se llenan', 'a'], ['Bartimeo junto al camino', 'b'], ['Jesús duerme en la barca', 'a'], ['La hija de Jairo', 'b']] },
+  { a: 'Con una palabra', b: 'Tomando de la mano o tocando', items: [['La tormenta se calma', 'a'], ['El paralítico se levanta', 'a'], ['Bartimeo recupera la vista', 'a'], ['El siervo del oficial romano', 'a'], ['La hija de Jairo', 'b'], ['La suegra de Pedro', 'b'], ['El leproso queda limpio', 'b'], ['Pedro, que se hundía', 'b']] }
+];
+function Sort(th, f) {
+  let set = null, queue = [], cur = null, cx = GW / 2, fly = 0, flyTo = 0, score = 0, streak = 0, over = false, left = 0, full = 0, round = 0, ban = 0, fb = '', fT = 0; const order = shuffle([0, 1, 2]);
+  function deal() { set = SORT_SETS[order[round % 3]]; round++; queue = shuffle(set.items.slice()); next(); const add = 28 / f; left = round === 1 ? add : left + add; full = Math.max(full, left); ban = 1.3; }
+  function next() { cur = queue.shift() || null; cx = GW / 2; fly = 0; if (!cur) setTimeout(() => { if (!over) deal(); }, 600); }
+  deal();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || ban > .7 || !cur || fly) return; let s = null; if (k === 'tap') s = d.x < GW / 2 ? 'a' : 'b'; if (k === 'left') s = 'a'; if (k === 'right') s = 'b'; if (!s) return;
+      if (s === cur[1]) { streak++; score += 15 + streak * 3; fb = '¡Bien!'; tone(600 + streak * 30, .1); } else { streak = 0; left = Math.max(0, left - 3); fb = 'Era: ' + (cur[1] === 'a' ? set.a : set.b); tone(170, .25); } fT = .7; fly = .35; flyTo = s === 'a' ? -1 : 1; },
+    update(dt) { if (over) return; ban = Math.max(0, ban - dt); fT = Math.max(0, fT - dt); if (fly) { fly = Math.max(0, fly - dt); cx += flyTo * 900 * dt; if (!fly) next(); } if (ban < .7) left -= dt; if (left <= 0) { left = 0; over = true; } },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'RONDA ' + round + (streak > 2 ? ' · RACHA ' + streak : ''), 16, 27);
+      [[set.a, 16], [set.b, GW / 2 + 6]].forEach(([s, x]) => { c.fillStyle = th.hx ? 'rgba(233,195,122,.18)' : 'rgba(255,255,255,.6)'; rr(c, x, 380, GW / 2 - 22, 100, 18); c.fill(); c.fillStyle = INK(th); c.font = '900 13px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText(s, x + (GW / 2 - 22) / 2, 436); c.textAlign = 'left'; });
+      if (cur) { c.fillStyle = th.hx ? '#2A2418' : '#FFFFFF'; rr(c, cx - 140, 180, 280, 110, 20); c.fill(); c.strokeStyle = th.hx ? '#E9C37A' : '#FF9636'; c.lineWidth = 2; c.stroke(); c.fillStyle = INK(th); c.font = '800 17px Nunito,sans-serif'; c.textAlign = 'center'; const w = cur[0].split(' '); let l1 = '', l2 = ''; w.forEach(x => { if ((l1 + ' ' + x).trim().length <= 22 && !l2) l1 = (l1 + ' ' + x).trim(); else l2 = (l2 + ' ' + x).trim(); }); c.fillText(l1, cx, l2 ? 228 : 240); if (l2) c.fillText(l2, cx, 252); c.textAlign = 'left'; }
+      lab(c, th, 'Tocá a la izquierda o a la derecha', GW / 2, GH - 18, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.5); else banner(c, th, 'Ronda ' + round, ban); } };
+}
+
+const ENGINES={flood:Flood,roof:Roof,count:Count,trace:Trace,reveal:Reveal,hop:Hop,sort:Sort,pour:Pour,spell:Spell,net:Net,row:Row,pipes:Pipes,lights:Lights,match:Match,run:Runner,fly:Flyer,cross:Crosser,catch:Catcher,memo:Memo,maze:Maze,simon:Simon,verso:Verso,herd:Herd,pop:Pop,swarm:Swarm,slide:Slide,balance:Balance,order:Order,words:Words,stack:Stack,diff:Diff,tf:TrueFalse,lantern:Lantern,rhythm:Rhythm,connect:Connect};
+const TAPG=['flood','roof','count','reveal','hop','sort','spell','net','row','pipes','lights','match','memo','simon','verso','pop','slide','order','diff','tf','rhythm','connect','stack','balance'],DRAGG=['trace','pour','herd','swarm','words','lantern'];
 let ar=null;const bursts=[];
 function burstAt(x,y){bursts.push({x,y,t:0});}
 function splash(x,y){bursts.push({x,y,t:0,w:1});}
@@ -1410,7 +1609,20 @@ galilea:[
  {t:'order',q:'Una forma de ordenar estos relatos',items:['La boda de Caná','La mujer samaritana junto al pozo','La lectura en la sinagoga de Nazaret','El llamado de los pescadores','La enseñanza en el monte'],exp:'Juan cuenta Caná y Samaria al comienzo. Después, Lucas narra la sinagoga y el llamado, y Mateo reúne la enseñanza del monte.',ref:'Juan 2; 4 · Lucas 4–5 · Mateo 5'},
  {t:'mc',q:'Según Jesús, ¿qué son sus seguidores en el mundo?',o:['La luz del mundo','Los dueños del mundo','Los jueces del mundo','Los que se esconden del mundo'],a:0,exp:'«Ustedes son la luz del mundo, como una ciudad en lo alto de una colina que no puede esconderse.»',ref:'Mateo 5:14'},
  {t:'app',q:'En tu escuela hay un compañero nuevo que siempre está solo en los recreos. Si sos luz del mundo, ¿qué hacés?',o:['Te acercás, lo invitás a sumarse y te interesás por él','Esperás a que lo haga otro','Le decís que vaya a la iglesia y listo','Lo mirás de lejos para no quedar mal'],a:0,exp:'La luz se ve en lo que hacemos. Un gesto de amor concreto muestra a Jesús mejor que muchas palabras.',ref:'Mateo 5:16'},
- {t:'reflect',q:'Simón tiró las redes otra vez solo porque Jesús se lo pidió. ¿En qué área de tu vida Jesús te pide que confíes y obedezcas? Escribilo en una o dos frases.',ref:'Lucas 5:5'}]
+ {t:'reflect',q:'Simón tiró las redes otra vez solo porque Jesús se lo pidió. ¿En qué área de tu vida Jesús te pide que confíes y obedezcas? Escribilo en una o dos frases.',ref:'Lucas 5:5'}],
+milagros:[
+ {t:'mc',q:'¿Qué hacía Jesús cuando se desató la tormenta?',o:['Dormía en la parte de atrás de la barca','Remaba con los discípulos','Pescaba con una red','Oraba en la orilla'],a:0,exp:'Jesús dormía, y los discípulos, aterrados, lo despertaron.',ref:'Marcos 4:38'},
+ {t:'tf',q:'Después de que Jesús habló, el viento se detuvo y hubo una gran calma.',a:true,exp:'«De repente, el viento se detuvo y hubo una gran calma.»',ref:'Marcos 4:39'},
+ {t:'mc',q:'¿Cuántos amigos llevaron al paralítico hasta Jesús?',o:['Cuatro','Dos','Doce','Siete'],a:0,exp:'Cuatro amigos lo cargaron en una camilla y lo bajaron por el techo.',ref:'Marcos 2:3-4'},
+ {t:'mc',q:'¿Qué le dijo Jesús primero al paralítico?',o:['Que sus pecados eran perdonados','Que volviera otro día','Que fuera al templo','Que se lavara en el río'],a:0,exp:'Jesús atendió primero su necesidad más profunda: el perdón. Después lo sanó para mostrar que tenía autoridad para perdonar.',ref:'Marcos 2:5-12'},
+ {t:'match',q:'Uní cada personaje con lo que hizo',p:[['Andrés','Llevó al muchachito con los panes y los pescados'],['Bartimeo','Gritó pidiendo compasión'],['Pedro','Caminó sobre el agua hacia Jesús'],['La mujer enferma','Tocó la ropa de Jesús con fe']],exp:'Cada uno se acercó a Jesús a su manera, y él respondió a cada uno.',ref:'Juan 6:8-9 · Marcos 10:47 · Mateo 14:29 · Marcos 5:27'},
+ {t:'mc',q:'¿Cuántas canastas sobraron después de que comió la multitud?',o:['Doce','Cinco','Dos','Siete'],a:0,exp:'Comieron todos hasta quedar satisfechos y con lo que sobró llenaron doce canastas.',ref:'Juan 6:12-13'},
+ {t:'tf',q:'El muchachito tenía cinco panes de cebada y dos pescados.',a:true,exp:'«Aquí hay un muchachito que tiene cinco panes de cebada y dos pescados.» Jesús multiplicó lo poco que alguien compartió.',ref:'Juan 6:9'},
+ {t:'order',q:'Ordená lo que pasó esa noche en el lago',items:['Jesús camina sobre el agua hacia la barca','Pedro le pide ir hacia él','Pedro mira el viento, tiene miedo y se hunde','Jesús lo toma de la mano','Los discípulos lo adoran como Hijo de Dios'],exp:'Mateo termina el relato con los discípulos adorando a Jesús.',ref:'Mateo 14:25-33'},
+ {t:'mc',q:'¿Qué hizo Bartimeo después de recuperar la vista?',o:['Siguió a Jesús por el camino','Volvió a pedir limosna','Se fue sin decir nada','Se enojó con la multitud'],a:0,exp:'Bartimeo no solo recuperó la vista: se convirtió en seguidor de Jesús.',ref:'Marcos 10:52'},
+ {t:'mc',q:'¿Para qué fueron escritas las señales de Jesús, según el evangelio de Juan?',o:['Para que creamos que Jesús es el Mesías, el Hijo de Dios, y tengamos vida','Para entretener a la gente','Para mostrar que Jesús era un mago','Para asustar a los romanos'],a:0,exp:'Juan explica que escribió estas señales para que creamos en Jesús y, al creer, tengamos vida en su nombre.',ref:'Juan 20:30-31'},
+ {t:'app',q:'Una amiga está pasando por algo muy difícil y tiene miedo. ¿Qué hacés?',o:['La escuchás, orás con ella y la animás a confiar en Jesús','Le decís que no es para tanto','Cambiás de tema para no ponerte triste','Le contás a todos lo que le pasa'],a:0,exp:'Como los amigos del paralítico, podemos acercar a otros a Jesús con amor y oración.',ref:'Marcos 2:3-5'},
+ {t:'reflect',q:'Pedro empezó a hundirse cuando dejó de mirar a Jesús. ¿Qué cosas te distraen de mirarlo a él y cómo podés volver a enfocarte?',ref:'Mateo 14:30-31'}]
 };
 function openExam(r,onPass){
   const R=REGIONS[r],E=EXAMS[R.id];if(!E){onPass();return;}
