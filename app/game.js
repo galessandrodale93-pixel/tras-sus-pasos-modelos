@@ -4,8 +4,8 @@ const { subscribeMember, getMemberState, login, register, verifyEmail, logout, r
 const { wixRequest, mintTokens, setTokens } = await import(location.origin + "/js/wix/client.js");
 const { WIX_CLIENT_ID } = await import(location.origin + "/js/wix/config.js");
 const { queryItems, insertItem, patchItemFields } = await import(location.origin + "/js/wix/items.js");
-const REGIONS=[{id:'nacimiento',name:'Nacimiento'},{id:'infancia',name:'Infancia'},{id:'bautismo',name:'Bautismo'},{id:'galilea',name:'Galilea'},{id:'milagros',name:'Milagros'},{id:'parabolas',name:'Parábolas'},{id:'jerusalen',name:'Jerusalén'}];
-const SOON=['Cruz','Resurrección','Pentecostés'];
+const REGIONS=[{id:'nacimiento',name:'Nacimiento'},{id:'infancia',name:'Infancia'},{id:'bautismo',name:'Bautismo'},{id:'galilea',name:'Galilea'},{id:'milagros',name:'Milagros'},{id:'parabolas',name:'Parábolas'},{id:'jerusalen',name:'Jerusalén'},{id:'cruz',name:'La cruz'}];
+const SOON=['Resurrección','Pentecostés'];
 const LOCAL={n1:[96,180],n2:[262,276],n3:[152,376],fA:[66,486],fB:[292,486],n4:[180,596],n5:[92,690]};
 const ORDER=['n1','n2','n3','fA','fB','n4','n5'];
 const STORY={
@@ -218,6 +218,36 @@ jerusalen:{
   text:'Repasá los días de Jesús en Jerusalén, desde Jericó hasta el huerto.',
   game:{type:'guess',title:'Adiviná la palabra',how:'Tocá letras para descubrir la palabra escondida. Tenés seis errores.',sky:['#BFE0FF','#FFF3DD']},
   ch:{t:'order',q:'Ordená estos momentos en Jerusalén',items:['Jesús entra en un burrito y la gente lo aclama','Jesús ve la ofrenda de la viuda en el templo','Lava los pies de sus discípulos y comparte la cena','Ora en el huerto de Getsemaní'],exp:'Así fue la última semana de Jesús antes de la cruz.',ref:'Mateo 21 · Marcos 12 · Juan 13 · Lucas 22'}}
+},
+cruz:{
+ n1:{place:'Patio del sumo sacerdote',title:'Pedro y el gallo',scene:'cr_n1',
+  text:'{name}, es de noche. Arrestaron a Jesús y lo llevaron a la casa del sumo sacerdote. Pedro lo sigue de lejos y se sienta junto al fuego del patio. Tres veces le preguntan si conoce a Jesús…',
+  game:{type:'rooster',title:'El canto del gallo',how:'Esperá tranquilo. Cuando cante el gallo, tocá la pantalla lo más rápido que puedas. Si tocás antes, perdés una vida.',sky:['#1E2C66','#5468B4'],night:true},
+  ch:{t:'mc',q:'¿Qué hizo Pedro cuando cantó el gallo y recordó las palabras de Jesús?',options:['Salió afuera y lloró amargamente','Se rió y se fue a dormir','Se escondió en el templo','Se olvidó enseguida'],answer:'Salió afuera y lloró amargamente',exp:'Pedro negó a Jesús tres veces, pero se arrepintió. Después de resucitar, Jesús lo perdonó y le volvió a confiar su misión.',ref:'Lucas 22:54-62 · Juan 21:15-17'}},
+ n2:{place:'La calle de Jerusalén',title:'Simón de Cirene',scene:'cr_n2',
+  text:'Pilato no encontró ningún delito en Jesús, pero cedió ante la multitud. Jesús sale cargando su cruz. En el camino, los soldados obligan a un hombre que venía del campo, Simón de Cirene, a llevarla detrás de él.',
+  game:{type:'carry',title:'Paso a paso',how:'Tocá izquierda y derecha, alternando, para avanzar con el madero. Si repetís el mismo lado, te tropezás.',sky:['#F3BC7E','#FFE8C2']},
+  ch:{t:'verse',parts:['Él, cargando su propia ',0,', fue al sitio llamado Lugar de la Calavera (en hebreo, ',1,').'],blanks:['cruz','Gólgota'],bank:['cruz','carga','Gólgota','Getsemaní','Betania','espada'],exp:'Jesús caminó hacia el Gólgota por amor a nosotros. Simón llevó la cruz detrás de él: seguir a Jesús es caminar tras sus pasos.',ref:'Juan 19:17 · Lucas 23:26'}},
+ n3:{place:'El Gólgota',title:'El perdón',scene:'cr_n3',
+  text:'En el Gólgota crucifican a Jesús entre dos criminales. Desde la cruz, Jesús hace algo sorprendente: le pide al Padre que perdone a los que lo están lastimando.',
+  game:{type:'forgive',title:'Nudos sueltos',how:'Tocá los números en orden, del 1 en adelante. Cada número que tocás suelta un nudo. Si te equivocás, perdés tiempo.',sky:['#8C8FDB','#FFC59C']},
+  ch:{t:'mc',q:'¿Qué le pidió Jesús al Padre por los que lo crucificaban?',options:['Que los perdonara, porque no sabían lo que hacían','Que los castigara enseguida','Que mandara ángeles a pelear','Que nadie los recordara'],answer:'Que los perdonara, porque no sabían lo que hacían',exp:'Jesús no devolvió mal por mal. En la cruz perdonó, y así nos abrió el camino para que nosotros también seamos perdonados.',ref:'Lucas 23:33-34'}},
+ fA:{place:'La cruz del medio',title:'El ladrón arrepentido',fork:1,scene:'cr_fA',
+  text:'Uno de los criminales se burla de Jesús. El otro lo reprende, reconoce que Jesús no hizo nada malo y le pide que se acuerde de él cuando venga en su reino.',
+  game:{type:'hold',title:'Acordate de mí',how:'Mantené apretado para que suba la luz y soltá justo cuando esté en la franja dorada.',sky:['#8C8FDB','#FFD4C2']},
+  ch:{t:'mc',q:'¿Qué le prometió Jesús al criminal que se arrepintió?',options:['Que ese mismo día estaría con él en el paraíso','Que lo bajaría de la cruz','Que le daría mucho dinero','No le prometió nada'],answer:'Que ese mismo día estaría con él en el paraíso',exp:'Nunca es tarde para volverse a Jesús. Ese hombre solo confió en él, y Jesús lo recibió.',ref:'Lucas 23:39-43'}},
+ fB:{place:'Al pie de la cruz',title:'María y Juan',fork:1,scene:'cr_fB',
+  text:'Cerca de la cruz están María, la madre de Jesús, y Juan, el discípulo que él amaba. Aun en medio de su dolor, Jesús se ocupa de su mamá y la deja al cuidado de Juan.',
+  game:{type:'puzzle',title:'A su casa',how:'Arrastrá cada pieza a su lugar para armar la imagen antes de que termine el tiempo.',sky:['#F3D3B0','#FFF2E2']},
+  ch:{t:'mc',q:'¿Qué hizo Jesús por su madre desde la cruz?',options:['Le encargó a Juan que la cuidara','Le pidió que se fuera a Egipto','Le dijo que volviera sola a Nazaret','No le dijo nada'],answer:'Le encargó a Juan que la cuidara',exp:'Jesús le dijo: «Apreciada mujer, ahí tienes a tu hijo». Desde ese momento, Juan la llevó a vivir a su casa.',ref:'Juan 19:25-27'}},
+ n4:{place:'El Calvario',title:'Todo está cumplido',scene:'cr_n4',
+  text:'Al mediodía, la oscuridad cubre toda la tierra durante tres horas. Jesús entrega su espíritu, la cortina del templo se rasga de arriba abajo y un oficial romano reconoce quién era él.',
+  game:{type:'dark',title:'Luz en la oscuridad',how:'Arrastrá la luz por la pantalla y quedate un momento sobre cada lámpara escondida para encenderla.',sky:['#1E2C66','#4A5A9A'],night:true},
+  ch:{t:'verse',parts:['Después de probar el vino, Jesús dijo: «¡Todo está ',0,'!». Entonces inclinó la cabeza y entregó su ',1,'.'],blanks:['cumplido','espíritu'],bank:['cumplido','perdido','espíritu','manto','olvidado','cuerpo'],exp:'Jesús completó la obra que el Padre le encargó: dar su vida por nuestros pecados. Por eso la cortina del templo se rasgó: ahora podemos acercarnos a Dios.',ref:'Juan 19:28-30 · Marcos 15:38'}},
+ n5:{place:'Hito del camino',title:'Repasá la etapa',scene:'hito8',
+  text:'Repasá lo que pasó en la cruz y por qué Jesús dio su vida por nosotros.',
+  game:{type:'breakout',title:'Libres',how:'Arrastrá la barra para que la luz rebote y rompa todas las cadenas. Tenés tres vidas.',sky:['#BFE0FF','#FFF3DD']},
+  ch:{t:'order',q:'Ordená lo que pasó',items:['Pedro niega a Jesús y canta el gallo','Simón de Cirene lleva la cruz','Jesús perdona y le promete el paraíso a un criminal','Jesús entrega su espíritu y la cortina del templo se rasga'],exp:'Lo pusieron en una tumba nueva… pero la historia no termina en la cruz.',ref:'Lucas 22–23 · Juan 19'}}
 }};
 const MAP_PLACES=[
  {id:'nazaret',name:'Nazaret',x:165,y:112,lx:-50,ly:4},{id:'capernaum',name:'Capernaum',x:196,y:86,lx:-62,ly:-8},
@@ -608,7 +638,42 @@ const SCENES={
   bg:T(60,46,1,A.cloud(u,80))+T(260,34,1,A.cloud(u,60,.9))+T(70,156,1,A.cloud(u,150))+T(260,160,1,A.cloud(u,150))+T(160,178,1,A.cloud(u,230)),
   actors:{scroll:u=>A.scroll(u),spk:u=>A.sparkles(u,9,70)},
   tl:[['scroll',.4,2.2,{x:180,y:92,sx:.08,o:.4},{x:180,y:92,sx:1,o:1}],['spk',2,3.2,{x:180,y:92,o:0},{x:180,y:92,o:1}]],
-  caps:[[0,'Palmas, monedas, una toalla y una copa.'],[2.4,'La última semana antes de la cruz.'],[4.6,'Repasá lo que viviste.']]})
+  caps:[[0,'Palmas, monedas, una toalla y una copa.'],[2.4,'La última semana antes de la cruz.'],[4.6,'Repasá lo que viviste.']]}),
+ cr_n1:u=>({sky:'night',dur:8,
+  bg:A.stars(u)+`<rect x="-20" y="120" width="400" height="80" fill="#3A3028"/><rect x="250" y="70" width="110" height="52" fill="#5A4A3A"/>`+T(140,166,1,A.fire(u)),
+  actors:{pedro:u=>A.figure(u,'#6E8A9A',{}),maid:u=>A.figure(u,'#8E2E22',{scarf:'#C9B48A'}),rooster:u=>`<g><ellipse cx="0" cy="0" rx="12" ry="9" fill="#B4502E"/><circle cx="10" cy="-9" r="6" fill="#B4502E"/><circle cx="9" cy="-16" r="3" fill="#D93A2A"/><path d="M15 -10 L22 -8 L15 -6Z" fill="#E9A52C"/><path d="M-10 -2 Q-22 -16 -16 -22" stroke="#3A6A4A" stroke-width="4" fill="none"/></g>`,glow:u=>A.glow(u,40,.8)},
+  tl:[['pedro',0,8,{x:100,y:170,s:.85},{x:100,y:170,s:.85}],['maid',0,3,{x:-30,y:170,s:.8},{x:60,y:170,s:.8}],['rooster',4.6,8,{x:300,y:64,o:0},{x:300,y:64,o:1}],['glow',4.8,8,{x:300,y:60,o:0},{x:300,y:60,o:.8}]],
+  caps:[[0,'Pedro se calienta junto al fuego del patio.'],[2.6,'Tres veces dice que no conoce a Jesús.'],[5.2,'Canta el gallo, y Pedro recuerda sus palabras.']]}),
+ cr_n2:u=>({sky:'desert',dur:8.5,
+  bg:T(250,46,1,A.sun(u,18))+T(80,128,1,A.walls(u))+T(300,128,1,A.walls(u))+A.ground(u,160,'#E6C99A','#C9A877'),
+  actors:{jesus:u=>A.presence(u),simon:u=>`<g>${A.figure(u,'#8A6A44',{})}<rect x="-42" y="-52" width="84" height="7" rx="2" fill="#7A5A3A" transform="rotate(-14)"/></g>`,crowd:u=>A.people(u,4)},
+  tl:[['crowd',0,8.5,{x:300,y:178,s:.8},{x:300,y:178,s:.8}],['jesus',0,8.5,{x:60,y:160},{x:250,y:160}],['simon',2.4,8.5,{x:-20,y:168,s:.8},{x:190,y:168,s:.8}]],
+  caps:[[0,'Jesús sale de la ciudad hacia el Gólgota.'],[2.6,'Los soldados le piden a Simón de Cirene que lleve la cruz.'],[5.2,'Simón camina detrás de Jesús.']]}),
+ cr_n3:u=>({sky:'dusk',dur:8,
+  bg:A.hills(u,140,'#9A8C74','#7A6E5A',30)+`<g fill="#5A4632">${[130,180,230].map((x,i)=>`<rect x="${x-3}" y="${i===1?62:74}" width="6" height="${i===1?72:60}"/><rect x="${x-18}" y="${i===1?76:86}" width="36" height="5"/>`).join('')}</g>`+T(90,178,.8,A.people(u,4)),
+  actors:{glow:u=>A.glow(u,60),spk:u=>A.sparkles(u,8,50)},
+  tl:[['glow',0,8,{x:180,y:96,o:.3},{x:180,y:96,o:1}],['spk',4.6,8,{x:180,y:96,o:0},{x:180,y:96,o:1}]],
+  caps:[[0,'En el Gólgota crucifican a Jesús entre dos criminales.'],[2.6,'La gente se burla y los soldados se reparten su ropa.'],[5.2,'Jesús le pide al Padre que los perdone.']]}),
+ cr_fA:u=>({sky:'dusk',dur:8,
+  bg:A.hills(u,140,'#9A8C74','#7A6E5A',30)+`<g fill="#5A4632">${[130,180,230].map((x,i)=>`<rect x="${x-3}" y="${i===1?62:74}" width="6" height="${i===1?72:60}"/><rect x="${x-18}" y="${i===1?76:86}" width="36" height="5"/>`).join('')}</g>`,
+  actors:{glow:u=>A.glow(u,50),glow2:u=>A.glow(u,34,.8),spk:u=>A.sparkles(u,8,60)},
+  tl:[['glow',0,8,{x:180,y:96,o:.6},{x:180,y:96,o:1}],['glow2',3,8,{x:230,y:104,o:0},{x:230,y:104,o:.9}],['spk',5,8,{x:205,y:96,o:0},{x:205,y:96,o:1}]],
+  caps:[[0,'Uno de los criminales se burla de Jesús.'],[2.6,'El otro le pide que se acuerde de él en su reino.'],[5.2,'Jesús le promete que ese día estará con él en el paraíso.']]}),
+ cr_fB:u=>({sky:'dusk',dur:8,
+  bg:A.hills(u,140,'#9A8C74','#7A6E5A',30)+`<g fill="#5A4632"><rect x="177" y="56" width="6" height="80"/><rect x="162" y="72" width="36" height="5"/></g>`+T(180,100,1,A.glow(u,50)),
+  actors:{maria:u=>A.figure(u,'#3E5A8A',{scarf:'#7A9AC8'}),juan:u=>A.figure(u,'#8A5A3A',{}),glow:u=>A.glow(u,40,.8)},
+  tl:[['maria',0,8,{x:150,y:176,s:.8},{x:150,y:176,s:.8}],['juan',0,3,{x:300,y:176,s:.8},{x:200,y:176,s:.8}],['glow',4.6,8,{x:175,y:160,o:0},{x:175,y:160,o:.9}]],
+  caps:[[0,'María, la madre de Jesús, está al pie de la cruz.'],[2.6,'A su lado está Juan, el discípulo que Jesús amaba.'],[5.2,'Jesús le encarga a Juan que cuide a su madre.']]}),
+ cr_n4:u=>({sky:'night',dur:8.5,
+  bg:A.hills(u,150,'#2E2A3A','#1C1A26',24)+`<g fill="#141220"><rect x="177" y="70" width="6" height="80"/><rect x="162" y="86" width="36" height="5"/></g>`,
+  actors:{veilL:u=>`<rect x="-46" y="-60" width="46" height="120" fill="#7A2E3A"/>`,veilR:u=>`<rect x="0" y="-60" width="46" height="120" fill="#7A2E3A"/>`,light:u=>A.glow(u,70),cent:u=>A.figure(u,'#8E2E22',{})},
+  tl:[['veilL',0,3.6,{x:300,y:110,s:.5},{x:300,y:110,s:.5}],['veilR',0,3.6,{x:300,y:110,s:.5},{x:300,y:110,s:.5}],['veilL',3.6,5,{x:300,y:110,s:.5},{x:282,y:110,s:.5}],['veilR',3.6,5,{x:300,y:110,s:.5},{x:318,y:110,s:.5}],['veilL',5,8.5,{x:282,y:110,s:.5},{x:282,y:110,s:.5}],['veilR',5,8.5,{x:318,y:110,s:.5},{x:318,y:110,s:.5}],['light',3.8,8.5,{x:300,y:110,o:0},{x:300,y:110,o:1}],['cent',5.4,8.5,{x:110,y:178,s:.8,o:0},{x:120,y:178,s:.8,o:1}]],
+  caps:[[0,'La oscuridad cubre la tierra durante tres horas.'],[2.6,'Jesús dice: «¡Todo está cumplido!» y entrega su espíritu.'],[5.2,'La cortina del templo se rasga, y un oficial romano lo reconoce como Hijo de Dios.']]}),
+ hito8:u=>({sky:'gold',dur:7,
+  bg:T(60,46,1,A.cloud(u,80))+T(260,34,1,A.cloud(u,60,.9))+T(70,156,1,A.cloud(u,150))+T(260,160,1,A.cloud(u,150))+T(160,178,1,A.cloud(u,230)),
+  actors:{scroll:u=>A.scroll(u),spk:u=>A.sparkles(u,9,70)},
+  tl:[['scroll',.4,2.2,{x:180,y:92,sx:.08,o:.4},{x:180,y:92,sx:1,o:1}],['spk',2,3.2,{x:180,y:92,o:0},{x:180,y:92,o:1}]],
+  caps:[[0,'Un gallo, un madero, un perdón y una promesa.'],[2.4,'Jesús dio su vida por amor a nosotros.'],[4.6,'Repasá lo que viviste.']]})
 };
 const ease=k=>k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
 const DEF={x:0,y:0,s:1,sx:1,r:0,o:1};
@@ -671,6 +736,13 @@ const NICON={
  start:'<path d="M0 -9 Q1.2 -1.2 9 0 Q1.2 1.2 0 9 Q-1.2 1.2 -9 0 Q-1.2 -1.2 0 -9Z" fill="currentColor"/>'
 };
 const GICON={
+ rooster:'<ellipse cx="-1" cy="2" rx="7" ry="5" fill="currentColor"/><circle cx="5" cy="-4" r="3.5" fill="currentColor"/><path d="M8 -4 L12 -3 L8 -1Z M-7 0 Q-12 -8 -9 -11" fill="currentColor" stroke="currentColor" stroke-width="1.6"/>',
+ carry:'<path d="M-10 4 L10 -6" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><circle cx="0" cy="-2" r="3" fill="currentColor"/><path d="M-3 9 L0 2 L3 9" stroke="currentColor" stroke-width="2" fill="none"/>',
+ forgive:'<path d="M0 8 C-12 0 -8 -10 0 -4 C8 -10 12 0 0 8Z" fill="none" stroke="currentColor" stroke-width="2"/><text y="3" text-anchor="middle" font-size="8" font-weight="900" fill="currentColor">1</text>',
+ hold:'<rect x="-4" y="-10" width="8" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="-2" y="-2" width="4" height="10" rx="1.5" fill="currentColor"/>',
+ puzzle:'<path d="M-9 -9 H0 V-5 A2.5 2.5 0 1 1 0 0 V0 H-9Z" fill="currentColor"/><path d="M1 1 H9 V9 H1Z" fill="none" stroke="currentColor" stroke-width="2"/>',
+ dark:'<circle r="9" fill="currentColor" opacity=".25"/><circle cx="2" cy="-1" r="4.5" fill="currentColor"/>',
+ breakout:'<rect x="-10" y="-9" width="6" height="4" fill="currentColor"/><rect x="-2" y="-9" width="6" height="4" fill="currentColor"/><rect x="6" y="-9" width="4" height="4" fill="currentColor"/><circle cx="1" cy="2" r="2.4" fill="currentColor"/><rect x="-7" y="7" width="14" height="3" rx="1.5" fill="currentColor"/>',
  pave:'<path d="M-10 5 H10" stroke="currentColor" stroke-width="3"/><path d="M-6 3 L-2 -8 M2 3 L6 -8" stroke="currentColor" stroke-width="2" fill="none"/>',
  spot:'<circle cx="-2" cy="-2" r="6" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M3 3 L9 9" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>',
  coins:'<circle cx="-4" cy="2" r="5" fill="currentColor"/><circle cx="4" cy="-2" r="5" fill="none" stroke="currentColor" stroke-width="2"/>',
@@ -722,7 +794,7 @@ const GICON={
  connect:'<path d="M-8 6L-2 -7 4 4 9 -6" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="-8" cy="6" r="2.4" fill="currentColor"/><circle cx="-2" cy="-7" r="2.4" fill="currentColor"/><circle cx="4" cy="4" r="2.4" fill="currentColor"/><circle cx="9" cy="-6" r="2.4" fill="currentColor"/>'
 };
 function rng(seed){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
-const VIGN=[[6,262,176,'temple',.55],[6,74,292,'palms',.8],[6,272,676,'tree',.8],[5,262,176,'tree',.8],[5,74,292,'house',1],[5,272,676,'rocks',1],[4,262,176,'riv',1],[4,74,292,'house',1],[4,272,676,'palms',.8],[3,262,176,'house',1],[3,74,292,'riv',1],[3,272,676,'palms',.8],[0,258,170,'house',1],[0,74,292,'stable',.7],[0,272,676,'camels',.6],[1,262,178,'temple',.55],[1,76,290,'pyr',.7],[1,272,676,'tree',.8],[2,262,176,'palms',.8],[2,74,292,'riv',1],[2,272,676,'rocks',1]];
+const VIGN=[[7,262,176,'rocks',1],[7,74,292,'tree',.8],[7,272,676,'house',1],[6,262,176,'temple',.55],[6,74,292,'palms',.8],[6,272,676,'tree',.8],[5,262,176,'tree',.8],[5,74,292,'house',1],[5,272,676,'rocks',1],[4,262,176,'riv',1],[4,74,292,'house',1],[4,272,676,'palms',.8],[3,262,176,'house',1],[3,74,292,'riv',1],[3,272,676,'palms',.8],[0,258,170,'house',1],[0,74,292,'stable',.7],[0,272,676,'camels',.6],[1,262,178,'temple',.55],[1,76,290,'pyr',.7],[1,272,676,'tree',.8],[2,262,176,'palms',.8],[2,74,292,'riv',1],[2,272,676,'rocks',1]];
 function vign(u,k){
   if(k==='house')return T(-14,0,.9,A.house(u))+T(16,2,.7,A.house(u));
   if(k==='stable')return T(0,0,.9,A.stable(u))+T(0,-62,1,A.star(u,3));
@@ -1868,8 +1940,163 @@ function Guess(th, f) {
       if (fT > 0) banner(c, th, fb, fT * 1.4); } };
 }
 
-const ENGINES={pave:Pave,spot:Spot,coins:Coins,wash:Wash,missing:Missing,awake:Awake,guess:Guess,sow:Sow,hotcold:HotCold,kind:Kind,rotate:Rotate,scale:Scale,blocks:Blocks,emoji:Emoji,flood:Flood,roof:Roof,count:Count,trace:Trace,reveal:Reveal,hop:Hop,sort:Sort,pour:Pour,spell:Spell,net:Net,row:Row,pipes:Pipes,lights:Lights,match:Match,run:Runner,fly:Flyer,cross:Crosser,catch:Catcher,memo:Memo,maze:Maze,simon:Simon,verso:Verso,herd:Herd,pop:Pop,swarm:Swarm,slide:Slide,balance:Balance,order:Order,words:Words,stack:Stack,diff:Diff,tf:TrueFalse,lantern:Lantern,rhythm:Rhythm,connect:Connect};
-const TAPG=['pave','spot','coins','missing','awake','guess','hotcold','kind','rotate','scale','blocks','emoji','flood','roof','count','reveal','hop','sort','spell','net','row','pipes','lights','match','memo','simon','verso','pop','slide','order','diff','tf','rhythm','connect','stack','balance'],DRAGG=['wash','sow','trace','pour','herd','swarm','words','lantern'];
+/* ===== juegos de la Cruz: el gallo, cargar la cruz, el perdón, acordate de mí, a su casa, la luz y las cadenas ===== */
+// 1. El gallo (esperá la señal y tocá en el momento justo)
+function Rooster(th, f) {
+  let st = 'wait', w = 1.6, win = 0, rt = 0, score = 0, over = false, round = 1, miss = 0, fb = '', fT = 0, res = 0, crow = 0;
+  const next = () => { round++; if (round > 10) { over = true; return; } st = 'wait'; w = 1 + Math.random() * 2.6; rt = 0; };
+  const strike = msg => { miss++; fb = msg; fT = 1; tone(170, .18); st = 'res'; res = .9; if (miss >= 3) over = true; };
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap') return; if (st === 'wait') { strike('¡Todavía no!'); return; } if (st === 'go') { const p = Math.max(6, Math.round(44 - rt * 34)); score += p; fb = rt < .4 ? '¡Rapidísimo! +' + p : '¡Bien! +' + p; fT = 1; tone(760, .12); st = 'res'; res = .9; } },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); crow = Math.max(0, crow - dt);
+      if (st === 'wait') { w -= dt; if (w <= 0) { st = 'go'; win = 1.25 / f; rt = 0; crow = .8; tone(880, .08); setTimeout(() => tone(1180, .16), 90); } }
+      else if (st === 'go') { rt += dt; if (rt > win) strike('Se te pasó'); }
+      else if (st === 'res') { res -= dt; if (res <= 0) next(); } },
+    draw(c, t) { skyBg(c, th, t); hearts(c, 3 - miss, 3); lab(c, th, 'RONDA ' + Math.min(round, 10) + '/10', GW - 16, 27, 'right');
+      c.fillStyle = th.hx ? '#2A2418' : '#6A5640'; c.fillRect(0, 330, GW, GH - 330); c.fillStyle = th.hx ? '#3A3020' : '#8A7256'; for (let i = 0; i < 9; i++) c.fillRect(i * 44 - 10, 330, 40, 6);
+      // fogata del patio
+      const fx = 120, fy = 400; for (let i = 0; i < 3; i++) { const h = 30 + Math.sin(t * 9 + i * 2) * 8; c.fillStyle = ['#E8642C', '#F59B2E', '#FFD45C'][i]; c.beginPath(); c.moveTo(fx - 18 + i * 6, fy); c.quadraticCurveTo(fx - 6 + i * 3, fy - h, fx + 2, fy - h - 6 + i * 6); c.quadraticCurveTo(fx + 10 - i * 3, fy - h * .6, fx + 18 - i * 6, fy); c.fill(); }
+      c.fillStyle = '#5A3A22'; rr(c, fx - 26, fy - 2, 52, 8, 4); c.fill();
+      // Pedro junto al fuego
+      c.fillStyle = '#6E8A9A'; c.beginPath(); c.moveTo(60, 420); c.quadraticCurveTo(52, 360, 66, 344); c.lineTo(82, 344); c.quadraticCurveTo(96, 360, 88, 420); c.fill(); c.fillStyle = '#B98A62'; c.beginPath(); c.arc(74, 334, 11, 0, 7); c.fill(); c.fillStyle = '#2A1B14'; c.beginPath(); c.arc(74, 330, 11, 3.3, 6.1); c.fill();
+      // el gallo sobre el muro
+      const gx = 262, gy = 214 - (crow > 0 ? Math.sin(crow * 20) * 3 : 0); c.fillStyle = th.hx ? '#4A3A2A' : '#C9B48A'; c.fillRect(190, 236, 150, 94); c.fillStyle = th.hx ? '#3A2E20' : '#B49A72'; c.fillRect(186, 230, 158, 10);
+      c.fillStyle = '#3A6A4A'; [[-26, -6], [-30, 6], [-24, 16]].forEach(([a, b]) => { c.beginPath(); c.ellipse(gx + a, gy + b - 10, 14, 5, -.8, 0, 7); c.fill(); });
+      c.fillStyle = '#B4502E'; c.beginPath(); c.ellipse(gx, gy, 22, 16, 0, 0, 7); c.fill(); c.beginPath(); c.arc(gx + 18, gy - 16, 10, 0, 7); c.fill();
+      c.fillStyle = '#D93A2A'; c.beginPath(); c.arc(gx + 16, gy - 28, 4, 0, 7); c.arc(gx + 22, gy - 27, 4, 0, 7); c.fill(); c.fillStyle = '#E9A52C'; c.beginPath(); c.moveTo(gx + 27, gy - 18); c.lineTo(gx + (crow > 0 ? 40 : 36), gy - 16); c.lineTo(gx + 27, gy - 12); c.fill();
+      c.fillStyle = '#111'; c.beginPath(); c.arc(gx + 21, gy - 18, 1.8, 0, 7); c.fill(); c.strokeStyle = '#E9A52C'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(gx - 4, gy + 14); c.lineTo(gx - 4, gy + 22); c.moveTo(gx + 6, gy + 14); c.lineTo(gx + 6, gy + 22); c.stroke();
+      if (st === 'go') { c.fillStyle = INK(th); c.font = '900 30px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText('¡KIKIRIKÍ!', GW / 2, 150); c.font = '900 16px Nunito,sans-serif'; c.fillText('¡Tocá ahora!', GW / 2, 176); c.textAlign = 'left'; }
+      else if (st === 'wait') lab(c, th, 'Esperá a que cante el gallo…', GW / 2, 150, 'center');
+      lab(c, th, 'Pedro recordó lo que Jesús le había dicho · Lucas 22:61', GW / 2, GH - 14, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.4); } };
+}
+// 2. Cargar la cruz con Simón (pasos alternados izquierda-derecha)
+function Carry(th, f) {
+  let want = 0, dist = 0, steps = 0, score = 0, over = false, left = 0, full = 0, trip = 0, stun = 0, combo = 0, fb = '', fT = 0, scroll = 0, bob = 0;
+  const GOAL = 30; function newTrip() { trip++; dist = 0; const add = 22 / f; left = trip === 1 ? add + 4 : left + add; full = Math.max(full, left); }
+  newTrip();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap' || stun > 0) return; const side = d.x < GW / 2 ? 0 : 1;
+      if (side === want) { want = 1 - want; dist++; steps++; combo++; scroll += 14; bob = 1; score += 2 + Math.min(6, Math.floor(combo / 5)); tone(side ? 420 : 380, .05);
+        if (dist >= GOAL) { score += 30 + Math.round(left) * 2; fb = '¡Tramo ' + trip + ' completo!'; fT = 1.2; tone(990, .3); newTrip(); } }
+      else { stun = .6; combo = 0; fb = '¡Paso a paso!'; fT = .8; tone(170, .15); } },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); stun = Math.max(0, stun - dt); bob = Math.max(0, bob - dt * 5); left -= dt; if (left <= 0) { left = 0; over = true; } },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'TRAMO ' + trip, 16, 27);
+      c.fillStyle = th.hx ? '#3A3020' : '#D9C49A'; c.fillRect(0, 300, GW, 120); c.fillStyle = th.hx ? '#2A2418' : '#B49A72'; c.fillRect(0, 420, GW, GH - 420);
+      for (let i = -1; i < 8; i++) { const x = ((i * 60 - scroll) % 480 + 480) % 480 - 60; c.fillStyle = th.hx ? '#4A3A2A' : '#C2A87E'; rr(c, x, 340 + (i % 3) * 22, 40, 14, 6); c.fill(); }
+      for (let i = 0; i < 4; i++) { const x = ((i * 130 - scroll * .4) % 520 + 520) % 520 - 60; c.fillStyle = th.hx ? '#3A2E20' : '#CDB58C'; c.fillRect(x, 220, 90, 80); c.fillStyle = th.hx ? '#2A2418' : '#B49A72'; c.fillRect(x + 34, 260, 22, 40); }
+      // Simón con el madero
+      const px = 170, py = 372 - bob * 4 + (stun > 0 ? 4 : 0); c.fillStyle = '#7A5A3A'; c.save(); c.translate(px, py - 52); c.rotate(-.25); rr(c, -60, -7, 150, 14, 3); c.fill(); c.restore();
+      c.fillStyle = '#8A6A44'; c.beginPath(); c.moveTo(px - 16, py); c.quadraticCurveTo(px - 20, py - 40, px - 8, py - 54); c.lineTo(px + 8, py - 54); c.quadraticCurveTo(px + 20, py - 40, px + 16, py); c.fill(); c.fillStyle = '#B98A62'; c.beginPath(); c.arc(px, py - 64, 11, 0, 7); c.fill();
+      c.fillStyle = '#4A3A2A'; const lg = want ? 6 : -6; rr(c, px - 10 + lg, py - 2, 8, 16, 3); c.fill(); rr(c, px + 2 - lg, py - 2, 8, 16, 3); c.fill();
+      for (let s = 0; s < 2; s++) { const on = s === want && stun <= 0, x = s ? GW - 90 : 20; c.fillStyle = on ? (th.hx ? 'rgba(226,172,85,.5)' : 'rgba(255,214,92,.75)') : 'rgba(127,127,127,.18)'; rr(c, x, 440, 70, 50, 12); c.fill(); c.fillStyle = INK(th); c.font = '900 14px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText(s ? 'DERECHO' : 'IZQUIERDO', x + 35, 470); c.textAlign = 'left'; }
+      c.fillStyle = th.hx ? 'rgba(226,172,85,.3)' : 'rgba(34,64,127,.15)'; rr(c, 16, 60, GW - 32, 10, 5); c.fill(); c.fillStyle = th.hx ? '#E2AC55' : '#2FAE7C'; rr(c, 16, 60, (GW - 32) * dist / GOAL, 10, 5); c.fill();
+      lab(c, th, 'Tocá izquierda y derecha, alternando', GW / 2, 100, 'center'); lab(c, th, 'Simón de Cirene llevó la cruz detrás de Jesús · Lucas 23:26', GW / 2, GH - 8, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.4); } };
+}
+// 3. Nudos sueltos (tocá los números en orden: cada uno es un perdón)
+function Forgive(th, f) {
+  let n = 0, cols = 3, rows = 3, nums = [], nextN = 1, score = 0, over = false, left = 0, full = 0, board = 0, fb = '', fT = 0, shake = 0, glow = [];
+  function deal() { board++; cols = board === 1 ? 3 : 4; rows = board < 3 ? (board === 1 ? 3 : 4) : 5; n = cols * rows; nums = shuffle(Array.from({ length: n }, (_, i) => i + 1)); nextN = 1; glow = []; const add = n * 1.6 / f; left = board === 1 ? add + 4 : left + add; full = Math.max(full, left); }
+  deal();
+  const cw = () => (GW - 40) / cols, ch2 = () => Math.min(64, 330 / rows), cell = i => ({ x: 20 + (i % cols) * cw(), y: 110 + Math.floor(i / cols) * ch2() });
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap') return; for (let i = 0; i < n; i++) { const p = cell(i); if (d.x > p.x && d.x < p.x + cw() && d.y > p.y && d.y < p.y + ch2()) { if (nums[i] === nextN) { glow.push(i); nextN++; score += 4; tone(400 + nextN * 18, .05); if (nextN > n) { score += 20 + Math.round(left) * 2; fb = '¡Todo perdonado!'; fT = 1.2; tone(990, .3); deal(); } } else if (nums[i] > nextN) { left = Math.max(0, left - 1); shake = .3; tone(180, .1); } return; } } },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); shake = Math.max(0, shake - dt); left -= dt; if (left <= 0) { left = 0; over = true; } },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'BUSCÁ EL ' + nextN, 16, 27);
+      lab(c, th, 'Tocá los números en orden para soltar los nudos', GW / 2, 90, 'center'); const sx = shake > 0 ? Math.sin(shake * 60) * 3 : 0;
+      for (let i = 0; i < n; i++) { const p = cell(i), on = glow.includes(i), w = cw() - 8, h = ch2() - 8, x = p.x + 4 + sx, y = p.y + 4;
+        c.fillStyle = on ? (th.hx ? 'rgba(226,172,85,.55)' : '#FFE7A6') : (th.hx ? '#2A2418' : '#FFFFFF'); rr(c, x, y, w, h, 10); c.fill();
+        if (!on) { c.strokeStyle = th.hx ? '#6A5A44' : '#B49A72'; c.lineWidth = 2; c.beginPath(); c.moveTo(x + 6, y + h - 8); c.bezierCurveTo(x + w * .3, y + 4, x + w * .7, y + h - 4, x + w - 6, y + 8); c.stroke(); }
+        else { c.fillStyle = '#E8875A'; c.beginPath(); const hx = x + w / 2, hy = y + h / 2 + 2; c.moveTo(hx, hy + 8); c.bezierCurveTo(hx - 14, hy - 2, hx - 8, hy - 13, hx, hy - 5); c.bezierCurveTo(hx + 8, hy - 13, hx + 14, hy - 2, hx, hy + 8); c.fill(); }
+        c.fillStyle = INK(th); c.font = '900 ' + (on ? 12 : 18) + 'px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText(nums[i], x + w / 2, on ? y + 14 : y + h / 2 + 6); c.textAlign = 'left'; }
+      lab(c, th, 'Jesús perdonó desde la cruz · Lucas 23:34', GW / 2, GH - 14, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.4); } };
+}
+// 4. Acordate de mí (mantené apretado para subir la luz y soltá en la franja dorada)
+function Hold(th, f) {
+  let lv = 0, holding = false, zone = 0, zh = 0, score = 0, over = false, round = 0, miss = 0, fb = '', fT = 0, wait = 0, sp = 0, glow = 0;
+  function deal() { round++; if (round > 10) { over = true; return; } lv = 0; zh = Math.max(.07, .16 - round * .008); zone = .3 + Math.random() * (.6 - zh); sp = (.42 + round * .035) * f; wait = 0; }
+  deal();
+  const res = ok => { holding = false; if (ok) { const mid = zone + zh / 2, p = Math.round(30 - Math.abs(lv - mid) / (zh / 2) * 15); score += p; fb = '¡En la luz! +' + p; tone(880, .25); glow = 1; } else { miss++; fb = lv > zone + zh ? 'Te pasaste' : 'Faltó un poco'; tone(180, .16); if (miss >= 3) over = true; } fT = 1; wait = 1; };
+  const B = { x: GW / 2 - 30, y: 110, w: 60, h: 320 };
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || wait > 0) return; if (k === 'down') holding = true; if (k === 'up' && holding) res(lv >= zone && lv <= zone + zh); },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); glow = Math.max(0, glow - dt); if (wait > 0) { wait -= dt; if (wait <= 0) deal(); return; } if (holding) { lv += sp * dt; if (lv >= 1) { lv = 1; res(false); } } },
+    draw(c, t) { skyBg(c, th, t); hearts(c, 3 - miss, 3); lab(c, th, 'RONDA ' + Math.min(round, 10) + '/10', GW - 16, 27, 'right');
+      lab(c, th, 'Mantené apretado y soltá en la franja dorada', GW / 2, 62, 'center');
+      c.fillStyle = th.hx ? '#2A2418' : 'rgba(255,255,255,.75)'; rr(c, B.x, B.y, B.w, B.h, 14); c.fill();
+      const zy = B.y + B.h * (1 - zone - zh); c.fillStyle = th.hx ? 'rgba(226,172,85,.55)' : 'rgba(255,200,80,.65)'; c.fillRect(B.x, zy, B.w, B.h * zh);
+      const ly = B.y + B.h * (1 - lv), g = c.createLinearGradient(0, ly, 0, B.y + B.h); g.addColorStop(0, '#FFF3C2'); g.addColorStop(1, '#F5B44A'); c.fillStyle = g; rr(c, B.x + 8, ly, B.w - 16, B.y + B.h - ly, 8); c.fill();
+      const gr = c.createRadialGradient(GW / 2, ly, 2, GW / 2, ly, 40 + glow * 60); gr.addColorStop(0, 'rgba(255,240,190,.9)'); gr.addColorStop(1, 'rgba(255,240,190,0)'); c.fillStyle = gr; c.beginPath(); c.arc(GW / 2, ly, 100, 0, 7); c.fill();
+      c.strokeStyle = th.hx ? '#E2AC55' : '#C9A04A'; c.lineWidth = 3; c.beginPath(); c.moveTo(B.x - 50, B.y + 6); c.lineTo(B.x - 50, B.y - 16); c.quadraticCurveTo(B.x - 30, B.y - 40, B.x - 10, B.y - 16); c.lineTo(B.x - 10, B.y + 6); c.stroke();
+      c.fillStyle = INK(th); c.font = '900 12px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText('PARAÍSO', B.x - 30, B.y + 22); c.textAlign = 'left';
+      lab(c, th, 'Jesús le prometió el paraíso · Lucas 23:43', GW / 2, GH - 14, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.4); } };
+}
+// 5. A su casa (rompecabezas: arrastrá cada pieza a su lugar)
+function Puzzle(th, f) {
+  const BX = 72, BY = 64, BS = 216; let n = 3, pcs = [], drag = null, ox = 0, oy = 0, score = 0, over = false, left = 0, full = 0, round = 0, fb = '', fT = 0, img = null;
+  function paint(k) { const cv = document.createElement('canvas'); cv.width = cv.height = BS; const c = cv.getContext('2d'); const g = c.createLinearGradient(0, 0, 0, BS); g.addColorStop(0, ['#F6C38A', '#9DBDF2', '#FFD4C2'][k % 3]); g.addColorStop(1, '#FFF2DD'); c.fillStyle = g; c.fillRect(0, 0, BS, BS);
+    c.fillStyle = '#FFE08A'; c.beginPath(); c.arc(160 - k * 30, 50, 22, 0, 7); c.fill(); c.fillStyle = ['#C9A877', '#9AB86A', '#B9A06A'][k % 3]; c.beginPath(); c.moveTo(0, 150); c.quadraticCurveTo(BS / 2, 120 + k * 6, BS, 150); c.lineTo(BS, BS); c.lineTo(0, BS); c.fill();
+    c.fillStyle = '#E2CFA8'; c.fillRect(40, 96, 90, 64); c.fillStyle = '#C9B48A'; c.fillRect(34, 90, 102, 10); c.fillStyle = '#6A4A2E'; c.fillRect(74, 124, 22, 36); c.fillStyle = '#8A6A44'; c.fillRect(48, 108, 16, 14);
+    [[160, '#3E5A8A', '#E6B691'], [186, '#8A5A3A', '#C99A72']].forEach(([x, robe, skin]) => { c.fillStyle = robe; c.beginPath(); c.moveTo(x - 12, 186); c.quadraticCurveTo(x - 14, 152, x - 6, 144); c.lineTo(x + 6, 144); c.quadraticCurveTo(x + 14, 152, x + 12, 186); c.fill(); c.fillStyle = skin; c.beginPath(); c.arc(x, 136, 8, 0, 7); c.fill(); });
+    c.fillStyle = '#3E5A8A'; c.beginPath(); c.arc(160, 133, 9, 3.1, 6.3); c.fill(); c.strokeStyle = 'rgba(255,255,255,.6)'; c.lineWidth = 3; c.beginPath(); c.moveTo(166, 158); c.lineTo(180, 158); c.stroke(); return cv; }
+  function deal() { round++; n = round === 1 ? 3 : 4; img = paint(round); pcs = []; const s = BS / n; for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) pcs.push({ i, j, x: 10 + Math.random() * (GW - 20 - s), y: 300 + Math.random() * (GH - 340 - s), ok: false }); const add = n * n * 2.4 / f; left = round === 1 ? add + 6 : left + add; full = Math.max(full, left); }
+  deal();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over) return; const s = BS / n;
+      if (k === 'down') { for (let q = pcs.length - 1; q >= 0; q--) { const p = pcs[q]; if (!p.ok && d.x > p.x && d.x < p.x + s && d.y > p.y && d.y < p.y + s) { drag = p; ox = d.x - p.x; oy = d.y - p.y; pcs.splice(q, 1); pcs.push(p); break; } } }
+      if (k === 'move' && drag) { drag.x = d.x - ox; drag.y = d.y - oy; }
+      if (k === 'up' && drag) { const hx = BX + drag.i * s, hy = BY + drag.j * s; if (Math.hypot(drag.x - hx, drag.y - hy) < s * .35) { drag.x = hx; drag.y = hy; drag.ok = true; score += 8; tone(660, .06); if (pcs.every(p => p.ok)) { score += 30 + Math.round(left) * 2; fb = '¡Una nueva familia!'; fT = 1.4; tone(990, .35); burstAt(GW / 2, BY + BS / 2); setTimeout(() => { if (!over) deal(); }, 1400); } } else tone(240, .05); drag = null; } },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); if (!pcs.every(p => p.ok)) left -= dt; if (left <= 0) { left = 0; over = true; } },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'IMAGEN ' + round, 16, 27); const s = BS / n;
+      c.fillStyle = th.hx ? '#2A2418' : 'rgba(255,255,255,.6)'; rr(c, BX - 6, BY - 6, BS + 12, BS + 12, 10); c.fill(); c.globalAlpha = .18; c.drawImage(img, BX, BY); c.globalAlpha = 1;
+      c.strokeStyle = 'rgba(127,127,127,.35)'; c.lineWidth = 1; for (let i = 1; i < n; i++) { c.beginPath(); c.moveTo(BX + i * s, BY); c.lineTo(BX + i * s, BY + BS); c.moveTo(BX, BY + i * s); c.lineTo(BX + BS, BY + i * s); c.stroke(); }
+      pcs.forEach(p => { c.drawImage(img, p.i * s, p.j * s, s, s, p.x, p.y, s, s); if (!p.ok) { c.strokeStyle = p === drag ? '#E9A52C' : '#fff'; c.lineWidth = 2; c.strokeRect(p.x + 1, p.y + 1, s - 2, s - 2); } });
+      lab(c, th, 'Arrastrá cada pieza a su lugar', GW / 2, BY + BS + 22, 'center');
+      lab(c, th, '«Apreciada mujer, ahí tienes a tu hijo» · Juan 19:26', GW / 2, GH - 8, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.4); } };
+}
+// 6. Luz en la oscuridad (mové la luz para encontrar las lámparas escondidas)
+function Dark(th, f) {
+  let px = GW / 2, py = 260, items = [], score = 0, over = false, left = 0, full = 0, round = 0, fb = '', fT = 0; const R = 62;
+  function deal() { round++; const k = 3 + round; items = []; while (items.length < k) { const x = 30 + Math.random() * (GW - 60), y = 90 + Math.random() * 360; if (items.every(q => Math.hypot(q.x - x, q.y - y) > 60)) items.push({ x, y, h: 0, on: false }); } const add = k * 3.2 / f; left = round === 1 ? add + 5 : left + add; full = Math.max(full, left); }
+  deal();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over) return; if (k === 'down' || k === 'move') { px = d.x; py = d.y; } },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); left -= dt; if (left <= 0) { left = 0; over = true; return; }
+      items.forEach(q => { if (q.on) return; if (Math.hypot(q.x - px, q.y - py) < 30) { q.h += dt; if (q.h > .35) { q.on = true; score += 12; tone(700 + items.filter(z => z.on).length * 60, .12); } } else q.h = Math.max(0, q.h - dt); });
+      if (items.every(q => q.on)) { score += 20 + Math.round(left) * 2; fb = '¡La luz vence a la oscuridad!'; fT = 1.4; tone(990, .35); deal(); } },
+    draw(c, t) { skyBg(c, th, t); c.fillStyle = th.hx ? '#3A3020' : '#8A7256'; c.beginPath(); c.moveTo(0, 300); c.quadraticCurveTo(GW / 2, 200, GW, 300); c.lineTo(GW, GH); c.lineTo(0, GH); c.fill();
+      c.fillStyle = th.hx ? '#2A2418' : '#5A4632'; c.fillRect(GW / 2 - 4, 170, 8, 80); c.fillRect(GW / 2 - 24, 186, 48, 7);
+      items.forEach(q => { c.fillStyle = '#B4704A'; c.beginPath(); c.ellipse(q.x, q.y + 4, 14, 6, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(q.x + 10, q.y + 2); c.lineTo(q.x + 20, q.y - 2); c.lineTo(q.x + 12, q.y + 6); c.fill(); });
+      c.fillStyle = 'rgba(6,8,22,.95)'; c.beginPath(); c.rect(0, 0, GW, GH); c.arc(px, py, R, 0, Math.PI * 2, true); c.fill();
+      const g = c.createRadialGradient(px, py, R * .55, px, py, R); g.addColorStop(0, 'rgba(6,8,22,0)'); g.addColorStop(1, 'rgba(6,8,22,.95)'); c.fillStyle = g; c.beginPath(); c.arc(px, py, R + 1, 0, 7); c.fill();
+      items.forEach(q => { if (!q.on && q.h <= 0) return; const k = q.on ? 1 : q.h / .35, gl = c.createRadialGradient(q.x + 16, q.y - 8, 1, q.x + 16, q.y - 8, 34); gl.addColorStop(0, `rgba(255,214,120,${.9 * k})`); gl.addColorStop(1, 'rgba(255,214,120,0)'); c.fillStyle = gl; c.beginPath(); c.arc(q.x + 16, q.y - 8, 34, 0, 7); c.fill(); if (q.on) { c.fillStyle = '#B4704A'; c.beginPath(); c.ellipse(q.x, q.y + 4, 14, 6, 0, 0, 7); c.fill(); c.fillStyle = '#FFC94A'; c.beginPath(); c.ellipse(q.x + 18, q.y - 6 + Math.sin(t * 8) * 1, 4, 9, 0, 0, 7); c.fill(); } });
+      c.fillStyle = '#F4EEDC'; c.font = '900 12px Nunito,sans-serif'; c.textAlign = 'left'; c.fillText('LÁMPARAS ' + items.filter(q => q.on).length + '/' + items.length, 16, 27); timeBar(c, th, left, full);
+      c.textAlign = 'center'; c.fillText('Arrastrá la luz y encontrá las lámparas', GW / 2, 64); c.fillText('«¡Todo está cumplido!» · Juan 19:30', GW / 2, GH - 14); c.textAlign = 'left'; if (fT > 0) banner(c, th, fb, fT * 1.4); } };
+}
+// 7. Libres (rebotá la luz con la barra y rompé las cadenas)
+function Breakout(th, f) {
+  const PY = 470, PW = 84, BW = 40, BH = 16; let pxp = GW / 2, bx = 0, by = 0, vx = 0, vy = 0, stuck = 1, bricks = [], lives = 3, score = 0, over = false, lvl = 0, fb = '', fT = 0;
+  function deal() { lvl++; bricks = []; const rows = Math.min(6, 3 + lvl); for (let j = 0; j < rows; j++) for (let i = 0; i < 8; i++) bricks.push({ x: 10 + i * (BW + 2) + (j % 2 ? 0 : 0), y: 80 + j * (BH + 6), hp: j < 2 && lvl > 1 ? 2 : 1 }); reset(); }
+  function reset() { stuck = .9; bx = pxp; by = PY - 10; vx = 0; vy = 0; }
+  deal();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over) return; if (k === 'down' || k === 'move') pxp = Math.max(PW / 2, Math.min(GW - PW / 2, d.x)); },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); if (stuck > 0) { bx = pxp; by = PY - 10; stuck -= dt; if (stuck <= 0) { const sp = (240 + lvl * 20) * f; vx = sp * (Math.random() < .5 ? -.6 : .6); vy = -sp * .8; } return; }
+      const steps = 3; for (let s = 0; s < steps; s++) { bx += vx * dt / steps; by += vy * dt / steps;
+        if (bx < 7) { bx = 7; vx = Math.abs(vx); } if (bx > GW - 7) { bx = GW - 7; vx = -Math.abs(vx); } if (by < 50) { by = 50; vy = Math.abs(vy); }
+        if (vy > 0 && by > PY - 8 && by < PY + 6 && Math.abs(bx - pxp) < PW / 2 + 6) { const k = (bx - pxp) / (PW / 2), sp = Math.hypot(vx, vy) * 1.01; vx = sp * k * .8; vy = -Math.sqrt(Math.max(1, sp * sp - vx * vx)); by = PY - 8; tone(520, .04); }
+        for (const b of bricks) { if (b.hp <= 0) continue; if (bx > b.x - 6 && bx < b.x + BW + 6 && by > b.y - 6 && by < b.y + BH + 6) { b.hp--; const ox = Math.min(Math.abs(bx - b.x), Math.abs(bx - b.x - BW)), oy = Math.min(Math.abs(by - b.y), Math.abs(by - b.y - BH)); if (ox < oy) vx = -vx; else vy = -vy; score += b.hp ? 3 : 6; tone(b.hp ? 300 : 640 + Math.random() * 120, .05); if (!b.hp) burstAt(b.x + BW / 2, b.y + BH / 2); break; } } }
+      bricks = bricks.filter(b => b.hp > 0); if (!bricks.length) { score += 40; fb = '¡Libres!'; fT = 1.4; tone(990, .35); deal(); }
+      if (by > GH + 10) { lives--; tone(170, .2); fb = lives > 0 ? 'Otra vez' : ''; fT = lives > 0 ? .8 : 0; if (lives <= 0) { over = true; return; } reset(); } },
+    draw(c, t) { skyBg(c, th, t); hearts(c, lives, 3); lab(c, th, 'NIVEL ' + lvl, GW - 16, 27, 'right');
+      bricks.forEach(b => { c.strokeStyle = b.hp > 1 ? '#5A6276' : '#8E97AE'; c.lineWidth = 4; c.beginPath(); c.ellipse(b.x + BW / 2 - 8, b.y + BH / 2, 10, 6, 0, 0, 7); c.stroke(); c.beginPath(); c.ellipse(b.x + BW / 2 + 8, b.y + BH / 2, 10, 6, 0, 0, 7); c.stroke(); });
+      const g = c.createRadialGradient(bx, by, 1, bx, by, 18); g.addColorStop(0, 'rgba(255,248,220,1)'); g.addColorStop(1, 'rgba(255,214,120,0)'); c.fillStyle = g; c.beginPath(); c.arc(bx, by, 18, 0, 7); c.fill(); c.fillStyle = '#FFFBEA'; c.beginPath(); c.arc(bx, by, 6, 0, 7); c.fill();
+      c.fillStyle = th.hx ? '#E2AC55' : '#2FAE7C'; rr(c, pxp - PW / 2, PY, PW, 12, 6); c.fill();
+      if (stuck > 0) lab(c, th, 'Arrastrá la barra para que la luz no caiga', GW / 2, 300, 'center');
+      lab(c, th, 'Jesús murió para hacernos libres del pecado · Romanos 6:6-7', GW / 2, GH - 14, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.4); } };
+}
+
+const ENGINES={rooster:Rooster,carry:Carry,forgive:Forgive,hold:Hold,puzzle:Puzzle,dark:Dark,breakout:Breakout,pave:Pave,spot:Spot,coins:Coins,wash:Wash,missing:Missing,awake:Awake,guess:Guess,sow:Sow,hotcold:HotCold,kind:Kind,rotate:Rotate,scale:Scale,blocks:Blocks,emoji:Emoji,flood:Flood,roof:Roof,count:Count,trace:Trace,reveal:Reveal,hop:Hop,sort:Sort,pour:Pour,spell:Spell,net:Net,row:Row,pipes:Pipes,lights:Lights,match:Match,run:Runner,fly:Flyer,cross:Crosser,catch:Catcher,memo:Memo,maze:Maze,simon:Simon,verso:Verso,herd:Herd,pop:Pop,swarm:Swarm,slide:Slide,balance:Balance,order:Order,words:Words,stack:Stack,diff:Diff,tf:TrueFalse,lantern:Lantern,rhythm:Rhythm,connect:Connect};
+const TAPG=['rooster','carry','forgive','pave','spot','coins','missing','awake','guess','hotcold','kind','rotate','scale','blocks','emoji','flood','roof','count','reveal','hop','sort','spell','net','row','pipes','lights','match','memo','simon','verso','pop','slide','order','diff','tf','rhythm','connect','stack','balance'],DRAGG=['hold','puzzle','dark','breakout','wash','sow','trace','pour','herd','swarm','words','lantern'];
 let ar=null;const bursts=[];
 function burstAt(x,y){bursts.push({x,y,t:0});}
 function splash(x,y){bursts.push({x,y,t:0,w:1});}
@@ -2025,7 +2252,20 @@ jerusalen:[
  {t:'order',q:'Ordená los momentos de la última cena',items:['Jesús lava los pies de los discípulos','Toma el pan, da gracias y lo parte','Comparte la copa del nuevo pacto','Van al huerto de Getsemaní a orar'],exp:'Después de la cena salieron hacia el monte de los Olivos.',ref:'Juan 13 · Lucas 22:19-39'},
  {t:'mc',q:'¿Qué oró Jesús en Getsemaní?',o:['Que se hiciera la voluntad del Padre, no la suya','Que sus enemigos fueran castigados','Que lo dejaran escapar esa noche','Que sus discípulos se fueran a dormir'],a:0,exp:'«Quiero que se haga tu voluntad, no la mía.» Jesús obedeció por amor.',ref:'Lucas 22:42'},
  {t:'app',q:'En casa hay que ordenar y limpiar después de comer, y nadie quiere hacerlo. ¿Qué harías siguiendo el ejemplo de Jesús?',o:['Me ofrezco a ayudar primero, con buena actitud','Espero a que lo haga otro','Me escondo hasta que terminen','Lo hago pero quejándome todo el tiempo'],a:0,exp:'Servir en lo cotidiano es una forma concreta de amar como Jesús.',ref:'Juan 13:14-15'},
- {t:'reflect',q:'Jesús le dijo al Padre: «que se haga tu voluntad». ¿En qué decisión de tu vida necesitás orar así esta semana?',ref:'Lucas 22:42'}]
+ {t:'reflect',q:'Jesús le dijo al Padre: «que se haga tu voluntad». ¿En qué decisión de tu vida necesitás orar así esta semana?',ref:'Lucas 22:42'}],
+cruz:[
+ {t:'mc',q:'¿Cuántas veces negó Pedro conocer a Jesús antes de que cantara el gallo?',o:['Tres','Una','Siete','Ninguna'],a:0,exp:'Pedro tuvo miedo y negó a Jesús tres veces. Después lloró arrepentido, y Jesús lo restauró.',ref:'Lucas 22:54-62'},
+ {t:'tf',q:'Pilato no encontró ningún delito en Jesús, pero igual cedió ante lo que pedía la multitud.',a:true,exp:'Jesús era inocente. Fue a la cruz por nuestros pecados, no por los suyos.',ref:'Lucas 23:4, 23-25'},
+ {t:'verse',parts:['Él, cargando su propia ',0,', fue al sitio llamado Lugar de la Calavera (en hebreo, ',1,').'],blanks:['cruz','Gólgota'],bank:['cruz','carga','Gólgota','Getsemaní','Betania','espada'],exp:'Gólgota quiere decir lugar de la calavera. Estaba fuera de los muros de Jerusalén.',ref:'Juan 19:17'},
+ {t:'mc',q:'¿Quién llevó la cruz detrás de Jesús en el camino?',o:['Simón de Cirene','Pedro','Pilato','José de Arimatea'],a:0,exp:'Los soldados obligaron a Simón, que venía del campo, a llevar la cruz detrás de Jesús.',ref:'Lucas 23:26'},
+ {t:'mc',q:'¿Qué hizo Jesús por los que lo crucificaban?',o:['Le pidió al Padre que los perdonara','Les gritó que se arrepentirían','Se quedó callado y enojado','Pidió que los castigaran'],a:0,exp:'Jesús perdonó en el momento de más dolor. Su amor alcanza incluso a sus enemigos.',ref:'Lucas 23:34'},
+ {t:'match',q:'Uní cada personaje con lo que hizo',p:[['Pedro','Negó conocer a Jesús y después lloró'],['Simón de Cirene','Llevó la cruz detrás de Jesús'],['Juan','Recibió a María en su casa'],['José de Arimatea','Puso el cuerpo de Jesús en una tumba nueva']],exp:'Cada uno vivió ese día de una manera distinta, pero todos estuvieron cerca de Jesús.',ref:'Lucas 22–23 · Juan 19'},
+ {t:'verse',parts:['Pero él fue ',0,' por nuestras rebeliones y aplastado por nuestros ',1,'.'],blanks:['traspasado','pecados'],bank:['traspasado','premiado','pecados','enemigos','olvidado','sueños'],exp:'Siglos antes, el profeta Isaías anunció que el Mesías sufriría en nuestro lugar.',ref:'Isaías 53:5'},
+ {t:'mc',q:'¿Qué pasó con la cortina del templo cuando murió Jesús?',o:['Se rasgó en dos, de arriba abajo','Se prendió fuego','La guardaron los sacerdotes','No pasó nada'],a:0,exp:'La cortina separaba el Lugar Santísimo. Al rasgarse, mostró que por Jesús podemos acercarnos a Dios.',ref:'Marcos 15:38 · Hebreos 10:19-20'},
+ {t:'verse',parts:['El oficial romano que estaba frente a él, al ver cómo había muerto, exclamó: «¡Este hombre era verdaderamente el ',0,' de ',1,'!».'],blanks:['Hijo','Dios'],bank:['Hijo','rey','Dios','Israel','siervo','Roma'],exp:'Un soldado extranjero fue uno de los primeros en reconocer quién era Jesús al pie de la cruz.',ref:'Marcos 15:39'},
+ {t:'mc',q:'¿Por qué murió Jesús en la cruz?',o:['Porque nos ama y dio su vida para pagar por nuestros pecados','Porque no pudo escapar','Porque se equivocó en algo','Porque los romanos eran más fuertes'],a:0,exp:'«Pues Dios amó tanto al mundo» que entregó a su único Hijo, para que todo el que crea en él tenga vida eterna.',ref:'Juan 3:16 · Juan 10:17-18'},
+ {t:'app',q:'Un compañero te hizo algo feo y ahora te pide perdón. ¿Qué harías siguiendo el ejemplo de Jesús?',o:['Lo perdono de corazón, aunque me haya dolido','Le digo que nunca lo voy a perdonar','Hago como que lo perdono y después me vengo','Le cuento a todos lo que hizo'],a:0,exp:'Si Jesús perdonó desde la cruz, nosotros podemos perdonar con su ayuda.',ref:'Lucas 23:34 · Efesios 4:32'},
+ {t:'reflect',q:'Jesús dio su vida por vos. ¿Qué querés decirle hoy en oración?',ref:'Juan 3:16'}]
 };
 function openExam(r,onPass){
   const R=REGIONS[r],E=EXAMS[R.id];if(!E){onPass();return;}
