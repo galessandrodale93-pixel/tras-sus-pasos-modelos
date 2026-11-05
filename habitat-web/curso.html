@@ -76,7 +76,36 @@ try{
  if(!A.loggedIn()){setGo(price?'Ingresá para comprarlo':'Ingresá para inscribirte',function(){try{sessionStorage.setItem('habitat:ret',location.pathname+location.search);}catch(e){}location.href='/ingresar.html';});return;}
  var me=await D.me();var parts=await D.participations(me.id);
  if(parts.some(function(x){return x.programId===PID;})){setGo('Ir a la clase →',function(){location.href='/clase.html?p='+PID;});return;}
- if(price){setGo('Comprar',function(){location.href=WA+encodeURIComponent('Hola Habitat, quiero comprar el curso "'+t+'". Mi email es '+me.email+'.');});msg.textContent='Escribinos y te habilitamos el curso. Muy pronto vas a poder pagarlo directo desde acá.';return;}
+ var PLAN={'5e3b050b-53ed-48c3-8cf7-4ba4d99833bc':'c225ca6b-2c02-440a-95d5-a1ddd38373a8','a371e43a-e432-4164-9e15-350e2d3d21bb':'f9f6f3e8-d9aa-44b9-bc4d-fb603184ac43','e02af77c-c23e-4ba2-a177-1dd030385bda':'a05f560b-4e59-4e51-a3f8-be6d1e5d21d2'};
+ var JA='/online-programs/participants/v3/join-applications';
+ async function curJA(){try{var r=await A.api('GET',JA+'/current/'+PID);return r.joinApplication||null;}catch(e){return null;}}
+ function inside(ja){return ja&&(ja.participantId||(ja.status==='APPROVED'&&/NO_PAYMENT_REQUIRED|PAYMENT_SUCCESSFUL/.test(ja.paymentStatus||'')));}
+ function waBuy(){location.href=WA+encodeURIComponent('Hola Habitat, quiero comprar el curso "'+t+'". Mi email es '+me.email+'.');}
+ async function buy(){go.disabled=true;go.textContent='Preparando el pago…';msg.textContent='';
+  try{
+   var ja=await curJA();
+   if(!ja){var c=await A.api('POST',JA,{joinApplication:{programId:PID}});ja=c.joinApplication;}
+   if(inside(ja)){location.href='/clase.html?p='+PID;return;}
+   var pp=await A.api('POST',JA+'/'+ja.id+'/prepare-payment',{paymentType:'PAID_PLANS'});ja=pp.joinApplication||ja;
+   if(inside(ja)){location.href='/clase.html?p='+PID;return;}
+   var plan=(ja.paymentInfo&&ja.paymentInfo.paidPlanIds||[])[0]||PLAN[PID];
+   if(!plan)throw new Error('sin plan');
+   var back=location.origin+'/curso.html?p='+PID+'&pago=1';
+   var rs=await A.api('POST','/_api/redirects-api/v1/redirect-session',{paidPlansCheckout:{planId:plan},callbacks:{postFlowUrl:back,thankYouPageUrl:back}});
+   var u=rs.redirectSession&&rs.redirectSession.fullUrl;if(!u)throw new Error('sin url');
+   location.href=u;
+  }catch(e){console.log(e);go.disabled=false;setGo('Comprar por WhatsApp',waBuy);msg.textContent='No pudimos abrir el pago en este momento. Escribinos y te habilitamos el curso.';}
+ }
+ if(price){
+  if(new URLSearchParams(location.search).get('pago')){
+   go.disabled=true;go.textContent='Confirmando tu pago…';msg.textContent='Estamos confirmando tu compra. Esto tarda unos segundos.';
+   for(var i=0;i<8;i++){var ja=await curJA();
+    if(ja&&!inside(ja)&&ja.status!=='DECLINED'){try{var q=await A.api('POST',JA+'/'+ja.id+'/prepare-payment',{paymentType:'PAID_PLANS'});ja=q.joinApplication||ja;}catch(e){}}
+    if(inside(ja)){msg.textContent='¡Listo! Ya tenés el curso.';setTimeout(function(){location.href='/clase.html?p='+PID;},900);return;}
+    await new Promise(function(r){setTimeout(r,2500);});}
+   msg.textContent='Si ya pagaste, en unos minutos se habilita. Si no, podés intentar de nuevo.';
+  }
+  setGo('Comprar',buy);return;}
  if(acc==='SECRET'){setGo('Consultar inscripción',function(){location.href=WA+encodeURIComponent('Hola Habitat, quiero inscribirme en "'+t+'".');});return;}
  setGo(acc==='PRIVATE'?'Solicitar inscripción':'Inscribirme',async function(){go.disabled=true;go.textContent='Un momento…';
   try{var r=await A.api('POST','/online-programs/participants/v3/join-applications',{joinApplication:{programId:PID}});var ja=r.joinApplication||{};
