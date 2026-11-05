@@ -295,6 +295,25 @@ function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
     mg.setAttribute('color', new THREE.BufferAttribute(mc, 3)); mg.computeVertexNormals(); const m = new THREE.Mesh(mg, mm); m.position.set(side * (XB + 40 + hsh(i, 5) * 30), -3, z); m.rotation.y = hsh(i, 1) * 6; scene.add(m); }
   return { hAt, dAt, sunL, sunDir, sky, terrain, hemi };
 }
+/* plantas reales escaneadas (Poly Haven, CC0): pasto, pasto bermuda y flores amarillas, con viento */
+const FLB = new URL('./flora/', import.meta.url).href;
+async function realFlora(scene, W, allPts, Q, uT) {
+  let man; try { man = await (await fetch(FLB + 'flora.json')).json(); } catch (e) { return; }
+  const coarse = Q.sh <= 2048, R = rng(4711), M4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3(), C = new THREE.Color();
+  const SET = { grass_medium_01: { n: coarse ? 1800 : 4500, s: [2.4, 3.8], r: [1.5, 13] }, grass_bermuda_01: { n: coarse ? 9000 : 22000, s: [3.2, 4.8], r: [1.3, 15] }, celandine_01: { n: coarse ? 700 : 1800, s: [2.2, 3.2], r: [2, 14] } };
+  for (const [base, meshes] of Object.entries(man)) { const cfg = SET[base]; if (!cfg) continue; let buf; try { buf = await (await fetch(FLB + base + '.bin')).arrayBuffer(); } catch (e2) { continue; }
+    const tex = new THREE.TextureLoader().load(FLB + base + '.webp'); tex.flipY = false; tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+    const mat = new THREE.MeshStandardMaterial({ map: tex, alphaTest: .45, roughness: .92, metalness: 0 });
+    mat.onBeforeCompile = sh => { sh.uniforms.uT = uT; sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <project_vertex>', 'vec4 mvPosition=vec4(transformed,1.);\n#ifdef USE_INSTANCING\nmvPosition=instanceMatrix*mvPosition;\n#endif\nfloat k=clamp(position.y*4.,0.,1.);k*=k;mvPosition.x+=sin(uT*1.9+mvPosition.x*.4+mvPosition.z*.3)*.07*k;mvPosition.z+=cos(uT*1.4+mvPosition.x*.25)*.04*k;\nmvPosition=modelViewMatrix*mvPosition;gl_Position=projectionMatrix*mvPosition;'); };
+    const per = Math.ceil(cfg.n / meshes.length);
+    meshes.forEach(mm => { let o = mm.off; const P = new Float32Array(buf, o, mm.nv * 3); o += mm.nv * 12; const N = new Int8Array(buf, o, mm.nv * 3); o += mm.nv * 3; o = (o + 3) & ~3; const U = new Float32Array(buf, o, mm.nv * 2); o += mm.nv * 8; const I = new Uint16Array(buf, o, mm.ni);
+      const g = new THREE.BufferGeometry(), NU = new Float32Array(mm.nv * 3), I2 = new Uint16Array(mm.ni * 2); for (let k = 0; k < mm.nv; k++) { NU[k * 3] = N[k * 3] / 127 * .35; NU[k * 3 + 1] = .9; NU[k * 3 + 2] = N[k * 3 + 2] / 127 * .35; } I2.set(I); for (let k = 0; k < mm.ni; k += 3) { I2[mm.ni + k] = I[k]; I2[mm.ni + k + 1] = I[k + 2]; I2[mm.ni + k + 2] = I[k + 1]; }
+      g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.BufferAttribute(NU, 3)); g.setAttribute('uv', new THREE.BufferAttribute(U, 2)); g.setIndex(new THREE.BufferAttribute(I2, 1));
+      const list = []; for (let i = 0; i < per * 3 && list.length < per; i++) { const p = allPts[Math.floor(R() * allPts.length)], a = R() * 6.28, r = cfg.r[0] + Math.pow(R(), 1.4) * (cfg.r[1] - cfg.r[0]), x = p[0] + Math.cos(a) * r, z = p[1] + Math.sin(a) * r; if (W.dAt(x, z) < cfg.r[0] || W.hAt(x, z) > 7 || blockedAt(x, z)) continue; list.push([x, z]); }
+      const im = new THREE.InstancedMesh(g, mat, list.length); list.forEach(([x, z], i) => { const s2 = cfg.s[0] + R() * (cfg.s[1] - cfg.s[0]); e.set((R() - .5) * .15, R() * 6.28, (R() - .5) * .15); q.setFromEuler(e); M4.compose(v.set(x, W.hAt(x, z) - .02, z), q, sc.set(s2, s2 * (.85 + R() * .3), s2)); im.setMatrixAt(i, M4); im.setColorAt(i, C.setRGB(.9 + R() * .2, .9 + R() * .2, .85 + R() * .2)); });
+      im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; im.receiveShadow = true; im.frustumCulled = false; scene.add(im); });
+  }
+}
 const FLORA = {};
 function heroFlora(scene, W, allPts, zMax, R, Q) {
   const M4 = new THREE.Matrix4(), Q4 = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SV = new THREE.Vector3(), CL = new THREE.Color();
@@ -322,7 +341,7 @@ function heroFlora(scene, W, allPts, zMax, R, Q) {
   cg.setAttribute('position', new THREE.Float32BufferAttribute(cp, 3)); cg.setAttribute('uv', new THREE.Float32BufferAttribute(cu, 2)); cg.setAttribute('normal', new THREE.Float32BufferAttribute(new Array(cp.length / 3).fill([0, 1, 0]).flat(), 3)); cg.setIndex(ci);
   const gm = new THREE.MeshLambertMaterial({ map: texL('grasscard.png', 4), alphaTest: .42 }), uT = { value: 0 };
   gm.onBeforeCompile = sh => { sh.uniforms.uT = uT; sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <project_vertex>', 'vec4 mvPosition=vec4(transformed,1.);\n#ifdef USE_INSTANCING\nmvPosition=instanceMatrix*mvPosition;\n#endif\nfloat k=position.y*position.y;mvPosition.x+=sin(uT*1.8+mvPosition.x*.35+mvPosition.z*.28)*.12*k;mvPosition.z+=cos(uT*1.3+mvPosition.x*.22)*.06*k;\nmvPosition=modelViewMatrix*mvPosition;gl_Position=projectionMatrix*mvPosition;'); };
-  const gl = []; for (let i = 0; i < Q.grass / 2.4; i++) { const p = allPts[Math.floor(R() * allPts.length)], a = R() * 6.28, wide = R() < .45, r = 1.2 + Math.pow(R(), 1.5) * 15, x = wide ? (R() - .5) * XB * 2.2 : p[0] + Math.cos(a) * r, z = wide ? p[1] + (R() - .5) * 10 : p[1] + Math.sin(a) * r; if (W.dAt(x, z) < 1.3 || W.hAt(x, z) > 7) continue; gl.push({ x, z, h: .32 + R() * .5, w: .6 + R() * .7, rot: R() * 6.28, c: R() }); }
+  const gl = []; for (let i = 0; i < Q.grass / 3.6; i++) { const p = allPts[Math.floor(R() * allPts.length)], a = R() * 6.28, wide = R() < .45, r = 1.2 + Math.pow(R(), 1.5) * 15, x = wide ? (R() - .5) * XB * 2.2 : p[0] + Math.cos(a) * r, z = wide ? p[1] + (R() - .5) * 10 : p[1] + Math.sin(a) * r; if (W.dAt(x, z) < 1.3 || W.hAt(x, z) > 7) continue; gl.push({ x, z, h: .32 + R() * .5, w: .6 + R() * .7, rot: R() * 6.28, c: R() }); }
   const gim = new THREE.InstancedMesh(cg, gm, gl.length); gl.forEach((o, i) => { put(o.x, W.hAt(o.x, o.z) - .03, o.z, 0, o.rot, 0, o.w, o.h, o.w); gim.setMatrixAt(i, M4); gim.setColorAt(i, FLORA.kids ? CL.setRGB(1.15 + o.c * .25, 1.35 + o.c * .2, .8 + o.c * .15) : CL.setRGB(1.05 + o.c * .3, 1.1 + o.c * .25, .85 + o.c * .2)); }); gim.instanceMatrix.needsUpdate = true; gim.instanceColor.needsUpdate = true; gim.frustumCulled = false; gim.receiveShadow = true; scene.add(gim);
   return uT;
 }
@@ -359,7 +378,7 @@ const KL = {};
   const zMax = -totalY * SC;
   let HW = null, uGrass = null;
   const pois = planPois(g), doors = planDoors(g), poiPts = pois.flatMap(q => q.flat).concat(doors.flatMap(q => q.flat));
-  { const flat = g.VIGN.map(([r, x, y]) => toV(x, g.TOP + r * g.RH + y)).concat(poiPts); FLORA.kids = !hx; HW = heroWorld(scene, g, allPts, flat, zMax, QL, hx ? null : KL); uGrass = heroFlora(scene, HW, allPts, zMax, R, hx ? QL : Object.assign({}, QL, { grass: QL.grass * .8, trees: QL.trees * .8 })); if (!hx) { ground.visible = false; KL.sun.position.set(-14, 26, 12); } }
+  { const flat = g.VIGN.map(([r, x, y]) => toV(x, g.TOP + r * g.RH + y)).concat(poiPts); FLORA.kids = !hx; HW = heroWorld(scene, g, allPts, flat, zMax, QL, hx ? null : KL); uGrass = heroFlora(scene, HW, allPts, zMax, R, hx ? QL : Object.assign({}, QL, { grass: QL.grass * .8, trees: QL.trees * .8 })); realFlora(scene, HW, allPts, QL, uGrass); if (!hx) { ground.visible = false; KL.sun.position.set(-14, 26, 12); } }
   const spots = { tree: [], bush: [], rock: [] };
   for (let i = 0; i < (HW ? 0 : 1500); i++) {
     const x = (R() - .5) * (XB * 2 + 40), z = R() * zMax - 6; if (near(x, z, 2.2)) continue;
