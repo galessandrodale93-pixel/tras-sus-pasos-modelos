@@ -6,3 +6,14 @@ Modelos y animaciones de los personajes de Hero en el juego *Tras Sus Pasos* (Ha
   - Universal Base Characters, Modular Character Outfits – Fantasy, Universal Animation Library.
 - Optimizados para la web (texturas WebP, geometría cuantizada).
 - `hero/gltf.js`: cargador glTF de three.js (MIT).
+
+## Juego (carpeta `app/`)
+
+Desde noviembre de 2026 la lógica del juego vive acá y el sitio de Wix solo la carga:
+
+- `app/game.js`: lógica principal (perfiles, historia de cada etapa, minijuegos, exámenes).
+- `app/walk3d.js` y `app/walk3d.css`: el mundo 3D, la música y los estilos.
+- `index.html` del sitio tiene una sola línea con `<script type="module" src="https://cdn.jsdelivr.net/gh/galessandrodale93-pixel/tras-sus-pasos-modelos@COMMIT/app/game.js">` (y un respaldo en rawcdn.githack.com).
+
+Para publicar una versión nueva: subir los cambios a `main`, copiar el hash del commit y reemplazarlo en esa línea del `index.html` del sitio.
+La música de fondo está en la rama `musica` y se importó al Media Manager de Wix.
