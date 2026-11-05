@@ -2776,13 +2776,14 @@ const LEARN=[
  ['📜','Historias que se ven','Cada etapa recorre la vida de Jesús con escenas animadas y narración, de Belén hasta la cruz.'],
  ['📖','La Palabra, palabra por palabra','Completan versículos de la Nueva Traducción Viviente y los escuchan en voz alta. Cada respuesta trae su cita para ir a buscarla en la Biblia.'],
  ['🧩','Desafíos en cada parada','Después de cada historia hay una pregunta para pensar: elegir, ordenar los hechos o completar el versículo.'],
- ['🎮','Minijuegos que nunca se repiten','Más de cincuenta juegos distintos, cada uno nacido de su historia: llenar las tinajas de Caná, echar las redes, lavar los pies.'],
+ ['🎮','Minijuegos que nunca se repiten','Más de sesenta juegos distintos, cada uno nacido de su historia: llenar las tinajas de Caná, echar las redes, lavar los pies.'],
  ['📝','Exámenes por etapa','Para avanzar hay un examen de 12 preguntas. Si se equivocan, el juego explica la respuesta y muestra el pasaje.'],
  ['🗺️','Un mapa para explorar','Caminan libres por Nazaret, el templo, el mar de Galilea y el Gólgota. Cada lugar muestra cómo se vivía en tiempos de Jesús.'],
  ['🤝','Misiones de servicio','Ayudan a personajes bíblicos: llevar el pan, buscar la oveja perdida, orar en el huerto. Aprenden a servir haciendo.'],
  ['🪵','Oficios y supervivencia (Hero)','Pescan, talan, cocinan y construyen su casa con las herramientas de la época. Si no se alimentan, no pueden seguir: cuidar el cuerpo también es parte del camino.'],
- ['🌱','Virtudes que crecen (Hero)','Al subir de nivel reparten puntos en Fuerza, Paciencia, Dominio propio, Sabiduría y Generosidad. La Humildad solo crece dando a otros.'],
- ['⚔️','Espadeo bíblico con amigos','En salas privadas compiten a ver quién responde bien y primero. Después de cada pregunta, todos leen la explicación y el pasaje.'],
+ ['🌱','Virtudes que crecen (Hero)','Al subir de nivel reparten puntos en Fuerza, Agilidad, Paciencia, Dominio propio, Sabiduría y Generosidad. Hay dos virtudes únicas: la Humildad, que crece solo dando a otros, y el Servicio, que crece solo haciendo obras por los demás.'],
+ ['🪙','Denarios y obras de amor (Hero)','Venden lo que cosechan en los mercados y compran en la carpintería o la panadería. En el camino hay mendigos: compartir con ellos les enseña lo que Jesús dijo en Mateo 25.'],
+ ['⚔️','Espadeo bíblico y juegos con amigos','En salas privadas juegan al Espadeo bíblico, a ¿Quién soy?, al Versículo en cadena y a carreras por la tierra de Jesús. Después de cada pregunta, todos leen la explicación y el pasaje. Si oran juntos, reciben una bendición.'],
  ['🏅','Progreso que se nota','Niveles, medallas, recuerdos y una prenda única para quienes terminan el curso. Los puntos se suman de un curso a otro.'],
  ['🛡️','Un lugar cuidado','Las salas son privadas y solo entra quien tiene el código. Cada chico juega con su propio perfil.']];
 function hubLearn(){const st=document.querySelector('#hubView .stage');if(!st||document.getElementById('learn'))return;st.insertAdjacentHTML('afterend',`<section class="learn" id="learn"><div class="wrap"><span class="why-k">Cómo se aprende jugando</span><h2>Cada juego es una puerta a <em>la Palabra</em></h2><p class="learn-l">Todo está pensado para que salgan sabiendo más de la Biblia: historias, versículos, preguntas y desafíos que se repasan una y otra vez mientras juegan.</p><div class="learn-g">${LEARN.map(([i,t,d])=>`<article><span class="learn-i" aria-hidden="true">${i}</span><b>${t}</b><p>${d}</p></article>`).join('')}</div></div></section>`);}
