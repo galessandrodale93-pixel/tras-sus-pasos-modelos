@@ -14,3 +14,13 @@
     go(0);}
   var y=document.getElementById('yr');if(y)y.textContent=new Date().getFullYear();
 })();
+/* Con sesión iniciada, el botón "Ingresar" pasa a "Mi cuenta" y lleva al Campus. */
+(function(){
+  var on=false;try{var t=JSON.parse(localStorage.getItem('habitat:mtok')||'null');on=!!(t&&t.r);}catch(e){}
+  if(!on)return;
+  document.querySelectorAll('a[href="/ingresar.html"]').forEach(function(a){
+    a.setAttribute('href','/campus.html');
+    if(a.classList.contains('in'))a.textContent='Mi cuenta';
+    else if(/ingres|campus de alumnos/i.test(a.textContent))a.textContent='Mi campus';
+  });
+})();
