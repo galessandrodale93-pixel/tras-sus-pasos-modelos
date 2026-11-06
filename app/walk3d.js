@@ -546,8 +546,18 @@ function heroFlora(scene, W, allPts, zMax, R, Q) {
 }
 
 /* ---------- construcción ---------- */
+
+// pasos del armado del mundo: se registran y se muestran en la sala de espera, así nunca queda colgado en silencio
+const BSTEP = { u: null, log: [] };
+function buildStep(n) { BSTEP.log.push([n, Math.round(performance.now())]); try { console.log('[armado]', n); } catch (e) {} try { if (BSTEP.u) BSTEP.u.prog(null, 'Armando el mundo… · ' + n); } catch (e) {} window.__armado = BSTEP.log; }
+const withTO = (p, ms, n) => Promise.race([p, new Promise((_, j) => setTimeout(() => j(new Error('tiempo: ' + n)), ms))]);
+function buildFail(U, e) {
+  console.warn('armado', e); const ov = U && U.ov; if (!ov) return; const box = document.createElement('div'); box.className = 'lb-fail';
+  box.innerHTML = `<b>No pudimos armar el mundo en este aparato.</b><p>Paso: ${esc((BSTEP.log[BSTEP.log.length - 1] || ['inicio'])[0])}. Probá de nuevo con la calidad Baja: se ve más simple, pero anda en cualquier celular.</p><button type="button" class="lb-go">Entrar en calidad Baja</button>`;
+  (ov.querySelector('.lb-in') || ov).appendChild(box); box.querySelector('button').onclick = () => { try { localStorage.setItem('tsp:q', 'bajo'); } catch (er) {} location.reload(); };
+}
 async function build() {
-  H3.npcs = []; await heroLoad();
+  H3.npcs = []; await heroLoad(); buildStep('terreno y casas');
   const g = G(), hx = g.branch === 'ados', root = document.getElementById('view3d'), _c = root.classList.toggle('hx', hx), cv = document.getElementById('c3d');
   const renderer = _r0 = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(1.75, devicePixelRatio || 1)); renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -750,7 +760,7 @@ function qEarly() { if (_qE != null) return _qE; let m = 'auto'; try { m = QOLD[
 function qLevelFor(g) {
   const coarse = matchMedia('(pointer: coarse)').matches, mem = navigator.deviceMemory || 4, good = /RTX|RX ?[67]\d{3}|Radeon Pro|Apple M\d|GTX|Radeon|Iris Xe|Arc|Adreno \(TM\) 7[3-9]\d|Mali-G7[1-9]|Immortalis|Xclipse|Apple GPU/i.test(g);
   if (/SwiftShader|llvmpipe|Software/i.test(g)) return { lv: 0, max: 1 };
-  if (coarse) return mem > 4 && good ? { lv: 3, max: 3 } : { lv: 2, max: 2 };
+  if (coarse) return { lv: 1, max: 1 }; // celulares y tablets: Medio como máximo (memoria de WebGL limitada, sobre todo en iPhone)
   if (good) return { lv: 3, max: 3 };
   return { lv: 2, max: 3 };
 }
@@ -767,7 +777,7 @@ function lobbyUI(kid) {
   let lines = []; try { lines = (G().lobbyLines && G().lobbyLines()) || []; } catch (e) {}
   ov.innerHTML = `<div class="lb-sl">${im.map((u, i) => `<div class="lb-im${i ? '' : ' on'}" style="background-image:${u}"></div>`).join('')}</div><div class="lb-shade"></div>
     <div class="lb-top"><button class="lb-mus" aria-label="Tocar para música">🎵 <span>Tocar para música</span></button></div>
-    <div class="lb-in">${kid ? '<small>Kids</small>' : `<h1 class="lb-hero"><img src="${new URL('./lobby/hero-oro.webp?v=4', import.meta.url).href}" alt="Hero" width="1200" height="308"></h1>`}<b>Tras sus pasos</b><p class="lb-sub">${kid ? '¡Vamos a caminar la historia de Jesús!' : 'Recorré la tierra donde caminó Jesús.'}</p>
+    <div class="lb-in">${kid ? '<small>Kids</small>' : `<h1 class="lb-hero"><picture><source type="image/webp" srcset="${new URL('./lobby/hero-oro-v4.webp', import.meta.url).href}"><img src="${new URL('./lobby/hero-oro-v4.png', import.meta.url).href}" alt="Hero" width="1200" height="308" onerror="this.closest('h1').outerHTML='<small>Hero</small>'"></picture></h1>`}<b>Tras sus pasos</b><p class="lb-sub">${kid ? '¡Vamos a caminar la historia de Jesús!' : 'Recorré la tierra donde caminó Jesús.'}</p>
       <p class="lb-vs" aria-live="polite"></p>
       <div class="lb-cards" hidden></div>
       <div class="lb-dl"><div class="lb-bar"><i></i></div><p class="lb-n">Preparando el mundo…</p></div>
@@ -791,7 +801,7 @@ async function lobby() {
   const kid = G().branch !== 'ados'; const U = lobbyUI(kid);
   if (LOBBY.done || !('caches' in window)) { LOBBY.done = true; U.prog(null, 'Armando el mundo…'); return U; }
   let list = null, c = null, miss = [], files = [];
-  try { list = await dlList(3); files = list.files; c = await caches.open(DLW.cache); const have = new Set((await c.keys()).map(r => r.url)); miss = files.filter(([u]) => !have.has(u)); } catch (e) { LOBBY.done = true; U.prog(null, 'Armando el mundo…'); return U; }
+  try { list = await dlList(matchMedia('(pointer: coarse)').matches ? 1 : 3); files = list.files; c = await caches.open(DLW.cache); const have = new Set((await c.keys()).map(r => r.url)); miss = files.filter(([u]) => !have.has(u)); } catch (e) { LOBBY.done = true; U.prog(null, 'Armando el mundo…'); return U; }
   const tot = files.reduce((a, f) => a + f[1], 0) || 1, MB = n => (n / 1048576).toFixed(0);
   const purge = () => { try { const keep = new Set(files.map(f => f[0])); c.keys().then(K => K.forEach(rq => { const m = rq.url.match(DLM.rx); if (m && DLM.r2ok.test(rq.url.slice(m[0].length)) && !keep.has(rq.url)) c.delete(rq); })); } catch (e) {} };
   if (!miss.length) { LOBBY.done = true; purge(); U.prog(1, 'Mundo guardado en este aparato ✓ · Armando el mundo…'); return U; }
@@ -2873,13 +2883,13 @@ const H3_BASE = window.H3_BASE || new URL('../hero/', import.meta.url).href;
 async function heroLoad() {
   if (H3.ok || H3.fail) return;
   try {
-    globalThis.__THREE = THREE; const mod = await import(H3_BASE + 'gltf.js'), L = new mod.GLTFLoader();
+    globalThis.__THREE = THREE; buildStep('personajes'); const mod = await withTO(import(H3_BASE + 'gltf.js'), 30000, 'gltf.js'), L = new mod.GLTFLoader(); const coarseM = matchMedia('(pointer: coarse)').matches;
     const ld = u => new Promise((r, j) => L.load((ABASE ? ABASE + 'hero/' : H3_BASE) + u, r, undefined, j));
-    const [m, f, an] = await Promise.race([Promise.all([ld(qEarly() >= 3 ? 'hero_m_hd.glb' : 'hero_m.glb'), ld(qEarly() >= 3 ? 'hero_f_hd.glb' : 'hero_f.glb'), ld('hero_anims.glb')]), new Promise((_, j) => setTimeout(() => j(new Error('tiempo')), window.H3_TO || 45000))]);
+    const [m, f, an] = await Promise.race([Promise.all([ld(qEarly() >= 3 && !coarseM ? 'hero_m_hd.glb' : 'hero_m.glb'), ld(qEarly() >= 3 && !coarseM ? 'hero_f_hd.glb' : 'hero_f.glb'), ld('hero_anims.glb')]), new Promise((_, j) => setTimeout(() => j(new Error('tiempo')), window.H3_TO || 45000))]);
     H3.skClone = mod.skClone; const all = gl => { const r = new THREE.Group(); gl.scenes.forEach(x => r.add(x)); return r; }; H3.sex.m = h3Template(all(m)); H3.sex.f = h3Template(all(f));
     H3.clips = Object.fromEntries(an.animations.map(c => [c.name, c]));
     const xl = f => new Promise((r, j) => L.load(new URL('../hero/' + f, import.meta.url).href, r, undefined, j)).then(ex => ex.animations.forEach(c => { if (!H3.clips[c.name] && !/dance/i.test(c.name)) H3.clips[c.name] = c; })).catch(e2 => console.warn('hero3d extra', f, e2));
-    await Promise.all([xl('hero_anims2.glb'), xl('hero_anims3.glb')]);
+    buildStep('animaciones'); await withTO(Promise.all([xl('hero_anims2.glb'), xl('hero_anims3.glb')]), 25000, 'animaciones').catch(e => console.warn('hero3d extra', e));
     H3.ok = true;
   } catch (e) { console.warn('hero3d', e); H3.fail = true; }
 }
@@ -3516,7 +3526,8 @@ async function show3d(on) {
   root.hidden = false; document.body.classList.add('v3on'); btn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Mapa</span>';
   const g = G(), key = g.branch + '|' + g.P().id + '|' + JSON.stringify(g.P().avatar);
   if (!THREE) { if (!loading) loading = import(THREE_URL); try { THREE = await loading; } catch (e) { document.body.classList.remove('v3boot'); root.hidden = true; document.body.classList.remove('v3on'); btn.hidden = true; return; } }
-  let LBU = null; if (builtFor !== key || !S) { if (!window.__noLobby && !/[?&]lobby=0/.test(location.search)) { try { LBU = await lobby(); } catch (e) { console.warn('lobby', e); } } if (S) { S.renderer.dispose(); S = null; } builtFor = key; try { await build(); } finally { if (LBU) LBU.close(); } }
+  let LBU = null; if (builtFor !== key || !S) { if (!window.__noLobby && !/[?&]lobby=0/.test(location.search)) { try { LBU = await lobby(); } catch (e) { console.warn('lobby', e); } } if (S) { S.renderer.dispose(); S = null; } builtFor = key; BSTEP.u = LBU; BSTEP.log = [];
+    let ok = false; try { await withTO(build(), 120000, 'armado'); ok = true; } catch (e) { builtFor = null; buildFail(LBU, e); if (!LBU) { document.body.classList.remove('v3boot'); root.hidden = true; document.body.classList.remove('v3on'); } return; } finally { BSTEP.u = null; if (LBU && ok) LBU.close(); } }
   else { const n = g.NODES[g.P().pos], [x, z] = (S.npos && S.npos[n.id]) || toV(n.x, n.y); S.av.position.set(x, 0, z); S.sig = ''; S.onStop = g.P().pos; S.quiet = false; }
   resize(); refresh(); bagBtn(); try { fanInit(); miniInit(); bagHud(); } catch (e) { console.warn('hud', e); } setTimeout(fullHint, 1500); setTimeout(iosHint, 1800); setTimeout(fidDaily, 5000); document.body.classList.remove('v3boot');
 }

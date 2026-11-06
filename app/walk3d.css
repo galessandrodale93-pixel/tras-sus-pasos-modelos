@@ -716,3 +716,6 @@ body.v3talk .v3glow,body.v3talk .v3hint,body.v3talk .v3mmbox,body.v3talk .v3mapb
 .v3camtip{position:fixed;z-index:7;left:50%;top:38%;transform:translate(-50%,-50%) scale(.96);padding:9px 18px;border-radius:999px;background:rgba(14,12,9,.78);color:#FFE7A6;font:800 14px/1 Nunito,system-ui,sans-serif;border:1px solid rgba(233,195,122,.45);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
 .v3camtip.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .v3cam .v3cam-m{font-size:15px}
+/* sala de espera: aviso si el mundo no se pudo armar */
+.lb-fail{margin-top:12px;padding:14px 16px;border-radius:14px;background:rgba(60,14,8,.78);border:1px solid rgba(255,150,120,.45);color:#FFE6DA;text-align:center;display:grid;gap:8px;justify-items:center}
+.lb-fail b{font:800 16px/1.3 Nunito,system-ui,sans-serif}.lb-fail p{margin:0;font:600 13px/1.45 Nunito,system-ui,sans-serif;opacity:.9}
