@@ -631,12 +631,14 @@ const DLW = { root: new URL('../', import.meta.url).href, cache: 'tsp-assets-v1'
 try { if ('serviceWorker' in navigator && location.protocol === 'https:' && !/localhost|127\.0\.0\.1/.test(location.hostname)) navigator.serviceWorker.register('/tsp-sw.js').catch(() => {}); } catch (e) {}
 // descarga en paralelo (8 a la vez, los más grandes primero) desde raw.githubusercontent (mucho más rápido en frío que githack)
 // y se guarda con la misma dirección que pide el juego, así el service worker la encuentra
-const DLM = { rx: /^https:\/\/(rawcdn|raw)\.githack\.com\/galessandrodale93-pixel\/tras-sus-pasos-modelos\//, raw: 'https://raw.githubusercontent.com/galessandrodale93-pixel/tras-sus-pasos-modelos/' };
+// orden de fuentes: R2 de Cloudflare (Worker tsp-assets, rápido y con CDN) → raw.githubusercontent → githack
+const DLM = { rx: /^https:\/\/(rawcdn|raw)\.githack\.com\/galessandrodale93-pixel\/tras-sus-pasos-modelos\/[0-9a-f]{7,40}\//, raw: 'https://raw.githubusercontent.com/galessandrodale93-pixel/tras-sus-pasos-modelos/main/', r2: 'https://tsp-assets.galessandrodale-93.workers.dev/', r2ok: /^(tex|hd|ph|hero|promo|app\/(sky|voice|flora|lobby|icons|tex))\/[\w\-./]+\.(glb|ktx2|webp|jpg|jpeg|png|mp3|mp4|wasm|bin)$/i };
+const dlSrc = u => { const m = u.match(DLM.rx); if (!m) return [u]; const p = u.slice(m[0].length).split('?')[0], L = []; if (DLM.r2ok.test(p)) L.push(DLM.r2 + p); L.push(u.replace(DLM.rx, m0 => m0.replace(/^https:\/\/(rawcdn|raw)\.githack\.com\//, 'https://raw.githubusercontent.com/'))); L.push(u); return L; };
 const DLCT = { js: 'application/javascript', css: 'text/css', json: 'application/json', wasm: 'application/wasm', glb: 'model/gltf-binary', ktx2: 'image/ktx2', webp: 'image/webp', jpg: 'image/jpeg', png: 'image/png', mp3: 'audio/mpeg', bin: 'application/octet-stream' };
 async function dlFetch(c, files, prog) {
   const q = files.slice().sort((a, b) => b[1] - a[1]), fail = []; let got = 0; const t0 = performance.now(), tot = files.reduce((a, f) => a + f[1], 0) || 1;
-  const one = async ([u, n]) => { const ext = (u.split('?')[0].split('.').pop() || '').toLowerCase(), alt = DLM.rx.test(u) ? u.replace(DLM.rx, DLM.raw) : null;
-    for (const src of alt ? [alt, u] : [u]) { try { const r = await fetch(src, { mode: 'cors' }); if (!r.ok) continue; const b = await r.blob(); await c.put(u, new Response(b, { headers: { 'Content-Type': DLCT[ext] || r.headers.get('content-type') || 'application/octet-stream' } })); return true; } catch (e) {} } return false; };
+  const one = async ([u, n]) => { const ext = (u.split('?')[0].split('.').pop() || '').toLowerCase();
+    for (const src of dlSrc(u)) { try { const r = await fetch(src, { mode: 'cors' }); if (!r.ok) continue; const b = await r.blob(); await c.put(u, new Response(b, { headers: { 'Content-Type': DLCT[ext] || r.headers.get('content-type') || 'application/octet-stream' } })); return true; } catch (e) {} } return false; };
   const work = async () => { while (q.length) { const f = q.shift(); if (!(await one(f))) fail.push(f); got += f[1]; const s = (performance.now() - t0) / 1000, sp = got / Math.max(.5, s); prog && prog(got, tot, sp, (tot - got) / Math.max(1, sp)); } };
   await Promise.all(Array.from({ length: 8 }, work)); return fail;
 }
