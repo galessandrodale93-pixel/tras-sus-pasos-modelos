@@ -2621,12 +2621,33 @@ function openExam1(r,onPass,BANK){
     box.querySelector('.ex-go').onclick=()=>{if(pass){box.remove();onPass();}else{box.remove();openExam(r,onPass);}};const l=box.querySelector('.ex-later');if(l)l.onclick=()=>{box.remove();refreshMap();};};
   intro();
 }
+
+/* ===== Trama de Hero: capítulos, compañeros, ganchos y rollo de Isaías (datos en app/story/hero_story.js) ===== */
+const HST={mod:null,busy:false,q:[]};
+const hstLoad=()=>HST.mod||(HST.mod=import('./story/hero_story.js').catch(()=>null));
+const hstP=()=>{const p=P();p.story=p.story||{open:{},close:{},scroll:[]};p.story.open=p.story.open||{};p.story.close=p.story.close||{};p.story.scroll=p.story.scroll||[];return p.story;};
+const hstFree=()=>{const mv=document.getElementById('mapView'),stp=document.getElementById('stop'),ar=document.getElementById('arcade');if(!mv||mv.hidden)return false;if(stp&&!stp.hidden)return false;if(ar&&!ar.hidden)return false;if(document.body.classList.contains('v3boot'))return false;const lu=document.getElementById('levelup'),mn=document.getElementById('menu');if(lu&&!lu.hidden)return false;if(mn&&!mn.hidden)return false;return !document.querySelector('.exam,.v3lobby,.hst,#v3sheet:not([hidden]),.film,.mg-wrap');};
+function hstCard(html,onClose){const d=document.createElement('div');d.className='hst';d.innerHTML=`<div class="hst-in" role="dialog">${html}<div class="hst-btns"><button class="hst-go">Seguir</button></div></div>`;document.body.appendChild(d);requestAnimationFrame(()=>d.classList.add('on'));const go=d.querySelector('.hst-go');try{go.focus({preventScroll:true});}catch(e){}d.querySelectorAll('[data-hst]').forEach(b=>b.onclick=()=>{if(b.dataset.hst==='scroll')hstScroll();});go.onclick=()=>{d.classList.remove('on');setTimeout(()=>{d.remove();HST.busy=false;onClose&&onClose();hstPump();},350);};HST.busy=true;}
+const hstSay=(M,list)=>list.map(([k,t])=>{const c=M.HCOMP[k];return `<div class="hst-say"><span class="hst-ico">${c.ico}</span><div><b>${esc(c.name)}</b><small>${esc(c.who)}</small><p>${esc(t)}</p></div></div>`;}).join('');
+async function hstOpen(r){const M=await hstLoad();if(!M)return;const R=REGIONS[r],C=M.HCHAP[R.id];if(!C)return;const st=hstP();if(st.open[R.id])return;st.open[R.id]=1;save();
+  const nm=P().name||'';hstCard(`<small class="hst-k">Capítulo ${C.n}</small><h2>${esc(C.t)}</h2>${C.open.map(t=>`<p class="hst-p">${esc(t.replace('{name}',nm))}</p>`).join('')}${hstSay(M,C.say.slice(0,2))}`);try{vo(C.open.join(' ').replace('{name}',nm),'narrador',{queue:1});}catch(e){}}
+async function hstClose(r){const M=await hstLoad();if(!M)return;const R=REGIONS[r],C=M.HCHAP[R.id];if(!C)return;const st=hstP();if(st.close[R.id])return;st.close[R.id]=1;
+  const got=[R.id].concat(R.id==='cruz'?['resurreccion']:[]).filter(id=>M.HSCROLL[id]&&!st.scroll.includes(id));got.forEach(id=>st.scroll.push(id));save();
+  const fr=got.map(id=>{const f=M.HSCROLL[id];return `<div class="hst-scroll"><small>📜 Fragmento del rollo · ${esc(f.ref)}</small>${f.q?`<p class="hst-q">«${esc(f.q)}»</p>`:''}<p>${esc(f.t)}</p></div>`;}).join('');
+  const extra=C.say.slice(2);hstCard(`<small class="hst-k">Fin del capítulo ${C.n} · ${esc(C.t)}</small>${extra.length?hstSay(M,extra):''}<p class="hst-hook">${esc(C.hook)}</p>${fr}<p class="hst-n">Rollo de Isaías: ${st.scroll.length} de 9 fragmentos.${R.id==='cruz'?' Frente a la cruz, Eleazar lo lee completo.':''}</p>${st.scroll.length?'<button class="hst-ghost" data-hst="scroll">Leer el rollo</button>':''}`,R.id==='cruz'?()=>hstScroll(true):null);}
+async function hstScroll(full){const M=await hstLoad();if(!M)return;const st=hstP(),have=new Set(st.scroll),O=['nacimiento','infancia','galilea','milagros','cruz5','parabolas','bautismo','jerusalen','resurreccion','cruz12'];
+  const rows=O.map(k=>{const id=k.startsWith('cruz')?'cruz':k,f=M.HSCROLL[id];if(!f)return '';if(!have.has(id))return `<li class="miss">— Fragmento que todavía no encontraste —</li>`;if(k==='cruz5')return `<li><small>Isaías 53:5</small><p class="hst-q">«${esc(f.q)}»</p></li>`;if(k==='cruz12')return `<li><small>Isaías 53:12</small><p>${esc(f.t)}</p></li>`;return `<li><small>${esc(f.ref)}</small><p>${esc(f.t)}</p></li>`;}).join('');
+  if(HST.busy){document.querySelectorAll('.hst').forEach(x=>x.remove());HST.busy=false;}
+  hstCard(`<small class="hst-k">Rollo de Isaías · capítulo 53</small><h2>${full?'Frente a la cruz':'El siervo que sufre'}</h2><p class="hst-p">Unos setecientos años antes, el profeta Isaías describió a un siervo de Dios que iba a sufrir en lugar del pueblo. ${have.size} de 9 fragmentos.</p><ol class="hst-roll">${rows}</ol><p class="hst-note">El versículo 53:5 se cita de la NTV; los demás se cuentan con palabras propias.</p>`);
+  if(full){try{vo('Pero él fue traspasado por nuestras rebeliones y aplastado por nuestros pecados.','narrador',{queue:1});}catch(e){}}}
+function hstPump(){if(HST.busy||!HST.q.length||!hstFree())return;const [k,r]=HST.q.shift();(k==='open'?hstOpen:hstClose)(r);}
+setInterval(()=>{try{if(branch!=='ados'||!current)return;const p=P(),r=curRegion(),R=REGIONS[r];if(R&&!hstP().open[R.id]&&!HST.q.some(x=>x[0]==='open'&&x[1]===r))HST.q.push(['open',r]);hstPump();}catch(e){}},2500);
 function finishRegion(r){
   const p=P(),R=REGIONS[r].id,ids=ORDER.map(k=>`${R}-${k}`).filter(isDone),okN=ids.filter(id=>p.done[id]).length,acc=ids.length?okN/ids.length:0;
   Object.assign(p.regions[R],{complete:true,stars:acc>=.9?3:acc>=.7?2:1,correct:okN,answered:ids.length});
   if(ids.length&&okN===ids.length)award('perfecto');
   if(REGIONS.every(x=>p.regions[x.id]&&p.regions[x.id].complete))award('peregrino');
-  save();refreshMap();celebrate(r);
+  save();refreshMap();celebrate(r);if(branch==='ados')HST.q.push(['close',r]);
 }
 function celebrate(r){
   $('#barFill').style.width='100%';
@@ -2874,7 +2895,7 @@ const go=()=>{try{const d=document,el=d.documentElement;if(d.fullscreenElement||
 const once=e=>{const t=e.target&&e.target.closest&&e.target.closest('button,a,[role=button],.pick,.card');if(!t)return;removeEventListener('pointerup',once,true);go();};addEventListener('pointerup',once,true);}catch(e){}})();
 function tspTitle(){try{if(document.title!=='Kids & Hero')document.title='Kids & Hero';}catch(e){}}
 tspTitle();
-window.GAME={stageLine,lobbyLines,vo:(t,v,o)=>vo(t,v,o),voState:()=>({log:VO.log.slice(-12),on:VO.on,src:VO.el&&VO.el.src,paused:VO.el?VO.el.paused:null,cur:VO.cur&&VO.cur.t,q:VO.q.length}),voStop:()=>voStop(),voOn:()=>VO.on,NODES,EDGES,ADJ,REGIONS,VIGN,TOP,RH,WIDTH,get branch(){return branch},level:()=>lvOf(total(P())),EXAMS,P,reachable,visited,isDone,bfs,arrive,save,toast,refreshHud,syncMap(){refreshMap();const n=NODES[P().pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));}};
+window.GAME={hstTest:r=>HST.q.push(['close',r]),hstScroll:()=>hstScroll(false),hstHas:()=>branch==='ados'&&hstP().scroll.length>0,stageLine,lobbyLines,vo:(t,v,o)=>vo(t,v,o),voState:()=>({log:VO.log.slice(-12),on:VO.on,src:VO.el&&VO.el.src,paused:VO.el?VO.el.paused:null,cur:VO.cur&&VO.cur.t,q:VO.q.length}),voStop:()=>voStop(),voOn:()=>VO.on,NODES,EDGES,ADJ,REGIONS,VIGN,TOP,RH,WIDTH,get branch(){return branch},level:()=>lvOf(total(P())),EXAMS,P,reachable,visited,isDone,bfs,arrive,save,toast,refreshHud,syncMap(){refreshMap();const n=NODES[P().pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));}};
 function enterMap(){
   if(worldFor!==branch)buildWorld();
   const p=P();

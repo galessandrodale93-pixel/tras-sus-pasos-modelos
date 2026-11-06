@@ -577,7 +577,7 @@ body.v3lb::before,body.v3lb::after{display:none!important}
 @media (max-height:520px){.v3lobby{padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}.lb-in{gap:6px;width:min(620px,100%)}.lb-in>b{font-size:28px}.lb-sub{display:none}.lb-vs{font-size:13px;min-height:2.6em}.lb-card{padding:8px 12px}.lb-ico{width:40px;height:40px;font-size:22px}.lb-card b{font-size:14px}.lb-card p{font-size:12px}.lb-go{padding:10px 24px;margin-top:2px}.lb-note{font-size:11px}.lb-mus{padding:7px 11px;font-size:12px}}
 
 /* ===== HUD mínimo (pedido de Gui): arriba a la izquierda Día + comida + minimapa; abajo a la derecha un solo abanico; a la derecha solo amigos ===== */
-body.v3on .hud,body.v3on .top,body.v3on #v3bag,body.v3on #menuBtn,body.v3on .view-toggle{display:none!important}
+body.v3on .top,body.v3on #v3bag,body.v3on #menuBtn,body.v3on .view-toggle,body.v3on .hud .pill.streak{display:none!important}
 .v3acts button:not([data-a="room"]){display:none!important}
 body.v3on .v3surv{left:max(12px,calc(env(safe-area-inset-left,0px) + 8px));top:calc(12px + env(safe-area-inset-top,0px));bottom:auto;transform:none;flex-direction:column;align-items:flex-start;gap:6px;width:auto;flex-wrap:nowrap;justify-content:flex-start}
 body.v3on .v3surv .sv-money,body.v3on .v3surv .sv-btn{display:none!important}
@@ -617,3 +617,37 @@ body:not(.v3on) .v3fan,body:has(#v3sheet:not([hidden])) .v3fan,body.v3lb .v3fan{
 /* el sello "Built on Wix" ocupa la esquina inferior derecha: el abanico va arriba de él */
 .v3fan{bottom:calc(70px + env(safe-area-inset-bottom,0px))}
 @media (max-height:520px){.v3fan{bottom:calc(58px + env(safe-area-inset-bottom,0px))}.fan-items{max-height:calc(100vh - 120px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}}
+
+/* tarjetas de la trama de Hero (capítulos, compañeros, rollo de Isaías) */
+.hst{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:max(14px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) max(14px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));background:rgba(6,4,2,.6);backdrop-filter:blur(3px);opacity:0;transition:opacity .35s}
+.hst.on{opacity:1}
+.hst-in{width:min(560px,100%);max-height:100%;overflow-y:auto;background:linear-gradient(180deg,#2A2014,#16110B);color:#F4E2B8;border:1px solid rgba(233,195,122,.4);border-radius:20px;padding:20px 20px 16px;box-shadow:0 20px 60px rgba(0,0,0,.6);font:600 14px/1.5 "Nunito",sans-serif}
+.hst-k{display:block;font:800 11px "Nunito",sans-serif;letter-spacing:.24em;text-transform:uppercase;color:#E9C37A}
+.hst-in h2{margin:4px 0 10px;font:600 28px/1.1 "Cinzel",Georgia,serif;color:#FFE7A6}
+.hst-p{margin:0 0 10px}.hst-hook{margin:10px 0;font:italic 600 15px/1.45 Georgia,serif;color:#FFE7A6}
+.hst-say{display:flex;gap:10px;margin:8px 0;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(233,195,122,.18)}
+.hst-ico{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:rgba(233,195,122,.15);font-size:18px}
+.hst-say b{font-weight:900}.hst-say small{margin-left:6px;opacity:.65;font-size:11px}.hst-say p{margin:2px 0 0}
+.hst-scroll{margin:10px 0;padding:12px 14px;border-radius:12px;background:linear-gradient(180deg,#E9D9B4,#D8C394);color:#3A2A14;border:1px solid #B89A62}
+.hst-scroll small{display:block;font-weight:900;font-size:11px;letter-spacing:.06em;margin-bottom:4px}.hst-scroll p{margin:4px 0 0}
+.hst-q{font:italic 700 15px/1.45 Georgia,serif}
+.hst-n,.hst-note{margin:8px 0 0;font-size:12px;opacity:.8}
+.hst-roll{margin:6px 0 0;padding-left:20px}.hst-roll li{margin:0 0 9px}.hst-roll li small{font-weight:900;color:#E9C37A}.hst-roll li p{margin:2px 0 0}.hst-roll li.miss{opacity:.45;font-style:italic}
+.hst-btns{display:flex;justify-content:flex-end;margin-top:12px}
+.hst-go{border:0;border-radius:99px;padding:11px 24px;font:900 15px "Nunito",sans-serif;background:linear-gradient(180deg,#FFE7A6,#E7AE45);color:#2A1A06;cursor:pointer}
+.hst-ghost{margin-top:8px;border:1px solid rgba(233,195,122,.5);background:transparent;color:#FFE7A6;border-radius:99px;padding:8px 16px;font:800 13px "Nunito",sans-serif;cursor:pointer}
+@media (max-height:520px){.hst-in{padding:14px 16px 12px;font-size:13px}.hst-in h2{font-size:22px;margin-bottom:6px}.hst-say{padding:7px 10px;margin:5px 0}}
+
+/* arriba a la izquierda, apilados y compactos: barra de nivel, Día, comida y botón de mapa */
+body.v3on .hud{left:0!important;right:auto!important;width:auto!important;max-width:min(330px,calc(100vw - 120px));padding-inline:max(10px,calc(env(safe-area-inset-left,0px) + 6px)) 0!important}
+body.v3on .v3surv,.v3mmbox{top:calc(80px + env(safe-area-inset-top,0px))!important}
+.v3mapbtn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 13px 0 10px;border-radius:999px;border:1px solid #6B5233;background:rgba(20,15,10,.82);color:#F3E6CC;font:900 12px "Nunito",sans-serif;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+body:not([data-branch="ados"]) .v3mapbtn{background:rgba(255,255,255,.92);color:#22407F;border-color:rgba(34,64,127,.25)}
+@media (max-height:520px){body.v3on .v3surv,.v3mmbox{top:calc(54px + env(safe-area-inset-top,0px))!important}.v3mapbtn{height:26px;font-size:11px;padding:0 10px 0 8px}.v3mapbtn svg{width:15px;height:15px}}
+
+/* brújula discreta hacia el hito activo (Hero) */
+.v3comp{position:fixed;z-index:6;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;border-radius:999px;background:rgba(20,15,10,.72);border:1px solid rgba(233,195,122,.45);color:#FFE7A6;font:800 12px "Nunito",sans-serif;cursor:pointer;backdrop-filter:blur(4px)}
+.v3comp i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:rgba(233,195,122,.18)}.v3comp i svg{transition:transform .2s}
+.v3comp[hidden],body:not(.v3on) .v3comp,body:has(#v3sheet:not([hidden])) .v3comp,body.v3lb .v3comp{display:none}
+@media (max-height:520px){.v3comp{top:calc(8px + env(safe-area-inset-top,0px));font-size:11px;padding:3px 10px 3px 4px}}
+@media (max-height:520px){.v3acts{bottom:calc(112px + env(safe-area-inset-bottom,0px))!important}}

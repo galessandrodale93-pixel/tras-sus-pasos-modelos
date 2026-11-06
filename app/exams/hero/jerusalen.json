@@ -571,6 +571,20 @@
    "id": "jer-38"
   },
   {
+   "t": "mc",
+   "q": "Según Isaías 53:8-9, ¿cómo condenan al siervo?",
+   "o": [
+    "Injustamente, aunque nunca hizo violencia ni engañó a nadie",
+    "Por haber robado en el templo",
+    "Por pelear contra Roma",
+    "Por no pagar impuestos"
+   ],
+   "a": 0,
+   "exp": "Es el fragmento del rollo de Isaías 53 que se junta en esta etapa del juego. Isaías lo escribió unos setecientos años antes de Jesús.",
+   "ref": "Isaías 53:8-9",
+   "id": "jer-isa"
+  },
+  {
    "t": "reflect",
    "q": "Jesús lavó los pies incluso de Judas y de Pedro. ¿A quién te cuesta servir?",
    "id": "jer-39"

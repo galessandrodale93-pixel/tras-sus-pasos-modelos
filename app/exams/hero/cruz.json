@@ -586,6 +586,20 @@
    "id": "cru-39"
   },
   {
+   "t": "mc",
+   "q": "Al final de Isaías 53, ¿qué hace el siervo por los que se rebelaron?",
+   "o": [
+    "Intercede por ellos",
+    "Los castiga",
+    "Se aleja de ellos",
+    "Los olvida"
+   ],
+   "a": 0,
+   "exp": "Es el fragmento del rollo de Isaías 53 que se junta en esta etapa del juego. Isaías lo escribió unos setecientos años antes de Jesús.",
+   "ref": "Isaías 53:12",
+   "id": "cru-isa"
+  },
+  {
    "t": "reflect",
    "q": "Mientras lo crucificaban, Jesús perdonó, prometió el paraíso y cuidó a su mamá. ¿Qué te dice eso de su amor por vos?",
    "id": "cru-40"

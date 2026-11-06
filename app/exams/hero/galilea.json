@@ -551,6 +551,20 @@
    "id": "gal-38"
   },
   {
+   "t": "mc",
+   "q": "Según Isaías 53:3, ¿cómo trata la gente al siervo?",
+   "o": [
+    "Lo desprecia y lo rechaza",
+    "Lo corona rey",
+    "Lo sigue sin dudar",
+    "Lo ignora porque no habla"
+   ],
+   "a": 0,
+   "exp": "Es el fragmento del rollo de Isaías 53 que se junta en esta etapa del juego. Isaías lo escribió unos setecientos años antes de Jesús.",
+   "ref": "Isaías 53:3",
+   "id": "gal-isa"
+  },
+  {
    "t": "reflect",
    "q": "Pedro obedeció cuando la orden de Jesús no tenía lógica. ¿Hay algo que Dios te está pidiendo que todavía no entendés?",
    "id": "gal-39"

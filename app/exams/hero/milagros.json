@@ -540,6 +540,20 @@
    "id": "mil-39"
   },
   {
+   "t": "mc",
+   "q": "¿Con qué carga el siervo según Isaías 53:4, que Mateo relaciona con las sanidades de Jesús?",
+   "o": [
+    "Con nuestras enfermedades y nuestros dolores",
+    "Con el oro del templo",
+    "Con las tablas de la ley",
+    "Con las redes de los pescadores"
+   ],
+   "a": 0,
+   "exp": "Es el fragmento del rollo de Isaías 53 que se junta en esta etapa del juego. Isaías lo escribió unos setecientos años antes de Jesús.",
+   "ref": "Isaías 53:4",
+   "id": "mil-isa"
+  },
+  {
    "t": "reflect",
    "q": "Los amigos del paralítico no se rindieron ante la multitud. ¿Por qué amigo podés orar con esa insistencia?",
    "id": "mil-40"

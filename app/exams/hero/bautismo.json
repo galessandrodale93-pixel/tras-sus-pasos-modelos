@@ -529,6 +529,20 @@
    "id": "bau-37"
   },
   {
+   "t": "mc",
+   "q": "Isaías 53:7 compara al siervo con un cordero. ¿Qué hace cuando lo maltratan?",
+   "o": [
+    "Se queda en silencio y no se defiende",
+    "Llama a un ejército",
+    "Escapa al desierto",
+    "Pide venganza"
+   ],
+   "a": 0,
+   "exp": "Es el fragmento del rollo de Isaías 53 que se junta en esta etapa del juego. Isaías lo escribió unos setecientos años antes de Jesús.",
+   "ref": "Isaías 53:7",
+   "id": "bau-isa"
+  },
+  {
    "t": "reflect",
    "q": "Antes de hacer un solo milagro, Jesús escuchó al Padre llamarlo su Hijo muy amado. ¿Qué te dice Dios a vos sobre quién sos?",
    "id": "bau-38"

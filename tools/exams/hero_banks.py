@@ -410,6 +410,23 @@ A('Un amigo te cuenta que tiene dudas sobre la fe y se siente mal por eso. ¿Qu�
 R('Jesús llamó a María por su nombre, caminó con los de Emaús, esperó a Tomás y le dio a Pedro una nueva oportunidad. ¿Con cuál de ellos te identificás hoy?')
 R('Jesús resucitado te conoce por tu nombre y camina con vos. ¿Qué le querés contar hoy?')
 
+
+# ───────────── Rollo de Isaías 53 (un fragmento por etapa, juntado en el juego)
+ISA = {
+ 'nacimiento': ('Isaías 53:1', '¿Qué pregunta hace el profeta al comienzo de Isaías 53?', 'Quién creyó el mensaje y a quién se le mostró el poder del Señor', ['Cuándo iba a nacer el Mesías', 'Dónde iba a estar el templo', 'Por qué Israel estaba en el exilio']),
+ 'infancia': ('Isaías 53:2', 'En Isaías 53:2, ¿cómo crece el siervo delante de Dios?', 'Como un brote tierno, como una raíz en tierra seca', ['Como un cedro alto del Líbano', 'Como un rey en un palacio', 'Como un río que crece']),
+ 'bautismo': ('Isaías 53:7', 'Isaías 53:7 compara al siervo con un cordero. ¿Qué hace cuando lo maltratan?', 'Se queda en silencio y no se defiende', ['Llama a un ejército', 'Escapa al desierto', 'Pide venganza']),
+ 'galilea': ('Isaías 53:3', 'Según Isaías 53:3, ¿cómo trata la gente al siervo?', 'Lo desprecia y lo rechaza', ['Lo corona rey', 'Lo sigue sin dudar', 'Lo ignora porque no habla']),
+ 'milagros': ('Isaías 53:4', '¿Con qué carga el siervo según Isaías 53:4, que Mateo relaciona con las sanidades de Jesús?', 'Con nuestras enfermedades y nuestros dolores', ['Con el oro del templo', 'Con las tablas de la ley', 'Con las redes de los pescadores']),
+ 'parabolas': ('Isaías 53:6', 'Isaías 53:6 dice que todos nos perdimos como…', 'Ovejas, cada uno por su propio camino', ['Monedas en una casa', 'Semillas en el camino', 'Peces en el mar']),
+ 'jerusalen': ('Isaías 53:8-9', 'Según Isaías 53:8-9, ¿cómo condenan al siervo?', 'Injustamente, aunque nunca hizo violencia ni engañó a nadie', ['Por haber robado en el templo', 'Por pelear contra Roma', 'Por no pagar impuestos']),
+ 'cruz': ('Isaías 53:12', 'Al final de Isaías 53, ¿qué hace el siervo por los que se rebelaron?', 'Intercede por ellos', ['Los castiga', 'Se aleja de ellos', 'Los olvida']),
+ 'resurreccion': ('Isaías 53:10-11', 'Según Isaías 53:10-11, ¿qué pasa después del sufrimiento del siervo?', 'Ve la luz y queda satisfecho, y muchos son declarados justos', ['Queda olvidado para siempre', 'Vuelve a nacer en Belén', 'Se convierte en rey de Roma']),
+}
+for k, (ref, q, ok, bad) in ISA.items():
+    cur = k
+    x = {'t': 'mc', 'q': q, 'o': [ok] + bad, 'a': 0, 'exp': 'Es el fragmento del rollo de Isaías 53 que se junta en esta etapa del juego. Isaías lo escribió unos setecientos años antes de Jesús.', 'ref': ref, 'id': k[:3] + '-isa'}
+    B[k].insert(len([q2 for q2 in B[k] if q2['t'] != 'reflect']), x)
 os.makedirs(OUT, exist_ok=True)
 for k, qs in B.items():
     g = [q for q in qs if q['t'] != 'reflect']

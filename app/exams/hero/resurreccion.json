@@ -574,6 +574,20 @@
    "id": "res-39"
   },
   {
+   "t": "mc",
+   "q": "Según Isaías 53:10-11, ¿qué pasa después del sufrimiento del siervo?",
+   "o": [
+    "Ve la luz y queda satisfecho, y muchos son declarados justos",
+    "Queda olvidado para siempre",
+    "Vuelve a nacer en Belén",
+    "Se convierte en rey de Roma"
+   ],
+   "a": 0,
+   "exp": "Es el fragmento del rollo de Isaías 53 que se junta en esta etapa del juego. Isaías lo escribió unos setecientos años antes de Jesús.",
+   "ref": "Isaías 53:10-11",
+   "id": "res-isa"
+  },
+  {
    "t": "reflect",
    "q": "Jesús llamó a María por su nombre, caminó con los de Emaús, esperó a Tomás y le dio a Pedro una nueva oportunidad. ¿Con cuál de ellos te identificás hoy?",
    "id": "res-40"

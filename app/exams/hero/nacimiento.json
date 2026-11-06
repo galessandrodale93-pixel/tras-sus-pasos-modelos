@@ -541,6 +541,20 @@
    "id": "nac-38"
   },
   {
+   "t": "mc",
+   "q": "¿Qué pregunta hace el profeta al comienzo de Isaías 53?",
+   "o": [
+    "Quién creyó el mensaje y a quién se le mostró el poder del Señor",
+    "Cuándo iba a nacer el Mesías",
+    "Dónde iba a estar el templo",
+    "Por qué Israel estaba en el exilio"
+   ],
+   "a": 0,
+   "exp": "Es el fragmento del rollo de Isaías 53 que se junta en esta etapa del juego. Isaías lo escribió unos setecientos años antes de Jesús.",
+   "ref": "Isaías 53:1",
+   "id": "nac-isa"
+  },
+  {
    "t": "reflect",
    "q": "Dios eligió llegar a un lugar humilde. ¿En qué lugar sencillo de tu vida podría estar queriendo entrar Jesús hoy?",
    "id": "nac-39"

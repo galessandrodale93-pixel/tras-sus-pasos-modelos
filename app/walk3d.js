@@ -574,6 +574,7 @@ const KL = {};
   S = { renderer, scene, camera, hx, av, markers, edgePts, allPts, items, joy: { x: 0, y: 0 }, keys: {}, flies, ground, yaw: Math.PI, camYaw: 0, camDist: 6.6, camPitch: .4, walking: false, moving: false, t: 0, root, cv, sig: '', onStop: g.P().pos, W: HW, uGrass, KL, zEnd: zMax };
   // orientar al personaje hacia la próxima parada
   buildPois(scene, pois, hx, HW, rng(77), ribbon); S.pois = pois; buildTowns(scene, g, hx, HW, pois); ambReset(); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; setTimeout(() => tutOpen(), 1500); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); }, 0);
+  try { scatterNodes(g, HW); if (S.npos[g.P().pos]) { const q = S.npos[g.P().pos]; av.position.set(q[0], 0, q[1]); } } catch (e) { console.warn('hitos', e); }
   S0 = S; insMigrate(); setTimeout(glowUI, 400); S.mis = buildMissions(scene, g, hx, HW); { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
   const nx = nextList()[0]; if (nx) { const N = g.NODES[nx], [bx, bz] = toV(N.x, N.y); S.yaw = Math.atan2(bx - ax, bz - az); }
   av.rotation.y = S.yaw;
@@ -826,6 +827,7 @@ async function go(id) {
   S.walking = true; S.quiet = false; wake(); ui();
   const h = g.NODES[p.pos], [hx0, hz0] = toV(h.x, h.y); if (Math.hypot(S.av.position.x - hx0, S.av.position.z - hz0) > .3) await walkLine(hx0, hz0);
   for (let i = 0; i < path.length - 1; i++) await walkEdge(path[i], path[i + 1]);
+  if (S.npos && S.npos[id]) await walkLine(S.npos[id][0], S.npos[id][1]);
   S.walking = false; S.onStop = id; p.pos = id; g.save(); S.sig = ''; g.arrive(id); refresh();
 }
 function walkLine(x1, z1) {
@@ -880,6 +882,7 @@ function fanItems() {
   L.push(['💪', 'Atributos', () => openBag('at')]);
   if (S && S.sv) { L.push(['🍽️', 'Comer (C)', () => svEat()]); L.push(['🔨', 'Fabricar (B)', () => svCraft()]); if (money != null) L.push([`<span class="fan-coin"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#F5C443" stroke="#8A5A12" stroke-width="1.6"/><circle cx="12" cy="12" r="7" fill="none" stroke="#B9801E" stroke-width="1.2"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="900" font-family="Georgia,serif" fill="#7A4E0E">D</text></svg><em>${money}</em></span>`, `${money} denarios (monedas)`, () => openBag()]); }
   const acts = document.getElementById('v3acts'); if (acts) acts.querySelectorAll('button[data-a]').forEach(b => { if (b.dataset.a === 'room') return; L.push([b.innerHTML, b.title || b.getAttribute('aria-label') || b.dataset.a, () => fanFire(b)]); });
+  try { if (G().hstHas && G().hstHas()) L.push(['📜', 'Rollo de Isaías', () => G().hstScroll()]); } catch (e) {}
   L.push(['⭐', 'Mi progreso', () => { const h = document.getElementById('hudLv'); if (h) h.click(); }]);
   L.push(['☰', 'Menú y ajustes', () => { const m = document.getElementById('menuBtn'); if (m) m.click(); }]);
   return L;
@@ -898,13 +901,42 @@ function fanInit() {
   el.addEventListener('pointerdown', () => fanArm(), true); el.addEventListener('pointermove', () => fanArm(), { passive: true });
 }
 const MINI = { cv: null, t: 0 };
+// Hero: los hitos de cada etapa no van en fila sobre el camino; se reparten por la etapa (cerca del lugar que nombran) en suelo alcanzable.
+// El camino queda como guía: "Caminar a…" sigue el camino y después hace un tramo recto (verificado libre) hasta el hito.
+function nodeActive() { const g = G(), p = g.P(), cur = g.NODES[p.pos]; if (cur && cur.kind === 'ch' && !g.isDone(cur.id)) return cur.id; const L = nextList(); return L[0] || null; }
+function scatterNodes(g, HW) {
+  S.npos = {}; if (!S.hx || !HW) return; const used = [];
+  const wet = (x, z) => { if (waterWet(x, z, null) > .06) return true; for (const B of WATER.basins) if (Math.hypot(x - B.x, z - B.z) < B.r * 1.3 + 1.5) return true; return false; };
+  const segClear = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.ceil(L / .8); for (let i = 2; i <= n; i++) { const x = x0 + (x1 - x0) * i / n, z = z0 + (z1 - z0) * i / n; if (blockedAt(x, z) || wet(x, z)) return false; } return true; };
+  const ok = (x, z) => { if (Math.abs(x) > Math.min(XB * .88, (HW.X1 || XB) - 6)) return false; if (HW.dAt(x, z) < 8) return false; if (wet(x, z)) return false; const sl = Math.hypot(HW.hAt(x + 1, z) - HW.hAt(x - 1, z), HW.hAt(x, z + 1) - HW.hAt(x, z - 1)) / 2; if (sl > .36) return false;
+    for (let k = 0; k < 8; k++) { const an = k / 8 * 6.283; if (blockedAt(x + Math.cos(an) * 1.4, z + Math.sin(an) * 1.4)) return false; } for (const u of used) if (Math.hypot(x - u[0], z - u[1]) < 12) return false; return true; };
+  Object.values(g.NODES).forEach(n => {
+    if (n.kind !== 'ch') return; const m = S.markers[n.id]; if (!m) return; const [px, pz] = toV(n.x, n.y); let h = 0; for (const c of n.id) h = (h * 31 + c.charCodeAt(0)) >>> 0; const R = rng(4000 + h % 9973), lab = (n.label || '').toLowerCase();
+    const poi = lab && lab !== 'el camino' ? (S.pois || []).find(q => q.r === n.r && q.k !== 'river' && q.name && (q.name.toLowerCase().includes(lab) || lab.includes(q.name.toLowerCase()))) : null;
+    let best = null; for (let t = 0; t < 160 && !best; t++) { let x, z; if (poi && t < 60) { const a = R() * 6.283, r = 7 + R() * 9; x = poi.x + Math.cos(a) * r; z = poi.z + Math.sin(a) * r; } else { const a = R() * 6.283, r = 16 + R() * (t < 110 ? 22 : 34); x = px + Math.cos(a) * r; z = pz + Math.sin(a) * r * .6; }
+      if (ok(x, z) && segClear(px, pz, x, z)) best = [x, z]; }
+    if (!best) return; used.push(best); m.position.set(best[0], Math.max(0, HW.hAt(best[0], best[1])), best[1]); S.npos[n.id] = best;
+  });
+}
+const COMP = { el: null, t: 0 };
+function compassTick(dt) {
+  if (!S || !S.hx) return; COMP.t -= dt; if (COMP.t > 0) return; COMP.t = .2;
+  if (!COMP.el) { COMP.el = document.createElement('div'); COMP.el.className = 'v3comp'; COMP.el.innerHTML = '<i><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3l6 15-6-3.5L6 18Z" fill="currentColor"/></svg></i><span></span>'; COMP.el.onclick = () => openMap(); document.body.appendChild(COMP.el); }
+  const id = nodeActive(), m = id && S.markers[id], a = S.av.position; if (!m || S.walking || sheetUp()) { COMP.el.hidden = true; return; }
+  const dx = m.position.x - a.x, dz = m.position.z - a.z, d = Math.hypot(dx, dz); if (d < 3.5) { COMP.el.hidden = true; return; }
+  const C = S.yaw + S.camYaw, f = dx * Math.sin(C) + dz * Math.cos(C), r = dx * -Math.cos(C) + dz * Math.sin(C), th = Math.atan2(r, f);
+  COMP.el.hidden = false; COMP.el.firstChild.style.transform = `rotate(${th}rad)`; COMP.el.lastChild.textContent = `${G().NODES[id].label} · ${Math.round(d)} m`;
+}
 function miniInit() {
-  if (MINI.cv && document.body.contains(MINI.cv)) return; const cv = document.createElement('canvas'); cv.className = 'v3mini'; cv.setAttribute('aria-label', 'Mapa: tocá para abrirlo'); cv.title = 'Mapa'; cv.onclick = () => openMap();
-  const sv = document.getElementById('v3surv'); if (sv && S && S.sv) sv.appendChild(cv); else { let b = document.getElementById('v3mmbox'); if (!b) { b = document.createElement('div'); b.id = 'v3mmbox'; b.className = 'v3mmbox'; document.body.appendChild(b); } b.appendChild(cv); }
-  MINI.cv = cv;
+  if (MINI.btn && document.body.contains(MINI.btn)) return; const b = document.createElement('button'); b.className = 'v3mapbtn'; b.setAttribute('aria-label', 'Abrir el mapa');
+  b.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Mapa</span>'; b.onclick = () => openMap();
+  const sv = document.getElementById('v3surv'); if (sv && S && S.sv) sv.appendChild(b); else { let x = document.getElementById('v3mmbox'); if (!x) { x = document.createElement('div'); x.id = 'v3mmbox'; x.className = 'v3mmbox'; document.body.appendChild(x); } x.appendChild(b); }
+  MINI.btn = b;
+  // el mapa grande se cierra también tocando afuera
+  if (!MINI.bd) { MINI.bd = 1; document.addEventListener('click', e => { const m = e.target; if (m && m.classList && m.classList.contains('v3map')) { const x = m.querySelector('[aria-label="Cerrar mapa"]'); if (x) x.click(); } }); }
 }
 function miniTick(dt) {
-  if (!S || !MINI.cv) return; MINI.t -= dt; if (MINI.t > 0) return; MINI.t = .5; const cv = MINI.cv, w = cv.clientWidth, h = cv.clientHeight; if (!w) return;
+  if (!S || !MINI.cv || !document.body.contains(MINI.cv)) return; MINI.t -= dt; if (MINI.t > 0) return; MINI.t = .5; const cv = MINI.cv, w = cv.clientWidth, h = cv.clientHeight; if (!w) return;
   const dpr = Math.min(2, devicePixelRatio || 1); if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
   if (MAPT.hx !== S.hx) { MAPT.tiles.clear(); MAPT.hx = S.hx; }
   const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); const a = S.av.position, sc = w / 220, X = wx => w / 2 + (wx - a.x) * sc, Y = wz => h / 2 - (wz - a.z) * sc;
@@ -1115,7 +1147,7 @@ function buildMissions(scene, g, hx, HW, rr) {
   const ring = (x, z) => { const m = new THREE.Mesh(new THREE.RingGeometry(.55, .7, 36), new THREE.MeshBasicMaterial({ color: '#FFD873', transparent: true, opacity: .7, side: THREE.DoubleSide, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(x, yAt(x, z) + .05, z); m.visible = false; scene.add(m); return m; };
   const per = new Array(16).fill(0);
   // Hero: las misiones no van sobre el camino; se reparten por la etapa en lugares con sentido (aldeas, pozo, lago, monte…) y siempre en suelo alcanzable
-  const used = []; const spotOk = (x, z) => { if (!HW) return false; if (Math.abs(x) > Math.min(XB * .9, (HW.X1 || XB) - 6)) return false; if (HW.dAt(x, z) < 9) return false; if (waterWet(x, z, null) > .04) return false;
+  const used = Object.values(S0.npos || {}).map(q => q.slice()); const spotOk = (x, z) => { if (!HW) return false; if (Math.abs(x) > Math.min(XB * .9, (HW.X1 || XB) - 6)) return false; if (HW.dAt(x, z) < 9) return false; if (waterWet(x, z, null) > .04) return false;
     for (const B of WATER.basins) if (Math.hypot(x - B.x, z - B.z) < B.r * 1.4 + 2) return false; const sl = Math.hypot(HW.hAt(x + 1, z) - HW.hAt(x - 1, z), HW.hAt(x, z + 1) - HW.hAt(x, z - 1)) / 2; if (sl > .38) return false;
     for (let k = 0; k < 8; k++) { const an = k / 8 * 6.283; if (blockedAt(x + Math.cos(an) * 1.2, z + Math.sin(an) * 1.2)) return false; } for (const u of used) if (Math.hypot(x - u[0], z - u[1]) < 14) return false; return true; };
   const spot = (r, R, k, avoid) => { const [za, zb] = regionZ(g, r), pois = (S0.pois || []).filter(q => q.r === r && q.k !== 'river'), anchors = pois.map(q => [q.x, q.z]);
@@ -1668,6 +1700,7 @@ function drawMap(cv) {
   for (const q of S.pois || []) { const open = regionOpen(q.r), qx = q.k === 'river' ? q.pts[Math.floor(q.pts.length / 2)][0] : q.x, px = X(qx), py = Y(q.z); x.globalAlpha = open ? 1 : .5; x.fillStyle = hx ? '#E9C37A' : '#FF9636'; x.strokeStyle = hx ? '#1A1610' : '#FFFFFF'; x.lineWidth = 2; x.beginPath(); x.moveTo(px, py - 8); x.lineTo(px + 7, py); x.lineTo(px, py + 8); x.lineTo(px - 7, py); x.closePath(); x.fill(); x.stroke(); label(q.name, px, py + 21, true); x.globalAlpha = 1; }
   // paradas de cada etapa
   for (const id in S.markers) { const m = S.markers[id], n = g.NODES[id], done = n.kind === 'ch' && g.isDone(id), reach = g.reachable(id), px = X(m.position.x), py = Y(m.position.z); x.fillStyle = done ? '#3FBF7F' : reach ? (hx ? '#FFD873' : '#FFC23D') : 'rgba(140,138,132,.8)'; x.strokeStyle = hx ? '#1A1610' : '#FFFFFF'; x.lineWidth = 2.5; x.beginPath(); x.arc(px, py, 6.5, 0, 7); x.fill(); x.stroke(); if (V.s > 2.2 && n.label) label(n.label, px, py - 11); }
+  { const ai = nodeActive(), am = ai && S.markers[ai]; if (am) { const px = X(am.position.x), py = Y(am.position.z), k = .5 + .5 * Math.sin(performance.now() / 260); x.strokeStyle = '#FF7A3D'; x.lineWidth = 3; x.beginPath(); x.arc(px, py, 12 + k * 4, 0, 7); x.stroke(); } }
   // misiones
   if (S.mis) for (const id in S.mis) { const m = S.mis[id]; if (p.missions && p.missions[id] || !regionOpen(m.d.r) || (p.mact && p.mact.id === id)) continue; const px = X(m.gp[0]), py = Y(m.gp[1]); x.fillStyle = '#FFD25E'; x.strokeStyle = '#5A3608'; x.lineWidth = 2; x.beginPath(); x.arc(px, py, 8, 0, 7); x.fill(); x.stroke(); x.fillStyle = '#5A3608'; x.font = '900 12px Nunito, sans-serif'; x.textAlign = 'center'; x.fillText('!', px, py + 4); x.textAlign = 'left'; }
   if (p.mact && S.mis && S.mis[p.mact.id]) { const m = S.mis[p.mact.id], d = m.d, goal = d.kind === 'deliver' ? m.tp : (p.mact.has ? m.gp : m.pp); x.strokeStyle = '#FFD25E'; x.lineWidth = 3; x.beginPath(); x.arc(X(goal[0]), Y(goal[1]), 11, 0, 7); x.stroke(); x.fillStyle = '#FFD25E'; x.beginPath(); x.arc(X(goal[0]), Y(goal[1]), 4, 0, 7); x.fill(); }
@@ -3338,7 +3371,7 @@ function loop(now) {
   // con un minijuego abierto el mundo 3D no se dibuja: toda la máquina queda para el minijuego
   const arc = S.arcEl || (S.arcEl = document.getElementById('arcade')); if (arc && !arc.hidden) { S.last = 0; return; }
   const raw = now - (S.last || now), t = now / 1000, dt = Math.min(.05, raw / 1000); S.last = now; S.t = t; S.renderer.info.reset(); if (raw > 0 && raw < 250) qFrame(raw);
-  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); floraTick(dt); miniTick(dt); const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
+  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); floraTick(dt); miniTick(dt); compassTick(dt); const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
   for (const id in S.items) { const m = S.items[id];
     if (m.userData.gone) { m.userData.gone += dt; const k = m.userData.gone / .5; m.scale.setScalar(1 + k); m.position.y += dt * 2; m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = Math.max(0, 1 - k); } }); if (k >= 1) { S.scene.remove(m); delete S.items[id]; } continue; }
     m.rotation.y = t * 1.6; m.position.y = (m.userData.by || 0) + .85 + Math.sin(t * 2.4 + id.length) * .12;
@@ -3395,7 +3428,7 @@ async function show3d(on) {
   const g = G(), key = g.branch + '|' + g.P().id + '|' + JSON.stringify(g.P().avatar);
   if (!THREE) { if (!loading) loading = import(THREE_URL); try { THREE = await loading; } catch (e) { document.body.classList.remove('v3boot'); root.hidden = true; document.body.classList.remove('v3on'); btn.hidden = true; return; } }
   let LBU = null; if (builtFor !== key || !S) { if (!window.__noLobby && !/[?&]lobby=0/.test(location.search)) { try { LBU = await lobby(); } catch (e) { console.warn('lobby', e); } } if (S) { S.renderer.dispose(); S = null; } builtFor = key; try { await build(); } finally { if (LBU) LBU.close(); } }
-  else { const n = g.NODES[g.P().pos], [x, z] = toV(n.x, n.y); S.av.position.set(x, 0, z); S.sig = ''; S.onStop = g.P().pos; S.quiet = false; }
+  else { const n = g.NODES[g.P().pos], [x, z] = (S.npos && S.npos[n.id]) || toV(n.x, n.y); S.av.position.set(x, 0, z); S.sig = ''; S.onStop = g.P().pos; S.quiet = false; }
   resize(); refresh(); bagBtn(); try { fanInit(); miniInit(); } catch (e) { console.warn('hud', e); } setTimeout(fullHint, 1500); setTimeout(iosHint, 1800); document.body.classList.remove('v3boot');
 }
 export function enter() {
