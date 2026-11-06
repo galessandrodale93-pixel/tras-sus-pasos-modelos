@@ -41,8 +41,45 @@ function goldSprite(txt) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthWrite: false, transparent: true })); sp.scale.set(w / 76 * .62, .62, 1); return sp;
 }
 try { document.fonts && document.fonts.load('800 44px Cinzel'); } catch (e) {}
+// letreros de Kids: letras 3D de espuma (atlas A–Z); acentos como marca suave; otros caracteres en Nunito 900 blanco
+const FOAM = { A: {"h":150,"g":{"A":[2,2,136,150],"B":[142,2,122,150],"C":[268,2,135,150],"D":[407,2,124,150],"E":[535,2,114,150],"F":[653,2,110,150],"G":[767,2,125,150],"H":[896,2,127,150],"I":[1027,2,113,150],"J":[1144,2,116,150],"K":[1264,2,115,150],"L":[1383,2,109,150],"M":[1496,2,185,150],"N":[1685,2,122,150],"O":[1811,2,140,150],"P":[1955,2,120,150],"Q":[2079,2,150,150],"R":[2233,2,121,150],"S":[2358,2,114,150],"T":[2476,2,106,150],"U":[2586,2,119,150],"V":[2709,2,131,150],"W":[2844,2,157,150],"X":[3005,2,130,150],"Y":[3139,2,126,150],"Z":[3269,2,116,150]}}, img: null, ready: false, list: [] };
+function foamLoad() {
+  if (FOAM.img) return; const im = new Image(); im.crossOrigin = 'anonymous'; FOAM.img = im; let alt = false;
+  im.onload = () => { FOAM.ready = true; FOAM.list.forEach(e => foamDraw(e)); };
+  im.onerror = () => { if (alt) return; alt = true; im.src = DLW.root + 'app/lobby/foam-atlas.webp'; };
+  im.src = DLM.r2 + 'app/lobby/foam-atlas.webp';
+}
+function foamDraw(e) {
+  const H = 76, k = 54 / FOAM.A.h, base = e.txt.normalize('NFD'), chars = []; // [letra, acento]
+  for (const ch of base) { if (/[̀-ͯ]/.test(ch)) { if (chars.length) chars[chars.length - 1][1] = ch === '̃' ? '~' : '´'; continue; } chars.push([ch.toUpperCase(), null]); }
+  const meas = document.createElement('canvas').getContext('2d'); meas.font = '900 44px Nunito, Arial, sans-serif';
+  const adv = ([c]) => c === ' ' ? 50 * k : FOAM.A.g[c] ? (FOAM.A.g[c][2] - 10) * k : meas.measureText(c).width + 4;
+  const w = Math.ceil(chars.reduce((s, c) => s + adv(c), 0) + 40), c = e.c; c.width = w; c.height = H; const x = c.getContext('2d'); x.clearRect(0, 0, w, H);
+  const pass = sh => { let px = 20; x.save(); if (sh) { x.shadowColor = 'rgba(40,60,90,.5)'; x.shadowBlur = 10; x.shadowOffsetY = 4; }
+    for (const [ch, ac] of chars) {
+      const g = FOAM.A.g[ch];
+      if (g) { x.drawImage(FOAM.img, g[0], g[1], g[2], g[3], px, 20, g[2] * k, g[3] * k); }
+      else if (ch !== ' ') { x.font = '900 40px Nunito, Arial, sans-serif'; x.fillStyle = '#fff'; x.textBaseline = 'middle'; x.textAlign = 'left'; x.fillText(ch, px, 48); }
+      if (ac) { const cx = px + (g ? g[2] * k : 24) / 2 - 2; x.fillStyle = '#fff'; x.font = '900 42px Nunito, Arial, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(ac, cx, ac === '~' ? 14 : 17); }
+      px += adv([ch]); }
+    x.restore(); };
+  pass(true); try { x.filter = 'brightness(1.18)'; } catch (er) {} pass(false); try { x.filter = 'none'; } catch (er) {}
+  x.restore(); e.t.needsUpdate = true; const m = e.sp.scale.y / .62 || 1; e.sp.scale.set(w / 76 * .62 * m, .62 * m, 1);
+}
+function foamSprite(txt) {
+  const c = document.createElement('canvas'), t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthWrite: false, transparent: true })), e = { txt, c, t, sp };
+  sp.userData.bob = Math.random() * 6.283; FOAM.list.push(e);
+  if (FOAM.ready) foamDraw(e); else { // mientras llega el atlas, el letrero de siempre
+    const x = c.getContext('2d'), f = 44; x.font = `800 ${f}px Nunito, Arial, sans-serif`; const w = Math.ceil(x.measureText(txt).width) + 48; c.width = w; c.height = 76; x.font = `800 ${f}px Nunito, Arial, sans-serif`;
+    x.fillStyle = 'rgba(255,255,255,.9)'; const r = 30; x.beginPath(); x.moveTo(r, 4); x.arcTo(w - 4, 4, w - 4, 72, r); x.arcTo(w - 4, 72, 4, 72, r); x.arcTo(4, 72, 4, 4, r); x.arcTo(4, 4, w - 4, 4, r); x.fill(); x.fillStyle = '#22407F'; x.textBaseline = 'middle'; x.textAlign = 'center'; x.fillText(txt, w / 2, 40); sp.scale.set(w / 76 * .62, .62, 1); foamLoad(); }
+  return sp;
+}
+// vaivén suave de los letreros de Kids
+function foamTick(t) { if (!FOAM.list.length) return; for (const e of FOAM.list) { const s = e.sp; if (!s.parent) continue; if (s.userData.by === undefined) s.userData.by = s.position.y; s.position.y = s.userData.by + Math.sin(t * 1.3 + s.userData.bob) * .06; } }
 function textSprite(txt, hx) {
   if (hx) return goldSprite(txt);
+  if (G().branch !== 'ados') return foamSprite(txt);
   const c = document.createElement('canvas'), x = c.getContext('2d'), f = 44;
   x.font = `800 ${f}px Nunito, Arial, sans-serif`;
   const w = Math.ceil(x.measureText(txt).width) + 48; c.width = w; c.height = 76;
@@ -3399,7 +3436,7 @@ function loop(now) {
   // con un minijuego abierto el mundo 3D no se dibuja: toda la máquina queda para el minijuego
   const arc = S.arcEl || (S.arcEl = document.getElementById('arcade')); if (arc && !arc.hidden) { S.last = 0; return; }
   const raw = now - (S.last || now), t = now / 1000, dt = Math.min(.05, raw / 1000); S.last = now; S.t = t; S.renderer.info.reset(); if (raw > 0 && raw < 250) qFrame(raw);
-  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); floraTick(dt); miniTick(dt); compassTick(dt); vilTick(dt); const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
+  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); floraTick(dt); miniTick(dt); compassTick(dt); vilTick(dt); foamTick(t); const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
   for (const id in S.items) { const m = S.items[id];
     if (m.userData.gone) { m.userData.gone += dt; const k = m.userData.gone / .5; m.scale.setScalar(1 + k); m.position.y += dt * 2; m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = Math.max(0, 1 - k); } }); if (k >= 1) { S.scene.remove(m); delete S.items[id]; } continue; }
     m.rotation.y = t * 1.6; m.position.y = (m.userData.by || 0) + .85 + Math.sin(t * 2.4 + id.length) * .12;
