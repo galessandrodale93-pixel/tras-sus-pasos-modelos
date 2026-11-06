@@ -31,6 +31,7 @@
   <div class="tt-hi"><p class="tt-k">Panel de tutores</p><h1 id="ttHola">Hola</h1><p id="ttWho">Cargando…</p><figure class="tt-word" id="ttWord" hidden><blockquote id="ttWordT"></blockquote><figcaption><span id="ttWordR"></span><button type="button" id="ttWordN">Otra palabra</button></figcaption></figure></div>
   <div class="tt-act">
     <button class="tt-bell" type="button" id="ttBell" aria-label="Notificaciones"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.4-1.8H9.6A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.8V3a1.5 1.5 0 0 0-3 0v1.2A7 7 0 0 0 5 11v5l-2 2v1h18v-1Z" fill="currentColor"/></svg><span id="ttBellN" hidden></span></button>
+    <a class="tt-ln" href="/finanzas.html" id="toFin" hidden>Finanzas</a>
     <a class="tt-ln" href="/voluntario.html" id="toVol" hidden>Mi servicio</a>
     <a class="tt-ln" href="/campus.html">Campus</a>
   </div>
@@ -93,16 +94,17 @@
       <div class="tt-board" id="volGrid"></div>
     </div>
     <div class="tt-cover" id="volMonth"></div>
+    <div class="tt-card tt-esp" id="volEsp"><div class="tt-bar"><div><h2 class="tt-h">Zarza, tiempo de mesa y Selah</h2><p class="tt-tip">Las fechas especiales con sus músicos, encargados y voluntarios. A cada uno le llega el aviso igual que al servicio de las clases.</p></div><button class="tt-btn" type="button" id="espAdd">Nueva fecha</button></div><div id="espList"></div></div>
   </section>
   <section id="v-equipo" class="tt-v" hidden>
     <h2 class="tt-h">Equipo de tutores</h2>
-    <p class="tt-tip">Cada persona entra con el email de su cuenta de Habitat. Todos ven todo. Además, cada uno puede tener permiso para pasar lista o marcar pagos. Los directores organizan el calendario, las clases, los voluntarios y el equipo.</p>
+    <p class="tt-tip">Cada persona entra con el email de su cuenta de Habitat. Todos ven todo. Además, cada uno puede tener permiso para pasar lista o marcar pagos. Los directores organizan el calendario, las clases y el equipo; quienes organizan arman el servicio de voluntarios, Zarza, el tiempo de mesa por Zoom y Selah; Finanzas es para quienes llevan cobros y gastos.</p>
     <div class="tt-team" id="ttTeam"></div>
     <form class="tt-card tt-form" id="tForm">
       <label>Nombre<input name="title" required></label><label>Email de su cuenta<input name="email" type="email" required></label>
       <label>Pareja de tutores<input name="pareja" list="parejas" placeholder="Ej.: Cris y Raque"><datalist id="parejas"></datalist></label>
       <label>Rol<select name="rol"><option value="tutor">Tutor</option><option value="director">Director</option></select></label>
-      <label class="tt-inl"><input type="checkbox" name="lista"> Pasa lista</label><label class="tt-inl"><input type="checkbox" name="pagos"> Marca pagos</label>
+      <label class="tt-inl"><input type="checkbox" name="lista"> Pasa lista</label><label class="tt-inl"><input type="checkbox" name="pagos"> Marca pagos</label><label class="tt-inl"><input type="checkbox" name="org"> Organiza el servicio</label><label class="tt-inl"><input type="checkbox" name="gastos"> Finanzas</label>
       <button class="tt-btn" type="submit">Dar acceso</button>
     </form>
   </section>

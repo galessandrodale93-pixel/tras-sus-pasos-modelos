@@ -48,7 +48,7 @@ export const POST: APIRoute = async ({ request, url }) => {
     const pick = (t: string) => (/adoraci/i.test(t) ? "Adoración" : /liderazgo/i.test(t) ? "Liderazgo" : /maranata/i.test(t) ? "Maranata" : "");
     const programa = /maranata/i.test(formName) ? "Maranata" : pick(cf) || pick(formName);
     const m = formName.match(/(m[oó]dulo|bloque)\s*(\d+)/i);
-    const item = /\btp\b|trabajo pr|entrega/i.test(formName) ? "TP" : m ? (/m[oó]dulo/i.test(m[1]) ? "Módulo " : "Bloque ") + m[2] : "";
+    const item = /\btp\b|trabajo pr|entrega/i.test(formName) ? (/asombro/i.test(formName) ? "TP 2" : /su casa|presencia/i.test(formName) ? "TP 1" : "TP") : m ? (/m[oó]dulo/i.test(m[1]) ? "Módulo " : "Bloque ") + m[2] : "";
     if (!programa || !item) return new Response(JSON.stringify({ ok: true, ignorado: formName }), { status: 200 });
     const fecha = String(d.createdAt || body.createdAt || new Date().toISOString()).slice(0, 10);
     const modalidad = text(by(/modalidad/i));

@@ -13,7 +13,7 @@ body = '''
   <div class="vs-next tt-card" id="vNext"><p class="tt-empty">Cargando tus turnos…</p></div>
   <div class="vs-row">
     <div class="tt-card"><h2 class="tt-h">Tus próximos turnos</h2><div class="tt-tl" id="vList"></div></div>
-    <div class="tt-card vs-cal"><h2 class="tt-h">Avisos en tu teléfono</h2><p class="tt-tip">Sumá tu calendario de servicio y te llega el recordatorio el mismo día los miércoles y jueves, y el viernes para el sábado. Si cambian los turnos, se actualiza solo.</p><div class="tt-wa"><a class="tt-btn" id="vIcs" href="#">Sumar a mi teléfono</a><a class="tt-btn s" id="vGcal" href="#" target="_blank" rel="noopener">Google Calendar</a></div><div class="tt-stats" id="vStats"></div></div>
+    <div class="tt-card vs-cal"><h2 class="tt-h">Avisos en tu teléfono</h2><p class="tt-tip">Sumá tu calendario de servicio y te llega el recordatorio: lo de la tarde y la noche el mismo día, lo de la mañana el día anterior. También Zarza, el tiempo de mesa por Zoom y Selah. Si cambian los turnos, se actualiza solo.</p><div class="tt-wa"><a class="tt-btn" id="vIcs" href="#">Sumar a mi teléfono</a><a class="tt-btn s" id="vGcal" href="#" target="_blank" rel="noopener">Google Calendar</a></div><div class="tt-stats" id="vStats"></div></div>
   </div>
   <h2 class="tt-h">El equipo este mes</h2>
   <p class="tt-tip">Quién sirve en cada tarea. Lo tuyo aparece resaltado.</p>
@@ -28,7 +28,9 @@ js = '''<script src="/assets/auth.js"></script>
 var A=window.HabitatAuth,$=function(s){return document.querySelector(s);};
 function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var DL=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],MS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-var IC={'Limpieza y sillas':'🧹','Audio':'🎚️','Diapositivas':'🖥️','Zoom':'🎥','Asistencia presencial':'📋','Asistencia online':'💻'};
+var IC={'Limpieza y sillas':'🧹','Audio':'🎚️','Diapositivas':'🖥️','Zoom':'🎥','Asistencia presencial':'📋','Asistencia online':'💻','Zarza':'🎶','Tiempo de mesa · Maranata':'🍽️','Tiempo de mesa · Liderazgo':'🍽️','Tiempo de mesa · Adoración':'🍽️','Selah · Encargado':'📖','Selah':'📖'};
+function ico(t){return IC[t]||IC[String(t).replace(/ \\(.*\\)$/,'')]||'🙌🏽';}
+function cuando(n){return n.tipo==='clase'?'Llegá a las <b>'+n.llegada+'</b> · la clase empieza a las '+n.inicio:n.inicio?'Empieza a las <b>'+n.inicio+'</b>'+(n.lugar?' · '+esc(n.lugar):''):'El horario se confirma pronto';}
 function pd(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
 function larga(s){var d=pd(s);return DL[d.getDay()]+' '+d.getDate()+' de '+MS[d.getMonth()];}
 function palabra(){var w=window.HabitatAliento('vol');$('#ttWordT').textContent=w.t;$('#ttWordR').textContent=w.r||'Para vos, hoy';$('#ttWord').hidden=false;}
@@ -39,15 +41,17 @@ try{await A.api('GET','/members/v1/members/my');tk=JSON.parse(localStorage.getIt
 fetch('/api/rol',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();}).then(function(r){if(r.tutor)$('#toTut').hidden=false;}).catch(function(){});
 var r={};try{r=await fetch('/api/voluntario',{headers:{'x-habitat-auth':tk}}).then(function(x){return x.json();});}catch(e){}
 if(!r.voluntario){$('#vHola').textContent='Todavía no estás en el equipo de voluntarios';$('#vWho').textContent='Si servís en Habitat, pedile a la dirección que sume el email con el que entrás al Campus.';$('#vMain').innerHTML='';return;}
+function selah(n){if(n.tipo!=='selah')return '';if(n.encargado)return '<div class="vs-selah"><p class="tt-lbl">Versículos para los voluntarios de Selah</p><textarea id="vsTxt" placeholder="Escribí las citas o los versículos que van a leer. Les llegan en el aviso.">'+esc(n.versiculos||'')+'</textarea><button class="tt-btn" type="button" id="vsOk" data-f="'+n.fecha+'">Guardar versículos</button></div>';return n.versiculos?'<div class="vs-selah"><p class="tt-lbl">Versículos para este tiempo</p><p>'+esc(n.versiculos).replace(/\\n/g,'<br>')+'</p></div>':'<p class="tt-tip">El encargado de Selah va a cargar los versículos; te llegan en el aviso.</p>';}
+function bindSelah(){var b=$('#vsOk');if(!b)return;b.onclick=async function(){b.disabled=true;try{var x=await fetch('/api/voluntario',{method:'POST',headers:{'content-type':'application/json','x-habitat-auth':tk},body:JSON.stringify({op:'versiculos',fecha:b.dataset.f,versiculos:$('#vsTxt').value})}).then(function(r){return r.json();});var e=$('#ttToast');e.textContent=x.ok?'Versículos guardados. Les llegan a los voluntarios.':(x.error||'No se guardó.');e.classList.add('on');setTimeout(function(){e.classList.remove('on');},2600);}catch(er){}b.disabled=false;};}
 var nom=(r.voluntario.nombre||'').replace(/\\(.*\\)/,'').trim().split(' ')[0];
 $('#vHola').textContent=(h<12?'Buen día':h<20?'Buenas tardes':'Buenas noches')+', '+nom;
 var hoy=new Date(Date.now()-3*3600e3).toISOString().slice(0,10);
 var T=r.turnos||[];
 $('#vWho').textContent=T.length?'Tenés '+T.length+(T.length===1?' turno':' turnos')+' por delante. Gracias por servir.':'No tenés turnos asignados por ahora.';
 if(T.length){var n=T[0],dd=Math.round((pd(n.fecha)-pd(hoy))/864e5);
- $('#vNext').innerHTML='<p class="tt-lbl">'+(dd===0?'Hoy':dd===1?'Mañana':'En '+dd+' días')+'</p><h2>'+larga(n.fecha)[0].toUpperCase()+larga(n.fecha).slice(1)+'</h2><div class="vs-tasks">'+n.tareas.map(function(t){return '<span class="vs-task"><em>'+(IC[t]||'🙌🏽')+'</em>'+esc(t)+'</span>';}).join('')+'</div><p class="vs-time">Llegá a las <b>'+n.llegada+'</b> · la clase empieza a las '+n.clase+'</p><p class="tt-tip">'+esc(r.animo||'')+'</p>';}
+ $('#vNext').innerHTML='<p class="tt-lbl">'+(dd===0?'Hoy':dd===1?'Mañana':'En '+dd+' días')+(n.tipo!=='clase'?' · '+n.icono+' '+esc(n.titulo):'')+'</p><h2>'+larga(n.fecha)[0].toUpperCase()+larga(n.fecha).slice(1)+'</h2><div class="vs-tasks">'+n.tareas.map(function(t){return '<span class="vs-task"><em>'+ico(t)+'</em>'+esc(t)+'</span>';}).join('')+'</div><p class="vs-time">'+cuando(n)+'</p>'+(n.link?'<p class="tt-tip">Link: <a href="'+esc(n.link)+'" target="_blank" rel="noopener">'+esc(n.link)+'</a></p>':'')+(n.notas&&n.notas.length?'<p class="tt-tip">'+esc(n.notas.join(' · '))+'</p>':'')+selah(n)+'<p class="tt-tip">'+esc(r.animo||'')+'</p>';bindSelah();}
 else $('#vNext').innerHTML='<h2>Por ahora no tenés turnos</h2><p class="tt-tip">'+esc(r.animo||'')+'</p>';
-$('#vList').innerHTML=T.map(function(t){return '<div><b>'+larga(t.fecha)+'</b><span>'+t.tareas.map(function(x){return (IC[x]||'')+' '+esc(x);}).join(' · ')+'</span><small>Llegada '+t.llegada+'</small></div>';}).join('')||'<div><span>Sin turnos por delante.</span></div>';
+$('#vList').innerHTML=T.map(function(t){return '<div><b>'+larga(t.fecha)+(t.tipo!=='clase'?' · '+esc(t.titulo):'')+'</b><span>'+t.tareas.map(function(x){return ico(x)+' '+esc(x);}).join(' · ')+'</span><small>'+(t.tipo==='clase'?'Llegada '+t.llegada:t.inicio?'A las '+t.inicio:'Horario a confirmar')+'</small></div>';}).join('')||'<div><span>Sin turnos por delante.</span></div>';
 var ics=r.voluntario.ics;$('#vIcs').href=ics.replace(/^https:/,'webcal:');$('#vGcal').href='https://calendar.google.com/calendar/r?cid='+encodeURIComponent(ics.replace(/^https:/,'webcal:'));
 var sv=r.servido||{};$('#vStats').innerHTML='<div class="tt-stat"><span class="tt-ring" style="--p:'+Math.min(100,(sv.dias||0)*4)+';--col:var(--gold)"><span>'+(sv.dias||0)+'</span></span><small>días que serviste este año</small></div><div class="tt-stat"><span class="tt-ring" style="--p:'+Math.min(100,(sv.tareas||0)*2)+'"><span>'+(sv.tareas||0)+'</span></span><small>tareas cumplidas</small></div>';
 var E=r.equipo||[],by={};E.forEach(function(t){(by[t.fecha]=by[t.fecha]||[]).push(t);});
@@ -73,6 +77,7 @@ css = '''<style>
 .vs-l{display:flex;justify-content:space-between;gap:10px;font-size:.86rem;padding:4px 0;border-top:1px solid var(--line)}
 .vs-l span:first-child{color:var(--muted)}
 .vs-l b{font-weight:600}
+.vs-selah{display:grid;gap:8px;background:var(--soft);border-radius:14px;padding:14px}.vs-selah textarea{width:100%;min-height:90px;font:inherit;padding:10px;border:1px solid var(--line);border-radius:10px}
 .vs-l b.yo{background:var(--yb);color:var(--y);padding:1px 8px;border-radius:999px}
 @media (max-width:760px){.vs-row{grid-template-columns:1fr}}
 </style>

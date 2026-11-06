@@ -20,7 +20,7 @@
   function addM(m, n) { var d = pd(m + '-01'); d.setMonth(d.getMonth() + n); return iso(d).slice(0, 7); }
   // la última clase (miércoles, jueves o sábado) hasta hoy
   function lastClass() { var d = new Date(TODAY); for (var i = 0; i < 7; i++) { if ([3, 4, 6].indexOf(d.getDay()) >= 0) return d; d = addD(d, -1); } return TODAY; }
-  var PROG = { Maranata: ['Módulo 1', 'Módulo 2', 'Módulo 3', 'Módulo 4', 'Módulo 5', 'Módulo 6', 'TP'], Liderazgo: [], 'Adoración': [] };
+  var PROG = { Maranata: ['Módulo 1', 'Módulo 2', 'Módulo 3', 'Módulo 4', 'Módulo 5', 'Módulo 6', 'TP 1', 'TP 2'], Liderazgo: [], 'Adoración': [] };
   for (var i = 1; i <= 12; i++) { PROG.Liderazgo.push('Bloque ' + i); PROG['Adoración'].push('Bloque ' + i); }
   PROG.Liderazgo.push('TP'); PROG['Adoración'].push('TP');
   function nrm(t) { return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
@@ -329,6 +329,7 @@
       s.onclick = function (e) { if (e.target.closest('.tt-chip')) return; if (SEL) { assign(s.dataset.f, s.dataset.t, SEL); } else toast('Elegí primero a alguien del equipo.'); };
     });
     $$('#volGrid .tt-chip').forEach(function (b) { b.onclick = function () { var s = b.closest('.tt-slot'); send({ op: 'turno', borrar: true, fecha: s.dataset.f, tarea: s.dataset.t, voluntarioId: b.dataset.v }, b.dataset.vx, 'turnos').then(renderVol); }; });
+    renderEsp();
   }
   function volModal(v) {
     v = v || {};
@@ -337,6 +338,40 @@
       f.onsubmit = function (e) { e.preventDefault(); send({ op: 'vol', id: v._id || '', title: f.title.value, email: f.email.value, telefono: f.telefono.value, disponibilidad: f.disponibilidad.value }, v._id, 'voluntarios').then(function () { close(); toast('Guardado.'); renderVol(); }); };
     });
   }
+  /* Fechas especiales: Zarza, tiempo de mesa por Zoom y Selah */
+  var ESP = { zarza: { t: 'Zarza', e: '🎶', slots: [['Zarza', 'Músicos']] }, mesa: { t: 'Tiempo de mesa por Zoom', e: '🍽️', slots: [['Tiempo de mesa · Maranata', 'Maranata'], ['Tiempo de mesa · Liderazgo', 'Liderazgo'], ['Tiempo de mesa · Adoración', 'Adoración']] }, selah: { t: 'Selah', e: '📖', slots: [['Selah · Encargado', 'Encargado'], ['Selah', 'Voluntarios']] } };
+  function renderEsp() {
+    var hoy = iso(TODAY), E = (D.eventos_servicio || []).filter(function (e) { return e.fecha >= hoy; }).sort(function (a, b) { return a.fecha < b.fecha ? -1 : 1; }), T = D.turnos || [], nm = {};
+    (D.voluntarios || []).forEach(function (v) { nm[v._id] = v.title; });
+    $('#espList').innerHTML = E.map(function (e) {
+      var X = ESP[e.tipo] || ESP.zarza;
+      return '<div class="tt-espc" data-id="' + esc(e._id) + '"><div class="tt-esph"><em>' + X.e + '</em><div><h3>' + esc(e.title || X.t) + '</h3><small>' + esc(flarga(e.fecha)) + (e.hora ? ' · ' + esc(e.hora) : ' · horario a confirmar') + (e.lugar ? ' · ' + esc(e.lugar) : '') + '</small></div><button class="tt-btn s" type="button" data-ed>Editar</button></div>' +
+        X.slots.map(function (sl) { var who = T.filter(function (x) { return x.fecha === e.fecha && x.tarea === sl[0]; }); return '<div class="tt-slot' + (who.length ? '' : ' empty') + (SEL ? ' can' : '') + '" data-f="' + e.fecha + '" data-t="' + esc(sl[0]) + '"><span>' + esc(sl[1]) + '</span><div class="who">' + who.map(function (x) { return '<button type="button" class="tt-chip" data-vx="' + esc(x._id) + '" data-v="' + esc(x.voluntarioId) + '" title="Quitar">' + av(nm[x.voluntarioId] || x.voluntarioId) + esc(String(nm[x.voluntarioId] || x.voluntarioId).split(' ')[0]) + (x.nota ? ' · ' + esc(x.nota) : '') + ' ✕</button>'; }).join('') + '</div></div>'; }).join('') +
+        (e.tipo === 'selah' ? '<label class="tt-lbl">Versículos para los voluntarios<textarea data-vs placeholder="Los carga el encargado desde Mi servicio, o acá.">' + esc(e.versiculos || '') + '</textarea></label><button class="tt-btn s" type="button" data-vsok>Guardar versículos</button>' : '') + '</div>';
+    }).join('') || '<p class="tt-empty">No hay fechas especiales cargadas. Sumá la próxima Zarza, un tiempo de mesa por Zoom o un Selah.</p>';
+    $$('#espList .tt-espc').forEach(function (c) {
+      var e = (D.eventos_servicio || []).filter(function (x) { return x._id === c.dataset.id; })[0];
+      $('[data-ed]', c).onclick = function () { espModal(e); };
+      var vb = $('[data-vsok]', c); if (vb) vb.onclick = function () { send(Object.assign({}, e, { op: 'vevento', versiculos: $('[data-vs]', c).value }), e._id, 'eventos_servicio').then(function () { toast('Versículos guardados. Les llegan a los voluntarios de Selah.'); }); };
+    });
+    $$('#espList .tt-slot').forEach(function (s) {
+      s.ondragover = function (ev) { ev.preventDefault(); s.classList.add('over'); };
+      s.ondragleave = function () { s.classList.remove('over'); };
+      var go = function (v) { if (!v) return; var t = s.dataset.t, f = s.dataset.f; if ((D.turnos || []).some(function (x) { return x.fecha === f && x.tarea === t && x.voluntarioId === v; })) return; var fin = function (nota) { send({ op: 'turno', fecha: f, tarea: t, voluntarioId: v, nota: nota || '' }, null, 'turnos').then(function () { toast((nm[v] || '').split(' ')[0] + ' quedó en ' + t + '.'); renderEsp(); renderVol(); }); }; if (t === 'Zarza') modal('<form class="tt-form"><h2 class="w">' + esc(nm[v] || '') + ' en Zarza</h2><label class="w">¿Qué hace?<input name="n" list="instL" placeholder="Voz, guitarra, teclado…"><datalist id="instL"><option>Voz</option><option>Guitarra</option><option>Teclado</option><option>Bajo</option><option>Batería</option><option>Violín</option></datalist></label><div class="w tt-wa"><button class="tt-btn" type="submit">Sumar</button><button class="tt-btn s" type="button" data-close>Cancelar</button></div></form>', function (m, close) { $('form', m).onsubmit = function (ev) { ev.preventDefault(); close(); fin($('[name=n]', m).value); }; }); else fin(''); };
+      s.ondrop = function (ev) { ev.preventDefault(); s.classList.remove('over'); go(ev.dataTransfer.getData('text/plain')); };
+      s.onclick = function (ev) { if (ev.target.closest('.tt-chip')) return; if (SEL) go(SEL); else toast('Elegí primero a alguien del equipo.'); };
+    });
+    $$('#espList .tt-chip').forEach(function (b) { b.onclick = function () { var s = b.closest('.tt-slot'); send({ op: 'turno', borrar: true, fecha: s.dataset.f, tarea: s.dataset.t, voluntarioId: b.dataset.v }, b.dataset.vx, 'turnos').then(function () { renderEsp(); }); }; });
+  }
+  function espModal(e) {
+    e = e || { tipo: 'zarza', fecha: iso(TODAY) };
+    modal('<form class="tt-form"><h2 class="w">' + (e._id ? 'Editar fecha' : 'Nueva fecha especial') + '</h2><label>Qué es<select name="tipo"' + (e._id ? ' disabled' : '') + '>' + Object.keys(ESP).map(function (k) { return '<option value="' + k + '"' + (e.tipo === k ? ' selected' : '') + '>' + ESP[k].t + '</option>'; }).join('') + '</select></label><label>Fecha<input type="date" name="fecha" required value="' + esc(e.fecha) + '"' + (e._id ? ' disabled' : '') + '></label><label>Hora<input type="time" name="hora" value="' + esc(e.hora || '') + '"></label><label>Lugar<input name="lugar" value="' + esc(e.lugar || '') + '" placeholder="Sede, Zoom…"></label><label class="w">Link (Zoom u otro)<input name="link" value="' + esc(e.link || '') + '" placeholder="https://"></label><label class="w">Nota para los voluntarios<input name="nota" value="' + esc(e.nota || '') + '"></label><div class="w tt-wa"><button class="tt-btn" type="submit">Guardar</button><button class="tt-btn s" type="button" data-close>Cancelar</button>' + (e._id ? '<button class="tt-btn s" type="button" data-del style="margin-left:auto;color:var(--r)">Borrar fecha</button>' : '') + '</div></form>', function (m, close) {
+      var f = $('form', m);
+      f.onsubmit = function (ev) { ev.preventDefault(); var tipo = e._id ? e.tipo : f.tipo.value, fe = e._id ? e.fecha : f.fecha.value; send({ op: 'vevento', tipo: tipo, fecha: fe, title: e.title || '', hora: f.hora.value, lugar: f.lugar.value, link: f.link.value, nota: f.nota.value, versiculos: e.versiculos || '' }, null, 'eventos_servicio').then(function () { close(); toast('Fecha guardada.'); renderEsp(); }); };
+      var del = $('[data-del]', m); if (del) del.onclick = function () { if (!del.dataset.ok) { del.dataset.ok = 1; del.textContent = '¿Borrar con sus turnos?'; return; } send({ op: 'vevento', borrar: true, tipo: e.tipo, fecha: e.fecha }, e._id, 'eventos_servicio').then(function () { D.turnos = (D.turnos || []).filter(function (x) { return !(x.fecha === e.fecha && x.tarea.indexOf(ESP[e.tipo].slots[0][0].split(' ·')[0]) === 0); }); close(); renderEsp(); }); };
+    });
+  }
+  $('#espAdd').onclick = function () { espModal(null); };
   $('#volAdd').onclick = function () { volModal(null); };
   $('#volPrev').onclick = function () { VW = addD(VW, -7); renderVol(); };
   $('#volNext').onclick = function () { VW = addD(VW, 7); renderVol(); };
@@ -344,13 +379,15 @@
   /* Equipo */
   function renderEquipo() {
     var R = { director: 'Director', tutor: 'Tutor', pagos: 'Tutor' };
-    $('#ttTeam').innerHTML = D.tutores.map(function (t) { var pl = !!t.lista || t.rol === 'director', pp = !!t.pagos || t.rol === 'pagos'; return '<div class="tt-tm">' + av(t.title || t.email, '', 'sm') + '<span><b>' + esc(t.title || t.email) + '</b><br><small>' + esc((t.email || '') + (t.pareja ? ' · ' + t.pareja : '')) + '</small></span><span class="tt-ch">' + (R[t.rol] || 'Tutor') + '</span><label class="tt-perm"><input type="checkbox" data-pl="' + esc(t._id) + '"' + (pl ? ' checked' : '') + (t.rol === 'director' ? ' disabled' : '') + '> Pasa lista</label><label class="tt-perm"><input type="checkbox" data-pg="' + esc(t._id) + '"' + (pp ? ' checked' : '') + '> Marca pagos</label>' + (t._id !== ME._id ? '<button class="tt-btn s" data-del="' + esc(t._id) + '" data-em="' + esc(t.email || '') + '">Quitar acceso</button>' : '') + '</div>'; }).join('');
-    var perm = function (id, k, v) { var t = D.tutores.filter(function (x) { return x._id === id; })[0]; var o = { op: 'tutor', id: t._id, title: t.title, email: t.email, pareja: t.pareja, rol: t.rol === 'director' ? 'director' : 'tutor', lista: !!t.lista, pagos: !!t.pagos || t.rol === 'pagos' }; o[k] = v; send(o, t._id, 'tutores').then(function () { toast(v ? 'Permiso dado.' : 'Permiso quitado.'); renderEquipo(); }); };
+    $('#ttTeam').innerHTML = D.tutores.map(function (t) { var pl = !!t.lista || t.rol === 'director', pp = !!t.pagos || t.rol === 'pagos'; return '<div class="tt-tm">' + av(t.title || t.email, '', 'sm') + '<span><b>' + esc(t.title || t.email) + '</b><br><small>' + esc((t.email || '') + (t.pareja ? ' · ' + t.pareja : '')) + '</small></span><span class="tt-ch">' + (R[t.rol] || 'Tutor') + '</span><label class="tt-perm"><input type="checkbox" data-pl="' + esc(t._id) + '"' + (pl ? ' checked' : '') + (t.rol === 'director' ? ' disabled' : '') + '> Pasa lista</label><label class="tt-perm"><input type="checkbox" data-pg="' + esc(t._id) + '"' + (pp ? ' checked' : '') + '> Marca pagos</label><label class="tt-perm"><input type="checkbox" data-po="' + esc(t._id) + '"' + (t.org ? ' checked' : '') + '> Organiza el servicio</label><label class="tt-perm"><input type="checkbox" data-pf="' + esc(t._id) + '"' + (t.gastos ? ' checked' : '') + '> Finanzas</label>' + (t._id !== ME._id ? '<button class="tt-btn s" data-del="' + esc(t._id) + '" data-em="' + esc(t.email || '') + '">Quitar acceso</button>' : '') + '</div>'; }).join('');
+    var perm = function (id, k, v) { var t = D.tutores.filter(function (x) { return x._id === id; })[0]; var o = { op: 'tutor', id: t._id, title: t.title, email: t.email, pareja: t.pareja, rol: t.rol === 'director' ? 'director' : 'tutor', lista: !!t.lista, pagos: !!t.pagos || t.rol === 'pagos', org: !!t.org, gastos: !!t.gastos }; o[k] = v; send(o, t._id, 'tutores').then(function () { toast(v ? 'Permiso dado.' : 'Permiso quitado.'); renderEquipo(); }); };
     $$('#ttTeam [data-pl]').forEach(function (c) { c.onchange = function () { perm(c.dataset.pl, 'lista', c.checked); }; });
     $$('#ttTeam [data-pg]').forEach(function (c) { c.onchange = function () { perm(c.dataset.pg, 'pagos', c.checked); }; });
+    $$('#ttTeam [data-po]').forEach(function (c) { c.onchange = function () { perm(c.dataset.po, 'org', c.checked); }; });
+    $$('#ttTeam [data-pf]').forEach(function (c) { c.onchange = function () { perm(c.dataset.pf, 'gastos', c.checked); }; });
     $$('#ttTeam [data-del]').forEach(function (b) { b.onclick = function () { if (!b.dataset.ok) { b.dataset.ok = 1; b.textContent = '¿Quitar?'; return; } send({ op: 'tutor', borrar: true, id: b.dataset.del, email: b.dataset.em }, b.dataset.del, 'tutores').then(renderEquipo); }; });
   }
-  $('#tForm').onsubmit = function (e) { e.preventDefault(); var f = e.target; send({ op: 'tutor', title: f.title.value, email: f.email.value, pareja: f.pareja.value, rol: f.rol.value, lista: f.lista.checked, pagos: f.pagos.checked }, null, 'tutores').then(function () { f.reset(); renderEquipo(); toast('Listo, ya puede entrar al panel.'); }); };
+  $('#tForm').onsubmit = function (e) { e.preventDefault(); var f = e.target; send({ op: 'tutor', title: f.title.value, email: f.email.value, pareja: f.pareja.value, rol: f.rol.value, lista: f.lista.checked, pagos: f.pagos.checked, org: f.org.checked, gastos: f.gastos.checked }, null, 'tutores').then(function () { f.reset(); renderEquipo(); toast('Listo, ya puede entrar al panel.'); }); };
 
   /* Ficha del alumno */
   var WA = {
@@ -400,7 +437,7 @@
       if (becado(a)) { box.innerHTML = '<p class="tt-tip">Becado: no paga cuota.</p>'; return; }
       var p = IX.pago[id] || {}, ms = []; for (var m = startM(a); m <= addM(CUR_M, 1) && ms.length < 24; m = addM(m, 1)) ms.push(m);
       box.innerHTML = '<p class="tt-tip">' + esc(a.formaPago || 'Forma de pago sin cargar') + (a.matricula ? ' · matrícula paga' : '') + '</p><div class="tt-grid">' + ms.map(function (m) { var v = p[m], late = m < CUR_M || (m === CUR_M && TODAY.getDate() > 10); return '<button type="button" data-m="' + m + '" class="' + (v ? 'ok' : late ? 'no' : '') + '"' + (pagos ? '' : ' disabled') + '>' + MC[+m.slice(5) - 1] + '<small>' + (v ? 'pagó' : late ? 'pendiente' : '—') + '</small></button>'; }).join('') + '</div><p class="tt-tip">' + (pagos ? 'Tocá un mes para marcarlo como pagado o pendiente.' : 'Los pagos los marca Raquel.') + '</p>';
-      $$('[data-m]', box).forEach(function (b) { b.onclick = function () { var m = b.dataset.m; send({ op: 'pago', alumnoId: id, mes: m, pagado: !(IX.pago[id] || {})[m] }, id + '|' + m, 'pagos').then(function () { ficha(id, 1); refresh(); }); }; });
+      $$('[data-m]', box).forEach(function (b) { b.onclick = function () { if (D.fin) { if (ME.gastos) location.href = '/finanzas.html#a-' + id; else toast('Los pagos los carga Raquel en Finanzas.'); return; } var m = b.dataset.m; send({ op: 'pago', alumnoId: id, mes: m, pagado: !(IX.pago[id] || {})[m] }, id + '|' + m, 'pagos').then(function () { ficha(id, 1); refresh(); }); }; });
     }
     if (FT === 'gr') {
       var g = IX.gr[id] || {}, wk = []; for (var k = 5; k >= 0; k--) wk.push(iso(addD(monday(TODAY), -7 * k)));
@@ -490,8 +527,8 @@
     ME = D.me; index();
     var R = { director: 'Director', tutor: 'Tutor', pagos: 'Tutor' }, h = new Date().getHours();
     $('#ttHola').textContent = (h < 12 ? 'Buen día' : h < 20 ? 'Buenas tardes' : 'Buenas noches') + ', ' + (ME.title || '').split(' ')[0];
-    $('#ttWho').textContent = (R[ME.rol] || 'Tutor') + (ME.lista && ME.rol !== 'director' ? ' · pasa lista' : '') + (ME.pagos ? ' · pagos' : '') + (ME.pareja ? ' · ' + ME.pareja : '') + ' · ' + DL[TODAY.getDay()] + ' ' + TODAY.getDate() + ' de ' + MESES[TODAY.getMonth()];
-    var dir = ME.rol === 'director'; $('#tabEq').hidden = !dir; $('#tabCal').hidden = !dir; $('#tabVol').hidden = !dir; $('#tabCla').hidden = !dir;
+    $('#ttWho').textContent = (R[ME.rol] || 'Tutor') + (ME.lista && ME.rol !== 'director' ? ' · pasa lista' : '') + (ME.pagos ? ' · pagos' : '') + (ME.org ? ' · organiza' : '') + (ME.pareja ? ' · ' + ME.pareja : '') + ' · ' + DL[TODAY.getDay()] + ' ' + TODAY.getDate() + ' de ' + MESES[TODAY.getMonth()];
+    var dir = ME.rol === 'director'; $('#tabEq').hidden = !dir; $('#tabCal').hidden = !dir; $('#tabVol').hidden = !ME.org; $('#toFin').hidden = !ME.gastos; $('#tabCla').hidden = !dir;
     $('#parejas').innerHTML = parejas().map(function (p) { return '<option>' + esc(p) + '</option>'; }).join('');
     if (ME.pareja && parejas().indexOf(ME.pareja) >= 0) F.par = ME.pareja;
     $('#fQ').oninput = function () { F.q = this.value.trim(); renderAlumnos(); };

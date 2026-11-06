@@ -4,6 +4,7 @@
 import type { APIRoute } from "astro";
 import { auth } from "@wix/essentials";
 import { items } from "@wix/data";
+import { pagosTutor } from "../../lib/fin";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
@@ -22,7 +23,7 @@ const b = (v: unknown) => v === true || v === "true" || v === 1;
 const asc = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase();
 const DATE = /^\d{4}-\d{2}-\d{2}$/, MES = /^\d{4}-\d{2}$/, ID = /^[a-z0-9-]{2,80}$/;
 
-type Tutor = { _id: string; title?: string; email?: string; pareja?: string; rol?: string; lista?: boolean; pagos?: boolean };
+type Tutor = { _id: string; title?: string; email?: string; pareja?: string; rol?: string; lista?: boolean; pagos?: boolean; org?: boolean; gastos?: boolean };
 
 async function all(col: string) {
   const out: Record<string, unknown>[] = [];
@@ -44,7 +45,7 @@ async function who(request: Request): Promise<Tutor | null> {
   const t = r.items[0] as Tutor | undefined;
   if (!t) return null;
   const rol = t.rol === "pagos" ? "tutor" : t.rol || "tutor";
-  return { ...t, rol, pagos: !!t.pagos || t.rol === "pagos", lista: !!t.lista || rol === "director" };
+  return { ...t, rol, pagos: !!t.pagos || t.rol === "pagos", lista: !!t.lista || rol === "director", org: !!t.org, gastos: !!t.gastos };
 }
 
 export const OPTIONS: APIRoute = async () => new Response(null, { status: 204, headers: CORS });
@@ -53,13 +54,16 @@ export const GET: APIRoute = async ({ request }) => {
   try {
     const me = await who(request);
     if (!me) return json({ error: "Tu cuenta no tiene acceso al panel de tutores." }, 403);
-    const [alumnos, asistencia, pagos, evaluaciones, grupo, seguimientos, tutores, mesa, tally, voluntarios, turnos, clases, plan, ev] = await Promise.all(
-      ["TutAlumnos", "TutAsistencia", "TutPagos", "TutEvaluaciones", "TutGrupo", "TutSeguimientos", "TutTutores", "TutMesa", "TutTally", "VolVoluntarios", "VolTurnos", "TutClases", "TutPlan"].map(all)
+    const [alumnos, asistencia, pagosV, evaluaciones, grupo, seguimientos, tutores, mesa, tally, voluntarios, turnos, clases, plan, fplanes, fcobros, vevent, ev] = await Promise.all(
+      ["TutAlumnos", "TutAsistencia", "TutPagos", "TutEvaluaciones", "TutGrupo", "TutSeguimientos", "TutTutores", "TutMesa", "TutTally", "VolVoluntarios", "VolTurnos", "TutClases", "TutPlan", "FinPlanes", "FinCobros", "VolEventos"].map(all)
         .concat([q("CampusEventos").ge("inicio", new Date(Date.now() - 120 * 864e5)).ascending("inicio").limit(500).find().then((r) => r.items)]),
     );
     const dir = me.rol === "director";
+    // si ya hay cobros en Finanzas, los pagos salen de ahí (mismas reglas del Excel de Raquel)
+    const fin = fcobros.length > 0;
+    const pagos = fin ? pagosTutor(fplanes as never, fcobros as never, new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 7)) : pagosV;
     return json({
-      me, alumnos, asistencia, pagos, evaluaciones, grupo, seguimientos, mesa, tally,
+      me, fin, eventos_servicio: vevent, alumnos, asistencia, pagos, evaluaciones, grupo, seguimientos, mesa, tally,
       tutores: tutores.map(({ email, ...t }) => (dir ? { email, ...t } : t)),
       voluntarios: voluntarios.map(({ clave, ...v }) => (dir ? { clave, ...v } : v)),
       turnos, clases, plan, eventos: (ev as Record<string, unknown>[]).map(({ _createdDate, _updatedDate, _owner, ...x }) => x),
@@ -91,6 +95,7 @@ export const POST: APIRoute = async ({ request }) => {
       }
       case "pago": {
         if (!me.pagos) return json({ error: "Los pagos los marca solo la encargada de pagos." }, 403);
+        if ((await q("FinCobros").limit(1).find()).items.length) return json({ error: "Los pagos ahora se cargan en Finanzas." }, 409);
         needAlu(); const m = s(x.mes, 7); if (!MES.test(m)) return json({ error: "mes" }, 400);
         const it = { _id: alu + "|" + m, alumnoId: alu, mes: m, pagado: b(x.pagado), por };
         await save("TutPagos", it); return json({ ok: true, item: it });
@@ -154,7 +159,7 @@ export const POST: APIRoute = async ({ request }) => {
         await rem("TutTally", id); return json({ ok: true });
       }
       case "vol": {
-        if (me.rol !== "director") return json({ error: "Solo la dirección organiza a los voluntarios." }, 403);
+        if (!me.org) return json({ error: "Solo quienes organizan arman el servicio." }, 403);
         if (x.borrar) { await rem("VolVoluntarios", s(x.id, 80)); return json({ ok: true }); }
         const title = s(x.title, 80); if (!title) return json({ error: "Falta el nombre." }, 400);
         const id = s(x.id, 80) || asc(title);
@@ -163,13 +168,28 @@ export const POST: APIRoute = async ({ request }) => {
         await save("VolVoluntarios", it); return json({ ok: true, item: it });
       }
       case "turno": {
-        if (me.rol !== "director") return json({ error: "Solo la dirección organiza a los voluntarios." }, 403);
+        if (!me.org) return json({ error: "Solo quienes organizan arman el servicio." }, 403);
         const f = s(x.fecha, 10), t = s(x.tarea, 40), v = s(x.voluntarioId, 80);
         if (!DATE.test(f) || !t || !ID.test(v)) return json({ error: "datos" }, 400);
         const _id = f + "|" + asc(t) + "|" + v;
         if (x.borrar) { await rem("VolTurnos", _id).catch(() => null); return json({ ok: true }); }
         const it = { _id, fecha: f, tarea: t, voluntarioId: v, nota: s(x.nota, 300), avisado: "" };
         await save("VolTurnos", it); return json({ ok: true, item: it });
+      }
+      case "vevento": {
+        if (!me.org) return json({ error: "Solo quienes organizan arman el servicio." }, 403);
+        const f = s(x.fecha, 10), tipo = s(x.tipo, 20);
+        if (!DATE.test(f) || !/^(zarza|mesa|selah)$/.test(tipo)) return json({ error: "Revisá la fecha." }, 400);
+        const _id = tipo + "|" + f;
+        if (x.borrar) {
+          await rem("VolEventos", _id).catch(() => null);
+          const pref = { zarza: "Zarza", mesa: "Tiempo de mesa", selah: "Selah" }[tipo] as string;
+          const ts = (await q("VolTurnos").eq("fecha", f).limit(200).find()).items as { _id: string; tarea: string }[];
+          for (const t of ts) if (t.tarea.startsWith(pref)) await rem("VolTurnos", t._id);
+          return json({ ok: true });
+        }
+        const it = { _id, title: s(x.title, 120) || ({ zarza: "Zarza", mesa: "Tiempo de mesa por Zoom", selah: "Selah" } as Record<string, string>)[tipo], tipo, fecha: f, hora: /^\d{2}:\d{2}$/.test(s(x.hora, 5)) ? s(x.hora, 5) : "", lugar: s(x.lugar, 160), link: s(x.link, 400), versiculos: s(x.versiculos, 4000), nota: s(x.nota, 500) };
+        await save("VolEventos", it); return json({ ok: true, item: it });
       }
       case "evento": {
         if (me.rol !== "director") return json({ error: "Solo la dirección edita el calendario." }, 403);
@@ -206,7 +226,7 @@ export const POST: APIRoute = async ({ request }) => {
         if (me.rol !== "director") return json({ error: "Solo los directores administran el equipo." }, 403);
         const email = s(x.email, 120).toLowerCase(); if (!/^\S+@\S+\.\S+$/.test(email)) return json({ error: "email" }, 400);
         if (x.borrar) { await rem("TutTutores", s(x.id, 80)); return json({ ok: true }); }
-        const it = { _id: s(x.id, 80) || asc(email), title: s(x.title, 80), email, pareja: s(x.pareja, 60), rol: s(x.rol, 20) === "director" ? "director" : "tutor", lista: b(x.lista), pagos: b(x.pagos) };
+        const it = { _id: s(x.id, 80) || asc(email), title: s(x.title, 80), email, pareja: s(x.pareja, 60), rol: s(x.rol, 20) === "director" ? "director" : "tutor", lista: b(x.lista), pagos: b(x.pagos), org: b(x.org), gastos: b(x.gastos) };
         await save("TutTutores", it); return json({ ok: true, item: it });
       }
     }

@@ -272,3 +272,9 @@ body.tutor{background:var(--paper)}
 @media (max-width:640px){.cl-av{display:none}}
 .cl-old{margin-bottom:12px}
 @media (max-width:640px){#cProfes{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}#cProfes .tt-pill{flex:none}}
+
+.tt-esp{display:grid;gap:14px;margin-top:16px}.tt-esp>.tt-bar{align-items:flex-start;justify-content:space-between}
+#espList{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.tt-espc{display:grid;gap:8px;border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--paper)}
+.tt-esph{display:flex;gap:10px;align-items:center}.tt-esph em{font-style:normal;font-size:1.6rem}.tt-esph div{flex:1;display:grid}.tt-esph h3{font-family:var(--serif);font-size:1.25rem}.tt-esph small{color:var(--muted);font-size:.8rem}.tt-esph small::first-letter{text-transform:uppercase}
+.tt-espc textarea{width:100%;min-height:70px;font:inherit;padding:8px;border:1px solid var(--line);border-radius:10px;margin-top:4px}

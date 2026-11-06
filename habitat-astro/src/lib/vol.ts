@@ -20,3 +20,28 @@ export function animo(seed: string) {
   return ANIMO[h % ANIMO.length];
 }
 export const esc = (t: unknown) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
+
+// Fechas especiales del servicio: Zarza (músicos), tiempo de mesa por Zoom (encargados) y Selah (encargado y voluntarios).
+export const ESPECIALES: Record<string, { pref: string; titulo: string; icono: string }> = {
+  zarza: { pref: "Zarza", titulo: "Zarza", icono: "🎶" },
+  mesa: { pref: "Tiempo de mesa", titulo: "Tiempo de mesa por Zoom", icono: "🍽️" },
+  selah: { pref: "Selah", titulo: "Selah", icono: "📖" },
+};
+export function tipoTarea(t: string) {
+  for (const [k, v] of Object.entries(ESPECIALES)) if (t.startsWith(v.pref)) return k;
+  return "clase";
+}
+export type Ev = { tipo: string; fecha: string; hora?: string; lugar?: string; link?: string; versiculos?: string; nota?: string; title?: string };
+export type Grupo = { fecha: string; tipo: string; titulo: string; icono: string; tareas: string[]; notas: string[]; llegada: string; inicio: string; lugar: string; link: string; versiculos: string; encargado: boolean; manana: boolean };
+// agrupa los turnos de una persona en un día: el servicio de la clase y cada fecha especial por separado
+export function grupos(fecha: string, ts: { tarea: string; nota?: string }[], evs: Ev[]): Grupo[] {
+  const by: Record<string, { tarea: string; nota?: string }[]> = {};
+  ts.forEach((t) => (by[tipoTarea(t.tarea)] = by[tipoTarea(t.tarea)] || []).push(t));
+  return Object.keys(by).map((tipo) => {
+    const L = by[tipo];
+    if (tipo === "clase") { const h = horario(fecha); return { fecha, tipo, titulo: "Servicio en la clase", icono: "🙌🏽", tareas: L.map((t) => t.tarea), notas: L.map((t) => t.nota || "").filter(Boolean), llegada: h.llegada, inicio: h.clase, lugar: "Habitat CFM", link: "", versiculos: "", encargado: false, manana: h.dia === "sábado" }; }
+    const e = evs.find((x) => x.tipo === tipo && x.fecha === fecha) || ({} as Ev), E = ESPECIALES[tipo];
+    const hora = e.hora || "";
+    return { fecha, tipo, titulo: e.title || E.titulo, icono: E.icono, tareas: L.map((t) => (t.nota ? t.tarea + " (" + t.nota + ")" : t.tarea)), notas: e.nota ? [e.nota] : [], llegada: hora, inicio: hora, lugar: e.lugar || (tipo === "mesa" ? "Zoom" : "Habitat CFM"), link: e.link || "", versiculos: e.versiculos || "", encargado: L.some((t) => /encargad/i.test(t.tarea) || tipo === "mesa"), manana: !hora || hora < "13:00" };
+  });
+}
