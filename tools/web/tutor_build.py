@@ -9,6 +9,8 @@ body = '''
   <div class="tt-hi"><p class="tt-k">Panel de tutores</p><h1 id="ttHola">Hola</h1><p id="ttWho">Cargando…</p><figure class="tt-word" id="ttWord" hidden><blockquote id="ttWordT"></blockquote><figcaption><span id="ttWordR"></span><button type="button" id="ttWordN">Otra palabra</button></figcaption></figure></div>
   <div class="tt-act">
     <button class="tt-bell" type="button" id="ttBell" aria-label="Notificaciones"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.4-1.8H9.6A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.8V3a1.5 1.5 0 0 0-3 0v1.2A7 7 0 0 0 5 11v5l-2 2v1h18v-1Z" fill="currentColor"/></svg><span id="ttBellN" hidden></span></button>
+    <a class="tt-ln" href="/tutor.html" id="toTut" hidden>Panel de tutores</a>
+    <a class="tt-ln" href="/organizacion.html" id="toOrg" hidden>Organización</a>
     <a class="tt-ln" href="/finanzas.html" id="toFin" hidden>Finanzas</a>
     <a class="tt-ln" href="/voluntario.html" id="toVol" hidden>Mi servicio</a>
     <a class="tt-ln" href="/campus.html">Campus</a>
@@ -99,4 +101,14 @@ html = html.replace('</head>', '<meta name="robots" content="noindex,nofollow">\
 html = html.replace('<body>', '<body data-solid="1" class="campus tutor">')
 html += body + B.FOOT + js + '</body>\n</html>\n'
 open(os.path.join(B.OUT, 'tutor.html'), 'w', encoding='utf-8').write(html)
+# Panel de organización: mismo motor, con calendario, clases y profes, servicio (voluntarios, Zarza, mesa, Selah) y equipo
+org = B.head('Organización · Habitat', 'Organización de Habitat CFM.', 'organizacion.html')
+org = org.replace('</head>', '<meta name="robots" content="noindex,nofollow">\n<link rel="stylesheet" href="/assets/campus.css">\n<link rel="stylesheet" href="/assets/tutor.css">\n</head>')
+org = org.replace('<body>', '<body data-solid="1" data-mode="org" class="campus tutor">')
+ob = body.replace('<p class="tt-k">Panel de tutores</p>', '<p class="tt-k">Panel de organización</p>')
+ob = ob.replace('<button data-t="hoy" class="on">Hoy</button><button data-t="alumnos">Alumnos</button><button data-t="lista">Pasar lista</button><button data-t="mesa">Tiempo de mesa</button>', '')
+ob = ob.replace('<button data-t="vol" hidden id="tabVol">Voluntarios</button>', '<button data-t="vol" hidden id="tabVol">Servicio</button>')
+ob = ob.replace('<section id="v-hoy" class="tt-v"></section>', '<section id="v-hoy" class="tt-v" hidden></section>')
+org += ob + B.FOOT + js + '</body>\n</html>\n'
+open(os.path.join(B.OUT, 'organizacion.html'), 'w', encoding='utf-8').write(org)
 print('tutor ok')

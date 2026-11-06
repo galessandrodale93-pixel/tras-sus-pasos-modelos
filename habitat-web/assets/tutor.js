@@ -517,18 +517,22 @@
 
   function cur() { var b = $('.tt-tabs .on'); return b ? b.dataset.t : 'hoy'; }
   function refresh() { var t = cur(); ({ hoy: renderHoy, alumnos: renderAlumnos, lista: renderLista, mesa: renderMesa, cal: renderCal, vol: renderVol, equipo: renderEquipo, clases: renderClases }[t] || renderHoy)(); }
-  function tab(t) { var b = $('#ttTabs [data-t="' + t + '"]'); if (!b || b.hidden) return; $$('#ttTabs button').forEach(function (x) { x.classList.toggle('on', x === b); }); $$('.tt-v').forEach(function (v) { v.hidden = v.id !== 'v-' + t; }); try { history.replaceState(null, '', '#' + t); } catch (e) {} refresh(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  var ORGM = document.body.dataset.mode === 'org', ORGT = ['cal', 'clases', 'vol', 'equipo'];
+  function tab(t) { var b = $('#ttTabs [data-t="' + t + '"]'); if ((!b || b.hidden) && ME && ME.org && !ORGM && ORGT.indexOf(t) >= 0) { location.href = '/organizacion.html#' + t; return; } if ((!b || b.hidden) && ORGM && ORGT.indexOf(t) < 0) { location.href = '/tutor.html#' + t; return; } if (!b || b.hidden) return; $$('#ttTabs button').forEach(function (x) { x.classList.toggle('on', x === b); }); $$('.tt-v').forEach(function (v) { v.hidden = v.id !== 'v-' + t; }); try { history.replaceState(null, '', '#' + t); } catch (e) {} refresh(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   $$('#ttTabs button').forEach(function (b) { b.onclick = function () { tab(b.dataset.t); }; });
 
   (async function init() {
-    if (!A.loggedIn()) { try { sessionStorage.setItem('habitat:ret', '/tutor.html'); } catch (e) {} location.replace('/ingresar.html'); return; }
+    if (!A.loggedIn()) { try { sessionStorage.setItem('habitat:ret', ORGM ? '/organizacion.html' : '/tutor.html'); } catch (e) {} location.replace('/ingresar.html'); return; }
     try { D = await api('GET'); }
     catch (e) { $('#ttHola').textContent = e.status === 403 ? 'Tu cuenta todavía no tiene acceso' : 'No se pudo cargar el panel'; $('#ttWho').textContent = e.status === 403 ? 'Pedile acceso a la dirección de Habitat con el email con el que entrás al Campus.' : 'Revisá tu conexión y recargá la página.'; $('#v-hoy').innerHTML = ''; return; }
     ME = D.me; index();
     var R = { director: 'Director', tutor: 'Tutor', pagos: 'Tutor' }, h = new Date().getHours();
     $('#ttHola').textContent = (h < 12 ? 'Buen día' : h < 20 ? 'Buenas tardes' : 'Buenas noches') + ', ' + (ME.title || '').split(' ')[0];
     $('#ttWho').textContent = (R[ME.rol] || 'Tutor') + (ME.lista && ME.rol !== 'director' ? ' · pasa lista' : '') + (ME.pagos ? ' · pagos' : '') + (ME.org ? ' · organiza' : '') + (ME.pareja ? ' · ' + ME.pareja : '') + ' · ' + DL[TODAY.getDay()] + ' ' + TODAY.getDate() + ' de ' + MESES[TODAY.getMonth()];
-    var dir = ME.rol === 'director'; $('#tabEq').hidden = !dir; $('#tabCal').hidden = !dir; $('#tabVol').hidden = !ME.org; $('#toFin').hidden = !ME.gastos; $('#tabCla').hidden = !dir;
+    // tres paneles: tutores (seguimiento), organización (calendario, clases, servicio y equipo) y finanzas
+    $('#toFin').hidden = !ME.gastos; if ($('#toOrg')) $('#toOrg').hidden = !ME.org || ORGM; if ($('#toTut')) $('#toTut').hidden = !ORGM;
+    ['tabEq', 'tabCal', 'tabVol', 'tabCla'].forEach(function (k) { $('#' + k).hidden = !ORGM; });
+    if (ORGM && !ME.org) { $('#ttHola').textContent = 'Este panel es para quienes organizan'; $('#ttWho').textContent = 'Desde acá se arma el calendario, las clases, el servicio de voluntarios y el equipo. Si te toca organizar, pedile acceso a la dirección.'; $('.tt-main').innerHTML = ''; $('#ttTabs').hidden = true; return; }
     $('#parejas').innerHTML = parejas().map(function (p) { return '<option>' + esc(p) + '</option>'; }).join('');
     if (ME.pareja && parejas().indexOf(ME.pareja) >= 0) F.par = ME.pareja;
     $('#fQ').oninput = function () { F.q = this.value.trim(); renderAlumnos(); };
@@ -536,6 +540,6 @@
     $('#lDate').value = iso(lastClass()); $('#lDate').onchange = renderLista;
     notis(); palabra();
     try { var tk = await token(); fetch('/api/rol', { headers: { 'x-habitat-auth': tk } }).then(function (r) { return r.json(); }).then(function (r) { if (r.voluntario) $('#toVol').hidden = false; }); } catch (e) {}
-    var hh = location.hash.replace('#', ''); if (hh && $('#ttTabs [data-t="' + hh + '"]') && !$('#ttTabs [data-t="' + hh + '"]').hidden) tab(hh); else renderHoy();
+    var hh = location.hash.replace('#', ''); if (hh && $('#ttTabs [data-t="' + hh + '"]') && !$('#ttTabs [data-t="' + hh + '"]').hidden) tab(hh); else if (ORGM) tab('vol'); else renderHoy();
   })();
 })();

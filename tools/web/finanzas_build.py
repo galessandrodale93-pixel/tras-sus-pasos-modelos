@@ -6,7 +6,7 @@ import build as B
 
 body = '''
 <section class="tt-top"><div class="wrap">
-  <div class="tt-hi"><p class="tt-k">Finanzas</p><h1 id="ttHola">Hola</h1><p id="ttWho">Cargando…</p></div>
+  <div class="tt-hi"><p class="tt-k">Panel de finanzas</p><h1 id="ttHola">Hola</h1><p id="ttWho">Cargando…</p></div>
   <div class="tt-act"><a class="tt-ln" href="/tutor.html">Panel de tutores</a><a class="tt-ln" href="/campus.html">Campus</a></div>
 </div></section>
 <nav class="tt-tabs" id="ttTabs"><div class="wrap">
