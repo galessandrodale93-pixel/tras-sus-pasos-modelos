@@ -41,44 +41,52 @@ function goldSprite(txt) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthWrite: false, transparent: true })); sp.scale.set(w / 76 * .62, .62, 1); return sp;
 }
 try { document.fonts && document.fonts.load('800 44px Cinzel'); } catch (e) {}
-// letreros de Kids: letras 3D de espuma (atlas A–Z); acentos como marca suave; otros caracteres en Nunito 900 blanco
-const FOAM = { A: {"h":150,"g":{"A":[2,2,136,150],"B":[142,2,122,150],"C":[268,2,135,150],"D":[407,2,124,150],"E":[535,2,114,150],"F":[653,2,110,150],"G":[767,2,125,150],"H":[896,2,127,150],"I":[1027,2,113,150],"J":[1144,2,116,150],"K":[1264,2,115,150],"L":[1383,2,109,150],"M":[1496,2,185,150],"N":[1685,2,122,150],"O":[1811,2,140,150],"P":[1955,2,120,150],"Q":[2079,2,150,150],"R":[2233,2,121,150],"S":[2358,2,114,150],"T":[2476,2,106,150],"U":[2586,2,119,150],"V":[2709,2,131,150],"W":[2844,2,157,150],"X":[3005,2,130,150],"Y":[3139,2,126,150],"Z":[3269,2,116,150]}}, img: null, ready: false, list: [] };
-function foamLoad() {
-  if (FOAM.img) return; const im = new Image(); im.crossOrigin = 'anonymous'; FOAM.img = im; let alt = false;
-  im.onload = () => { FOAM.ready = true; FOAM.list.forEach(e => foamDraw(e)); };
-  im.onerror = () => { if (alt) return; alt = true; im.src = DLW.root + 'app/lobby/foam-atlas.webp'; };
-  im.src = DLM.r2 + 'app/lobby/foam-atlas.webp';
+// letreros con letras de un atlas A–Z: Kids usa espuma blanca y Hero, oro romano. Los acentos se redibujan como una marca suave;
+// cualquier otro carácter va con la fuente de respaldo
+const ATLAS = {
+  foam: { file: 'foam-atlas.webp', A: {"h":150,"g":{"A":[2,2,136,150],"B":[142,2,122,150],"C":[268,2,135,150],"D":[407,2,124,150],"E":[535,2,114,150],"F":[653,2,110,150],"G":[767,2,125,150],"H":[896,2,127,150],"I":[1027,2,113,150],"J":[1144,2,116,150],"K":[1264,2,115,150],"L":[1383,2,109,150],"M":[1496,2,185,150],"N":[1685,2,122,150],"O":[1811,2,140,150],"P":[1955,2,120,150],"Q":[2079,2,150,150],"R":[2233,2,121,150],"S":[2358,2,114,150],"T":[2476,2,106,150],"U":[2586,2,119,150],"V":[2709,2,131,150],"W":[2844,2,157,150],"X":[3005,2,130,150],"Y":[3139,2,126,150],"Z":[3269,2,116,150]}}, adv: 10, sp: 50, mark: '#fff', font: '900 40px Nunito, Arial, sans-serif', fill: '#fff', shadow: 'rgba(40,60,90,.5)', bright: 1.18, img: null, ready: false, list: [] },
+  roman: { file: 'roman-gold-atlas.webp', A: {"h":150,"g":{"A":[2,2,113,150],"B":[119,2,84,150],"C":[207,2,92,150],"D":[303,2,110,150],"E":[417,2,83,150],"F":[504,2,76,150],"G":[584,2,105,150],"H":[693,2,124,150],"I":[821,2,49,150],"J":[874,2,57,150],"K":[935,2,101,150],"L":[1040,2,82,150],"M":[1126,2,131,150],"N":[1261,2,121,150],"O":[1386,2,110,150],"P":[1500,2,79,150],"Q":[1583,2,112,150],"R":[1699,2,87,150],"S":[1790,2,79,150],"T":[1873,2,100,150],"U":[1977,2,123,150],"V":[2104,2,110,150],"W":[2218,2,154,150],"X":[2376,2,105,150],"Y":[2485,2,110,150],"Z":[2599,2,106,150]}}, adv: 2, sp: 46, mark: '#E8B850', font: '600 40px Cinzel, Georgia, serif', fill: '#E0B050', shadow: 'rgba(0,0,0,.6)', bright: 1, img: null, ready: false, list: [] }
+};
+function atlasLoad(T) {
+  if (T.img) return; const im = new Image(); im.crossOrigin = 'anonymous'; T.img = im; let alt = false;
+  im.onload = () => { T.top = atlasTops(T); T.ready = true; T.list.forEach(e => atlasDraw(T, e)); };
+  im.onerror = () => { if (alt) return; alt = true; im.src = DLW.root + 'app/lobby/' + T.file; };
+  im.src = DLM.r2 + 'app/lobby/' + T.file;
 }
-function foamDraw(e) {
-  const H = 76, k = 54 / FOAM.A.h, base = e.txt.normalize('NFD'), chars = []; // [letra, acento]
-  for (const ch of base) { if (/[̀-ͯ]/.test(ch)) { if (chars.length) chars[chars.length - 1][1] = ch === '̃' ? '~' : '´'; continue; } chars.push([ch.toUpperCase(), null]); }
-  const meas = document.createElement('canvas').getContext('2d'); meas.font = '900 44px Nunito, Arial, sans-serif';
-  const adv = ([c]) => c === ' ' ? 50 * k : FOAM.A.g[c] ? (FOAM.A.g[c][2] - 10) * k : meas.measureText(c).width + 4;
+// fila donde empieza la tinta de cada letra (para apoyar el acento justo encima)
+function atlasTops(T) { const o = {}; try { const c = document.createElement('canvas'), x = c.getContext('2d'); for (const ch in T.A.g) { const [gx, gy, gw, gh] = T.A.g[ch]; c.width = gw; c.height = gh; x.clearRect(0, 0, gw, gh); x.drawImage(T.img, gx, gy, gw, gh, 0, 0, gw, gh); const d = x.getImageData(0, 0, gw, gh).data; let top = 0; outer: for (let y = 0; y < gh; y++) for (let i = 0; i < gw; i++) if (d[(y * gw + i) * 4 + 3] > 60) { top = y; break outer; } o[ch] = top; } } catch (e) {} return o; }
+function atlasDraw(T, e) {
+  const H = 76, k = 54 / T.A.h, chars = [];
+  for (const ch of e.txt.normalize('NFD')) { if (/[̀-ͯ]/.test(ch)) { if (chars.length) chars[chars.length - 1][1] = ch === '̃' ? '~' : '´'; continue; } chars.push([ch.toUpperCase(), null]); }
+  const meas = document.createElement('canvas').getContext('2d'); meas.font = T.font;
+  const adv = ([c]) => c === ' ' ? T.sp * k : T.A.g[c] ? (T.A.g[c][2] - T.adv) * k : meas.measureText(c).width + 4;
   const w = Math.ceil(chars.reduce((s, c) => s + adv(c), 0) + 40), c = e.c; c.width = w; c.height = H; const x = c.getContext('2d'); x.clearRect(0, 0, w, H);
-  const pass = sh => { let px = 20; x.save(); if (sh) { x.shadowColor = 'rgba(40,60,90,.5)'; x.shadowBlur = 10; x.shadowOffsetY = 4; }
+  const pass = sh => { let px = 20; x.save(); if (sh) { x.shadowColor = T.shadow; x.shadowBlur = 10; x.shadowOffsetY = 4; }
     for (const [ch, ac] of chars) {
-      const g = FOAM.A.g[ch];
-      if (g) { x.drawImage(FOAM.img, g[0], g[1], g[2], g[3], px, 20, g[2] * k, g[3] * k); }
-      else if (ch !== ' ') { x.font = '900 40px Nunito, Arial, sans-serif'; x.fillStyle = '#fff'; x.textBaseline = 'middle'; x.textAlign = 'left'; x.fillText(ch, px, 48); }
-      if (ac) { const cx = px + (g ? g[2] * k : 24) / 2 - 2; x.fillStyle = '#fff'; x.font = '900 42px Nunito, Arial, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(ac, cx, ac === '~' ? 14 : 17); }
+      const g = T.A.g[ch];
+      if (g) { x.drawImage(T.img, g[0], g[1], g[2], g[3], px, 20, g[2] * k, g[3] * k); }
+      else if (ch !== ' ') { x.font = T.font; x.fillStyle = T.fill; x.textBaseline = 'middle'; x.textAlign = 'left'; x.fillText(ch, px, 48); }
+      if (ac) { const cx = px + (g ? g[2] * k : 24) / 2 - 2; x.fillStyle = T.mark; x.font = '900 42px Nunito, Arial, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; const ty = g && T.top && T.top[ch] != null ? 20 + T.top[ch] * k : 26; x.fillText(ac, cx, Math.max(9, ty - (ac === '~' ? 7 : 5))); }
       px += adv([ch]); }
     x.restore(); };
-  pass(true); try { x.filter = 'brightness(1.18)'; } catch (er) {} pass(false); try { x.filter = 'none'; } catch (er) {}
-  x.restore(); e.t.needsUpdate = true; const m = e.sp.scale.y / .62 || 1; e.sp.scale.set(w / 76 * .62 * m, .62 * m, 1);
+  pass(true); if (T.bright !== 1) { try { x.filter = 'brightness(' + T.bright + ')'; } catch (er) {} } pass(false); try { x.filter = 'none'; } catch (er) {}
+  e.t.needsUpdate = true; const m = e.sp.scale.y / .62 || 1; e.sp.scale.set(w / 76 * .62 * m, .62 * m, 1);
 }
-function foamSprite(txt) {
+function atlasSprite(T, txt, fallback) {
   const c = document.createElement('canvas'), t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthWrite: false, transparent: true })), e = { txt, c, t, sp };
-  sp.userData.bob = Math.random() * 6.283; FOAM.list.push(e);
-  if (FOAM.ready) foamDraw(e); else { // mientras llega el atlas, el letrero de siempre
-    const x = c.getContext('2d'), f = 44; x.font = `800 ${f}px Nunito, Arial, sans-serif`; const w = Math.ceil(x.measureText(txt).width) + 48; c.width = w; c.height = 76; x.font = `800 ${f}px Nunito, Arial, sans-serif`;
-    x.fillStyle = 'rgba(255,255,255,.9)'; const r = 30; x.beginPath(); x.moveTo(r, 4); x.arcTo(w - 4, 4, w - 4, 72, r); x.arcTo(w - 4, 72, 4, 72, r); x.arcTo(4, 72, 4, 4, r); x.arcTo(4, 4, w - 4, 4, r); x.fill(); x.fillStyle = '#22407F'; x.textBaseline = 'middle'; x.textAlign = 'center'; x.fillText(txt, w / 2, 40); sp.scale.set(w / 76 * .62, .62, 1); foamLoad(); }
+  sp.userData.bob = Math.random() * 6.283; T.list.push(e); LBOB.push(sp);
+  if (T.ready) atlasDraw(T, e); else { fallback(c, txt); sp.scale.set(c.width / 76 * .62, .62, 1); atlasLoad(T); }
   return sp;
 }
-// vaivén suave de los letreros de Kids
-function foamTick(t) { if (!FOAM.list.length) return; for (const e of FOAM.list) { const s = e.sp; if (!s.parent) continue; if (s.userData.by === undefined) s.userData.by = s.position.y; s.position.y = s.userData.by + Math.sin(t * 1.3 + s.userData.bob) * .06; } }
+const LBOB = [];
+const foamSprite = txt => atlasSprite(ATLAS.foam, txt, (c, txt) => { const x = c.getContext('2d'), f = 44; x.font = `800 ${f}px Nunito, Arial, sans-serif`; const w = Math.ceil(x.measureText(txt).width) + 48; c.width = w; c.height = 76; x.font = `800 ${f}px Nunito, Arial, sans-serif`;
+  x.fillStyle = 'rgba(255,255,255,.9)'; const r = 30; x.beginPath(); x.moveTo(r, 4); x.arcTo(w - 4, 4, w - 4, 72, r); x.arcTo(w - 4, 72, 4, 72, r); x.arcTo(4, 72, 4, 4, r); x.arcTo(4, 4, w - 4, 4, r); x.fill(); x.fillStyle = '#22407F'; x.textBaseline = 'middle'; x.textAlign = 'center'; x.fillText(txt, w / 2, 40); });
+const romanSprite = txt => atlasSprite(ATLAS.roman, txt, (c, txt) => { const x = c.getContext('2d'), f = 44; x.font = `800 ${f}px Cinzel, Georgia, serif`; const w = Math.ceil(x.measureText(txt).width) + 48; c.width = w; c.height = 76; goldPaint(x, txt, w / 2, 40, f); });
+// vaivén suave (solo en Kids)
+function foamTick(t) { if (!ATLAS.foam.list.length) return; for (const e of ATLAS.foam.list) { const s = e.sp; if (!s.parent) continue; if (s.userData.by === undefined) s.userData.by = s.position.y; s.position.y = s.userData.by + Math.sin(t * 1.3 + s.userData.bob) * .06; } }
 function textSprite(txt, hx) {
-  if (hx) return goldSprite(txt);
+  if (hx) return romanSprite(txt);
   if (G().branch !== 'ados') return foamSprite(txt);
   const c = document.createElement('canvas'), x = c.getContext('2d'), f = 44;
   x.font = `800 ${f}px Nunito, Arial, sans-serif`;
@@ -759,7 +767,7 @@ function lobbyUI(kid) {
   let lines = []; try { lines = (G().lobbyLines && G().lobbyLines()) || []; } catch (e) {}
   ov.innerHTML = `<div class="lb-sl">${im.map((u, i) => `<div class="lb-im${i ? '' : ' on'}" style="background-image:${u}"></div>`).join('')}</div><div class="lb-shade"></div>
     <div class="lb-top"><button class="lb-mus" aria-label="Tocar para música">🎵 <span>Tocar para música</span></button></div>
-    <div class="lb-in">${kid ? '<small>Kids</small>' : `<h1 class="lb-hero"><img src="${new URL('./lobby/hero-oro.webp?v=3', import.meta.url).href}" alt="Hero" width="1200" height="338"></h1>`}<b>Tras sus pasos</b><p class="lb-sub">${kid ? '¡Vamos a caminar la historia de Jesús!' : 'Recorré la tierra donde caminó Jesús.'}</p>
+    <div class="lb-in">${kid ? '<small>Kids</small>' : `<h1 class="lb-hero"><img src="${new URL('./lobby/hero-oro.webp?v=4', import.meta.url).href}" alt="Hero" width="1200" height="308"></h1>`}<b>Tras sus pasos</b><p class="lb-sub">${kid ? '¡Vamos a caminar la historia de Jesús!' : 'Recorré la tierra donde caminó Jesús.'}</p>
       <p class="lb-vs" aria-live="polite"></p>
       <div class="lb-cards" hidden></div>
       <div class="lb-dl"><div class="lb-bar"><i></i></div><p class="lb-n">Preparando el mundo…</p></div>
