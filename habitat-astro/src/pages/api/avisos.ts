@@ -29,7 +29,10 @@ export const GET: APIRoute = async ({ url }) => {
   try {
     const cfg = (await q("TutConfig").limit(50).find()).items as { _id: string; valor?: string }[];
     const C = Object.fromEntries(cfg.map((c) => [c._id, c.valor || ""]));
-    if (!C.cronKey || url.searchParams.get("k") !== C.cronKey) return json({ error: "no" }, 401);
+    // Sin parámetros cualquiera puede dispararlo: solo manda los avisos de hoy y una sola vez (queda marcado).
+    // Probar con otra fecha o en seco requiere la clave interna.
+    const prueba = url.searchParams.has("fecha") || url.searchParams.has("dry");
+    if (prueba && (!C.cronKey || url.searchParams.get("k") !== C.cronKey)) return json({ error: "no" }, 401);
     const hoy = url.searchParams.get("fecha") || new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
     const dow = new Date(hoy + "T12:00:00-03:00").getUTCDay();
     const target = dow === 3 || dow === 4 ? hoy : dow === 5 ? new Date(Date.parse(hoy + "T12:00:00Z") + 864e5).toISOString().slice(0, 10) : "";
