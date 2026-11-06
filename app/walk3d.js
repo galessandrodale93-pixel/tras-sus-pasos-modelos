@@ -3413,6 +3413,8 @@ function camRecenter() { if (!S) return; S.camYaw = 0; S.camPitch = .4; S.camLoo
 function camFollow(dt) {
   if (!S || CAMM.mode !== 'behind' || S.walking || CINE.on || CINE.cam || POSE.cine) return;
   if (S.camLookT && performance.now() - S.camLookT < (S.freeMoving ? 600 : 2500)) return;
+  // caminando hacia la cámara no se persigue (evita girar sin fin); al soltar, vuelve suave a la espalda
+  { const k = S.keys || {}, back = (S.joy.y || 0) + ((k.ArrowDown || k.s) ? 1 : 0) - ((k.ArrowUp || k.w) ? 1 : 0); if (S.freeMoving && back > .5) return; }
   let d = -S.camYaw; while (d > Math.PI) d -= 6.283; while (d < -Math.PI) d += 6.283; S.camYaw += d * Math.min(1, dt / .2);
 }
 // la cámara no atraviesa paredes ni casas: se acerca al personaje si hay algo en medio
