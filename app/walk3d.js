@@ -2807,7 +2807,7 @@ async function heroLoad() {
   try {
     globalThis.__THREE = THREE; const mod = await import(H3_BASE + 'gltf.js'), L = new mod.GLTFLoader();
     const ld = u => new Promise((r, j) => L.load((ABASE ? ABASE + 'hero/' : H3_BASE) + u, r, undefined, j));
-    const [m, f, an] = await Promise.race([Promise.all([ld(qEarly() >= 3 ? 'hero_m_hd.glb' : 'hero_m.glb'), ld(qEarly() >= 3 ? 'hero_f_hd.glb' : 'hero_f.glb'), ld('hero_anims.glb')]), new Promise((_, j) => setTimeout(() => j(new Error('tiempo')), 45000))]);
+    const [m, f, an] = await Promise.race([Promise.all([ld(qEarly() >= 3 ? 'hero_m_hd.glb' : 'hero_m.glb'), ld(qEarly() >= 3 ? 'hero_f_hd.glb' : 'hero_f.glb'), ld('hero_anims.glb')]), new Promise((_, j) => setTimeout(() => j(new Error('tiempo')), window.H3_TO || 45000))]);
     H3.skClone = mod.skClone; const all = gl => { const r = new THREE.Group(); gl.scenes.forEach(x => r.add(x)); return r; }; H3.sex.m = h3Template(all(m)); H3.sex.f = h3Template(all(f));
     H3.clips = Object.fromEntries(an.animations.map(c => [c.name, c]));
     const xl = f => new Promise((r, j) => L.load(new URL('../hero/' + f, import.meta.url).href, r, undefined, j)).then(ex => ex.animations.forEach(c => { if (!H3.clips[c.name] && !/dance/i.test(c.name)) H3.clips[c.name] = c; })).catch(e2 => console.warn('hero3d extra', f, e2));
@@ -3348,15 +3348,15 @@ function wireInput() {
   cv.onpointermove = e => { if (pts.has(e.pointerId)) pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pinch && pts.size >= 2) { S.camDist = Z(pinch.dist * pinch.d0 / spread()); return; }
     if (!down) return; const dx = e.clientX - down.x, dy = e.clientY - down.y; drag = Math.max(drag, Math.abs(dx), Math.abs(dy));
-    S.camYaw = down.yaw - dx * .008; S.camPitch = Math.max(-.18, Math.min(1.2, down.pitch + dy * .005)); };
+    S.camYaw = down.yaw - dx * .008; S.camLookT = performance.now(); S.camPitch = Math.max(-.18, Math.min(1.2, down.pitch + dy * .005)); };
   cv.onpointercancel = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; down = null; };
   cv.onwheel = e => { e.preventDefault(); wake(); S.camDist = Z(S.camDist * Math.exp(e.deltaY * .0012)); };
   // botones de cámara: acercar, alejar y volver atrás del personaje
-  const cb = document.createElement('div'); cb.className = 'v3cam'; cb.innerHTML = '<button data-z="-1" aria-label="Acercar cámara">+</button><button data-z="1" aria-label="Alejar cámara">−</button><button data-z="0" aria-label="Centrar cámara">⌖</button>';
-  cb.onpointerdown = e => e.stopPropagation(); cb.onclick = e => { const z = e.target.closest('button'); if (!z) return; wake(); const k = +z.dataset.z; if (k) S.camDist = Z(S.camDist * (k > 0 ? 1.3 : 1 / 1.3)); else { S.camYaw = 0; S.camPitch = .4; S.camDist = 6.6; } };
-  S.root.querySelectorAll('.v3cam').forEach(x => x.remove()); S.root.appendChild(cb);
+  const cb = document.createElement('div'); cb.className = 'v3cam'; cb.innerHTML = '<button data-z="-1" aria-label="Acercar cámara">+</button><button data-z="1" aria-label="Alejar cámara">−</button><button data-z="0" aria-label="Centrar cámara detrás del personaje">⌖</button><button data-z="m" class="v3cam-m" aria-label="Cambiar modo de cámara"></button>';
+  cb.onpointerdown = e => e.stopPropagation(); cb.onclick = e => { const z = e.target.closest('button'); if (!z) return; wake(); if (z.dataset.z === 'm') { camModeToggle(); return; } const k = +z.dataset.z; if (k) S.camDist = Z(S.camDist * (k > 0 ? 1.3 : 1 / 1.3)); else { S.camYaw = 0; S.camPitch = .4; S.camDist = 6.6; } };
+  S.root.querySelectorAll('.v3cam').forEach(x => x.remove()); S.root.appendChild(cb); camModeUI();
   if (!window.__camKeys) window.__camKeys = 1, addEventListener('keydown', e => { if (!S || document.getElementById('view3d').hidden || sheetUp() || /INPUT|TEXTAREA/.test((e.target || {}).tagName || '')) return; const k = e.key.toLowerCase();
-    if (k === '+' || k === '=') S.camDist = Z(S.camDist / 1.2); else if (k === '-' || k === '_') S.camDist = Z(S.camDist * 1.2); else if (k === 'q') S.camYaw += .12; else if (k === 'e') S.camYaw -= .12; else if (k === 'r') S.camPitch = Math.max(-.18, S.camPitch - .08); else if (k === 'f') S.camPitch = Math.min(1.2, S.camPitch + .08); });
+    if (k === '+' || k === '=') S.camDist = Z(S.camDist / 1.2); else if (k === '-' || k === '_') S.camDist = Z(S.camDist * 1.2); else if (k === 'q') S.camYaw += .12; else if (k === 'e') S.camYaw -= .12; else if (k === 'r') S.camPitch = Math.max(-.18, S.camPitch - .08); else if (k === 'f') S.camPitch = Math.min(1.2, S.camPitch + .08); else if (k === 'v') camModeToggle(); else if (k === 'x') camRecenter(); });
   cv.onpointerup = e => {
     pts.delete(e.pointerId); if (pts.size < 2) pinch = null;
     const was = down; down = null; if (!was || drag > 8) return;
@@ -3382,7 +3382,7 @@ function loop(now) {
     m.rotation.y = t * 1.6; m.position.y = (m.userData.by || 0) + .85 + Math.sin(t * 2.4 + id.length) * .12;
     if ((m.position.x - S.av.position.x) ** 2 + (m.position.z - S.av.position.z) ** 2 < 2.6) collect(id, m);
   }
-  const yaw = S.yaw + S.camYaw, a = S.av.position, ph = S.camPitch ?? .4, back = S.camDist * Math.cos(ph), up = (S.hx ? 1.3 : 1.02) + S.camDist * Math.sin(ph);
+  camFollow(dt); const yaw = S.yaw + S.camYaw, a = S.av.position, ph = S.camPitch ?? .4, back = camSafeBack(a, yaw, S.camDist * Math.cos(ph)), up = (S.hx ? 1.3 : 1.02) + S.camDist * Math.sin(ph);
   { const gnd = Math.max(S.W ? Math.max(0, S.W.hAt(a.x, a.z)) : 0, stairH(a.x, a.z), floorH(a.x, a.z)); S.gy = (S.gy ?? gnd) + (gnd - (S.gy ?? gnd)) * Math.min(1, dt * 12); if (S.jy > 0) { S.jv -= 17 * dt; S.jy = Math.max(0, S.jy + S.jv * dt); } a.y = S.gy + (S.jy || 0); }
   if (S.W) { S.W.sunL.position.set(a.x + S.W.sunDir.x * 40, a.y + 11, a.z + S.W.sunDir.z * 40); S.W.sunL.target.position.copy(a); S.uGrass.value = t; S.W.sky.material.uniforms.t.value = t; }
   const cx = a.x - Math.sin(yaw) * back, cz = a.z - Math.cos(yaw) * back;
@@ -3403,6 +3403,20 @@ const THINK = {
   kids: ['¿A dónde seguimos?', '¿Qué habrá más adelante?', '¡Vamos, que el camino sigue!', '¿Y si busco algún objeto escondido?', 'Mmm… ¿por dónde era?'],
   hx: ['¿A dónde seguimos?', 'Algo me dice que hay más por descubrir…', '¿Qué habrá detrás de esos árboles?', 'El camino sigue. ¿Vamos?', 'Siento que me falta encontrar algo…']
 };
+/* ---------- modos de cámara: "Detrás" (sigue la espalda del personaje) y "Libre" (como antes) ---------- */
+const CAMM = { mode: (() => { try { return localStorage.getItem('tsp:cam') || 'behind'; } catch (e) { return 'behind'; } })() };
+function camModeUI() { const b = document.querySelector('.v3cam-m'); if (b) { b.textContent = CAMM.mode === 'behind' ? '🎥' : '👀'; b.title = CAMM.mode === 'behind' ? 'Cámara: detrás (V para cambiar)' : 'Cámara: libre (V para cambiar)'; } }
+function camTip(t) { let el = document.getElementById('v3camtip'); if (!el) { el = document.createElement('div'); el.id = 'v3camtip'; el.className = 'v3camtip'; document.body.appendChild(el); } el.textContent = t; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); clearTimeout(CAMM.tt); CAMM.tt = setTimeout(() => el.classList.remove('on'), 1600); }
+function camModeToggle() { CAMM.mode = CAMM.mode === 'behind' ? 'free' : 'behind'; try { localStorage.setItem('tsp:cam', CAMM.mode); } catch (e) {} camModeUI(); camTip(CAMM.mode === 'behind' ? 'Cámara: detrás' : 'Cámara: libre'); if (CAMM.mode === 'behind') S.camLookT = 0; }
+function camRecenter() { if (!S) return; S.camYaw = 0; S.camPitch = .4; S.camLookT = 0; camTip('Cámara centrada'); }
+// en modo "Detrás", el ángulo de la cámara vuelve suave a la espalda (≈0,2 s); mirar con el mouse lo suspende un momento
+function camFollow(dt) {
+  if (!S || CAMM.mode !== 'behind' || S.walking || CINE.on || CINE.cam || POSE.cine) return;
+  if (S.camLookT && performance.now() - S.camLookT < (S.freeMoving ? 600 : 2500)) return;
+  let d = -S.camYaw; while (d > Math.PI) d -= 6.283; while (d < -Math.PI) d += 6.283; S.camYaw += d * Math.min(1, dt / .2);
+}
+// la cámara no atraviesa paredes ni casas: se acerca al personaje si hay algo en medio
+function camSafeBack(a, yaw, back) { let b = back; for (let k = 1; k <= 8; k++) { const r = back * k / 8; if (blockedAt(a.x - Math.sin(yaw) * r, a.z - Math.cos(yaw) * r)) { b = Math.max(.9, back * (k - 1) / 8 - .2); break; } } return b; }
 function wake() { if (!S) return; S.idleT = 0; if (S.hint) S.hint.classList.remove('on'); if (S.think) S.think.classList.remove('on'); }
 const HV = { v: null };
 function idle(dt) {
