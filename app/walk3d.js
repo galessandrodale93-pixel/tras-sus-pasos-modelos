@@ -687,47 +687,51 @@ const HOWTO = {
   kids: [['🚶', 'Caminá', 'Mové el círculo de abajo (o las flechas) para caminar por donde quieras.'], ['🗺️', 'El mapa', 'Tocá «Mapa» para ver dónde estás y elegir a dónde ir.'], ['🎮', 'Juegos', 'En cada parada hay una historia de Jesús y un juego. ¡Cada juego es distinto!'], ['🌟', 'Brillá', 'Con el botón de la estrella hacés una pose y te llenás de luz. Ayudar a otros te hace brillar más.'], ['💪', 'Tus fuerzas', 'Cuando subís de nivel ganás puntos para tus fuerzas. Tocá la estrellita de arriba para elegirlas.'], ['🏅', 'Tus puntos', 'Los puntos que juntás se guardan y siguen sumando en todos los cursos.']],
   hero: [['🧭', 'Recorré la tierra', 'Joystick o W A S D para moverte; arrastrá para mirar. El mundo es abierto: explorá.'], ['🗺️', 'Mapa', 'El mapa muestra el camino, las paradas, las misiones y dónde estás. Tocá un lugar para marcar el destino.'], ['⚔️', 'Minijuegos', 'Cada parada cuenta un pasaje y trae un desafío propio. Ninguno se repite.'], ['✦', 'Resplandor', 'Las buenas obras y las poses llenan tu Resplandor: un reflejo de Dios, no de vos. Los demás lo ven en tu nombre.'], ['📈', 'Atributos', 'Al subir de nivel ganás puntos para repartir. El ícono junto a tu nivel te avisa cuántos tenés.'], ['🏆', 'Progreso', 'Tus puntos, insignias y Resplandor se acumulan entre todos los cursos.']]
 };
-async function lobby() {
-  if (LOBBY.done || !('caches' in window)) { LOBBY.done = true; return; }
-  const kid = G().branch !== 'ados', coarse = matchMedia('(pointer: coarse)').matches; let mode = 'auto'; try { mode = QOLD[localStorage.getItem('tsp:q')] || localStorage.getItem('tsp:q') || 'auto'; } catch (e) {}
-  const lv = 3; // se baja el mundo entero en máxima calidad (también en el celular); después Auto elige qué usar
-  let list; try { list = await dlList(lv); } catch (e) { LOBBY.done = true; return; }
-  let files = list.files;
-  const c = await caches.open(DLW.cache), have = new Set((await c.keys()).map(r => r.url)); let miss = files.filter(([u]) => !have.has(u));
-  const tot = files.reduce((a, f) => a + f[1], 0) || 1, MB = n => (n / 1048576).toFixed(0);
-  let imgs = []; try { const L = await (await fetch(DLW.root + 'app/lobby/list.json')).json(); imgs = (L[kid ? 'kids' : 'hero'] || []).concat(L.both || []).map(n => DLW.root + 'app/lobby/' + n); } catch (e) {}
-  const ov = document.createElement('div'); ov.className = 'v3lobby' + (kid ? ' kid' : ''); document.body.appendChild(ov);
-  const fresh = (() => { try { return !localStorage.getItem('tsp:howto'); } catch (e) { return false; } })();
-  ov.innerHTML = `<div class="lb-sl">${imgs.map((u, i) => `<div class="lb-im${i ? '' : ' on'}" style="background-image:url(${u})"></div>`).join('')}</div><div class="lb-shade"></div>
-    <button class="lb-mute" aria-label="Silenciar música">🔊</button>
+// sala de espera: aparece al instante (fondo con degradé, fotos del juego, versículos y tarjetas), baja el mundo completo
+// y se queda mientras se arma el mundo 3D; se cierra sola cuando todo está listo
+const LB_IMG = { hero: ['hero_1.jpg', 'hero_2.jpg', 'hero_3.jpg', 'hero_4.jpg', 'hero_5.jpg'], kids: ['kids_1.jpg', 'kids_2.jpg', 'kids_3.jpg', 'kids_4.jpg', 'kids_5.jpg'] };
+function lobbyUI(kid) {
+  const ov = document.createElement('div'); ov.className = 'v3lobby' + (kid ? ' kid' : ''); const H = HOWTO[kid ? 'kids' : 'hero'];
+  const im = (LB_IMG[kid ? 'kids' : 'hero'] || []).map(n => `url(${DLM.r2}app/lobby/${n}),url(${DLW.root}app/lobby/${n})`);
+  let lines = []; try { lines = (G().lobbyLines && G().lobbyLines()) || []; } catch (e) {}
+  ov.innerHTML = `<div class="lb-sl">${im.map((u, i) => `<div class="lb-im${i ? '' : ' on'}" style="background-image:${u}"></div>`).join('')}</div><div class="lb-shade"></div>
+    <div class="lb-top"><button class="lb-mus" aria-label="Tocar para música">🎵 <span>Tocar para música</span></button></div>
     <div class="lb-in"><small>${kid ? 'Kids' : 'Hero'}</small><b>Tras sus pasos</b><p class="lb-sub">${kid ? '¡Vamos a caminar la historia de Jesús!' : 'Recorré la tierra donde caminó Jesús.'}</p>
+      <p class="lb-vs" aria-live="polite"></p>
       <div class="lb-cards" hidden></div>
-      <div class="lb-dl" hidden><div class="lb-bar"><i></i></div><p class="lb-n"></p></div>
-      <button class="lb-go">${miss.length ? (kid ? '¡Tocá para empezar!' : 'Entrar') : 'Entrar'}</button>
-      <p class="lb-note">${miss.length ? `Antes de jugar se guarda el mundo completo en máxima calidad (${MB(tot)} MB). Solo la primera vez: después entrás al instante, aun sin internet.` : 'El mundo ya está guardado en este aparato.'}</p></div>`;
-  const go = ov.querySelector('.lb-go'), note = ov.querySelector('.lb-note'), bar = ov.querySelector('.lb-bar i'), num = ov.querySelector('.lb-n'), dl = ov.querySelector('.lb-dl'), cards = ov.querySelector('.lb-cards');
-  // fotos del juego que se funden cada 5 s
-  const ims = [...ov.querySelectorAll('.lb-im')]; let si = 0; const slT = setInterval(() => { if (ims.length < 2) return; ims[si].classList.remove('on'); si = (si + 1) % ims.length; ims[si].classList.add('on'); }, 5000);
-  // música de fondo (necesita un toque)
-  let mus = null; const L2 = MUS[kid ? 'kids' : 'hero'] || []; const mute = ov.querySelector('.lb-mute'); let muted = false;
-  const musStart = () => { if (mus || !L2.length) return; mus = new Audio(L2[Math.floor(Math.random() * L2.length)]); mus.loop = true; mus.volume = muted ? 0 : .5; mus.play().catch(() => {}); };
-  mute.onclick = () => { muted = !muted; mute.textContent = muted ? '🔇' : '🔊'; if (mus) mus.volume = muted ? 0 : .5; };
-  // tarjetas para el que juega por primera vez
-  const H = HOWTO[kid ? 'kids' : 'hero']; let ci = 0;
+      <div class="lb-dl"><div class="lb-bar"><i></i></div><p class="lb-n">Preparando el mundo…</p></div>
+      <button class="lb-go" hidden></button><p class="lb-note"></p></div>`;
+  document.body.appendChild(ov); document.body.classList.add('v3lb');
+  const $ = q => ov.querySelector(q), ims = [...ov.querySelectorAll('.lb-im')], T = [];
+  let si = 0; T.push(setInterval(() => { if (ims.length < 2) return; ims[si].classList.remove('on'); si = (si + 1) % ims.length; ims[si].classList.add('on'); }, 5000));
+  let vi = Math.floor(Math.random() * Math.max(1, lines.length)); const vs = $('.lb-vs'), verse = () => { if (!lines.length) return; vs.classList.remove('on'); setTimeout(() => { vs.textContent = lines[vi % lines.length]; vi++; vs.classList.add('on'); }, 350); }; verse(); T.push(setInterval(verse, 8000));
+  const fresh = (() => { try { return !localStorage.getItem('tsp:howto'); } catch (e) { return false; } })(), cards = $('.lb-cards'); let ci = 0;
   const card = () => { cards.innerHTML = `<div class="lb-card"><span class="lb-ico">${H[ci][0]}</span><div><b>${H[ci][1]}</b><p>${H[ci][2]}</p></div></div><div class="lb-dots">${H.map((_, i) => `<i class="${i === ci ? 'on' : ''}"></i>`).join('')}</div>`; };
-  let cT = null; const cardsOn = () => { cards.hidden = false; card(); cT = setInterval(() => { ci = (ci + 1) % H.length; card(); }, 6500); cards.onclick = () => { ci = (ci + 1) % H.length; card(); }; };
-  const finish = () => new Promise(res => { clearInterval(slT); clearInterval(cT); try { localStorage.setItem('tsp:howto', '1'); } catch (e) {} ov.classList.add('out'); if (mus) { const m = mus; const f = setInterval(() => { m.volume = Math.max(0, m.volume - .05); if (m.volume <= 0) { clearInterval(f); m.pause(); } }, 60); } setTimeout(() => { ov.remove(); res(); }, 700); });
+  if (fresh) { cards.hidden = false; card(); T.push(setInterval(() => { ci = (ci + 1) % H.length; card(); }, 6500)); cards.onclick = () => { ci = (ci + 1) % H.length; card(); }; }
+  let mus = null, on = false; const L2 = MUS[kid ? 'kids' : 'hero'] || [], mb = $('.lb-mus');
+  mb.onclick = () => { if (!L2.length) return; if (!mus) { mus = new Audio(L2[Math.floor(Math.random() * L2.length)]); mus.loop = true; mus.volume = .5; } on = !on; if (on) mus.play().catch(() => {}); else mus.pause(); mb.innerHTML = on ? '🔊 <span>Música</span>' : '🔇 <span>Música</span>'; mb.classList.toggle('on', on); };
+  const U = { ov, $, bar: $('.lb-bar i'), num: $('.lb-n'), go: $('.lb-go'), note: $('.lb-note'), dl: $('.lb-dl'),
+    prog(f, txt) { if (f == null) this.bar.parentNode.classList.add('ind'); else { this.bar.parentNode.classList.remove('ind'); this.bar.style.width = (Math.max(0, Math.min(1, f)) * 100).toFixed(1) + '%'; } if (txt != null) this.num.textContent = txt; },
+    close() { T.forEach(clearInterval); try { localStorage.setItem('tsp:howto', '1'); } catch (e) {} ov.classList.add('out'); document.body.classList.remove('v3lb'); if (mus) { const m = mus; const f = setInterval(() => { m.volume = Math.max(0, m.volume - .05); if (m.volume <= 0) { clearInterval(f); m.pause(); } }, 60); } setTimeout(() => ov.remove(), 750); } };
+  return U;
+}
+// devuelve la sala abierta (para cerrarla cuando el mundo está armado) o null
+async function lobby() {
+  const kid = G().branch !== 'ados'; const U = lobbyUI(kid);
+  if (LOBBY.done || !('caches' in window)) { LOBBY.done = true; U.prog(null, 'Armando el mundo…'); return U; }
+  let list = null, c = null, miss = [], files = [];
+  try { list = await dlList(3); files = list.files; c = await caches.open(DLW.cache); const have = new Set((await c.keys()).map(r => r.url)); miss = files.filter(([u]) => !have.has(u)); } catch (e) { LOBBY.done = true; U.prog(null, 'Armando el mundo…'); return U; }
+  const tot = files.reduce((a, f) => a + f[1], 0) || 1, MB = n => (n / 1048576).toFixed(0);
+  if (!miss.length) { LOBBY.done = true; U.prog(1, 'Mundo guardado en este aparato ✓ · Armando el mundo…'); return U; }
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+  U.note.textContent = `Se guarda el mundo completo en máxima calidad (${MB(tot)} MB). Solo la primera vez: después entrás al instante, aun sin internet.`;
   return new Promise(resolve => {
-    const ready = () => { go.hidden = false; go.disabled = false; go.textContent = kid ? '¡Listo! Entrar' : '¡Listo! Entrar'; go.classList.add('ready'); note.textContent = 'Todo listo para jugar sin cortes.'; go.onclick = () => { LOBBY.done = true; finish().then(resolve); }; };
-    const run = async () => {
-      go.hidden = true; dl.hidden = false; note.textContent = 'Preparando el mundo… podés leer mientras tanto.'; if (fresh) cardsOn();
-      const base = tot - miss.reduce((a, f) => a + f[1], 0);
-      const fail = await dlFetch(c, miss, (g, t, sp, eta) => { const G2 = base + g; bar.style.width = (G2 / tot * 100).toFixed(1) + '%'; num.textContent = 'Descargando mundo en máxima calidad · ' + dlFmt(G2, tot, sp, (tot - G2) / Math.max(1, sp)); });
-      if (fail.length) { miss = fail; go.hidden = false; go.textContent = 'Reintentar'; note.textContent = `Faltan ${fail.length} archivos (se cortó la conexión). Tocá «Reintentar».`; go.onclick = () => run(); return; }
-      ready();
-    };
-    if (!miss.length) { note.textContent = 'Comprobando… ✓'; go.hidden = true; setTimeout(() => { LOBBY.done = true; finish().then(resolve); }, 700); return; }
-    go.onclick = () => { musStart(); try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {} run(); };
+    const run = async () => { U.go.hidden = true; const base = tot - miss.reduce((a, f) => a + f[1], 0);
+      const fail = await dlFetch(c, miss, (g, t, sp, eta) => { const G2 = base + g; U.prog(G2 / tot, 'Descargando mundo en máxima calidad · ' + dlFmt(G2, tot, sp, (tot - G2) / Math.max(1, sp))); });
+      if (fail.length) { miss = fail; U.go.hidden = false; U.go.textContent = 'Reintentar'; U.note.textContent = `Faltan ${fail.length} archivos (se cortó la conexión). Tocá «Reintentar».`; U.go.onclick = () => run(); return; }
+      LOBBY.done = true; U.prog(1, '¡Listo! Mundo guardado ✓'); U.note.textContent = 'Todo listo para jugar sin cortes.'; U.go.hidden = false; U.go.textContent = '¡Listo! Entrar'; U.go.classList.add('ready');
+      U.go.onclick = () => { U.go.hidden = true; U.note.textContent = ''; U.prog(null, 'Armando el mundo…'); resolve(U); }; };
+    run();
   });
 }
 /* ---------- perfilador (?prof=1): milisegundos por sistema, promedio de los últimos cuadros ---------- */
@@ -857,6 +861,74 @@ function pop(it) {
   el.innerHTML = `<span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[it.k]}</svg></span><span class="tx"><small>¡Encontraste algo! +${ITEM_PTS}</small><b>${esc(it.name)}</b></span>`;
   el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
   clearTimeout(pop.t); pop.t = setTimeout(() => { el.classList.remove('on'); el.hidden = true; }, 2600);
+}
+// en 3D la mochila va arriba (donde estaba el menú ☰) y el menú baja al lugar de la mochila
+function hudSwap(on) {
+  const m = document.getElementById('menuBtn'), b = document.getElementById('v3bag'); if (!m || !b) return; const H = hudSwap;
+  if (on && !H.on) { H.mp = m.parentNode; H.mn = m.nextSibling; H.bp = b.parentNode; H.bn = b.nextSibling; H.mp.insertBefore(b, m); document.body.appendChild(m); m.classList.add('v3menufab'); b.classList.add('v3baghud'); H.on = true; }
+  else if (!on && H.on) { H.mp.insertBefore(m, H.mn && H.mn.parentNode === H.mp ? H.mn : null); H.bp.insertBefore(b, H.bn && H.bn.parentNode === H.bp ? H.bn : null); m.classList.remove('v3menufab'); b.classList.remove('v3baghud'); H.on = false; }
+}
+// ---------- HUD mínimo: abanico de íconos (se despliega hacia arriba y se repliega solo a los 4 s) y minimapa ----------
+const FAN = { el: null, open: false, t: 0 };
+function fanFire(b) { if (!b) return; if (b.onpointerdown) b.onpointerdown({ preventDefault() {}, stopPropagation() {}, pointerType: 'mouse', button: 0, target: b, currentTarget: b }); else b.click(); }
+function fanItems() {
+  const L = [], money = (() => { const m = document.querySelector('#v3surv .sv-money'); return m ? (m.textContent.match(/\d+/) || ['0'])[0] : null; })();
+  L.push(['🎒', 'Mochila', () => { const b = document.getElementById('v3bag'); if (b) b.click(); }]);
+  L.push(['💪', 'Atributos', () => openBag('at')]);
+  if (S && S.sv) { L.push(['🍽️', 'Comer (C)', () => svEat()]); L.push(['🔨', 'Fabricar (B)', () => svCraft()]); if (money != null) L.push([`<span class="fan-coin">🪙<em>${money}</em></span>`, `${money} denarios (monedas)`, () => openBag()]); }
+  const acts = document.getElementById('v3acts'); if (acts) acts.querySelectorAll('button[data-a]').forEach(b => { if (b.dataset.a === 'room') return; L.push([b.innerHTML, b.title || b.getAttribute('aria-label') || b.dataset.a, () => fanFire(b)]); });
+  L.push(['⭐', 'Mi progreso', () => { const h = document.getElementById('hudLv'); if (h) h.click(); }]);
+  L.push(['☰', 'Menú y ajustes', () => { const m = document.getElementById('menuBtn'); if (m) m.click(); }]);
+  return L;
+}
+function fanArm() { clearTimeout(FAN.t); if (FAN.open) FAN.t = setTimeout(() => fanSet(false), 4000); }
+function fanSet(open) {
+  const el = FAN.el; if (!el) return; FAN.open = open; el.classList.toggle('open', open); el.querySelector('.fan-tg').setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) { const box = el.querySelector('.fan-items'), L = fanItems(); box.innerHTML = L.map(([ico, t], i) => `<button data-i="${i}" title="${String(t).replace(/"/g, '&quot;')}" aria-label="${String(t).replace(/<[^>]+>/g, '').replace(/"/g, '&quot;')}" style="transition-delay:${(i * 22)}ms">${ico}</button>`).join('');
+    box.querySelectorAll('button').forEach(b => b.onclick = e => { e.stopPropagation(); const f = L[+b.dataset.i]; try { f && f[2](); } catch (er) {} fanArm(); setTimeout(() => { if (FAN.open) fanSet(true); }, 250); }); }
+  fanArm();
+}
+function fanInit() {
+  if (FAN.el && document.body.contains(FAN.el)) return; const el = document.createElement('div'); el.id = 'v3fan'; el.className = 'v3fan';
+  el.innerHTML = '<div class="fan-items" role="menu"></div><button class="fan-tg" aria-label="Más opciones" aria-expanded="false"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="6" cy="6" r="2.2" fill="currentColor"/><circle cx="12" cy="6" r="2.2" fill="currentColor"/><circle cx="18" cy="6" r="2.2" fill="currentColor"/><circle cx="6" cy="12" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="18" cy="12" r="2.2" fill="currentColor"/><circle cx="6" cy="18" r="2.2" fill="currentColor"/><circle cx="12" cy="18" r="2.2" fill="currentColor"/><circle cx="18" cy="18" r="2.2" fill="currentColor"/></svg></button>';
+  document.body.appendChild(el); FAN.el = el; el.querySelector('.fan-tg').onclick = e => { e.stopPropagation(); fanSet(!FAN.open); };
+  el.addEventListener('pointerdown', () => fanArm(), true); el.addEventListener('pointermove', () => fanArm(), { passive: true });
+}
+const MINI = { cv: null, t: 0 };
+function miniInit() {
+  if (MINI.cv && document.body.contains(MINI.cv)) return; const cv = document.createElement('canvas'); cv.className = 'v3mini'; cv.setAttribute('aria-label', 'Mapa: tocá para abrirlo'); cv.title = 'Mapa'; cv.onclick = () => openMap();
+  const sv = document.getElementById('v3surv'); if (sv && S && S.sv) sv.appendChild(cv); else { let b = document.getElementById('v3mmbox'); if (!b) { b = document.createElement('div'); b.id = 'v3mmbox'; b.className = 'v3mmbox'; document.body.appendChild(b); } b.appendChild(cv); }
+  MINI.cv = cv;
+}
+function miniTick(dt) {
+  if (!S || !MINI.cv) return; MINI.t -= dt; if (MINI.t > 0) return; MINI.t = .5; const cv = MINI.cv, w = cv.clientWidth, h = cv.clientHeight; if (!w) return;
+  const dpr = Math.min(2, devicePixelRatio || 1); if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  if (MAPT.hx !== S.hx) { MAPT.tiles.clear(); MAPT.hx = S.hx; }
+  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); const a = S.av.position, sc = w / 220, X = wx => w / 2 + (wx - a.x) * sc, Y = wz => h / 2 - (wz - a.z) * sc;
+  x.fillStyle = S.hx ? '#1A150E' : '#CFE3F2'; x.fillRect(0, 0, w, h);
+  const L = 0, Tm = 256 / (Math.pow(2, L) * .5); let made = 0;
+  for (let tz = Math.ceil((a.z + 120) / Tm); tz * Tm > a.z - 120 - Tm; tz--) for (let tx = Math.floor((a.x - 120) / Tm); tx * Tm < a.x + 120; tx++) { let t = MAPT.tiles.get(L + ':' + tx + ':' + tz); if (!t && made < 1) { t = mapTile(L, tx, tz); made++; } if (t) x.drawImage(t.cv, X(t.x0), Y(t.z0), t.size * sc + .5, t.size * sc + .5); }
+  // paradas y destino
+  const g = G(), p = g.P(); for (const id in S.markers) { const m = S.markers[id], px = X(m.position.x), py = Y(m.position.z); if (px < -4 || py < -4 || px > w + 4 || py > h + 4) continue; const done = p.done && p.done[id.split('-').pop()]; x.fillStyle = done ? 'rgba(255,255,255,.55)' : '#FFD25E'; x.beginPath(); x.arc(px, py, 2.6, 0, 6.283); x.fill(); }
+  if (S.wp) { const px = Math.max(6, Math.min(w - 6, X(S.wp.x))), py = Math.max(6, Math.min(h - 6, Y(S.wp.z))); x.strokeStyle = '#FF7A3D'; x.lineWidth = 2; x.beginPath(); x.arc(px, py, 4.5, 0, 6.283); x.stroke(); }
+  // jugador: flecha según hacia dónde mira la cámara
+  x.save(); x.translate(w / 2, h / 2); x.rotate(S.av.rotation.y); x.fillStyle = '#FFFFFF'; x.strokeStyle = '#2A1A06'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(0, -7); x.lineTo(5, 5); x.lineTo(0, 2.5); x.lineTo(-5, 5); x.closePath(); x.fill(); x.stroke(); x.restore();
+}
+// PC: sugerir pantalla completa al entrar (una vez por sesión, se cierra sola a los 6 s o con la X)
+function fullHint() {
+  try { if (fullHint.done || !matchMedia('(pointer: fine)').matches || matchMedia('(pointer: coarse)').matches) return; const d = document; if (d.fullscreenElement || d.webkitFullscreenElement || (screen.height - innerHeight < 4 && screen.width - innerWidth < 4)) return; if (sessionStorage.getItem('tsp:fullHint')) return; sessionStorage.setItem('tsp:fullHint', '1'); } catch (e) { return; }
+  fullHint.done = true; const mac = /Mac/i.test(navigator.platform || navigator.userAgent), el = document.createElement('div'); el.className = 'v3full';
+  el.innerHTML = `<span>🖥️</span><p>Para vivir la experiencia completa, apretá <kbd>${mac ? 'Ctrl+Cmd+F' : 'F11'}</kbd> y jugá en pantalla completa.</p><button class="v3full-go">Pantalla completa</button><button class="v3full-x" aria-label="Cerrar">✕</button>`;
+  document.body.appendChild(el); const bye = () => { el.classList.add('out'); setTimeout(() => el.remove(), 400); }; const t = setTimeout(bye, 6000);
+  el.querySelector('.v3full-x').onclick = () => { clearTimeout(t); bye(); };
+  el.querySelector('.v3full-go').onclick = () => { clearTimeout(t); bye(); try { const r = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen({ navigationUI: 'hide' }); if (r && r.catch) r.catch(() => {}); } catch (e) {} };
+}
+// iPhone: Safari no deja usar pantalla completa en páginas; una tarjeta (una sola vez) explica cómo instalarlo en el inicio
+function iosHint() {
+  try { const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); if (!ios || navigator.standalone || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || localStorage.getItem('tsp:a2hs')) return; localStorage.setItem('tsp:a2hs', '1'); } catch (e) { return; }
+  const ua = navigator.userAgent, how = /CriOS/i.test(ua) ? 'tocá <b>Compartir</b> <span class="sh">⬆︎</span> (el ícono junto a la barra de direcciones) y elegí <b>«Agregar a pantalla de inicio»</b>' : /FxiOS|EdgiOS|OPiOS|GSA\//i.test(ua) ? 'abrí este link en <b>Safari</b>, tocá <b>Compartir</b> <span class="sh">⬆︎</span> y elegí <b>«Agregar a inicio»</b>' : 'tocá <b>Compartir</b> <span class="sh">⬆︎</span> (abajo) y elegí <b>«Agregar a inicio»</b>';
+  const el = document.createElement('div'); el.className = 'v3full ios'; el.innerHTML = `<span>📲</span><p>Para jugar en pantalla completa: ${how}. Después abrí <b>Kids &amp; Hero</b> desde el ícono.</p><button class="v3full-x" aria-label="Cerrar">✕</button>`;
+  document.body.appendChild(el); const bye = () => { el.classList.add('out'); setTimeout(() => el.remove(), 400); }; const t = setTimeout(bye, 12000); el.querySelector('.v3full-x').onclick = () => { clearTimeout(t); bye(); };
 }
 function bagBtn() { const b = document.getElementById('v3bag'); if (!b) return; b.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M8 7V6a4 4 0 0 1 8 0v1h2.5a1 1 0 0 1 1 1l-1 12H5.5l-1-12a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'; b.setAttribute('aria-label', 'Abrir mochila'); }
 function openBag(first) {
@@ -1039,16 +1111,25 @@ function buildMissions(scene, g, hx, HW, rr) {
   const npc = (look, x, z, face) => { const rig = hx || H3.ok, o = rig ? buildHeroAvatar(look) : buildAvatar(look, false); if (!rig) o.scale.setScalar(1.08); o.position.set(x, yAt(x, z), z); o.rotation.y = face; if (rig) o.traverse(q => { if (q.isMesh) q.castShadow = true; }); o.traverse(q => { if (q.isPointLight) q.intensity = 0; }); scene.add(o); return o; };
   const ring = (x, z) => { const m = new THREE.Mesh(new THREE.RingGeometry(.55, .7, 36), new THREE.MeshBasicMaterial({ color: '#FFD873', transparent: true, opacity: .7, side: THREE.DoubleSide, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(x, yAt(x, z) + .05, z); m.visible = false; scene.add(m); return m; };
   const per = new Array(16).fill(0);
+  // Hero: las misiones no van sobre el camino; se reparten por la etapa en lugares con sentido (aldeas, pozo, lago, monte…) y siempre en suelo alcanzable
+  const used = []; const spotOk = (x, z) => { if (!HW) return false; if (Math.abs(x) > Math.min(XB * .9, (HW.X1 || XB) - 6)) return false; if (HW.dAt(x, z) < 9) return false; if (waterWet(x, z, null) > .04) return false;
+    for (const B of WATER.basins) if (Math.hypot(x - B.x, z - B.z) < B.r * 1.4 + 2) return false; const sl = Math.hypot(HW.hAt(x + 1, z) - HW.hAt(x - 1, z), HW.hAt(x, z + 1) - HW.hAt(x, z - 1)) / 2; if (sl > .38) return false;
+    for (let k = 0; k < 8; k++) { const an = k / 8 * 6.283; if (blockedAt(x + Math.cos(an) * 1.2, z + Math.sin(an) * 1.2)) return false; } for (const u of used) if (Math.hypot(x - u[0], z - u[1]) < 14) return false; return true; };
+  const spot = (r, R, k, avoid) => { const [za, zb] = regionZ(g, r), pois = (S0.pois || []).filter(q => q.r === r && q.k !== 'river'), anchors = pois.map(q => [q.x, q.z]);
+    for (let t = 0; t < 90; t++) { let x, z; const an = anchors.length ? anchors[(k + t) % anchors.length] : null;
+      if (an && t < 50) { const ang = R() * 6.283, rad = 12 + R() * 16; x = an[0] + Math.cos(ang) * rad; z = an[1] + Math.sin(ang) * rad; } else { x = (R() * 2 - 1) * XB * .85; z = zb + (za - zb) * (.1 + R() * .8); }
+      if (z > za + 5 || z < zb - 5) continue; if (avoid && Math.hypot(x - avoid[0], z - avoid[1]) < 22) continue; if (spotOk(x, z)) { used.push([x, z]); return [x, z]; } }
+    return null; };
   MISSIONS.forEach((d, i) => {
     const R = rng(900 + i), ns = regNodes(d.r); if (ns.length < 3) return; const slot = per[d.r]++, side = slot % 2 ? 1 : -1;
     const a = ns[Math.min(ns.length - 1, 1 + slot)], b = ns[Math.min(ns.length - 1, 3 + slot)];
-    const gx = a.position.x + side * 8, gz = a.position.z - .6, giver = npc(d.giver.look, gx, gz, -side * Math.PI / 2);
+    let gx = a.position.x + side * 8, gz = a.position.z - .6; const sp = hx ? spot(d.r, R, slot * 2) : null; if (sp) [gx, gz] = sp; const giver = npc(d.giver.look, gx, gz, sp ? Math.atan2(a.position.x - gx, a.position.z - gz) : -side * Math.PI / 2);
     const bang = bangSprite(); bang.position.set(gx, yAt(gx, gz) + 2.35, gz); scene.add(bang);
     const m = { d, giver, bang, gp: [gx, gz] };
     if (d.kind === 'act') { const poi = (S0.pois || []).find(q => q.k === (d.place || 'temple')); let tx = poi ? poi.x : b.position.x - side * 8, tz = poi ? poi.z : b.position.z; if (poi && poi.k === 'river') { const q = poi.pts[Math.floor(poi.pts.length / 2)]; tx = q[0] - 3.3; tz = q[1]; } if (poi && poi.k === 'temple') { tx = poi.x - poi.side * 6.5; tz = poi.z; } if (poi && poi.k === 'lake') { tx = poi.x - poi.side * 33; tz = poi.z + 9; } if (poi && poi.k === 'shore') { tx = poi.x - poi.side * 6; tz = poi.z + 2; } if (poi && poi.k === 'golgota') { tx = poi.x - poi.side * 5; tz = poi.z + 3; } if (poi && poi.k === 'tomb') { tx = poi.x - poi.side * 5; tz = poi.z + 2; } if (poi && poi.k === 'garden') { tx = poi.x - poi.side * 2.5; tz = poi.z + 2.5; } if (poi && poi.k === 'inn') { tx = poi.x - poi.side * 6; tz = poi.z - 2; } if (poi && poi.k === 'roofhouse') { tx = poi.x - poi.side * 6; tz = poi.z + 1.5; } if (poi && poi.k === 'village') { tx = poi.x - poi.side * 1.6; tz = poi.z + 1.6; }
       if (d.target) { m.target = npc(d.target.look, tx, tz, poi ? -poi.side * Math.PI / 2 : 0); } m.tp = [tx, tz]; m.ring = ring(tx, tz); }
-    else if (d.kind === 'deliver') { const tx = b.position.x - side * 8, tz = b.position.z - .4; m.target = npc(d.target.look, tx, tz, side * Math.PI / 2); m.tp = [tx, tz]; m.ring = ring(tx, tz); }
-    else { const px = b.position.x - side * (12 + R() * 6), pz = b.position.z + 3 + R() * 6; m.pp = [px, pz]; m.pick = misMesh(d.item); m.pick.position.set(px, yAt(px, pz) + (d.item.k === 'jar' || d.item.k === 'honey' ? .5 : 0), pz); m.pick.visible = false; scene.add(m.pick); m.ring = ring(px, pz);
+    else if (d.kind === 'deliver') { let tx = b.position.x - side * 8, tz = b.position.z - .4; const tp = hx ? spot(d.r, R, slot * 2 + 1, [gx, gz]) : null; if (tp) [tx, tz] = tp; m.target = npc(d.target.look, tx, tz, side * Math.PI / 2); m.tp = [tx, tz]; m.ring = ring(tx, tz); }
+    else { let px = b.position.x - side * (12 + R() * 6), pz = b.position.z + 3 + R() * 6; const pp = hx ? spot(d.r, R, slot * 2 + 1, [gx, gz]) : null; if (pp) [px, pz] = pp; m.pp = [px, pz]; m.pick = misMesh(d.item); m.pick.position.set(px, yAt(px, pz) + (d.item.k === 'jar' || d.item.k === 'honey' ? .5 : 0), pz); m.pick.visible = false; scene.add(m.pick); m.ring = ring(px, pz);
       if (d.well) { const w = new THREE.Group(), st = new THREE.MeshStandardMaterial({ color: '#8C8374', roughness: 1, flatShading: true }); const wall = new THREE.Mesh(new THREE.CylinderGeometry(.6, .66, .6, 14, 1, true), st); wall.material.side = THREE.DoubleSide; wall.position.y = .3; w.add(wall); const lip = new THREE.Mesh(new THREE.TorusGeometry(.62, .07, 6, 18), st); lip.rotation.x = Math.PI / 2; lip.position.y = .6; w.add(lip); const wat = new THREE.Mesh(new THREE.CircleGeometry(.58, 18), new THREE.MeshStandardMaterial({ color: '#2E5A66', roughness: .1, metalness: .3 })); wat.rotation.x = -Math.PI / 2; wat.position.y = .25; w.add(wat); w.position.set(px + 1.1, yAt(px + 1.1, pz), pz); w.traverse(q => { if (q.isMesh) { q.castShadow = q.receiveShadow = !!hx; } }); scene.add(w); } }
     M[d.id] = m;
   });
@@ -1625,7 +1706,7 @@ function actUI() { const b = document.querySelector('#v3acts [data-a="pray"]'); 
 function wireActs() {
   let box = document.getElementById('v3acts');
   if (!box) { box = document.createElement('div'); box.id = 'v3acts'; box.className = 'v3acts';
-    box.innerHTML = '<button data-a="jump" aria-label="Saltar" title="Saltar (barra espaciadora)"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 4l7 7h-4v6H9v-6H5Z" fill="currentColor"/><path d="M6 21h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><button data-a="pray" aria-label="Arrodillarse a orar" title="Orar (tecla O)">🙏</button><button data-a="wave" aria-label="Saludar" title="Saludar (tecla H)">👋</button><button data-a="sit" aria-label="Sentarse" title="Sentarse (tecla X)">🪑</button><button data-a="glow" aria-label="Resplandor" title="Resplandor (tecla P)">🌟</button><button data-a="room" aria-label="Jugar con amigos" title="Jugar con amigos">👥</button><button data-a="help" aria-label="Cómo se juega" title="Cómo se juega">❔</button>';
+    box.innerHTML = '<button data-a="jump" aria-label="Saltar" title="Saltar (barra espaciadora)"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 4l7 7h-4v6H9v-6H5Z" fill="currentColor"/><path d="M6 21h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><button data-a="pray" aria-label="Arrodillarse a orar" title="Orar (tecla O)">🙏</button><button data-a="wave" aria-label="Saludar" title="Saludar (tecla H)">👋</button><button data-a="glow" aria-label="Resplandor" title="Resplandor (tecla P)">🌟</button><button data-a="room" aria-label="Jugar con amigos" title="Jugar con amigos">👥</button><button data-a="help" aria-label="Cómo se juega" title="Cómo se juega">❔</button>';
     document.body.appendChild(box); box.querySelectorAll('button').forEach(b => b.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); ({ jump: doJump, pray: doPray, wave: doWave, sit: doSit, glow: () => S && (S.hx ? poseMenu() : kidsShine()), room: mpPanel, help: () => tutOpen(true) })[b.dataset.a](); }); }
   addEventListener('keydown', e => { if (!S || document.getElementById('view3d').hidden || e.repeat || /INPUT|TEXTAREA/.test((e.target || {}).tagName || '')) return; const k = e.key.toLowerCase(); if (k === ' ') { e.preventDefault(); doJump(); } else if (k === 'o') doPray(); else if (k === 'h') doWave(); else if (k === 't' && MP.code) talkStart(); else if (k === 'e') axHold(true); else if (k === 'c') svEat(); else if (k === 'b') svCraft(); else if (k === 'p' && S) (S.hx ? poseMenu() : kidsShine()); });
   addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 't') talkStop(); }); addEventListener('blur', () => talkStop());
@@ -3075,8 +3156,7 @@ const POSES = [
   { id: 'brazos', name: 'Brazos cruzados', ico: '🙅', clip: 'M_Idle' },
   { id: 'capa', name: 'Capa al viento', ico: '🧣', clip: 'Idle_Loop', cape: 1 },
   { id: 'horizonte', name: 'Mirar el horizonte', ico: '🌅', clip: 'M_Looking' },
-  { id: 'lampara', name: 'Levantar la lámpara', ico: '🪔', clip: 'Idle_Torch_Loop', lamp: 1 },
-  { id: 'espada', name: 'La espada del Espíritu', ico: '🗡️', clip: 'Sword_Idle', sword: 1, hx: 1 }];
+  { id: 'lampara', name: 'Levantar la lámpara', ico: '🪔', clip: 'Idle_Torch_Loop', lamp: 1 }];
 const GLW = { lvMax: 10 };
 function glowState() { const p = G().P(); if (!p.glow || typeof p.glow !== 'object') p.glow = { pts: 0 }; return p.glow; }
 const glowLv = pts => Math.min(GLW.lvMax, Math.floor(Math.sqrt(Math.max(0, pts) / 12)));
@@ -3211,7 +3291,7 @@ function wireJoy() {
   base.onpointerdown = e => { e.preventDefault(); wake(); e.stopPropagation(); id = e.pointerId; const r = base.getBoundingClientRect(); cx = r.left + r.width / 2; cy = r.top + r.height / 2; try { base.setPointerCapture(id); } catch (er) {} set(e.clientX, e.clientY); };
   base.onpointermove = e => { if (e.pointerId === id) set(e.clientX, e.clientY); };
   base.onpointerup = base.onpointercancel = e => { if (e.pointerId !== id) return; id = null; knob.style.transform = ''; S.joy.x = 0; S.joy.y = 0; };
-  addEventListener('keydown', e => { if (!S || document.getElementById('view3d').hidden) return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', 'Shift'].includes(k)) { S.keys[k] = true; if (k !== 'Shift') e.preventDefault(); } if (k === 'x' && !e.repeat) doSit(); });
+  addEventListener('keydown', e => { if (!S || document.getElementById('view3d').hidden) return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', 'Shift'].includes(k)) { S.keys[k] = true; if (k !== 'Shift') e.preventDefault(); } if (k === 'x' && !e.repeat && false) doSit(); });
   addEventListener('keyup', e => { if (!S) return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; S.keys[k] = false; });
   document.getElementById('v3bag').onclick = openBag; bagBtn();
 }
@@ -3255,7 +3335,7 @@ function loop(now) {
   // con un minijuego abierto el mundo 3D no se dibuja: toda la máquina queda para el minijuego
   const arc = S.arcEl || (S.arcEl = document.getElementById('arcade')); if (arc && !arc.hidden) { S.last = 0; return; }
   const raw = now - (S.last || now), t = now / 1000, dt = Math.min(.05, raw / 1000); S.last = now; S.t = t; S.renderer.info.reset(); if (raw > 0 && raw < 250) qFrame(raw);
-  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); floraTick(dt); const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
+  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); floraTick(dt); miniTick(dt); const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
   for (const id in S.items) { const m = S.items[id];
     if (m.userData.gone) { m.userData.gone += dt; const k = m.userData.gone / .5; m.scale.setScalar(1 + k); m.position.y += dt * 2; m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = Math.max(0, 1 - k); } }); if (k >= 1) { S.scene.remove(m); delete S.items[id]; } continue; }
     m.rotation.y = t * 1.6; m.position.y = (m.userData.by || 0) + .85 + Math.sin(t * 2.4 + id.length) * .12;
@@ -3311,9 +3391,9 @@ async function show3d(on) {
   root.hidden = false; document.body.classList.add('v3on'); btn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Mapa</span>';
   const g = G(), key = g.branch + '|' + g.P().id + '|' + JSON.stringify(g.P().avatar);
   if (!THREE) { if (!loading) loading = import(THREE_URL); try { THREE = await loading; } catch (e) { document.body.classList.remove('v3boot'); root.hidden = true; document.body.classList.remove('v3on'); btn.hidden = true; return; } }
-  if (builtFor !== key || !S) { if (!window.__noLobby && (/[?&]lobby=1/.test(location.search) || localStorage.getItem("tsp:lobby") === "1")) await lobby(); if (S) { S.renderer.dispose(); S = null; } builtFor = key; await build(); }
+  let LBU = null; if (builtFor !== key || !S) { if (!window.__noLobby && !/[?&]lobby=0/.test(location.search)) { try { LBU = await lobby(); } catch (e) { console.warn('lobby', e); } } if (S) { S.renderer.dispose(); S = null; } builtFor = key; try { await build(); } finally { if (LBU) LBU.close(); } }
   else { const n = g.NODES[g.P().pos], [x, z] = toV(n.x, n.y); S.av.position.set(x, 0, z); S.sig = ''; S.onStop = g.P().pos; S.quiet = false; }
-  resize(); refresh(); bagBtn(); document.body.classList.remove('v3boot');
+  resize(); refresh(); bagBtn(); try { fanInit(); miniInit(); } catch (e) { console.warn('hud', e); } setTimeout(fullHint, 1500); setTimeout(iosHint, 1800); document.body.classList.remove('v3boot');
 }
 export function enter() {
   const btn = document.getElementById('viewToggle'); if (!btn) return;
@@ -3390,7 +3470,7 @@ function axVerse(dt) {
 }
 function agiMul() { return 1 + atr('agi') * .06; }
 function lvlNow() { const g = G(); return g.level ? g.level() : 1; }
-const ATTR_PER_LV = 10, ATTR_MAX = 50, LV_MAX = 50;
+const ATTR_PER_LV = 10, ATTR_MAX = 50, LV_MAX = 75;
 // botón de atributos en la barra de nivel, con globito de puntos sin repartir
 function attrSync() {
   try { const row = document.querySelector('#mapView .hud-row'); if (!row) return; let b = document.getElementById('hudAttr'); const kid = G().branch !== 'ados';
@@ -3651,16 +3731,22 @@ function invSurv(body) {
   if (tk) tk.onclick = () => { if (!nearHome()) { svToast('Tenés que estar en tu casa para usar el cofre.'); return; } Object.entries(s.chest).forEach(([k, n]) => svAdd(k, n)); s.chest = {}; G().save(); invSurv(body); };
 }
 function invAttr(body) {
-  const a = atP(), free = ptsFree(), lv = Math.min(LV_MAX, lvlNow()), h = a.hum || 0;
-  body.innerHTML = `<div class="sv-inv"><p class="sv-tip">Nivel ${lv} de ${LV_MAX}. Cada vez que subís de nivel ganás <b>${ATTR_PER_LV} puntos</b> para repartir como quieras (máximo ${ATTR_MAX} por atributo). Cada 5 puntos se nota un escalón más.</p><div class="sv-free">Puntos para repartir: <b>${free}</b></div>
+  const AP = invAttr.pend || (invAttr.pend = {}), pt = Object.values(AP).reduce((x, y) => x + y, 0);
+  const a = atP(), free = ptsFree() - pt, lv = Math.min(LV_MAX, lvlNow()), h = a.hum || 0;
+  let glowH = ''; if (S && S.hx) { const g = glowState(), gl = glowLv(g.pts), ga = 12 * gl * gl, gb = 12 * (gl + 1) * (gl + 1), pc = gl >= GLW.lvMax ? 100 : Math.round((g.pts - ga) / (gb - ga) * 100); glowH = `<div class="sv-glow"><b>✦ Resplandor ${gl}</b><small>Crece con misiones de servicio, compartir con quien lo necesita, respuestas correctas y versículos.</small><span class="sv-axbar"><i style="width:${pc}%"></i></span></div>`; }
+  body.innerHTML = `<div class="sv-inv">${glowH}<p class="sv-tip">Nivel ${lv} de ${LV_MAX}. Cada vez que subís de nivel ganás <b>${ATTR_PER_LV} puntos</b> para repartir como quieras (máximo ${ATTR_MAX} por atributo). Cada 5 puntos se nota un escalón más.</p><div class="sv-free">Puntos para repartir: <b>${free}</b></div>${pt ? `<div class="sv-conf"><p>Vas a sumar ${ATTR.filter(([k]) => AP[k]).map(([k, n]) => `<b>${n} +${AP[k]}</b>`).join(', ')}. <em>Una vez confirmados, los puntos quedan fijos y no se pueden cambiar.</em></p><div><button class="sv-undo">Deshacer</button><button class="sv-ok">${invAttr.ask ? 'Sí, confirmar' : 'Confirmar'}</button></div></div>` : ''}
     <div class="sv-bulk"><span>Sumar de a</span>${[1, 5, 10].map(n => `<button data-n="${n}" class="${(S.bulk || 1) === n ? 'on' : ''}">${n}</button>`).join('')}</div>
-    ${ATTR.map(([k, n, d]) => `<div class="sv-attr"><div><b>${n} <em>${a[k] + axLv(k)}</em>${axLv(k) ? `<span class="sv-axlv">(+${axLv(k)} por práctica)</span>` : ''}</b><small>${d}</small><span class="sv-axbar" title="Experiencia de ${n}"><i style="width:${Math.min(100, ((axP().xp[k] || 0) / axNeed(axLv(k))) * 100).toFixed(0)}%"></i></span><span class="sv-pips">${Array.from({ length: 10 }, (_, i) => `<i class="${i < Math.floor(a[k] / 5) ? 'on' : ''}"></i>`).join('')}</span></div><button data-k="${k}" ${free > 0 && a[k] < ATTR_MAX ? '' : 'disabled'} aria-label="Subir ${n}">+</button></div>`).join('')}
+    ${ATTR.map(([k, n, d]) => `<div class="sv-attr"><div><b>${n} <em>${a[k] + axLv(k)}</em>${AP[k] ? `<span class="sv-pend">+${AP[k]}</span>` : ''}${axLv(k) ? `<span class="sv-axlv">(+${axLv(k)} por práctica)</span>` : ''}</b><small>${d}</small><span class="sv-axbar" title="Experiencia de ${n}"><i style="width:${Math.min(100, ((axP().xp[k] || 0) / axNeed(axLv(k))) * 100).toFixed(0)}%"></i></span><span class="sv-pips">${Array.from({ length: 10 }, (_, i) => `<i class="${i < Math.floor(a[k] / 5) ? 'on' : ''}"></i>`).join('')}</span></div><button data-k="${k}" ${free > 0 && a[k] + (AP[k] || 0) < ATTR_MAX ? '' : 'disabled'} aria-label="Subir ${n}">+</button></div>`).join('')}
     <div class="sv-attr sv-hum"><div><b>Humildad <em>${h}</em></b><small>Es la única que no se compra con puntos: crece solo cuando le das puntos tuyos a otros en una sala con amigos. Jesús enseñó que el que se humilla será enaltecido (Lucas 14:11).</small></div></div>
     <ul class="sv-perks">${HUM_PERKS.map(([n, t, d]) => `<li class="${h >= n ? 'on' : ''}"><b>${n} · ${t}</b><small>${d}</small></li>`).join('')}</ul>
     <div class="sv-attr sv-hum"><div><b>Servicio <em>${a.serv || 0}</em></b><small>También es único: crece solo haciendo obras para los demás, como ayudar a los mendigos del camino o cumplir misiones.</small></div></div>
     <ul class="sv-perks">${SERV_PERKS.map(([n, t, d]) => `<li class="${(a.serv || 0) >= n ? 'on' : ''}"><b>${n} · ${t}</b><small>${d}</small></li>`).join('')}</ul></div>`;
   body.querySelectorAll('[data-n]').forEach(b => b.onclick = () => { S.bulk = +b.dataset.n; invAttr(body); });
-  body.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k, n = Math.min(S.bulk || 1, ptsFree(), ATTR_MAX - a[k]); if (n <= 0) return; a[k] += n; a.spent = (a.spent || 0) + n; G().save(); invAttr(body); attrSync(); });
+  // el + solo reserva: los puntos se fijan para siempre recién al confirmar
+  body.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k, n = Math.min(S.bulk || 1, free, ATTR_MAX - a[k] - (AP[k] || 0)); if (n <= 0) return; AP[k] = (AP[k] || 0) + n; invAttr.ask = false; invAttr(body); });
+  const un = body.querySelector('.sv-undo'), ok = body.querySelector('.sv-ok');
+  if (un) un.onclick = () => { invAttr.pend = {}; invAttr.ask = false; invAttr(body); };
+  if (ok) ok.onclick = () => { if (!invAttr.ask) { invAttr.ask = true; invAttr(body); return; } const real = ptsFree(); let used = 0; ATTR.forEach(([k]) => { const n = Math.max(0, Math.min(AP[k] || 0, real - used, ATTR_MAX - a[k])); if (n) { a[k] += n; used += n; } }); a.spent = (a.spent || 0) + used; invAttr.pend = {}; invAttr.ask = false; G().save(); invAttr(body); attrSync(); try { G().toast('✅ Puntos confirmados. Quedan guardados para siempre.'); } catch (e) {} };
 }
 
 
