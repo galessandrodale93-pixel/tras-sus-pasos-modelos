@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Panel de tutores · Habitat</title>
+<meta name="description" content="Seguimiento de alumnos de Habitat CFM.">
+<meta property="og:title" content="Panel de tutores · Habitat">
+<meta property="og:description" content="Seguimiento de alumnos de Habitat CFM.">
+<meta property="og:image" content="https://static.wixstatic.com/media/43ca3b_c6ce05ca60a14606ad9863e52d5d8e9d~mv2.jpg/v1/fill/w_1200,h_630,al_c,q_82,enc_auto/43ca3b_c6ce05ca60a14606ad9863e52d5d8e9d.jpg">
+<meta name="theme-color" content="#10251d">
+<link rel="icon" type="image/png" href="https://static.wixstatic.com/media/43ca3b_2d985f94c5e04a82b1434561cce4cc35~mv2.png"><link rel="apple-touch-icon" href="https://static.wixstatic.com/media/43ca3b_2d985f94c5e04a82b1434561cce4cc35~mv2.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Raleway:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/assets/site.css">
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="/assets/campus.css">
+<link rel="stylesheet" href="/assets/tutor.css">
+</head>
+<body data-solid="1" class="campus tutor">
+<header class="top"><div class="wrap">
+<a class="brand brand-top" href="/index.html" aria-label="Habitat · Centro de Formación Ministerial"><img src="https://static.wixstatic.com/media/43ca3b_dbb2ca1106804e9b9271ee3989f69c9f~mv2.jpg/v1/fill/w_120,h_120,al_c,q_82,enc_auto/43ca3b_dbb2ca1106804e9b9271ee3989f69c9f.jpg" alt="Habitat"></a>
+<button class="burger" aria-label="Menú" aria-expanded="false"><span></span><span></span><span></span></button>
+<nav class="nav" aria-label="Principal">
+<div class="nav-main"><a href="/index.html">Inicio</a><div class="dd"><a class="ddt" href="/institucional.html">Institucional</a><div class="dd-m"><a href="/institucional.html#historia">Nuestra historia</a><a href="/institucional.html#mision">Misión y visión</a><a href="/institucional.html#valores">Nuestros valores</a><a href="/institucional.html#fe">Declaración de fe</a><a href="/institucional.html#equipo">Equipo directivo</a><a href="/voluntarios.html">Sé parte del equipo</a></div></div><div class="dd"><a class="ddt" href="/formacion.html">Formación</a><div class="dd-m"><a href="/formacion.html#carreras">Carreras ministeriales</a><a href="/formacion.html#escuelas">Escuelas ministeriales</a><a href="/formacion.html#cursos">Cursos online</a></div></div><a href="/libro.html">Libro</a><a href="/sembradores.html">Sembradores</a><a href="/ubicacion.html">Ubicación</a></div>
+<div class="nav-side"><a class="kh" href="/kids-hero.html">Kids &amp; Hero</a><a class="in" href="/ingresar.html">Ingresar</a></div>
+</nav></div></header>
+<main>
+
+<section class="tt-top"><div class="wrap">
+  <div class="tt-hi"><span class="kick">Habitat · Tutores</span><h1>Seguimiento de alumnos</h1><p id="ttWho">Cargando…</p></div>
+  <div class="tt-act">
+    <button class="tt-bell" type="button" id="ttBell" aria-label="Notificaciones">Notificaciones<span id="ttBellN" hidden></span></button>
+    <a class="tt-ln" href="/campus.html">Campus</a>
+  </div>
+</div></section>
+<div class="tt-noti" id="ttNoti" hidden></div>
+<nav class="tt-tabs" id="ttTabs"><div class="wrap">
+  <button data-t="alumnos" class="on">Alumnos</button><button data-t="lista">Pasar lista</button><button data-t="seg">Seguimientos</button><button data-t="equipo" hidden id="tabEq">Equipo</button>
+</div></nav>
+<div class="tt-main"><div class="wrap">
+  <section id="v-alumnos" class="tt-v">
+    <div class="tt-sum" id="ttSum"></div>
+    <div class="tt-fil">
+      <input id="fQ" type="search" placeholder="Buscar alumno">
+      <select id="fPar"><option value="">Todos los tutores</option></select>
+      <select id="fCar"><option value="">Todas las carreras</option><option>Maranata</option><option>Liderazgo</option><option>Adoración</option></select>
+      <select id="fMod"><option value="">Toda modalidad</option><option>Presencial</option><option>Zoom</option><option>Asincrónico</option></select>
+      <select id="fEst"><option value="">Todos los estados</option><option value="r">🔴 Para seguimiento</option><option value="y">🟡 Para mirar</option><option value="g">🟢 Al día</option></select>
+      <button class="tt-add" type="button" id="addAlu">+ Alumno</button>
+    </div>
+    <div class="tt-list" id="ttList"><p class="tt-empty">Cargando alumnos…</p></div>
+  </section>
+  <section id="v-lista" class="tt-v" hidden>
+    <div class="tt-fil">
+      <label class="tt-date">Clase del <input id="lDate" type="date"></label>
+      <select id="lCar"><option value="">Todas las carreras</option><option>Maranata</option><option>Liderazgo</option><option>Adoración</option></select>
+      <select id="lMod"><option value="">Presencial y Zoom</option><option>Presencial</option><option>Zoom</option></select>
+      <select id="lPar"><option value="">Todos los tutores</option></select>
+    </div>
+    <p class="tt-tip">Tocá el estado de cada alumno. Se guarda solo. «Tarde» y «Mesa» (si se quedó al tiempo de mesa) se marcan aparte.</p>
+    <div class="tt-roll" id="ttRoll"></div>
+  </section>
+  <section id="v-seg" class="tt-v" hidden>
+    <h2 class="tt-h">Para contactar</h2>
+    <p class="tt-tip">Alumnos en rojo o amarillo que nadie contactó en forma individual en las últimas dos semanas.</p>
+    <div class="tt-list" id="ttTodo"></div>
+    <h2 class="tt-h">Últimos seguimientos individuales</h2>
+    <div class="tt-log" id="ttLog"></div>
+  </section>
+  <section id="v-equipo" class="tt-v" hidden>
+    <h2 class="tt-h">Equipo de tutores</h2>
+    <p class="tt-tip">Cada persona entra con el email de su cuenta de Habitat. Rol «Pagos» puede marcar pagos; «Director» además administra el equipo.</p>
+    <div class="tt-team" id="ttTeam"></div>
+    <form class="tt-tform" id="tForm">
+      <input name="title" placeholder="Nombre" required><input name="email" type="email" placeholder="Email de su cuenta" required>
+      <input name="pareja" placeholder="Pareja de tutores (ej. Cris y Raque)" list="parejas"><datalist id="parejas"></datalist>
+      <select name="rol"><option value="tutor">Tutor</option><option value="pagos">Pagos</option><option value="director">Director</option></select>
+      <button type="submit">Agregar</button>
+    </form>
+  </section>
+</div></div>
+<div class="tt-drawer" id="ttDrawer" hidden><div class="tt-dr-bg" data-x></div><aside class="tt-dr" role="dialog" aria-modal="true" aria-labelledby="drName"><button class="tt-x" type="button" data-x aria-label="Cerrar">✕</button><div id="drBody"></div></aside></div>
+<div class="tt-toast" id="ttToast" role="status" aria-live="polite"></div>
+</main>
+<footer class="foot"><div class="wrap">
+<div class="g">
+<div><a class="brand" href="/index.html"><img src="https://static.wixstatic.com/media/43ca3b_dbb2ca1106804e9b9271ee3989f69c9f~mv2.jpg/v1/fill/w_120,h_120,al_c,q_82,enc_auto/43ca3b_dbb2ca1106804e9b9271ee3989f69c9f.jpg" alt=""><span><b>HABITAT</b><small>CENTRO DE FORMACIÓN MINISTERIAL</small></span></a>
+<p class="ver">“Yo amo la habitación de tu casa y el lugar dónde habita tu gloria”<span>Salmo 26:8</span></p></div>
+<div><h4>Habitat</h4><a href="/institucional.html#historia">Nuestra historia</a><a href="/institucional.html#valores">Valores</a><a href="/institucional.html#fe">Declaración de fe</a><a href="/institucional.html#equipo">Equipo</a><a href="/voluntarios.html">Voluntarios</a></div>
+<div><h4>Formación</h4><a href="/formacion.html#carreras">Carreras</a><a href="/formacion.html#escuelas">Escuelas</a><a href="/formacion.html#cursos">Cursos online</a><a href="/libro.html">Libro Asombro</a><a href="/kids-hero.html">Kids &amp; Hero</a></div>
+<div><h4>Visitanos</h4><a href="/ubicacion.html">Av. Juan Bautista Justo 8177, CABA</a><a href="https://wa.me/5491171637995">+54 9 11 7163-7995</a><a href="https://www.instagram.com/habitat_cfm" target="_blank" rel="noopener">Instagram @habitat_cfm</a><a href="/ingresar.html">Campus de alumnos</a></div>
+</div>
+<div class="bt"><span>© <span id="yr">2026</span> Habitat · Centro de Formación Ministerial</span><span>Hecho con amor para Su presencia</span></div>
+</div></footer>
+<script src="/assets/site.js"></script>
+<script src="/assets/auth.js"></script>
+<script src="/assets/tutor.js"></script>
+</body>
+</html>
