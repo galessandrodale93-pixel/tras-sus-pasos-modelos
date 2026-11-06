@@ -164,6 +164,7 @@
   var LF = { car: '', mod: '' }, CYC = ['P', 'Z', 'A', 'J', ''], STN = { P: 'Presente', Z: 'Zoom', A: 'Ausente', J: 'Justificó', '': 'Sin marcar' };
   function listaAl() { return activos().filter(function (a) { return !async_(a) && (!LF.car || progs(a).indexOf(LF.car) >= 0) && (!LF.mod || a.modalidad === LF.mod) && (!F.par || a.tutores === F.par); }).sort(function (x, y) { return (x.title || '').localeCompare(y.title || ''); }); }
   function renderLista() {
+    var puede = !!ME.lista; $('#lAll').hidden = !puede; $('#lTip').textContent = puede ? 'Tocá a cada alumno para marcar cómo vino. Cada toque pasa al estado siguiente: presente, Zoom, ausente, justificó. Si vino, abajo podés marcar si llegó tarde o si se quedó al tiempo de mesa. Se guarda solo.' : 'La lista la pasa quien tiene ese permiso (Raquel). Acá ves cómo quedó cada clase.';
     var f = $('#lDate').value, L = listaAl(), by = {}; D.asistencia.forEach(function (x) { if (x.fecha === f) by[x.alumnoId] = x; });
     var pill = function (k, v, t) { return '<button class="tt-pill' + (LF[k] === v ? ' on' : '') + '" data-k="' + k + '" data-v="' + v + '">' + t + '</button>'; };
     $('#lPills').innerHTML = pill('car', '', 'Todas') + ['Maranata', 'Liderazgo', 'Adoración'].map(function (c) { return pill('car', c, c); }).join('') + '<span class="tt-sep"></span>' + pill('mod', '', 'Presencial y Zoom') + pill('mod', 'Presencial', 'Presencial') + pill('mod', 'Zoom', 'Zoom') + '<span class="tt-sep"></span>' + pairPills();
@@ -185,6 +186,7 @@
       };
       var a = IX.alu[id];
       var next = function () { var e = cur().estado || ''; var n = CYC[(CYC.indexOf(e) + 1) % CYC.length]; if (n === 'P' && a && a.modalidad === 'Zoom') n = 'Z'; else if (n === 'Z' && a && a.modalidad === 'Zoom' && e === 'Z') n = 'A'; put({ estado: n }); };
+      if (!ME.lista) { $$('.tg button', t).forEach(function (b) { b.disabled = true; }); return; }
       t.onclick = function (ev) { if (ev.target.closest('.tg')) return; next(); };
       t.onkeydown = function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); next(); } };
       $$('.tg button', t).forEach(function (b) { b.onclick = function () { var o = {}; o[b.dataset.k] = !cur()[b.dataset.k]; put(o); }; });
@@ -229,10 +231,11 @@
       var d = addD(st, i), f = iso(d); if (i >= 35 && d.getMonth() !== CM.getMonth()) break;
       var E = (D.eventos || []).filter(function (e) { return iso(evDate(e)) === f; }).sort(function (a, b) { return evDate(a) - evDate(b); });
       var vt = (D.turnos || []).filter(function (x) { return x.fecha === f; }).length;
-      h += '<div class="tt-day' + (d.getMonth() !== CM.getMonth() ? ' out' : '') + (f === iso(TODAY) ? ' today' : '') + '" data-f="' + f + '" role="button" tabindex="0"><b>' + d.getDate() + '</b>' + E.map(function (e) { return '<button type="button" class="tt-ev ' + esc(String(e.tipo || '').split(' ')[0]) + '" data-e="' + esc(e._id) + '" title="' + esc(e.title) + '">' + (e.mesa ? '🍽️ ' : '') + esc(e.title) + '</button>'; }).join('') + (vt ? '<small class="tt-lbl" style="font-size:.66rem">🙌🏽 ' + vt + ' tareas</small>' : '') + '</div>';
+      var CL = (D.clases || []).filter(function (c) { return c.fecha === f; });
+      h += '<div class="tt-day' + (d.getMonth() !== CM.getMonth() ? ' out' : '') + (f === iso(TODAY) ? ' today' : '') + '" data-f="' + f + '" role="button" tabindex="0"><b>' + d.getDate() + '</b>' + E.map(function (e) { return '<button type="button" class="tt-ev ' + esc(String(e.tipo || '').split(' ')[0]) + '" data-e="' + esc(e._id) + '" title="' + esc(e.title) + '">' + (e.mesa ? '🍽️ ' : '') + esc(e.title) + '</button>';  }).join('') + CL.map(function (c) { return '<button type="button" class="tt-ev cl ' + esc(c.tipo) + '" data-cl="' + esc(c._id) + '" title="' + esc(c.programa + ': ' + c.title + (c.profe ? ' (' + c.profe + ')' : '')) + '">' + esc(c.programa.slice(0, 3)) + ' · ' + esc(c.tipo === 'Clase' ? (c.profe || c.title) : c.title) + '</button>'; }).join('') + (vt ? '<small class="tt-lbl" style="font-size:.66rem">🙌🏽 ' + vt + ' tareas</small>' : '') + '</div>';
     }
     $('#calGrid').innerHTML = h;
-    $$('#calGrid .tt-day').forEach(function (c) { c.onclick = function (ev) { var b = ev.target.closest('[data-e]'); if (b) evModal(D.eventos.filter(function (x) { return x._id === b.dataset.e; })[0]); else evModal(null, c.dataset.f); }; c.onkeydown = function (ev) { if (ev.key === 'Enter') evModal(null, c.dataset.f); }; });
+    $$('#calGrid .tt-day').forEach(function (c) { c.onclick = function (ev) { var cl = ev.target.closest('[data-cl]'); if (cl) { claseModal((D.clases || []).filter(function (x) { return x._id === cl.dataset.cl; })[0]); return; } var b = ev.target.closest('[data-e]'); if (b) evModal(D.eventos.filter(function (x) { return x._id === b.dataset.e; })[0]); else evModal(null, c.dataset.f); }; c.onkeydown = function (ev) { if (ev.key === 'Enter') evModal(null, c.dataset.f); }; });
   }
   function dtl(d) { return iso(d) + 'T' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
   function modal(html, onOpen) { var m = document.createElement('div'); m.className = 'tt-modal'; m.innerHTML = '<div class="tt-card">' + html + '</div>'; document.body.appendChild(m); var close = function () { m.remove(); }; m.onclick = function (e) { if (e.target === m || e.target.closest('[data-close]')) close(); }; onOpen(m, close); var f = m.querySelector('input,select,textarea'); if (f) f.focus(); return m; }
@@ -248,6 +251,46 @@
   }
   $('#calPrev').onclick = function () { CM.setMonth(CM.getMonth() - 1); renderCal(); };
   $('#calNext').onclick = function () { CM.setMonth(CM.getMonth() + 1); renderCal(); };
+
+  /* Clases y profes */
+  var CP = 'Maranata', CPROF = '', CVIEJ = false;
+  function renderClases() {
+    var P = ['Maranata', 'Liderazgo', 'Adoración'], L = (D.clases || []).filter(function (c) { return c.programa === CP; }).sort(function (a, b) { return a.fecha < b.fecha ? -1 : 1; });
+    $('#cProg').innerHTML = P.map(function (p) { return '<button class="tt-pill' + (CP === p ? ' on' : '') + '" data-p="' + p + '">' + p + '</button>'; }).join('');
+    $$('#cProg [data-p]').forEach(function (b) { b.onclick = function () { CP = b.dataset.p; CPROF = ''; CVIEJ = false; renderClases(); }; });
+    var cnt = {}; L.forEach(function (c) { String(c.profe || '').split(/,| y | · /).map(function (x) { return x.replace(/\(.*\)/, '').trim(); }).filter(Boolean).forEach(function (p) { cnt[p] = (cnt[p] || 0) + 1; }); });
+    $('#cProfes').innerHTML = '<button class="tt-pill' + (!CPROF ? ' on' : '') + '" data-pr="">Todos los profes</button>' + Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a]; }).map(function (p) { return '<button class="tt-pill' + (CPROF === p ? ' on' : '') + '" data-pr="' + esc(p) + '">' + av(p, '', 'xs') + esc(p) + ' · ' + cnt[p] + '</button>'; }).join('');
+    $$('#cProfes [data-pr]').forEach(function (b) { b.onclick = function () { CPROF = b.dataset.pr; renderClases(); }; });
+    if (CPROF) L = L.filter(function (c) { return String(c.profe || '').indexOf(CPROF) >= 0; });
+    var hoy = iso(TODAY), next = L.filter(function (c) { return c.fecha >= hoy; })[0], grp = {}, ord = [];
+    L.forEach(function (c) { var k = c.bloque || MESES[pd(c.fecha).getMonth()][0].toUpperCase() + MESES[pd(c.fecha).getMonth()].slice(1); if (!grp[k]) { grp[k] = []; ord.push(k); } grp[k].push(c); });
+    var IC = { Clase: '📖', Examen: '📝', Intro: '✨', Receso: '☕' };
+    var nPast = ord.filter(function (k) { return grp[k].every(function (c) { return c.fecha < hoy; }); }).length;
+    $('#cList').innerHTML = (nPast && !CVIEJ ? '<button type="button" class="tt-btn s cl-old" id="cOld">Ver ' + nPast + (nPast === 1 ? ' tramo que ya pasó' : ' tramos que ya pasaron') + '</button>' : '') + (ord.length ? ord.filter(function (k) { return CVIEJ || !grp[k].every(function (c) { return c.fecha < hoy; }); }).map(function (k) { return '<div class="tt-card cl-g"><h3>' + esc(k) + '</h3>' + grp[k].map(function (c) { var d = pd(c.fecha); return '<button type="button" class="cl-r' + (c.fecha < hoy ? ' past' : '') + (next && c._id === next._id ? ' next' : '') + '" data-cl="' + esc(c._id) + '"><span class="cl-d"><b>' + d.getDate() + '</b><small>' + MC[d.getMonth()] + '</small></span><span class="cl-t"><b>' + IC[c.tipo || 'Clase'] + ' ' + esc(c.title) + '</b>' + (c.profe ? '<small>' + esc(c.profe) + '</small>' : '') + (c.nota ? '<small>' + esc(c.nota) + '</small>' : '') + '</span>' + (next && c._id === next._id ? '<span class="tt-ch">Próxima</span>' : '') + (c.profe ? '<span class="cl-av">' + String(c.profe).split(/,| y | · /).slice(0, 3).map(function (p) { return av(p.replace(/\(.*\)/, '').trim(), '', 'sm'); }).join('') + '</span>' : '') + '</button>'; }).join('') + '</div>'; }).join('') : '<p class="tt-empty">No hay clases cargadas.</p>');
+    if ($('#cOld')) $('#cOld').onclick = function () { CVIEJ = true; renderClases(); };
+    $$('#cList [data-cl]').forEach(function (b) { b.onclick = function () { claseModal((D.clases || []).filter(function (x) { return x._id === b.dataset.cl; })[0]); }; });
+    var PL = (D.plan || []).filter(function (p) { return p.programa === CP; }).sort(function (a, b) { return a.orden - b.orden; }), sem = {}, so = [];
+    PL.forEach(function (p) { if (!sem[p.semestre]) { sem[p.semestre] = []; so.push(p.semestre); } sem[p.semestre].push(p); });
+    $('#cPlan').innerHTML = CP === 'Maranata' ? '<p class="tt-tip">Maranata se organiza por módulos dentro del calendario de arriba.</p>' : so.map(function (k) { return '<details class="tt-card cl-s"' + (k.indexOf(String(TODAY.getFullYear())) >= 0 ? ' open' : '') + '><summary>' + esc(k) + '</summary>' + sem[k].map(function (p) { return '<button type="button" class="cl-b" data-pl="' + esc(p._id) + '"><b>' + esc(p.title) + '</b><span>' + String(p.temas || '').split('/').map(function (t) { return '<i>' + esc(t.trim()) + '</i>'; }).join('') + '</span></button>'; }).join('') + '</details>'; }).join('');
+    $$('#cPlan [data-pl]').forEach(function (b) { b.onclick = function () { planModal((D.plan || []).filter(function (x) { return x._id === b.dataset.pl; })[0]); }; });
+  }
+  function claseModal(c) {
+    c = c || { programa: CP, tipo: 'Clase', fecha: iso(TODAY) };
+    var bl = {}; (D.clases || []).forEach(function (x) { if (x.programa === c.programa && x.bloque) bl[x.bloque] = 1; });
+    modal('<form class="tt-form"><h2 class="w">' + (c._id ? 'Editar clase' : 'Nueva clase') + '</h2><label>Fecha<input type="date" name="fecha" required value="' + esc(c.fecha) + '"></label><label>Carrera<select name="programa">' + ['Maranata', 'Liderazgo', 'Adoración'].map(function (p) { return '<option' + (c.programa === p ? ' selected' : '') + '>' + p + '</option>'; }).join('') + '</select></label><label class="w">Tema<input name="title" required value="' + esc(c.title || '') + '"></label><label>Profe<input name="profe" list="profesL" value="' + esc(c.profe || '') + '"><datalist id="profesL">' + Object.keys((D.clases || []).reduce(function (o, x) { if (x.profe) o[x.profe] = 1; return o; }, {})).sort().map(function (p) { return '<option>' + esc(p) + '</option>'; }).join('') + '</datalist></label><label>Tipo<select name="tipo">' + ['Clase', 'Examen', 'Intro', 'Receso'].map(function (t) { return '<option' + (c.tipo === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select></label><label class="w">Bloque<input name="bloque" list="bloquesL" value="' + esc(c.bloque || '') + '"><datalist id="bloquesL">' + Object.keys(bl).map(function (b) { return '<option>' + esc(b) + '</option>'; }).join('') + '</datalist></label><label class="w">Nota<input name="nota" value="' + esc(c.nota || '') + '" placeholder="Ej.: preparar material, a confirmar…"></label><div class="w tt-wa"><button class="tt-btn" type="submit">Guardar</button><button class="tt-btn s" type="button" data-close>Cancelar</button>' + (c._id ? '<button class="tt-btn s" type="button" data-del style="margin-left:auto;color:var(--r)">Borrar</button>' : '') + '</div></form>', function (m, close) {
+      var f = $('form', m);
+      f.onsubmit = function (e) { e.preventDefault(); send({ op: 'clase', id: c._id || '', fecha: f.fecha.value, programa: f.programa.value, title: f.title.value, profe: f.profe.value, tipo: f.tipo.value, bloque: f.bloque.value, nota: f.nota.value }, c._id, 'clases').then(function () { close(); toast('Clase guardada.'); refresh(); }); };
+      var del = $('[data-del]', m); if (del) del.onclick = function () { if (!del.dataset.ok) { del.dataset.ok = 1; del.textContent = '¿Borrar de verdad?'; return; } send({ op: 'clase', borrar: true, id: c._id }, c._id, 'clases').then(function () { close(); refresh(); }); };
+    });
+  }
+  function planModal(p) {
+    p = p || { programa: CP };
+    modal('<form class="tt-form"><h2 class="w">Bloque del plan</h2><label class="w">Semestre<input name="semestre" value="' + esc(p.semestre || '') + '"></label><label class="w">Bloque<input name="title" required value="' + esc(p.title || '') + '"></label><label class="w">Temas (separados por /)<textarea name="temas">' + esc(p.temas || '') + '</textarea></label><div class="w tt-wa"><button class="tt-btn" type="submit">Guardar</button><button class="tt-btn s" type="button" data-close>Cancelar</button></div></form>', function (m, close) {
+      var f = $('form', m);
+      f.onsubmit = function (e) { e.preventDefault(); send({ op: 'plan', id: p._id || '', programa: p.programa, orden: p.orden, semestre: f.semestre.value, title: f.title.value, temas: f.temas.value }, p._id, 'plan').then(function () { close(); toast('Plan actualizado.'); renderClases(); }); };
+    });
+  }
+  $('#cAdd').onclick = function () { claseModal(null); };
 
   /* Voluntarios */
   var TAREAS = [['Limpieza y sillas', '🧹'], ['Audio', '🎚️'], ['Diapositivas', '🖥️'], ['Zoom', '🎥'], ['Asistencia presencial', '📋'], ['Asistencia online', '💻']];
@@ -300,11 +343,14 @@
 
   /* Equipo */
   function renderEquipo() {
-    var R = { director: 'Director', tutor: 'Tutor', pagos: 'Pagos' };
-    $('#ttTeam').innerHTML = D.tutores.map(function (t) { return '<div class="tt-tm">' + av(t.title || t.email, '', 'sm') + '<span><b>' + esc(t.title || t.email) + '</b><br><small>' + esc((t.email || '') + (t.pareja ? ' · ' + t.pareja : '')) + '</small></span><span class="tt-ch">' + (R[t.rol] || 'Tutor') + '</span>' + (t._id !== ME._id ? '<button class="tt-btn s" data-del="' + esc(t._id) + '" data-em="' + esc(t.email || '') + '">Quitar acceso</button>' : '') + '</div>'; }).join('');
+    var R = { director: 'Director', tutor: 'Tutor', pagos: 'Tutor' };
+    $('#ttTeam').innerHTML = D.tutores.map(function (t) { var pl = !!t.lista || t.rol === 'director', pp = !!t.pagos || t.rol === 'pagos'; return '<div class="tt-tm">' + av(t.title || t.email, '', 'sm') + '<span><b>' + esc(t.title || t.email) + '</b><br><small>' + esc((t.email || '') + (t.pareja ? ' · ' + t.pareja : '')) + '</small></span><span class="tt-ch">' + (R[t.rol] || 'Tutor') + '</span><label class="tt-perm"><input type="checkbox" data-pl="' + esc(t._id) + '"' + (pl ? ' checked' : '') + (t.rol === 'director' ? ' disabled' : '') + '> Pasa lista</label><label class="tt-perm"><input type="checkbox" data-pg="' + esc(t._id) + '"' + (pp ? ' checked' : '') + '> Marca pagos</label>' + (t._id !== ME._id ? '<button class="tt-btn s" data-del="' + esc(t._id) + '" data-em="' + esc(t.email || '') + '">Quitar acceso</button>' : '') + '</div>'; }).join('');
+    var perm = function (id, k, v) { var t = D.tutores.filter(function (x) { return x._id === id; })[0]; var o = { op: 'tutor', id: t._id, title: t.title, email: t.email, pareja: t.pareja, rol: t.rol === 'director' ? 'director' : 'tutor', lista: !!t.lista, pagos: !!t.pagos || t.rol === 'pagos' }; o[k] = v; send(o, t._id, 'tutores').then(function () { toast(v ? 'Permiso dado.' : 'Permiso quitado.'); renderEquipo(); }); };
+    $$('#ttTeam [data-pl]').forEach(function (c) { c.onchange = function () { perm(c.dataset.pl, 'lista', c.checked); }; });
+    $$('#ttTeam [data-pg]').forEach(function (c) { c.onchange = function () { perm(c.dataset.pg, 'pagos', c.checked); }; });
     $$('#ttTeam [data-del]').forEach(function (b) { b.onclick = function () { if (!b.dataset.ok) { b.dataset.ok = 1; b.textContent = '¿Quitar?'; return; } send({ op: 'tutor', borrar: true, id: b.dataset.del, email: b.dataset.em }, b.dataset.del, 'tutores').then(renderEquipo); }; });
   }
-  $('#tForm').onsubmit = function (e) { e.preventDefault(); var f = e.target; send({ op: 'tutor', title: f.title.value, email: f.email.value, pareja: f.pareja.value, rol: f.rol.value }, null, 'tutores').then(function () { f.reset(); renderEquipo(); toast('Listo, ya puede entrar al panel.'); }); };
+  $('#tForm').onsubmit = function (e) { e.preventDefault(); var f = e.target; send({ op: 'tutor', title: f.title.value, email: f.email.value, pareja: f.pareja.value, rol: f.rol.value, lista: f.lista.checked, pagos: f.pagos.checked }, null, 'tutores').then(function () { f.reset(); renderEquipo(); toast('Listo, ya puede entrar al panel.'); }); };
 
   /* Ficha del alumno */
   var WA = {
@@ -331,7 +377,7 @@
     pane(a);
   }
   function pane(a) {
-    var id = a._id, box = $('#fp'), pagos = ME.rol === 'pagos';
+    var id = a._id, box = $('#fp'), pagos = !!ME.pagos;
     if (FT === 'seg') {
       var motivos = ['Faltas', 'Exámenes', 'Grupo', 'Acompañamiento'].concat(pagos ? ['Pagos'] : []), segs = IX.seg[id] || [];
       box.innerHTML = (a.telefono ? '<div class="tt-wa">' + motivos.map(function (k) { return '<a class="tt-btn wa" target="_blank" rel="noopener" data-m="' + k + '" href="' + esc(waLink(a, k)) + '">WhatsApp · ' + k + '</a>'; }).join('') + '</div><p class="tt-tip">Abre WhatsApp con un mensaje listo para revisar y mandar vos. Después anotalo acá abajo.</p>' : '<p class="tt-tip">Cargá su WhatsApp en «Datos» para escribirle desde acá con un mensaje ya armado.</p>') +
@@ -381,7 +427,7 @@
     if (f.formaPago) { o.formaPago = f.formaPago.value; o.matricula = f.matricula.checked; }
     send(o, id, 'alumnos').then(function (r) { toast('Datos guardados.'); refresh(); FT = 'dat'; ficha(r.item._id, 1); });
   }
-  function nuevo() { $('#drBody').innerHTML = '<div class="tt-fh">' + av('+', '', 'lg') + '<div><h2 id="drName">Sumar alumno</h2><p>Con nombre, carrera y tutores ya aparece en las listas.</p></div></div><form class="tt-card tt-form" id="aluF">' + aluFields({ modalidad: 'Presencial', tutores: ME.pareja || '' }, ME.rol === 'pagos') + '<button class="tt-btn w" type="submit">Sumar</button></form>'; $('#ttDrawer').hidden = false; document.body.style.overflow = 'hidden'; $('#aluF').onsubmit = function (e) { e.preventDefault(); saveAlu(e.target, ''); }; }
+  function nuevo() { $('#drBody').innerHTML = '<div class="tt-fh">' + av('+', '', 'lg') + '<div><h2 id="drName">Sumar alumno</h2><p>Con nombre, carrera y tutores ya aparece en las listas.</p></div></div><form class="tt-card tt-form" id="aluF">' + aluFields({ modalidad: 'Presencial', tutores: ME.pareja || '' }, !!ME.pagos) + '<button class="tt-btn w" type="submit">Sumar</button></form>'; $('#ttDrawer').hidden = false; document.body.style.overflow = 'hidden'; $('#aluF').onsubmit = function (e) { e.preventDefault(); saveAlu(e.target, ''); }; }
   function closeDr() { $('#ttDrawer').hidden = true; document.body.style.overflow = ''; }
   $$('[data-x]').forEach(function (e) { e.onclick = closeDr; });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeDr(); var m = $('.tt-modal'); if (m) m.remove(); } });
@@ -433,7 +479,7 @@
   $('#ttWordN').onclick = palabra;
 
   function cur() { var b = $('.tt-tabs .on'); return b ? b.dataset.t : 'hoy'; }
-  function refresh() { var t = cur(); ({ hoy: renderHoy, alumnos: renderAlumnos, lista: renderLista, mesa: renderMesa, cal: renderCal, vol: renderVol, equipo: renderEquipo }[t] || renderHoy)(); }
+  function refresh() { var t = cur(); ({ hoy: renderHoy, alumnos: renderAlumnos, lista: renderLista, mesa: renderMesa, cal: renderCal, vol: renderVol, equipo: renderEquipo, clases: renderClases }[t] || renderHoy)(); }
   function tab(t) { var b = $('#ttTabs [data-t="' + t + '"]'); if (!b || b.hidden) return; $$('#ttTabs button').forEach(function (x) { x.classList.toggle('on', x === b); }); $$('.tt-v').forEach(function (v) { v.hidden = v.id !== 'v-' + t; }); try { history.replaceState(null, '', '#' + t); } catch (e) {} refresh(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   $$('#ttTabs button').forEach(function (b) { b.onclick = function () { tab(b.dataset.t); }; });
 
@@ -442,10 +488,10 @@
     try { D = await api('GET'); }
     catch (e) { $('#ttHola').textContent = e.status === 403 ? 'Tu cuenta todavía no tiene acceso' : 'No se pudo cargar el panel'; $('#ttWho').textContent = e.status === 403 ? 'Pedile acceso a la dirección de Habitat con el email con el que entrás al Campus.' : 'Revisá tu conexión y recargá la página.'; $('#v-hoy').innerHTML = ''; return; }
     ME = D.me; index();
-    var R = { director: 'Director', tutor: 'Tutor', pagos: 'Pagos' }, h = new Date().getHours();
+    var R = { director: 'Director', tutor: 'Tutor', pagos: 'Tutor' }, h = new Date().getHours();
     $('#ttHola').textContent = (h < 12 ? 'Buen día' : h < 20 ? 'Buenas tardes' : 'Buenas noches') + ', ' + (ME.title || '').split(' ')[0];
-    $('#ttWho').textContent = (R[ME.rol] || 'Tutor') + (ME.pareja ? ' · ' + ME.pareja : '') + ' · ' + DL[TODAY.getDay()] + ' ' + TODAY.getDate() + ' de ' + MESES[TODAY.getMonth()];
-    var dir = ME.rol === 'director'; $('#tabEq').hidden = !dir; $('#tabCal').hidden = !dir; $('#tabVol').hidden = !dir;
+    $('#ttWho').textContent = (R[ME.rol] || 'Tutor') + (ME.lista && ME.rol !== 'director' ? ' · pasa lista' : '') + (ME.pagos ? ' · pagos' : '') + (ME.pareja ? ' · ' + ME.pareja : '') + ' · ' + DL[TODAY.getDay()] + ' ' + TODAY.getDate() + ' de ' + MESES[TODAY.getMonth()];
+    var dir = ME.rol === 'director'; $('#tabEq').hidden = !dir; $('#tabCal').hidden = !dir; $('#tabVol').hidden = !dir; $('#tabCla').hidden = !dir;
     $('#parejas').innerHTML = parejas().map(function (p) { return '<option>' + esc(p) + '</option>'; }).join('');
     if (ME.pareja && parejas().indexOf(ME.pareja) >= 0) F.par = ME.pareja;
     $('#fQ').oninput = function () { F.q = this.value.trim(); renderAlumnos(); };

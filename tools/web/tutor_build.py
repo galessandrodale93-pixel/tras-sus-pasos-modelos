@@ -15,7 +15,7 @@ body = '''
 </div></section>
 <div class="tt-pop" id="ttNoti" hidden role="dialog" aria-label="Notificaciones"></div>
 <nav class="tt-tabs" id="ttTabs"><div class="wrap">
-  <button data-t="hoy" class="on">Hoy</button><button data-t="alumnos">Alumnos</button><button data-t="lista">Pasar lista</button><button data-t="mesa">Tiempo de mesa</button><button data-t="cal" hidden id="tabCal">Calendario</button><button data-t="vol" hidden id="tabVol">Voluntarios</button><button data-t="equipo" hidden id="tabEq">Equipo</button>
+  <button data-t="hoy" class="on">Hoy</button><button data-t="alumnos">Alumnos</button><button data-t="lista">Pasar lista</button><button data-t="mesa">Tiempo de mesa</button><button data-t="cal" hidden id="tabCal">Calendario</button><button data-t="clases" hidden id="tabCla">Clases y profes</button><button data-t="vol" hidden id="tabVol">Voluntarios</button><button data-t="equipo" hidden id="tabEq">Equipo</button>
 </div></nav>
 <div class="tt-main"><div class="wrap">
   <section id="v-hoy" class="tt-v"></section>
@@ -34,7 +34,7 @@ body = '''
     </div>
     <div class="tt-pills" id="lPills"></div>
     <div class="tt-prog"><i id="lBar"></i><span id="lCnt"></span></div>
-    <p class="tt-tip">Tocá a cada alumno para marcar cómo vino. Cada toque pasa al estado siguiente: presente, Zoom, ausente, justificó. Se guarda solo.</p>
+    <p class="tt-tip" id="lTip">Tocá a cada alumno para marcar cómo vino. Cada toque pasa al estado siguiente: presente, Zoom, ausente, justificó. Si vino, abajo podés marcar si llegó tarde o si se quedó al tiempo de mesa. Se guarda solo.</p>
     <div class="tt-roll" id="ttRoll"></div>
   </section>
   <section id="v-mesa" class="tt-v" hidden>
@@ -57,6 +57,13 @@ body = '''
     <div class="tt-month" id="calGrid"></div>
     <p class="tt-tip">Tocá un día para agregar una clase, un examen o un aviso. Todo lo que cargues aparece en la agenda del Campus y en el teléfono de los alumnos.</p>
   </section>
+  <section id="v-clases" class="tt-v" hidden>
+    <div class="tt-bar"><div class="tt-pills" id="cProg"></div><button class="tt-btn" type="button" id="cAdd">Sumar clase</button></div>
+    <div class="tt-pills" id="cProfes"></div>
+    <div id="cList"></div>
+    <h2 class="tt-h">Plan de bloques</h2>
+    <div id="cPlan"></div>
+  </section>
   <section id="v-vol" class="tt-v" hidden>
     <div class="tt-calh"><button class="tt-arrow" type="button" id="volPrev" aria-label="Semana anterior">‹</button><h2 id="volTit"></h2><button class="tt-arrow" type="button" id="volNext" aria-label="Semana siguiente">›</button></div>
     <div class="tt-vwrap">
@@ -67,12 +74,13 @@ body = '''
   </section>
   <section id="v-equipo" class="tt-v" hidden>
     <h2 class="tt-h">Equipo de tutores</h2>
-    <p class="tt-tip">Cada persona entra con el email de su cuenta de Habitat. Pagos puede marcar pagos. Director además organiza el calendario, los voluntarios y el equipo.</p>
+    <p class="tt-tip">Cada persona entra con el email de su cuenta de Habitat. Todos ven todo. Además, cada uno puede tener permiso para pasar lista o marcar pagos. Los directores organizan el calendario, las clases, los voluntarios y el equipo.</p>
     <div class="tt-team" id="ttTeam"></div>
     <form class="tt-card tt-form" id="tForm">
       <label>Nombre<input name="title" required></label><label>Email de su cuenta<input name="email" type="email" required></label>
       <label>Pareja de tutores<input name="pareja" list="parejas" placeholder="Ej.: Cris y Raque"><datalist id="parejas"></datalist></label>
-      <label>Rol<select name="rol"><option value="tutor">Tutor</option><option value="pagos">Pagos</option><option value="director">Director</option></select></label>
+      <label>Rol<select name="rol"><option value="tutor">Tutor</option><option value="director">Director</option></select></label>
+      <label class="tt-inl"><input type="checkbox" name="lista"> Pasa lista</label><label class="tt-inl"><input type="checkbox" name="pagos"> Marca pagos</label>
       <button class="tt-btn" type="submit">Dar acceso</button>
     </form>
   </section>

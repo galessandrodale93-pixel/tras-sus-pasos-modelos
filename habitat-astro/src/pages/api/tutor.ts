@@ -22,7 +22,7 @@ const b = (v: unknown) => v === true || v === "true" || v === 1;
 const asc = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase();
 const DATE = /^\d{4}-\d{2}-\d{2}$/, MES = /^\d{4}-\d{2}$/, ID = /^[a-z0-9-]{2,80}$/;
 
-type Tutor = { _id: string; title?: string; email?: string; pareja?: string; rol?: string };
+type Tutor = { _id: string; title?: string; email?: string; pareja?: string; rol?: string; lista?: boolean; pagos?: boolean };
 
 async function all(col: string) {
   const out: Record<string, unknown>[] = [];
@@ -42,7 +42,9 @@ async function who(request: Request): Promise<Tutor | null> {
   if (!email) return null;
   const r = await q("TutTutores").eq("email", email).limit(1).find();
   const t = r.items[0] as Tutor | undefined;
-  return t ? { ...t, rol: t.rol || "tutor" } : null;
+  if (!t) return null;
+  const rol = t.rol === "pagos" ? "tutor" : t.rol || "tutor";
+  return { ...t, rol, pagos: !!t.pagos || t.rol === "pagos", lista: !!t.lista || rol === "director" };
 }
 
 export const OPTIONS: APIRoute = async () => new Response(null, { status: 204, headers: CORS });
@@ -51,8 +53,8 @@ export const GET: APIRoute = async ({ request }) => {
   try {
     const me = await who(request);
     if (!me) return json({ error: "Tu cuenta no tiene acceso al panel de tutores." }, 403);
-    const [alumnos, asistencia, pagos, evaluaciones, grupo, seguimientos, tutores, mesa, tally, voluntarios, turnos, ev] = await Promise.all(
-      ["TutAlumnos", "TutAsistencia", "TutPagos", "TutEvaluaciones", "TutGrupo", "TutSeguimientos", "TutTutores", "TutMesa", "TutTally", "VolVoluntarios", "VolTurnos"].map(all)
+    const [alumnos, asistencia, pagos, evaluaciones, grupo, seguimientos, tutores, mesa, tally, voluntarios, turnos, clases, plan, ev] = await Promise.all(
+      ["TutAlumnos", "TutAsistencia", "TutPagos", "TutEvaluaciones", "TutGrupo", "TutSeguimientos", "TutTutores", "TutMesa", "TutTally", "VolVoluntarios", "VolTurnos", "TutClases", "TutPlan"].map(all)
         .concat([q("CampusEventos").ge("inicio", new Date(Date.now() - 120 * 864e5)).ascending("inicio").limit(500).find().then((r) => r.items)]),
     );
     const dir = me.rol === "director";
@@ -60,7 +62,7 @@ export const GET: APIRoute = async ({ request }) => {
       me, alumnos, asistencia, pagos, evaluaciones, grupo, seguimientos, mesa, tally,
       tutores: tutores.map(({ email, ...t }) => (dir ? { email, ...t } : t)),
       voluntarios: voluntarios.map(({ clave, ...v }) => (dir ? { clave, ...v } : v)),
-      turnos, eventos: (ev as Record<string, unknown>[]).map(({ _createdDate, _updatedDate, _owner, ...x }) => x),
+      turnos, clases, plan, eventos: (ev as Record<string, unknown>[]).map(({ _createdDate, _updatedDate, _owner, ...x }) => x),
     });
   } catch (e) {
     console.error("tutor GET", e);
@@ -79,6 +81,7 @@ export const POST: APIRoute = async ({ request }) => {
     const needAlu = () => { if (!ID.test(alu)) throw new Error("alumno"); };
     switch (x.op) {
       case "asis": {
+        if (!me.lista) return json({ error: "La lista la pasa quien tenga ese permiso (por ahora, Raquel). Pedíselo a la dirección." }, 403);
         needAlu(); const f = s(x.fecha, 10); if (!DATE.test(f)) return json({ error: "fecha" }, 400);
         const est = s(x.estado, 1);
         if (!est) { await rem("TutAsistencia", alu + "|" + f).catch(() => null); return json({ ok: true }); }
@@ -87,7 +90,7 @@ export const POST: APIRoute = async ({ request }) => {
         await save("TutAsistencia", it); return json({ ok: true, item: it });
       }
       case "pago": {
-        if (me.rol !== "pagos") return json({ error: "Los pagos los marca solo la encargada de pagos." }, 403);
+        if (!me.pagos) return json({ error: "Los pagos los marca solo la encargada de pagos." }, 403);
         needAlu(); const m = s(x.mes, 7); if (!MES.test(m)) return json({ error: "mes" }, 400);
         const it = { _id: alu + "|" + m, alumnoId: alu, mes: m, pagado: b(x.pagado), por };
         await save("TutPagos", it); return json({ ok: true, item: it });
@@ -127,7 +130,7 @@ export const POST: APIRoute = async ({ request }) => {
           email: s(x.email, 120), telefono: s(x.telefono, 40), cumple: s(x.cumple, 10), notas: s(x.notas, 2000),
           activo: x.activo === undefined ? true : b(x.activo),
         };
-        if (me.rol === "pagos") { it.formaPago = s(x.formaPago, 40); it.matricula = b(x.matricula); }
+        if (me.pagos) { it.formaPago = s(x.formaPago, 40); it.matricula = b(x.matricula); }
         else if (nuevo) { it.formaPago = ""; it.matricula = false; }
         delete it._createdDate; delete it._updatedDate; delete it._owner;
         await save("TutAlumnos", it); return json({ ok: true, item: it });
@@ -178,16 +181,32 @@ export const POST: APIRoute = async ({ request }) => {
         if (x.id) { it._id = s(x.id, 120); await save("CampusEventos", it); return json({ ok: true, item: it }); }
         return json({ ok: true, item: await ins("CampusEventos", it) });
       }
+      case "clase": {
+        if (me.rol !== "director") return json({ error: "Solo la dirección edita el calendario de clases." }, 403);
+        if (x.borrar) { await rem("TutClases", s(x.id, 80)); return json({ ok: true }); }
+        const f = s(x.fecha, 10); if (!DATE.test(f)) return json({ error: "Revisá la fecha." }, 400);
+        const pg = s(x.programa, 30); if (!pg) return json({ error: "Falta la carrera." }, 400);
+        const it = { _id: s(x.id, 80) || asc(pg).slice(0, 3) + "-" + f, fecha: f, programa: pg, bloque: s(x.bloque, 120), title: s(x.title, 200), profe: s(x.profe, 120), tipo: s(x.tipo, 20) || "Clase", nota: s(x.nota, 500) };
+        await save("TutClases", it); return json({ ok: true, item: it });
+      }
+      case "plan": {
+        if (me.rol !== "director") return json({ error: "Solo la dirección edita el plan." }, 403);
+        if (x.borrar) { await rem("TutPlan", s(x.id, 80)); return json({ ok: true }); }
+        const pg = s(x.programa, 30);
+        const it = { _id: s(x.id, 80) || asc(pg).slice(0, 3) + "-" + Date.now(), programa: pg, semestre: s(x.semestre, 80), title: s(x.title, 160), temas: s(x.temas, 2000), orden: Number(x.orden) || 99 };
+        await save("TutPlan", it); return json({ ok: true, item: it });
+      }
       case "grupo-listo": {
         const cur = (await q("TutTutores").eq("_id", me._id).limit(1).find()).items[0] as Record<string, unknown>;
-        const it = { _id: me._id, title: cur.title, email: cur.email, pareja: cur.pareja, rol: cur.rol, grupoUlt: new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10) };
+        const { _createdDate, _updatedDate, _owner, ...rest } = cur;
+        const it = { ...rest, grupoUlt: new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10) };
         await save("TutTutores", it); return json({ ok: true, item: it });
       }
       case "tutor": {
         if (me.rol !== "director") return json({ error: "Solo los directores administran el equipo." }, 403);
         const email = s(x.email, 120).toLowerCase(); if (!/^\S+@\S+\.\S+$/.test(email)) return json({ error: "email" }, 400);
         if (x.borrar) { await rem("TutTutores", s(x.id, 80)); return json({ ok: true }); }
-        const it = { _id: s(x.id, 80) || asc(email), title: s(x.title, 80), email, pareja: s(x.pareja, 60), rol: /^(director|tutor|pagos)$/.test(s(x.rol, 20)) ? s(x.rol, 20) : "tutor" };
+        const it = { _id: s(x.id, 80) || asc(email), title: s(x.title, 80), email, pareja: s(x.pareja, 60), rol: s(x.rol, 20) === "director" ? "director" : "tutor", lista: b(x.lista), pagos: b(x.pagos) };
         await save("TutTutores", it); return json({ ok: true, item: it });
       }
     }
