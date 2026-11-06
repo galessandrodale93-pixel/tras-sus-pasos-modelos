@@ -42,7 +42,7 @@
       <button class="btn-done" id="done" type="button">✓ Marcar como vista</button>
       <button class="btn-s" id="next" type="button">Siguiente →</button>
     </div>
-    <div class="pm-tabs" role="tablist"><button class="on" data-t="desc" type="button">Sobre la clase</button><button data-t="mat" type="button">Materiales</button><button data-t="notes" type="button">Mis notas</button></div>
+    <div class="pm-tabs" role="tablist"><button class="on" data-t="desc" type="button">Sobre la clase</button><button data-t="mat" type="button">Materiales</button><button data-t="ask" type="button">Preguntas</button><button data-t="notes" type="button">Mi diario</button></div>
     <div class="pm-pane rich" id="pane"></div>
   </main>
 </div>
@@ -60,10 +60,11 @@
 <script src="/assets/site.js"></script>
 <script src="/assets/auth.js"></script>
 <script src="/assets/campus-data.js"></script>
+<script src="/assets/campus-extra.js"></script>
 <script src="/assets/hls.light.min.js"></script>
 <script>
 (async function(){
-var A=window.HabitatAuth,D=window.CampusData;
+var A=window.HabitatAuth,D=window.CampusData,X=window.CampusExtra;
 if(!A.loggedIn()){location.replace('/ingresar.html');return;}
 var Q=new URLSearchParams(location.search),PID=Q.get('p');
 if(!PID){location.replace('/campus.html');return;}
@@ -111,8 +112,16 @@ async function stage(){var x=steps[cur];if(!x)return;var st=document.getElementB
 function pane(){var x=steps[cur],h='';
  if(tab==='desc')h='<h3>'+esc(x.description&&x.description.title)+'</h3>'+(x.stepType==='VIDEO'?D.rich(x.description&&x.description.details):'')+'<p class="muted">'+esc(prog.description&&prog.description.details||'')+'</p>';
  if(tab==='mat'){var ms=[];steps.forEach(function(y){var r=D.rich(y.description&&y.description.details);var m=r.match(/<div class="mt">[\s\S]*?<\/div><\/div>|<div class="mt">[\s\S]*?<\/a><\/div>/g);if(m)ms=ms.concat(m);});h='<div class="mats">'+(ms.join('')||'<p>Este curso no tiene materiales para descargar.</p>')+'</div>';}
- if(tab==='notes'){var v='';try{v=localStorage.getItem('campus:n:'+x.id)||''}catch(e){}h='<textarea id="nt" placeholder="Escribí lo que Dios te habló en esta clase…">'+esc(v)+'</textarea><small class="hint">Tus notas se guardan en este dispositivo.</small>';}
- var p=document.getElementById('pane');p.innerHTML=h;var t=document.getElementById('nt');if(t)t.addEventListener('input',function(){try{localStorage.setItem('campus:n:'+x.id,t.value)}catch(e){}});}
+ if(tab==='notes'){var v='';try{v=localStorage.getItem('campus:n:'+x.id)||''}catch(e){}h='<textarea id="nt" placeholder="Escribí lo que Dios te habló en esta clase…">'+esc(v)+'</textarea><small class="hint" id="nth">Se guarda en tu diario espiritual. <a href="/diario.html">Ver mi diario →</a></small>';}
+ if(tab==='ask'){h='<form class="qa-f" id="qf"><textarea id="qt" maxlength="1500" placeholder="¿Te quedó una duda de esta clase? Escribila y un docente te responde acá." required></textarea><div class="qa-r"><small>Tu pregunta y su respuesta las ven los demás alumnos del curso.</small><button class="btn-done" type="submit">Enviar pregunta</button></div><p class="qa-m" id="qm" role="status"></p></form><div class="qa-l" id="ql"><p class="muted">Cargando preguntas…</p></div>';}
+ var p=document.getElementById('pane');p.innerHTML=h;
+ var t=document.getElementById('nt');if(t){var ent=null,tm=null;X.diaryFor(x.id).then(function(e){if(e){ent=e;if(!t.value)t.value=e.texto||'';}}).catch(function(){});
+  t.addEventListener('input',function(){try{localStorage.setItem('campus:n:'+x.id,t.value)}catch(e){}clearTimeout(tm);tm=setTimeout(async function(){var hh=document.getElementById('nth');try{var id=await X.saveEntry({_id:ent&&ent._id,title:(x.description&&x.description.title)||'Clase',texto:t.value,programId:PID,stepId:x.id,clase:(prog.description&&prog.description.title||'')+' · '+(x.description&&x.description.title||''),f:ent&&ent.f});ent=ent||{};ent._id=id;if(hh)hh.firstChild.textContent='Guardado en tu diario espiritual. ';}catch(e){if(hh)hh.firstChild.textContent='No se pudo guardar en el diario (quedó en este dispositivo). ';}},1200);});}
+ var qf=document.getElementById('qf');if(qf){var ql=document.getElementById('ql');
+  var load=function(){X.questions(x.id).then(function(L){ql.innerHTML=L.length?L.map(function(q){return '<div class="qa-i"><div class="qa-q"><b>'+esc(q.nombre||'Alumno')+'</b><p>'+esc(q.title)+'</p></div>'+(q.respuesta?'<div class="qa-a"><b>'+esc(q.respondidoPor||'Habitat')+'</b><p>'+esc(q.respuesta)+'</p></div>':'<small class="qa-p">Esperando respuesta de un docente</small>')+'</div>';}).join(''):'<p class="muted">Todavía no hay preguntas en esta clase. ¡Hacé la primera!</p>';}).catch(function(){ql.innerHTML='<p class="muted">No pudimos cargar las preguntas.</p>';});};load();
+  qf.addEventListener('submit',async function(ev){ev.preventDefault();var qm=document.getElementById('qm'),qt=document.getElementById('qt'),bt=qf.querySelector('button');if(!part){qm.textContent='Inscribite en el curso para hacer preguntas.';return;}bt.disabled=true;qm.textContent='Enviando…';
+   try{await X.ask({stepId:x.id,programId:PID,texto:qt.value,curso:prog.description&&prog.description.title||'',clase:x.description&&x.description.title||''});qt.value='';qm.textContent='¡Listo! Tu pregunta quedó publicada. Te avisamos cuando tenga respuesta.';load();}catch(e){qm.textContent=e.message||'No pudimos enviar la pregunta.';}bt.disabled=false;});}
+}
 async function mark(x){if(!part||done[x.id])return;try{await D.complete(part.id,x.id);done[x.id]=1;list();var b=document.getElementById('done');b.classList.add('is');b.textContent='✓ Vista';}catch(e){var bb=document.getElementById('done');bb.textContent='No se pudo guardar';}}
 document.getElementById('list').addEventListener('click',function(e){var b=e.target.closest('.it');if(!b)return;cur=+b.dataset.i;stage();if(innerWidth<900)document.body.classList.remove('side-open');window.scrollTo({top:0,behavior:'smooth'});});
 document.getElementById('prev').onclick=function(){if(cur>0){cur--;stage();}};

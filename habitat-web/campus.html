@@ -26,7 +26,7 @@
 <main>
 
 <section class="cx-hero"><div class="wrap">
-  <div class="hi rv in"><span class="kick">Campus Habitat</span><h1>Hola<em id="hiName"></em></h1><p id="hiLine">Cargando tus cursos…</p><div class="hi-act"><a class="out" href="/perfil.html">Mi perfil</a><button class="out" type="button" id="outBtn">Cerrar sesión</button></div></div>
+  <div class="hi rv in"><span class="kick">Campus Habitat</span><h1>Hola<em id="hiName"></em></h1><p id="hiLine">Cargando tus cursos…</p><div class="hi-act"><a class="out" href="#agenda" id="bell">Avisos<span class="bd" id="bellN" hidden></span></a><a class="out" href="/biblia.html">Biblia</a><a class="out" href="/diario.html">Mi diario</a><a class="out" href="/perfil.html">Mi perfil</a><button class="out" type="button" id="outBtn">Cerrar sesión</button></div></div>
   <a class="resume rv in" id="resume" href="#" hidden>
     <div class="rimg"><img id="rImg" src="" alt=""><span class="play" aria-hidden="true">▶</span></div>
     <div class="rtx"><span class="kick">Continuar</span><b id="rStep"></b><small id="rProg"></small><div class="bar"><i id="rBar"></i></div></div>
@@ -37,6 +37,11 @@
   <div class="st"><b id="sDone">–</b><span>clases vistas</span></div>
   <div class="st"><b id="sHrs">–</b><span>de formación</span></div>
   <div class="st"><b id="sFin">–</b><span>programas completos</span></div>
+</div></section>
+<section class="cx-sec" id="agenda"><div class="wrap">
+  <div class="cx-h"><h2>Agenda y avisos</h2><span class="cal-act"><a id="calG" href="#" target="_blank" rel="noopener">+ Google Calendar</a><a id="calI" href="#">+ iPhone / Outlook</a></span></div>
+  <div class="ag" id="agList"><p class="cx-empty">Cargando la agenda…</p></div>
+  <p class="ag-tip">Sumá el calendario de Habitat a tu teléfono y te llegan los recordatorios de cada clase en vivo: un día antes y una hora antes.</p>
 </div></section>
 <section class="cx-sec"><div class="wrap">
   <div class="cx-h"><h2>Mis cursos</h2><a href="/perfil.html">Ver mi progreso →</a></div>
@@ -60,11 +65,23 @@
 <script src="/assets/site.js"></script>
 <script src="/assets/auth.js"></script>
 <script src="/assets/campus-data.js"></script>
+<script src="/assets/campus-extra.js"></script>
 <script>
 (async function(){
 var A=window.HabitatAuth,D=window.CampusData;
 if(!A.loggedIn()){location.replace('/ingresar.html');return;}
 document.getElementById('outBtn').onclick=function(){A.logout();};
+var X=window.CampusExtra;
+function agenda(pids){X.agenda(pids).then(function(L){
+ var now=Date.now(),up=L.filter(function(e){return (e.end||e.ini).getTime()>=now-3600e3;}),av=L.filter(function(e){return /aviso/i.test(e.tipo||'')&&e.ini.getTime()<=now;}).reverse().slice(0,4);
+ var n=X.unseen(L);var bn=document.getElementById('bellN');if(n){bn.textContent=n;bn.hidden=false;}
+ document.getElementById('bell').addEventListener('click',function(){X.markSeen();bn.hidden=true;});
+ var it=function(e){var live=/vivo|encuentro/i.test(e.tipo||'');return '<div class="ag-it'+(e.destacado?' hot':'')+'"><div class="ag-d"><b>'+e.ini.getDate()+'</b><small>'+X.fecha(e.ini).split(' ')[0]+' · '+X.fecha(e.ini).split(' ')[2]+'</small></div><div class="ag-t"><span class="ag-k">'+X.esc(e.tipo||'Aviso')+(e.curso?' · '+X.esc(e.curso):'')+'</span><b>'+X.esc(e.title)+'</b>'+(e.descripcion?'<p>'+X.esc(e.descripcion)+'</p>':'')+'<small>'+(/aviso/i.test(e.tipo||'')?'':X.hora(e.ini)+' h'+(e.lugar?' · '+X.esc(e.lugar):''))+'</small></div>'+(e.link&&live?'<a class="ag-go" href="'+X.esc(e.link)+'" target="_blank" rel="noopener">Entrar</a>':e.link?'<a class="ag-go s" href="'+X.esc(e.link)+'" target="_blank" rel="noopener">Ver</a>':'')+'</div>';};
+ var h=up.filter(function(e){return !/aviso/i.test(e.tipo||'');}).slice(0,6).map(it).join('');
+ var ha=av.map(it).join('');
+ document.getElementById('agList').innerHTML=(ha?'<h3 class="ag-h">Avisos</h3>'+ha:'')+(h?'<h3 class="ag-h">Próximamente</h3>'+h:'')||'<p class="cx-empty">No hay clases en vivo ni avisos por ahora. Cuando haya, te aparecen acá y en tu calendario.</p>';
+}).catch(function(){document.getElementById('agList').innerHTML='<p class="cx-empty">No pudimos cargar la agenda.</p>';});
+ document.getElementById('calG').href=X.google();document.getElementById('calI').href=X.webcal();}
 function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var K={curso:'Curso online',escuela:'Escuela',carrera:'Carrera'};
 try{
@@ -80,6 +97,7 @@ try{
    rows.push({part:parts[i],prog:progs[i],done:done,tot:tot,pct:tot?Math.min(100,Math.round(done*100/tot)):0,last:parts[i].lastActivityDate||parts[i].createdDate||''});
  }
  rows.sort(function(a,b){return (b.last||'').localeCompare(a.last||'');});
+ agenda(rows.map(function(r){return r.prog.id;}));
  var totalDone=rows.reduce(function(a,r){return a+r.done;},0);
  document.getElementById('sCur').textContent=rows.filter(function(r){return r.pct<100;}).length;
  document.getElementById('sDone').textContent=totalDone;

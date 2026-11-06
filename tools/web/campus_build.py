@@ -59,7 +59,7 @@ def page(fn, title, body, js=''):
 # ---------- Mis cursos (datos reales) ----------
 campus = '''
 <section class="cx-hero"><div class="wrap">
-  <div class="hi rv in"><span class="kick">Campus Habitat</span><h1>Hola<em id="hiName"></em></h1><p id="hiLine">Cargando tus cursos…</p><div class="hi-act"><a class="out" href="/perfil.html">Mi perfil</a><button class="out" type="button" id="outBtn">Cerrar sesión</button></div></div>
+  <div class="hi rv in"><span class="kick">Campus Habitat</span><h1>Hola<em id="hiName"></em></h1><p id="hiLine">Cargando tus cursos…</p><div class="hi-act"><a class="out" href="#agenda" id="bell">Avisos<span class="bd" id="bellN" hidden></span></a><a class="out" href="/biblia.html">Biblia</a><a class="out" href="/diario.html">Mi diario</a><a class="out" href="/perfil.html">Mi perfil</a><button class="out" type="button" id="outBtn">Cerrar sesión</button></div></div>
   <a class="resume rv in" id="resume" href="#" hidden>
     <div class="rimg"><img id="rImg" src="" alt=""><span class="play" aria-hidden="true">▶</span></div>
     <div class="rtx"><span class="kick">Continuar</span><b id="rStep"></b><small id="rProg"></small><div class="bar"><i id="rBar"></i></div></div>
@@ -70,6 +70,11 @@ campus = '''
   <div class="st"><b id="sDone">–</b><span>clases vistas</span></div>
   <div class="st"><b id="sHrs">–</b><span>de formación</span></div>
   <div class="st"><b id="sFin">–</b><span>programas completos</span></div>
+</div></section>
+<section class="cx-sec" id="agenda"><div class="wrap">
+  <div class="cx-h"><h2>Agenda y avisos</h2><span class="cal-act"><a id="calG" href="#" target="_blank" rel="noopener">+ Google Calendar</a><a id="calI" href="#">+ iPhone / Outlook</a></span></div>
+  <div class="ag" id="agList"><p class="cx-empty">Cargando la agenda…</p></div>
+  <p class="ag-tip">Sumá el calendario de Habitat a tu teléfono y te llegan los recordatorios de cada clase en vivo: un día antes y una hora antes.</p>
 </div></section>
 <section class="cx-sec"><div class="wrap">
   <div class="cx-h"><h2>Mis cursos</h2><a href="/perfil.html">Ver mi progreso →</a></div>
@@ -82,11 +87,23 @@ campus = '''
 '''
 campus_js = '''<script src="/assets/auth.js"></script>
 <script src="/assets/campus-data.js"></script>
+<script src="/assets/campus-extra.js"></script>
 <script>
 (async function(){
 var A=window.HabitatAuth,D=window.CampusData;
 if(!A.loggedIn()){location.replace('/ingresar.html');return;}
 document.getElementById('outBtn').onclick=function(){A.logout();};
+var X=window.CampusExtra;
+function agenda(pids){X.agenda(pids).then(function(L){
+ var now=Date.now(),up=L.filter(function(e){return (e.end||e.ini).getTime()>=now-3600e3;}),av=L.filter(function(e){return /aviso/i.test(e.tipo||'')&&e.ini.getTime()<=now;}).reverse().slice(0,4);
+ var n=X.unseen(L);var bn=document.getElementById('bellN');if(n){bn.textContent=n;bn.hidden=false;}
+ document.getElementById('bell').addEventListener('click',function(){X.markSeen();bn.hidden=true;});
+ var it=function(e){var live=/vivo|encuentro/i.test(e.tipo||'');return '<div class="ag-it'+(e.destacado?' hot':'')+'"><div class="ag-d"><b>'+e.ini.getDate()+'</b><small>'+X.fecha(e.ini).split(' ')[0]+' · '+X.fecha(e.ini).split(' ')[2]+'</small></div><div class="ag-t"><span class="ag-k">'+X.esc(e.tipo||'Aviso')+(e.curso?' · '+X.esc(e.curso):'')+'</span><b>'+X.esc(e.title)+'</b>'+(e.descripcion?'<p>'+X.esc(e.descripcion)+'</p>':'')+'<small>'+(/aviso/i.test(e.tipo||'')?'':X.hora(e.ini)+' h'+(e.lugar?' · '+X.esc(e.lugar):''))+'</small></div>'+(e.link&&live?'<a class="ag-go" href="'+X.esc(e.link)+'" target="_blank" rel="noopener">Entrar</a>':e.link?'<a class="ag-go s" href="'+X.esc(e.link)+'" target="_blank" rel="noopener">Ver</a>':'')+'</div>';};
+ var h=up.filter(function(e){return !/aviso/i.test(e.tipo||'');}).slice(0,6).map(it).join('');
+ var ha=av.map(it).join('');
+ document.getElementById('agList').innerHTML=(ha?'<h3 class="ag-h">Avisos</h3>'+ha:'')+(h?'<h3 class="ag-h">Próximamente</h3>'+h:'')||'<p class="cx-empty">No hay clases en vivo ni avisos por ahora. Cuando haya, te aparecen acá y en tu calendario.</p>';
+}).catch(function(){document.getElementById('agList').innerHTML='<p class="cx-empty">No pudimos cargar la agenda.</p>';});
+ document.getElementById('calG').href=X.google();document.getElementById('calI').href=X.webcal();}
 function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var K={curso:'Curso online',escuela:'Escuela',carrera:'Carrera'};
 try{
@@ -102,6 +119,7 @@ try{
    rows.push({part:parts[i],prog:progs[i],done:done,tot:tot,pct:tot?Math.min(100,Math.round(done*100/tot)):0,last:parts[i].lastActivityDate||parts[i].createdDate||''});
  }
  rows.sort(function(a,b){return (b.last||'').localeCompare(a.last||'');});
+ agenda(rows.map(function(r){return r.prog.id;}));
  var totalDone=rows.reduce(function(a,r){return a+r.done;},0);
  document.getElementById('sCur').textContent=rows.filter(function(r){return r.pct<100;}).length;
  document.getElementById('sDone').textContent=totalDone;
@@ -148,17 +166,18 @@ clase = '''
       <button class="btn-done" id="done" type="button">✓ Marcar como vista</button>
       <button class="btn-s" id="next" type="button">Siguiente →</button>
     </div>
-    <div class="pm-tabs" role="tablist"><button class="on" data-t="desc" type="button">Sobre la clase</button><button data-t="mat" type="button">Materiales</button><button data-t="notes" type="button">Mis notas</button></div>
+    <div class="pm-tabs" role="tablist"><button class="on" data-t="desc" type="button">Sobre la clase</button><button data-t="mat" type="button">Materiales</button><button data-t="ask" type="button">Preguntas</button><button data-t="notes" type="button">Mi diario</button></div>
     <div class="pm-pane rich" id="pane"></div>
   </main>
 </div>
 '''
 js = '''<script src="/assets/auth.js"></script>
 <script src="/assets/campus-data.js"></script>
+<script src="/assets/campus-extra.js"></script>
 <script src="/assets/hls.light.min.js"></script>
 <script>
 (async function(){
-var A=window.HabitatAuth,D=window.CampusData;
+var A=window.HabitatAuth,D=window.CampusData,X=window.CampusExtra;
 if(!A.loggedIn()){location.replace('/ingresar.html');return;}
 var Q=new URLSearchParams(location.search),PID=Q.get('p');
 if(!PID){location.replace('/campus.html');return;}
@@ -206,8 +225,16 @@ async function stage(){var x=steps[cur];if(!x)return;var st=document.getElementB
 function pane(){var x=steps[cur],h='';
  if(tab==='desc')h='<h3>'+esc(x.description&&x.description.title)+'</h3>'+(x.stepType==='VIDEO'?D.rich(x.description&&x.description.details):'')+'<p class="muted">'+esc(prog.description&&prog.description.details||'')+'</p>';
  if(tab==='mat'){var ms=[];steps.forEach(function(y){var r=D.rich(y.description&&y.description.details);var m=r.match(/<div class="mt">[\\s\\S]*?<\\/div><\\/div>|<div class="mt">[\\s\\S]*?<\\/a><\\/div>/g);if(m)ms=ms.concat(m);});h='<div class="mats">'+(ms.join('')||'<p>Este curso no tiene materiales para descargar.</p>')+'</div>';}
- if(tab==='notes'){var v='';try{v=localStorage.getItem('campus:n:'+x.id)||''}catch(e){}h='<textarea id="nt" placeholder="Escribí lo que Dios te habló en esta clase…">'+esc(v)+'</textarea><small class="hint">Tus notas se guardan en este dispositivo.</small>';}
- var p=document.getElementById('pane');p.innerHTML=h;var t=document.getElementById('nt');if(t)t.addEventListener('input',function(){try{localStorage.setItem('campus:n:'+x.id,t.value)}catch(e){}});}
+ if(tab==='notes'){var v='';try{v=localStorage.getItem('campus:n:'+x.id)||''}catch(e){}h='<textarea id="nt" placeholder="Escribí lo que Dios te habló en esta clase…">'+esc(v)+'</textarea><small class="hint" id="nth">Se guarda en tu diario espiritual. <a href="/diario.html">Ver mi diario →</a></small>';}
+ if(tab==='ask'){h='<form class="qa-f" id="qf"><textarea id="qt" maxlength="1500" placeholder="¿Te quedó una duda de esta clase? Escribila y un docente te responde acá." required></textarea><div class="qa-r"><small>Tu pregunta y su respuesta las ven los demás alumnos del curso.</small><button class="btn-done" type="submit">Enviar pregunta</button></div><p class="qa-m" id="qm" role="status"></p></form><div class="qa-l" id="ql"><p class="muted">Cargando preguntas…</p></div>';}
+ var p=document.getElementById('pane');p.innerHTML=h;
+ var t=document.getElementById('nt');if(t){var ent=null,tm=null;X.diaryFor(x.id).then(function(e){if(e){ent=e;if(!t.value)t.value=e.texto||'';}}).catch(function(){});
+  t.addEventListener('input',function(){try{localStorage.setItem('campus:n:'+x.id,t.value)}catch(e){}clearTimeout(tm);tm=setTimeout(async function(){var hh=document.getElementById('nth');try{var id=await X.saveEntry({_id:ent&&ent._id,title:(x.description&&x.description.title)||'Clase',texto:t.value,programId:PID,stepId:x.id,clase:(prog.description&&prog.description.title||'')+' · '+(x.description&&x.description.title||''),f:ent&&ent.f});ent=ent||{};ent._id=id;if(hh)hh.firstChild.textContent='Guardado en tu diario espiritual. ';}catch(e){if(hh)hh.firstChild.textContent='No se pudo guardar en el diario (quedó en este dispositivo). ';}},1200);});}
+ var qf=document.getElementById('qf');if(qf){var ql=document.getElementById('ql');
+  var load=function(){X.questions(x.id).then(function(L){ql.innerHTML=L.length?L.map(function(q){return '<div class="qa-i"><div class="qa-q"><b>'+esc(q.nombre||'Alumno')+'</b><p>'+esc(q.title)+'</p></div>'+(q.respuesta?'<div class="qa-a"><b>'+esc(q.respondidoPor||'Habitat')+'</b><p>'+esc(q.respuesta)+'</p></div>':'<small class="qa-p">Esperando respuesta de un docente</small>')+'</div>';}).join(''):'<p class="muted">Todavía no hay preguntas en esta clase. ¡Hacé la primera!</p>';}).catch(function(){ql.innerHTML='<p class="muted">No pudimos cargar las preguntas.</p>';});};load();
+  qf.addEventListener('submit',async function(ev){ev.preventDefault();var qm=document.getElementById('qm'),qt=document.getElementById('qt'),bt=qf.querySelector('button');if(!part){qm.textContent='Inscribite en el curso para hacer preguntas.';return;}bt.disabled=true;qm.textContent='Enviando…';
+   try{await X.ask({stepId:x.id,programId:PID,texto:qt.value,curso:prog.description&&prog.description.title||'',clase:x.description&&x.description.title||''});qt.value='';qm.textContent='¡Listo! Tu pregunta quedó publicada. Te avisamos cuando tenga respuesta.';load();}catch(e){qm.textContent=e.message||'No pudimos enviar la pregunta.';}bt.disabled=false;});}
+}
 async function mark(x){if(!part||done[x.id])return;try{await D.complete(part.id,x.id);done[x.id]=1;list();var b=document.getElementById('done');b.classList.add('is');b.textContent='✓ Vista';}catch(e){var bb=document.getElementById('done');bb.textContent='No se pudo guardar';}}
 document.getElementById('list').addEventListener('click',function(e){var b=e.target.closest('.it');if(!b)return;cur=+b.dataset.i;stage();if(innerWidth<900)document.body.classList.remove('side-open');window.scrollTo({top:0,behavior:'smooth'});});
 document.getElementById('prev').onclick=function(){if(cur>0){cur--;stage();}};
@@ -423,6 +450,106 @@ try{
 })();
 </script>'''
 page('curso.html', 'Curso · Habitat', curso, curso_js)
+
+# ---------- Diario espiritual ----------
+diario = """
+<section class="cx-hero dy-hero"><div class="wrap">
+  <div class="hi rv in"><span class="kick">Campus Habitat</span><h1>Mi diario espiritual</h1><p>Lo que Dios te va hablando en cada clase y en tu tiempo con la Palabra. Solo lo ves vos.</p><div class="hi-act"><a class="out" href="/campus.html">← Mis cursos</a><a class="out" href="/biblia.html">Biblia</a><button class="out" type="button" id="dlBtn">Descargar mi diario</button></div></div>
+</div></section>
+<section class="cx-sec"><div class="wrap dy">
+  <form class="dy-new" id="dyF">
+    <h2 id="dyH">Nueva entrada</h2>
+    <input id="dyT" maxlength="160" placeholder="Título (por ejemplo: Lo que aprendí hoy)">
+    <div class="dy-row"><input id="dyC" maxlength="80" placeholder="Cita bíblica (ej. Juan 15:5)"><input id="dyV" maxlength="600" placeholder="Versículo o frase que te marcó"></div>
+    <textarea id="dyX" placeholder="Escribí con libertad…" required></textarea>
+    <div class="qa-r"><small id="dyM" role="status"></small><span><button class="btn-s" type="button" id="dyCancel" hidden>Cancelar</button> <button class="btn-done" type="submit">Guardar</button></span></div>
+  </form>
+  <div class="dy-side"><input id="dyS" type="search" placeholder="Buscar en mi diario…"><div id="dyL"><p class="cx-empty">Cargando tu diario…</p></div></div>
+</div></section>
+"""
+diario_js = """<script src="/assets/auth.js"></script>
+<script src="/assets/campus-extra.js"></script>
+<script>
+(async function(){
+var A=window.HabitatAuth,X=window.CampusExtra,esc=X.esc;
+if(!A.loggedIn()){try{sessionStorage.setItem('habitat:ret','/diario.html');}catch(e){}location.replace('/ingresar.html');return;}
+var L=[],edit=null,$=function(i){return document.getElementById(i);};
+function card(e){var f=e.f?X.fecha(e.f)+' '+e.f.getFullYear():'';return '<article class="dy-it" data-id="'+esc(e._id)+'"><small>'+esc(f)+(e.clase?' · '+esc(e.clase):'')+'</small><b>'+esc(e.title||'Sin título')+'</b>'+(e.cita||e.versiculo?'<blockquote>'+esc(e.versiculo||'')+(e.cita?' <cite>'+esc(e.cita)+'</cite>':'')+'</blockquote>':'')+'<p>'+esc(e.texto||'').replace(/\\n/g,'<br>')+'</p><div class="dy-a"><button type="button" data-a="e">Editar</button><button type="button" data-a="d">Borrar</button></div></article>';}
+function draw(){var t=($('dyS').value||'').toLowerCase();var F=L.filter(function(e){return !t||[e.title,e.texto,e.cita,e.versiculo,e.clase].join(' ').toLowerCase().indexOf(t)>=0;});$('dyL').innerHTML=F.length?F.map(card).join(''):'<p class="cx-empty">'+(L.length?'No encontramos entradas con esa búsqueda.':'Tu diario está vacío. Escribí tu primera entrada, o anotá algo en la pestaña “Mi diario” de cualquier clase.')+'</p>';}
+async function load(){try{L=await X.diary(200);}catch(e){$('dyL').innerHTML='<p class="cx-empty">No pudimos cargar tu diario.</p>';return;}draw();}
+function reset(){edit=null;$('dyF').reset();$('dyH').textContent='Nueva entrada';$('dyCancel').hidden=true;}
+$('dyS').addEventListener('input',draw);
+$('dyCancel').onclick=reset;
+$('dyF').addEventListener('submit',async function(ev){ev.preventDefault();$('dyM').textContent='Guardando…';
+ try{await X.saveEntry({_id:edit&&edit._id,title:$('dyT').value,cita:$('dyC').value,versiculo:$('dyV').value,texto:$('dyX').value,programId:edit&&edit.programId,stepId:edit&&edit.stepId,clase:edit&&edit.clase,f:edit&&edit.f});$('dyM').textContent='Guardado.';reset();load();}catch(e){$('dyM').textContent='No se pudo guardar. Probá de nuevo.';}});
+$('dyL').addEventListener('click',async function(ev){var b=ev.target.closest('button');if(!b)return;var id=b.closest('.dy-it').dataset.id,e=L.find(function(x){return x._id===id;});if(!e)return;
+ if(b.dataset.a==='e'){edit=e;$('dyT').value=e.title||'';$('dyC').value=e.cita||'';$('dyV').value=e.versiculo||'';$('dyX').value=e.texto||'';$('dyH').textContent='Editar entrada';$('dyCancel').hidden=false;window.scrollTo({top:$('dyF').offsetTop-90,behavior:'smooth'});}
+ if(b.dataset.a==='d'){if(b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='¿Seguro? Tocá de nuevo';return;}try{await X.removeEntry(id);L=L.filter(function(x){return x._id!==id;});draw();}catch(e){b.textContent='No se pudo borrar';}}});
+$('dlBtn').onclick=function(){var t='MI DIARIO ESPIRITUAL · HABITAT\\n\\n'+L.slice().reverse().map(function(e){return (e.f?X.fecha(e.f)+' '+e.f.getFullYear():'')+(e.clase?' · '+e.clase:'')+'\\n'+(e.title||'')+'\\n'+(e.versiculo?'«'+e.versiculo+'» '+(e.cita||'')+'\\n':e.cita?e.cita+'\\n':'')+'\\n'+(e.texto||'')+'\\n\\n— — —\\n';}).join('\\n');
+ var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain;charset=utf-8'}));a.download='mi-diario-habitat.txt';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);};
+load();
+})();
+</script>"""
+page('diario.html', 'Mi diario espiritual · Campus Habitat', diario, diario_js)
+
+# ---------- Biblia + diario ----------
+biblia = """
+<section class="cx-hero dy-hero"><div class="wrap">
+  <div class="hi rv in"><span class="kick">Campus Habitat</span><h1>Biblia</h1><p>Leé, marcá lo que te habla y guardalo en tu diario espiritual.</p><div class="hi-act"><a class="out" href="/campus.html">← Mis cursos</a><a class="out" href="/diario.html">Mi diario</a></div></div>
+</div></section>
+<section class="cx-sec"><div class="wrap bb">
+  <div class="bb-main">
+    <div class="bb-bar">
+      <select id="bB" aria-label="Libro"></select><select id="bC" aria-label="Capítulo"></select>
+      <select id="bV" aria-label="Traducción"><option value="rv1909">Reina-Valera 1909</option><option value="rv1865">Reina-Valera 1865</option></select>
+    </div>
+    <div class="bb-ext">Leer este capítulo en otras traducciones: <a id="xNTV" target="_blank" rel="noopener">NTV</a> · <a id="xNVI" target="_blank" rel="noopener">NVI</a> · <a id="xRVR" target="_blank" rel="noopener">RVR 1960</a></div>
+    <h2 id="bT"></h2>
+    <div class="bb-tx" id="bX"><p class="cx-empty">Cargando…</p></div>
+    <div class="bb-nav"><button class="btn-s" type="button" id="bP">← Capítulo anterior</button><button class="btn-s" type="button" id="bN">Capítulo siguiente →</button></div>
+  </div>
+  <aside class="bb-side" id="bS">
+    <h3>Mi diario</h3>
+    <p class="muted" id="bHint">Tocá uno o varios versículos para guardarlos con lo que Dios te habló.</p>
+    <form id="bF" hidden><blockquote id="bQ"></blockquote><textarea id="bR" placeholder="¿Qué te habló Dios con esto?"></textarea><div class="qa-r"><button class="btn-s" type="button" id="bClr">Limpiar</button><button class="btn-done" type="submit">Guardar en mi diario</button></div><small id="bM" role="status"></small></form>
+  </aside>
+</div></section>
+"""
+biblia_js = """<script src="/assets/auth.js"></script>
+<script src="/assets/campus-extra.js"></script>
+<script>
+(async function(){
+var A=window.HabitatAuth,X=window.CampusExtra,esc=X.esc,$=function(i){return document.getElementById(i);};
+var U=['GEN','EXO','LEV','NUM','DEU','JOS','JDG','RUT','1SA','2SA','1KI','2KI','1CH','2CH','EZR','NEH','EST','JOB','PSA','PRO','ECC','SNG','ISA','JER','LAM','EZK','DAN','HOS','JOL','AMO','OBA','JON','MIC','NAM','HAB','ZEP','HAG','ZEC','MAL','MAT','MRK','LUK','JHN','ACT','ROM','1CO','2CO','GAL','EPH','PHP','COL','1TH','2TH','1TI','2TI','TIT','PHM','HEB','JAS','1PE','2PE','1JN','2JN','3JN','JUD','REV'];
+var st={v:'rv1909',b:43,c:1};try{var sv=JSON.parse(localStorage.getItem('campus:bib')||'null');if(sv)st=sv;}catch(e){}
+var q=new URLSearchParams(location.search);if(q.get('b'))st.b=+q.get('b');if(q.get('c'))st.c=+q.get('c');
+var IDX=null,cache={},sel=[];
+async function idx(){if(!IDX)IDX=await fetch('/assets/biblia/'+st.v+'/index.json').then(function(r){return r.json();});return IDX;}
+async function book(v,b){var k=v+b;if(!cache[k])cache[k]=fetch('/assets/biblia/'+v+'/'+('0'+b).slice(-2)+'.json').then(function(r){return r.json();});return cache[k];}
+function save(){try{localStorage.setItem('campus:bib',JSON.stringify(st));}catch(e){}}
+async function draw(){var I=await idx();st.b=Math.min(66,Math.max(1,st.b));var nc=I.chapters[st.b-1];st.c=Math.min(nc,Math.max(1,st.c));save();
+ $('bB').innerHTML=I.books.map(function(n,i){return '<option value="'+(i+1)+'"'+(i+1===st.b?' selected':'')+'>'+n+'</option>';}).join('');
+ var o='';for(var i=1;i<=nc;i++)o+='<option value="'+i+'"'+(i===st.c?' selected':'')+'>Capítulo '+i+'</option>';$('bC').innerHTML=o;$('bV').value=st.v;
+ var name=I.books[st.b-1];$('bT').textContent=name+' '+st.c;
+ var u=function(id,code){return 'https://www.bible.com/bible/'+id+'/'+U[st.b-1]+'.'+st.c+'.'+code;};$('xNTV').href=u(127,'NTV');$('xNVI').href=u(128,'NVI');$('xRVR').href=u(149,'RVR1960');
+ $('bX').innerHTML='<p class="cx-empty">Cargando…</p>';var B=await book(st.v,st.b);var vs=B[st.c-1]||[];
+ $('bX').innerHTML=vs.map(function(t,i){return '<span class="vs" data-n="'+(i+1)+'"><sup>'+(i+1)+'</sup>'+esc(t)+' </span>';}).join('');
+ sel=[];side();$('bP').disabled=st.b===1&&st.c===1;$('bN').disabled=st.b===66&&st.c===I.chapters[65];window.scrollTo({top:0});}
+function ref(){if(!sel.length)return '';var I=IDX,a=sel.slice().sort(function(x,y){return x-y;}),r=[],s=a[0],p=a[0];for(var i=1;i<=a.length;i++){if(a[i]===p+1){p=a[i];continue;}r.push(s===p?s:s+'-'+p);s=p=a[i];}return I.books[st.b-1]+' '+st.c+':'+r.join(',')+' ('+(st.v==='rv1909'?'RV1909':'RV1865')+')';}
+function side(){var on=sel.length>0;$('bS').classList.toggle('sel',on);$('bF').hidden=!on;$('bHint').hidden=on;document.querySelectorAll('.vs').forEach(function(e){e.classList.toggle('on',sel.indexOf(+e.dataset.n)>=0);});
+ if(on){var t=sel.slice().sort(function(x,y){return x-y;}).map(function(n){return document.querySelector('.vs[data-n="'+n+'"]').textContent.replace(/^\\d+/,'').trim();}).join(' ');$('bQ').innerHTML=esc(t)+' <cite>'+esc(ref())+'</cite>';$('bQ').dataset.t=t;}}
+$('bX').addEventListener('click',function(e){var v=e.target.closest('.vs');if(!v)return;var n=+v.dataset.n,i=sel.indexOf(n);if(i>=0)sel.splice(i,1);else sel.push(n);side();});
+$('bB').onchange=function(){st.b=+this.value;st.c=1;draw();};$('bC').onchange=function(){st.c=+this.value;draw();};
+$('bV').onchange=function(){st.v=this.value;IDX=null;draw();};
+$('bP').onclick=function(){if(st.c>1)st.c--;else if(st.b>1){st.b--;st.c=IDX.chapters[st.b-1];}draw();};
+$('bN').onclick=function(){if(st.c<IDX.chapters[st.b-1])st.c++;else if(st.b<66){st.b++;st.c=1;}draw();};
+$('bClr').onclick=function(){sel=[];$('bR').value='';side();};
+$('bF').addEventListener('submit',async function(ev){ev.preventDefault();if(!A.loggedIn()){$('bM').innerHTML='Para guardar en tu diario <a href="/ingresar.html">ingresá al Campus</a>.';try{sessionStorage.setItem('habitat:ret','/biblia.html');}catch(e){}return;}
+ $('bM').textContent='Guardando…';try{await X.saveEntry({title:ref().replace(/ \\(.*\\)$/,''),cita:ref(),versiculo:$('bQ').dataset.t,texto:$('bR').value});$('bM').innerHTML='Guardado. <a href="/diario.html">Ver mi diario →</a>';sel=[];$('bR').value='';side();}catch(e){$('bM').textContent='No se pudo guardar. Probá de nuevo.';}});
+draw();
+})();
+</script>"""
+page('biblia.html', 'Biblia · Campus Habitat', biblia, biblia_js)
 
 # ---------- Ingreso ----------
 ingresar = f'''
