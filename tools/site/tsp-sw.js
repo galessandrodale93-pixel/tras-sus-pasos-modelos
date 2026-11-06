@@ -8,7 +8,7 @@ const CT = { glb: 'model/gltf-binary', ktx2: 'image/ktx2', webp: 'image/webp', j
 // primero R2 (Cloudflare), después raw.githubusercontent; si los dos fallan, githack como siempre
 async function fromMirror(u) { const m = u.match(GH); if (!m) return null; const p = u.slice(m[0].length).split('?')[0], ext = p.split('.').pop().toLowerCase(); if (!CT[ext]) return null;
   const L = []; if (R2OK.test(p)) L.push(R2 + p); L.push(u.replace(/^https:\/\/(rawcdn|raw)\.githack\.com\//, 'https://raw.githubusercontent.com/'));
-  for (const src of L) { try { const r = await fetch(src, { mode: 'cors' }); if (!r.ok) continue; return new Response(await r.blob(), { status: 200, headers: { 'Content-Type': CT[ext] } }); } catch (e) {} } return null; }
+  for (const src of L) { try { const r = await fetch(src, { mode: 'cors' }); if (!r.ok) continue; const b = await r.blob(); if (!b.size) continue; return new Response(b, { status: 200, headers: { 'Content-Type': CT[ext] } }); } catch (e) {} } return null; }
 self.addEventListener('install', e => { self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });
 self.addEventListener('fetch', e => {

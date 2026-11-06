@@ -638,7 +638,7 @@ const DLCT = { js: 'application/javascript', css: 'text/css', json: 'application
 async function dlFetch(c, files, prog) {
   const q = files.slice().sort((a, b) => b[1] - a[1]), fail = []; let got = 0; const t0 = performance.now(), tot = files.reduce((a, f) => a + f[1], 0) || 1;
   const one = async ([u, n]) => { const ext = (u.split('?')[0].split('.').pop() || '').toLowerCase();
-    for (const src of dlSrc(u)) { try { const r = await fetch(src, { mode: 'cors' }); if (!r.ok) continue; const b = await r.blob(); await c.put(u, new Response(b, { headers: { 'Content-Type': DLCT[ext] || r.headers.get('content-type') || 'application/octet-stream' } })); return true; } catch (e) {} } return false; };
+    for (const src of dlSrc(u)) { try { const r = await fetch(src, { mode: 'cors' }); if (!r.ok) continue; const b = await r.blob(); if (!b.size && n) continue; await c.put(u, new Response(b, { headers: { 'Content-Type': DLCT[ext] || r.headers.get('content-type') || 'application/octet-stream' } })); return true; } catch (e) {} } return false; };
   const work = async () => { while (q.length) { const f = q.shift(); if (!(await one(f))) fail.push(f); got += f[1]; const s = (performance.now() - t0) / 1000, sp = got / Math.max(.5, s); prog && prog(got, tot, sp, (tot - got) / Math.max(1, sp)); } };
   await Promise.all(Array.from({ length: 8 }, work)); return fail;
 }
