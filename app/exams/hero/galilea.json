@@ -1,0 +1,564 @@
+{
+ "stage": "galilea",
+ "branch": "hero",
+ "only": true,
+ "source": "materiales/hero-tras-sus-pasos/material.html",
+ "questions": [
+  {
+   "t": "mc",
+   "q": "¿Con qué poder volvió Jesús a Galilea?",
+   "o": [
+    "Con el poder del Espíritu",
+    "Con un ejército",
+    "Con permiso de Roma",
+    "Con el apoyo de los fariseos"
+   ],
+   "a": 0,
+   "exp": "Lleno del poder del Espíritu, Jesús volvió a Galilea.",
+   "ref": "Lucas 4:14",
+   "id": "gal-01"
+  },
+  {
+   "t": "mc",
+   "q": "¿Dónde leyó Jesús el rollo de Isaías?",
+   "o": [
+    "En la sinagoga de Nazaret, un sábado",
+    "En el templo de Jerusalén",
+    "En una barca en el lago",
+    "En la casa de Pedro"
+   ],
+   "a": 0,
+   "exp": "Un sábado entró en la sinagoga de Nazaret, como acostumbraba.",
+   "ref": "Lucas 4:16",
+   "id": "gal-02"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué rollo le dieron para leer?",
+   "o": [
+    "El del profeta Isaías",
+    "El de Moisés",
+    "El de Miqueas",
+    "El de los Salmos"
+   ],
+   "a": 0,
+   "exp": "Le dieron el rollo del profeta Isaías.",
+   "ref": "Lucas 4:17",
+   "id": "gal-03"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué anunciaba el pasaje que leyó?",
+   "o": [
+    "Buenas noticias a los pobres, libertad a los cautivos y vista a los ciegos",
+    "La destrucción de Roma",
+    "Las reglas del sábado",
+    "La construcción del templo"
+   ],
+   "a": 0,
+   "exp": "Leyó el pasaje sobre el Ungido que trae buenas noticias a los pobres.",
+   "ref": "Lucas 4:18",
+   "id": "gal-04"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué dijo Jesús después de enrollar el libro?",
+   "o": [
+    "Que esa Escritura se había cumplido ese mismo día",
+    "Que la profecía se cumpliría dentro de mil años",
+    "Que Isaías se había equivocado",
+    "Que había que leerla otra vez"
+   ],
+   "a": 0,
+   "exp": "Con todos los ojos puestos en él, anunció que esa Escritura se había cumplido ese mismo día.",
+   "ref": "Lucas 4:21",
+   "id": "gal-05"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué se enfurecieron los de la sinagoga?",
+   "o": [
+    "Porque Jesús les recordó que Dios también había mostrado su gracia a extranjeros",
+    "Porque leyó mal el rollo",
+    "Porque llegó tarde",
+    "Porque no quiso leer"
+   ],
+   "a": 0,
+   "exp": "Se enfurecieron cuando les recordó que Dios también había mostrado su gracia a extranjeros.",
+   "ref": "Lucas 4:25-28",
+   "id": "gal-06"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué quisieron hacerle a Jesús en Nazaret?",
+   "o": [
+    "Tirarlo por un barranco",
+    "Hacerlo rey",
+    "Encerrarlo en el templo",
+    "Mandarlo a Egipto"
+   ],
+   "a": 0,
+   "exp": "Quisieron tirarlo por un barranco, pero Jesús pasó entre ellos y se fue.",
+   "ref": "Lucas 4:29-30",
+   "id": "gal-07"
+  },
+  {
+   "t": "mc",
+   "q": "¿Dónde se instaló Jesús, como centro de su ministerio?",
+   "o": [
+    "En Capernaum, a orillas del mar de Galilea",
+    "En Belén",
+    "En Jericó",
+    "En Jerusalén"
+   ],
+   "a": 0,
+   "exp": "Se instaló en Capernaum, que se convirtió en el centro de su ministerio.",
+   "ref": "Lucas 4:31",
+   "id": "gal-08"
+  },
+  {
+   "t": "mc",
+   "q": "¿Quiénes fueron los primeros discípulos llamados junto al mar?",
+   "o": [
+    "Pedro, Andrés, Santiago y Juan",
+    "Mateo, Tomás, Felipe y Judas",
+    "Zaqueo, Bartimeo, Nicodemo y José",
+    "Simeón, Ana, José y María"
+   ],
+   "a": 0,
+   "exp": "Jesús vio a Simón (Pedro) y Andrés, y a Santiago y Juan, hijos de Zebedeo.",
+   "ref": "Marcos 1:16-20",
+   "id": "gal-09"
+  },
+  {
+   "t": "mc",
+   "q": "¿De quién eran hijos Santiago y Juan?",
+   "o": [
+    "De Zebedeo",
+    "De Alfeo",
+    "De Jonás",
+    "De Zacarías"
+   ],
+   "a": 0,
+   "exp": "Santiago y Juan eran hijos de Zebedeo.",
+   "ref": "Marcos 1:19",
+   "id": "gal-10"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué les prometió Jesús a los pescadores que llamó?",
+   "o": [
+    "Enseñarles a pescar personas",
+    "Darles barcas nuevas",
+    "Hacerlos ricos",
+    "Llevarlos a Roma"
+   ],
+   "a": 0,
+   "exp": "Los invitó a seguirlo y les prometió enseñarles a pescar personas.",
+   "ref": "Marcos 1:17",
+   "id": "gal-11"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hicieron los pescadores cuando Jesús los llamó?",
+   "o": [
+    "Dejaron todo y lo siguieron",
+    "Le pidieron tiempo para pensarlo",
+    "Se negaron",
+    "Lo siguieron solo los sábados"
+   ],
+   "a": 0,
+   "exp": "Ellos dejaron todo y lo siguieron.",
+   "ref": "Marcos 1:18",
+   "id": "gal-12"
+  },
+  {
+   "t": "mc",
+   "q": "Antes de la pesca milagrosa, ¿cuánto había pescado Pedro esa noche?",
+   "o": [
+    "Nada",
+    "153 peces",
+    "Dos barcas llenas",
+    "Cinco peces"
+   ],
+   "a": 0,
+   "exp": "Pedro había pasado toda la noche pescando sin sacar nada.",
+   "ref": "Lucas 5:5",
+   "id": "gal-13"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le dijo Jesús a Pedro después de enseñar desde la barca?",
+   "o": [
+    "Que fuera mar adentro y echara las redes",
+    "Que vendiera la barca",
+    "Que volviera a su casa",
+    "Que pescara en la orilla"
+   ],
+   "a": 0,
+   "exp": "Le dijo que fuera mar adentro y echara las redes.",
+   "ref": "Lucas 5:4",
+   "id": "gal-14"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué pasó cuando Pedro obedeció?",
+   "o": [
+    "Sacaron tantos peces que las redes se rompían y las dos barcas casi se hunden",
+    "No sacaron nada",
+    "Se levantó una tormenta",
+    "Sacaron un solo pez con una moneda"
+   ],
+   "a": 0,
+   "exp": "Sacaron tantos peces que las redes empezaban a romperse.",
+   "ref": "Lucas 5:6-7",
+   "id": "gal-15"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo reaccionó Pedro ante la pesca milagrosa?",
+   "o": [
+    "Cayó de rodillas y le pidió que se alejara porque se sentía demasiado pecador",
+    "Vendió los peces y se hizo rico",
+    "Se enojó porque se rompieron las redes",
+    "Se fue corriendo al pueblo"
+   ],
+   "a": 0,
+   "exp": "Pedro cayó de rodillas; Jesús le dijo que no tuviera miedo.",
+   "ref": "Lucas 5:8-10",
+   "id": "gal-16"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hizo Jesús antes de elegir a los doce apóstoles?",
+   "o": [
+    "Pasó toda la noche orando en un monte",
+    "Hizo un examen a la multitud",
+    "Consultó a los fariseos",
+    "Echó suertes"
+   ],
+   "a": 0,
+   "exp": "Antes de elegir a sus apóstoles, pasó toda la noche orando en un monte.",
+   "ref": "Lucas 6:12",
+   "id": "gal-17"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué es significativo que fueran doce apóstoles?",
+   "o": [
+    "Como las doce tribus de Israel: Jesús formaba un pueblo nuevo",
+    "Porque eran los meses del año",
+    "Porque era el número de barcas",
+    "Porque no había más voluntarios"
+   ],
+   "a": 0,
+   "exp": "Doce, como las doce tribus de Israel.",
+   "ref": "",
+   "id": "gal-18"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuál de estos NO fue uno de los doce apóstoles?",
+   "o": [
+    "Zaqueo",
+    "Tomás",
+    "Bartolomé",
+    "Simón el zelote"
+   ],
+   "a": 0,
+   "exp": "Zaqueo era jefe de cobradores en Jericó; no fue uno de los doce.",
+   "ref": "Lucas 6:14-16",
+   "id": "gal-19"
+  },
+  {
+   "t": "mc",
+   "q": "¿En qué capítulos de Mateo está el Sermón del monte?",
+   "o": [
+    "Mateo 5–7",
+    "Mateo 1–2",
+    "Mateo 13",
+    "Mateo 26–28"
+   ],
+   "a": 0,
+   "exp": "El Sermón del monte está en Mateo 5–7.",
+   "ref": "",
+   "id": "gal-20"
+  },
+  {
+   "t": "mc",
+   "q": "¿Con qué empieza el Sermón del monte?",
+   "o": [
+    "Con las bienaventuranzas",
+    "Con el Padre Nuestro",
+    "Con la parábola del sembrador",
+    "Con la historia de las dos casas"
+   ],
+   "a": 0,
+   "exp": "Empieza con las bienaventuranzas: felices los que…",
+   "ref": "Mateo 5:3-10",
+   "id": "gal-21"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué oración enseñó Jesús en el Sermón del monte?",
+   "o": [
+    "El Padre Nuestro",
+    "La oración de Getsemaní",
+    "El salmo del pastor",
+    "La oración de Simeón"
+   ],
+   "a": 0,
+   "exp": "Ahí enseñó también el Padre Nuestro.",
+   "ref": "Mateo 6:9-13",
+   "id": "gal-22"
+  },
+  {
+   "t": "mc",
+   "q": "¿Con qué historia termina el material su resumen del Sermón del monte?",
+   "o": [
+    "Las dos casas, una sobre la roca y otra sobre la arena",
+    "La oveja perdida",
+    "El hijo pródigo",
+    "El sembrador"
+   ],
+   "a": 0,
+   "exp": "Enseñó la historia de las dos casas.",
+   "ref": "Mateo 7:24-27",
+   "id": "gal-23"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué es en realidad el mar de Galilea?",
+   "o": [
+    "Un lago de agua dulce",
+    "Un mar de agua salada",
+    "Un río ancho",
+    "Un estanque del templo"
+   ],
+   "a": 0,
+   "exp": "Es un lago de agua dulce, de unos 21 km de largo.",
+   "ref": "",
+   "id": "gal-24"
+  },
+  {
+   "t": "mc",
+   "q": "¿A qué altura está el mar de Galilea?",
+   "o": [
+    "Más de 200 metros por debajo del nivel del mar",
+    "A 200 metros sobre el nivel del mar",
+    "Al mismo nivel que el mar",
+    "En la cima de un monte"
+   ],
+   "a": 0,
+   "exp": "Está más de 200 metros por debajo del nivel del mar y puede pasar de la calma a una tormenta en minutos.",
+   "ref": "",
+   "id": "gal-25"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuándo solían pescar los pescadores del lago?",
+   "o": [
+    "Sobre todo de noche",
+    "Solo al mediodía",
+    "Solo los sábados",
+    "Solo en invierno"
+   ],
+   "a": 0,
+   "exp": "Vivían de echar redes, sobre todo de noche.",
+   "ref": "",
+   "id": "gal-26"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuál de estas frases es una bienaventuranza?",
+   "o": [
+    "Felices los compasivos",
+    "Felices los que tienen mucho dinero",
+    "Felices los más fuertes",
+    "Felices los que nunca lloran"
+   ],
+   "a": 0,
+   "exp": "Felices los compasivos, los de corazón puro, los que procuran la paz…",
+   "ref": "Mateo 5:7",
+   "id": "gal-27"
+  },
+  {
+   "t": "mc",
+   "q": "Según el glosario, ¿qué significa \"apóstol\"?",
+   "o": [
+    "Enviado",
+    "Pescador",
+    "Maestro",
+    "Ungido"
+   ],
+   "a": 0,
+   "exp": "Apóstol: \"enviado\". Cada uno de los doce que Jesús eligió para estar con él y enviarlos.",
+   "ref": "",
+   "id": "gal-28"
+  },
+  {
+   "t": "tf",
+   "q": "Al principio, en la sinagoga de Nazaret, todos hablaban bien de Jesús.",
+   "a": true,
+   "exp": "Al principio todos hablaban bien de él.",
+   "ref": "Lucas 4:22",
+   "id": "gal-29"
+  },
+  {
+   "t": "tf",
+   "q": "Jesús eligió a sus primeros discípulos entre los maestros de la ley.",
+   "a": false,
+   "exp": "Los eligió entre trabajadores comunes: pescadores que conocían el esfuerzo y el cansancio.",
+   "ref": "",
+   "id": "gal-30"
+  },
+  {
+   "t": "tf",
+   "q": "Judas Iscariote fue uno de los doce apóstoles.",
+   "a": true,
+   "exp": "La lista de los doce termina con Judas Iscariote.",
+   "ref": "Lucas 6:16",
+   "id": "gal-31"
+  },
+  {
+   "t": "tf",
+   "q": "Pedro obedeció a Jesús aunque la orden no tenía lógica para un pescador.",
+   "a": true,
+   "exp": "Pedro obedeció aunque no tenía sentido, y vio un milagro.",
+   "ref": "Lucas 5:5",
+   "id": "gal-32"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada lugar con lo que pasó ahí",
+   "p": [
+    [
+     "Sinagoga de Nazaret",
+     "Jesús leyó el rollo de Isaías"
+    ],
+    [
+     "Capernaum",
+     "Centro de su ministerio"
+    ],
+    [
+     "Mar de Galilea",
+     "Llamado de los pescadores"
+    ],
+    [
+     "Un monte",
+     "Oró toda la noche y eligió a los doce"
+    ]
+   ],
+   "exp": "Los lugares de la etapa Galilea.",
+   "ref": "",
+   "id": "gal-33"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "El ",
+    0,
+    " del Señor está sobre mí, porque me ha ungido para llevar la ",
+    1,
+    " a los ",
+    2,
+    "."
+   ],
+   "blanks": [
+    "Espíritu",
+    "Buena Noticia",
+    "pobres"
+   ],
+   "bank": [
+    "Espíritu",
+    "Buena Noticia",
+    "pobres",
+    "ángel",
+    "Ley",
+    "reyes"
+   ],
+   "exp": "El pasaje de Isaías que Jesús leyó en Nazaret.",
+   "ref": "Lucas 4:18",
+   "id": "gal-34"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "Ustedes son la ",
+    0,
+    " del mundo, como una ",
+    1,
+    " en lo alto de una colina que no puede esconderse."
+   ],
+   "blanks": [
+    "luz",
+    "ciudad"
+   ],
+   "bank": [
+    "luz",
+    "ciudad",
+    "sal",
+    "torre",
+    "casa"
+   ],
+   "exp": "Jesús dijo que sus seguidores son la luz del mundo.",
+   "ref": "Mateo 5:14",
+   "id": "gal-35"
+  },
+  {
+   "t": "order",
+   "q": "Ordená la pesca milagrosa",
+   "items": [
+    "Pedro pasa la noche pescando sin sacar nada",
+    "Jesús sube a su barca y enseña desde el agua",
+    "Jesús le dice que vaya mar adentro y eche las redes",
+    "Las redes se llenan tanto que empiezan a romperse",
+    "Pedro cae de rodillas",
+    "Jesús le dice que desde ese momento va a pescar personas"
+   ],
+   "exp": "Lucas 5:1-11.",
+   "ref": "",
+   "id": "gal-36"
+  },
+  {
+   "t": "app",
+   "q": "Sentís que Dios te pide algo que no entendés del todo, como perdonar a alguien o pedir disculpas. ¿Qué aprendemos de Pedro?",
+   "o": [
+    "Obedecer aunque no lo entienda todavía, confiando en Jesús",
+    "Esperar a entenderlo todo antes de hacer algo",
+    "Hacer lo contrario para ver qué pasa",
+    "Ignorarlo porque no tiene lógica"
+   ],
+   "a": 0,
+   "exp": "Pedro obedeció cuando la orden no tenía lógica, y vio un milagro.",
+   "ref": "",
+   "id": "gal-37"
+  },
+  {
+   "t": "app",
+   "q": "Jesús dijo que sus seguidores son luz. ¿Cuál es una forma concreta de brillar en la escuela?",
+   "o": [
+    "Acercarte a un compañero que está solo y tratarlo con amor",
+    "Mostrar que sabés más que los demás",
+    "Hablar de Dios solo en la iglesia",
+    "Esconder que seguís a Jesús"
+   ],
+   "a": 0,
+   "exp": "Una ciudad en lo alto de una colina no puede esconderse.",
+   "ref": "",
+   "id": "gal-38"
+  },
+  {
+   "t": "reflect",
+   "q": "Pedro obedeció cuando la orden de Jesús no tenía lógica. ¿Hay algo que Dios te está pidiendo que todavía no entendés?",
+   "id": "gal-39"
+  },
+  {
+   "t": "reflect",
+   "q": "Jesús dijo que sus seguidores son luz. ¿En qué lugar de tu semana (la escuela, tu casa, tus amigos) te toca brillar?",
+   "id": "gal-40"
+  }
+ ]
+}

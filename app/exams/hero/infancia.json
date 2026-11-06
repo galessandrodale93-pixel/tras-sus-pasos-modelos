@@ -1,0 +1,519 @@
+{
+ "stage": "infancia",
+ "branch": "hero",
+ "only": true,
+ "source": "materiales/hero-tras-sus-pasos/material.html",
+ "questions": [
+  {
+   "t": "mc",
+   "q": "¿A dónde llevaron José y María al bebé para presentarlo al Señor?",
+   "o": [
+    "Al templo de Jerusalén",
+    "A la sinagoga de Nazaret",
+    "Al río Jordán",
+    "A la casa de Herodes"
+   ],
+   "a": 0,
+   "exp": "Lo llevaron al templo de Jerusalén para presentarlo al Señor.",
+   "ref": "Lucas 2:22",
+   "id": "inf-01"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué ley mandaba presentar al bebé en el templo?",
+   "o": [
+    "La ley de Moisés",
+    "Una orden de César Augusto",
+    "Una regla de los fariseos",
+    "Una costumbre de Egipto"
+   ],
+   "a": 0,
+   "exp": "Lo presentaron como mandaba la ley de Moisés.",
+   "ref": "Lucas 2:22-23",
+   "id": "inf-02"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué ofrenda llevaron en la presentación?",
+   "o": [
+    "Un par de tórtolas o dos pichones de paloma",
+    "Un cordero",
+    "Un buey",
+    "Oro e incienso"
+   ],
+   "a": 0,
+   "exp": "Ofrecieron un par de tórtolas o dos pichones de paloma.",
+   "ref": "Lucas 2:24",
+   "id": "inf-03"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué muestra esa ofrenda sobre la familia de Jesús?",
+   "o": [
+    "Que era una familia humilde, que no podía pagar un cordero",
+    "Que era una familia de sacerdotes",
+    "Que era una familia muy rica",
+    "Que no conocía la ley"
+   ],
+   "a": 0,
+   "exp": "La ley permitía esa ofrenda a las familias que no podían pagar un cordero.",
+   "ref": "Levítico 12:8",
+   "id": "inf-04"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le había revelado el Espíritu Santo a Simeón?",
+   "o": [
+    "Que no moriría sin ver al Mesías",
+    "Que sería sumo sacerdote",
+    "Que Jesús nacería en Egipto",
+    "Que viviría cien años"
+   ],
+   "a": 0,
+   "exp": "El Espíritu Santo le había revelado que no moriría sin ver al Mesías.",
+   "ref": "Lucas 2:26",
+   "id": "inf-05"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo describió Simeón la salvación que Dios preparó?",
+   "o": [
+    "Una luz para las naciones y la gloria de Israel",
+    "Un rey guerrero contra Roma",
+    "Un templo nuevo",
+    "Una ley más estricta"
+   ],
+   "a": 0,
+   "exp": "Simeón habló de la salvación para todos los pueblos: una luz para las naciones y la gloria de Israel.",
+   "ref": "Lucas 2:30-32",
+   "id": "inf-06"
+  },
+  {
+   "t": "mc",
+   "q": "¿Quién era Ana?",
+   "o": [
+    "Una profetisa muy anciana que vivía en el templo",
+    "La madre de María",
+    "La esposa de Simeón",
+    "Una vecina de Nazaret"
+   ],
+   "a": 0,
+   "exp": "Ana era una profetisa muy anciana que vivía en el templo adorando a Dios con ayunos y oraciones.",
+   "ref": "Lucas 2:36-37",
+   "id": "inf-07"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hizo Ana al ver al niño?",
+   "o": [
+    "Dio gracias y habló de él a todos los que esperaban la redención de Jerusalén",
+    "Se lo contó al rey Herodes",
+    "Le hizo un regalo de oro",
+    "Lo bendijo y se fue a Nazaret"
+   ],
+   "a": 0,
+   "exp": "Ella dio gracias y habló del niño a todos los que esperaban la redención de Jerusalén.",
+   "ref": "Lucas 2:38",
+   "id": "inf-08"
+  },
+  {
+   "t": "mc",
+   "q": "¿Para qué fiesta subían José y María a Jerusalén cada año?",
+   "o": [
+    "La Pascua",
+    "La cosecha",
+    "El año nuevo",
+    "La coronación del rey"
+   ],
+   "a": 0,
+   "exp": "Cada año subían a Jerusalén para la fiesta de la Pascua.",
+   "ref": "Lucas 2:41",
+   "id": "inf-09"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué edad tenía Jesús cuando se quedó en el templo?",
+   "o": [
+    "Doce años",
+    "Ocho años",
+    "Quince años",
+    "Treinta años"
+   ],
+   "a": 0,
+   "exp": "Cuando Jesús tenía doce años se quedó en Jerusalén.",
+   "ref": "Lucas 2:42",
+   "id": "inf-10"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué sus padres no se dieron cuenta de que Jesús se había quedado?",
+   "o": [
+    "Pensaban que iba en la caravana con parientes y amigos",
+    "Él les había avisado",
+    "Estaban enojados con él",
+    "Viajaban de noche"
+   ],
+   "a": 0,
+   "exp": "Pensaban que iba en la caravana con los parientes y amigos.",
+   "ref": "Lucas 2:44",
+   "id": "inf-11"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuándo encontraron a Jesús?",
+   "o": [
+    "Al tercer día",
+    "Esa misma noche",
+    "Después de una semana",
+    "Al año siguiente"
+   ],
+   "a": 0,
+   "exp": "Al tercer día lo encontraron en el templo.",
+   "ref": "Lucas 2:46",
+   "id": "inf-12"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué estaba haciendo Jesús cuando lo encontraron?",
+   "o": [
+    "Estaba sentado entre los maestros de la ley, escuchándolos y haciéndoles preguntas",
+    "Estaba trabajando con José",
+    "Estaba durmiendo en el patio",
+    "Estaba sanando enfermos"
+   ],
+   "a": 0,
+   "exp": "Lo encontraron sentado entre los maestros, escuchándolos y haciéndoles preguntas.",
+   "ref": "Lucas 2:46",
+   "id": "inf-13"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo reaccionaban los que escuchaban a Jesús en el templo?",
+   "o": [
+    "Estaban asombrados de su inteligencia y de sus respuestas",
+    "Se enojaban con él",
+    "No le prestaban atención",
+    "Lo querían echar"
+   ],
+   "a": 0,
+   "exp": "Todos estaban asombrados de su inteligencia y de sus respuestas.",
+   "ref": "Lucas 2:47",
+   "id": "inf-14"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué les respondió Jesús a sus padres?",
+   "o": [
+    "Que tenía que estar en la casa de su Padre",
+    "Que se había perdido",
+    "Que quería quedarse a vivir en Jerusalén",
+    "Que estaba esperando a Simeón"
+   ],
+   "a": 0,
+   "exp": "Jesús les preguntó por qué lo buscaban, si tenía que estar en la casa de su Padre.",
+   "ref": "Lucas 2:49",
+   "id": "inf-15"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo reaccionaron José y María ante esa respuesta?",
+   "o": [
+    "No entendieron lo que quiso decir",
+    "Lo retaron delante de todos",
+    "Lo dejaron quedarse",
+    "Se alegraron porque lo entendieron todo"
+   ],
+   "a": 0,
+   "exp": "Ellos no entendieron lo que quiso decir.",
+   "ref": "Lucas 2:50",
+   "id": "inf-16"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hizo Jesús después del templo?",
+   "o": [
+    "Volvió con ellos a Nazaret y les fue obediente",
+    "Se quedó estudiando en Jerusalén",
+    "Se fue al desierto",
+    "Empezó a predicar"
+   ],
+   "a": 0,
+   "exp": "Jesús volvió con ellos a Nazaret y les fue obediente.",
+   "ref": "Lucas 2:51",
+   "id": "inf-17"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo conocían a Jesús en Nazaret?",
+   "o": [
+    "Como el carpintero, el hijo de María",
+    "Como el maestro de la sinagoga",
+    "Como el pescador",
+    "Como el hijo del sacerdote"
+   ],
+   "a": 0,
+   "exp": "En Nazaret lo conocían como el carpintero, el hijo de María.",
+   "ref": "Marcos 6:3",
+   "id": "inf-18"
+  },
+  {
+   "t": "mc",
+   "q": "¿A qué se refiere la palabra que usa el evangelio para \"carpintero\"?",
+   "o": [
+    "A un artesano que trabajaba con madera y también con piedra",
+    "A un constructor de barcos",
+    "A un comerciante de telas",
+    "A un escriba"
+   ],
+   "a": 0,
+   "exp": "La palabra se refiere a un artesano que trabajaba con madera y también con piedra.",
+   "ref": "",
+   "id": "inf-19"
+  },
+  {
+   "t": "mc",
+   "q": "Según Lucas 2:52, ¿en qué cuatro áreas crecía Jesús?",
+   "o": [
+    "Sabiduría, estatura, el favor de Dios y el de la gente",
+    "Fuerza, riqueza, fama y poder",
+    "Oración, ayuno, limosna y estudio",
+    "Sabiduría, fuerza, riqueza y paz"
+   ],
+   "a": 0,
+   "exp": "Jesús crecía en sabiduría y en estatura, y en el favor de Dios y de toda la gente.",
+   "ref": "Lucas 2:52",
+   "id": "inf-20"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué recordaba la fiesta de la Pascua?",
+   "o": [
+    "La noche en que Dios liberó a Israel de la esclavitud en Egipto",
+    "El nacimiento del rey David",
+    "La construcción del templo",
+    "La llegada de los magos"
+   ],
+   "a": 0,
+   "exp": "La Pascua recordaba la liberación de Israel de la esclavitud en Egipto.",
+   "ref": "",
+   "id": "inf-21"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué protegió a las familias de Israel la noche de la primera Pascua?",
+   "o": [
+    "La sangre de un cordero en las puertas",
+    "Un muro de piedra",
+    "Un ejército de soldados",
+    "Una nube sobre las casas"
+   ],
+   "a": 0,
+   "exp": "La sangre de un cordero en las puertas protegió a las familias.",
+   "ref": "",
+   "id": "inf-22"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo viajaban las familias a Jerusalén para la Pascua?",
+   "o": [
+    "En grandes caravanas, a pie y cantando",
+    "Cada familia sola, en carro",
+    "En barco por el Jordán",
+    "A caballo con soldados romanos"
+   ],
+   "a": 0,
+   "exp": "Miles de familias viajaban en grandes caravanas, a pie y cantando.",
+   "ref": "",
+   "id": "inf-23"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo describe el material a Simeón?",
+   "o": [
+    "Un hombre justo y devoto",
+    "Un rey de Judea",
+    "Un pescador de Galilea",
+    "Un soldado romano"
+   ],
+   "a": 0,
+   "exp": "En el templo había un hombre justo y devoto llamado Simeón.",
+   "ref": "Lucas 2:25",
+   "id": "inf-24"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hizo Simeón cuando vio al bebé?",
+   "o": [
+    "Lo tomó en brazos y alabó a Dios",
+    "Lo llevó ante el sumo sacerdote",
+    "Le puso nombre",
+    "Lloró de tristeza"
+   ],
+   "a": 0,
+   "exp": "Tomó al bebé en brazos y alabó a Dios.",
+   "ref": "Lucas 2:28",
+   "id": "inf-25"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué enseña que Jesús viviera muchos años en tareas sencillas antes de su ministerio?",
+   "o": [
+    "Que fue fiel en lo pequeño antes de lo extraordinario",
+    "Que no le interesaba enseñar",
+    "Que Dios no obra en lo cotidiano",
+    "Que estaba escondido de Herodes"
+   ],
+   "a": 0,
+   "exp": "Antes de hacer un solo milagro público, vivió años de fidelidad en lo pequeño.",
+   "ref": "",
+   "id": "inf-26"
+  },
+  {
+   "t": "tf",
+   "q": "En la presentación en el templo, la familia de Jesús ofreció un cordero.",
+   "a": false,
+   "exp": "Ofrecieron dos tórtolas o pichones de paloma, la ofrenda de las familias que no podían pagar un cordero.",
+   "ref": "Lucas 2:24",
+   "id": "inf-27"
+  },
+  {
+   "t": "tf",
+   "q": "Ana adoraba a Dios en el templo con ayunos y oraciones.",
+   "a": true,
+   "exp": "Vivía en el templo adorando a Dios con ayunos y oraciones.",
+   "ref": "Lucas 2:37",
+   "id": "inf-28"
+  },
+  {
+   "t": "tf",
+   "q": "Después de un día de camino, José y María buscaron a Jesús y volvieron a Jerusalén.",
+   "a": true,
+   "exp": "Después de un día de camino lo buscaron, y al no encontrarlo volvieron a Jerusalén.",
+   "ref": "Lucas 2:44-45",
+   "id": "inf-29"
+  },
+  {
+   "t": "tf",
+   "q": "Los evangelios cuentan con mucho detalle los años de Jesús en Nazaret.",
+   "a": false,
+   "exp": "De los años siguientes sabemos poco.",
+   "ref": "",
+   "id": "inf-30"
+  },
+  {
+   "t": "tf",
+   "q": "Jesús fue un hijo obediente con José y María.",
+   "a": true,
+   "exp": "Volvió con ellos a Nazaret y les fue obediente.",
+   "ref": "Lucas 2:51",
+   "id": "inf-31"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada persona con lo que hizo",
+   "p": [
+    [
+     "Simeón",
+     "Lo llamó luz para las naciones"
+    ],
+    [
+     "Ana",
+     "Habló del niño a todos los que esperaban"
+    ],
+    [
+     "Los maestros del templo",
+     "Se asombraban de sus respuestas"
+    ],
+    [
+     "María",
+     "Le dijo que lo habían buscado desesperados"
+    ]
+   ],
+   "exp": "Personas que vieron en el niño algo de Dios.",
+   "ref": "",
+   "id": "inf-32"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "Jesús crecía en ",
+    0,
+    " y en ",
+    1,
+    ", y en el favor de ",
+    2,
+    " y de toda la gente."
+   ],
+   "blanks": [
+    "sabiduría",
+    "estatura",
+    "Dios"
+   ],
+   "bank": [
+    "sabiduría",
+    "estatura",
+    "Dios",
+    "fuerza",
+    "riqueza",
+    "Roma"
+   ],
+   "exp": "El versículo de la etapa: un crecimiento completo.",
+   "ref": "Lucas 2:52",
+   "id": "inf-33"
+  },
+  {
+   "t": "order",
+   "q": "Ordená lo que pasó",
+   "items": [
+    "Presentan al bebé en el templo",
+    "La familia vuelve a Nazaret",
+    "Suben a Jerusalén para la Pascua cuando Jesús tiene doce años",
+    "Sus padres emprenden el regreso sin él",
+    "Lo encuentran al tercer día en el templo",
+    "Vuelve a Nazaret y les es obediente"
+   ],
+   "exp": "De la presentación a los doce años.",
+   "ref": "",
+   "id": "inf-34"
+  },
+  {
+   "t": "app",
+   "q": "Tu hermano dice que lo que hace en casa (ordenar, ayudar) no le importa a Dios. ¿Qué le podés contar de la vida de Jesús?",
+   "o": [
+    "Que Jesús pasó años en tareas sencillas y fue fiel en lo pequeño antes de lo extraordinario",
+    "Que tiene razón: a Dios solo le importa lo que se hace en el templo",
+    "Que Jesús nunca trabajó",
+    "Que solo importan los milagros"
+   ],
+   "a": 0,
+   "exp": "Jesús vivió años de fidelidad en lo pequeño: trabajar con las manos, aprender las Escrituras, vivir en familia.",
+   "ref": "",
+   "id": "inf-35"
+  },
+  {
+   "t": "app",
+   "q": "Te toca lavar los platos y no tenés ganas. ¿Qué actitud se parece más a la de Jesús en Nazaret?",
+   "o": [
+    "Hacerlo bien, como si fuera para él",
+    "Hacerlo mal para que no te lo pidan más",
+    "Esperar a que lo haga otro",
+    "Hacerlo solo si alguien te ve"
+   ],
+   "a": 0,
+   "exp": "Jesús fue fiel en lo cotidiano: ¿qué tarea \"chica\" podés hacer hoy como si fuera para él?",
+   "ref": "",
+   "id": "inf-36"
+  },
+  {
+   "t": "reflect",
+   "q": "¿En cuál de las cuatro áreas de Lucas 2:52 sentís que estás creciendo? ¿En cuál te gustaría pedirle ayuda a Dios esta semana?",
+   "id": "inf-37"
+  },
+  {
+   "t": "reflect",
+   "q": "Jesús fue fiel en lo cotidiano antes de lo extraordinario. ¿Qué tarea \"chica\" podés hacer hoy como si fuera para él?",
+   "id": "inf-38"
+  }
+ ]
+}

@@ -1,0 +1,599 @@
+{
+ "stage": "cruz",
+ "branch": "hero",
+ "only": true,
+ "source": "materiales/hero-tras-sus-pasos/material.html",
+ "questions": [
+  {
+   "t": "mc",
+   "q": "¿Ante qué sumo sacerdote fue llevado Jesús durante la noche?",
+   "o": [
+    "Caifás",
+    "Anás el escriba",
+    "Nicodemo",
+    "Simeón"
+   ],
+   "a": 0,
+   "exp": "Fue llevado ante el sumo sacerdote Caifás y el concilio religioso.",
+   "ref": "Mateo 26:57",
+   "id": "cru-01"
+  },
+  {
+   "t": "mc",
+   "q": "¿De qué acusó el concilio a Jesús?",
+   "o": [
+    "De blasfemia, porque afirmó ser el Hijo de Dios",
+    "De robar en el templo",
+    "De no pagar impuestos",
+    "De ser samaritano"
+   ],
+   "a": 0,
+   "exp": "Lo acusaron de blasfemia porque afirmó ser el Hijo de Dios.",
+   "ref": "",
+   "id": "cru-02"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué llevaron a Jesús ante Pilato?",
+   "o": [
+    "Porque solo los romanos podían condenar a muerte",
+    "Porque Pilato era su amigo",
+    "Porque era sábado",
+    "Porque Herodes lo pidió"
+   ],
+   "a": 0,
+   "exp": "Como solo los romanos podían condenar a muerte, lo llevaron ante el gobernador.",
+   "ref": "",
+   "id": "cru-03"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué pensó Pilato después de interrogar a Jesús?",
+   "o": [
+    "Que no había motivo para condenarlo, y quiso soltarlo",
+    "Que era culpable de todo",
+    "Que era un rey peligroso",
+    "Que había que mandarlo a Roma"
+   ],
+   "a": 0,
+   "exp": "Pilato no encontró motivo para condenarlo y quiso soltarlo.",
+   "ref": "Lucas 23:4",
+   "id": "cru-04"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hizo Pilato cuando la multitud pidió que lo crucificaran?",
+   "o": [
+    "Se lavó las manos, lo mandó azotar y lo entregó",
+    "Lo soltó",
+    "Lo mandó a Egipto",
+    "Lo encerró en el templo"
+   ],
+   "a": 0,
+   "exp": "Pilato se lavó las manos y lo entregó para que lo crucificaran.",
+   "ref": "Mateo 27:24-26",
+   "id": "cru-05"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le pusieron los soldados a Jesús para burlarse?",
+   "o": [
+    "Una corona de espinas y un manto",
+    "Un anillo y sandalias",
+    "Una toalla",
+    "Una corona de oro"
+   ],
+   "a": 0,
+   "exp": "Le pusieron una corona de espinas y un manto, y se burlaron de él como \"rey de los judíos\".",
+   "ref": "Juan 19:2-3",
+   "id": "cru-06"
+  },
+  {
+   "t": "mc",
+   "q": "¿Quién fue obligado a llevar la cruz detrás de Jesús?",
+   "o": [
+    "Simón de Cirene",
+    "Simón Pedro",
+    "José de Arimatea",
+    "Juan"
+   ],
+   "a": 0,
+   "exp": "Los soldados obligaron a Simón de Cirene a llevar la cruz.",
+   "ref": "Lucas 23:26",
+   "id": "cru-07"
+  },
+  {
+   "t": "mc",
+   "q": "¿De dónde venía Simón de Cirene?",
+   "o": [
+    "Del campo",
+    "Del templo",
+    "Del lago de Galilea",
+    "De Roma"
+   ],
+   "a": 0,
+   "exp": "Era un hombre que venía del campo.",
+   "ref": "Marcos 15:21",
+   "id": "cru-08"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué significa \"Gólgota\"?",
+   "o": [
+    "Lugar de la Calavera",
+    "Jardín de los Olivos",
+    "Casa del pan",
+    "Monte santo"
+   ],
+   "a": 0,
+   "exp": "Gólgota: \"Lugar de la Calavera\", donde crucificaron a Jesús.",
+   "ref": "Juan 19:17",
+   "id": "cru-09"
+  },
+  {
+   "t": "mc",
+   "q": "¿Dónde quedaba el lugar de la crucifixión?",
+   "o": [
+    "Fuera de la ciudad",
+    "Dentro del templo",
+    "En Belén",
+    "En el desierto de Judea"
+   ],
+   "a": 0,
+   "exp": "Lo llevaron a un lugar fuera de la ciudad.",
+   "ref": "",
+   "id": "cru-10"
+  },
+  {
+   "t": "mc",
+   "q": "¿Entre quiénes crucificaron a Jesús?",
+   "o": [
+    "Entre dos criminales",
+    "Entre dos soldados",
+    "Entre Pedro y Juan",
+    "Entre dos profetas"
+   ],
+   "a": 0,
+   "exp": "Allí lo crucificaron entre dos criminales.",
+   "ref": "Lucas 23:33",
+   "id": "cru-11"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué decía el letrero sobre la cabeza de Jesús?",
+   "o": [
+    "\"Jesús de Nazaret, el Rey de los judíos\"",
+    "\"Hijo del carpintero\"",
+    "\"Enemigo de Roma\"",
+    "\"Profeta de Galilea\""
+   ],
+   "a": 0,
+   "exp": "Sobre su cabeza pusieron ese letrero.",
+   "ref": "Juan 19:19",
+   "id": "cru-12"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le pidió Jesús al Padre por los que lo crucificaban?",
+   "o": [
+    "Que los perdonara, porque no sabían lo que hacían",
+    "Que los castigara",
+    "Que mandara ángeles",
+    "Que los echara de Jerusalén"
+   ],
+   "a": 0,
+   "exp": "Pidió que los perdonara.",
+   "ref": "Lucas 23:34",
+   "id": "cru-13"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le prometió Jesús al criminal arrepentido?",
+   "o": [
+    "Que ese mismo día estaría con él en el paraíso",
+    "Que lo bajaría de la cruz",
+    "Que lo perdonaría al tercer día",
+    "Que lo haría apóstol"
+   ],
+   "a": 0,
+   "exp": "Le prometió que ese mismo día estaría con él en el paraíso.",
+   "ref": "Lucas 23:43",
+   "id": "cru-14"
+  },
+  {
+   "t": "mc",
+   "q": "¿A quién le encomendó Jesús el cuidado de su madre?",
+   "o": [
+    "A Juan, el discípulo a quien amaba",
+    "A Pedro",
+    "A José de Arimatea",
+    "A Simón de Cirene"
+   ],
+   "a": 0,
+   "exp": "Le dijo a ella que Juan sería su hijo, y a Juan que ella sería su madre.",
+   "ref": "Juan 19:26-27",
+   "id": "cru-15"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuánto tiempo cubrió la oscuridad toda la tierra?",
+   "o": [
+    "Desde el mediodía hasta las tres de la tarde",
+    "Toda la noche",
+    "Tres días",
+    "Un minuto"
+   ],
+   "a": 0,
+   "exp": "Desde el mediodía hasta las tres de la tarde, la oscuridad cubrió toda la tierra.",
+   "ref": "Lucas 23:44",
+   "id": "cru-16"
+  },
+  {
+   "t": "mc",
+   "q": "Según Juan, ¿cuáles fueron las últimas palabras de Jesús?",
+   "o": [
+    "¡Todo está cumplido!",
+    "¡Tengo sed!",
+    "¡Ánimo, soy yo!",
+    "¡No está aquí!"
+   ],
+   "a": 0,
+   "exp": "Después de probar el vino, Jesús dijo: «¡Todo está cumplido!».",
+   "ref": "Juan 19:30",
+   "id": "cru-17"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué pasó con la cortina del templo cuando murió Jesús?",
+   "o": [
+    "Se rasgó en dos, de arriba abajo",
+    "Se quemó",
+    "Se cayó al piso entera",
+    "No pasó nada"
+   ],
+   "a": 0,
+   "exp": "La cortina del templo se rasgó en dos, de arriba abajo.",
+   "ref": "Marcos 15:38",
+   "id": "cru-18"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué separaba la cortina del templo?",
+   "o": [
+    "El Lugar Santísimo",
+    "El patio de los gentiles",
+    "La cocina de los sacerdotes",
+    "El mercado"
+   ],
+   "a": 0,
+   "exp": "Esa cortina separaba el Lugar Santísimo.",
+   "ref": "",
+   "id": "cru-19"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué anuncia la cortina rasgada de arriba abajo?",
+   "o": [
+    "Que el camino a la presencia de Dios quedó abierto por Jesús",
+    "Que el templo se iba a vender",
+    "Que había un terremoto",
+    "Que los romanos lo destruyeron"
+   ],
+   "a": 0,
+   "exp": "Abierta de arriba abajo, anuncia que el camino a la presencia de Dios quedó abierto por Jesús.",
+   "ref": "",
+   "id": "cru-20"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué dijo el oficial romano que estaba frente a la cruz?",
+   "o": [
+    "Que ese hombre era verdaderamente el Hijo de Dios",
+    "Que era un criminal",
+    "Que había que bajarlo",
+    "Que era un profeta falso"
+   ],
+   "a": 0,
+   "exp": "El oficial romano reaccionó así.",
+   "ref": "Marcos 15:39",
+   "id": "cru-21"
+  },
+  {
+   "t": "mc",
+   "q": "¿Quién pidió el cuerpo de Jesús a Pilato?",
+   "o": [
+    "José de Arimatea",
+    "Pedro",
+    "Juan",
+    "Simón de Cirene"
+   ],
+   "a": 0,
+   "exp": "José de Arimatea, un miembro rico del concilio que seguía a Jesús en secreto, pidió el cuerpo.",
+   "ref": "Juan 19:38",
+   "id": "cru-22"
+  },
+  {
+   "t": "mc",
+   "q": "¿Quién ayudó a José de Arimatea a envolver el cuerpo?",
+   "o": [
+    "Nicodemo",
+    "Tomás",
+    "María Magdalena",
+    "Zaqueo"
+   ],
+   "a": 0,
+   "exp": "Junto con Nicodemo lo envolvió en lienzos con especias.",
+   "ref": "Juan 19:39-40",
+   "id": "cru-23"
+  },
+  {
+   "t": "mc",
+   "q": "¿Dónde pusieron el cuerpo de Jesús?",
+   "o": [
+    "En una tumba nueva cavada en la roca, cerrada con una piedra grande",
+    "En la casa de María",
+    "En el templo",
+    "En un campo junto al Jordán"
+   ],
+   "a": 0,
+   "exp": "Lo pusieron en una tumba nueva, cavada en la roca.",
+   "ref": "Juan 19:41-42",
+   "id": "cru-24"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuántos años antes describió Isaías al siervo que sufriría en lugar del pueblo?",
+   "o": [
+    "Unos setecientos años",
+    "Unos diez años",
+    "Unos cien años",
+    "Unos tres mil años"
+   ],
+   "a": 0,
+   "exp": "Unos setecientos años antes, el profeta Isaías describió a un siervo de Dios que sufriría.",
+   "ref": "",
+   "id": "cru-25"
+  },
+  {
+   "t": "mc",
+   "q": "¿Para quiénes estaba reservada la cruz en el Imperio romano?",
+   "o": [
+    "Para esclavos y rebeldes",
+    "Para los ciudadanos romanos",
+    "Para los sacerdotes",
+    "Para los ricos"
+   ],
+   "a": 0,
+   "exp": "Era la forma de ejecución más cruel y humillante, reservada a esclavos y rebeldes.",
+   "ref": "",
+   "id": "cru-26"
+  },
+  {
+   "t": "mc",
+   "q": "¿Quién era el gobernador romano de Judea en la época de la crucifixión?",
+   "o": [
+    "Poncio Pilato",
+    "Herodes el Grande",
+    "César Augusto",
+    "Caifás"
+   ],
+   "a": 0,
+   "exp": "En la época de la crucifixión, el gobernador romano de Judea era Poncio Pilato.",
+   "ref": "",
+   "id": "cru-27"
+  },
+  {
+   "t": "mc",
+   "q": "¿Quién podía entrar en el Lugar Santísimo?",
+   "o": [
+    "Solo el sumo sacerdote, una vez al año",
+    "Cualquiera los sábados",
+    "Los levitas todos los días",
+    "Nadie nunca"
+   ],
+   "a": 0,
+   "exp": "Solo entraba el sumo sacerdote una vez al año.",
+   "ref": "",
+   "id": "cru-28"
+  },
+  {
+   "t": "tf",
+   "q": "José de Arimatea seguía a Jesús en secreto.",
+   "a": true,
+   "exp": "Era un miembro rico del concilio que seguía a Jesús en secreto.",
+   "ref": "Juan 19:38",
+   "id": "cru-29"
+  },
+  {
+   "t": "tf",
+   "q": "Los dos criminales crucificados se burlaron de Jesús hasta el final.",
+   "a": false,
+   "exp": "Uno se burlaba, pero el otro le pidió que se acordara de él.",
+   "ref": "Lucas 23:39-42",
+   "id": "cru-30"
+  },
+  {
+   "t": "tf",
+   "q": "Pilato quiso soltar a Jesús.",
+   "a": true,
+   "exp": "Pilato no encontró motivo y quiso soltarlo, pero la multitud pedía que lo crucificaran.",
+   "ref": "Lucas 23:20",
+   "id": "cru-31"
+  },
+  {
+   "t": "tf",
+   "q": "La cortina del templo se rasgó de abajo hacia arriba.",
+   "a": false,
+   "exp": "Se rasgó de arriba abajo.",
+   "ref": "Marcos 15:38",
+   "id": "cru-32"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada persona con lo que hizo",
+   "p": [
+    [
+     "Caifás",
+     "Lo acusó de blasfemia ante el concilio"
+    ],
+    [
+     "Poncio Pilato",
+     "Se lavó las manos y lo entregó"
+    ],
+    [
+     "Simón de Cirene",
+     "Llevó la cruz detrás de Jesús"
+    ],
+    [
+     "José de Arimatea",
+     "Pidió el cuerpo y lo sepultó"
+    ]
+   ],
+   "exp": "Personajes de la etapa La cruz.",
+   "ref": "",
+   "id": "cru-33"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "Él, cargando su propia ",
+    0,
+    ", fue al sitio llamado Lugar de la ",
+    1,
+    " (en hebreo, Gólgota)."
+   ],
+   "blanks": [
+    "cruz",
+    "Calavera"
+   ],
+   "bank": [
+    "cruz",
+    "Calavera",
+    "corona",
+    "Piedra"
+   ],
+   "exp": "El camino al Gólgota.",
+   "ref": "Juan 19:17",
+   "id": "cru-34"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "Después de probar el vino, Jesús dijo: «¡Todo está ",
+    0,
+    "!». Entonces inclinó la cabeza y entregó su ",
+    1,
+    "."
+   ],
+   "blanks": [
+    "cumplido",
+    "espíritu"
+   ],
+   "bank": [
+    "cumplido",
+    "espíritu",
+    "perdido",
+    "reino"
+   ],
+   "exp": "Las últimas palabras de Jesús según Juan.",
+   "ref": "Juan 19:30",
+   "id": "cru-35"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "Pero él fue ",
+    0,
+    " por nuestras ",
+    1,
+    " y aplastado por nuestros ",
+    2,
+    "."
+   ],
+   "blanks": [
+    "traspasado",
+    "rebeliones",
+    "pecados"
+   ],
+   "bank": [
+    "traspasado",
+    "rebeliones",
+    "pecados",
+    "herido",
+    "palabras",
+    "enemigos"
+   ],
+   "exp": "La profecía del siervo que sufre.",
+   "ref": "Isaías 53:5",
+   "id": "cru-36"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "¡Este hombre era verdaderamente el ",
+    0,
+    " de ",
+    1,
+    "!"
+   ],
+   "blanks": [
+    "Hijo",
+    "Dios"
+   ],
+   "bank": [
+    "Hijo",
+    "Dios",
+    "Rey",
+    "David"
+   ],
+   "exp": "Lo que dijo el oficial romano frente a la cruz.",
+   "ref": "Marcos 15:39",
+   "id": "cru-37"
+  },
+  {
+   "t": "order",
+   "q": "Ordená lo que pasó",
+   "items": [
+    "Jesús es llevado ante Caifás y el concilio",
+    "A la mañana lo llevan ante Pilato",
+    "Los soldados le ponen una corona de espinas",
+    "Simón de Cirene lleva la cruz",
+    "Lo crucifican en el Gólgota",
+    "La oscuridad cubre la tierra",
+    "Jesús dice: «¡Todo está cumplido!»",
+    "José de Arimatea lo sepulta en una tumba de roca"
+   ],
+   "exp": "De la noche del juicio a la tumba.",
+   "ref": "",
+   "id": "cru-38"
+  },
+  {
+   "t": "app",
+   "q": "Alguien te lastimó mucho y no tenés ganas de perdonarlo. ¿Qué te muestra Jesús en la cruz?",
+   "o": [
+    "Que se puede pedir ayuda a Dios para perdonar, como Jesús perdonó desde la cruz",
+    "Que hay que esperar a que el otro sufra igual",
+    "Que el perdón es solo para los que lo merecen",
+    "Que mejor olvidarse de esa persona para siempre"
+   ],
+   "a": 0,
+   "exp": "Mientras lo crucificaban, Jesús pidió perdón para los que lo crucificaban.",
+   "ref": "Lucas 23:34",
+   "id": "cru-39"
+  },
+  {
+   "t": "reflect",
+   "q": "Mientras lo crucificaban, Jesús perdonó, prometió el paraíso y cuidó a su mamá. ¿Qué te dice eso de su amor por vos?",
+   "id": "cru-40"
+  },
+  {
+   "t": "reflect",
+   "q": "Leé Isaías 53:5 despacio y poné tu nombre: \"fue traspasado por mis rebeliones\". ¿Qué le querés decir a Jesús después de esto?",
+   "id": "cru-41"
+  }
+ ]
+}

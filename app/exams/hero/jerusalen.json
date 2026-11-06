@@ -1,0 +1,584 @@
+{
+ "stage": "jerusalen",
+ "branch": "hero",
+ "only": true,
+ "source": "materiales/hero-tras-sus-pasos/material.html",
+ "questions": [
+  {
+   "t": "mc",
+   "q": "¿En qué ciudad vivía Zaqueo?",
+   "o": [
+    "Jericó",
+    "Jerusalén",
+    "Nazaret",
+    "Caná"
+   ],
+   "a": 0,
+   "exp": "Camino a Jerusalén, Jesús pasó por Jericó, donde vivía Zaqueo.",
+   "ref": "Lucas 19:1-2",
+   "id": "jer-01"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué era Zaqueo?",
+   "o": [
+    "Jefe de los cobradores de impuestos, muy rico",
+    "Un pescador pobre",
+    "Un sacerdote del templo",
+    "Un soldado romano"
+   ],
+   "a": 0,
+   "exp": "Zaqueo era jefe de los cobradores de impuestos y muy rico.",
+   "ref": "Lucas 19:2",
+   "id": "jer-02"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué la gente odiaba a los cobradores de impuestos?",
+   "o": [
+    "Trabajaban para Roma y muchas veces cobraban de más",
+    "Porque eran samaritanos",
+    "Porque no iban al templo",
+    "Porque eran extranjeros"
+   ],
+   "a": 0,
+   "exp": "Los cobradores trabajaban para Roma y muchas veces cobraban de más.",
+   "ref": "",
+   "id": "jer-03"
+  },
+  {
+   "t": "mc",
+   "q": "¿A qué árbol se subió Zaqueo?",
+   "o": [
+    "A un sicómoro",
+    "A un olivo",
+    "A una palmera",
+    "A una higuera"
+   ],
+   "a": 0,
+   "exp": "Corrió y se trepó a un árbol sicómoro.",
+   "ref": "Lucas 19:4",
+   "id": "jer-04"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué Zaqueo se subió al árbol?",
+   "o": [
+    "Era bajo y no podía ver por la multitud",
+    "Se escondía de los soldados",
+    "Quería juntar frutos",
+    "Quería predicar desde ahí"
+   ],
+   "a": 0,
+   "exp": "Zaqueo era bajo y no podía ver por la multitud.",
+   "ref": "Lucas 19:3",
+   "id": "jer-05"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le dijo Jesús a Zaqueo?",
+   "o": [
+    "Que bajara rápido, porque ese día se iba a hospedar en su casa",
+    "Que devolviera todo al templo",
+    "Que se fuera de Jericó",
+    "Que se quedara en el árbol"
+   ],
+   "a": 0,
+   "exp": "Lo llamó por su nombre y le dijo que bajara rápido.",
+   "ref": "Lucas 19:5",
+   "id": "jer-06"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué prometió Zaqueo?",
+   "o": [
+    "Dar la mitad de sus bienes a los pobres y devolver cuatro veces más a quien hubiera estafado",
+    "Dejar de trabajar",
+    "Construir una sinagoga",
+    "Ir todos los días al templo"
+   ],
+   "a": 0,
+   "exp": "Zaqueo cambió.",
+   "ref": "Lucas 19:8",
+   "id": "jer-07"
+  },
+  {
+   "t": "mc",
+   "q": "¿En qué entró Jesús a Jerusalén?",
+   "o": [
+    "Montado en un burro",
+    "En un carro de guerra",
+    "A caballo",
+    "Caminando solo"
+   ],
+   "a": 0,
+   "exp": "Jesús entró en Jerusalén montado en un burro.",
+   "ref": "Mateo 21:7",
+   "id": "jer-08"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué profecía se cumplió con la entrada de Jesús en un burro?",
+   "o": [
+    "La de Zacarías 9:9",
+    "La de Miqueas 5:2",
+    "La de Isaías 40:3",
+    "La de Isaías 53:5"
+   ],
+   "a": 0,
+   "exp": "Tu rey viene a ti, humilde, montado en un burro.",
+   "ref": "Zacarías 9:9",
+   "id": "jer-09"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hizo la multitud en la entrada triunfal?",
+   "o": [
+    "Extendió sus mantos en el camino y cortó ramas de los árboles",
+    "Le tiró piedras",
+    "Se quedó en silencio",
+    "Lo llevó ante Pilato"
+   ],
+   "a": 0,
+   "exp": "Una multitud extendió sus mantos y cortó ramas.",
+   "ref": "Mateo 21:8",
+   "id": "jer-10"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hizo Jesús cuando entró en el templo?",
+   "o": [
+    "Echó a los que compraban y vendían: la casa de Dios debía ser una casa de oración",
+    "Ofreció un cordero",
+    "Se sentó a enseñar a los niños",
+    "Pidió hablar con el sumo sacerdote"
+   ],
+   "a": 0,
+   "exp": "Echó a los que compraban y vendían.",
+   "ref": "Mateo 21:12-13",
+   "id": "jer-11"
+  },
+  {
+   "t": "mc",
+   "q": "¿Dónde fue la última cena?",
+   "o": [
+    "En un cuarto del piso de arriba",
+    "En el templo",
+    "En la casa de Zaqueo",
+    "En una barca"
+   ],
+   "a": 0,
+   "exp": "Jesús cenó con sus discípulos en un cuarto del piso de arriba.",
+   "ref": "Lucas 22:12",
+   "id": "jer-12"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hizo Jesús durante la cena con una toalla y agua?",
+   "o": [
+    "Les lavó los pies a sus discípulos",
+    "Lavó las copas",
+    "Bautizó a los discípulos",
+    "Limpió la mesa"
+   ],
+   "a": 0,
+   "exp": "Se ató una toalla a la cintura y empezó a lavarles los pies, un trabajo de sirvientes.",
+   "ref": "Juan 13:4-5",
+   "id": "jer-13"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le dijo Jesús a Pedro cuando no quería dejarse lavar los pies?",
+   "o": [
+    "Que si no lo hacía, no tendría parte con él",
+    "Que entonces lavara él los pies de todos",
+    "Que se fuera de la cena",
+    "Que tenía razón"
+   ],
+   "a": 0,
+   "exp": "Si no lo lavaba, no tendría parte con él.",
+   "ref": "Juan 13:8",
+   "id": "jer-14"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué enseñó Jesús al lavarles los pies?",
+   "o": [
+    "Que ellos también debían servirse unos a otros",
+    "Que la limpieza es lo más importante",
+    "Que él era sirviente del templo",
+    "Que no había que comer sin lavarse"
+   ],
+   "a": 0,
+   "exp": "Si su Señor y Maestro les lavó los pies, ellos también debían servirse unos a otros.",
+   "ref": "Juan 13:14",
+   "id": "jer-15"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué dijo Jesús al partir el pan?",
+   "o": [
+    "Que era su cuerpo, entregado por ellos, y que lo hicieran en memoria de él",
+    "Que era el pan de la Pascua de Egipto",
+    "Que lo guardaran para el viaje",
+    "Que lo dieran a los pobres"
+   ],
+   "a": 0,
+   "exp": "Tomó el pan, dio gracias, lo partió y les dijo que era su cuerpo.",
+   "ref": "Lucas 22:19",
+   "id": "jer-16"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué anunció Jesús con la copa?",
+   "o": [
+    "El nuevo pacto entre Dios y su pueblo, confirmado con su sangre",
+    "Una nueva ley para el templo",
+    "Que se acabaría la Pascua",
+    "Que tomarían vino en el cielo"
+   ],
+   "a": 0,
+   "exp": "Con la copa anunció el nuevo pacto.",
+   "ref": "Lucas 22:20",
+   "id": "jer-17"
+  },
+  {
+   "t": "mc",
+   "q": "¿Quién salió en la noche durante la cena?",
+   "o": [
+    "Judas Iscariote",
+    "Pedro",
+    "Juan",
+    "Tomás"
+   ],
+   "a": 0,
+   "exp": "Anunció que uno de ellos lo iba a traicionar, y Judas Iscariote salió en la noche.",
+   "ref": "Juan 13:30",
+   "id": "jer-18"
+  },
+  {
+   "t": "mc",
+   "q": "¿Dónde oró Jesús después de la cena?",
+   "o": [
+    "En el huerto de Getsemaní, en el monte de los Olivos",
+    "En el templo",
+    "En el desierto de Judea",
+    "En la orilla del lago"
+   ],
+   "a": 0,
+   "exp": "Fueron al monte de los Olivos, a un huerto llamado Getsemaní.",
+   "ref": "Mateo 26:36",
+   "id": "jer-19"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué les pidió Jesús a los discípulos en Getsemaní?",
+   "o": [
+    "Que velaran y oraran para no caer en tentación",
+    "Que prepararan las espadas",
+    "Que fueran a dormir",
+    "Que buscaran a Judas"
+   ],
+   "a": 0,
+   "exp": "Les pidió que velaran y oraran para no caer en tentación.",
+   "ref": "Lucas 22:40",
+   "id": "jer-20"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo encontró Jesús a los discípulos cuando volvió de orar?",
+   "o": [
+    "Dormidos",
+    "Orando",
+    "Peleando",
+    "Cantando"
+   ],
+   "a": 0,
+   "exp": "Volvió y los encontró dormidos.",
+   "ref": "Lucas 22:45",
+   "id": "jer-21"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo entregó Judas a Jesús?",
+   "o": [
+    "Con un beso",
+    "Con una carta",
+    "Señalándolo con una antorcha",
+    "Gritando su nombre"
+   ],
+   "a": 0,
+   "exp": "Judas llegó con una multitud armada y lo entregó con un beso.",
+   "ref": "Lucas 22:47-48",
+   "id": "jer-22"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuántas veces negó Pedro a Jesús?",
+   "o": [
+    "Tres",
+    "Una",
+    "Dos",
+    "Siete"
+   ],
+   "a": 0,
+   "exp": "Pedro negó conocerlo tres veces.",
+   "ref": "Lucas 22:54-62",
+   "id": "jer-23"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué pasó cuando cantó el gallo?",
+   "o": [
+    "El Señor se dio vuelta y lo miró, y Pedro salió y lloró amargamente",
+    "Pedro se rió",
+    "Pedro sacó la espada",
+    "Pedro se fue a pescar"
+   ],
+   "a": 0,
+   "exp": "El Señor lo miró, y Pedro lloró amargamente.",
+   "ref": "Lucas 22:61-62",
+   "id": "jer-24"
+  },
+  {
+   "t": "mc",
+   "q": "¿Dónde negó Pedro a Jesús?",
+   "o": [
+    "En el patio del sumo sacerdote",
+    "En el huerto de Getsemaní",
+    "En el templo",
+    "En Galilea"
+   ],
+   "a": 0,
+   "exp": "En el patio del sumo sacerdote, Pedro negó conocerlo tres veces.",
+   "ref": "Lucas 22:55",
+   "id": "jer-25"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué sentido nuevo dio Jesús al pan y a la copa de la Pascua?",
+   "o": [
+    "Que él es el Cordero cuya entrega trae una liberación más grande",
+    "Que la Pascua ya no recordaba nada",
+    "Que había que comer más",
+    "Que solo los sacerdotes podían comerlo"
+   ],
+   "a": 0,
+   "exp": "Por eso la iglesia sigue partiendo el pan hasta hoy, en memoria de él.",
+   "ref": "",
+   "id": "jer-26"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo oró Jesús en Getsemaní?",
+   "o": [
+    "Con tanta angustia que su sudor caía como gotas de sangre",
+    "Con alegría, cantando",
+    "En silencio total, sin hablar",
+    "Leyendo un rollo"
+   ],
+   "a": 0,
+   "exp": "Se arrodilló y oró con tanta angustia que su sudor caía como gotas de sangre.",
+   "ref": "Lucas 22:44",
+   "id": "jer-27"
+  },
+  {
+   "t": "tf",
+   "q": "La gente murmuró cuando Jesús fue a la casa de Zaqueo.",
+   "a": true,
+   "exp": "La gente murmuraba, pero Zaqueo cambió.",
+   "ref": "Lucas 19:7",
+   "id": "jer-28"
+  },
+  {
+   "t": "tf",
+   "q": "Jesús les lavó los pies a todos menos a Judas.",
+   "a": false,
+   "exp": "Jesús lavó los pies incluso de Judas, que lo iba a traicionar.",
+   "ref": "",
+   "id": "jer-29"
+  },
+  {
+   "t": "tf",
+   "q": "Pedro había prometido que estaba dispuesto a ir a la cárcel y a morir por Jesús.",
+   "a": true,
+   "exp": "Pedro lo había prometido, pero Jesús le anunció que lo negaría.",
+   "ref": "Lucas 22:33-34",
+   "id": "jer-30"
+  },
+  {
+   "t": "tf",
+   "q": "Lavar los pies era un trabajo de sirvientes.",
+   "a": true,
+   "exp": "Empezó a lavarles los pies, un trabajo de sirvientes.",
+   "ref": "",
+   "id": "jer-31"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada persona con lo que hizo",
+   "p": [
+    [
+     "Zaqueo",
+     "Se subió a un sicómoro para ver a Jesús"
+    ],
+    [
+     "La multitud",
+     "Extendió mantos y cortó ramas"
+    ],
+    [
+     "Judas",
+     "Lo entregó con un beso"
+    ],
+    [
+     "Pedro",
+     "Lo negó tres veces antes de que cantara el gallo"
+    ]
+   ],
+   "exp": "Personajes de la etapa Jerusalén.",
+   "ref": "",
+   "id": "jer-32"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "Pues el ",
+    0,
+    " vino a buscar y a ",
+    1,
+    " a los que están ",
+    2,
+    "."
+   ],
+   "blanks": [
+    "Hijo del Hombre",
+    "salvar",
+    "perdidos"
+   ],
+   "bank": [
+    "Hijo del Hombre",
+    "salvar",
+    "perdidos",
+    "Profeta",
+    "juzgar",
+    "ricos"
+   ],
+   "exp": "Lo que Jesús dijo en la casa de Zaqueo.",
+   "ref": "Lucas 19:10",
+   "id": "jer-33"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "¡Alaben a Dios por el Hijo de ",
+    0,
+    "! ¡Bendiciones al que viene en el ",
+    1,
+    " del Señor!"
+   ],
+   "blanks": [
+    "David",
+    "nombre"
+   ],
+   "bank": [
+    "David",
+    "nombre",
+    "Moisés",
+    "templo"
+   ],
+   "exp": "Lo que gritaba la multitud en la entrada triunfal.",
+   "ref": "Mateo 21:9",
+   "id": "jer-34"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "Así que ahora les doy un nuevo ",
+    0,
+    ": ",
+    1,
+    " unos a otros. Tal como yo los he amado, ustedes deben amarse unos a otros."
+   ],
+   "blanks": [
+    "mandamiento",
+    "ámense"
+   ],
+   "bank": [
+    "mandamiento",
+    "ámense",
+    "consejo",
+    "sírvanse"
+   ],
+   "exp": "El nuevo mandamiento de la última cena.",
+   "ref": "Juan 13:34",
+   "id": "jer-35"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "Padre, si quieres, te pido que quites esta ",
+    0,
+    " de sufrimiento de mí. Sin embargo, quiero que se haga tu ",
+    1,
+    ", no la mía."
+   ],
+   "blanks": [
+    "copa",
+    "voluntad"
+   ],
+   "bank": [
+    "copa",
+    "voluntad",
+    "cruz",
+    "palabra"
+   ],
+   "exp": "La oración de Jesús en Getsemaní.",
+   "ref": "Lucas 22:42",
+   "id": "jer-36"
+  },
+  {
+   "t": "order",
+   "q": "Ordená lo que pasó",
+   "items": [
+    "Jesús se hospeda en la casa de Zaqueo en Jericó",
+    "Entra en Jerusalén montado en un burro",
+    "Echa del templo a los que compraban y vendían",
+    "Les lava los pies a sus discípulos en la última cena",
+    "Ora en Getsemaní",
+    "Judas lo entrega con un beso",
+    "Pedro lo niega tres veces"
+   ],
+   "exp": "De Jericó al patio del sumo sacerdote.",
+   "ref": "",
+   "id": "jer-37"
+  },
+  {
+   "t": "app",
+   "q": "Alguien de tu grupo te trató mal y ahora necesita ayuda con algo. ¿Qué haría Jesús?",
+   "o": [
+    "Servirlo igual, como Jesús que lavó los pies incluso de Judas",
+    "Ignorarlo para que aprenda",
+    "Ayudarlo solo si te pide perdón primero",
+    "Contarles a todos lo que te hizo"
+   ],
+   "a": 0,
+   "exp": "Jesús lavó los pies incluso de Judas, que lo iba a traicionar.",
+   "ref": "",
+   "id": "jer-38"
+  },
+  {
+   "t": "reflect",
+   "q": "Jesús lavó los pies incluso de Judas y de Pedro. ¿A quién te cuesta servir?",
+   "id": "jer-39"
+  },
+  {
+   "t": "reflect",
+   "q": "En Getsemaní, Jesús le contó al Padre lo que sentía y después se rindió a su voluntad. ¿Qué te gustaría contarle hoy, con la misma sinceridad?",
+   "id": "jer-40"
+  }
+ ]
+}

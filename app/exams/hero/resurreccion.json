@@ -1,0 +1,587 @@
+{
+ "stage": "resurreccion",
+ "branch": "hero",
+ "only": true,
+ "source": "materiales/hero-tras-sus-pasos/material.html",
+ "questions": [
+  {
+   "t": "mc",
+   "q": "¿Qué día fueron las mujeres a la tumba?",
+   "o": [
+    "El domingo temprano, el primer día de la semana",
+    "El viernes a la tarde",
+    "El sábado a la noche",
+    "Una semana después"
+   ],
+   "a": 0,
+   "exp": "El domingo temprano, el primer día de la semana.",
+   "ref": "Mateo 28:1",
+   "id": "res-01"
+  },
+  {
+   "t": "mc",
+   "q": "¿Quiénes fueron primero a la tumba?",
+   "o": [
+    "María Magdalena y otras mujeres, con especias",
+    "Pedro y Juan",
+    "Los soldados romanos",
+    "José de Arimatea y Nicodemo"
+   ],
+   "a": 0,
+   "exp": "María Magdalena y otras mujeres fueron con especias para el cuerpo.",
+   "ref": "Mateo 28:1",
+   "id": "res-02"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hizo el ángel del Señor en la tumba?",
+   "o": [
+    "Corrió la piedra y se sentó sobre ella",
+    "Selló la tumba",
+    "Se llevó el cuerpo",
+    "Despertó a los discípulos"
+   ],
+   "a": 0,
+   "exp": "Un ángel bajó del cielo, corrió la piedra y se sentó sobre ella.",
+   "ref": "Mateo 28:2",
+   "id": "res-03"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué les pasó a los guardias?",
+   "o": [
+    "Temblaron de miedo",
+    "Se pusieron a cantar",
+    "Persiguieron al ángel",
+    "No vieron nada"
+   ],
+   "a": 0,
+   "exp": "Los guardias temblaron de miedo.",
+   "ref": "Mateo 28:4",
+   "id": "res-04"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué les mandó el ángel a las mujeres?",
+   "o": [
+    "Ir rápido a avisar a los discípulos",
+    "Quedarse cuidando la tumba",
+    "Volver a casa en silencio",
+    "Ir a ver a Pilato"
+   ],
+   "a": 0,
+   "exp": "Les mandó ir rápido a avisar a los discípulos.",
+   "ref": "Mateo 28:7",
+   "id": "res-05"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué discípulos corrieron a la tumba?",
+   "o": [
+    "Pedro y Juan",
+    "Tomás y Felipe",
+    "Andrés y Santiago",
+    "Judas y Mateo"
+   ],
+   "a": 0,
+   "exp": "Pedro y Juan corrieron a la tumba.",
+   "ref": "Juan 20:3-4",
+   "id": "res-06"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué encontraron Pedro y Juan en la tumba?",
+   "o": [
+    "Los lienzos tirados y el paño de la cabeza doblado aparte",
+    "El cuerpo de Jesús",
+    "Soldados dormidos",
+    "Una carta del ángel"
+   ],
+   "a": 0,
+   "exp": "Encontraron los lienzos tirados y el paño doblado aparte.",
+   "ref": "Juan 20:6-7",
+   "id": "res-07"
+  },
+  {
+   "t": "mc",
+   "q": "¿Con quién confundió María Magdalena a Jesús resucitado?",
+   "o": [
+    "Con el jardinero",
+    "Con un soldado",
+    "Con Pedro",
+    "Con un ángel"
+   ],
+   "a": 0,
+   "exp": "Vio a un hombre que pensó que era el jardinero.",
+   "ref": "Juan 20:15",
+   "id": "res-08"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuándo reconoció María Magdalena a Jesús?",
+   "o": [
+    "Cuando la llamó por su nombre",
+    "Cuando le mostró las manos",
+    "Cuando partió el pan",
+    "Cuando la tocó"
+   ],
+   "a": 0,
+   "exp": "La llamó por su nombre: \"¡María!\". Ella lo reconoció.",
+   "ref": "Juan 20:16",
+   "id": "res-09"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué significa \"Raboní\"?",
+   "o": [
+    "Maestro",
+    "Señor de todo",
+    "Amigo",
+    "Jardinero"
+   ],
+   "a": 0,
+   "exp": "\"¡Raboní!\", que quiere decir \"Maestro\".",
+   "ref": "Juan 20:16",
+   "id": "res-10"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué misión le dio Jesús a María Magdalena?",
+   "o": [
+    "Ir a contarles a los discípulos",
+    "Quedarse en la tumba",
+    "Ir al templo",
+    "Esperarlo en Galilea sola"
+   ],
+   "a": 0,
+   "exp": "Jesús la envió y ella fue la primera en anunciar que había visto al Señor.",
+   "ref": "Juan 20:17-18",
+   "id": "res-11"
+  },
+  {
+   "t": "mc",
+   "q": "¿Hacia qué pueblo caminaban los dos discípulos tristes?",
+   "o": [
+    "Emaús",
+    "Jericó",
+    "Betania",
+    "Belén"
+   ],
+   "a": 0,
+   "exp": "Dos discípulos caminaban tristes hacia Emaús.",
+   "ref": "Lucas 24:13",
+   "id": "res-12"
+  },
+  {
+   "t": "mc",
+   "q": "¿A qué distancia de Jerusalén quedaba Emaús?",
+   "o": [
+    "A unos once kilómetros",
+    "A cien kilómetros",
+    "A un kilómetro",
+    "A tres días de camino"
+   ],
+   "a": 0,
+   "exp": "Emaús era un pueblo a unos once kilómetros de Jerusalén.",
+   "ref": "Lucas 24:13",
+   "id": "res-13"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué les explicó Jesús en el camino a Emaús?",
+   "o": [
+    "Lo que las Escrituras, desde Moisés y los profetas, decían sobre él",
+    "Cómo pescar en el lago",
+    "Las leyes de Roma",
+    "La historia de los magos"
+   ],
+   "a": 0,
+   "exp": "Les explicó todo lo que las Escrituras decían sobre él.",
+   "ref": "Lucas 24:27",
+   "id": "res-14"
+  },
+  {
+   "t": "mc",
+   "q": "¿En qué momento lo reconocieron los de Emaús?",
+   "o": [
+    "Cuando tomó el pan, lo bendijo y lo partió",
+    "Cuando entraron al pueblo",
+    "Cuando les mostró las manos",
+    "Cuando vieron una luz"
+   ],
+   "a": 0,
+   "exp": "En ese momento se les abrieron los ojos y lo reconocieron.",
+   "ref": "Lucas 24:30-31",
+   "id": "res-15"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hicieron los de Emaús después de reconocerlo?",
+   "o": [
+    "Volvieron enseguida a Jerusalén a contarlo, aunque era de noche",
+    "Se quedaron a dormir",
+    "Se fueron a Galilea",
+    "No se lo contaron a nadie"
+   ],
+   "a": 0,
+   "exp": "Volvieron enseguida a Jerusalén, aunque ya era de noche.",
+   "ref": "Lucas 24:33",
+   "id": "res-16"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué decía Tomás que necesitaba para creer?",
+   "o": [
+    "Ver las marcas de los clavos y tocar su costado",
+    "Escuchar a un ángel",
+    "Ver la tumba vacía",
+    "Que Pedro se lo jurara"
+   ],
+   "a": 0,
+   "exp": "Dijo que no creería hasta ver las marcas de los clavos y tocar su costado.",
+   "ref": "Juan 20:25",
+   "id": "res-17"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuántos días después volvió Jesús y estaba Tomás?",
+   "o": [
+    "Ocho días después",
+    "Al día siguiente",
+    "Cuarenta días después",
+    "Un año después"
+   ],
+   "a": 0,
+   "exp": "Ocho días después, Jesús volvió.",
+   "ref": "Juan 20:26",
+   "id": "res-18"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué exclamó Tomás al ver a Jesús?",
+   "o": [
+    "¡Mi Señor y mi Dios!",
+    "¡Raboní!",
+    "¡Es el jardinero!",
+    "¡Todo está cumplido!"
+   ],
+   "a": 0,
+   "exp": "Tomás exclamó: \"¡Mi Señor y mi Dios!\".",
+   "ref": "Juan 20:28",
+   "id": "res-19"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué respondió Jesús a Tomás?",
+   "o": [
+    "Benditos los que creen sin verme",
+    "Ahora andá a pescar",
+    "No vuelvas a dudar nunca",
+    "Contalo en el templo"
+   ],
+   "a": 0,
+   "exp": "Jesús respondió: \"Benditos los que creen sin verme\".",
+   "ref": "Juan 20:29",
+   "id": "res-20"
+  },
+  {
+   "t": "mc",
+   "q": "¿De qué lado de la barca les dijo Jesús que echaran la red?",
+   "o": [
+    "A la derecha",
+    "A la izquierda",
+    "Atrás",
+    "En la orilla"
+   ],
+   "a": 0,
+   "exp": "Desde la orilla, Jesús les dijo que echaran la red a la derecha.",
+   "ref": "Juan 21:6",
+   "id": "res-21"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuántos peces grandes sacaron?",
+   "o": [
+    "153",
+    "12",
+    "100",
+    "5.000"
+   ],
+   "a": 0,
+   "exp": "Sacaron 153 peces grandes.",
+   "ref": "Juan 21:11",
+   "id": "res-22"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué los esperaba en la playa?",
+   "o": [
+    "Fuego, pescado y pan",
+    "Una barca nueva",
+    "Los soldados",
+    "Una multitud"
+   ],
+   "a": 0,
+   "exp": "En la playa los esperaba con fuego, pescado y pan.",
+   "ref": "Juan 21:9",
+   "id": "res-23"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuántas veces le preguntó Jesús a Pedro \"¿Me amas?\"?",
+   "o": [
+    "Tres",
+    "Una",
+    "Dos",
+    "Siete"
+   ],
+   "a": 0,
+   "exp": "Después del desayuno, le preguntó a Pedro tres veces.",
+   "ref": "Juan 21:15-17",
+   "id": "res-24"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le encargó Jesús a Pedro?",
+   "o": [
+    "Cuida de mis ovejas",
+    "Construí un templo",
+    "Volvé a pescar",
+    "Escribí un libro"
+   ],
+   "a": 0,
+   "exp": "Tres veces Jesús le encargó: \"Cuida de mis ovejas\".",
+   "ref": "Juan 21:17",
+   "id": "res-25"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué es significativo que Jesús le preguntara a Pedro tres veces?",
+   "o": [
+    "Porque Pedro lo había negado tres veces",
+    "Porque Pedro no escuchaba bien",
+    "Porque eran tres discípulos",
+    "Porque era la costumbre de la Pascua"
+   ],
+   "a": 0,
+   "exp": "Tres veces lo había negado; tres veces le dijo que lo amaba: una nueva oportunidad.",
+   "ref": "",
+   "id": "res-26"
+  },
+  {
+   "t": "mc",
+   "q": "¿Dónde les dio Jesús la gran comisión?",
+   "o": [
+    "En un monte de Galilea",
+    "En el templo de Jerusalén",
+    "En Emaús",
+    "En la tumba"
+   ],
+   "a": 0,
+   "exp": "En un monte de Galilea, Jesús les dio una misión que llega hasta hoy.",
+   "ref": "Mateo 28:16-20",
+   "id": "res-27"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué les prometió Jesús junto con la gran comisión?",
+   "o": [
+    "Que estaría con ellos siempre, hasta el fin de los tiempos",
+    "Que nunca sufrirían",
+    "Que serían ricos",
+    "Que volvería al día siguiente"
+   ],
+   "a": 0,
+   "exp": "\"Y tengan por seguro esto: que estoy con ustedes siempre, hasta el fin de los tiempos\".",
+   "ref": "Mateo 28:20",
+   "id": "res-28"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué autoridad dijo Jesús que había recibido?",
+   "o": [
+    "Toda autoridad en el cielo y en la tierra",
+    "La autoridad del templo",
+    "La autoridad de Roma",
+    "Ninguna"
+   ],
+   "a": 0,
+   "exp": "Había recibido toda autoridad en el cielo y en la tierra.",
+   "ref": "Mateo 28:18",
+   "id": "res-29"
+  },
+  {
+   "t": "tf",
+   "q": "Las mujeres salieron de la tumba con miedo y con mucha alegría.",
+   "a": true,
+   "exp": "Ellas salieron corriendo, con miedo y con mucha alegría.",
+   "ref": "Mateo 28:8",
+   "id": "res-30"
+  },
+  {
+   "t": "tf",
+   "q": "Los de Emaús reconocieron a Jesús apenas se les acercó en el camino.",
+   "a": false,
+   "exp": "Caminó con ellos, pero no lo reconocieron hasta que partió el pan.",
+   "ref": "Lucas 24:16",
+   "id": "res-31"
+  },
+  {
+   "t": "tf",
+   "q": "María Magdalena fue la primera en anunciar que había visto al Señor.",
+   "a": true,
+   "exp": "Ella fue la primera en anunciar que había visto al Señor.",
+   "ref": "Juan 20:18",
+   "id": "res-32"
+  },
+  {
+   "t": "tf",
+   "q": "Hubo un gran terremoto cuando el ángel bajó del cielo.",
+   "a": true,
+   "exp": "Hubo un gran terremoto: un ángel del Señor bajó del cielo.",
+   "ref": "Mateo 28:2",
+   "id": "res-33"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada persona con lo que dijo o vivió",
+   "p": [
+    [
+     "María Magdalena",
+     "\"¡Raboní!\""
+    ],
+    [
+     "Tomás",
+     "\"¡Mi Señor y mi Dios!\""
+    ],
+    [
+     "Pedro",
+     "Tres veces \"¿Me amas?\""
+    ],
+    [
+     "Los de Emaús",
+     "Lo reconocieron al partir el pan"
+    ]
+   ],
+   "exp": "Encuentros con Jesús resucitado.",
+   "ref": "",
+   "id": "res-34"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "¡No está aquí! Ha ",
+    0,
+    " tal como dijo que sucedería. Vengan, vean el ",
+    1,
+    " donde estaba su cuerpo."
+   ],
+   "blanks": [
+    "resucitado",
+    "lugar"
+   ],
+   "bank": [
+    "resucitado",
+    "lugar",
+    "escondido",
+    "jardín"
+   ],
+   "exp": "El anuncio del ángel a las mujeres.",
+   "ref": "Mateo 28:6",
+   "id": "res-35"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "Entonces se dijeron el uno al otro: «¿No ardía nuestro ",
+    0,
+    " cuando nos hablaba en el ",
+    1,
+    " y nos explicaba las ",
+    2,
+    "?»."
+   ],
+   "blanks": [
+    "corazón",
+    "camino",
+    "Escrituras"
+   ],
+   "bank": [
+    "corazón",
+    "camino",
+    "Escrituras",
+    "alma",
+    "templo",
+    "parábolas"
+   ],
+   "exp": "Los discípulos de Emaús.",
+   "ref": "Lucas 24:32",
+   "id": "res-36"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "Por lo tanto, vayan y hagan ",
+    0,
+    " de todas las ",
+    1,
+    ", bautizándolos en el nombre del Padre y del Hijo y del Espíritu Santo."
+   ],
+   "blanks": [
+    "discípulos",
+    "naciones"
+   ],
+   "bank": [
+    "discípulos",
+    "naciones",
+    "amigos",
+    "ciudades"
+   ],
+   "exp": "La gran comisión.",
+   "ref": "Mateo 28:19",
+   "id": "res-37"
+  },
+  {
+   "t": "order",
+   "q": "Ordená lo que pasó",
+   "items": [
+    "Las mujeres van a la tumba el domingo temprano",
+    "El ángel les dice que Jesús resucitó",
+    "Pedro y Juan corren a la tumba",
+    "Jesús llama a María Magdalena por su nombre",
+    "Los de Emaús lo reconocen al partir el pan",
+    "Ocho días después Tomás dice: \"¡Mi Señor y mi Dios!\""
+   ],
+   "exp": "Los primeros encuentros con Jesús resucitado.",
+   "ref": "",
+   "id": "res-38"
+  },
+  {
+   "t": "app",
+   "q": "Un amigo te cuenta que tiene dudas sobre la fe y se siente mal por eso. ¿Qué te enseña la historia de Tomás?",
+   "o": [
+    "Que Jesús lo esperó en su duda; podés acompañar a tu amigo con paciencia",
+    "Que dudar es imperdonable",
+    "Que no tiene que hablar de sus dudas",
+    "Que mejor deje de ir a la iglesia"
+   ],
+   "a": 0,
+   "exp": "Jesús esperó a Tomás en su duda.",
+   "ref": "",
+   "id": "res-39"
+  },
+  {
+   "t": "reflect",
+   "q": "Jesús llamó a María por su nombre, caminó con los de Emaús, esperó a Tomás y le dio a Pedro una nueva oportunidad. ¿Con cuál de ellos te identificás hoy?",
+   "id": "res-40"
+  },
+  {
+   "t": "reflect",
+   "q": "Jesús resucitado te conoce por tu nombre y camina con vos. ¿Qué le querés contar hoy?",
+   "id": "res-41"
+  }
+ ]
+}

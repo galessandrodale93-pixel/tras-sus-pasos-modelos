@@ -1,0 +1,554 @@
+{
+ "stage": "nacimiento",
+ "branch": "hero",
+ "only": true,
+ "source": "materiales/hero-tras-sus-pasos/material.html",
+ "questions": [
+  {
+   "t": "mc",
+   "q": "¿Qué ángel visitó a María para anunciarle el nacimiento de Jesús?",
+   "o": [
+    "Gabriel",
+    "Miguel",
+    "Rafael",
+    "Un ángel sin nombre"
+   ],
+   "a": 0,
+   "exp": "El ángel Gabriel visitó a María en Nazaret.",
+   "ref": "Lucas 1:26-38",
+   "id": "nac-01"
+  },
+  {
+   "t": "mc",
+   "q": "¿En qué pueblo vivía María cuando recibió el anuncio?",
+   "o": [
+    "Nazaret",
+    "Belén",
+    "Jerusalén",
+    "Capernaum"
+   ],
+   "a": 0,
+   "exp": "La historia empieza en Nazaret, un pueblo de Galilea.",
+   "ref": "Lucas 1:26",
+   "id": "nac-02"
+  },
+  {
+   "t": "mc",
+   "q": "¿En qué región quedaba Nazaret?",
+   "o": [
+    "Galilea, al norte",
+    "Judea, al sur",
+    "El valle del Jordán",
+    "Egipto"
+   ],
+   "a": 0,
+   "exp": "Nazaret es un pueblo chico en las colinas de Galilea, al norte.",
+   "ref": "",
+   "id": "nac-03"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué significa el nombre «Jesús»?",
+   "o": [
+    "El Señor salva",
+    "Dios está con nosotros",
+    "Ungido",
+    "Enviado"
+   ],
+   "a": 0,
+   "exp": "El ángel le dijo a María que lo llamara Jesús, que significa \"el Señor salva\".",
+   "ref": "Lucas 1:31",
+   "id": "nac-04"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué significa «Emanuel»?",
+   "o": [
+    "Dios está con nosotros",
+    "El Señor salva",
+    "Buena noticia",
+    "Hijo de David"
+   ],
+   "a": 0,
+   "exp": "Mateo explica que el niño sería llamado Emanuel, que significa \"Dios está con nosotros\".",
+   "ref": "Mateo 1:23",
+   "id": "nac-05"
+  },
+  {
+   "t": "mc",
+   "q": "Según Mateo, ¿la profecía de qué profeta se cumplía con el nombre Emanuel?",
+   "o": [
+    "Isaías",
+    "Miqueas",
+    "Zacarías",
+    "Moisés"
+   ],
+   "a": 0,
+   "exp": "Mateo explica que así se cumplía la profecía de Isaías.",
+   "ref": "Mateo 1:23",
+   "id": "nac-06"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué pensó hacer José al enterarse de que María estaba embarazada?",
+   "o": [
+    "Romper el compromiso en secreto",
+    "Contarlo en la sinagoga",
+    "Irse a vivir a Egipto",
+    "Pedir consejo a Herodes"
+   ],
+   "a": 0,
+   "exp": "José pensó en romper el compromiso en secreto, pero un ángel le habló.",
+   "ref": "Mateo 1:19-20",
+   "id": "nac-07"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo le habló el ángel a José para que recibiera a María?",
+   "o": [
+    "En un sueño",
+    "En el templo",
+    "Por medio de un profeta",
+    "Con una voz desde el cielo en el río"
+   ],
+   "a": 0,
+   "exp": "Un ángel le habló en un sueño y le dijo que no tuviera miedo de recibirla como esposa.",
+   "ref": "Mateo 1:20",
+   "id": "nac-08"
+  },
+  {
+   "t": "mc",
+   "q": "¿De qué familia descendía José?",
+   "o": [
+    "Del rey David",
+    "Del sacerdote Aarón",
+    "De Moisés",
+    "Del rey Saúl"
+   ],
+   "a": 0,
+   "exp": "José era descendiente del rey David; por eso tuvo que registrarse en Belén.",
+   "ref": "Lucas 2:4",
+   "id": "nac-09"
+  },
+  {
+   "t": "mc",
+   "q": "¿Quién ordenó el censo que llevó a José y María a Belén?",
+   "o": [
+    "El emperador César Augusto",
+    "El rey Herodes",
+    "Poncio Pilato",
+    "El sumo sacerdote"
+   ],
+   "a": 0,
+   "exp": "César Augusto ordenó un censo en todo el imperio.",
+   "ref": "Lucas 2:1",
+   "id": "nac-10"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué viajaron José y María de Nazaret a Belén?",
+   "o": [
+    "Para registrarse en el pueblo de sus antepasados por el censo",
+    "Para escapar de Herodes",
+    "Para la fiesta de la Pascua",
+    "Para presentar al bebé en el templo"
+   ],
+   "a": 0,
+   "exp": "Cada uno tenía que registrarse en el pueblo de sus antepasados, y José era de la familia de David.",
+   "ref": "Lucas 2:1-4",
+   "id": "nac-11"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué profeta anunció siglos antes que de Belén saldría el gobernante de Israel?",
+   "o": [
+    "Miqueas",
+    "Isaías",
+    "Zacarías",
+    "Jeremías"
+   ],
+   "a": 0,
+   "exp": "El profeta Miqueas lo había anunciado (Miqueas 5:2).",
+   "ref": "Miqueas 5:2",
+   "id": "nac-12"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo se la conoce a Belén en la historia del nacimiento?",
+   "o": [
+    "La ciudad de David",
+    "La ciudad de Moisés",
+    "La ciudad del templo",
+    "La ciudad de los pescadores"
+   ],
+   "a": 0,
+   "exp": "Belén es la ciudad de David, en Judea, a pocos kilómetros de Jerusalén.",
+   "ref": "",
+   "id": "nac-13"
+  },
+  {
+   "t": "mc",
+   "q": "¿Dónde acostó María al bebé recién nacido?",
+   "o": [
+    "En un pesebre",
+    "En una cuna de madera",
+    "En una canasta junto al río",
+    "En una cama del alojamiento"
+   ],
+   "a": 0,
+   "exp": "María lo envolvió en tiras de tela y lo acostó en un pesebre, donde comían los animales.",
+   "ref": "Lucas 2:7",
+   "id": "nac-14"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué Jesús fue acostado en un pesebre?",
+   "o": [
+    "Porque no había lugar para ellos en el alojamiento",
+    "Porque así lo mandaba la ley",
+    "Porque Herodes los buscaba",
+    "Porque los pastores lo pidieron"
+   ],
+   "a": 0,
+   "exp": "En Belén no había lugar para ellos en el alojamiento.",
+   "ref": "Lucas 2:7",
+   "id": "nac-15"
+  },
+  {
+   "t": "mc",
+   "q": "¿Quiénes fueron los primeros en recibir la noticia del nacimiento?",
+   "o": [
+    "Unos pastores que cuidaban sus rebaños",
+    "Los magos de oriente",
+    "Los sacerdotes del templo",
+    "El rey Herodes"
+   ],
+   "a": 0,
+   "exp": "Esa noche un ángel se apareció a unos pastores en los campos cercanos.",
+   "ref": "Lucas 2:8-12",
+   "id": "nac-16"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué pasó enseguida después de que el ángel les habló a los pastores?",
+   "o": [
+    "Apareció un ejército de ángeles alabando a Dios",
+    "Se apagó la luz y no vieron nada",
+    "Llegaron los magos",
+    "Empezó a llover"
+   ],
+   "a": 0,
+   "exp": "Enseguida apareció un ejército de ángeles alabando a Dios.",
+   "ref": "Lucas 2:13-14",
+   "id": "nac-17"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hicieron los pastores después de ver al bebé?",
+   "o": [
+    "Volvieron glorificando a Dios por todo lo que habían visto",
+    "Se quedaron a vivir en Belén",
+    "Fueron a avisarle a Herodes",
+    "Le llevaron oro e incienso"
+   ],
+   "a": 0,
+   "exp": "Encontraron al bebé tal como se les había dicho y volvieron glorificando a Dios.",
+   "ref": "Lucas 2:20",
+   "id": "nac-18"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué guió a los magos hasta el niño?",
+   "o": [
+    "Una estrella",
+    "Un ángel en un sueño",
+    "Un pastor",
+    "El río Jordán"
+   ],
+   "a": 0,
+   "exp": "Los magos, sabios de tierras del oriente, fueron guiados por una estrella.",
+   "ref": "Mateo 2:1-10",
+   "id": "nac-19"
+  },
+  {
+   "t": "mc",
+   "q": "¿De dónde venían los magos?",
+   "o": [
+    "De tierras del oriente",
+    "De Egipto",
+    "De Roma",
+    "De Galilea"
+   ],
+   "a": 0,
+   "exp": "Eran sabios de tierras del oriente.",
+   "ref": "Mateo 2:1",
+   "id": "nac-20"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué tres regalos le dieron los magos al niño?",
+   "o": [
+    "Oro, incienso y mirra",
+    "Oro, plata y perfume",
+    "Pan, vino y aceite",
+    "Corderos, palomas y oro"
+   ],
+   "a": 0,
+   "exp": "Se inclinaron, lo adoraron y le dieron oro, incienso y mirra.",
+   "ref": "Mateo 2:11",
+   "id": "nac-21"
+  },
+  {
+   "t": "mc",
+   "q": "¿Para qué se usaba el incienso?",
+   "o": [
+    "En la adoración a Dios",
+    "Como regalo para reyes",
+    "Para preparar a los muertos",
+    "Para pagar impuestos"
+   ],
+   "a": 0,
+   "exp": "El oro era un regalo para reyes, el incienso se usaba en la adoración a Dios y la mirra para preparar a los muertos.",
+   "ref": "",
+   "id": "nac-22"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué anunciaba la mirra entre los regalos?",
+   "o": [
+    "Lo que Jesús iba a vivir: era un perfume usado para preparar a los muertos",
+    "Que iba a ser rico",
+    "Que iba a ser sacerdote del templo",
+    "Que iba a vivir en Egipto"
+   ],
+   "a": 0,
+   "exp": "Desde la cuna, los regalos anuncian quién es Jesús y lo que va a vivir.",
+   "ref": "",
+   "id": "nac-23"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué los magos volvieron a su tierra por otro camino?",
+   "o": [
+    "Porque fueron advertidos en un sueño",
+    "Porque se perdieron",
+    "Porque Herodes los echó",
+    "Porque la estrella desapareció"
+   ],
+   "a": 0,
+   "exp": "Advertidos en un sueño, volvieron a su tierra por otro camino.",
+   "ref": "Mateo 2:12",
+   "id": "nac-24"
+  },
+  {
+   "t": "mc",
+   "q": "¿A dónde huyó la familia cuando Herodes quiso matar al niño?",
+   "o": [
+    "A Egipto",
+    "A Nazaret",
+    "A Jericó",
+    "Al desierto de Judea"
+   ],
+   "a": 0,
+   "exp": "Un ángel avisó a José y la familia huyó a Egipto hasta que Herodes murió.",
+   "ref": "Mateo 2:13-15",
+   "id": "nac-25"
+  },
+  {
+   "t": "mc",
+   "q": "¿Quién era rey cuando nació Jesús?",
+   "o": [
+    "Herodes el Grande",
+    "Poncio Pilato",
+    "César Augusto",
+    "El rey David"
+   ],
+   "a": 0,
+   "exp": "Herodes el Grande, famoso por sus construcciones y por su crueldad.",
+   "ref": "",
+   "id": "nac-26"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo respondió María al anuncio del ángel?",
+   "o": [
+    "Se reconoció sierva del Señor y aceptó que se cumpliera lo anunciado",
+    "Se negó por miedo",
+    "Pidió una señal en el cielo",
+    "Se lo contó a Herodes"
+   ],
+   "a": 0,
+   "exp": "María respondió con una confianza enorme: se reconoce sierva del Señor.",
+   "ref": "Lucas 1:38",
+   "id": "nac-27"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué dice del corazón de Dios que el primer anuncio fuera para los pastores?",
+   "o": [
+    "Que Dios se acerca primero a la gente sencilla que nadie tiene en cuenta",
+    "Que solo los pastores podían entender",
+    "Que los reyes no le importaban porque eran malos",
+    "Que fue una casualidad"
+   ],
+   "a": 0,
+   "exp": "Los pastores eran gente sencilla sin mucho prestigio; que el primer anuncio fuera para ellos dice mucho del corazón de Dios.",
+   "ref": "",
+   "id": "nac-28"
+  },
+  {
+   "t": "tf",
+   "q": "Jesús nació en Nazaret.",
+   "a": false,
+   "exp": "Jesús creció en Nazaret, pero nació en Belén, la ciudad de David.",
+   "ref": "Lucas 2:4-7",
+   "id": "nac-29"
+  },
+  {
+   "t": "tf",
+   "q": "El viaje de Nazaret a Belén era largo, de varios días caminando.",
+   "a": true,
+   "exp": "Era un viaje largo, de varios días, por caminos de tierra y piedra.",
+   "ref": "",
+   "id": "nac-30"
+  },
+  {
+   "t": "tf",
+   "q": "El rey Herodes se alegró cuando supo que había nacido el rey de los judíos.",
+   "a": false,
+   "exp": "La pregunta de los magos puso nervioso a Herodes, y después quiso matar al niño.",
+   "ref": "Mateo 2:3",
+   "id": "nac-31"
+  },
+  {
+   "t": "tf",
+   "q": "La familia estuvo en Egipto hasta que murió Herodes.",
+   "a": true,
+   "exp": "Huyeron a Egipto hasta que Herodes murió.",
+   "ref": "Mateo 2:15",
+   "id": "nac-32"
+  },
+  {
+   "t": "tf",
+   "q": "El ángel anunció que María tendría un hijo por obra del Espíritu Santo.",
+   "a": true,
+   "exp": "Gabriel le anunció que tendría un hijo por obra del Espíritu Santo.",
+   "ref": "Lucas 1:35",
+   "id": "nac-33"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada personaje con lo que hizo",
+   "p": [
+    [
+     "Gabriel",
+     "Le anunció a María el nacimiento"
+    ],
+    [
+     "José",
+     "Recibió a María como esposa después del sueño"
+    ],
+    [
+     "Los pastores",
+     "Fueron corriendo a ver al bebé"
+    ],
+    [
+     "Los magos",
+     "Adoraron al niño y le dieron regalos"
+    ]
+   ],
+   "exp": "Cada uno respondió a Dios a su manera.",
+   "ref": "",
+   "id": "nac-34"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada regalo con su significado",
+   "p": [
+    [
+     "Oro",
+     "Regalo para reyes"
+    ],
+    [
+     "Incienso",
+     "Se usaba en la adoración a Dios"
+    ],
+    [
+     "Mirra",
+     "Perfume para preparar a los muertos"
+    ]
+   ],
+   "exp": "Los regalos anuncian quién es Jesús: Rey, Dios y el que daría su vida.",
+   "ref": "",
+   "id": "nac-35"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "¡El ",
+    0,
+    " —sí, el Mesías, el Señor— ha nacido hoy en ",
+    1,
+    ", la ciudad de ",
+    2,
+    "!"
+   ],
+   "blanks": [
+    "Salvador",
+    "Belén",
+    "David"
+   ],
+   "bank": [
+    "Salvador",
+    "Belén",
+    "David",
+    "Nazaret",
+    "Moisés",
+    "Maestro"
+   ],
+   "exp": "El anuncio del ángel a los pastores resume quién es Jesús.",
+   "ref": "Lucas 2:11",
+   "id": "nac-36"
+  },
+  {
+   "t": "order",
+   "q": "Ordená lo que pasó",
+   "items": [
+    "Gabriel le anuncia a María el nacimiento",
+    "José y María viajan a Belén por el censo",
+    "Jesús nace y es acostado en un pesebre",
+    "Un ángel les da la noticia a los pastores",
+    "Los magos llegan guiados por una estrella",
+    "La familia huye a Egipto"
+   ],
+   "exp": "Del anuncio en Nazaret a la huida a Egipto.",
+   "ref": "",
+   "id": "nac-37"
+  },
+  {
+   "t": "app",
+   "q": "Un compañero te dice: \"Dios solo se fija en la gente importante\". ¿Qué te enseña el nacimiento de Jesús para responderle?",
+   "o": [
+    "Que Dios eligió llegar a un lugar humilde y le habló primero a pastores sencillos",
+    "Que tiene razón, por eso los magos eran sabios",
+    "Que mejor no hablar de Dios en la escuela",
+    "Que Dios solo habla a los que van al templo"
+   ],
+   "a": 0,
+   "exp": "Dios llegó sin ruido, a un lugar humilde, y le habló primero a gente que nadie tenía en cuenta.",
+   "ref": "",
+   "id": "nac-38"
+  },
+  {
+   "t": "reflect",
+   "q": "Dios eligió llegar a un lugar humilde. ¿En qué lugar sencillo de tu vida podría estar queriendo entrar Jesús hoy?",
+   "id": "nac-39"
+  },
+  {
+   "t": "reflect",
+   "q": "María aceptó que se cumpliera en ella la palabra de Dios. ¿Qué te cuesta entregarle a Dios con esa confianza?",
+   "id": "nac-40"
+  }
+ ]
+}

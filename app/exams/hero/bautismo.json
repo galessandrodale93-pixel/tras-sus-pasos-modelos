@@ -1,0 +1,542 @@
+{
+ "stage": "bautismo",
+ "branch": "hero",
+ "only": true,
+ "source": "materiales/hero-tras-sus-pasos/material.html",
+ "questions": [
+  {
+   "t": "mc",
+   "q": "¿Quién era Juan el Bautista para Jesús?",
+   "o": [
+    "Un pariente",
+    "Su hermano",
+    "Uno de los doce apóstoles",
+    "Un maestro de la ley de Jerusalén"
+   ],
+   "a": 0,
+   "exp": "Juan el Bautista era pariente de Jesús.",
+   "ref": "",
+   "id": "bau-01"
+  },
+  {
+   "t": "mc",
+   "q": "¿Dónde predicaba Juan el Bautista?",
+   "o": [
+    "En el desierto de Judea",
+    "En el templo de Jerusalén",
+    "En la sinagoga de Nazaret",
+    "En Capernaum"
+   ],
+   "a": 0,
+   "exp": "Juan apareció en el desierto de Judea predicando.",
+   "ref": "Mateo 3:1",
+   "id": "bau-02"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué predicaba Juan?",
+   "o": [
+    "Que la gente se arrepintiera y volviera a Dios, porque el reino del cielo estaba cerca",
+    "Que había que pelear contra Roma",
+    "Que había que construir un templo nuevo",
+    "Que el Mesías nunca vendría"
+   ],
+   "a": 0,
+   "exp": "Predicaba que la gente se arrepintiera de sus pecados y volviera a Dios.",
+   "ref": "Mateo 3:2",
+   "id": "bau-03"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué profeta había anunciado a Juan como \"una voz que clama en el desierto\"?",
+   "o": [
+    "Isaías",
+    "Miqueas",
+    "Zacarías",
+    "Malaquías"
+   ],
+   "a": 0,
+   "exp": "Juan era el mensajero anunciado por Isaías (Isaías 40:3).",
+   "ref": "Isaías 40:3",
+   "id": "bau-04"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo se vestía Juan el Bautista?",
+   "o": [
+    "Con ropa de pelo de camello y un cinturón de cuero",
+    "Con túnica blanca de sacerdote",
+    "Con un manto de rey",
+    "Con ropa de pescador"
+   ],
+   "a": 0,
+   "exp": "Su ropa era de pelo de camello, con un cinturón de cuero.",
+   "ref": "Mateo 3:4",
+   "id": "bau-05"
+  },
+  {
+   "t": "mc",
+   "q": "¿De qué se alimentaba Juan?",
+   "o": [
+    "De langostas y miel silvestre",
+    "De pan y pescado",
+    "De higos y dátiles",
+    "Solo de agua"
+   ],
+   "a": 0,
+   "exp": "Se alimentaba de langostas y miel silvestre.",
+   "ref": "Mateo 3:4",
+   "id": "bau-06"
+  },
+  {
+   "t": "mc",
+   "q": "¿En qué río bautizaba Juan?",
+   "o": [
+    "En el río Jordán",
+    "En el Nilo",
+    "En el mar de Galilea",
+    "En el estanque de Siloé"
+   ],
+   "a": 0,
+   "exp": "La gente confesaba sus pecados y era bautizada en el río Jordán.",
+   "ref": "Mateo 3:6",
+   "id": "bau-07"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo llama el evangelio de Juan al lugar donde bautizaba?",
+   "o": [
+    "Betania, al otro lado del Jordán",
+    "Caná de Galilea",
+    "Capernaum",
+    "Emaús"
+   ],
+   "a": 0,
+   "exp": "Juan 1:28 lo ubica en Betania, al otro lado del Jordán, al que muchos llaman Betábara.",
+   "ref": "Juan 1:28",
+   "id": "bau-08"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué anunciaba Juan sobre el que venía detrás de él?",
+   "o": [
+    "Que iba a bautizar con el Espíritu Santo y con fuego",
+    "Que iba a ser rey de Roma",
+    "Que iba a bautizar en el mar",
+    "Que iba a ser su discípulo"
+   ],
+   "a": 0,
+   "exp": "Detrás de él venía alguien mucho más poderoso, que bautizaría con el Espíritu Santo y con fuego.",
+   "ref": "Mateo 3:11",
+   "id": "bau-09"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué decía Juan que no era digno de hacer?",
+   "o": [
+    "Llevarle las sandalias",
+    "Hablar en el templo",
+    "Bautizar en el Jordán",
+    "Comer con él"
+   ],
+   "a": 0,
+   "exp": "Juan decía que ni siquiera era digno de llevarle las sandalias.",
+   "ref": "Mateo 3:11",
+   "id": "bau-10"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué Juan quiso impedir que Jesús se bautizara?",
+   "o": [
+    "Porque era él quien necesitaba ser bautizado por Jesús",
+    "Porque el río estaba crecido",
+    "Porque Jesús no se había arrepentido",
+    "Porque los fariseos lo prohibían"
+   ],
+   "a": 0,
+   "exp": "Juan quiso impedírselo: era él quien necesitaba ser bautizado por Jesús.",
+   "ref": "Mateo 3:14",
+   "id": "bau-11"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le respondió Jesús a Juan?",
+   "o": [
+    "Que lo hiciera igual, porque convenía cumplir todo lo que Dios pide",
+    "Que lo dejara para otro día",
+    "Que bautizara primero a sus discípulos",
+    "Que se fuera al desierto"
+   ],
+   "a": 0,
+   "exp": "Jesús le pidió que lo hiciera igual, porque convenía cumplir todo lo que Dios pide.",
+   "ref": "Mateo 3:15",
+   "id": "bau-12"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo descendió el Espíritu de Dios sobre Jesús?",
+   "o": [
+    "Como una paloma",
+    "Como una nube oscura",
+    "Como un viento fuerte",
+    "Como una estrella"
+   ],
+   "a": 0,
+   "exp": "Vio al Espíritu de Dios descender como una paloma y posarse sobre él.",
+   "ref": "Mateo 3:16",
+   "id": "bau-13"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué dijo la voz del cielo en el bautismo?",
+   "o": [
+    "Que Jesús era su Hijo muy amado, en quien se alegraba",
+    "Que Jesús debía ir a Egipto",
+    "Que Juan era el Mesías",
+    "Que el templo sería destruido"
+   ],
+   "a": 0,
+   "exp": "Una voz del cielo lo llamó su Hijo muy amado, en quien se alegraba.",
+   "ref": "Mateo 3:17",
+   "id": "bau-14"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué verdad sobre Dios se ve con claridad en el bautismo de Jesús?",
+   "o": [
+    "La Trinidad: un solo Dios en tres personas",
+    "Que hay muchos dioses",
+    "Que el Espíritu es un ángel",
+    "Que el Padre y el Hijo son enemigos"
+   ],
+   "a": 0,
+   "exp": "Aparecen juntos el Padre que habla, el Hijo que es bautizado y el Espíritu que desciende.",
+   "ref": "",
+   "id": "bau-15"
+  },
+  {
+   "t": "mc",
+   "q": "¿Quién llevó a Jesús al desierto para ser tentado?",
+   "o": [
+    "El Espíritu",
+    "Juan el Bautista",
+    "Los fariseos",
+    "Sus discípulos"
+   ],
+   "a": 0,
+   "exp": "El Espíritu llevó a Jesús al desierto para ser tentado por el diablo.",
+   "ref": "Mateo 4:1",
+   "id": "bau-16"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuánto tiempo ayunó Jesús en el desierto?",
+   "o": [
+    "Cuarenta días y cuarenta noches",
+    "Siete días",
+    "Tres días",
+    "Doce días"
+   ],
+   "a": 0,
+   "exp": "Ayunó cuarenta días y cuarenta noches, y tuvo hambre.",
+   "ref": "Mateo 4:2",
+   "id": "bau-17"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuál fue la primera tentación?",
+   "o": [
+    "Convertir piedras en pan",
+    "Tirarse desde el templo",
+    "Adorar al diablo",
+    "Caminar sobre el agua"
+   ],
+   "a": 0,
+   "exp": "El diablo lo tentó a que convirtiera piedras en pan.",
+   "ref": "Mateo 4:3",
+   "id": "bau-18"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le propuso el diablo en lo más alto del templo?",
+   "o": [
+    "Que se tirara para que los ángeles lo sostuvieran",
+    "Que enseñara a la multitud",
+    "Que echara a los vendedores",
+    "Que se hiciera sumo sacerdote"
+   ],
+   "a": 0,
+   "exp": "Lo tentó a tirarse desde lo más alto del templo para que los ángeles lo sostuvieran.",
+   "ref": "Mateo 4:5-6",
+   "id": "bau-19"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le ofreció el diablo a cambio de que se inclinara a adorarlo?",
+   "o": [
+    "Todos los reinos del mundo",
+    "Mucho pan",
+    "Una corona de oro",
+    "Un ejército de ángeles"
+   ],
+   "a": 0,
+   "exp": "Le ofreció todos los reinos del mundo a cambio de adorarlo.",
+   "ref": "Mateo 4:8-9",
+   "id": "bau-20"
+  },
+  {
+   "t": "mc",
+   "q": "¿De qué libro de la Escritura tomó Jesús sus respuestas al diablo?",
+   "o": [
+    "Deuteronomio",
+    "Salmos",
+    "Isaías",
+    "Génesis"
+   ],
+   "a": 0,
+   "exp": "Las tres veces respondió con palabras del libro de Deuteronomio.",
+   "ref": "",
+   "id": "bau-21"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué respondió Jesús a la tentación del pan?",
+   "o": [
+    "Que la gente vive de cada palabra que sale de la boca de Dios, no solo de pan",
+    "Que no tenía hambre",
+    "Que el pan era para los pobres",
+    "Que lo haría más tarde"
+   ],
+   "a": 0,
+   "exp": "Respondió con Deuteronomio 8:3.",
+   "ref": "Deuteronomio 8:3",
+   "id": "bau-22"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué pasó cuando el diablo se fue?",
+   "o": [
+    "Vinieron ángeles a cuidarlo",
+    "Jesús volvió a Nazaret enseguida",
+    "Llegó Juan con comida",
+    "Empezó una tormenta"
+   ],
+   "a": 0,
+   "exp": "El diablo se fue, y vinieron ángeles a cuidarlo.",
+   "ref": "Mateo 4:11",
+   "id": "bau-23"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo presentó Juan a Jesús cuando lo vio venir?",
+   "o": [
+    "Como el Cordero de Dios, que quita el pecado del mundo",
+    "Como el nuevo rey de Roma",
+    "Como un profeta más",
+    "Como el hijo del carpintero"
+   ],
+   "a": 0,
+   "exp": "Juan lo presentó con una frase que resume el evangelio.",
+   "ref": "Juan 1:29",
+   "id": "bau-24"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué recuerda el número cuarenta en la Biblia?",
+   "o": [
+    "Los cuarenta años de Israel en el desierto y los cuarenta días de Moisés en el monte",
+    "Los cuarenta reyes de Israel",
+    "Las cuarenta tribus",
+    "Los cuarenta panes de la Pascua"
+   ],
+   "a": 0,
+   "exp": "Donde Israel cayó en la prueba, Jesús se mantuvo fiel.",
+   "ref": "",
+   "id": "bau-25"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué anuncia Juan al llamar a Jesús \"Cordero de Dios\"?",
+   "o": [
+    "Que Jesús es el sacrificio definitivo",
+    "Que Jesús iba a ser pastor de ovejas",
+    "Que había que dejar de ir al templo",
+    "Que Jesús era muy tímido"
+   ],
+   "a": 0,
+   "exp": "Se ofrecían corderos en el templo; Juan anuncia que Jesús es el sacrificio definitivo.",
+   "ref": "",
+   "id": "bau-26"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hacía la gente que iba a escuchar a Juan?",
+   "o": [
+    "Confesaba sus pecados y era bautizada en el Jordán",
+    "Le pagaba para ser bautizada",
+    "Le llevaba ofrendas de corderos",
+    "Lo coronaba como rey"
+   ],
+   "a": 0,
+   "exp": "Gente de Jerusalén, Judea y la zona del Jordán confesaba sus pecados y era bautizada.",
+   "ref": "Mateo 3:5-6",
+   "id": "bau-27"
+  },
+  {
+   "t": "mc",
+   "q": "Según el glosario, ¿qué es el bautismo?",
+   "o": [
+    "Inmersión en agua como señal de arrepentimiento y de una vida nueva",
+    "Una fiesta de cumpleaños",
+    "Un sacrificio de animales",
+    "Una oración en la sinagoga"
+   ],
+   "a": 0,
+   "exp": "Bautismo: inmersión en agua como señal de arrepentimiento y de una vida nueva.",
+   "ref": "",
+   "id": "bau-28"
+  },
+  {
+   "t": "tf",
+   "q": "Jesús llegó al Jordán desde Galilea para ser bautizado.",
+   "a": true,
+   "exp": "Un día Jesús llegó de Galilea al Jordán para ser bautizado.",
+   "ref": "Mateo 3:13",
+   "id": "bau-29"
+  },
+  {
+   "t": "tf",
+   "q": "Jesús respondió a las tentaciones haciendo milagros.",
+   "a": false,
+   "exp": "Las tres veces respondió con la Escritura.",
+   "ref": "",
+   "id": "bau-30"
+  },
+  {
+   "t": "tf",
+   "q": "El Padre llamó a Jesús su Hijo amado antes de que hiciera un solo milagro.",
+   "a": true,
+   "exp": "Su identidad vino antes que su tarea.",
+   "ref": "",
+   "id": "bau-31"
+  },
+  {
+   "t": "tf",
+   "q": "Juan decía que la vida de cada uno tenía que mostrar el cambio.",
+   "a": true,
+   "exp": "Juan era firme: la vida tenía que mostrar el cambio.",
+   "ref": "Mateo 3:8",
+   "id": "bau-32"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada tentación con la respuesta de Jesús",
+   "p": [
+    [
+     "Convertir piedras en pan",
+     "No solo de pan vive la gente, sino de cada palabra de Dios"
+    ],
+    [
+     "Tirarse desde el templo",
+     "No hay que poner a prueba al Señor"
+    ],
+    [
+     "Adorar al diablo por los reinos",
+     "Solo a Dios hay que adorar y servir"
+    ]
+   ],
+   "exp": "Tres respuestas de Deuteronomio: 8:3; 6:16; 6:13.",
+   "ref": "Mateo 4:1-11",
+   "id": "bau-33"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada persona de la Trinidad con lo que pasó en el bautismo",
+   "p": [
+    [
+     "El Padre",
+     "Habla desde el cielo"
+    ],
+    [
+     "El Hijo",
+     "Es bautizado en el Jordán"
+    ],
+    [
+     "El Espíritu Santo",
+     "Desciende como una paloma"
+    ]
+   ],
+   "exp": "Una de las ventanas más claras de la Biblia a la Trinidad.",
+   "ref": "",
+   "id": "bau-34"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "¡Miren! ¡El ",
+    0,
+    " de Dios, que quita el ",
+    1,
+    " del ",
+    2,
+    "!"
+   ],
+   "blanks": [
+    "Cordero",
+    "pecado",
+    "mundo"
+   ],
+   "bank": [
+    "Cordero",
+    "pecado",
+    "mundo",
+    "Pastor",
+    "templo",
+    "León"
+   ],
+   "exp": "Con esta frase Juan presentó a Jesús.",
+   "ref": "Juan 1:29",
+   "id": "bau-35"
+  },
+  {
+   "t": "order",
+   "q": "Ordená lo que pasó",
+   "items": [
+    "Juan predica en el desierto de Judea",
+    "Jesús llega de Galilea al Jordán",
+    "Juan quiere impedirle el bautismo",
+    "Jesús es bautizado",
+    "El cielo se abre y el Espíritu baja como paloma",
+    "El Espíritu lo lleva al desierto cuarenta días"
+   ],
+   "exp": "Del Jordán al desierto.",
+   "ref": "",
+   "id": "bau-36"
+  },
+  {
+   "t": "app",
+   "q": "Un amigo te presiona para que hagas algo que sabés que está mal. ¿Qué te enseña Jesús en el desierto?",
+   "o": [
+    "Responder con la Palabra de Dios guardada en el corazón",
+    "Discutir hasta ganar",
+    "Hacerlo una sola vez para que te deje",
+    "No decir nada y seguirlo"
+   ],
+   "a": 0,
+   "exp": "Jesús venció cada tentación respondiendo con la Escritura.",
+   "ref": "",
+   "id": "bau-37"
+  },
+  {
+   "t": "reflect",
+   "q": "Antes de hacer un solo milagro, Jesús escuchó al Padre llamarlo su Hijo muy amado. ¿Qué te dice Dios a vos sobre quién sos?",
+   "id": "bau-38"
+  },
+  {
+   "t": "reflect",
+   "q": "Cuando venga la tentación, ¿qué versículo podés tener guardado en el corazón para responder como Jesús?",
+   "id": "bau-39"
+  }
+ ]
+}

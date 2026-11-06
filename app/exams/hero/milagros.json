@@ -1,0 +1,553 @@
+{
+ "stage": "milagros",
+ "branch": "hero",
+ "only": true,
+ "source": "materiales/hero-tras-sus-pasos/material.html",
+ "questions": [
+  {
+   "t": "mc",
+   "q": "¿Cómo llaman los evangelios a los milagros de Jesús?",
+   "o": [
+    "Señales",
+    "Trucos",
+    "Leyendas",
+    "Parábolas"
+   ],
+   "a": 0,
+   "exp": "Cada milagro muestra algo de quién es él.",
+   "ref": "",
+   "id": "mil-01"
+  },
+  {
+   "t": "mc",
+   "q": "¿Para qué escribió Juan las señales de Jesús?",
+   "o": [
+    "Para que creamos que Jesús es el Mesías, el Hijo de Dios, y tengamos vida",
+    "Para que la gente se asombre",
+    "Para enseñar medicina",
+    "Para criticar a los fariseos"
+   ],
+   "a": 0,
+   "exp": "Juan dice que escribió esas señales para que creamos y tengamos vida.",
+   "ref": "Juan 20:31",
+   "id": "mil-02"
+  },
+  {
+   "t": "mc",
+   "q": "¿Dónde hizo Jesús su primera señal?",
+   "o": [
+    "En una boda en Caná de Galilea",
+    "En el templo de Jerusalén",
+    "En Capernaum",
+    "En el río Jordán"
+   ],
+   "a": 0,
+   "exp": "La primera señal fue en una boda en Caná de Galilea.",
+   "ref": "Juan 2:1-11",
+   "id": "mil-03"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué problema hubo en la boda de Caná?",
+   "o": [
+    "Se acabó el vino",
+    "Se acabó el pan",
+    "Llovió mucho",
+    "Faltaron invitados"
+   ],
+   "a": 0,
+   "exp": "Se acabó el vino, algo vergonzoso para una familia.",
+   "ref": "Juan 2:3",
+   "id": "mil-04"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué les dijo María a los sirvientes en Caná?",
+   "o": [
+    "Que hicieran todo lo que Jesús les dijera",
+    "Que fueran a comprar más vino",
+    "Que cerraran la puerta",
+    "Que no le contaran a nadie"
+   ],
+   "a": 0,
+   "exp": "María les pidió que hicieran todo lo que él les dijera.",
+   "ref": "Juan 2:5",
+   "id": "mil-05"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuántas tinajas había y de qué eran?",
+   "o": [
+    "Seis tinajas de piedra",
+    "Doce tinajas de barro",
+    "Tres tinajas de oro",
+    "Siete tinajas de madera"
+   ],
+   "a": 0,
+   "exp": "Había seis tinajas de piedra para el lavado ceremonial.",
+   "ref": "Juan 2:6",
+   "id": "mil-06"
+  },
+  {
+   "t": "mc",
+   "q": "¿Para qué se usaban las tinajas de Caná?",
+   "o": [
+    "Para el lavado ceremonial",
+    "Para guardar aceite",
+    "Para el vino de la fiesta",
+    "Para dar de beber a los animales"
+   ],
+   "a": 0,
+   "exp": "Eran tinajas de piedra para el lavado ceremonial.",
+   "ref": "Juan 2:6",
+   "id": "mil-07"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo era el vino que salió de las tinajas?",
+   "o": [
+    "Del mejor",
+    "Muy poco",
+    "Agrio",
+    "Igual que el anterior"
+   ],
+   "a": 0,
+   "exp": "Cuando lo probó el encargado de la fiesta, era vino, y del mejor.",
+   "ref": "Juan 2:10",
+   "id": "mil-08"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hicieron los discípulos después de la señal de Caná?",
+   "o": [
+    "Creyeron en él",
+    "Se fueron",
+    "Se burlaron",
+    "Pidieron más vino"
+   ],
+   "a": 0,
+   "exp": "Fue la primera señal de Jesús, y sus discípulos creyeron en él.",
+   "ref": "Juan 2:11",
+   "id": "mil-09"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuántos hombres llevaban al paralítico en la camilla?",
+   "o": [
+    "Cuatro",
+    "Dos",
+    "Doce",
+    "Uno"
+   ],
+   "a": 0,
+   "exp": "Cuatro hombres traían a un amigo paralítico en una camilla.",
+   "ref": "Marcos 2:3",
+   "id": "mil-10"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo hicieron llegar al paralítico hasta Jesús?",
+   "o": [
+    "Subieron al techo, hicieron un agujero y lo bajaron",
+    "Esperaron a que todos se fueran",
+    "Entraron por la puerta de atrás",
+    "Gritaron hasta que Jesús salió"
+   ],
+   "a": 0,
+   "exp": "Como no podían pasar, subieron al techo, hicieron un agujero y lo bajaron.",
+   "ref": "Marcos 2:4",
+   "id": "mil-11"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le dijo Jesús primero al paralítico?",
+   "o": [
+    "Que sus pecados quedaban perdonados",
+    "Que se levantara y caminara",
+    "Que fuera al templo",
+    "Que tuviera paciencia"
+   ],
+   "a": 0,
+   "exp": "Al ver la fe de ellos, Jesús le dijo que sus pecados quedaban perdonados.",
+   "ref": "Marcos 2:5",
+   "id": "mil-12"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué algunos maestros de la ley pensaron que Jesús blasfemaba?",
+   "o": [
+    "Porque solo Dios perdona pecados",
+    "Porque era sábado",
+    "Porque tocó a un enfermo",
+    "Porque rompieron el techo"
+   ],
+   "a": 0,
+   "exp": "Pensaron que era una blasfemia, porque solo Dios perdona pecados.",
+   "ref": "Marcos 2:7",
+   "id": "mil-13"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo mostró Jesús que tenía autoridad para perdonar pecados?",
+   "o": [
+    "Le ordenó al paralítico levantarse, tomar su camilla e irse a su casa",
+    "Les mostró un libro",
+    "Les pidió que se fueran",
+    "Hizo bajar fuego del cielo"
+   ],
+   "a": 0,
+   "exp": "El hombre se fue caminando delante de todos.",
+   "ref": "Marcos 2:10-12",
+   "id": "mil-14"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuántos años hacía que la mujer sufría de hemorragias?",
+   "o": [
+    "Doce años",
+    "Treinta y ocho años",
+    "Tres años",
+    "Cuarenta años"
+   ],
+   "a": 0,
+   "exp": "Una mujer sufría de hemorragias desde hacía doce años.",
+   "ref": "Marcos 5:25",
+   "id": "mil-15"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué tocó la mujer para quedar sana?",
+   "o": [
+    "El manto de Jesús",
+    "Sus manos",
+    "Su camilla",
+    "Las tinajas"
+   ],
+   "a": 0,
+   "exp": "Se acercó por detrás, tocó el manto de Jesús y se sanó al instante.",
+   "ref": "Marcos 5:27-29",
+   "id": "mil-16"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo llamó Jesús a la mujer sanada?",
+   "o": [
+    "Hija",
+    "Hermana",
+    "Señora",
+    "Amiga"
+   ],
+   "a": 0,
+   "exp": "Jesús la llamó hija, le dijo que su fe la había sanado y la despidió en paz.",
+   "ref": "Marcos 5:34",
+   "id": "mil-17"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le dijo Jesús a la mujer?",
+   "o": [
+    "Que su fe la había sanado y que fuera en paz",
+    "Que no tenía que haberlo tocado",
+    "Que fuera al médico",
+    "Que ofreciera dos palomas"
+   ],
+   "a": 0,
+   "exp": "Su fe la había sanado.",
+   "ref": "Marcos 5:34",
+   "id": "mil-18"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuántos hombres comieron en la multiplicación de los panes?",
+   "o": [
+    "Unos cinco mil, sin contar mujeres y chicos",
+    "Unos cien",
+    "Doce",
+    "Cuatro mil, contando a todos"
+   ],
+   "a": 0,
+   "exp": "Una multitud de unos cinco mil hombres, sin contar mujeres y chicos.",
+   "ref": "Juan 6:10",
+   "id": "mil-19"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué tenía el muchacho?",
+   "o": [
+    "Cinco panes de cebada y dos pescados",
+    "Siete panes y tres peces",
+    "Doce panes",
+    "Una canasta de higos"
+   ],
+   "a": 0,
+   "exp": "Un muchacho tenía cinco panes de cebada y dos pescados.",
+   "ref": "Juan 6:9",
+   "id": "mil-20"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuántas canastas se llenaron con lo que sobró?",
+   "o": [
+    "Doce",
+    "Cinco",
+    "Siete",
+    "Ninguna"
+   ],
+   "a": 0,
+   "exp": "Con lo que sobró llenaron doce canastas.",
+   "ref": "Juan 6:13",
+   "id": "mil-21"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuándo vieron los discípulos a Jesús caminando sobre el agua?",
+   "o": [
+    "De madrugada, con el viento en contra",
+    "Al mediodía, con el lago tranquilo",
+    "Al atardecer, en la orilla",
+    "Un sábado en la sinagoga"
+   ],
+   "a": 0,
+   "exp": "De madrugada vieron a Jesús caminando sobre el agua.",
+   "ref": "Mateo 14:24-25",
+   "id": "mil-22"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué les dijo Jesús a los discípulos asustados?",
+   "o": [
+    "Que tuvieran ánimo y no tuvieran miedo, porque era él",
+    "Que volvieran a la orilla",
+    "Que remaran más fuerte",
+    "Que se tiraran al agua"
+   ],
+   "a": 0,
+   "exp": "Jesús les dijo que tuvieran ánimo y no tuvieran miedo, porque era él.",
+   "ref": "Mateo 14:27",
+   "id": "mil-23"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué Pedro empezó a hundirse?",
+   "o": [
+    "Porque al ver el viento tuvo miedo",
+    "Porque se le rompió la barca",
+    "Porque no sabía nadar",
+    "Porque Jesús se alejó"
+   ],
+   "a": 0,
+   "exp": "Al ver el viento tuvo miedo y empezó a hundirse.",
+   "ref": "Mateo 14:30",
+   "id": "mil-24"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hicieron los discípulos cuando Jesús subió a la barca?",
+   "o": [
+    "Lo adoraron reconociendo que de verdad era el Hijo de Dios",
+    "Siguieron remando sin hablar",
+    "Se fueron a dormir",
+    "Le pidieron que se bajara"
+   ],
+   "a": 0,
+   "exp": "El viento se calmó y lo adoraron.",
+   "ref": "Mateo 14:32-33",
+   "id": "mil-25"
+  },
+  {
+   "t": "mc",
+   "q": "¿A qué estanque mandó Jesús al ciego de nacimiento?",
+   "o": [
+    "Al estanque de Siloé",
+    "Al río Jordán",
+    "Al mar de Galilea",
+    "A las tinajas de Caná"
+   ],
+   "a": 0,
+   "exp": "Le untó barro en los ojos y lo mandó a lavarse al estanque de Siloé.",
+   "ref": "Juan 9:6-7",
+   "id": "mil-26"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le untó Jesús en los ojos al ciego de nacimiento?",
+   "o": [
+    "Barro",
+    "Aceite",
+    "Vino",
+    "Miel"
+   ],
+   "a": 0,
+   "exp": "Le untó barro en los ojos.",
+   "ref": "Juan 9:6",
+   "id": "mil-27"
+  },
+  {
+   "t": "mc",
+   "q": "¿En qué ciudad fue sanado Bartimeo?",
+   "o": [
+    "Jericó",
+    "Caná",
+    "Capernaum",
+    "Nazaret"
+   ],
+   "a": 0,
+   "exp": "En Jericó, un mendigo ciego llamado Bartimeo le gritaba a Jesús.",
+   "ref": "Marcos 10:46",
+   "id": "mil-28"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo llamaba Bartimeo a Jesús?",
+   "o": [
+    "Hijo de David",
+    "Hijo de José",
+    "Maestro de Nazaret",
+    "Profeta de Galilea"
+   ],
+   "a": 0,
+   "exp": "Lo llamaba Hijo de David y le pedía compasión.",
+   "ref": "Marcos 10:47",
+   "id": "mil-29"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hizo Bartimeo después de recuperar la vista?",
+   "o": [
+    "Siguió a Jesús por el camino",
+    "Volvió a pedir limosna",
+    "Se fue a su casa sin hablar",
+    "Se fue a Roma"
+   ],
+   "a": 0,
+   "exp": "Bartimeo recuperó la vista y siguió a Jesús por el camino.",
+   "ref": "Marcos 10:52",
+   "id": "mil-30"
+  },
+  {
+   "t": "mc",
+   "q": "Además de sanar el cuerpo, ¿qué les devolvía Jesús a los enfermos que sanaba?",
+   "o": [
+    "Su lugar en la familia y en la comunidad",
+    "Su dinero",
+    "Un trabajo en el templo",
+    "Un título de profeta"
+   ],
+   "a": 0,
+   "exp": "Un enfermo muchas veces quedaba excluido; cuando Jesús sana, devuelve a la persona a su familia y a su comunidad.",
+   "ref": "",
+   "id": "mil-31"
+  },
+  {
+   "t": "tf",
+   "q": "El paralítico bajado por el techo fue sanado en Capernaum.",
+   "a": true,
+   "exp": "En Capernaum, la casa donde enseñaba Jesús estaba tan llena que no se podía entrar.",
+   "ref": "Marcos 2:1",
+   "id": "mil-32"
+  },
+  {
+   "t": "tf",
+   "q": "Cuando quisieron hacer callar a Bartimeo, él se quedó callado.",
+   "a": false,
+   "exp": "Lo quisieron hacer callar, pero gritó más fuerte.",
+   "ref": "Marcos 10:48",
+   "id": "mil-33"
+  },
+  {
+   "t": "tf",
+   "q": "La mujer enferma se acercó a Jesús por detrás, entre la multitud.",
+   "a": true,
+   "exp": "Se acercó por detrás entre la multitud y tocó el manto.",
+   "ref": "Marcos 5:27",
+   "id": "mil-34"
+  },
+  {
+   "t": "tf",
+   "q": "Jesús dijo que él es la luz del mundo.",
+   "a": true,
+   "exp": "Jesús dijo que él es la luz del mundo, y lo mostró sanando ciegos.",
+   "ref": "Juan 8:12",
+   "id": "mil-35"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada lugar con la señal que pasó ahí",
+   "p": [
+    [
+     "Caná",
+     "El agua se convirtió en vino"
+    ],
+    [
+     "Una casa en Capernaum",
+     "El paralítico bajado por el techo"
+    ],
+    [
+     "El estanque de Siloé",
+     "El ciego de nacimiento volvió viendo"
+    ],
+    [
+     "Jericó",
+     "Bartimeo recuperó la vista"
+    ]
+   ],
+   "exp": "Señales que apuntan a alguien.",
+   "ref": "",
+   "id": "mil-36"
+  },
+  {
+   "t": "order",
+   "q": "Ordená la historia de Bartimeo",
+   "items": [
+    "Bartimeo le grita a Jesús, llamándolo Hijo de David",
+    "Lo quieren hacer callar",
+    "Grita más fuerte",
+    "Jesús lo llama y le pregunta qué quiere",
+    "Bartimeo le pide ver",
+    "Recupera la vista y sigue a Jesús"
+   ],
+   "exp": "Marcos 10:46-52.",
+   "ref": "",
+   "id": "mil-37"
+  },
+  {
+   "t": "order",
+   "q": "Ordená lo que pasó en el lago",
+   "items": [
+    "Los discípulos cruzan el lago con viento en contra",
+    "De madrugada ven a Jesús caminando sobre el agua",
+    "Jesús les dice que tengan ánimo, que es él",
+    "Pedro baja de la barca y camina sobre el agua",
+    "Tiene miedo y empieza a hundirse",
+    "Jesús lo agarra de la mano y el viento se calma"
+   ],
+   "exp": "Mateo 14:22-33.",
+   "ref": "",
+   "id": "mil-38"
+  },
+  {
+   "t": "app",
+   "q": "Un amigo tuyo está pasando un mal momento y se alejó de Dios. ¿Qué te enseñan los amigos del paralítico?",
+   "o": [
+    "Orar por él con insistencia y acercarlo a Jesús aunque cueste",
+    "Esperar a que vuelva solo",
+    "Contárselo a todos",
+    "Alejarte para no complicarte"
+   ],
+   "a": 0,
+   "exp": "Los amigos del paralítico no se rindieron ante la multitud: abrieron un techo.",
+   "ref": "",
+   "id": "mil-39"
+  },
+  {
+   "t": "reflect",
+   "q": "Los amigos del paralítico no se rindieron ante la multitud. ¿Por qué amigo podés orar con esa insistencia?",
+   "id": "mil-40"
+  },
+  {
+   "t": "reflect",
+   "q": "Jesús le preguntó a Bartimeo qué quería que hiciera por él. Si te lo preguntara hoy, ¿qué le responderías?",
+   "id": "mil-41"
+  }
+ ]
+}

@@ -1,0 +1,603 @@
+{
+ "stage": "parabolas",
+ "branch": "hero",
+ "only": true,
+ "source": "materiales/hero-tras-sus-pasos/material.html",
+ "questions": [
+  {
+   "t": "mc",
+   "q": "¿Qué es una parábola?",
+   "o": [
+    "Una historia corta de la vida diaria que enseña una verdad sobre Dios y su reino",
+    "Un milagro de sanidad",
+    "Una ley del templo",
+    "Un canto de alabanza"
+   ],
+   "a": 0,
+   "exp": "Una parábola es una historia corta, tomada de la vida diaria, que enseña una verdad del reino.",
+   "ref": "",
+   "id": "par-01"
+  },
+  {
+   "t": "mc",
+   "q": "¿De qué cosas hablaba Jesús en sus parábolas?",
+   "o": [
+    "De semillas, panes, monedas, ovejas y familias",
+    "De batallas y reyes lejanos",
+    "De estrellas y planetas",
+    "De leyes romanas"
+   ],
+   "a": 0,
+   "exp": "Hablaba de cosas que todos conocían.",
+   "ref": "",
+   "id": "par-02"
+  },
+  {
+   "t": "mc",
+   "q": "En la parábola del sembrador, ¿qué representa la semilla?",
+   "o": [
+    "El mensaje del reino",
+    "El dinero",
+    "Los pájaros",
+    "El agricultor"
+   ],
+   "a": 0,
+   "exp": "La semilla es el mensaje del reino, la Palabra.",
+   "ref": "Mateo 13:19",
+   "id": "par-03"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué pasó con la semilla que cayó en el camino?",
+   "o": [
+    "Los pájaros se la comieron",
+    "El sol la quemó",
+    "Los espinos la ahogaron",
+    "Dio una gran cosecha"
+   ],
+   "a": 0,
+   "exp": "Parte de la semilla cayó en el camino y los pájaros se la comieron.",
+   "ref": "Mateo 13:4",
+   "id": "par-04"
+  },
+  {
+   "t": "mc",
+   "q": "¿A quién representa la semilla que cayó en el camino?",
+   "o": [
+    "A quien escucha y no entiende, y el maligno le arrebata lo sembrado",
+    "A quien escucha y da fruto",
+    "A quien se preocupa por la riqueza",
+    "A quien recibe la palabra con alegría"
+   ],
+   "a": 0,
+   "exp": "El camino es quien escucha y no entiende.",
+   "ref": "Mateo 13:19",
+   "id": "par-05"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué pasó con la semilla en terreno rocoso?",
+   "o": [
+    "Brotó rápido, pero como no tenía raíz, el sol la quemó",
+    "Los pájaros se la comieron",
+    "Creció entre espinos",
+    "Dio cien veces más"
+   ],
+   "a": 0,
+   "exp": "Brotó rápido, pero no tenía raíz.",
+   "ref": "Mateo 13:5-6",
+   "id": "par-06"
+  },
+  {
+   "t": "mc",
+   "q": "¿A quién representa el terreno rocoso?",
+   "o": [
+    "A quien recibe la palabra con alegría pero se aparta cuando llegan los problemas",
+    "A quien nunca escucha",
+    "A quien da mucho fruto",
+    "A quien siembra"
+   ],
+   "a": 0,
+   "exp": "Se aparta cuando llegan los problemas.",
+   "ref": "Mateo 13:20-21",
+   "id": "par-07"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué representan los espinos?",
+   "o": [
+    "Las preocupaciones de esta vida y el atractivo de la riqueza",
+    "Los pájaros del cielo",
+    "La lluvia",
+    "Los ángeles"
+   ],
+   "a": 0,
+   "exp": "Los espinos ahogan la palabra.",
+   "ref": "Mateo 13:22",
+   "id": "par-08"
+  },
+  {
+   "t": "mc",
+   "q": "¿A quién representa la buena tierra?",
+   "o": [
+    "A quien escucha, entiende y da fruto",
+    "A quien escucha sin entender",
+    "A quien se aparta en los problemas",
+    "A quien tiene muchas riquezas"
+   ],
+   "a": 0,
+   "exp": "La buena tierra es quien escucha, entiende y da fruto.",
+   "ref": "Mateo 13:23",
+   "id": "par-09"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le preguntó el experto en la ley a Jesús?",
+   "o": [
+    "Qué tenía que hacer para heredar la vida eterna",
+    "Cuándo sería la Pascua",
+    "Quién era el más grande",
+    "Si había que pagar impuestos"
+   ],
+   "a": 0,
+   "exp": "Le preguntó qué tenía que hacer para heredar la vida eterna.",
+   "ref": "Lucas 10:25",
+   "id": "par-10"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo resumió el experto lo que decía la ley?",
+   "o": [
+    "Amar a Dios con todo el corazón y al prójimo como a uno mismo",
+    "Ir al templo cada sábado",
+    "Ofrecer sacrificios cada año",
+    "No comer con pecadores"
+   ],
+   "a": 0,
+   "exp": "Amar a Dios con todo el corazón y al prójimo como a uno mismo.",
+   "ref": "Lucas 10:27",
+   "id": "par-11"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué pregunta hizo el experto para justificarse?",
+   "o": [
+    "¿Quién es mi prójimo?",
+    "¿Quién es el Mesías?",
+    "¿Dónde está el reino?",
+    "¿Cuál es el mayor mandamiento?"
+   ],
+   "a": 0,
+   "exp": "Quiso justificarse y preguntó quién era su prójimo.",
+   "ref": "Lucas 10:29",
+   "id": "par-12"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué camino iba el hombre asaltado?",
+   "o": [
+    "De Jerusalén a Jericó",
+    "De Nazaret a Belén",
+    "De Capernaum a Caná",
+    "De Jericó a Egipto"
+   ],
+   "a": 0,
+   "exp": "Un hombre que bajaba de Jerusalén a Jericó fue asaltado.",
+   "ref": "Lucas 10:30",
+   "id": "par-13"
+  },
+  {
+   "t": "mc",
+   "q": "¿Quiénes pasaron y siguieron de largo?",
+   "o": [
+    "Un sacerdote y un levita",
+    "Un samaritano y un pastor",
+    "Dos soldados romanos",
+    "Un fariseo y un pescador"
+   ],
+   "a": 0,
+   "exp": "Pasó un sacerdote y siguió de largo; pasó un levita y también siguió.",
+   "ref": "Lucas 10:31-32",
+   "id": "par-14"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué era un levita?",
+   "o": [
+    "Un ayudante del templo",
+    "Un soldado romano",
+    "Un cobrador de impuestos",
+    "Un pastor de ovejas"
+   ],
+   "a": 0,
+   "exp": "Un levita era un ayudante del templo.",
+   "ref": "",
+   "id": "par-15"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hizo el samaritano?",
+   "o": [
+    "Le vendó las heridas, lo llevó a una posada y pagó para que lo cuidaran",
+    "Llamó a los soldados",
+    "Le dio una moneda y siguió",
+    "Esperó a que pasara otro"
+   ],
+   "a": 0,
+   "exp": "Sintió compasión y lo cuidó.",
+   "ref": "Lucas 10:33-35",
+   "id": "par-16"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le dijo Jesús al experto al final?",
+   "o": [
+    "Que fuera e hiciera lo mismo",
+    "Que estudiara más la ley",
+    "Que fuera al templo",
+    "Que no hablara con samaritanos"
+   ],
+   "a": 0,
+   "exp": "Jesús le dijo que fuera e hiciera lo mismo.",
+   "ref": "Lucas 10:37",
+   "id": "par-17"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué era escandaloso que el héroe de la historia fuera un samaritano?",
+   "o": [
+    "Porque judíos y samaritanos tenían siglos de enemistad",
+    "Porque los samaritanos eran sacerdotes",
+    "Porque los samaritanos eran romanos",
+    "Porque el samaritano era rico"
+   ],
+   "a": 0,
+   "exp": "Diferían en dónde adorar a Dios y en qué libros de la Escritura aceptar.",
+   "ref": "",
+   "id": "par-18"
+  },
+  {
+   "t": "mc",
+   "q": "¿A quiénes respondía Jesús con las tres historias de Lucas 15?",
+   "o": [
+    "A los que lo criticaban por comer con pecadores",
+    "A sus discípulos que tenían miedo",
+    "A Pilato",
+    "A los pastores de Belén"
+   ],
+   "a": 0,
+   "exp": "Jesús responde a los que lo criticaban por comer con pecadores.",
+   "ref": "Lucas 15:1-3",
+   "id": "par-19"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuántas ovejas tenía el pastor de la parábola?",
+   "o": [
+    "Cien",
+    "Doce",
+    "Cincuenta",
+    "Mil"
+   ],
+   "a": 0,
+   "exp": "Un pastor tiene cien ovejas y pierde una.",
+   "ref": "Lucas 15:4",
+   "id": "par-20"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hace el pastor cuando encuentra la oveja?",
+   "o": [
+    "Vuelve feliz con ella sobre los hombros y hace fiesta",
+    "La reta por haberse ido",
+    "La vende",
+    "La deja con las otras sin decir nada"
+   ],
+   "a": 0,
+   "exp": "Vuelve feliz con ella sobre los hombros y hace fiesta.",
+   "ref": "Lucas 15:5-6",
+   "id": "par-21"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hace la mujer que pierde una moneda?",
+   "o": [
+    "Barre toda la casa hasta hallarla y celebra con sus vecinas",
+    "Pide prestada otra",
+    "Se queda llorando",
+    "Culpa a sus vecinas"
+   ],
+   "a": 0,
+   "exp": "Barre toda la casa hasta hallarla.",
+   "ref": "Lucas 15:8-9",
+   "id": "par-22"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le pidió el hijo menor a su padre?",
+   "o": [
+    "Su parte de la herencia",
+    "Un trabajo en el campo",
+    "Una casa nueva",
+    "Permiso para casarse"
+   ],
+   "a": 0,
+   "exp": "El hijo menor pidió su parte de la herencia.",
+   "ref": "Lucas 15:12",
+   "id": "par-23"
+  },
+  {
+   "t": "mc",
+   "q": "¿En qué trabajo terminó el hijo pródigo cuando llegó el hambre?",
+   "o": [
+    "Cuidando cerdos",
+    "Pescando",
+    "Cobrando impuestos",
+    "Construyendo casas"
+   ],
+   "a": 0,
+   "exp": "Terminó cuidando cerdos y deseando comer lo que ellos comían.",
+   "ref": "Lucas 15:15-16",
+   "id": "par-24"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo pensaba volver el hijo a su padre?",
+   "o": [
+    "Dispuesto a ser tratado como un empleado",
+    "Pidiendo más dinero",
+    "Exigiendo una fiesta",
+    "Escondido de noche"
+   ],
+   "a": 0,
+   "exp": "Recapacitó y volvió, dispuesto a ser tratado como un empleado.",
+   "ref": "Lucas 15:18-19",
+   "id": "par-25"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le dio el padre al hijo que volvió?",
+   "o": [
+    "La mejor ropa, un anillo y sandalias",
+    "Un castigo",
+    "Un lugar entre los empleados",
+    "Una bolsa de monedas para irse otra vez"
+   ],
+   "a": 0,
+   "exp": "Le puso la mejor ropa, un anillo y sandalias, y organizó una fiesta.",
+   "ref": "Lucas 15:22-23",
+   "id": "par-26"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo reaccionó el hermano mayor?",
+   "o": [
+    "Se enojó y no quiso entrar",
+    "Corrió a abrazarlo",
+    "Organizó la fiesta",
+    "Se fue de la casa"
+   ],
+   "a": 0,
+   "exp": "El hermano mayor se enojó y no quiso entrar.",
+   "ref": "Lucas 15:28",
+   "id": "par-27"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué hizo el padre con el hermano mayor?",
+   "o": [
+    "Salió a buscarlo también",
+    "Lo echó de la casa",
+    "Lo ignoró",
+    "Lo castigó"
+   ],
+   "a": 0,
+   "exp": "El padre salió a buscarlo también: Dios es ese Padre que sale a buscar a sus dos hijos.",
+   "ref": "Lucas 15:28",
+   "id": "par-28"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué era llamativo que el padre corriera hacia su hijo?",
+   "o": [
+    "En esa cultura un hombre mayor no corría en público",
+    "Porque estaba enfermo",
+    "Porque era de noche",
+    "Porque estaba prohibido por Roma"
+   ],
+   "a": 0,
+   "exp": "El padre deja de lado su dignidad para abrazar a su hijo antes de que nadie lo humille.",
+   "ref": "",
+   "id": "par-29"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuánto fruto dio la semilla en tierra fértil?",
+   "o": [
+    "Treinta, sesenta y hasta cien veces más",
+    "Lo mismo que se sembró",
+    "Dos veces más",
+    "Mil veces más"
+   ],
+   "a": 0,
+   "exp": "Produjeron una cosecha treinta, sesenta y hasta cien veces más numerosa.",
+   "ref": "Mateo 13:8",
+   "id": "par-30"
+  },
+  {
+   "t": "tf",
+   "q": "El samaritano era de un pueblo despreciado por los judíos.",
+   "a": true,
+   "exp": "Pasó un samaritano, de un pueblo despreciado por los judíos.",
+   "ref": "",
+   "id": "par-31"
+  },
+  {
+   "t": "tf",
+   "q": "El sacerdote se detuvo a ayudar al hombre herido.",
+   "a": false,
+   "exp": "Pasó un sacerdote y siguió de largo.",
+   "ref": "Lucas 10:31",
+   "id": "par-32"
+  },
+  {
+   "t": "tf",
+   "q": "El padre esperó en la puerta a que el hijo le pidiera perdón antes de abrazarlo.",
+   "a": false,
+   "exp": "Lo vio de lejos, corrió, lo abrazó y lo besó.",
+   "ref": "Lucas 15:20",
+   "id": "par-33"
+  },
+  {
+   "t": "tf",
+   "q": "En la parábola, los espinos ahogaron parte de la semilla.",
+   "a": true,
+   "exp": "Otra cayó entre espinos, que la ahogaron.",
+   "ref": "Mateo 13:7",
+   "id": "par-34"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada terreno con lo que le pasó a la semilla",
+   "p": [
+    [
+     "El camino",
+     "Los pájaros se la comieron"
+    ],
+    [
+     "Terreno rocoso",
+     "El sol la quemó porque no tenía raíz"
+    ],
+    [
+     "Entre espinos",
+     "Los espinos la ahogaron"
+    ],
+    [
+     "Tierra fértil",
+     "Dio una gran cosecha"
+    ]
+   ],
+   "exp": "La parábola del sembrador.",
+   "ref": "Mateo 13:1-23",
+   "id": "par-35"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "Pero otras semillas cayeron en tierra ",
+    0,
+    ", ¡y produjeron una cosecha que fue treinta, ",
+    1,
+    " y hasta ",
+    2,
+    " veces más numerosa de lo que se había sembrado!"
+   ],
+   "blanks": [
+    "fértil",
+    "sesenta",
+    "cien"
+   ],
+   "bank": [
+    "fértil",
+    "sesenta",
+    "cien",
+    "seca",
+    "cuarenta",
+    "mil"
+   ],
+   "exp": "La buena tierra escucha, entiende y da fruto.",
+   "ref": "Mateo 13:8",
+   "id": "par-36"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "De la misma manera, ¡hay más ",
+    0,
+    " en el cielo por un pecador perdido que se arrepiente y regresa a Dios que por ",
+    1,
+    " justos que no se extraviaron!"
+   ],
+   "blanks": [
+    "alegría",
+    "noventa y nueve"
+   ],
+   "bank": [
+    "alegría",
+    "noventa y nueve",
+    "tristeza",
+    "cien",
+    "diez"
+   ],
+   "exp": "La alegría de Dios por lo perdido y encontrado.",
+   "ref": "Lucas 15:7",
+   "id": "par-37"
+  },
+  {
+   "t": "verse",
+   "q": "Completá el versículo",
+   "parts": [
+    "Lleno de amor y de ",
+    0,
+    ", ",
+    1,
+    " hacia su hijo, lo abrazó y lo besó."
+   ],
+   "blanks": [
+    "compasión",
+    "corrió"
+   ],
+   "bank": [
+    "compasión",
+    "corrió",
+    "enojo",
+    "caminó",
+    "esperó"
+   ],
+   "exp": "El padre del pródigo.",
+   "ref": "Lucas 15:20",
+   "id": "par-38"
+  },
+  {
+   "t": "order",
+   "q": "Ordená la historia del hijo pródigo",
+   "items": [
+    "El hijo menor pide su parte de la herencia",
+    "Se va lejos y la malgasta",
+    "Termina cuidando cerdos",
+    "Recapacita y vuelve a su padre",
+    "El padre corre, lo abraza y lo besa",
+    "Hacen fiesta y el padre sale a buscar al hermano mayor"
+   ],
+   "exp": "Lucas 15:11-32.",
+   "ref": "",
+   "id": "par-39"
+  },
+  {
+   "t": "app",
+   "q": "Hay un chico nuevo en tu curso, de un grupo con el que nunca te llevaste bien, y hoy está pasándola mal. ¿Qué haría un buen prójimo?",
+   "o": [
+    "Acercarse y ayudarlo, como el samaritano",
+    "Esperar a que lo ayude otro",
+    "Mirar y seguir de largo",
+    "Ayudarlo solo si es de tu grupo"
+   ],
+   "a": 0,
+   "exp": "Jesús dijo: vayan y hagan lo mismo.",
+   "ref": "Lucas 10:37",
+   "id": "par-40"
+  },
+  {
+   "t": "reflect",
+   "q": "¿Qué tipo de tierra es hoy tu corazón? ¿Hay \"espinos\" (preocupaciones, pantallas, ansiedad) que están ahogando lo que Dios siembra?",
+   "id": "par-41"
+  },
+  {
+   "t": "reflect",
+   "q": "En la historia del pródigo, ¿te sentís más el hijo que se fue o el que se quedó enojado? El Padre corre hacia los dos.",
+   "id": "par-42"
+  }
+ ]
+}
