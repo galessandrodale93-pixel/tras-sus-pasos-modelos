@@ -483,3 +483,12 @@ body.hx .hud-attr,.hx .hud-attr{background:rgba(20,16,10,.6);border-color:rgba(2
 #arCard.hcard{background-size:cover;background-position:center}
 #arCard.hcard .box{background:rgba(12,10,6,.55)!important;color:#F4E2B8;border:1px solid rgba(233,195,122,.3)}
 #arCard.hcard .box h3{font-family:"Cinzel",Georgia,serif}
+/* descargar mundo completo */
+.v3dl{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 40%,rgba(40,30,14,.88),rgba(6,5,3,.96));padding:16px}
+.v3dl-in{width:min(520px,100%);display:grid;gap:12px;color:#F4E2B8;text-align:center}
+.v3dl-in b{font:600 clamp(22px,4vw,30px) "Cinzel",Georgia,serif;letter-spacing:.03em}
+.v3dl-t{font:700 14px/1.45 "Nunito",sans-serif;opacity:.9;margin:0}
+.v3dl-bar{height:14px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;border:1px solid rgba(233,195,122,.35)}
+.v3dl-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#B8862E,#FFD873);transition:width .3s}
+.v3dl-n{font:800 12px "Nunito",sans-serif;opacity:.75;margin:0}
+.v3dl-x{justify-self:center;border:1px solid rgba(233,195,122,.5);background:transparent;color:inherit;border-radius:99px;padding:9px 18px;font:800 13px "Nunito",sans-serif;cursor:pointer}
