@@ -875,7 +875,7 @@ function fanItems() {
   const L = [], money = (() => { const m = document.querySelector('#v3surv .sv-money'); return m ? (m.textContent.match(/\d+/) || ['0'])[0] : null; })();
   L.push(['🎒', 'Mochila', () => { const b = document.getElementById('v3bag'); if (b) b.click(); }]);
   L.push(['💪', 'Atributos', () => openBag('at')]);
-  if (S && S.sv) { L.push(['🍽️', 'Comer (C)', () => svEat()]); L.push(['🔨', 'Fabricar (B)', () => svCraft()]); if (money != null) L.push([`<span class="fan-coin">🪙<em>${money}</em></span>`, `${money} denarios (monedas)`, () => openBag()]); }
+  if (S && S.sv) { L.push(['🍽️', 'Comer (C)', () => svEat()]); L.push(['🔨', 'Fabricar (B)', () => svCraft()]); if (money != null) L.push([`<span class="fan-coin"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#F5C443" stroke="#8A5A12" stroke-width="1.6"/><circle cx="12" cy="12" r="7" fill="none" stroke="#B9801E" stroke-width="1.2"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="900" font-family="Georgia,serif" fill="#7A4E0E">D</text></svg><em>${money}</em></span>`, `${money} denarios (monedas)`, () => openBag()]); }
   const acts = document.getElementById('v3acts'); if (acts) acts.querySelectorAll('button[data-a]').forEach(b => { if (b.dataset.a === 'room') return; L.push([b.innerHTML, b.title || b.getAttribute('aria-label') || b.dataset.a, () => fanFire(b)]); });
   L.push(['⭐', 'Mi progreso', () => { const h = document.getElementById('hudLv'); if (h) h.click(); }]);
   L.push(['☰', 'Menú y ajustes', () => { const m = document.getElementById('menuBtn'); if (m) m.click(); }]);
