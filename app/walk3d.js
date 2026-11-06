@@ -19,7 +19,29 @@ function bez(P1, P2, t) { // misma curva que edgeD del mapa
   return { x, y };
 }
 function mat(color, opts) { return new THREE.MeshStandardMaterial(Object.assign({ color, roughness: .85, metalness: 0 }, opts || {})); }
+// letreros de Hero: letras doradas talladas (Cinzel 800) con degradé cálido, contorno oscuro, sombra y brillo
+function goldPaint(x, txt, cx, cy, f) {
+  x.font = `800 ${f}px Cinzel, Fraunces, Georgia, serif`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round';
+  x.save(); x.shadowColor = 'rgba(0,0,0,.8)'; x.shadowBlur = f * .22; x.shadowOffsetY = f * .08; x.lineWidth = f * .2; x.strokeStyle = '#241305'; x.strokeText(txt, cx, cy); x.restore();
+  x.lineWidth = f * .07; x.strokeStyle = '#5a3410'; x.strokeText(txt, cx, cy);
+  const g = x.createLinearGradient(0, cy - f * .5, 0, cy + f * .5); g.addColorStop(0, '#f6d27a'); g.addColorStop(.48, '#e0a447'); g.addColorStop(.62, '#c8862b'); g.addColorStop(1, '#7a4a14');
+  x.fillStyle = g; x.fillText(txt, cx, cy);
+  // bisel: luz arriba y sombra abajo dentro de la letra, y un brillo diagonal suave
+  const w = Math.ceil(x.measureText(txt).width) + f, h = f * 1.6, o = document.createElement('canvas'); o.width = w; o.height = h; const y = o.getContext('2d');
+  y.font = x.font; y.textAlign = 'center'; y.textBaseline = 'middle'; y.fillStyle = '#fff'; y.fillText(txt, w / 2, h / 2); y.globalCompositeOperation = 'source-in';
+  const s = y.createLinearGradient(0, 0, w, h); s.addColorStop(0, 'rgba(255,248,220,0)'); s.addColorStop(.42, 'rgba(255,248,220,0)'); s.addColorStop(.5, 'rgba(255,248,220,.55)'); s.addColorStop(.58, 'rgba(255,248,220,0)'); s.addColorStop(1, 'rgba(255,248,220,0)'); y.fillStyle = s; y.fillRect(0, 0, w, h);
+  x.drawImage(o, cx - w / 2, cy - h / 2);
+  x.save(); x.beginPath(); x.rect(0, cy - f, x.canvas.width, f * .62); x.clip(); x.lineWidth = f * .025; x.strokeStyle = 'rgba(255,240,190,.6)'; x.strokeText(txt, cx, cy - f * .02); x.restore();
+}
+function goldSprite(txt) {
+  const c = document.createElement('canvas'), x = c.getContext('2d'), f = 44; x.font = `800 ${f}px Cinzel, Fraunces, Georgia, serif`;
+  const w = Math.ceil(x.measureText(txt).width) + 48; c.width = w; c.height = 76; goldPaint(x, txt, w / 2, 40, f);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthWrite: false, transparent: true })); sp.scale.set(w / 76 * .62, .62, 1); return sp;
+}
+try { document.fonts && document.fonts.load('800 44px Cinzel'); } catch (e) {}
 function textSprite(txt, hx) {
+  if (hx) return goldSprite(txt);
   const c = document.createElement('canvas'), x = c.getContext('2d'), f = 44;
   x.font = `800 ${f}px Nunito, Arial, sans-serif`;
   const w = Math.ceil(x.measureText(txt).width) + 48; c.width = w; c.height = 76;
