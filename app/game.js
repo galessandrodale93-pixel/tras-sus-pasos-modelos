@@ -2544,17 +2544,44 @@ resurreccion:[
  {t:'app',q:'Un amigo te cuenta que está muy triste y que siente que Dios está lejos. ¿Qué podés hacer?',o:['Escucharlo, orar con él y contarle que Jesús está vivo y cerca','Decirle que no es para tanto','Cambiar de tema','Dejar de hablarle'],a:0,exp:'Como los de Emaús, a veces estamos tristes y no vemos que Jesús camina a nuestro lado.',ref:'Lucas 24:13-35 · Mateo 28:20'},
  {t:'reflect',q:'Jesús te envía a contar la buena noticia. ¿A quién se la querés contar esta semana?',ref:'Mateo 28:19-20'}]
 };
+/* bancos de preguntas: EXAMS (base) + preguntas de las paradas + app/exams/<hero|kids>/<etapa>.json (opcional, se puede llenar sin tocar código) */
+const EXB={};
+const exId=x=>{const t=(x.t||'')+'|'+(x.q||'')+'|'+((x.parts||[]).join('')||'')+'|'+((x.p||[]).map(v=>v[0]).join(','));let h=0;for(let k=0;k<t.length;k++)h=(h*31+t.charCodeAt(k))>>>0;return x.id||('q'+h.toString(36));};
+function exNorm(x){x=Object.assign({},x);if(x.t==='who')x={t:'mc',q:'¿Quién dijo: «'+x.quote+'»?',o:x.options,a:x.options.indexOf(x.answer),exp:x.exp,ref:x.ref};
+  if(x.t==='mc'&&x.options&&x.o==null){x.o=x.options;x.a=typeof x.answer==='number'?x.answer:x.options.indexOf(x.answer);}
+  if(x.t==='tf'&&typeof x.a==='string')x.a=/^(v|true|verdadero|s)/i.test(x.a);x.id=exId(x);return x;}
+const exOk=x=>x&&({mc:x.o&&x.a>=0&&x.a<x.o.length,app:x.o&&x.a>=0&&x.a<x.o.length,tf:typeof x.a==='boolean',match:x.p&&x.p.length>1,verse:x.parts&&x.blanks&&x.bank,order:x.items&&x.items.length>1,reflect:1}[x.t]);
+async function exBank(id){const br=branch==='kids'?'kids':'hero',key=br+':'+id;if(EXB[key])return EXB[key];
+  let ext=[],only=0;const urls=['https://raw.githubusercontent.com/galessandrodale93-pixel/tras-sus-pasos-modelos/main/app/exams/'+br+'/'+id+'.json'];try{urls.push(new URL('./exams/'+br+'/'+id+'.json',import.meta.url).href);}catch(e){}
+  for(const u of urls){try{const r=await Promise.race([fetch(u,{cache:'no-cache'}),new Promise((_,j)=>setTimeout(()=>j(0),4000))]);if(r&&r.ok){const j=await r.json();ext=(Array.isArray(j)?j:j.questions||[]);if(j&&j.only&&ext.length>=12)only=1;break;}}catch(e){}}
+  const stops=Object.values(STORY[id]||{}).map(n=>n&&n.ch).filter(c=>c&&(c.t==='mc'||c.t==='who'));
+  const all=(only?ext:[...(EXAMS[id]||[]),...stops,...ext]).map(exNorm).filter(exOk),seen=new Set();
+  return EXB[key]=all.filter(x=>!seen.has(x.id)&&seen.add(x.id));}
+/* arma un intento: N preguntas (Kids menos y más simples), sin repetir las del intento anterior si el banco alcanza, con una reflexión al final */
+function exPick(bank,last,kids){const N=kids?8:12,ref=bank.filter(x=>x.t==='reflect'),gr=bank.filter(x=>x.t!=='reflect'&&(!kids||/^(mc|tf|match)$/.test(x.t))),L=new Set(last||[]),sh=a=>{a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]];}return a;};
+  const fresh=sh(gr.filter(x=>!L.has(x.id))),old=sh(gr.filter(x=>L.has(x.id))),n=Math.min(N-(kids?0:1),gr.length);
+  /* variedad: primero una de cada tipo, después el resto */
+  const out=[],types=[...new Set(fresh.map(x=>x.t))];for(const t of types){const x=fresh.find(v=>v.t===t&&!out.includes(v));if(x&&out.length<n)out.push(x);}
+  for(const x of fresh)if(out.length<n&&!out.includes(x))out.push(x);for(const x of old)if(out.length<n)out.push(x);
+  const o=sh(out);if(!kids&&ref.length)o.push(ref[Math.floor(Math.random()*ref.length)]);return o;}
 function openExam(r,onPass){
-  const R=REGIONS[r],E=EXAMS[R.id];if(!E){onPass();return;}
+  const R=REGIONS[r];if(!EXAMS[R.id]){onPass();return;}
+  exBank(R.id).then(b=>openExam1(r,onPass,b)).catch(()=>openExam1(r,onPass,(EXAMS[R.id]||[]).map(exNorm)));}
+function openExam1(r,onPass,BANK){
+  const R=REGIONS[r],E=BANK;if(!E||!E.length){onPass();return;}
   {const need=humNeed(r),have=(P().attr&&P().attr.hum)||0;if(need>have){const g=document.createElement('div');g.className='exam hx';g.innerHTML=`<div class="ex-card ex-hum"><small>Examen de etapa · ${esc(R.name)}</small><h3>Este examen pide Humildad ${need}</h3><p>Tenés ${have}. La humildad crece solo dando: invitá a un amigo a una sala y regalale un punto de alguno de tus atributos. Jesús enseñó que el más grande es el que sirve a los demás.</p><p class="ex-ref">Mateo 23:11</p><div class="ex-btns"><button class="ex-room">👥 Invitar a un amigo</button><button class="ex-later">Más tarde</button></div></div>`;document.body.appendChild(g);g.querySelector('.ex-later').onclick=()=>g.remove();g.querySelector('.ex-room').onclick=()=>{g.remove();try{window.W3&&W3.room&&W3.room();}catch(e){}};return;}}
-  const p=P(),items=E.map(x=>x),graded=items.filter(x=>x.t!=='reflect').length,need=Math.ceil(graded*(branch==='kids'?.6:.7));
-  let i=0,ok=0,wrong=[],reflect='';
+  const p=P(),kids=branch==='kids',ex0=(p.exams=p.exams||{})[R.id]=(p.exams[R.id]||{}),byId={};E.forEach(x=>byId[x.id]=x);
+  let items,i=0,ok=0,wrong=[],reflect='',resumed=false;
+  const cur=ex0.cur;if(cur&&cur.ids&&cur.ids.every(k=>byId[k])&&cur.i<cur.ids.length){items=cur.ids.map(k=>byId[k]);i=cur.i;ok=cur.ok||0;wrong=(cur.wrong||[]).map(k=>byId[k]).filter(Boolean);resumed=true;}
+  else{items=exPick(E,ex0.last,kids);ex0.cur={ids:items.map(x=>x.id),i:0,ok:0,wrong:[],at:Date.now()};ex0.n=(ex0.n||0)+1;save();}
+  const graded=items.filter(x=>x.t!=='reflect').length,need=Math.ceil(graded*(kids?.6:.7));
+  const keep=()=>{ex0.cur={ids:items.map(x=>x.id),i,ok,wrong:wrong.map(x=>x.id),at:Date.now()};save();};
   const box=document.createElement('div');box.className='exam'+(branch==='ados'?' hx':'');document.body.appendChild(box);
   const shuf=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]);
   const head=()=>`<div class="ex-top"><small>Examen de etapa · ${esc(R.name)}</small><div class="ex-bar"><i style="width:${i/items.length*100}%"></i></div><span>${i+1} / ${items.length}</span></div>`;
-  const intro=()=>{box.innerHTML=`<div class="ex-card ex-intro"><div class="ex-seal">✦</div><small>Antes de seguir el camino</small><h2>Examen de la etapa<br><em>${esc(R.name)}</em></h2><p>Repasá todo lo que viviste en esta etapa. Son ${items.length} desafíos: preguntas, pasajes para completar, personajes para unir, una situación real para resolver y una reflexión personal.</p><p class="ex-note">Para pasar a la etapa siguiente necesitás ${need} respuestas correctas de ${graded}. Si no llegás, podés repasar y volver a intentarlo.</p><div class="ex-btns"><button class="ex-go">Empezar</button><button class="ex-later">Más tarde</button></div></div>`;
+  const intro=()=>{box.innerHTML=`<div class="ex-card ex-intro"><div class="ex-seal">✦</div><small>Antes de seguir el camino</small><h2>Examen de la etapa<br><em>${esc(R.name)}</em></h2><p>Repasá todo lo que viviste en esta etapa. Son ${items.length} desafíos: preguntas, pasajes para completar, personajes para unir, una situación real para resolver y una reflexión personal.</p><p class="ex-note">Para pasar a la etapa siguiente necesitás ${need} respuestas correctas de ${graded}. Si no llegás, podés repasar y volver a intentarlo: cada intento trae preguntas distintas.</p>${resumed?`<p class="ex-note"><b>Seguís donde lo dejaste:</b> pregunta ${i+1} de ${items.length}.</p>`:(ex0.n>1?`<p class="ex-note">Intento ${ex0.n}.</p>`:'')}<div class="ex-btns"><button class="ex-go">Empezar</button><button class="ex-later">Más tarde</button></div></div>`;
     box.querySelector('.ex-go').onclick=()=>show();box.querySelector('.ex-later').onclick=()=>{box.remove();refreshMap();};};
-  const next=good=>{if(good===true)ok++;else if(good===false)wrong.push(items[i]);i++;i<items.length?show():end();};
+  const next=good=>{if(good===true)ok++;else if(good===false)wrong.push(items[i]);i++;keep();i<items.length?show():end();};
   const feedback=(card,good,x)=>{const f=document.createElement('div');f.className='ex-fb '+(good?'ok':'no');f.innerHTML=`<b>${good?'¡Correcto!':'No es esa'}</b><p>${esc(x.exp||'')}</p><small>${esc(x.ref||'')}</small><button class="ex-next">${i+1<items.length?'Siguiente':'Ver resultado'}</button>`;card.appendChild(f);try{if(good&&window.W3&&W3.glowAdd)W3.glowAdd(1,'examen');}catch(e){}vo(good?'¡Correcto!':'No es esa');vo(x.exp,'narrador',{queue:1});f.querySelector('.ex-next').onclick=()=>next(good);f.scrollIntoView({behavior:'smooth',block:'nearest'});};
   const show=()=>{const x=items[i];let h=head()+'<div class="ex-card">';const tag={mc:'Opción múltiple',tf:'Verdadero o falso',match:'Unir',verse:'Completá el pasaje',order:'Ordená',app:'Situación ministerial',reflect:'Reflexión personal'}[x.t];
     h+=`<span class="ex-tag t-${x.t}">${tag}</span><h3>${esc(x.q||'Completá el versículo')}</h3>`;
@@ -2580,12 +2607,12 @@ function openExam(r,onPass){
     if(x.t==='reflect'){const ta=card.querySelector('.ex-ta'),chk=card.querySelector('.ex-check');ta.oninput=()=>{chk.disabled=ta.value.trim().length<15;};chk.onclick=()=>{reflect=ta.value.trim();next(null);};}
   };
   const end=()=>{const pass=ok>=need,ex=p.exams=p.exams||{},prev=ex[R.id]||{},first=pass&&!prev.passed,pts=ok*15+(first?100:0);
-    ex[R.id]={best:Math.max(prev.best||0,ok),of:graded,passed:prev.passed||pass,pts:(prev.pts||0)+(first?pts:0)+(prev.passed?0:(pass?0:0)),reflect:reflect||prev.reflect||'',at:new Date().toISOString()};save();refreshHud();
+    ex[R.id]={best:Math.max(prev.best||0,ok),of:graded,passed:prev.passed||pass,pts:(prev.pts||0)+(first?pts:0),reflect:reflect||prev.reflect||'',at:new Date().toISOString(),n:prev.n||1,last:items.map(x=>x.id),hist:[...(prev.hist||[]),{ok,of:graded,pass,at:Date.now()}].slice(-12)};save();refreshHud();
     box.innerHTML=`<div class="ex-card ex-end ${pass?'pass':'fail'}"><div class="ex-seal">${pass?'🏆':'📖'}</div><small>Examen de ${esc(R.name)}</small><h2>${pass?'¡Etapa aprobada!':'Todavía no'}</h2><div class="ex-score"><b>${ok}</b><span>de ${graded} correctas</span></div>
       <p>${pass?(first?`Sumaste ${pts} puntos. ¡Seguí el camino!`:'Ya habías aprobado esta etapa. ¡Bien repasado!'):`Necesitás ${need}. Repasá estos temas y volvé a intentarlo cuando quieras:`}</p>
       ${wrong.length?'<ul class="ex-rev">'+wrong.map(w=>`<li><b>${esc(w.q||'Completar el pasaje')}</b><small>${esc(w.ref||'')}</small></li>`).join('')+'</ul>':''}
       <div class="ex-btns"><button class="ex-go">${pass?'Continuar':'Volver a intentarlo'}</button>${pass?'':'<button class="ex-later">Repasar el camino</button>'}</div></div>`;
-    box.querySelector('.ex-go').onclick=()=>{if(pass){box.remove();onPass();}else{i=0;ok=0;wrong=[];show();}};const l=box.querySelector('.ex-later');if(l)l.onclick=()=>{box.remove();refreshMap();};};
+    box.querySelector('.ex-go').onclick=()=>{if(pass){box.remove();onPass();}else{box.remove();openExam(r,onPass);}};const l=box.querySelector('.ex-later');if(l)l.onclick=()=>{box.remove();refreshMap();};};
   intro();
 }
 function finishRegion(r){
@@ -2830,15 +2857,19 @@ function hubLearn(){const st=document.querySelector('#hubView .stage');if(!st||d
 function humNeed(r){return branch==='ados'&&r>=3?Math.floor((r-1)/2):0;}
 /* insignia del curso en el cinturón de la verdad: para quien termina todas las etapas */
 function courseDone(){const p=P(),ex=p.exams||{};if(!REGIONS.some(R=>R.id==='resurreccion')||!REGIONS.every(R=>ex[R.id]&&ex[R.id].passed))return;setTimeout(()=>{try{window.W3&&(W3.insGive?W3.insGive('tsp'):W3.gearGive&&W3.gearGive('tsp'));}catch(e){}},2500);}
-window.GAME={vo:(t,v,o)=>vo(t,v,o),voState:()=>({log:VO.log.slice(-12),on:VO.on,src:VO.el&&VO.el.src,paused:VO.el?VO.el.paused:null,cur:VO.cur&&VO.cur.t,q:VO.q.length}),voStop:()=>voStop(),voOn:()=>VO.on,NODES,EDGES,ADJ,REGIONS,VIGN,TOP,RH,WIDTH,get branch(){return branch},level:()=>lvOf(total(P())),EXAMS,P,reachable,visited,isDone,bfs,arrive,save,toast,refreshHud,syncMap(){refreshMap();const n=NODES[P().pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));}};
+// mientras se trabaja (pescar, talar), una frase de la etapa actual: textos que ya están en el curso (citas NTV verificadas de los exámenes o la narración de las paradas)
+function stageLine(){try{const r=curRegion(),R=REGIONS[r],ex=(EXAMS[R.id]||[]).map(q=>q.exp).filter(t=>t&&/«/.test(t)),st=Object.values(NODES).filter(n=>n.r===r&&n.text).map(n=>n.text.replace('{name}',P().name));const pool=ex.concat(st);if(!pool.length)return null;let t=pool[Math.floor(Math.random()*pool.length)];if(t===stageLine.last&&pool.length>1)t=pool[(pool.indexOf(t)+1)%pool.length];stageLine.last=t;return t;}catch(e){return null;}}
+window.GAME={stageLine,vo:(t,v,o)=>vo(t,v,o),voState:()=>({log:VO.log.slice(-12),on:VO.on,src:VO.el&&VO.el.src,paused:VO.el?VO.el.paused:null,cur:VO.cur&&VO.cur.t,q:VO.q.length}),voStop:()=>voStop(),voOn:()=>VO.on,NODES,EDGES,ADJ,REGIONS,VIGN,TOP,RH,WIDTH,get branch(){return branch},level:()=>lvOf(total(P())),EXAMS,P,reachable,visited,isDone,bfs,arrive,save,toast,refreshHud,syncMap(){refreshMap();const n=NODES[P().pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));}};
 function enterMap(){
   if(worldFor!==branch)buildWorld();
   const p=P();
   $('#hudAv').innerHTML=headBox(p.avatar);$('#avBody').innerHTML=`<g class="idle">${avatarSVG(p.avatar)}</g>`;
   const tw=Math.max(40,p.name.length*6.4+18);$('#tagBg').setAttribute('x',-tw/2);$('#tagBg').setAttribute('width',tw);$('#tagTx').textContent=p.name;
+  // si se juega en 3D, el mapa viejo no se ve ni un instante: lo tapa la pantalla de carga hasta que el mundo nuevo está listo
+  {let v='3d';try{v=localStorage.getItem('tsp-view')||'3d';}catch(e){}if(v==='3d')document.body.classList.add('v3boot');}
   show('mapView');refreshMap();const n=NODES[p.pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));
   if(p.pos==='start'&&!isDone('nacimiento-n1'))setTimeout(()=>toast(`¡Hola, ${p.name}! Tocá la parada que brilla para empezar.`),500);
-  import(new URL('./walk3d.js', import.meta.url).href).then(m=>m.enter()).catch(e=>console.warn(e));
+  import(new URL('./walk3d.js', import.meta.url).href).then(m=>m.enter()).catch(e=>{console.warn(e);document.body.classList.remove('v3boot');});
 }
 $('#menuBtn').onclick=()=>{voMenu();$('#menu').hidden=false;};
 $('#hudLv').onclick=$('#hudTitle').onclick=()=>openProg();
@@ -2866,7 +2897,7 @@ function openProg(){
   el.onclick=e=>{if(e.target===el||e.target.closest('.prog-x')){el.hidden=true;return;}if(e.target.closest('[data-a="med"]')){el.hidden=true;renderMedals();show('medalsView');}};
 }
 $('#menu').onclick=e=>{const a=e.target.closest('[data-a]');if(e.target.id==='menu'||a)$('#menu').hidden=true;if(!a)return;
-  ({calidad:()=>{try{toast(W3.qCycle());}catch(e){}},mundo:()=>{try{W3.dlWorld();}catch(e){}},narr:()=>voToggle(),prog:()=>openProg(),medals:()=>{renderMedals();show('medalsView');},rank:()=>{renderRank();show('rankView');},edit:()=>openCreate(true),who:()=>{pushCloud();loadProfiles();},home:()=>{pushCloud();goHome();},logout:()=>{pushCloud().then(doLogout);},close:()=>{}})[a.dataset.a]();};
+  ({fps:()=>{try{toast('Mostrar rendimiento: '+(W3.qFpsToggle()?'Sí':'No'));}catch(e){}},calidad:()=>{try{toast(W3.qCycle());}catch(e){}},mundo:()=>{try{W3.dlWorld();}catch(e){}},narr:()=>voToggle(),prog:()=>openProg(),medals:()=>{renderMedals();show('medalsView');},rank:()=>{renderRank();show('rankView');},edit:()=>openCreate(true),who:()=>{pushCloud();loadProfiles();},home:()=>{pushCloud();goHome();},logout:()=>{pushCloud().then(doLogout);},close:()=>{}})[a.dataset.a]();};
 document.querySelectorAll('.back').forEach(b=>b.onclick=enterMap);
 function renderMedals(){const p=P();$('#medals').innerHTML=MEDALS.map(m=>`<div class="medal glass ${p.medals.includes(m.id)?'':'off'}">${coin(m)}<b>${m.name}</b><span>${m.desc}</span></div>`).join('');}
 async function renderRank(){
@@ -2936,7 +2967,7 @@ const voKids=()=>branch==='kids';
 function voToggle(){VO.on=!VO.on;try{localStorage.setItem('tsp:narr',VO.on?'1':'0');}catch(e){}if(!VO.on)voStop();voMenu();toast(VO.on?'Narración activada':'Narración apagada');}
 function voMenu(){const m=document.querySelector('#menu .menu-in');if(!m)return;
   const add=(a,t)=>{let b=m.querySelector(`[data-a="${a}"]`);if(!b){b=document.createElement('button');b.className='item';b.dataset.a=a;const c=m.querySelector('[data-a="close"]');m.insertBefore(b,c);}b.textContent=t;};
-  try{if(window.W3&&W3.qLabel&&W3.state){add('calidad','Calidad gráfica: '+W3.qLabel());add('mundo','Descargar mundo completo');}}catch(e){}let b=m.querySelector('[data-a="narr"]');if(!b){b=document.createElement('button');b.className='item';b.dataset.a='narr';const c=m.querySelector('[data-a="close"]');m.insertBefore(b,c);}b.textContent='Narración: '+(VO.on?'Sí 🔊':'No 🔇');}
+  try{if(window.W3&&W3.qLabel&&W3.state){add('calidad','Calidad gráfica: '+W3.qLabel());add('mundo','Descargar mundo completo');add('fps','Mostrar rendimiento: '+(W3.fpsOn()?'Sí':'No'));}}catch(e){}let b=m.querySelector('[data-a="narr"]');if(!b){b=document.createElement('button');b.className='item';b.dataset.a='narr';const c=m.querySelector('[data-a="close"]');m.insertBefore(b,c);}b.textContent='Narración: '+(VO.on?'Sí 🔊':'No 🔇');}
 const FEMV=/^(María|Elisabet|Ana|Marta|la viuda|una viuda|una vecina|la vecina|Una vecina|María Magdalena|la mujer|una mujer|Una vendedora|Juana|Susana)/i;
 function toast(txt,m){try{vo(txt,'narrador',{queue:1,tts:voKids()});}catch(e){}const t=$('#toast');t.innerHTML=(m?coin(m,28):'')+`<span>${esc(txt)}</span>`;t.style.paddingLeft=m?'8px':'16px';t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2800);}
 

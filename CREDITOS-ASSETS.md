@@ -20,6 +20,9 @@ Personajes y animaciones (Mixamo y el rig del héroe): ver tools/README.md. El f
 | dirt_floor | CC0 | https://polyhaven.com/a/dirt_floor |
 | rock_boulder_dry | CC0 | https://polyhaven.com/a/rock_boulder_dry |
 | patterned_clay_plaster | CC0 | https://polyhaven.com/a/patterned_clay_plaster |
+| white_sandstone_bricks | CC0 | https://polyhaven.com/a/white_sandstone_bricks |
+| monastery_stone_floor | CC0 | https://polyhaven.com/a/monastery_stone_floor |
+| plastered_stone_wall | CC0 | https://polyhaven.com/a/plastered_stone_wall |
 | large_sandstone_blocks | CC0 | https://polyhaven.com/a/large_sandstone_blocks |
 | old_sandstone_02 | CC0 | https://polyhaven.com/a/old_sandstone_02 |
 | marble_01 | CC0 | https://polyhaven.com/a/marble_01 |
