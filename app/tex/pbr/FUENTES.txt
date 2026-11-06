@@ -1,0 +1,8 @@
+Texturas PBR (CC0, dominio público) de Poly Haven — https://polyhaven.com
+Reducidas a 512 px y convertidas a WEBP (difusa, normal y rugosidad).
+- large_sandstone_blocks  https://polyhaven.com/a/large_sandstone_blocks
+- old_sandstone_02        https://polyhaven.com/a/old_sandstone_02
+- marble_01               https://polyhaven.com/a/marble_01
+- brown_planks_05         https://polyhaven.com/a/brown_planks_05
+- metal_plate             https://polyhaven.com/a/metal_plate
+Todo lo demás del ambiente (fuego, humo, brasas, estandartes, agua, aves, mariposas, rayos de luz, nubes) es procedural (three.js), sin archivos descargados.
