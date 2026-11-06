@@ -19,18 +19,19 @@ function bez(P1, P2, t) { // misma curva que edgeD del mapa
   return { x, y };
 }
 function mat(color, opts) { return new THREE.MeshStandardMaterial(Object.assign({ color, roughness: .85, metalness: 0 }, opts || {})); }
-// letreros de Hero: letras doradas talladas (Cinzel 800) con degradé cálido, contorno oscuro, sombra y brillo
+// letreros de Hero: letras de arena (Cinzel 800) con degradé cálido, contorno oscuro, sombra, brillo y grano sutil
 function goldPaint(x, txt, cx, cy, f) {
   x.font = `800 ${f}px Cinzel, Fraunces, Georgia, serif`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round';
-  x.save(); x.shadowColor = 'rgba(0,0,0,.8)'; x.shadowBlur = f * .22; x.shadowOffsetY = f * .08; x.lineWidth = f * .2; x.strokeStyle = '#241305'; x.strokeText(txt, cx, cy); x.restore();
-  x.lineWidth = f * .07; x.strokeStyle = '#5a3410'; x.strokeText(txt, cx, cy);
-  const g = x.createLinearGradient(0, cy - f * .5, 0, cy + f * .5); g.addColorStop(0, '#f6d27a'); g.addColorStop(.48, '#e0a447'); g.addColorStop(.62, '#c8862b'); g.addColorStop(1, '#7a4a14');
+  x.save(); x.shadowColor = 'rgba(0,0,0,.8)'; x.shadowBlur = f * .22; x.shadowOffsetY = f * .08; x.lineWidth = f * .2; x.strokeStyle = '#1f170a'; x.strokeText(txt, cx, cy); x.restore();
+  x.lineWidth = f * .07; x.strokeStyle = '#4a3a1c'; x.strokeText(txt, cx, cy);
+  const g = x.createLinearGradient(0, cy - f * .5, 0, cy + f * .5); g.addColorStop(0, '#e9d9a6'); g.addColorStop(.5, '#cdb67c'); g.addColorStop(.62, '#b89a5a'); g.addColorStop(1, '#6e5a30');
   x.fillStyle = g; x.fillText(txt, cx, cy);
   // bisel: luz arriba y sombra abajo dentro de la letra, y un brillo diagonal suave
   const w = Math.ceil(x.measureText(txt).width) + f, h = f * 1.6, o = document.createElement('canvas'); o.width = w; o.height = h; const y = o.getContext('2d');
   y.font = x.font; y.textAlign = 'center'; y.textBaseline = 'middle'; y.fillStyle = '#fff'; y.fillText(txt, w / 2, h / 2); y.globalCompositeOperation = 'source-in';
-  const s = y.createLinearGradient(0, 0, w, h); s.addColorStop(0, 'rgba(255,248,220,0)'); s.addColorStop(.42, 'rgba(255,248,220,0)'); s.addColorStop(.5, 'rgba(255,248,220,.55)'); s.addColorStop(.58, 'rgba(255,248,220,0)'); s.addColorStop(1, 'rgba(255,248,220,0)'); y.fillStyle = s; y.fillRect(0, 0, w, h);
+  const s = y.createLinearGradient(0, 0, w, h); s.addColorStop(0, 'rgba(255,248,220,0)'); s.addColorStop(.42, 'rgba(255,248,220,0)'); s.addColorStop(.5, 'rgba(255,248,220,.35)'); s.addColorStop(.58, 'rgba(255,248,220,0)'); s.addColorStop(1, 'rgba(255,248,220,0)'); y.fillStyle = s; y.fillRect(0, 0, w, h);
   x.drawImage(o, cx - w / 2, cy - h / 2);
+  { const q = document.createElement('canvas'); q.width = w; q.height = h; const z = q.getContext('2d'); z.font = x.font; z.textAlign = 'center'; z.textBaseline = 'middle'; z.fillStyle = '#fff'; z.fillText(txt, w / 2, h / 2); z.globalCompositeOperation = 'source-in'; let sd = 7; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647; for (let i = 0; i < w * h / 6; i++) { const v = rnd(); z.fillStyle = v < .5 ? 'rgba(60,40,10,.22)' : 'rgba(255,245,215,.2)'; z.fillRect(rnd() * w, rnd() * h, 1.2, 1.2); } x.drawImage(q, cx - w / 2, cy - h / 2); }
   x.save(); x.beginPath(); x.rect(0, cy - f, x.canvas.width, f * .62); x.clip(); x.lineWidth = f * .025; x.strokeStyle = 'rgba(255,240,190,.6)'; x.strokeText(txt, cx, cy - f * .02); x.restore();
 }
 function goldSprite(txt) {
@@ -721,7 +722,7 @@ function lobbyUI(kid) {
   let lines = []; try { lines = (G().lobbyLines && G().lobbyLines()) || []; } catch (e) {}
   ov.innerHTML = `<div class="lb-sl">${im.map((u, i) => `<div class="lb-im${i ? '' : ' on'}" style="background-image:${u}"></div>`).join('')}</div><div class="lb-shade"></div>
     <div class="lb-top"><button class="lb-mus" aria-label="Tocar para música">🎵 <span>Tocar para música</span></button></div>
-    <div class="lb-in">${kid ? '<small>Kids</small>' : `<h1 class="lb-hero"><img src="${new URL('./lobby/hero-oro.webp', import.meta.url).href}" alt="Hero" width="1200" height="357"></h1>`}<b>Tras sus pasos</b><p class="lb-sub">${kid ? '¡Vamos a caminar la historia de Jesús!' : 'Recorré la tierra donde caminó Jesús.'}</p>
+    <div class="lb-in">${kid ? '<small>Kids</small>' : `<h1 class="lb-hero"><img src="${new URL('./lobby/hero-oro.webp?v=3', import.meta.url).href}" alt="Hero" width="1200" height="338"></h1>`}<b>Tras sus pasos</b><p class="lb-sub">${kid ? '¡Vamos a caminar la historia de Jesús!' : 'Recorré la tierra donde caminó Jesús.'}</p>
       <p class="lb-vs" aria-live="polite"></p>
       <div class="lb-cards" hidden></div>
       <div class="lb-dl"><div class="lb-bar"><i></i></div><p class="lb-n">Preparando el mundo…</p></div>
