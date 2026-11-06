@@ -611,7 +611,7 @@ function stageShots(nodeId) {
 }
 /* ---------- instalar como app y "Descargar mundo completo": guarda todo en el aparato (Cache Storage) para jugar sin cortes y sin internet ---------- */
 const DLW = { root: new URL('../', import.meta.url).href, cache: 'tsp-assets-v1', busy: false };
-try { if ('serviceWorker' in navigator && location.protocol === 'https:' && !/localhost|127\.0\.0\.1/.test(location.hostname)) navigator.serviceWorker.register('/sw.js').catch(() => {}); } catch (e) {}
+try { if ('serviceWorker' in navigator && location.protocol === 'https:' && !/localhost|127\.0\.0\.1/.test(location.hostname)) navigator.serviceWorker.register('/tsp-sw.js').catch(() => {}); } catch (e) {}
 async function dlList(lv) {
   const man = await (await fetch(DLW.root + 'app/assets.json', { cache: 'no-store' })).json(), T = ['bajo', 'medio', 'alto', 'ultra'][lv];
   const paths = man.tiers[T] || [], abs = man.abs || []; return { files: paths.map(p => [DLW.root + p, man.size[p] || 0]).concat(abs.map(([u, n]) => [u, n])), mb: man.mb[T] };
