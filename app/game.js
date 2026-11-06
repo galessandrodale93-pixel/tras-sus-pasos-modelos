@@ -1,4 +1,6 @@
 // Tras Sus Pasos: lógica del juego (servida desde el repositorio; el sitio de Wix solo carga este archivo)
+// guarda los archivos del juego en el aparato (service worker propio; Wix usa /sw.js)
+try{if('serviceWorker' in navigator&&location.protocol==='https:'&&!/localhost|127\.0\.0\.1/.test(location.hostname)){const reg=()=>navigator.serviceWorker.register('/tsp-sw.js').catch(()=>{});if(document.readyState==='complete')reg();else window.addEventListener('load',reg);}}catch(e){}
 { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = new URL('./walk3d.css', import.meta.url).href; document.head.appendChild(l); }
 const { subscribeMember, getMemberState, login, register, verifyEmail, logout, refreshMember } = await import(location.origin + "/js/wix/member-store.js");
 const { wixRequest, mintTokens, setTokens } = await import(location.origin + "/js/wix/client.js");
