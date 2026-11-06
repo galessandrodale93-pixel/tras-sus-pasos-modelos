@@ -699,7 +699,7 @@ function lobbyUI(kid) {
   let lines = []; try { lines = (G().lobbyLines && G().lobbyLines()) || []; } catch (e) {}
   ov.innerHTML = `<div class="lb-sl">${im.map((u, i) => `<div class="lb-im${i ? '' : ' on'}" style="background-image:${u}"></div>`).join('')}</div><div class="lb-shade"></div>
     <div class="lb-top"><button class="lb-mus" aria-label="Tocar para música">🎵 <span>Tocar para música</span></button></div>
-    <div class="lb-in"><small>${kid ? 'Kids' : 'Hero'}</small><b>Tras sus pasos</b><p class="lb-sub">${kid ? '¡Vamos a caminar la historia de Jesús!' : 'Recorré la tierra donde caminó Jesús.'}</p>
+    <div class="lb-in">${kid ? '<small>Kids</small>' : `<h1 class="lb-hero"><img src="${new URL('./lobby/hero-oro.webp', import.meta.url).href}" alt="Hero" width="1200" height="357"></h1>`}<b>Tras sus pasos</b><p class="lb-sub">${kid ? '¡Vamos a caminar la historia de Jesús!' : 'Recorré la tierra donde caminó Jesús.'}</p>
       <p class="lb-vs" aria-live="polite"></p>
       <div class="lb-cards" hidden></div>
       <div class="lb-dl"><div class="lb-bar"><i></i></div><p class="lb-n">Preparando el mundo…</p></div>
