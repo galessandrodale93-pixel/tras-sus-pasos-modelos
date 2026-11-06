@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Tras sus pasos · Material del alumno · Hero</title>
+<style>
+@page { size: A4; margin: 15mm 15mm 16mm 15mm; }
+:root{--vino:#6B1E2E;--vino2:#8C2C40;--oro:#B8913A;--oro2:#D9BC7A;--crema:#FBF6EC;--tinta:#2A2220;--gris:#6E625C;}
+*{box-sizing:border-box}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{margin:0;font-family:Caladea,Cambria,Georgia,serif;color:var(--tinta);font-size:10.3pt;line-height:1.42;hyphens:auto}
+h1,h2,h3{font-family:Lora,Caladea,Georgia,serif;color:var(--vino);line-height:1.15;text-wrap:balance}
+p{margin:0 0 .62em;text-align:justify}
+em{color:var(--vino2)}
+.page{page-break-after:auto}
+.page.brk{page-break-after:always}
+.hd{break-inside:avoid;page-break-inside:avoid}
+.page+.page{margin-top:7mm;padding-top:5mm;border-top:1.2pt solid var(--oro2)}
+.page.brk+.page,.cover-wrap+.page{margin-top:0;padding-top:0;border-top:0}
+.page:last-child{page-break-after:auto}
+/* portada */
+.cover{height:262mm;display:flex;flex-direction:column;justify-content:space-between;border:1.2pt solid var(--oro);padding:16mm 14mm;background:linear-gradient(180deg,#fff 0%,var(--crema) 100%)}
+.cover .top{font-family:Lora,serif;letter-spacing:.28em;text-transform:uppercase;font-size:9pt;color:var(--oro)}
+.cover h1{font-size:46pt;margin:0 0 6mm;letter-spacing:-.01em}
+.cover .sub{font-size:15pt;color:var(--vino2);font-style:italic;margin:0}
+.cover .rule{width:48mm;height:2pt;background:var(--oro);margin:9mm 0}
+.cover .meta{font-size:10.5pt;color:var(--gris);line-height:1.7}
+.cover .meta b{color:var(--vino)}
+.cover .etapas{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm;margin-top:8mm}
+.cover .etapas span{border:.7pt solid var(--oro2);padding:2.2mm 3mm;font-size:9.5pt;font-family:Lora,serif;color:var(--vino);background:#fff}
+.cover .etapas span i{font-style:normal;color:var(--oro);margin-right:2mm}
+/* títulos de etapa */
+.kick{font-family:Lora,serif;font-size:8.6pt;letter-spacing:.24em;text-transform:uppercase;color:var(--oro);margin:0 0 1.5mm}
+h2{font-size:21pt;margin:0 0 1.5mm}
+.lead{font-style:italic;color:var(--gris);font-size:10.8pt;margin:0 0 3.5mm;border-bottom:.8pt solid var(--oro2);padding-bottom:3mm}
+h3{font-size:12pt;margin:3.6mm 0 1.4mm;break-after:avoid}
+.refs{font-size:9.3pt;color:var(--gris);margin:-1mm 0 3mm}
+/* recuadros */
+.box{border-left:3pt solid var(--oro);background:var(--crema);padding:2.8mm 4.2mm 2mm;margin:3mm 0;break-inside:avoid}
+.box .bt{font-family:Lora,serif;font-weight:700;color:var(--vino);font-size:10pt;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1.4mm}
+.box p{font-size:9.9pt}
+.box.intim{border-left-color:var(--vino);background:#F7EEEF}
+.verse{margin:3.5mm 0;padding:3mm 6mm;text-align:center;border-top:.8pt solid var(--oro2);border-bottom:.8pt solid var(--oro2);break-inside:avoid}
+.verse q{display:block;font-size:12pt;font-style:italic;color:var(--vino);quotes:"«" "»"}
+.verse cite{display:block;font-style:normal;font-size:9.4pt;color:var(--oro);letter-spacing:.12em;text-transform:uppercase;margin-top:2mm}
+.saber{border:1pt solid var(--vino);padding:3.4mm 4.6mm 2mm;margin:5mm 0 0;break-inside:avoid}
+.saber .bt{font-family:Lora,serif;font-weight:700;color:#fff;background:var(--vino);display:inline-block;padding:1mm 3mm;font-size:9.2pt;letter-spacing:.1em;text-transform:uppercase;margin:-6.2mm 0 2mm}
+.saber ul{margin:0;padding-left:5mm}
+.saber li{font-size:9.8pt;margin-bottom:1.2mm}
+.two{columns:2;column-gap:7mm}
+.two p{text-align:left}
+table{width:100%;border-collapse:collapse;font-size:10pt;margin:3mm 0}
+td,th{border-bottom:.6pt solid var(--oro2);padding:1.6mm 2mm;text-align:left;vertical-align:top}
+th{font-family:Lora,serif;color:var(--vino);font-size:9.6pt}
+.glos dt{font-family:Lora,serif;font-weight:700;color:var(--vino);font-size:10.4pt;margin-top:2mm}
+.glos dd{margin:0 0 1mm;font-size:10.3pt}
+.fin{text-align:center;margin-top:10mm;color:var(--gris);font-style:italic}
+</style>
+</head>
+<body>
+
+<!-- PORTADA -->
+<section class="page brk cover-wrap"><div class="cover">
+  <div>
+    <div class="top">Habitat CFM · Entrenamiento Hero</div>
+    <div class="rule"></div>
+    <h1>Tras sus pasos</h1>
+    <p class="sub">La vida de Jesús, de Belén a la tumba vacía</p>
+    <div class="rule"></div>
+    <div class="etapas">
+      <span><i>I</i>Nacimiento</span><span><i>II</i>Infancia</span><span><i>III</i>Bautismo</span>
+      <span><i>IV</i>Galilea</span><span><i>V</i>Milagros</span><span><i>VI</i>Parábolas</span>
+      <span><i>VII</i>Jerusalén</span><span><i>VIII</i>La cruz</span><span><i>IX</i>Resurrección</span>
+    </div>
+  </div>
+  <div class="meta">
+    <b>Material del alumno</b> · Adolescentes de 12 a 18 años<br>
+    Todo lo que ves en el juego sale de estas páginas, y todos los exámenes de etapa se rinden sobre este material.<br>
+    Citas bíblicas: Nueva Traducción Viviente (NTV).
+  </div>
+</div></section>
+
+<!-- INTRODUCCIÓN -->
+<section class="page">
+  <div class="hd"><p class="kick">Antes de empezar</p>
+  <h2>Cómo usar este material</h2>
+  <p class="lead">Un mapa, una historia y un camino para recorrer con los pies, con la cabeza y con el corazón.</p>
+
+  <p>Este material acompaña el recorrido de <em>Tras sus pasos</em> en Hero. El juego tiene nueve etapas, y este cuadernillo también. Cada vez que entrás a una etapa del juego, los lugares, los personajes, los minijuegos y las preguntas del examen salen de la parte que le corresponde acá. Por eso conviene leer cada capítulo antes de jugarlo, o volver a él cuando el examen se pone difícil.</p></div>
+  <p>Cada capítulo tiene la misma estructura. Primero, <b>la historia</b>, contada con detalle y con las referencias para que la busques en tu Biblia. Después, <b>Una ventana al texto</b>, un recuadro con el contexto histórico y cultural que ayuda a entender lo que leíste. Luego, <b>el versículo de la etapa</b>, que vas a encontrar en el juego para completar. Más abajo, <b>Para entrar en intimidad</b>, preguntas para pensar a solas con Dios. Y al final, <b>Lo que tenés que saber</b>: la lista de lo que se toma en el examen de la etapa.</p>
+  <p>Una recomendación: tené la Biblia abierta al lado. Los cuatro evangelios —Mateo, Marcos, Lucas y Juan— cuentan la vida de Jesús desde cuatro miradas distintas. Mateo escribe pensando en lectores judíos y muestra a Jesús como el Mesías prometido. Marcos es el más breve y el más rápido, lleno de acción. Lucas, que era médico, investigó todo con cuidado y presta mucha atención a los pobres, a las mujeres y a los marginados. Juan escribe para que creamos que Jesús es el Hijo de Dios, y cuenta conversaciones largas que los otros no registran.</p>
+
+  <h3>El mundo en el que nació Jesús</h3>
+  <p>Hace unos dos mil años, la tierra de Israel formaba parte del Imperio romano. El emperador gobernaba desde Roma, y en la región mandaban reyes y gobernadores que dependían de él. Cuando Jesús nació, el rey era <b>Herodes el Grande</b>, famoso por sus construcciones —entre ellas la renovación del templo de Jerusalén— y también por su crueldad. Más adelante, en la época de la crucifixión, el gobernador romano de Judea era <b>Poncio Pilato</b>.</p>
+  <p>El pueblo judío esperaba al <b>Mesías</b>, el Ungido prometido por los profetas: un descendiente del rey David que iba a traer el reino de Dios. Había distintos grupos religiosos. Los <b>fariseos</b> estudiaban la ley con muchísimo detalle y cuidaban las tradiciones. Los <b>saduceos</b> estaban ligados a los sacerdotes del templo. Los <b>maestros de la ley</b> o escribas la enseñaban y la interpretaban. La vida religiosa giraba alrededor del <b>templo</b> en Jerusalén, donde se ofrecían los sacrificios, y de las <b>sinagogas</b> de cada pueblo, donde la gente se reunía el sábado a leer las Escrituras y orar.</p>
+
+  <h3>El mapa del recorrido</h3>
+  <table>
+    <tr><th>Lugar</th><th>Dónde queda</th><th>Qué pasa ahí</th></tr>
+    <tr><td>Belén</td><td>Judea, al sur, a pocos kilómetros de Jerusalén</td><td>Nace Jesús. Es la ciudad de David.</td></tr>
+    <tr><td>Nazaret</td><td>Galilea, al norte, un pueblo chico en las colinas</td><td>Jesús crece. Lee al profeta Isaías en la sinagoga.</td></tr>
+    <tr><td>Río Jordán</td><td>Corre de norte a sur hasta el mar Muerto</td><td>Juan bautiza. Jesús es bautizado.</td></tr>
+    <tr><td>Mar de Galilea</td><td>Un lago de agua dulce al norte</td><td>Pescadores, llamados, milagros en el agua.</td></tr>
+    <tr><td>Capernaum</td><td>A orillas del mar de Galilea</td><td>Centro del ministerio de Jesús.</td></tr>
+    <tr><td>Jericó</td><td>En el valle del Jordán, camino a Jerusalén</td><td>Zaqueo y el ciego Bartimeo.</td></tr>
+    <tr><td>Jerusalén</td><td>Judea, sobre los montes</td><td>El templo, la última cena, la cruz y la resurrección.</td></tr>
+  </table>
+</section>
+
+<!-- ETAPA I -->
+<section class="page">
+  <div class="hd"><p class="kick">Etapa I</p>
+  <h2>Nacimiento</h2>
+  <p class="lead">Dios entra en la historia de la manera más humilde: como un bebé, en un pueblo chico, rodeado de pastores.</p>
+  <p class="refs">Leé: Lucas 1:26-38; 2:1-20 · Mateo 1:18-25; 2:1-15 · Miqueas 5:2</p>
+
+  <h3>Un anuncio en Nazaret</h3>
+  <p>La historia empieza en Nazaret, un pueblo de Galilea. El ángel Gabriel visita a <b>María</b>, una joven comprometida con un hombre llamado <b>José</b>, descendiente del rey David. El ángel le anuncia que va a tener un hijo por obra del Espíritu Santo, y que tiene que llamarlo <b>Jesús</b>. Ese nombre significa "el Señor salva". María pregunta cómo puede pasar eso, y termina respondiendo con una confianza enorme: se reconoce sierva del Señor y acepta que se cumpla en ella todo lo que el ángel le anunció (Lucas 1:38).</p></div>
+  <p>José, al enterarse de que María estaba embarazada, pensó en romper el compromiso en secreto. Pero un ángel le habló en un sueño y le dijo que no tuviera miedo de recibirla como esposa. Mateo explica que así se cumplía la profecía de Isaías: el niño sería llamado <b>Emanuel</b>, que significa "Dios está con nosotros" (Mateo 1:23).</p>
+
+  <h3>Camino a Belén</h3>
+  <p>El emperador <b>César Augusto</b> ordenó un censo en todo el imperio, y cada uno tenía que registrarse en el pueblo de sus antepasados. Como José era de la familia de David, viajó con María desde Nazaret hasta <b>Belén</b>, la ciudad de David. Era un viaje largo, de varios días, caminando por caminos de tierra y piedra. Siglos antes, el profeta Miqueas había anunciado que de Belén saldría el gobernante de Israel (Miqueas 5:2). Sin saberlo, un emperador pagano estaba moviendo las piezas para que se cumpliera la Palabra de Dios.</p>
+  <p>En Belén no había lugar para ellos en el alojamiento, y cuando nació el bebé, María lo envolvió en tiras de tela y lo acostó en un <b>pesebre</b>, el lugar donde comían los animales.</p>
+
+  <h3>Los pastores y los magos</h3>
+  <p>Esa noche, unos <b>pastores</b> cuidaban sus rebaños en los campos cercanos. Se les apareció un ángel, la gloria del Señor los rodeó y tuvieron muchísimo miedo. El ángel les dio la mejor noticia de todas, y enseguida apareció un ejército de ángeles alabando a Dios. Los pastores fueron corriendo, encontraron al bebé tal como se les había dicho, y volvieron glorificando a Dios por todo lo que habían visto.</p>
+  <p>Tiempo después llegaron <b>sabios de tierras del oriente</b>, conocidos como los magos, guiados por una <b>estrella</b>. Preguntaron en Jerusalén por el rey de los judíos que había nacido, y eso puso nervioso al rey Herodes. La estrella los llevó hasta la casa donde estaba el niño. Se inclinaron, lo adoraron y le dieron tres regalos: <b>oro, incienso y mirra</b>. Advertidos en un sueño, volvieron a su tierra por otro camino. Herodes, furioso, quiso matar al niño, pero un ángel avisó a José, y la familia huyó a <b>Egipto</b> hasta que Herodes murió.</p>
+
+  <div class="verse"><q>¡El Salvador —sí, el Mesías, el Señor— ha nacido hoy en Belén, la ciudad de David!</q><cite>Lucas 2:11</cite></div>
+
+  <div class="box"><div class="bt">Una ventana al texto</div>
+  <p>Los pastores eran gente sencilla, que vivía al aire libre con los animales y no tenía mucho prestigio. Que el primer anuncio del nacimiento del Mesías haya sido para ellos dice mucho del corazón de Dios. Los regalos de los magos también hablan: el <b>oro</b> era un regalo para reyes, el <b>incienso</b> se usaba en la adoración a Dios, y la <b>mirra</b> era un perfume que se usaba, entre otras cosas, para preparar a los muertos. Desde la cuna, los regalos anuncian quién es Jesús y lo que va a vivir.</p></div>
+
+  <div class="box intim"><div class="bt">Para entrar en intimidad</div>
+  <p>Dios eligió llegar sin ruido, a un lugar humilde, y le habló primero a gente que nadie tenía en cuenta. ¿En qué lugar sencillo de tu vida podría estar queriendo entrar Jesús hoy? María aceptó que se cumpliera en ella la palabra de Dios. ¿Qué te cuesta entregarle a Dios con esa confianza?</p></div>
+
+  <div class="saber"><div class="bt">Lo que tenés que saber</div><ul>
+    <li>El ángel <b>Gabriel</b> anunció a María, en Nazaret, que tendría un hijo llamado Jesús ("el Señor salva").</li>
+    <li><b>Emanuel</b> significa "Dios está con nosotros" (Mateo 1:23).</li>
+    <li>José y María viajaron a <b>Belén</b> por el censo de <b>César Augusto</b>; Belén es la ciudad de David (Miqueas 5:2).</li>
+    <li>Jesús fue acostado en un <b>pesebre</b>; los primeros en recibir la noticia fueron los <b>pastores</b>.</li>
+    <li>Los magos siguieron una <b>estrella</b> y trajeron <b>oro, incienso y mirra</b>.</li>
+    <li>Herodes quiso matar al niño y la familia huyó a <b>Egipto</b>.</li>
+  </ul></div>
+</section>
+
+<!-- ETAPA II -->
+<section class="page">
+  <div class="hd"><p class="kick">Etapa II</p>
+  <h2>Infancia</h2>
+  <p class="lead">Treinta años escondidos en un pueblo chico. Dios también obra en lo cotidiano.</p>
+  <p class="refs">Leé: Lucas 2:21-52 · Marcos 6:3</p>
+
+  <h3>Presentado en el templo</h3>
+  <p>Cuando se cumplieron los días de la purificación, José y María llevaron al bebé al <b>templo de Jerusalén</b> para presentarlo al Señor, como mandaba la ley de Moisés. Ofrecieron el sacrificio que correspondía: un par de tórtolas o <b>dos pichones de paloma</b>. La ley permitía esa ofrenda a las familias que no podían pagar un cordero (Levítico 12:8). Jesús creció en una familia humilde.</p></div>
+  <p>En el templo había un hombre justo y devoto llamado <b>Simeón</b>. El Espíritu Santo le había revelado que no moriría sin ver al Mesías. Tomó al bebé en brazos y alabó a Dios, diciendo que ya podía morir en paz, porque había visto la salvación que Dios preparó para todos los pueblos: una luz para las naciones y la gloria de Israel. También estaba allí <b>Ana</b>, una profetisa muy anciana que vivía en el templo adorando a Dios con ayunos y oraciones. Ella dio gracias y habló del niño a todos los que esperaban la redención de Jerusalén.</p>
+
+  <h3>Doce años y una pregunta</h3>
+  <p>La familia volvió a <b>Nazaret</b>. Cada año, José y María subían a Jerusalén para la fiesta de la <b>Pascua</b>. Cuando Jesús tenía <b>doce años</b>, al terminar la fiesta, sus padres emprendieron el regreso sin darse cuenta de que él se había quedado. Pensaban que iba en la caravana con los parientes y amigos. Después de un día de camino lo buscaron, y al no encontrarlo volvieron a Jerusalén.</p>
+  <p>Al tercer día lo encontraron en el templo, sentado entre los maestros de la ley, escuchándolos y haciéndoles preguntas. Todos estaban asombrados de su inteligencia y de sus respuestas. María le dijo que lo habían buscado desesperados, y Jesús les preguntó por qué lo buscaban, si tenía que estar en la casa de su Padre (Lucas 2:49). Ellos no entendieron lo que quiso decir. Jesús volvió con ellos a Nazaret y les fue obediente.</p>
+
+  <h3>El carpintero de Nazaret</h3>
+  <p>De los años siguientes sabemos poco. En Nazaret conocían a Jesús como <b>el carpintero</b>, el hijo de María (Marcos 6:3). La palabra que usa el evangelio se refiere a un artesano que trabajaba con madera y también con piedra. Jesús pasó la mayor parte de su vida en tareas sencillas: trabajar con las manos, aprender las Escrituras, vivir en familia. Antes de hacer un solo milagro público, vivió años de fidelidad en lo pequeño.</p>
+
+  <div class="verse"><q>Jesús crecía en sabiduría y en estatura, y en el favor de Dios y de toda la gente.</q><cite>Lucas 2:52</cite></div>
+
+  <div class="box"><div class="bt">Una ventana al texto</div>
+  <p>Para la Pascua, miles de familias viajaban a Jerusalén en grandes caravanas, a pie y cantando. Los chicos iban con primos, tíos y vecinos, por eso no era raro que un padre pasara horas sin ver a su hijo. La Pascua recordaba la noche en que Dios liberó a Israel de la esclavitud en Egipto: la sangre de un cordero en las puertas protegió a las familias. Esa fiesta va a volver a aparecer, muy fuerte, en la etapa de Jerusalén.</p></div>
+
+  <div class="box intim"><div class="bt">Para entrar en intimidad</div>
+  <p>Lucas dice que Jesús creció en cuatro áreas: sabiduría, estatura, el favor de Dios y el de la gente. ¿En cuál de esas cuatro sentís que estás creciendo? ¿En cuál te gustaría pedirle ayuda a Dios esta semana? Jesús fue fiel en lo cotidiano antes de lo extraordinario: ¿qué tarea "chica" podés hacer hoy como si fuera para él?</p></div>
+
+  <div class="saber"><div class="bt">Lo que tenés que saber</div><ul>
+    <li>Jesús fue presentado en el templo con la ofrenda de <b>dos palomas</b>, la de las familias pobres.</li>
+    <li><b>Simeón</b> lo llamó luz para las naciones; <b>Ana</b>, la profetisa anciana, habló de él a todos.</li>
+    <li>A los <b>doce años</b>, en la <b>Pascua</b>, se quedó en el templo conversando con los maestros.</li>
+    <li>Les respondió a sus padres que tenía que estar en la <b>casa de su Padre</b> (Lucas 2:49).</li>
+    <li>Creció en <b>Nazaret</b> y lo conocían como <b>el carpintero</b>.</li>
+    <li>Creció en sabiduría, estatura y en el favor de Dios y de la gente (Lucas 2:52).</li>
+  </ul></div>
+</section>
+
+<!-- ETAPA III -->
+<section class="page">
+  <div class="hd"><p class="kick">Etapa III</p>
+  <h2>Bautismo</h2>
+  <p class="lead">Una voz en el desierto, un río, un cielo abierto. Y después, la prueba.</p>
+  <p class="refs">Leé: Mateo 3:1-17; 4:1-11 · Juan 1:19-34 · Isaías 40:3</p>
+
+  <h3>La voz en el desierto</h3>
+  <p><b>Juan el Bautista</b>, pariente de Jesús, apareció en el desierto de Judea predicando que la gente se arrepintiera de sus pecados y volviera a Dios, porque el reino del cielo estaba cerca. Era el mensajero anunciado por Isaías, una voz que clamaba en el desierto para preparar el camino del Señor (Isaías 40:3). Su ropa era de <b>pelo de camello</b>, con un cinturón de cuero, y se alimentaba de <b>langostas y miel silvestre</b>. Gente de Jerusalén, de toda Judea y de la zona del Jordán iba a escucharlo, confesaba sus pecados y era bautizada en el <b>río Jordán</b>. El evangelio de Juan ubica este lugar en Betania, al otro lado del Jordán (Juan 1:28), al que muchos llaman Betábara.</p></div>
+  <p>Juan era firme: les decía a todos que su vida tenía que mostrar el cambio, y anunciaba que detrás de él venía alguien mucho más poderoso, que iba a bautizar con el Espíritu Santo y con fuego. Juan decía que ni siquiera era digno de llevarle las sandalias.</p>
+
+  <h3>El cielo se abre</h3>
+  <p>Un día Jesús llegó de Galilea al Jordán para ser bautizado. Juan quiso impedírselo: era él quien necesitaba ser bautizado por Jesús. Jesús le pidió que lo hiciera igual, porque convenía cumplir todo lo que Dios pide. Cuando salió del agua, <b>los cielos se abrieron</b>, vio al <b>Espíritu de Dios descender como una paloma</b> y posarse sobre él, y una <b>voz del cielo</b> lo llamó su Hijo muy amado, en quien se alegraba (Mateo 3:17).</p>
+  <p>En esa escena aparecen juntos el Padre que habla, el Hijo que es bautizado y el Espíritu que desciende. Es una de las ventanas más claras de la Biblia a la <b>Trinidad</b>: un solo Dios en tres personas.</p>
+
+  <h3>Cuarenta días en el desierto</h3>
+  <p>Después, el Espíritu llevó a Jesús al desierto para ser tentado por el diablo. Ayunó <b>cuarenta días y cuarenta noches</b>, y tuvo hambre. El diablo lo tentó <b>tres veces</b>: que convirtiera piedras en pan; que se tirara desde lo más alto del templo para que los ángeles lo sostuvieran; y que se inclinara a adorarlo a cambio de todos los reinos del mundo. Las tres veces, Jesús respondió con la Escritura, con palabras del libro de <b>Deuteronomio</b>: que la gente vive de cada palabra que sale de la boca de Dios y no solo de pan (Deuteronomio 8:3); que no hay que poner a prueba al Señor (6:16); y que solo a Dios hay que adorar y servir (6:13). El diablo se fue, y vinieron ángeles a cuidarlo.</p>
+  <p>Al otro día de su encuentro con Jesús, Juan lo vio venir y lo presentó a todos con una frase que resume el evangelio:</p>
+
+  <div class="verse"><q>¡Miren! ¡El Cordero de Dios, que quita el pecado del mundo!</q><cite>Juan 1:29</cite></div>
+
+  <div class="box"><div class="bt">Una ventana al texto</div>
+  <p>El número cuarenta tiene historia en la Biblia: Israel anduvo cuarenta años por el desierto, y Moisés estuvo cuarenta días en el monte. Donde Israel cayó en la prueba, Jesús se mantuvo fiel. Y la imagen del <b>cordero</b> era conocida por todo israelita: se ofrecían corderos en el templo, y el de la Pascua recordaba la liberación de Egipto. Juan anuncia que Jesús es el sacrificio definitivo.</p></div>
+
+  <div class="box intim"><div class="bt">Para entrar en intimidad</div>
+  <p>Antes de hacer un solo milagro, Jesús escuchó al Padre llamarlo su Hijo muy amado. Su identidad vino antes que su tarea. ¿Qué te dice Dios a vos sobre quién sos? Cuando venga la tentación, ¿qué versículo podés tener guardado en el corazón para responder como Jesús?</p></div>
+
+  <div class="saber"><div class="bt">Lo que tenés que saber</div><ul>
+    <li>Juan el Bautista vestía <b>pelo de camello</b> y comía <b>langostas y miel silvestre</b>; bautizaba en el <b>Jordán</b>.</li>
+    <li>Era "la voz que clama en el desierto" anunciada por <b>Isaías</b>.</li>
+    <li>En el bautismo, el cielo se abrió, el Espíritu bajó <b>como paloma</b> y el Padre lo llamó su <b>Hijo muy amado</b>.</li>
+    <li>Ahí se ve la <b>Trinidad</b>: Padre, Hijo y Espíritu Santo.</li>
+    <li>Jesús ayunó <b>40 días</b> y venció <b>tres tentaciones</b> respondiendo con la Escritura (Deuteronomio).</li>
+    <li>Juan lo presentó como "el <b>Cordero de Dios</b>, que quita el pecado del mundo".</li>
+  </ul></div>
+</section>
+
+<!-- ETAPA IV -->
+<section class="page">
+  <div class="hd"><p class="kick">Etapa IV</p>
+  <h2>Galilea</h2>
+  <p class="lead">Un anuncio en la sinagoga, unos pescadores, una montaña. Empieza el reino.</p>
+  <p class="refs">Leé: Lucas 4:14-30; 5:1-11; 6:12-16 · Marcos 1:16-20 · Mateo 5–7</p>
+
+  <h3>La lectura en Nazaret</h3>
+  <p>Lleno del poder del Espíritu, Jesús volvió a Galilea. Un sábado entró en la <b>sinagoga de Nazaret</b>, como acostumbraba, y se puso de pie para leer. Le dieron el <b>rollo del profeta Isaías</b>, lo desenrolló y leyó el pasaje sobre el Ungido que trae buenas noticias a los pobres, libertad a los cautivos y vista a los ciegos. Enrolló el libro, se sentó, y con todos los ojos puestos en él anunció que esa Escritura se había cumplido ese mismo día (Lucas 4:21).</p></div>
+  <p>Al principio todos hablaban bien de él, pero cuando Jesús les recordó que Dios también había mostrado su gracia a extranjeros, se enfurecieron y quisieron tirarlo por un barranco. Jesús pasó entre ellos y se fue. Se instaló en <b>Capernaum</b>, a orillas del mar de Galilea, que se convirtió en el centro de su ministerio.</p>
+
+  <div class="verse"><q>El Espíritu del Señor está sobre mí, porque me ha ungido para llevar la Buena Noticia a los pobres.</q><cite>Lucas 4:18</cite></div>
+
+  <h3>Remá mar adentro</h3>
+  <p>Caminando junto al mar, Jesús vio a dos hermanos, <b>Simón (Pedro) y Andrés</b>, echando la red, y a otros dos, <b>Santiago y Juan</b>, hijos de Zebedeo, arreglando las suyas. Los invitó a seguirlo y les prometió enseñarles a <b>pescar personas</b>. Ellos dejaron todo y lo siguieron.</p>
+  <p>Lucas cuenta una escena impresionante. Pedro había pasado toda la noche pescando sin sacar nada. Jesús subió a su barca, enseñó a la multitud desde el agua y después le dijo que fuera mar adentro y echara las redes. Pedro obedeció aunque no tenía sentido, y sacaron tantos peces que las redes empezaban a romperse y las dos barcas casi se hunden. Pedro cayó de rodillas y le pidió que se alejara, porque se sentía demasiado pecador. Jesús le dijo que no tuviera miedo: desde ese momento iba a pescar personas.</p>
+
+  <h3>Los doce y el Sermón del monte</h3>
+  <p>Antes de elegir a sus apóstoles, Jesús pasó <b>toda la noche orando</b> en un monte. A la mañana eligió a <b>doce</b>: Simón Pedro, Andrés, Santiago, Juan, Felipe, Bartolomé, Mateo, Tomás, Santiago hijo de Alfeo, Simón el zelote, Judas hijo de Santiago y Judas Iscariote. Doce, como las doce tribus de Israel: Jesús estaba formando un pueblo nuevo.</p>
+  <p>En un monte, Jesús enseñó el mensaje más famoso de la historia, el <b>Sermón del monte</b> (Mateo 5–7). Empieza con las <b>bienaventuranzas</b>: felices los que reconocen su necesidad de Dios, los que lloran, los humildes, los que tienen hambre y sed de justicia, los compasivos, los de corazón puro, los que procuran la paz y los perseguidos por hacer lo correcto. Ahí enseñó también el <b>Padre Nuestro</b>, el amor a los enemigos y la historia de las dos casas, una sobre la roca y otra sobre la arena.</p>
+
+  <div class="verse"><q>Ustedes son la luz del mundo, como una ciudad en lo alto de una colina que no puede esconderse.</q><cite>Mateo 5:14</cite></div>
+
+  <div class="box"><div class="bt">Una ventana al texto</div>
+  <p>El mar de Galilea es en realidad un lago de agua dulce, de unos 21 km de largo, que está más de 200 metros por debajo del nivel del mar. Rodeado de colinas, puede pasar de la calma a una tormenta en minutos. Alrededor había pueblos de pescadores que vivían de echar redes, sobre todo de noche. Jesús eligió a sus primeros discípulos entre trabajadores comunes, que conocían el esfuerzo y el cansancio.</p></div>
+
+  <div class="box intim"><div class="bt">Para entrar en intimidad</div>
+  <p>Pedro obedeció cuando la orden de Jesús no tenía lógica, y vio un milagro. ¿Hay algo que Dios te está pidiendo que todavía no entendés? Jesús dijo que sus seguidores son luz: ¿en qué lugar de tu semana (la escuela, tu casa, tus amigos) te toca brillar?</p></div>
+
+  <div class="saber"><div class="bt">Lo que tenés que saber</div><ul>
+    <li>En la sinagoga de <b>Nazaret</b>, Jesús leyó el rollo de <b>Isaías</b> y dijo que esa Escritura se cumplía en él.</li>
+    <li>Su base de ministerio fue <b>Capernaum</b>, junto al mar de Galilea.</li>
+    <li>Primeros discípulos: <b>Pedro, Andrés, Santiago y Juan</b>, pescadores, llamados a <b>pescar personas</b>.</li>
+    <li>Pesca milagrosa: Pedro echó las redes mar adentro después de una noche sin pescar nada.</li>
+    <li>Jesús oró toda la noche y eligió a <b>doce</b> apóstoles.</li>
+    <li>El <b>Sermón del monte</b> (Mateo 5–7) incluye las bienaventuranzas, el Padre Nuestro y la enseñanza de que sus seguidores son la luz del mundo.</li>
+  </ul></div>
+</section>
+
+<!-- ETAPA V -->
+<section class="page">
+  <div class="hd"><p class="kick">Etapa V</p>
+  <h2>Milagros</h2>
+  <p class="lead">Agua que se vuelve vino, un techo abierto, un lago que se vuelve camino. Señales que apuntan a alguien.</p>
+  <p class="refs">Leé: Juan 2:1-11; 6:1-14; 9:1-7 · Marcos 2:1-12; 5:25-34; 10:46-52 · Mateo 14:22-33</p>
+
+  <p>Los evangelios llaman a los milagros de Jesús <b>señales</b>: cada uno muestra algo de quién es él. Juan dice que escribió esas señales para que creamos que Jesús es el Mesías, el Hijo de Dios, y tengamos vida (Juan 20:31).</p></div>
+
+  <h3>La primera señal: una boda en Caná</h3>
+  <p>En una boda en <b>Caná de Galilea</b> se acabó el vino, algo vergonzoso para una familia. María le avisó a Jesús y les pidió a los sirvientes que hicieran todo lo que él les dijera. Había <b>seis tinajas de piedra</b> para el lavado ceremonial. Jesús mandó llenarlas de agua hasta el borde, y cuando sacaron un poco para el encargado de la fiesta, era vino, y del mejor. Fue la <b>primera señal</b> de Jesús, y sus discípulos creyeron en él.</p>
+
+  <h3>El techo abierto</h3>
+  <p>En Capernaum, la casa donde enseñaba Jesús estaba tan llena que no se podía entrar. Cuatro hombres traían a un amigo <b>paralítico</b> en una camilla. Como no podían pasar, subieron al techo, hicieron un agujero y lo bajaron delante de Jesús. Al ver la fe de ellos, Jesús le dijo al paralítico que sus pecados quedaban perdonados. Algunos maestros de la ley pensaron que eso era una blasfemia, porque solo Dios perdona pecados. Entonces Jesús, para mostrar que tenía autoridad para perdonar, le ordenó que se levantara, tomara su camilla y volviera a su casa. Y el hombre se fue caminando delante de todos.</p>
+
+  <h3>Tocar el manto</h3>
+  <p>Una mujer que sufría de hemorragias desde hacía <b>doce años</b> había gastado todo en médicos sin mejorar. Pensaba que con solo tocar su ropa iba a quedar sana. Se acercó por detrás entre la multitud, tocó el manto de Jesús y se sanó al instante. Jesús se dio vuelta y preguntó quién lo había tocado. Ella se acercó temblando y le contó todo. Jesús la llamó <b>hija</b>, le dijo que su fe la había sanado y la despidió en paz.</p>
+
+  <h3>Panes, peces y un lago bajo los pies</h3>
+  <p>Una multitud de unos <b>cinco mil hombres</b>, sin contar mujeres y chicos, había seguido a Jesús. Un muchacho tenía <b>cinco panes de cebada y dos pescados</b>. Jesús dio gracias, los repartió, y todos comieron hasta quedar satisfechos. Con lo que sobró llenaron <b>doce canastas</b>.</p>
+  <p>Esa misma noche, los discípulos cruzaban el lago en barca y el viento soplaba en contra. De madrugada vieron a Jesús <b>caminando sobre el agua</b> y se asustaron. Jesús les dijo que tuvieran ánimo y no tuvieran miedo, porque era él. Pedro le pidió ir hacia él, bajó de la barca y caminó sobre el agua, pero al ver el viento tuvo miedo y empezó a hundirse. Jesús lo agarró de la mano y le preguntó por qué había dudado. Cuando subieron a la barca, el viento se calmó, y los discípulos lo adoraron reconociendo que de verdad era el Hijo de Dios.</p>
+
+  <h3>Luz para los ojos</h3>
+  <p>Jesús dijo que él es la luz del mundo (Juan 8:12), y lo mostró sanando ciegos. A un hombre ciego de nacimiento le untó barro en los ojos y lo mandó a lavarse al estanque de Siloé, y volvió viendo. En <b>Jericó</b>, un mendigo ciego llamado <b>Bartimeo</b> le gritaba a Jesús, llamándolo Hijo de David, que tuviera compasión de él. Lo quisieron hacer callar, pero gritó más fuerte. Jesús lo llamó y le preguntó qué quería que hiciera por él. Bartimeo le pidió ver. Y Bartimeo recuperó la vista y siguió a Jesús por el camino.</p>
+
+  <div class="box"><div class="bt">Una ventana al texto</div>
+  <p>En la época de Jesús, una persona enferma o con una discapacidad muchas veces quedaba excluida: no podía trabajar, se la consideraba impura y terminaba pidiendo limosna. Cuando Jesús sana, también devuelve a la persona a su familia y a su comunidad. Por eso le dice "hija" a la mujer y llama a Bartimeo para que se acerque delante de todos.</p></div>
+
+  <div class="box intim"><div class="bt">Para entrar en intimidad</div>
+  <p>Los amigos del paralítico no se rindieron ante la multitud: abrieron un techo. ¿Por qué amigo podés orar con esa insistencia? Jesús le preguntó a Bartimeo qué quería que hiciera por él. Si te lo preguntara hoy, ¿qué le responderías?</p></div>
+
+  <div class="saber"><div class="bt">Lo que tenés que saber</div><ul>
+    <li>Primera señal: agua en vino en <b>Caná</b>, con <b>seis tinajas</b> de piedra. María les pidió a los sirvientes que hicieran lo que él dijera.</li>
+    <li>El <b>paralítico</b> bajado por el techo: Jesús primero le perdonó los pecados y después lo sanó.</li>
+    <li>La mujer enferma <b>doce años</b> tocó el manto y Jesús le dijo que su fe la había sanado.</li>
+    <li>Alimentación de los cinco mil: <b>cinco panes y dos pescados</b>; sobraron <b>doce canastas</b>.</li>
+    <li>Jesús caminó sobre el agua; Pedro también, hasta que tuvo miedo y empezó a hundirse.</li>
+    <li>Jesús es la <b>luz del mundo</b>; el ciego <b>Bartimeo</b> fue sanado en <b>Jericó</b>.</li>
+  </ul></div>
+</section>
+
+<!-- ETAPA VI -->
+<section class="page">
+  <div class="hd"><p class="kick">Etapa VI</p>
+  <h2>Parábolas</h2>
+  <p class="lead">Historias simples de campo, ovejas y familias que esconden los secretos del reino.</p>
+  <p class="refs">Leé: Mateo 13:1-23 · Lucas 10:25-37; 15:1-32</p>
+
+  <p>Una <b>parábola</b> es una historia corta, tomada de la vida diaria, que enseña una verdad sobre Dios y su reino. Jesús hablaba de semillas, panes, monedas, ovejas y familias, cosas que todos conocían. Quien escuchaba con el corazón abierto entendía; quien no quería entender se quedaba en la superficie.</p></div>
+
+  <h3>El sembrador</h3>
+  <p>Un agricultor salió a sembrar. Parte de la semilla cayó en el <b>camino</b> y los pájaros se la comieron. Otra cayó en <b>terreno rocoso</b>: brotó rápido, pero como no tenía raíz, el sol la quemó. Otra cayó entre <b>espinos</b>, que la ahogaron. Y otra cayó en <b>tierra fértil</b> y dio una gran cosecha.</p>
+  <p>Jesús explicó la parábola. La semilla es el mensaje del reino. El camino es quien escucha y no entiende, y el maligno le arrebata lo sembrado. El terreno rocoso es quien recibe la palabra con alegría, pero se aparta cuando llegan los problemas. Los espinos son las preocupaciones de esta vida y el atractivo de la riqueza, que ahogan la palabra. La buena tierra es quien escucha, entiende y da fruto.</p>
+
+  <div class="verse"><q>Pero otras semillas cayeron en tierra fértil, ¡y produjeron una cosecha que fue treinta, sesenta y hasta cien veces más numerosa de lo que se había sembrado!</q><cite>Mateo 13:8</cite></div>
+
+  <h3>Ser un buen prójimo</h3>
+  <p>Un experto en la ley le preguntó a Jesús qué tenía que hacer para heredar la vida eterna. Jesús le preguntó qué decía la ley, y el hombre respondió: amar a Dios con todo el corazón y al prójimo como a uno mismo. Pero quiso justificarse y preguntó quién era su prójimo. Jesús contó una historia. Un hombre que bajaba de Jerusalén a Jericó fue asaltado y quedó medio muerto. Pasó un <b>sacerdote</b> y siguió de largo. Pasó un <b>levita</b>, ayudante del templo, y también siguió. Pasó un <b>samaritano</b>, de un pueblo despreciado por los judíos, sintió compasión, le vendó las heridas, lo llevó a una posada y pagó para que lo cuidaran. Jesús preguntó cuál de los tres fue el prójimo, y el experto contestó que el que mostró compasión. Jesús le dijo que fuera e hiciera lo mismo.</p>
+
+  <h3>Lo perdido y encontrado</h3>
+  <p>En Lucas 15, Jesús responde a los que lo criticaban por comer con pecadores con tres historias. Un pastor tiene <b>cien ovejas</b>, pierde una, deja las <b>noventa y nueve</b> y la busca hasta encontrarla; vuelve feliz con ella sobre los hombros y hace fiesta. Una mujer pierde una moneda, barre toda la casa hasta hallarla y celebra con sus vecinas.</p>
+  <div class="verse"><q>De la misma manera, ¡hay más alegría en el cielo por un pecador perdido que se arrepiente y regresa a Dios que por noventa y nueve justos que no se extraviaron!</q><cite>Lucas 15:7</cite></div>
+  <p>La tercera historia es la del <b>hijo pródigo</b>. El hijo menor pidió su parte de la herencia, se fue lejos y la malgastó. Cuando llegó el hambre, terminó cuidando cerdos y deseando comer lo que ellos comían. Entonces recapacitó y volvió a su padre, dispuesto a ser tratado como un empleado. Su padre lo vio de lejos, corrió, lo abrazó, lo besó, le puso la mejor ropa, un anillo y sandalias, y organizó una fiesta. El hermano mayor se enojó y no quiso entrar, y el padre salió a buscarlo también. Dios es ese Padre que sale a buscar a sus dos hijos.</p>
+  <div class="verse"><q>Lleno de amor y de compasión, corrió hacia su hijo, lo abrazó y lo besó.</q><cite>Lucas 15:20</cite></div>
+
+  <div class="box"><div class="bt">Una ventana al texto</div>
+  <p>Judíos y samaritanos tenían siglos de enemistad: diferían en dónde adorar a Dios y en qué libros de la Escritura aceptar. Que el héroe de la historia fuera un samaritano era escandaloso para los oyentes de Jesús. Y en esa cultura, un hombre mayor no corría en público: el padre del pródigo deja de lado su dignidad para abrazar a su hijo antes de que nadie lo humille.</p></div>
+
+  <div class="box intim"><div class="bt">Para entrar en intimidad</div>
+  <p>¿Qué tipo de tierra es hoy tu corazón? ¿Hay "espinos" (preocupaciones, pantallas, ansiedad) que están ahogando lo que Dios siembra? En la historia del pródigo, ¿te sentís más el hijo que se fue o el que se quedó enojado? El Padre corre hacia los dos.</p></div>
+
+  <div class="saber"><div class="bt">Lo que tenés que saber</div><ul>
+    <li>Una <b>parábola</b> es una historia de la vida diaria que enseña una verdad del reino.</li>
+    <li>Sembrador: <b>camino, terreno rocoso, espinos y tierra fértil</b>; la semilla es la Palabra. Fruto: treinta, sesenta y cien.</li>
+    <li>Buen samaritano: pasaron un <b>sacerdote</b> y un <b>levita</b>; ayudó el <b>samaritano</b>. Jesús manda hacer lo mismo.</li>
+    <li>Oveja perdida: el pastor deja las <b>noventa y nueve</b> para buscar una.</li>
+    <li>Hijo pródigo: el padre lo ve de lejos, <b>corre</b>, lo abraza y hace fiesta; también busca al hermano mayor.</li>
+  </ul></div>
+</section>
+
+<!-- ETAPA VII -->
+<section class="page">
+  <div class="hd"><p class="kick">Etapa VII</p>
+  <h2>Jerusalén</h2>
+  <p class="lead">El camino sube a la ciudad. Palmas, una mesa, una toalla y un jardín de olivos.</p>
+  <p class="refs">Leé: Lucas 19:1-10 · Mateo 21:1-17 · Juan 13:1-35 · Lucas 22:7-62 · Zacarías 9:9</p>
+
+  <h3>Zaqueo, en Jericó</h3>
+  <p>Camino a Jerusalén, Jesús pasó por <b>Jericó</b>. Allí vivía <b>Zaqueo</b>, jefe de los cobradores de impuestos y muy rico. Los cobradores trabajaban para Roma y muchas veces cobraban de más, por eso la gente los odiaba. Zaqueo era bajo y no podía ver por la multitud, así que corrió y se trepó a un <b>árbol sicómoro</b>. Jesús se detuvo justo ahí, lo miró, lo llamó por su nombre y le dijo que bajara rápido, porque ese día se iba a hospedar en su casa. La gente murmuraba, pero Zaqueo cambió: prometió dar la mitad de sus bienes a los pobres y devolver cuatro veces más a quien hubiera estafado.</p></div>
+  <div class="verse"><q>Pues el Hijo del Hombre vino a buscar y a salvar a los que están perdidos.</q><cite>Lucas 19:10</cite></div>
+
+  <h3>La entrada triunfal</h3>
+  <p>Cerca de la fiesta de la Pascua, Jesús entró en Jerusalén montado en un <b>burro</b>, cumpliendo la profecía de Zacarías: tu rey viene a ti, humilde, montado en un burro (Zacarías 9:9). Una multitud extendió sus <b>mantos</b> en el camino y cortó <b>ramas</b> de los árboles. Los que iban adelante y los que venían detrás gritaban:</p>
+  <div class="verse"><q>¡Alaben a Dios por el Hijo de David! ¡Bendiciones al que viene en el nombre del Señor!</q><cite>Mateo 21:9</cite></div>
+  <p>Después Jesús entró en el templo y echó a los que compraban y vendían, diciendo que la casa de Dios debía ser una casa de oración.</p>
+
+  <h3>La última cena</h3>
+  <p>La noche de la Pascua, Jesús cenó con sus discípulos en un cuarto del piso de arriba. Durante la cena se levantó, se ató una toalla a la cintura, echó agua en un recipiente y empezó a <b>lavarles los pies</b>, un trabajo de sirvientes. Pedro no quería dejarse lavar, pero Jesús le dijo que, si no lo hacía, no tendría parte con él. Después les explicó: si él, su Señor y Maestro, les había lavado los pies, ellos también debían servirse unos a otros.</p>
+  <p>Tomó el <b>pan</b>, dio gracias, lo partió y les dijo que era su cuerpo, entregado por ellos, y que lo hicieran en memoria de él. Con la <b>copa</b> les anunció el nuevo pacto entre Dios y su pueblo, confirmado con su sangre. Anunció que uno de ellos lo iba a traicionar, y <b>Judas Iscariote</b> salió en la noche.</p>
+  <div class="verse"><q>Así que ahora les doy un nuevo mandamiento: ámense unos a otros. Tal como yo los he amado, ustedes deben amarse unos a otros.</q><cite>Juan 13:34</cite></div>
+
+  <h3>Getsemaní y el gallo</h3>
+  <p>Después fueron al monte de los Olivos, a un huerto llamado <b>Getsemaní</b>. Jesús les pidió que velaran y oraran para no caer en tentación. Se alejó un poco, se arrodilló y oró con tanta angustia que su sudor caía como gotas de sangre. Volvió y los encontró dormidos. Esa noche llegó Judas con una multitud armada y lo entregó con un beso.</p>
+  <div class="verse"><q>Padre, si quieres, te pido que quites esta copa de sufrimiento de mí. Sin embargo, quiero que se haga tu voluntad, no la mía.</q><cite>Lucas 22:42</cite></div>
+  <p>Pedro había prometido que estaba dispuesto a ir a la cárcel y a morir por Jesús, pero Jesús le había anunciado que antes de que cantara el gallo lo negaría tres veces. En el patio del sumo sacerdote, Pedro negó conocerlo <b>tres veces</b>. En ese momento cantó el gallo, el Señor se dio vuelta y lo miró, y Pedro salió y lloró amargamente.</p>
+
+  <div class="box"><div class="bt">Una ventana al texto</div>
+  <p>En la Pascua, cada familia comía un cordero recordando la liberación de Egipto. En esa misma cena, Jesús le da un sentido nuevo al pan y a la copa: él es el Cordero cuya entrega trae una liberación más grande. Por eso la iglesia sigue partiendo el pan hasta hoy, en memoria de él.</p></div>
+
+  <div class="box intim"><div class="bt">Para entrar en intimidad</div>
+  <p>Jesús lavó los pies incluso de Judas, que lo iba a traicionar, y de Pedro, que lo iba a negar. ¿A quién te cuesta servir? En Getsemaní, Jesús le contó al Padre lo que sentía y después se rindió a su voluntad. ¿Qué te gustaría contarle hoy, con la misma sinceridad?</p></div>
+
+  <div class="saber"><div class="bt">Lo que tenés que saber</div><ul>
+    <li><b>Zaqueo</b>, jefe de cobradores de impuestos en Jericó, subió a un sicómoro y cambió su vida.</li>
+    <li>Entrada triunfal en un <b>burro</b> (Zacarías 9:9), con mantos y ramas: "¡Alaben a Dios por el Hijo de David!".</li>
+    <li>En la última cena Jesús <b>lavó los pies</b> a sus discípulos y partió el pan y la copa, y pidió que lo hicieran en memoria de él.</li>
+    <li>Dio un <b>nuevo mandamiento</b>: ámense unos a otros como yo los he amado.</li>
+    <li>En <b>Getsemaní</b> oró: "quiero que se haga tu voluntad, no la mía". Judas lo entregó con un beso.</li>
+    <li>Pedro lo negó <b>tres veces</b> antes de que cantara el gallo.</li>
+  </ul></div>
+</section>
+
+<!-- ETAPA VIII -->
+<section class="page">
+  <div class="hd"><p class="kick">Etapa VIII</p>
+  <h2>La cruz</h2>
+  <p class="lead">El momento más oscuro de la historia, y el amor más grande.</p>
+  <p class="refs">Leé: Lucas 23 · Marcos 15:21-47 · Juan 19:16-42 · Isaías 53:3-6</p>
+
+  <h3>Juzgado y condenado</h3>
+  <p>Durante la noche, Jesús fue llevado ante el sumo sacerdote <b>Caifás</b> y el concilio religioso, que lo acusaron de blasfemia porque afirmó ser el Hijo de Dios. Como solo los romanos podían condenar a muerte, a la mañana lo llevaron ante el gobernador <b>Poncio Pilato</b>. Pilato no encontró motivo para condenarlo y quiso soltarlo, pero la multitud pedía a gritos que lo crucificaran. Pilato se lavó las manos, lo mandó azotar y lo entregó para que lo crucificaran. Los soldados le pusieron una <b>corona de espinas</b> y un manto, y se burlaron de él como "rey de los judíos".</p></div>
+
+  <h3>El camino al Gólgota</h3>
+  <p>Jesús salió cargando su cruz. En el camino, los soldados obligaron a un hombre que venía del campo, <b>Simón de Cirene</b>, a llevar la cruz detrás de él. Lo llevaron a un lugar fuera de la ciudad.</p>
+  <div class="verse"><q>Él, cargando su propia cruz, fue al sitio llamado Lugar de la Calavera (en hebreo, Gólgota).</q><cite>Juan 19:17</cite></div>
+  <p>Allí lo crucificaron entre dos criminales. Sobre su cabeza pusieron un letrero: "Jesús de Nazaret, el Rey de los judíos". Desde la cruz, Jesús le pidió al Padre que perdonara a los que lo crucificaban, porque no sabían lo que hacían (Lucas 23:34). Uno de los criminales se burlaba, pero el otro le pidió que se acordara de él cuando viniera en su reino, y Jesús le prometió que ese mismo día estaría con él en el paraíso (Lucas 23:43).</p>
+
+  <h3>María y Juan al pie de la cruz</h3>
+  <p>Cerca de la cruz estaban <b>María, la madre de Jesús</b>, otras mujeres y el discípulo a quien Jesús amaba, <b>Juan</b>. Jesús, aun sufriendo, cuidó de su madre: le dijo a ella que Juan sería su hijo, y a Juan, que ella sería su madre. Desde entonces Juan la llevó a vivir a su casa.</p>
+
+  <h3>"Todo está cumplido"</h3>
+  <p>Desde el mediodía hasta las tres de la tarde, la oscuridad cubrió toda la tierra.</p>
+  <div class="verse"><q>Después de probar el vino, Jesús dijo: «¡Todo está cumplido!». Entonces inclinó la cabeza y entregó su espíritu.</q><cite>Juan 19:30</cite></div>
+  <p>En ese momento, la <b>cortina del templo se rasgó</b> en dos, de arriba abajo (Marcos 15:38). Esa cortina separaba el Lugar Santísimo, donde solo entraba el sumo sacerdote una vez al año. Abierta de arriba abajo, anuncia que el camino a la presencia de Dios quedó abierto por Jesús. El oficial romano que estaba frente a la cruz reaccionó así:</p>
+  <div class="verse"><q>¡Este hombre era verdaderamente el Hijo de Dios!</q><cite>Marcos 15:39</cite></div>
+  <p>Esa tarde, <b>José de Arimatea</b>, un miembro rico del concilio que seguía a Jesús en secreto, pidió el cuerpo a Pilato. Junto con Nicodemo lo envolvió en lienzos con especias y lo puso en una tumba nueva, cavada en la roca. Una piedra grande cerró la entrada.</p>
+
+  <div class="box"><div class="bt">Una ventana al texto</div>
+  <p>Unos setecientos años antes, el profeta Isaías describió a un siervo de Dios que sufriría en lugar del pueblo: "Pero él fue traspasado por nuestras rebeliones y aplastado por nuestros pecados" (Isaías 53:5). La cruz era la forma de ejecución más cruel y humillante del Imperio romano, reservada a esclavos y rebeldes. Los primeros cristianos vieron en ella el centro del plan de Dios: Jesús cargó lo que nos correspondía a nosotros.</p></div>
+
+  <div class="box intim"><div class="bt">Para entrar en intimidad</div>
+  <p>Mientras lo crucificaban, Jesús perdonó, prometió el paraíso y cuidó a su mamá. En medio del dolor siguió amando. Tomate un momento para leer Isaías 53:5 despacio y poner tu nombre: "fue traspasado por mis rebeliones". ¿Qué le querés decir a Jesús después de esto?</p></div>
+
+  <div class="saber"><div class="bt">Lo que tenés que saber</div><ul>
+    <li>Fue juzgado por <b>Caifás</b> y condenado por <b>Poncio Pilato</b>, que se lavó las manos.</li>
+    <li><b>Simón de Cirene</b> fue obligado a llevar la cruz; lo crucificaron en el <b>Gólgota</b> ("Lugar de la Calavera").</li>
+    <li>Desde la cruz pidió <b>perdón</b> para los que lo crucificaban y prometió el <b>paraíso</b> al criminal arrepentido.</li>
+    <li>Encomendó a <b>María</b> al cuidado de <b>Juan</b>.</li>
+    <li>Últimas palabras en Juan: "<b>¡Todo está cumplido!</b>". La <b>cortina del templo</b> se rasgó de arriba abajo.</li>
+    <li>El oficial romano dijo que era el Hijo de Dios. <b>José de Arimatea</b> lo sepultó en una tumba de roca. Profecía: Isaías 53:5.</li>
+  </ul></div>
+</section>
+
+<!-- ETAPA IX -->
+<section class="page">
+  <div class="hd"><p class="kick">Etapa IX</p>
+  <h2>Resurrección</h2>
+  <p class="lead">La piedra está corrida. La muerte no tiene la última palabra.</p>
+  <p class="refs">Leé: Mateo 28 · Lucas 24:13-35 · Juan 20–21</p>
+
+  <h3>La tumba vacía</h3>
+  <p>El domingo temprano, el <b>primer día de la semana</b>, María Magdalena y otras mujeres fueron a la tumba con especias para el cuerpo. Hubo un gran terremoto: un ángel del Señor bajó del cielo, corrió la piedra y se sentó sobre ella. Los guardias temblaron de miedo. El ángel les dijo a las mujeres que no tuvieran miedo:</p></div>
+  <div class="verse"><q>¡No está aquí! Ha resucitado tal como dijo que sucedería. Vengan, vean el lugar donde estaba su cuerpo.</q><cite>Mateo 28:6</cite></div>
+  <p>Les mandó ir rápido a avisar a los discípulos. Ellas salieron corriendo, con miedo y con mucha alegría. Pedro y Juan corrieron a la tumba y encontraron los lienzos tirados y el paño de la cabeza doblado aparte.</p>
+
+  <h3>María Magdalena</h3>
+  <p><b>María Magdalena</b> se quedó llorando afuera de la tumba. Se dio vuelta y vio a un hombre que pensó que era el jardinero. Él le preguntó por qué lloraba. Entonces la llamó por su nombre: "¡María!". Ella lo reconoció: "¡Raboní!", que quiere decir "Maestro". Jesús la envió a contarles a los discípulos, y ella fue la primera en anunciar que había visto al Señor.</p>
+
+  <h3>El camino a Emaús</h3>
+  <p>Ese mismo día, dos discípulos caminaban tristes hacia <b>Emaús</b>, un pueblo a unos once kilómetros de Jerusalén. Jesús se les acercó y caminó con ellos, pero no lo reconocieron. Les explicó todo lo que las Escrituras, desde Moisés y los profetas, decían sobre él. Al llegar le insistieron que se quedara. Sentados a la mesa, Jesús tomó el pan, lo bendijo, lo <b>partió</b> y se lo dio. En ese momento se les abrieron los ojos y lo reconocieron, y él desapareció.</p>
+  <div class="verse"><q>Entonces se dijeron el uno al otro: «¿No ardía nuestro corazón cuando nos hablaba en el camino y nos explicaba las Escrituras?».</q><cite>Lucas 24:32</cite></div>
+  <p>Volvieron enseguida a Jerusalén a contarlo, aunque ya era de noche.</p>
+
+  <h3>Tomás y el desayuno en la playa</h3>
+  <p><b>Tomás</b> no estaba cuando Jesús se apareció a los discípulos, y dijo que no creería hasta ver las marcas de los clavos y tocar su costado. Ocho días después, Jesús volvió, le mostró sus manos y su costado y le dijo que no siguiera dudando. Tomás exclamó: "¡Mi Señor y mi Dios!". Jesús respondió: "Benditos los que creen sin verme".</p>
+  <p>Tiempo después, junto al mar de Galilea, los discípulos habían pasado la noche pescando sin éxito. Desde la orilla, Jesús les dijo que echaran la red a la derecha de la barca, y sacaron <b>153 peces grandes</b>. En la playa los esperaba con fuego, pescado y pan. Después del desayuno, le preguntó a Pedro <b>tres veces</b>: "¿Me amas?". Tres veces Pedro lo había negado; tres veces le dijo que lo amaba, y tres veces Jesús le encargó: "Cuida de mis ovejas".</p>
+
+  <h3>La gran comisión</h3>
+  <p>En un monte de Galilea, Jesús les dijo a sus discípulos que había recibido toda autoridad en el cielo y en la tierra, y les dio una misión que llega hasta hoy. Les prometió: "Y tengan por seguro esto: que estoy con ustedes siempre, hasta el fin de los tiempos" (Mateo 28:20).</p>
+  <div class="verse"><q>Por lo tanto, vayan y hagan discípulos de todas las naciones, bautizándolos en el nombre del Padre y del Hijo y del Espíritu Santo.</q><cite>Mateo 28:19</cite></div>
+  <p>Lo que pasó después —la venida del Espíritu Santo en Pentecostés y el nacimiento de la iglesia— lo vas a recorrer en el próximo curso: <b>Hechos</b>.</p>
+
+  <div class="box intim"><div class="bt">Para entrar en intimidad</div>
+  <p>Jesús llamó a María por su nombre, caminó con los de Emaús en su tristeza, esperó a Tomás en su duda y le dio a Pedro una nueva oportunidad. ¿Con cuál de ellos te identificás hoy? Jesús resucitado también te conoce por tu nombre y camina con vos.</p></div>
+
+  <div class="saber"><div class="bt">Lo que tenés que saber</div><ul>
+    <li>Resucitó el <b>primer día de la semana</b>; el ángel dijo: "¡No está aquí! Ha resucitado".</li>
+    <li><b>María Magdalena</b> lo reconoció cuando la llamó por su nombre y fue la primera en anunciarlo.</li>
+    <li>En <b>Emaús</b> lo reconocieron al <b>partir el pan</b>: "¿No ardía nuestro corazón…?".</li>
+    <li><b>Tomás</b>: "¡Mi Señor y mi Dios!". Jesús: "Benditos los que creen sin verme".</li>
+    <li>Junto al lago: <b>153 peces</b>; Jesús le preguntó a Pedro <b>tres veces</b> "¿Me amas?".</li>
+    <li><b>Gran comisión</b>: "vayan y hagan discípulos de todas las naciones" (Mateo 28:19).</li>
+  </ul></div>
+</section>
+
+<!-- CIERRE -->
+<section class="page">
+  <div class="hd"><p class="kick">Para cerrar</p>
+  <h2>Seguir sus pasos</h2>
+  <p class="lead">El recorrido termina en una tumba vacía y en un envío. El camino de Jesús sigue con vos.</p>
+  <p>Recorriste nueve etapas: un bebé en un pesebre, un chico en el templo, un río con el cielo abierto, una sinagoga, una barca, un techo roto, historias de semillas y ovejas, una mesa con una toalla, una cruz y una piedra corrida. Todo apunta a la misma persona. Jesús es el Salvador anunciado a los pastores, el Cordero de Dios que quita el pecado del mundo, la luz del mundo, el Hijo de David, el que vino a buscar y salvar lo que se había perdido, el que cumplió todo en la cruz y el que vive para siempre.</p></div>
+  <p>Seguir sus pasos significa caminar como él caminó: escuchando al Padre, sirviendo a los demás, amando a los que nadie mira y llevando la buena noticia a todas las naciones. Ese es el entrenamiento Hero.</p>
+
+  <h3>Glosario</h3>
+  <dl class="glos two">
+    <dt>Apóstol</dt><dd>"Enviado". Cada uno de los doce que Jesús eligió para estar con él y enviarlos.</dd>
+    <dt>Bautismo</dt><dd>Inmersión en agua como señal de arrepentimiento y de una vida nueva.</dd>
+    <dt>Bienaventuranzas</dt><dd>Las frases de "felices los…" con las que empieza el Sermón del monte.</dd>
+    <dt>Cordero de Dios</dt><dd>Título de Jesús: el sacrificio que quita el pecado del mundo.</dd>
+    <dt>Discípulo</dt><dd>Aprendiz y seguidor de un maestro. Jesús nos llama a hacer discípulos.</dd>
+    <dt>Emanuel</dt><dd>"Dios está con nosotros".</dd>
+    <dt>Evangelio</dt><dd>"Buena noticia". También, cada uno de los cuatro libros sobre Jesús.</dd>
+    <dt>Fariseos</dt><dd>Grupo judío que cuidaba con mucho detalle la ley y las tradiciones.</dd>
+    <dt>Gólgota</dt><dd>"Lugar de la Calavera", donde crucificaron a Jesús.</dd>
+    <dt>Mesías</dt><dd>"Ungido" (en griego, Cristo). El rey prometido descendiente de David.</dd>
+    <dt>Parábola</dt><dd>Historia de la vida diaria que enseña una verdad del reino de Dios.</dd>
+    <dt>Pascua</dt><dd>Fiesta que recuerda la liberación de Israel de Egipto.</dd>
+    <dt>Sinagoga</dt><dd>Lugar de reunión de cada pueblo para leer las Escrituras y orar.</dd>
+    <dt>Templo</dt><dd>El santuario de Jerusalén, centro de la adoración y los sacrificios.</dd>
+    <dt>Trinidad</dt><dd>Un solo Dios en tres personas: Padre, Hijo y Espíritu Santo.</dd>
+  </dl>
+
+  <h3>Los nueve versículos de memoria</h3>
+  <table>
+    <tr><th>Etapa</th><th>Versículo</th></tr>
+    <tr><td>I · Nacimiento</td><td>Lucas 2:11</td></tr>
+    <tr><td>II · Infancia</td><td>Lucas 2:52</td></tr>
+    <tr><td>III · Bautismo</td><td>Juan 1:29</td></tr>
+    <tr><td>IV · Galilea</td><td>Lucas 4:18 · Mateo 5:14</td></tr>
+    <tr><td>VI · Parábolas</td><td>Mateo 13:8 · Lucas 15:7 · Lucas 15:20</td></tr>
+    <tr><td>VII · Jerusalén</td><td>Lucas 19:10 · Mateo 21:9 · Juan 13:34 · Lucas 22:42</td></tr>
+    <tr><td>VIII · La cruz</td><td>Juan 19:17 · Juan 19:30 · Isaías 53:5 · Marcos 15:39</td></tr>
+    <tr><td>IX · Resurrección</td><td>Mateo 28:6 · Lucas 24:32 · Mateo 28:19</td></tr>
+  </table>
+  <p class="fin">Habitat CFM · Entrenamiento Hero · Tras sus pasos</p>
+</section>
+</body>
+</html>
