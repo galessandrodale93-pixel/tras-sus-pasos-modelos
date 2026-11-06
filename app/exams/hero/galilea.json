@@ -106,13 +106,13 @@
    "t": "mc",
    "q": "¿Dónde se instaló Jesús, como centro de su ministerio?",
    "o": [
-    "En Capernaum, a orillas del mar de Galilea",
+    "En Capernaúm, a orillas del mar de Galilea",
     "En Belén",
     "En Jericó",
     "En Jerusalén"
    ],
    "a": 0,
-   "exp": "Se instaló en Capernaum, que se convirtió en el centro de su ministerio.",
+   "exp": "Se instaló en Capernaúm, que se convirtió en el centro de su ministerio.",
    "ref": "Lucas 4:31",
    "id": "gal-08"
   },
@@ -437,7 +437,7 @@
      "Jesús leyó el rollo de Isaías"
     ],
     [
-     "Capernaum",
+     "Capernaúm",
      "Centro de su ministerio"
     ],
     [

@@ -574,7 +574,7 @@ const KL = {};
   S = { renderer, scene, camera, hx, av, markers, edgePts, allPts, items, joy: { x: 0, y: 0 }, keys: {}, flies, ground, yaw: Math.PI, camYaw: 0, camDist: 6.6, camPitch: .4, walking: false, moving: false, t: 0, root, cv, sig: '', onStop: g.P().pos, W: HW, uGrass, KL, zEnd: zMax };
   // orientar al personaje hacia la próxima parada
   buildPois(scene, pois, hx, HW, rng(77), ribbon); S.pois = pois; buildTowns(scene, g, hx, HW, pois); ambReset(); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; setTimeout(() => tutOpen(), 1500); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); }, 0);
-  try { scatterNodes(g, HW); if (S.npos[g.P().pos]) { const q = S.npos[g.P().pos]; av.position.set(q[0], 0, q[1]); } } catch (e) { console.warn('hitos', e); }
+  try { scatterNodes(g, HW); if (S.npos[g.P().pos]) { const q = S.npos[g.P().pos]; av.position.set(q[0], 0, q[1]); } } catch (e) { console.warn('hitos', e); } S.spawn = [av.position.x, av.position.z];
   S0 = S; insMigrate(); setTimeout(glowUI, 400); S.mis = buildMissions(scene, g, hx, HW); { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
   const nx = nextList()[0]; if (nx) { const N = g.NODES[nx], [bx, bz] = toV(N.x, N.y); S.yaw = Math.atan2(bx - ax, bz - az); }
   av.rotation.y = S.yaw;
@@ -878,7 +878,6 @@ const FAN = { el: null, open: false, t: 0 };
 function fanFire(b) { if (!b) return; if (b.onpointerdown) b.onpointerdown({ preventDefault() {}, stopPropagation() {}, pointerType: 'mouse', button: 0, target: b, currentTarget: b }); else b.click(); }
 function fanItems() {
   const L = [], money = (() => { const m = document.querySelector('#v3surv .sv-money'); return m ? (m.textContent.match(/\d+/) || ['0'])[0] : null; })();
-  L.push(['🎒', 'Mochila', () => { const b = document.getElementById('v3bag'); if (b) b.click(); }]);
   L.push(['💪', 'Atributos', () => openBag('at')]);
   if (S && S.sv) { L.push(['🍽️', 'Comer (C)', () => svEat()]); L.push(['🔨', 'Fabricar (B)', () => svCraft()]); if (money != null) L.push([`<span class="fan-coin"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#F5C443" stroke="#8A5A12" stroke-width="1.6"/><circle cx="12" cy="12" r="7" fill="none" stroke="#B9801E" stroke-width="1.2"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="900" font-family="Georgia,serif" fill="#7A4E0E">D</text></svg><em>${money}</em></span>`, `${money} denarios (monedas)`, () => openBag()]); }
   const acts = document.getElementById('v3acts'); if (acts) acts.querySelectorAll('button[data-a]').forEach(b => { if (b.dataset.a === 'room') return; L.push([b.innerHTML, b.title || b.getAttribute('aria-label') || b.dataset.a, () => fanFire(b)]); });
@@ -894,6 +893,7 @@ function fanSet(open) {
     box.querySelectorAll('button').forEach(b => b.onclick = e => { e.stopPropagation(); const f = L[+b.dataset.i]; try { f && f[2](); } catch (er) {} fanArm(); setTimeout(() => { if (FAN.open) fanSet(true); }, 250); }); }
   fanArm();
 }
+function bagHud() { const b = document.getElementById('v3bag'), row = document.querySelector('.hud .hud-row'); if (!b || !row || b.parentNode === row) return; const sc = row.querySelector('.pill.score'); row.insertBefore(b, sc ? sc.nextSibling : null); b.classList.add('v3baghud'); }
 function fanInit() {
   if (FAN.el && document.body.contains(FAN.el)) return; const el = document.createElement('div'); el.id = 'v3fan'; el.className = 'v3fan';
   el.innerHTML = '<div class="fan-items" role="menu"></div><button class="fan-tg" aria-label="Más opciones" aria-expanded="false"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="6" cy="6" r="2.2" fill="currentColor"/><circle cx="12" cy="6" r="2.2" fill="currentColor"/><circle cx="18" cy="6" r="2.2" fill="currentColor"/><circle cx="6" cy="12" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="18" cy="12" r="2.2" fill="currentColor"/><circle cx="6" cy="18" r="2.2" fill="currentColor"/><circle cx="12" cy="18" r="2.2" fill="currentColor"/><circle cx="18" cy="18" r="2.2" fill="currentColor"/></svg></button>';
@@ -922,10 +922,11 @@ const COMP = { el: null, t: 0 };
 function compassTick(dt) {
   if (!S || !S.hx) return; COMP.t -= dt; if (COMP.t > 0) return; COMP.t = .2;
   if (!COMP.el) { COMP.el = document.createElement('div'); COMP.el.className = 'v3comp'; COMP.el.innerHTML = '<i><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3l6 15-6-3.5L6 18Z" fill="currentColor"/></svg></i><span></span>'; COMP.el.onclick = () => openMap(); document.body.appendChild(COMP.el); }
-  const id = nodeActive(), m = id && S.markers[id], a = S.av.position; if (!m || S.walking || sheetUp()) { COMP.el.hidden = true; return; }
+  const a = S.av.position, bg = S.sv && S.sv.bag; if (bg && !S.walking && !sheetUp()) { const dx = bg.x - a.x, dz = bg.z - a.z, d = Math.hypot(dx, dz), C = S.yaw + S.camYaw, th = Math.atan2(dx * -Math.cos(C) + dz * Math.sin(C), dx * Math.sin(C) + dz * Math.cos(C)); COMP.el.hidden = d < 2; COMP.el.firstChild.style.transform = `rotate(${th}rad)`; COMP.el.lastChild.textContent = `Tu bolsa · ${Math.round(d)} m`; return; }
+  const id = nodeActive(), m = id && S.markers[id]; if (!m || S.walking || sheetUp()) { COMP.el.hidden = true; return; }
   const dx = m.position.x - a.x, dz = m.position.z - a.z, d = Math.hypot(dx, dz); if (d < 3.5) { COMP.el.hidden = true; return; }
   const C = S.yaw + S.camYaw, f = dx * Math.sin(C) + dz * Math.cos(C), r = dx * -Math.cos(C) + dz * Math.sin(C), th = Math.atan2(r, f);
-  COMP.el.hidden = false; COMP.el.firstChild.style.transform = `rotate(${th}rad)`; COMP.el.lastChild.textContent = `${G().NODES[id].label} · ${Math.round(d)} m`;
+  COMP.el.hidden = false; COMP.el.firstChild.style.transform = `rotate(${th}rad)`; const nd = G().NODES[id], rid = G().REGIONS[nd.r] && G().REGIONS[nd.r].id; let pas = ''; if (rid === 'jerusalen') { const dn = Object.keys(G().NODES).filter(k => k.startsWith('jerusalen-') && G().NODES[k].kind === 'ch' && G().isDone(k)).length; pas = ` · faltan ${Math.max(1, 7 - dn)} días para la Pascua`; } else if (rid === 'cruz') pas = ' · Pascua'; COMP.el.lastChild.textContent = `${nd.label} · ${Math.round(d)} m${pas}`;
 }
 function miniInit() {
   if (MINI.btn && document.body.contains(MINI.btn)) return; const b = document.createElement('button'); b.className = 'v3mapbtn'; b.setAttribute('aria-label', 'Abrir el mapa');
@@ -1193,6 +1194,7 @@ function misCarry(m, on) {
 }
 function misDone(m) {
   const p = misState(), d = m.d; p.missions[d.id] = true; p.mact = null; G().save(); G().refreshHud && G().refreshHud(); misCarry(m, false); if (m.ring) m.ring.visible = false; if (m.pick) m.pick.visible = false;
+  if (S.hx) { const help = ['deliver', 'fetch', 'act'].includes(d.kind); if (help) { axGain('amor', 3); const b = [0, 5, 5, 10, 10, 10][ft('amor')]; if (b) { const pp = G().P(); pp.bonus = (pp.bonus || 0) + b; } } axGain('sab', 2); axGain('fid', 1); if (fv('sab') >= 40) { S.boostT = 30; setTimeout(() => svToast('😊 ¡Alegría! 30 segundos de paso rápido.'), 2200); } behav('misiones'); }
   misPop('¡Misión cumplida! +' + MIS_PTS, d.done); tone3d(); try { const who = d.target || d.giver; G().vo(d.done, who.look && who.look.g === 'chica' ? 'mujer' : 'varon'); } catch (e) {} glowAdd(10, 'mision'); h3npcPlay(m.target || m.giver, ['M_Thankful', 'M_Cheering'], 3); if (m.target && m.giver) setTimeout(() => h3npcPlay(m.giver, ['M_Clapping', 'M_Thankful'], 2.5), 600);
   if (Math.random() < .5) setTimeout(() => gearGive(gearRoll(), 'Recompensa de la misión'), 3400);
   if (S && S.hx) setTimeout(() => svMissionReward(d), 1800);
@@ -1703,6 +1705,9 @@ function drawMap(cv) {
   { const ai = nodeActive(), am = ai && S.markers[ai]; if (am) { const px = X(am.position.x), py = Y(am.position.z), k = .5 + .5 * Math.sin(performance.now() / 260); x.strokeStyle = '#FF7A3D'; x.lineWidth = 3; x.beginPath(); x.arc(px, py, 12 + k * 4, 0, 7); x.stroke(); } }
   // misiones
   if (S.mis) for (const id in S.mis) { const m = S.mis[id]; if (p.missions && p.missions[id] || !regionOpen(m.d.r) || (p.mact && p.mact.id === id)) continue; const px = X(m.gp[0]), py = Y(m.gp[1]); x.fillStyle = '#FFD25E'; x.strokeStyle = '#5A3608'; x.lineWidth = 2; x.beginPath(); x.arc(px, py, 8, 0, 7); x.fill(); x.stroke(); x.fillStyle = '#5A3608'; x.font = '900 12px Nunito, sans-serif'; x.textAlign = 'center'; x.fillText('!', px, py + 4); x.textAlign = 'left'; }
+  if (S.sv && S.sv.bag) { const b = S.sv.bag, px = X(b.x), py = Y(b.z); x.fillStyle = '#FF6A4A'; x.strokeStyle = '#3A0E06'; x.lineWidth = 2.5; x.beginPath(); x.arc(px, py, 9, 0, 7); x.fill(); x.stroke(); x.font = '900 11px Nunito, sans-serif'; x.textAlign = 'center'; x.fillStyle = '#FFF'; x.fillText('🎒', px, py + 4); x.textAlign = 'left'; label('Tu bolsa', px, py - 13); }
+  if (S.hx && SEC.list.length) { const sp = secP(); SEC.list.forEach(e => { if (!sp.secrets[e.d.id]) return; const px = X(e.x), py = Y(e.z); x.fillStyle = '#B98AFF'; x.strokeStyle = '#2A1A3A'; x.lineWidth = 2; x.beginPath(); x.arc(px, py, 7, 0, 7); x.fill(); x.stroke(); x.fillStyle = '#FFF'; x.font = '900 10px Nunito, sans-serif'; x.textAlign = 'center'; x.fillText('✦', px, py + 3.5); x.textAlign = 'left'; if (V.s > 2.2) label(e.d.name, px, py - 11); }); }
+  if (S.hx && VIL.list.length) VIL.list.forEach(v => { const px = X(v.x), py = Y(v.z) + 16, st = repStars(v.name); x.font = '900 11px Nunito, sans-serif'; x.textAlign = 'center'; x.lineWidth = 3; x.strokeStyle = 'rgba(0,0,0,.6)'; const t = '★'.repeat(st) + '☆'.repeat(5 - st); x.strokeText(t, px, py); x.fillStyle = '#FFD25E'; x.fillText(t, px, py); x.textAlign = 'left'; });
   if (p.mact && S.mis && S.mis[p.mact.id]) { const m = S.mis[p.mact.id], d = m.d, goal = d.kind === 'deliver' ? m.tp : (p.mact.has ? m.gp : m.pp); x.strokeStyle = '#FFD25E'; x.lineWidth = 3; x.beginPath(); x.arc(X(goal[0]), Y(goal[1]), 11, 0, 7); x.stroke(); x.fillStyle = '#FFD25E'; x.beginPath(); x.arc(X(goal[0]), Y(goal[1]), 4, 0, 7); x.fill(); }
   { const sv = p.surv; x.font = '18px sans-serif'; x.textAlign = 'center'; if (sv && sv.house) x.fillText('🏠', X(sv.house.x), Y(sv.house.z) + 6); if (sv && sv.bag) x.fillText('🎒', X(sv.bag.x), Y(sv.bag.z) + 6); x.textAlign = 'left'; }
   // vos
@@ -2118,7 +2123,7 @@ function mpLeave(silent) {
 }
 function mpAdd(id, info) {
   if (!S || MP.players[id]) return; const hx = S.hx, rig = hx || H3.ok, av = rig ? buildHeroAvatar(info.avatar || {}) : buildAvatar(info.avatar || {}, false); av.traverse(o => { if (o.isPointLight) o.intensity = 2; if (o.isMesh && rig) o.castShadow = true; });
-  const tag = tagSprite(info.name, (info.avatar && info.avatar.ins) || [], hx, (info.avatar && info.avatar.glow) || 0); tag.scale.multiplyScalar(.42); tag.position.y = 2.55 * (av.userData.h3 ? av.userData.h3.tagK || 1 : 1); av.add(tag); if ((info.hum || 0) >= 10) av.add(humHalo()); av.position.copy(S.av.position); av.position.x += 1.5; S.scene.add(av);
+  const tag = tagSprite(info.name + (info.avatar && info.avatar.don && DONL[info.avatar.don] ? ' · ' + DONL[info.avatar.don] : ''), (info.avatar && info.avatar.ins) || [], hx, (info.avatar && info.avatar.glow) || 0); tag.scale.multiplyScalar(.42); tag.position.y = 2.55 * (av.userData.h3 ? av.userData.h3.tagK || 1 : 1); av.add(tag); if ((info.hum || 0) >= 10) av.add(humHalo()); av.position.copy(S.av.position); av.position.x += 1.5; S.scene.add(av);
   if (TALK.stream) setTimeout(talkCallAll, 600);
   MP.players[id] = { info, av, tag, tgt: { x: av.position.x, y: 0, z: av.position.z, yaw: 0 }, st: { pose: null, waveT: 0, jy: 0 }, moving: false, bubble: null, bT: 0 };
 }
@@ -2266,7 +2271,7 @@ const GEAR = [
 ];
 const GBY = Object.fromEntries(GEAR.map(x => [x.id, x]));
 function gearState() { const p = G().P(); p.gear = p.gear || { own: [], eq: {} }; p.gear.own = p.gear.own || []; p.gear.eq = p.gear.eq || {}; return p.gear; }
-function lookOf(p) { const gs = p.gear || {}, eq = {}; for (const k in (gs.eq || {})) if (GBY[gs.eq[k]]) eq[k] = gs.eq[k]; return Object.assign({}, p.avatar || {}, { gear: eq, ins: Object.keys((p.ins && typeof p.ins === 'object') ? p.ins : {}).filter(k => CBY[k]), glow: glowLv((p.glow && p.glow.pts) || 0) }); }
+function lookOf(p) { const gs = p.gear || {}, eq = {}; for (const k in (gs.eq || {})) if (GBY[gs.eq[k]]) eq[k] = gs.eq[k]; return Object.assign({}, p.avatar || {}, { gear: eq, ins: Object.keys((p.ins && typeof p.ins === 'object') ? p.ins : {}).filter(k => CBY[k]), glow: glowLv((p.glow && p.glow.pts) || 0), don: (() => { const I = (p.ins && typeof p.ins === 'object') ? p.ins : {}; for (const k in I) if (I[k] && I[k].don) return I[k].don; return null; })() }); }
 function gearOn(av) { const o = {}, e = (av && av.gear) || {}; SLOTS.forEach(([s]) => { if (GBY[e[s]]) o[s] = GBY[e[s]]; }); return o; }
 function gearRoll() {
   const st = gearState(), left = GEAR.filter(x => !st.own.includes(x.id) && x.r !== 'u'); if (!left.length) return null;
@@ -2855,7 +2860,7 @@ function kidApply(u) {
 function buildHero3(av) {
   const sx = av.g === 'chica' ? 'f' : 'm', tpl = H3.sex[sx], o = H3.skClone(tpl.T), D = gearOn(av), npc = !('gear' in av), hx = (it) => it && H3_GEAR[it.id];
   const pick = { body: (hx(D.shirt) || {}).p || 'Peasant', legs: (hx(D.pants) || {}).p || 'Peasant', feet: (hx(D.boots) || {}).p || 'Peasant' };
-  const tint = { body: (hx(D.shirt) || {}).t || (npc && av.outfit ? new THREE.Color(av.outfit).lerp(new THREE.Color('#FFFFFF'), .35).getStyle() : null), legs: (hx(D.pants) || {}).t, feet: (hx(D.boots) || {}).t, bracer: (hx(D.gloves) || {}).t, hood: (hx(D.hat) || {}).hood };
+  const tint = { body: (hx(D.shirt) || {}).t || (npc && av.outfit ? new THREE.Color(av.outfit).lerp(new THREE.Color('#FFFFFF'), av.tintK ?? .35).getStyle() : null), legs: (hx(D.pants) || {}).t, feet: (hx(D.boots) || {}).t, bracer: (hx(D.gloves) || {}).t, hood: (hx(D.hat) || {}).hood };
   const kid = G().branch !== 'ados'; if (kid && !tint.body && av.outfit) tint.body = new THREE.Color(av.outfit).lerp(new THREE.Color('#FFFFFF'), npc ? .45 : .12).getStyle();
   const hood = !!(hx(D.hat) || {}).hood, hatProc = D.hat && !hood ? D.hat : null, gray = /^#(9|A|B|C|D)/i.test(av.hair || ''), drop = [];
   const skinC = new THREE.Color(av.skin || '#D9A57E').multiplyScalar(1.28), hairC = new THREE.Color(av.hair || '#2A1B14').multiplyScalar(1.15);
@@ -3169,7 +3174,7 @@ function insState() { const p = G().P(); if (!p.ins || typeof p.ins !== 'object'
 // puntaje del curso: promedio de los mejores exámenes de cada etapa
 function insScore() { const p = G().P(), ex = p.exams || {}, R = (G().REGIONS || []); let ok = 0, sum = 0, of = 0; R.forEach(r => { const e = ex[r.id]; if (e && e.passed) { ok++; sum += +(e.best ?? e.ok ?? 0); of += +(e.of || 12); } }); return { ok, total: R.length, pct: of ? Math.round(sum / of * 100) : 0 }; }
 function insGive(id, silent) {
-  const I = insState(); if (!CBY[id] || I[id]) return false; const sc = insScore(); I[id] = { at: new Date().toISOString(), pct: sc.pct, ok: sc.ok, of: sc.total }; G().save();
+  const I = insState(); if (!CBY[id] || I[id]) return false; const sc = insScore(), dn = S && S.hx ? donTop() : null; I[id] = { at: new Date().toISOString(), pct: sc.pct, ok: sc.ok, of: sc.total, don: dn }; { const p = G().P(); p.badges = p.badges || []; if (!p.badges.some(b => b.course === id)) p.badges.push({ course: id, name: CBY[id].name, don: dn, donName: dn ? DONL[dn] : null, at: I[id].at }); } G().save();
   if (S) reLook(); if (!silent) { const el = document.getElementById('v3pop'); if (el) { el.innerHTML = `<span class="ic" style="background:#3A2410;border:1px solid ${CBY[id].c}"><img alt="" src="${emblemURL(id, 64)}" width="34" height="34"></span><span class="tx"><small style="color:${CBY[id].c}">Cinturón de la verdad · Curso terminado</small><b>${esc(CBY[id].name)}</b><em class="gp-tip">Tu insignia brilla en tu cinturón y junto a tu nombre</em></span>`; el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); clearTimeout(pop.t); pop.t = setTimeout(() => { el.classList.remove('on'); el.hidden = true; }, 5200); tone3d(); } }
   return true;
 }
@@ -3182,7 +3187,7 @@ function insMigrate() {
 function invCourses(body) {
   const I = insState(); const fmt = d => { try { return new Date(d).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return ''; } };
   body.innerHTML = `<div class="ins-wrap"><p class="ins-lead">Cada curso que terminás suma una insignia a tu <b>cinturón de la verdad</b>. Se ve siempre, con cualquier ropa, y los demás la ven junto a tu nombre.</p>${COURSES.map(c => { const d = I[c.id];
-    return `<div class="ins-row${d ? ' on' : ''}"><img alt="" src="${emblemURL(c.id, 72)}" width="44" height="44"><div><b>${esc(c.name)}</b><small>${d ? 'Terminado el ' + fmt(d.at) + (d.of ? ` · Exámenes ${d.ok}/${d.of} · ${d.pct}%` : '') : c.soon ? 'Próximamente' : 'Todavía no terminado'}</small></div>${d ? '<span class="ins-ok">✓</span>' : ''}</div>`; }).join('')}</div>`;
+    return `<div class="ins-row${d ? ' on' : ''}"><img alt="" src="${emblemURL(c.id, 72)}" width="44" height="44"><div><b>${esc(c.name)}</b><small>${d ? 'Terminado el ' + fmt(d.at) + (d.of ? ` · Exámenes ${d.ok}/${d.of} · ${d.pct}%` : '') : c.soon ? 'Próximamente' : 'Todavía no terminado'}</small>${d && d.don && DONL[d.don] ? `<small class="ins-don">✦ Don descubierto: <b>${DONL[d.don]}</b></small>` : ''}</div>${d ? '<span class="ins-ok">✓</span>' : ''}</div>`; }).join('')}</div>`;
 }
 
 /* ---------- Resplandor: poses quietas, modo cinemático y la luz que crece con las buenas obras ----------
@@ -3283,7 +3288,7 @@ function poseOff() { if (POSE.cine) { POSE.cine = 0; cineRays(false); cineUI(fal
 function nearestPath(x, z) { let d = Infinity; for (const p of S.allPts) { const q = (p[0] - x) ** 2 + (p[1] - z) ** 2; if (q < d) d = q; } return Math.sqrt(d); }
 /* mundo abierto: se puede caminar por todo el terreno; las historias de cada etapa siguen en orden */
 function frontier() { return (S.zEnd ?? -1e9) + 10; }
-function sheetUp() { const v = document.getElementById('v3sheet'); return (v && !v.hidden) || !!document.querySelector('.sheet:not([hidden])') || !document.getElementById('arcade').hidden; }
+function sheetUp() { const v = document.getElementById('v3sheet'); return CINE.on || (v && !v.hidden) || !!document.querySelector('.sheet:not([hidden])') || !document.getElementById('arcade').hidden; }
 function autoEnter() {
   const g = G(), p = g.P(), a = S.av.position; let best = null, bd = .95 * .95;
   for (const id in S.markers) { const m = S.markers[id], d = (m.position.x - a.x) ** 2 + (m.position.z - a.z) ** 2; if (d < bd) { bd = d; best = id; } }
@@ -3305,7 +3310,7 @@ function freeWalk(dt) {
   const mag = Math.min(1, Math.hypot(jx, jy)); if (mag >= .12 && S.pose === 'pray') { S.pose = null; actUI(); } if (mag >= .12 && S.sit) { S.sit = false; actUI(); } if (mag >= .12 && S.poseK) poseEnd(); S.fullT = mag > .96 ? (S.fullT || 0) + dt : 0; if (S.sprint && S.hx) { AXS.run = (AXS.run || 0) + dt; if (AXS.run > 12) { AXS.run = 0; axGain('agi', 1); } } S.sprint = !!S.hx && (!!k.Shift || S.fullT > 1.2); if (mag < .12) { if (S.freeMoving) { S.freeMoving = false; snapToStop(); } return; }
   const C = S.yaw + S.camYaw, fx = Math.sin(C), fz = Math.cos(C), rx = -Math.cos(C), rz = Math.sin(C);
   let mx = fx * -jy + rx * jx, mz = fz * -jy + rz * jx; const ml = Math.hypot(mx, mz) || 1; mx /= ml; mz /= ml;
-  const sp = 5 * mag * dt * agiMul() * (S.sprint ? 1.55 : 1), a = S.av.position, fr = frontier(), z0 = 6;
+  if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint ? 1.55 : 1) * (S.boostT > 0 ? 1.3 : 1), a = S.av.position, fr = frontier(), z0 = 6;
   const ok = (x, z) => Math.abs(x) < XB && z > fr && z < z0 && !blockedAt(x, z);
   let nx = a.x + mx * sp, nz = a.z + mz * sp;
   if (!ok(nx, nz)) { if (nz <= fr && performance.now() - (S.wallT || 0) > 6000) { S.wallT = performance.now(); G().toast('Hasta acá llega el camino por ahora.'); } if (ok(nx, a.z)) nz = a.z; else if (ok(a.x, nz)) nx = a.x; else { nx = a.x; nz = a.z; } }
@@ -3371,7 +3376,7 @@ function loop(now) {
   // con un minijuego abierto el mundo 3D no se dibuja: toda la máquina queda para el minijuego
   const arc = S.arcEl || (S.arcEl = document.getElementById('arcade')); if (arc && !arc.hidden) { S.last = 0; return; }
   const raw = now - (S.last || now), t = now / 1000, dt = Math.min(.05, raw / 1000); S.last = now; S.t = t; S.renderer.info.reset(); if (raw > 0 && raw < 250) qFrame(raw);
-  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); floraTick(dt); miniTick(dt); compassTick(dt); const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
+  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); floraTick(dt); miniTick(dt); compassTick(dt); vilTick(dt); const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
   for (const id in S.items) { const m = S.items[id];
     if (m.userData.gone) { m.userData.gone += dt; const k = m.userData.gone / .5; m.scale.setScalar(1 + k); m.position.y += dt * 2; m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = Math.max(0, 1 - k); } }); if (k >= 1) { S.scene.remove(m); delete S.items[id]; } continue; }
     m.rotation.y = t * 1.6; m.position.y = (m.userData.by || 0) + .85 + Math.sin(t * 2.4 + id.length) * .12;
@@ -3382,11 +3387,11 @@ function loop(now) {
   if (S.W) { S.W.sunL.position.set(a.x + S.W.sunDir.x * 40, a.y + 11, a.z + S.W.sunDir.z * 40); S.W.sunL.target.position.copy(a); S.uGrass.value = t; S.W.sky.material.uniforms.t.value = t; }
   const cx = a.x - Math.sin(yaw) * back, cz = a.z - Math.cos(yaw) * back;
   S.camera.position.x += (cx - S.camera.position.x) * .08; S.camera.position.z += (cz - S.camera.position.z) * .08; { const cg = S.W ? S.W.hAt(S.camera.position.x, S.camera.position.z) : 0; S.camera.position.y += (Math.max(a.y + up, cg + .45) - S.camera.position.y) * .08; }
-  { const la = Math.min(4.5, 1.2 + S.camDist * .5) * Math.max(.15, 1 - Math.max(0, ph - .4) * 1.2); S.camera.lookAt(a.x + Math.sin(yaw) * la, a.y + (S.hx ? 1.2 : .92) + Math.max(0, .3 - ph) * 4, a.z + Math.cos(yaw) * la); } if (S.W) S.W.sky.position.copy(S.camera.position);
+  { const la = Math.min(4.5, 1.2 + S.camDist * .5) * Math.max(.15, 1 - Math.max(0, ph - .4) * 1.2); S.camL = [a.x + Math.sin(yaw) * la, a.y + (S.hx ? 1.2 : .92) + Math.max(0, .3 - ph) * 4, a.z + Math.cos(yaw) * la]; S.camI = [cx, Math.max(a.y + up, (S.W ? S.W.hAt(cx, cz) : 0) + .45), cz]; S.camera.lookAt(S.camL[0], S.camL[1], S.camL[2]); } if (S.W) S.W.sky.position.copy(S.camera.position);
   S.fill.position.copy(S.camera.position); S.fill.target.position.copy(a);
   { let i = 0; for (const id in S.markers) { const m = S.markers[id], o = m.userData.orb; i++; const d2 = (m.position.x - a.x) ** 2 + (m.position.z - a.z) ** 2, vis = d2 < [4900, 8100, 14400, 22500][QUAL.lv]; if (m.visible !== vis) m.visible = vis; if (d2 > 6400) continue; o.rotation.y = t * 1.4 + i; o.position.y = (o.geometry.type === 'TorusGeometry' ? .2 : 1.05 + Math.sin(t * 2 + i) * .08); } }
   if (S.flies) { S.flies.visible = false; S.flies.material.opacity = .6 + Math.sin(t * 3) * .3; S.flies.rotation.y = Math.sin(t * .05) * .02; }
-  if (window.__camFix) { const f = window.__camFix; S.camera.position.set(...f.p); S.camera.lookAt(...f.l); }
+  cineTick(dt); if (window.__camFix) { const f = window.__camFix; S.camera.position.set(...f.p); S.camera.lookAt(...f.l); }
   fxWatch(now); if (S.W) { const u = S.W.sky.material.uniforms; u.inv.value = S.fx ? 1 : 0; u.ex.value = S.renderer.toneMappingExposure; }
   const p5 = PF ? performance.now() : 0; if (S.fx) S.fx.render(dt); else S.renderer.render(S.scene, S.camera); const p6 = PF ? performance.now() : 0; QUAL.lastCalls = S.renderer.info.render.calls; QUAL.lastTris = S.renderer.info.render.triangles;
   idle(dt); misTick(t); voiceTick(dt); wpTick(t); mpTick(t, dt); dayTick(dt); gearDropTick(dt, t); doorTick(t); h3npcTick(dt); roomTick(dt); survTick(dt, t); prayTogetherTick(dt); axVerse(dt);
@@ -3429,7 +3434,7 @@ async function show3d(on) {
   if (!THREE) { if (!loading) loading = import(THREE_URL); try { THREE = await loading; } catch (e) { document.body.classList.remove('v3boot'); root.hidden = true; document.body.classList.remove('v3on'); btn.hidden = true; return; } }
   let LBU = null; if (builtFor !== key || !S) { if (!window.__noLobby && !/[?&]lobby=0/.test(location.search)) { try { LBU = await lobby(); } catch (e) { console.warn('lobby', e); } } if (S) { S.renderer.dispose(); S = null; } builtFor = key; try { await build(); } finally { if (LBU) LBU.close(); } }
   else { const n = g.NODES[g.P().pos], [x, z] = (S.npos && S.npos[n.id]) || toV(n.x, n.y); S.av.position.set(x, 0, z); S.sig = ''; S.onStop = g.P().pos; S.quiet = false; }
-  resize(); refresh(); bagBtn(); try { fanInit(); miniInit(); } catch (e) { console.warn('hud', e); } setTimeout(fullHint, 1500); setTimeout(iosHint, 1800); document.body.classList.remove('v3boot');
+  resize(); refresh(); bagBtn(); try { fanInit(); miniInit(); bagHud(); } catch (e) { console.warn('hud', e); } setTimeout(fullHint, 1500); setTimeout(iosHint, 1800); setTimeout(fidDaily, 5000); document.body.classList.remove('v3boot');
 }
 export function enter() {
   const btn = document.getElementById('viewToggle'); if (!btn) return;
@@ -3443,12 +3448,12 @@ export function enter() {
    SUPERVIVENCIA Y RPG (solo Hero)
    - Herramientas: pedernal, hacha, pico, caña y red (misiones o flotando en el mapa)
    - Recursos: madera (talar olivos), piedra (picar rocas), frutos (granados), pescado (lago y río)
-   - Fogata para cocinar, hambre con 45 + 12 minutos de juego, desmayo y bolsa en el piso 5 minutos
+   - Fogata para cocinar, hambre con 45 + 12 minutos de juego, desmayo y bolsa en el piso 2 minutos (+1 con Control propio 40; con Amor 50 no se pierde)
    - Fabricar: tablones, bloques, fogata, casa y muebles (cama, mesa, banco, horno, cofre, lámpara)
    - Atributos: 2 puntos por nivel para repartir
    - Días: cada jugador cuenta sus propios días de camino (15 minutos de juego = 1 día)
    ===================================================================== */
-const SV = { FULL: 57 * 60, WARN: 12 * 60, DAY: 15 * 60, BAG: 5 * 60, TREE: 240, ROCK: 300, FRUIT: 180, FIRE: 240 };
+const SV = { FULL: 57 * 60, WARN: 12 * 60, DAY: 15 * 60, BAG: 2 * 60, TREE: 240, ROCK: 300, FRUIT: 180, FIRE: 240 };
 const TOOLS = {
   flint: ['Pedernal', '🔥', 'Para encender fogatas.'], axe: ['Hacha', '🪓', 'Para talar árboles y sacar madera.'], pick: ['Pico', '⛏️', 'Para picar rocas y sacar piedra.'],
   rod: ['Caña de pescar', '🎣', 'Esperá a que pique y tirá en el momento justo.'], net: ['Red de pescar', '🕸️', 'Se tira al agua y atrapa peces sola, aunque tarda más.']
@@ -3459,7 +3464,9 @@ const RES = {
   fruit: ['Granadas', '🍎'], fish: ['Pescado crudo', '🐟'], cooked: ['Pescado asado', '🍢']
 };
 const FOOD = { cooked: 25 * 60, fruit: 10 * 60 };
-const ATTR = [
+// Kids: atributos de siempre. Hero: frutos del Espíritu (Gálatas 5:22-23, NTV) + Cuerpo. Las claves viejas se reusan (nadie pierde puntos):
+// dom→Control propio, pac→Paciencia, gen→Bondad, sab→Alegría; fue y agi pasan a Cuerpo; amor, paz, gent y fid son nuevos. Humildad sigue igual (hum).
+const ATTRK = [
   ['fue', 'Fuerza', 'Talás y picás con menos golpes, y sacás más madera.'],
   ['agi', 'Agilidad', 'Caminás más rápido y saltás más alto.'],
   ['dom', 'Dominio propio', 'El hambre baja más despacio (Gálatas 5:22-23).'],
@@ -3467,6 +3474,22 @@ const ATTR = [
   ['sab', 'Sabiduría', 'Ganás más puntos de experiencia por trabajar.'],
   ['gen', 'Generosidad', 'Las misiones te regalan comida y materiales.']
 ];
+const FRUITS = [
+  ['amor', 'Amor', 'Crece ayudando.', ['+10% en misiones de ayuda', 'Los que ayudaste vuelven con una misión nueva', '+20% en misiones de ayuda', 'Tus ayudas suben la reputación de la aldea', 'Si te desmayás, alguien que ayudaste cuida tu bolsa: no se pierde aunque pase el tiempo']],
+  ['sab', 'Alegría', 'Crece cumpliendo misiones y animando a otros.', ['+5% de experiencia', 'Las estrellas de los minijuegos valen más', '+10% de experiencia', '30 s de carrera rápida al completar una misión', '+15% de experiencia y compañeros más animados']],
+  ['paz', 'Paz', 'Crece jugando los minijuegos con golpes.', ['Parpadeo de invulnerabilidad de 0,5 s tras un golpe', '1 s de invulnerabilidad', '+1 corazón', '2 s de invulnerabilidad', 'Escudo de paz: el primer golpe de cada partida no resta']],
+  ['pac', 'Paciencia', 'Crece pescando con caña.', ['Los peces pican 10% antes', 'Ventana más larga para tirar', 'Pican 20% antes', 'Chance de sacar dos peces', 'Peces raros que valen más']],
+  ['gent', 'Gentileza', 'Crece tratando bien a la gente de las aldeas.', ['-5% en los precios', 'Te saludan primero y te dan pistas', '-10% en los precios', 'Te regalan comida', 'Misiones escondidas']],
+  ['gen', 'Bondad', 'Crece compartiendo pan y denarios.', ['Compartir duplica la reputación que ganás', 'Lo compartido a veces vuelve como regalo', 'Los necesitados te cuentan dónde hay lugares secretos', 'Compartir también suma Alegría', 'A veces aparece una canasta extra de pan']],
+  ['fid', 'Fidelidad', 'Crece volviendo cada día y terminando lo empezado.', ['Bonus de racha', '1 día de gracia en la racha', 'Bonus de racha mayor', 'Las misiones a medias nunca se pierden', 'Cofre semanal']],
+  ['dom', 'Control propio', 'Crece comiendo con medida y cuidando tus fuerzas.', ['-10% de hambre', 'Comer te llena más', '-20% de hambre', 'Si te desmayás, tenés 1 minuto más para buscar la bolsa', '-35% de hambre']]
+];
+const BODY = [['fue', 'Fuerza', 'Talás y picás con menos golpes, y sacás más madera.'], ['agi', 'Agilidad', 'Caminás más rápido y saltás más alto.']];
+const ATTRH = FRUITS.map(([k, n, d]) => [k, n, d]).concat(BODY);
+const attrList = () => (S && S.hx) || (G().branch === 'ados') ? ATTRH : ATTRK;
+const ATTR = new Proxy([], { get: (o, k) => { const L = attrList(), v = L[k]; return typeof v === 'function' ? v.bind(L) : v; } });
+// valor del fruto (0–50) y escalón (0–5)
+const fv = k => Math.min(50, (atP()[k] || 0) + axLv(k)), ft = k => Math.floor(fv(k) / 10);
 const RECIPES = [
   { id: 'plank', name: 'Tablones', out: { plank: 1 }, need: { wood: 2 }, tool: 'axe', desc: 'Cortá la madera en tablones para construir.' },
   { id: 'block', name: 'Bloques de piedra', out: { block: 1 }, need: { stone: 2 }, tool: 'pick', desc: 'Tallá la piedra en bloques.' },
@@ -3484,7 +3507,7 @@ function svP() { const p = G().P(); p.surv = p.surv || {}; const s = p.surv; if 
 function atP() { const p = G().P(); p.attr = p.attr || {}; ATTR.forEach(([k]) => { p.attr[k] = p.attr[k] || 0; }); return p.attr; }
 function atr(k) { return Math.min(50, (atP()[k] || 0) + axLv(k)) / 5; }
 /* ---------- experiencia por atributo: lo que hacés seguido te sale mejor (pescar → Paciencia, talar y picar → Fuerza, correr y saltar → Agilidad…) ---------- */
-const AXN = Object.fromEntries([['fue', 'Fuerza'], ['agi', 'Agilidad'], ['dom', 'Dominio propio'], ['pac', 'Paciencia'], ['sab', 'Sabiduría'], ['gen', 'Generosidad']]);
+const AXN = new Proxy({}, { get: (o, k) => { const x = attrList().find(q => q[0] === k); return x ? x[1] : undefined; } });
 const axNeed = l => 30 + l * 22; // cada nivel pide un poco más
 function axP() { const a = atP(); a.xp = a.xp || {}; a.xl = a.xl || {}; return a; }
 function axLv(k) { const a = atP(); return (a.xl && a.xl[k]) || 0; }
@@ -3495,6 +3518,11 @@ function axGain(k, n) {
   else { AXS.dirty = (AXS.dirty || 0) + 1; if (AXS.dirty > 6) { AXS.dirty = 0; G().save(); } }
 }
 const AXS = {};
+// contadores de comportamiento (para el futuro descubrimiento de dones)
+function behav(k, n) { try { const p = G().P(); p.behav = p.behav || {}; p.behav[k] = (p.behav[k] || 0) + (n || 1); } catch (e) {} }
+function fidDaily() { try { if (!S || !S.hx) return; const p = G().P(), d = new Date().toISOString().slice(0, 10); if (p.fidDay === d) return; const prev = p.fidDay; p.fidDay = d; const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10), y2 = new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10);
+  p.fidRun = prev === y || (prev === y2 && fv('fid') >= 20) ? (p.fidRun || 0) + 1 : 1; axGain('fid', 4); const b = fv('fid') >= 30 ? 10 : fv('fid') >= 10 ? 5 : 0; if (b && p.fidRun > 1) { p.bonus = (p.bonus || 0) + b * Math.min(7, p.fidRun); setTimeout(() => svToast(`📅 Volviste ${p.fidRun} días seguidos: +${b * Math.min(7, p.fidRun)} puntos por tu Fidelidad.`), 4000); }
+  if (fv('fid') >= 50) { const w = Math.floor(Date.now() / 6048e5); if (p.fidWeek !== w) { p.fidWeek = w; setTimeout(() => { svAdd('bread', 3); svAdd('money', 10); svToast('🎁 Cofre semanal de la Fidelidad: 3 panes y 10 denarios.'); }, 6000); } } behav('dias'); G().save(); } catch (e) {} }
 function axFloat(t, big) { const d = document.createElement('div'); d.className = 'v3ax' + (big ? ' up' : ''); d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 1700); }
 // mantener apretada la acción (E o el botón) repite el trabajo: talar, picar, pescar
 function axHold(on) { clearInterval(AXS.hold); if (!on) return; svAct(); AXS.hold = setInterval(() => { if (!S || !S.sv || S.sv.fishing && S.sv.fishing.mode === 'net') return; svAct(); }, 850); }
@@ -3517,7 +3545,7 @@ function attrSync() {
 async function attrOpen() { try { if (document.getElementById('view3d').hidden) await show3d(true); } catch (e) {} if (S) setTimeout(() => openBag('at'), 200); }
 function ptsFree() { const a = atP(); return Math.max(0, (Math.min(LV_MAX, lvlNow()) - 1) * ATTR_PER_LV - (a.spent || 0)); }
 function humHalo() { const g = new THREE.Group(), r = new THREE.Mesh(new THREE.TorusGeometry(.32, .025, 8, 32), new THREE.MeshBasicMaterial({ color: '#FFD25E', transparent: true, opacity: .85, blending: THREE.AdditiveBlending, depthWrite: false })); r.rotation.x = Math.PI / 2; r.position.y = 2.15; g.add(r); g.name = 'humHalo'; return g; }
-function svXP(n) { const p = G().P(); p.bonus = (p.bonus || 0) + Math.round(n * (1 + atr('sab') * .2)); }
+function svXP(n) { const p = G().P(); p.bonus = (p.bonus || 0) + Math.round(n * (S && S.hx ? 1 + [0, .05, .05, .1, .1, .15][ft('sab')] : 1 + atr('sab') * .2)); }
 function svAdd(k, n) { const s = svP(); s.inv[k] = Math.max(0, (s.inv[k] || 0) + n); }
 function svHas(need) { const s = svP(); return Object.entries(need).every(([k, n]) => (s.inv[k] || 0) >= n); }
 function svPay(need) { Object.entries(need).forEach(([k, n]) => svAdd(k, -n)); }
@@ -3560,7 +3588,7 @@ function svBuild(scene, W) {
   // tu casa, si ya la construiste
   const s = svP(); if (s.house) svPlaceHouse(scene, s.house, true);
   if (s.bag && s.bag.left > 0) svDropBag(s.bag, true);
-  try { econBuild(scene, W); } catch (e) { console.warn('econ', e); }
+  try { econBuild(scene, W); } catch (e) { console.warn('econ', e); } try { vilBuild(scene, W).then(() => secBuild(scene, W)).catch(e => console.warn('sec', e)); } catch (e) { console.warn('vil', e); }
   svUI();
 }
 function svToolMesh(t) {
@@ -3576,6 +3604,8 @@ function svToolMesh(t) {
 function svNear() {
   if (!svOn() || !S.sv) return null; const a = S.av.position, st = S.sv, s = svP(), d2 = (x, z) => (x - a.x) ** 2 + (z - a.z) ** 2;
   if (st.fishing) return { k: 'fishing' };
+  { const v = vilNearNpc(); if (v) return { k: 'vil', v, label: vilLabel(v) }; }
+  { const e = secNear(); if (e) return { k: 'sec', e, label: secP().secrets[e.d.id] ? 'Ver el lugar secreto' : SEC.mod.ENTRY[e.d.entry][0] }; }
   for (const b of (st.beggars || [])) if (d2(b.x, b.z) < 6) return { k: 'beg', b, label: 'Ayudar' };
   for (const m of (st.stalls || [])) if (d2(m.x, m.z) < 9) return { k: 'shop', shop: 'mercado', label: 'Comprar y vender' };
   if (S.inRoom && SHOPS[S.inRoom.trade]) return { k: 'shop', shop: S.inRoom.trade, label: 'Comprar y vender' };
@@ -3610,6 +3640,8 @@ function svAct() {
   if (!n) { svToast('No hay nada para hacer acá. Buscá árboles, rocas, granados o agua.'); return; }
   if (n.need) { svToast(n.label + '. Las herramientas se consiguen en misiones o brillando en el mapa.'); return; }
   if (n.k === 'fishing') { svFishTap(); return; }
+  if (n.k === 'vil') { vilAct(n.v); return; }
+  if (n.k === 'sec') { secOpen(n.e); return; }
   if (n.k === 'shop') { svShop(n.shop); return; }
   if (n.k === 'beg') { svGive(n.b); return; }
   if (n.k === 'bag') { svPickBag(); return; }
@@ -3620,14 +3652,14 @@ function svAct() {
     else { svHide(FLORA.rI, n.i, false); st.mined.set(n.i, SV.ROCK); svAdd('stone', 2); svXP(2); svToast('🪨 Conseguiste 2 piedras.'); }
     G().save(); svUI(); return; }
   if (n.k === 'cook') { h3do(['M_Kneeling_Idle', 'PickUp_Table'], 2.6); const k = s.inv.fish; svAdd('fish', -k); svAdd('cooked', k); svXP(k); G().save(); svToast('🍢 Cocinaste ' + k + (k > 1 ? ' pescados.' : ' pescado.') + ' Ya se pueden comer (tecla C o el botón de comer).'); svUI(); return; }
-  if (n.k === 'fish') { if (svTool('rod')) { st.fishing = { mode: 'rod', t: 0, bite: Math.max(1.2, 2 + Math.random() * 4 - atr('pac') * .35), win: 1.1 + atr('pac') * .15 }; svToast('🎣 Tiraste la caña. Cuando pique, tocá la acción (E).'); }
+  if (n.k === 'fish') { if (svTool('rod')) { st.fishing = S.hx ? { mode: 'rod', t: 0, bite: Math.max(1, (2 + Math.random() * 4) * [1, .9, .9, .8, .8, .8][ft('pac')]), win: 1.1 + (fv('pac') >= 20 ? .7 : 0) + fv('pac') * .01 } : { mode: 'rod', t: 0, bite: Math.max(1.2, 2 + Math.random() * 4 - atr('pac') * .35), win: 1.1 + atr('pac') * .15 }; svToast('🎣 Tiraste la caña. Cuando pique, tocá la acción (E).'); }
     else { st.fishing = { mode: 'net', t: 0, bite: 5 - atr('pac') * .2 }; svToast('🕸️ Tiraste la red. Esperá un momento…'); } S.joy.x = 0; S.joy.y = 0; svUI(); }
 }
-function svFishTap() { const f = S.sv.fishing; if (!f || f.mode !== 'rod') return; if (f.t >= f.bite && f.t <= f.bite + f.win) { axGain('pac', 3); const n = 1 + (Math.random() < atr('pac') * .06 ? 1 : 0); svAdd('fish', n); svXP(2); G().save(); svToast('🐟 ¡Sacaste ' + (n > 1 ? 'dos peces!' : 'un pez!') + ' Cocinalo en una fogata antes de comerlo.'); } else svToast('Muy rápido. Esperá a que pique.'); S.sv.fishing = null; svUI(); }
+function svFishTap() { const f = S.sv.fishing; if (!f || f.mode !== 'rod') return; if (f.t >= f.bite && f.t <= f.bite + f.win) { axGain('pac', 3); const n = 1 + (S.hx ? (fv('pac') >= 40 && Math.random() < .3 ? 1 : 0) : (Math.random() < atr('pac') * .06 ? 1 : 0)); svAdd('fish', n); if (S.hx && fv('pac') >= 50 && Math.random() < .15) { svAdd('money', 3); svToast('✨ ¡Un pez raro! Lo vendiste por 3 denarios.'); } svXP(2); G().save(); svToast('🐟 ¡Sacaste ' + (n > 1 ? 'dos peces!' : 'un pez!') + ' Cocinalo en una fogata antes de comerlo.'); } else svToast('Muy rápido. Esperá a que pique.'); S.sv.fishing = null; svUI(); }
 function svEat() {
   if (!svOn() || S.down) return; const s = svP(), k = (s.inv.cooked || 0) > 0 ? 'cooked' : (s.inv.bread || 0) > 0 ? 'bread' : (s.inv.fruit || 0) > 0 ? 'fruit' : null;
   if (!k) { svToast((s.inv.fish || 0) > 0 ? 'El pescado crudo hay que cocinarlo primero en una fogata.' : 'No tenés comida. Buscá granados o pescá.'); return; }
-  h3do(['M_Drinking', 'PickUp_Table'], 2.4, .6, 1.2); svAdd(k, -1); s.sat = Math.min(SV.FULL, s.sat + FOOD[k]); s.warned = 0; G().save(); if (humV() >= 1 && MP.code) xSend({ k: 'share', by: meInfo().name, x: S.av.position.x, z: S.av.position.z }); svToast(k === 'cooked' ? '🍢 Comiste pescado asado. ¡Recuperaste fuerzas!' : k === 'bread' ? '🥖 Comiste pan.' : '🍎 Comiste una granada.'); svUI();
+  h3do(['M_Drinking', 'PickUp_Table'], 2.4, .6, 1.2); svAdd(k, -1); s.sat = Math.min(SV.FULL, s.sat + FOOD[k] * (S.hx && fv('dom') >= 20 ? 1.25 : 1)); s.warned = 0; G().save(); if (humV() >= 1 && MP.code) xSend({ k: 'share', by: meInfo().name, x: S.av.position.x, z: S.av.position.z }); svToast(k === 'cooked' ? '🍢 Comiste pescado asado. ¡Recuperaste fuerzas!' : k === 'bread' ? '🥖 Comiste pan.' : '🍎 Comiste una granada.'); svUI();
 }
 
 /* ---------- fabricar y construir ---------- */
@@ -3654,7 +3686,7 @@ function svFire(x, z) {
   for (let i = 0; i < 5; i++) { const l = cy(.06, .07, .8, tm('wd', '#6A4A2E'), 0, .1, 0, g); l.rotation.z = Math.PI / 2 - .25; l.rotation.y = i / 5 * 6.28; }
   { const old = new THREE.Group(); for (let i = 0; i < 8; i++) { const r = new THREE.Mesh(new THREE.DodecahedronGeometry(.12, 0), tm('st', '#8C8374')); r.position.set(Math.cos(i / 8 * 6.28) * .5, .06, Math.sin(i / 8 * 6.28) * .5); old.add(r); } g.add(old); phOne('stone_fire_pit', g, 0, -.03, 0, 0, .55, { done: () => { old.visible = false; } }); }
   const fl = new THREE.Mesh(new THREE.ConeGeometry(.22, .6, 8), new THREE.MeshBasicMaterial({ color: '#FFB347', transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false })); fl.position.y = .4; g.add(fl);
-  g.position.set(x, y, z); S.scene.add(g); const f = { x, z, y, g, fl, left: SV.FIRE }; S.sv.fires.push(f); if (AMB.ready) { f.amb = ambFire(x, y + .25, z, .7); fl.visible = false; } svXP(2); svToast('🔥 Encendiste una fogata. Acercate con pescado crudo para cocinarlo.');
+  g.position.set(x, y, z); S.scene.add(g); const f = { x, z, y, g, fl, left: SV.FIRE }; S.sv.fires.push(f); if (AMB.ready) { f.amb = ambFire(x, y + .25, z, .7); fl.visible = false; } svXP(2); svToast('🔥 Encendiste una fogata. Acercate con pescado crudo para cocinarlo.'); if (S.hx) setTimeout(fireTalk, 5000);
 }
 function svHouseSpot() {
   const a = S.av.position; if (!S.W) return null; const ok = (x, z) => { if (Math.abs(x) > XB - 6) return false; for (let u = -4.5; u <= 4.5; u += 1.5) for (let v = -4.5; v <= 4.5; v += 1.5) { if (blockedAt(x + u, z + v) || S.W.dAt(x + u, z + v) < 1.6) return false; } return Math.abs(S.W.hAt(x - 3, z - 3) - S.W.hAt(x + 3, z + 3)) < 1.6; };
@@ -3684,33 +3716,40 @@ function svFurnish(id, silent) {
 
 /* ---------- hambre, desmayo y la bolsa en el piso ---------- */
 function svTickHunger(dt) {
-  const s = svP(); if (S.down) return; s.play += dt; const drain = 1 - Math.min(.6, atr('dom') * .07); s.sat -= dt * drain;
+  const s = svP(); if (S.down) return; s.play += dt; const drain = S.hx ? 1 - [0, .1, .1, .2, .2, .35][ft('dom')] : 1 - Math.min(.6, atr('dom') * .07); s.sat -= dt * drain;
   if (s.sat <= SV.WARN && (!s.warned || s.play - s.warned > 120)) { s.warned = s.play; svToast('🍞 Tenés hambre. Necesitás comer pronto: frutos de los granados o pescado asado.'); }
   if (s.sat <= 0) svFaint();
 }
 function svFaint() {
+  // la bolsa queda donde caíste (2 min; Control propio 40+ suma 1 min). Con Amor 50+ alguien que ayudaste la cuida y no desaparece.
   const s = svP(), p = G().P(), gs = gearState(); S.down = 1; S.pose = null; S.joy.x = 0; S.joy.y = 0;
-  // lo valioso que se pierde para siempre: hasta 2 objetos, primero prendas legendarias/épicas, después herramientas
   const keep = new Set(gs.own.filter(id => GBY[id] && GBY[id].r === 'u')), prot = Math.floor(humV() / 5); gs.own.map(id => GBY[id]).filter(x => x && x.r !== 'u').sort((a, b) => 'lerc'.indexOf(a.r) - 'lerc'.indexOf(b.r)).slice(0, prot).forEach(x => keep.add(x.id));
-  const val = gs.own.map(id => GBY[id]).filter(x => x && !keep.has(x.id)).sort((a, b) => 'lerc'.indexOf(a.r) - 'lerc'.indexOf(b.r)), lost = [];
-  for (const it of val) { if (lost.length >= 2) break; if (it.r === 'l' || it.r === 'e' || lost.length === 0) lost.push({ g: it.id, name: it.name }); }
-  if (lost.length < 2 && s.tools.length) { const t = s.tools[s.tools.length - 1]; lost.push({ t, name: TOOLS[t][0] }); }
-  const lostG = lost.filter(x => x.g).map(x => x.g), lostT = lost.filter(x => x.t).map(x => x.t);
-  const bag = { x: S.av.position.x, z: S.av.position.z, left: SV.BAG, inv: { ...s.inv }, tools: s.tools.filter(t => !lostT.includes(t)), own: gs.own.filter(id => !lostG.includes(id) && !keep.has(id)), eq: Object.fromEntries(Object.entries(gs.eq).filter(([, id]) => !keep.has(id))) };
-  Object.keys(bag.eq).forEach(k => { if (lostG.includes(bag.eq[k])) delete bag.eq[k]; });
+  const guard = S.hx && fv('amor') >= 50, secs = SV.BAG + (S.hx && fv('dom') >= 40 ? 60 : 0);
+  const bag = { x: S.av.position.x, z: S.av.position.z, left: secs, guard, inv: { ...s.inv }, tools: s.tools.slice(), own: gs.own.filter(id => !keep.has(id)), eq: Object.fromEntries(Object.entries(gs.eq).filter(([, id]) => !keep.has(id))) };
   s.inv = {}; s.tools = []; gs.own = [...keep]; gs.eq = Object.fromEntries(Object.entries(gs.eq).filter(([, id]) => keep.has(id))); s.bag = bag; s.sat = 20 * 60; s.warned = 0; G().save(); reLook && reLook();
-  const el = document.getElementById('v3sheet'); el.innerHTML = `<div class="inv hx sv-faint"><h3>Sin alimento, ${esc(p.name || 'tu personaje')} no pudo seguir el camino.</h3><p>Se quedó sin fuerzas y cayó al suelo. Todo lo que llevaba quedó en ese lugar: tenés <b>5 minutos de juego</b> para volver a buscarlo.</p>${lost.length ? `<p class="sv-lost">Se perdió para siempre: <b>${lost.map(x => esc(x.name)).join(' y ')}</b>.</p>` : ''}<p class="sv-verse">Un buen samaritano te ayudó a levantarte y te dio algo de comer. Desde ahora, no te olvides de alimentarte.</p><button class="sv-up">Levantarme</button></div>`;
+  const mm = Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
+  const el = document.getElementById('v3sheet'); el.innerHTML = `<div class="inv hx sv-faint"><h3>Sin alimento, ${esc(p.name || 'tu personaje')} no pudo seguir el camino.</h3><p>Se quedó sin fuerzas y cayó al suelo. La bolsa con todo lo que llevaba quedó en ese lugar. Vas a despertar en el punto de partida: <b>la bolsa está marcada en el mapa y en la brújula</b>.</p>${guard ? `<p class="sv-lost">🤝 Alguien que ayudaste se quedó cuidando tu bolsa: no se va a perder, pero tenés que ir a buscarla.</p>` : `<p class="sv-lost">Si no la encontrás en <b>${mm}</b>, perdés todo lo que tenía.</p>`}<p class="sv-verse">Un buen samaritano te ayudó a levantarte y te dio algo de comer. Desde ahora, no te olvides de alimentarte.</p><button class="sv-up">Levantarme</button></div>`;
   el.hidden = false; el.onclick = null; svDropBag(bag); svUI();
-  el.querySelector('.sv-up').onclick = () => { el.hidden = true; S.down = 0; h3do(['M_Standing_Up'], 4, 0, 1.6); const b = S.sv.bed; if (b) { S.av.position.x = b.x + 1; S.av.position.z = b.z; svToast('Te despertaste en tu cama. Tus cosas están donde caíste.'); } else svToast('Tus cosas quedaron donde caíste. ¡Andá a buscarlas!'); svUI(); };
+  el.querySelector('.sv-up').onclick = () => { el.hidden = true; S.down = 0; h3do(['M_Standing_Up'], 4, 0, 1.6); const sp = S.spawn; if (sp) { S.av.position.x = sp[0]; S.av.position.z = sp[1]; } svToast(guard ? '🎒 Tu bolsa te espera donde caíste. Seguí la brújula.' : '🎒 ¡Corré a buscar tu bolsa! Seguí la brújula.'); svUI(); };
 }
 function svDropBag(bag, silent) {
   const y = S.W.hAt(bag.x, bag.z), g = new THREE.Group(), cm = tm('sack', '#8A6A44'); const b = new THREE.Mesh(new THREE.SphereGeometry(.35, 14, 10), cm); b.scale.set(1.1, .8, 1); b.position.y = .28; g.add(b); const k = new THREE.Mesh(new THREE.ConeGeometry(.12, .25, 8), cm); k.position.y = .62; g.add(k);
   const beam = new THREE.Mesh(new THREE.CylinderGeometry(.1, .6, 9, 12, 1, true), new THREE.MeshBasicMaterial({ color: '#FF6A4A', transparent: true, opacity: .3, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide })); beam.position.y = 4.5; g.add(beam);
   g.position.set(bag.x, y, bag.z); S.scene.add(g); S.sv.bag = { ...bag, g };
 }
+
+// contador visible de la bolsa en el piso
+function bagTimer() {
+  const s = svP(), b = s && s.bag; let el = document.getElementById('v3bagt');
+  if (!b || !S.sv || !S.sv.bag) { if (el) el.hidden = true; return; }
+  if (!el) { el = document.createElement('div'); el.id = 'v3bagt'; el.className = 'v3bagt'; el.onclick = () => openMap(); document.body.appendChild(el); }
+  const a = S.av.position, d = Math.round(Math.hypot(b.x - a.x, b.z - a.z)), L = Math.max(0, Math.ceil(b.left)), mm = Math.floor(L / 60) + ':' + String(L % 60).padStart(2, '0');
+  const txt = b.guard ? `🎒 Tu bolsa está a ${d} m · la cuidan por vos` : `🎒 Si no la encontrás en ${mm} perdés todo · ${d} m`;
+  if (el.textContent !== txt) el.textContent = txt; el.hidden = false; el.classList.toggle('urg', !b.guard && L <= 30);
+}
 function svPickBag() {
   h3do(['M_Picking_Up', 'PickUp_Table'], 2.4, .8, 1.3); const s = svP(), b = s.bag, gs = gearState(); if (!b) return; Object.entries(b.inv).forEach(([k, n]) => svAdd(k, n)); b.tools.forEach(t => { if (!s.tools.includes(t)) s.tools.push(t); });
-  b.own.forEach(id => { if (!gs.own.includes(id)) gs.own.push(id); }); Object.assign(gs.eq, b.eq); s.bag = null; if (S.sv.bag) S.scene.remove(S.sv.bag.g); S.sv.bag = null; G().save(); reLook && reLook(); svToast('🎒 ¡Recuperaste tus cosas!'); svUI();
+  b.own.forEach(id => { if (!gs.own.includes(id)) gs.own.push(id); }); Object.assign(gs.eq, b.eq); s.bag = null; if (S.sv.bag) S.scene.remove(S.sv.bag.g); S.sv.bag = null; G().save(); reLook && reLook(); svToast('🎒 ¡Recuperaste tus cosas!'); svUI(); bagTimer();
 }
 
 /* ---------- tick ---------- */
@@ -3733,7 +3772,7 @@ function survTick(dt, t) {
   // herramientas flotando
   st.picks = st.picks.filter(g => { g.children[1].rotation.y = t * 1.5; g.children[1].position.y = .3 + Math.sin(t * 2.3) * .12; if ((g.position.x - S.av.position.x) ** 2 + (g.position.z - S.av.position.z) ** 2 < 3) { svGiveTool(g.userData.t, 'Encontraste'); S.scene.remove(g); return false; } return true; });
   // bolsa en el piso
-  if (st.bag) { st.bag.g.children[2].material.opacity = .22 + Math.sin(t * 3) * .1; if (!S.down) { s.bag.left -= dt; if (s.bag.left <= 0) { S.scene.remove(st.bag.g); st.bag = null; s.bag = null; G().save(); svToast('Se perdieron las cosas que quedaron en el piso.'); } } }
+  if (st.bag) { st.bag.g.children[2].material.opacity = .22 + Math.sin(t * 3) * .1; if (!S.down && !s.bag.guard) { s.bag.left -= dt; if (s.bag.left <= 0) { S.scene.remove(st.bag.g); st.bag = null; s.bag = null; G().save(); svToast('No llegaste a tiempo: se perdió lo que tenías en la bolsa.'); } } } bagTimer();
   // pesca
   if (st.fishing) { const f = st.fishing; f.t += dt; const a = S.av.position; if (S.freeMoving) { st.fishing = null; svToast('Dejaste de pescar.'); }
     else if (f.mode === 'rod') { if (f.t >= f.bite && !f.cue) { f.cue = 1; svToast('🐟 ¡Pica! Tocá la acción (E) ahora.'); try { tone3d(); } catch (e) {} } if (f.t > f.bite + f.win + .2) { st.fishing = null; svToast('Se escapó el pez. Probá otra vez.'); } }
@@ -3766,13 +3805,14 @@ function invSurv(body) {
   if (st) st.onclick = () => { if (!nearHome()) { svToast('Tenés que estar en tu casa para usar el cofre.'); return; } Object.entries(s.inv).forEach(([k, n]) => { s.chest[k] = (s.chest[k] || 0) + n; }); s.inv = {}; G().save(); invSurv(body); };
   if (tk) tk.onclick = () => { if (!nearHome()) { svToast('Tenés que estar en tu casa para usar el cofre.'); return; } Object.entries(s.chest).forEach(([k, n]) => svAdd(k, n)); s.chest = {}; G().save(); invSurv(body); };
 }
+function perksHtml(k) { const f = FRUITS.find(x => x[0] === k); if (!f) return ''; const t = ft(k); return `<span class="sv-perk">${t ? `✓ ${esc(f[3][t - 1])}` : ''}${t < 5 ? `${t ? ' · ' : ''}Con ${(t + 1) * 10}: ${esc(f[3][t])}` : ''}</span>`; }
 function invAttr(body) {
   const AP = invAttr.pend || (invAttr.pend = {}), pt = Object.values(AP).reduce((x, y) => x + y, 0);
   const a = atP(), free = ptsFree() - pt, lv = Math.min(LV_MAX, lvlNow()), h = a.hum || 0;
   let glowH = ''; if (S && S.hx) { const g = glowState(), gl = glowLv(g.pts), ga = 12 * gl * gl, gb = 12 * (gl + 1) * (gl + 1), pc = gl >= GLW.lvMax ? 100 : Math.round((g.pts - ga) / (gb - ga) * 100); glowH = `<div class="sv-glow"><b>✦ Resplandor ${gl}</b><small>Crece con misiones de servicio, compartir con quien lo necesita, respuestas correctas y versículos.</small><span class="sv-axbar"><i style="width:${pc}%"></i></span></div>`; }
   body.innerHTML = `<div class="sv-inv">${glowH}<p class="sv-tip">Nivel ${lv} de ${LV_MAX}. Cada vez que subís de nivel ganás <b>${ATTR_PER_LV} puntos</b> para repartir como quieras (máximo ${ATTR_MAX} por atributo). Cada 5 puntos se nota un escalón más.</p><div class="sv-free">Puntos para repartir: <b>${free}</b></div>${pt ? `<div class="sv-conf"><p>Vas a sumar ${ATTR.filter(([k]) => AP[k]).map(([k, n]) => `<b>${n} +${AP[k]}</b>`).join(', ')}. <em>Una vez confirmados, los puntos quedan fijos y no se pueden cambiar.</em></p><div><button class="sv-undo">Deshacer</button><button class="sv-ok">${invAttr.ask ? 'Sí, confirmar' : 'Confirmar'}</button></div></div>` : ''}
     <div class="sv-bulk"><span>Sumar de a</span>${[1, 5, 10].map(n => `<button data-n="${n}" class="${(S.bulk || 1) === n ? 'on' : ''}">${n}</button>`).join('')}</div>
-    ${ATTR.map(([k, n, d]) => `<div class="sv-attr"><div><b>${n} <em>${a[k] + axLv(k)}</em>${AP[k] ? `<span class="sv-pend">+${AP[k]}</span>` : ''}${axLv(k) ? `<span class="sv-axlv">(+${axLv(k)} por práctica)</span>` : ''}</b><small>${d}</small><span class="sv-axbar" title="Experiencia de ${n}"><i style="width:${Math.min(100, ((axP().xp[k] || 0) / axNeed(axLv(k))) * 100).toFixed(0)}%"></i></span><span class="sv-pips">${Array.from({ length: 10 }, (_, i) => `<i class="${i < Math.floor(a[k] / 5) ? 'on' : ''}"></i>`).join('')}</span></div><button data-k="${k}" ${free > 0 && a[k] + (AP[k] || 0) < ATTR_MAX ? '' : 'disabled'} aria-label="Subir ${n}">+</button></div>`).join('')}
+    ${(S.hx ? [['__h', 'Frutos del Espíritu · Gálatas 5:22-23']].concat(FRUITS.map(x => [x[0], x[1], x[2]]), [['__h', 'Cuerpo']], BODY) : ATTRK).map(([k, n, d]) => k === '__h' ? `<h4 class="sv-sec">${n}</h4>` : `<div class="sv-attr"><div><b>${n} <em>${a[k] + axLv(k)}</em>${AP[k] ? `<span class="sv-pend">+${AP[k]}</span>` : ''}${axLv(k) ? `<span class="sv-axlv">(+${axLv(k)} por práctica)</span>` : ''}</b><small>${d}</small>${S.hx ? perksHtml(k) : ''}<span class="sv-axbar" title="Experiencia de ${n}"><i style="width:${Math.min(100, ((axP().xp[k] || 0) / axNeed(axLv(k))) * 100).toFixed(0)}%"></i></span><span class="sv-pips">${Array.from({ length: 10 }, (_, i) => `<i class="${i < Math.floor(a[k] / 5) ? 'on' : ''}"></i>`).join('')}</span></div><button data-k="${k}" ${free > 0 && a[k] + (AP[k] || 0) < ATTR_MAX ? '' : 'disabled'} aria-label="Subir ${n}">+</button></div>`).join('')}
     <div class="sv-attr sv-hum"><div><b>Humildad <em>${h}</em></b><small>Es la única que no se compra con puntos: crece solo cuando le das puntos tuyos a otros en una sala con amigos. Jesús enseñó que el que se humilla será enaltecido (Lucas 14:11).</small></div></div>
     <ul class="sv-perks">${HUM_PERKS.map(([n, t, d]) => `<li class="${h >= n ? 'on' : ''}"><b>${n} · ${t}</b><small>${d}</small></li>`).join('')}</ul>
     <div class="sv-attr sv-hum"><div><b>Servicio <em>${a.serv || 0}</em></b><small>También es único: crece solo haciendo obras para los demás, como ayudar a los mendigos del camino o cumplir misiones.</small></div></div>
@@ -4005,7 +4045,7 @@ const SERV_PERKS = [
 ];
 function servV() { return svOn() ? (atP().serv || 0) : 0; }
 function servAdd(n, why) { const a = atP(); a.serv = (a.serv || 0) + n; G().save(); if (a.serv >= 15 && GBY.servidor && !gearState().own.includes('servidor')) gearGive(GBY.servidor, 'Por tu servicio'); }
-function price(n) { return Math.max(1, Math.round(n * (servV() >= 3 ? .9 : 1))); }
+function price(n) { let f = servV() >= 3 ? .9 : 1; if (S && S.hx) { f *= [1, .95, .95, .9, .9, .9][ft('gent')]; const v = vilNearest(60); if (v && repStars(v.name) >= 4) f *= .95; if (S.haggle) f *= .8; } return Math.max(1, Math.round(n * f)); }
 function money() { return svP().inv.money || 0; }
 
 /* puestos del mercado y mendigos a lo largo del camino */
@@ -4028,6 +4068,235 @@ function econBuild(scene, W) {
   });
 }
 
+
+/* ===================== ALDEAS (Hero): saludar, charlas, ayudas, testigos, decisiones y reputación ===================== */
+const VIL = { mod: null, npcs: [], list: [], cur: null, t: 0, greetT: {} };
+const vday = () => new Date().toISOString().slice(0, 10);
+function repP() { const p = G().P(); p.rep = p.rep || {}; return p.rep; }
+const repOf = name => { const r = repP(); return r[name] == null ? 45 : r[name]; };
+const repStars = name => Math.max(1, Math.min(5, 1 + Math.floor(repOf(name) / 20)));
+function repAdd(name, n) { if (!name) return; const r = repP(); let k = n; if (n > 0 && fv('amor') >= 40) k += 1; r[name] = Math.max(0, Math.min(100, repOf(name) + k)); G().save(); }
+function vilNearest(maxD) { const a = S.av.position; let best = null, bd = (maxD || 40) ** 2; for (const v of VIL.list) { const d = (v.x - a.x) ** 2 + (v.z - a.z) ** 2; if (d < bd) { bd = d; best = v; } } return best; }
+/* ===== Conversaciones cinemáticas: plano y contraplano sobre el hombro, sin salir del mundo =====
+   cine({ cast: { id: { name, sub, o | look, voice, pitch, rate } }, steps: [ { who: id|'me'|'nar', t, g } | { who, ask: q, o: [ { t, fn, then: [steps], quiet } ] } ], onDone }) */
+const CINE = { on: false, side: 1 };
+const CMP_CAST = {
+  esc: { name: 'Eleazar', sub: 'anciano escriba', voice: 'esc', pitch: .78, rate: .92, look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#CFCFCF', outfit: '#D8CBA8', tintK: 0, anim: ['M_Holding_Idle', 'M_Standing_Idle'] } },
+  zel: { name: 'Asher', sub: 'tu amigo zelote', voice: 'zel', pitch: 1.1, rate: 1.05, look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#1A120C', outfit: '#6E2F22', tintK: 0, anim: ['M_Standing_Idle', 'M_Idle'] } },
+  rom: { name: 'Lucio', sub: 'soldado romano', voice: 'rom', pitch: .9, rate: 1, look: { g: 'chico', age: 18, skin: '#D6A57C', hair: '#3A2A1A', outfit: '#9A2418', tintK: 0, anim: ['M_Standing_Idle'] } }
+};
+function cineBusy() { return !!(S && (CINE.on || S.walking)); }
+function cineOk() { return !!(S && S.hx && H3.ok && !CINE.on && !S.walking && document.getElementById('view3d') && !document.getElementById('view3d').hidden); }
+const cineEye = o => o.position.y + (o.userData && o.userData.h3 ? 1.6 * o.scale.y : 1.45);
+function cineSpawn(ids) {
+  // ubica a los compañeros delante del jugador, en semicírculo, mirándolo; prueba varias direcciones hasta encontrar lugar libre
+  const a = S.av.position, n = ids.length, ok = (x, z) => !blockedAt(x, z) && waterWet(x, z, null) < .05; let best = null;
+  for (const dy of [0, .5, -.5, 1, -1, 1.6, -1.6, 2.4, -2.4, 3.14]) { const y = S.yaw + dy, fx = Math.sin(y), fz = Math.cos(y), rx = fz, rz = -fx;
+    const ps = ids.map((id, i) => { const off = (i - (n - 1) / 2) * 1.3, dep = 2.5 + Math.abs(off) * .2; return [a.x + fx * dep + rx * off, a.z + fz * dep + rz * off]; });
+    if (ps.every(([x, z]) => ok(x, z))) { best = { ps, y }; break; } }
+  if (!best) { const y = S.yaw; best = { y, ps: ids.map((id, i) => [a.x + Math.sin(y) * 2.5 + Math.cos(y) * (i - (n - 1) / 2) * 1.3, a.z + Math.cos(y) * 2.5 - Math.sin(y) * (i - (n - 1) / 2) * 1.3]) }; }
+  S.yaw = best.y; S.camYaw = 0; S.av.rotation.y = S.yaw;
+  return ids.map((id, i) => { const [x, z] = best.ps[i], o = buildHeroAvatar(Object.assign({}, CMP_CAST[id].look)); o.position.set(x, Math.max(0, S.W ? S.W.hAt(x, z) : 0), z); o.rotation.y = Math.atan2(a.x - x, a.z - z); S.scene.add(o); return o; });
+}
+function cineEl() {
+  let el = document.querySelector('.cine-ui'); if (el) return el;
+  el = document.createElement('div'); el.className = 'cine-ui'; el.innerHTML = '<i class="cine-bar t"></i><i class="cine-bar b"></i><div class="cine-dof"></div><button class="cine-skip" type="button">Saltar ›</button><div class="cine-sub"><b class="cine-who"></b><p class="cine-t"></p><div class="cine-opts"></div><span class="cine-next" aria-hidden="true">▸</span></div>';
+  document.body.appendChild(el); return el;
+}
+function cine(sc) {
+  if (!cineOk()) return false;
+  const ids = Object.keys(sc.cast || {}), spawnIds = ids.filter(k => !sc.cast[k].o && CMP_CAST[k]);
+  const spawned = spawnIds.length ? cineSpawn(spawnIds) : []; spawnIds.forEach((k, i) => { sc.cast[k] = Object.assign({}, CMP_CAST[k], sc.cast[k], { o: spawned[i] }); });
+  ids.forEach(k => { if (!sc.cast[k].o) delete sc.cast[k]; });
+  const actors = Object.keys(sc.cast); if (!actors.length && !sc.steps.some(s => s.who === 'nar')) return false;
+  // el jugador mira al grupo; los personajes se giran para mirarse
+  CINE.on = true; CINE.sc = sc; CINE.q = sc.steps.slice(); CINE.spawned = spawned; CINE.fov0 = S.camera.fov; CINE.side = Math.random() < .5 ? 1 : -1; CINE.face = null;
+  S.joy.x = 0; S.joy.y = 0; S.keys = {}; S.sprint = false;
+  const el = cineEl(); el.classList.toggle('dof', QUAL.lv >= 1); document.body.classList.add('v3talk'); requestAnimationFrame(() => el.classList.add('on'));
+  const from = { p: S.camera.position.toArray(), l: (S.camL || [S.av.position.x, S.av.position.y + 1.2, S.av.position.z]).slice(), f: S.camera.fov };
+  CINE.cam = { from, to: from, t: 0, dur: .95 };
+  el.querySelector('.cine-skip').onclick = e => { e.stopPropagation(); cineSkip(); };
+  el.onclick = e => { if (e.target.closest('.cine-opts button,.cine-skip')) return; cineNext(); };
+  setTimeout(() => cineStep(), 120);
+  return true;
+}
+function cinePose(kind, spk, ask) {
+  // devuelve {p,l,f}: 'ots' sobre el hombro del que escucha hacia el que habla; 'wide' plano de dos/grupo de costado
+  const pl = S.av, cast = CINE.sc.cast, os = Object.keys(cast).map(k => cast[k].o);
+  const c = os.length ? os.reduce((m, o) => (m[0] += o.position.x / os.length, m[1] += o.position.z / os.length, m), [0, 0]) : [pl.position.x + Math.sin(S.yaw) * 2.5, pl.position.z + Math.cos(S.yaw) * 2.5];
+  const N = spk && spk !== pl ? spk : os[0];
+  let dx = (N ? N.position.x : c[0]) - pl.position.x, dz = (N ? N.position.z : c[1]) - pl.position.z; const L = Math.hypot(dx, dz) || 1; dx /= L; dz /= L; const s = CINE.side, rx = dz * s, rz = -dx * s;
+  const ph = innerHeight > innerWidth ? .7 : 1, f = innerHeight > innerWidth ? 46 : 36;
+  if (kind === 'wide' || !N) { const mx = (pl.position.x + c[0]) / 2, mz = (pl.position.z + c[1]) / 2, my = pl.position.y; return { p: [mx + rx * 3.6 - dx * .8, my + 1.75, mz + rz * 3.6 - dz * .8], l: [mx, my + 1.25, mz], f: f + 8 }; }
+  if (spk === pl) { const e = cineEye(N), ep = cineEye(pl), sh = ask ? .8 : 0; return { p: [N.position.x + dx * .95 * ph + rx * .55, e + .06, N.position.z + dz * .95 * ph + rz * .55], l: [pl.position.x - rx * .1 + dz * sh, ep - .04, pl.position.z - rz * .1 - dx * sh], f }; }
+  const e = cineEye(pl), en = cineEye(spk); return { p: [pl.position.x - dx * .95 * ph + rx * .55, e + .06, pl.position.z - dz * .95 * ph + rz * .55], l: [spk.position.x - rx * .1, en - .04, spk.position.z - rz * .1], f };
+}
+// la cámara no puede quedar dentro de una casa ni con una pared en medio: prueba el otro hombro, más cerca, o un plano general
+function cineClear(P) { const [x, y, z] = P.p, [lx, ly, lz] = P.l, H = (X, Z) => S.W ? Math.max(0, S.W.hAt(X, Z)) : 0; if (blockedAt(x, z) || H(x, z) + .45 > y) return false; for (let i = 1; i < 6; i++) { const k = i / 6 * .85, X = x + (lx - x) * k, Z = z + (lz - z) * k; if (blockedAt(X, Z) || H(X, Z) + .2 > y + (ly - y) * k) return false; } return true; }
+function cinePoseSafe(kind, spk, ask) { let P = cinePose(kind, spk, ask); if (cineClear(P)) return P; CINE.side = -CINE.side; P = cinePose(kind, spk, ask); if (cineClear(P)) return P; CINE.side = -CINE.side;
+  for (const k of [.6, .35]) { const Q = cinePose(kind, spk, ask), c = [(Q.l[0] - Q.p[0]) * (1 - k), (Q.l[2] - Q.p[2]) * (1 - k)]; Q.p = [Q.p[0] + c[0], Q.p[1], Q.p[2] + c[1]]; if (cineClear(Q)) return Q; }
+  const a = S.av.position, L = [a.x, cineEye(S.av) - .2, a.z]; for (let i = 0; i < 12; i++) { const ang = i / 12 * 6.283, Q = { p: [a.x + Math.sin(ang) * 3.2, L[1] + .7, a.z + Math.cos(ang) * 3.2], l: L, f: 44 }; if (cineClear(Q)) return Q; }
+  return P; }
+function cineShot(kind, spk, dur, ask) { const C = CINE.cam || {}; const cur = C.cur || C.from; CINE.cam = { from: cur, to: cinePoseSafe(kind, spk, ask), t: 0, dur: dur || .7, kind, spk }; }
+function cineWho(w) { if (w === 'me') return S.av; if (w === 'nar') return null; const c = CINE.sc.cast[w]; return c ? c.o : null; }
+function cineStep() {
+  if (!CINE.on) return; const el = cineEl(), st = CINE.q.shift(); CINE.st = st; clearTimeout(CINE.autoT); try { G().voStop(); } catch (e) {}
+  if (!st) return cineEnd();
+  const sub = el.querySelector('.cine-sub'), who = el.querySelector('.cine-who'), tx = el.querySelector('.cine-t'), op = el.querySelector('.cine-opts'), nm = G().P().name || '';
+  let t = String(st.ask || st.t || '').replace(/^\{name\},\s*/, nm ? nm + ', ' : '').replace(/\{name\}/g, nm); t = t.charAt(0).toUpperCase() + t.slice(1); const ttxt = t, spkO = cineWho(st.who), c = CINE.sc.cast[st.who];
+  sub.classList.toggle('nar', st.who === 'nar'); sub.classList.toggle('ask', !!st.o); who.textContent = st.who === 'me' ? (nm || 'Vos') : c ? c.name : ''; who.hidden = st.who === 'nar'; tx.textContent = t;
+  sub.classList.remove('in'); void sub.offsetWidth; sub.classList.add('in'); op.innerHTML = ''; CINE.ready = false; setTimeout(() => { CINE.ready = true; }, 450);
+  // cámara: narrador → plano general; habla un personaje → sobre el hombro del jugador; habla el jugador o elige → contraplano
+  const first = !CINE.cam.kind; if (st.o) { if (spkO && spkO !== S.av) { cineShot('ots', spkO, first ? .95 : .7); clearTimeout(CINE.askT); CINE.askT = setTimeout(() => { if (CINE.st === st) cineShot('ots', S.av, .8, true); }, 2000); } else cineShot('ots', S.av, first ? .95 : .75, true); } else if (st.who === 'nar') cineShot('wide', null, first ? .95 : 1.1); else cineShot('ots', spkO, first ? .95 : .7);
+  CINE.face = spkO && spkO !== S.av ? spkO : null;
+  const secs = Math.max(2.2, Math.min(9, t.length / 15));
+  if (spkO && spkO !== S.av) { h3npcPlay(spkO, st.g === 'point' ? ['M_Pointing_Gesture', 'M_Talking'] : st.g === 'nod' ? ['M_Lengthy_Head_Nod', 'M_Talking'] : ['M_Talking', 'Idle_Talking_Loop'], secs); if (Math.random() < .5) h3do(['M_Lengthy_Head_Nod', 'M_Thinking'], 2.2); }
+  else if (spkO === S.av) h3do(['M_Talking', 'Idle_Talking_Loop'], secs);
+  Object.keys(CINE.sc.cast).forEach(k => { const o = CINE.sc.cast[k].o; if (o !== spkO && Math.random() < .35) h3npcPlay(o, ['M_Lengthy_Head_Nod', 'M_Thinking'], 2); });
+  if (st.o) { op.innerHTML = st.o.map((x, i) => `<button type="button" data-i="${i}">${esc(x.t)}</button>`).join(''); op.querySelectorAll('button').forEach(b => b.onclick = e => { e.stopPropagation(); const x = st.o[+b.dataset.i]; try { x.fn && x.fn(); } catch (er) {} CINE.q = (x.quiet ? [] : [{ who: 'me', t: x.t }]).concat(x.then || [], CINE.q); cineStep(); }); try { op.querySelector('button').focus({ preventScroll: true }); } catch (e) {} }
+  const t0 = performance.now();
+  const vc = st.who === 'me' ? ((G().P().avatar || {}).g === 'chica' ? 'mujer' : 'varon') : st.who === 'nar' ? 'narrador' : (c && c.voice) || 'varon';
+  try { if (G().voOn && G().voOn()) G().vo(t, vc, { pitch: c && c.pitch, rate: c && c.rate, onend: () => { const el = performance.now() - t0; if (CINE.st === st && !st.o && el > 1500) CINE.autoT = setTimeout(() => { if (CINE.st === st) cineStep(); }, 1000); } }); } catch (e) {}
+}
+function cineNext() { if (!CINE.on || !CINE.ready || (CINE.st && CINE.st.o)) return; cineStep(); }
+function cineSkip() { if (!CINE.on) return; const i = CINE.q.findIndex(s => s.o); if (CINE.st && CINE.st.o) return; CINE.q = i >= 0 ? CINE.q.slice(i) : []; cineStep(); }
+function cineEnd() {
+  const el = cineEl(); el.classList.remove('on'); document.body.classList.remove('v3talk'); try { G().voStop(); } catch (e) {}
+  S.camYaw = 0; CINE.cam = { from: CINE.cam.cur || CINE.cam.from, to: null, t: 0, dur: .95, release: true }; CINE.face = null;
+  const sc = CINE.sc, sp = CINE.spawned; setTimeout(() => { sp.forEach(o => { S && S.scene.remove(o); const i = H3.npcs.indexOf(o); if (i >= 0) H3.npcs.splice(i, 1); }); }, 950);
+  CINE.on = false; CINE.sc = null; try { sc.onDone && sc.onDone(); } catch (e) {}
+}
+function cineTick(dt) {
+  const C = CINE.cam; if (!C) return;
+  if (C.release) C.to = { p: S.camI || C.from.p, l: S.camL || C.from.l, f: CINE.fov0 };
+  C.t = Math.min(1, C.t + dt / C.dur); const k = (1 - Math.cos(Math.PI * C.t)) / 2, L = (a, b) => a.map((v, i) => v + (b[i] - v) * k);
+  const cur = { p: L(C.from.p, C.to.p), l: L(C.from.l, C.to.l), f: C.from.f + (C.to.f - C.from.f) * k };
+  if (!C.release && C.kind === 'wide' && C.t >= 1) { C.drift = (C.drift || 0) + dt; const d = Math.min(1.2, C.drift * .06); cur.p = cur.p.map((v, i) => v + (cur.l[i] - v) * d * .12); }
+  C.cur = cur; S.camera.position.set(cur.p[0], cur.p[1], cur.p[2]); S.camera.lookAt(cur.l[0], cur.l[1], cur.l[2]); if (Math.abs(S.camera.fov - cur.f) > .01) { S.camera.fov = cur.f; S.camera.updateProjectionMatrix(); }
+  if (S.W) S.W.sky.position.copy(S.camera.position);
+  // los que escuchan miran al que habla; el jugador gira suave hacia quien le habla
+  if (CINE.on && CINE.sc) { const sp = CINE.face, turn = (o, tx, tz) => { let d = Math.atan2(tx - o.position.x, tz - o.position.z) - o.rotation.y; while (d > Math.PI) d -= 6.283; while (d < -Math.PI) d += 6.283; o.rotation.y += d * Math.min(1, dt * 5); };
+    for (const k in CINE.sc.cast) { const o = CINE.sc.cast[k].o; const tg = sp && sp !== o ? sp : S.av; turn(o, tg.position.x, tg.position.z); }
+    if (sp) { turn(S.av, sp.position.x, sp.position.z); S.yaw = S.av.rotation.y; } }
+  if (C.release && C.t >= 1) { CINE.cam = null; S.camera.fov = CINE.fov0; S.camera.updateProjectionMatrix(); }
+}
+addEventListener('keydown', e => { if (!CINE.on) return; const k = e.key; if (k === ' ' || k === 'Enter') { e.preventDefault(); e.stopImmediatePropagation(); if (!(CINE.st && CINE.st.o)) cineNext(); } else if (k === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); cineSkip(); } else if (/^[1-3]$/.test(k) && CINE.st && CINE.st.o) { const b = document.querySelectorAll('.cine-opts button')[+k - 1]; if (b) b.click(); e.stopImmediatePropagation(); } else e.stopImmediatePropagation(); }, true);
+async function vilBuild(scene, W) {
+  if (!S.hx) return; const M = VIL.mod = await import('./story/villages.js').catch(() => null); import('./story/hero_story.js').then(m => { VIL.wask = m.WASK; }).catch(() => {}); if (!M || !S) return; const g = G(), R = rng(5150);
+  const VN = { village: null, taller: 'Nazaret', roofhouse: 'Capernaúm', inn: 'Jericó', upper: 'Jerusalén' };
+  VIL.list = (S.pois || []).filter(q => q.k in VN).map(q => ({ name: VN[q.k] || q.name || 'Aldea', x: q.x + (q.k === 'village' ? 0 : (q.side || 1) * -4), z: q.z, r: q.r })); VIL.npcs = [];
+  const free = (x, z) => !blockedAt(x, z) && waterWet(x, z, null) < .05 && Math.abs(x) < XB * .9;
+  const put = (look, x, z, face, role, extra) => { for (let t = 0; t < 30 && !free(x, z); t++) { x += (R() - .5) * 4; z += (R() - .5) * 4; } if (!free(x, z)) return null; const o = buildHeroAvatar(look); o.position.set(x, Math.max(0, W.hAt(x, z)), z); o.rotation.y = face; scene.add(o); const v = Object.assign({ id: role + '-' + VIL.npcs.length, o, x, z, role, name: M.VNAMES[Math.floor(R() * M.VNAMES.length)] }, extra || {}); VIL.npcs.push(v); return v; };
+  const helpers = ['aguatera', 'pescador', 'vendedor'], margs = ['leproso', 'cobrador', 'mendiga'];
+  VIL.list.forEach((vl, i) => { const ang = R() * 6.28, sk = ['#C99A72', '#B98A62', '#D6A57C'][i % 3];
+    put({ g: 'chica', age: 18, skin: sk, hair: '#BDBDBD', outfit: '#6A5A7A', anim: ['M_Lengthy_Head_Nod', 'Idle_Talking_Loop'] }, vl.x + Math.cos(ang) * 6, vl.z + Math.sin(ang) * 6, ang + Math.PI, 'anciana', { vil: vl.name, talk: i % M.TALKS.length });
+    const h = helpers[i % 3]; put({ g: h === 'aguatera' ? 'chica' : 'chico', age: 18, skin: sk, hair: '#2A1B14', outfit: ['#8A6A44', '#5A6A7A', '#8E2E22'][i % 3], anim: ['M_Holding_Idle', 'M_Box_Idle'] }, vl.x + Math.cos(ang + 2) * 7, vl.z + Math.sin(ang + 2) * 7, ang + 2 + Math.PI, 'help', { vil: vl.name, help: h });
+    const mg = margs[i % 3]; put({ g: mg === 'mendiga' ? 'chica' : 'chico', age: 18, skin: '#B98A62', hair: '#6A6A6A', outfit: '#8A8478', anim: ['M_Sad_Idle', 'Crouch_Idle_Loop', 'M_Kneeling_Idle'] }, vl.x + Math.cos(ang + 4) * 16, vl.z + Math.sin(ang + 4) * 16, ang + 4 + Math.PI, 'marg', { vil: vl.name, marg: mg }); });
+  // testigos: uno o dos por etapa, cerca de una aldea de esa etapa (o del camino)
+  g.REGIONS.forEach((Rg, r) => { const W2 = M.WITNESS[Rg.id]; if (!W2) return; const vl = VIL.list.find(v => v.r === r); const ns = Object.keys(g.NODES).filter(id => id.startsWith(Rg.id + '-n')).map(id => S.markers[id]).filter(Boolean); const base = vl ? [vl.x, vl.z] : ns.length ? [ns[0].position.x + 8, ns[0].position.z] : null; if (!base) return;
+    W2.forEach((w, j) => { const ang = R() * 6.28, look = { mujer: { g: 'chica', outfit: '#8A5A6A' }, pastor: { g: 'chico', outfit: '#7A6A4A' }, pescador: { g: 'chico', outfit: '#3E5A6A' }, rico: { g: 'chico', outfit: '#6A2E5A' }, hombre: { g: 'chico', outfit: '#6A5A44' } }[w.look] || { g: 'chico', outfit: '#6A5A44' };
+      put(Object.assign({ age: 18, skin: '#C99A72', hair: '#2A1B14', anim: ['Idle_Talking_Loop', 'M_Lengthy_Head_Nod'] }, look), base[0] + Math.cos(ang) * (10 + j * 4), base[1] + Math.sin(ang) * (10 + j * 4), ang + Math.PI, 'wit', { vil: vl ? vl.name : null, wit: w, region: r, wid: Rg.id + j }); }); });
+  // tensión hacia Jerusalén: más soldados en las últimas etapas
+  ['jerusalen', 'cruz'].forEach(id => { const r = g.REGIONS.findIndex(x => x.id === id); if (r < 0) return; Object.keys(g.NODES).filter(k => k.startsWith(id + '-n')).forEach((k, j) => { const [x, z] = toV(g.NODES[k].x, g.NODES[k].y), sd = j % 2 ? 1 : -1; put({ g: 'chico', age: 18, skin: '#D6A57C', hair: '#3A2A1A', outfit: '#8E2E22', anim: ['M_Standing_Idle', 'M_Holding_Idle'] }, x + sd * 5, z - 2, sd > 0 ? -Math.PI / 2 : Math.PI / 2, 'sold', { vil: null }); }); });
+}
+function vilNearNpc() { if (!VIL.npcs.length) return null; const a = S.av.position; let best = null, bd = 2.4 * 2.4; for (const v of VIL.npcs) { const d = (v.x - a.x) ** 2 + (v.z - a.z) ** 2; if (d < bd) { bd = d; best = v; } } return best; }
+function vilState() { const p = G().P(); p.vil = p.vil || { greet: {}, help: {}, talk: {}, dec: {}, wit: {} }; ['greet', 'help', 'talk', 'dec', 'wit'].forEach(k => p.vil[k] = p.vil[k] || {}); return p.vil; }
+function vilLabel(v) { const st = vilState(), d = vday(); if (v.role === 'sold') return 'Saludar'; if (v.role === 'wit') return st.wit[v.wid] ? 'Volver a escuchar' : 'Escuchar su historia'; if (st.greet[v.id] !== d) return 'Saludar · Shalom';
+  if (v.role === 'anciana') return st.talk[v.id] ? 'Charlar' : 'Escucharla'; if (v.role === 'help') { const h = st.help[v.id]; return h && h !== d ? 'Ver cómo sigue' : h === d ? 'Charlar' : VIL.mod.HELPS[v.help][0]; } if (v.role === 'marg') return st.dec[v.id] ? 'Charlar' : 'Acercarte'; return 'Charlar'; }
+function vilSheet(html, after) { const el = document.getElementById('v3sheet'); el.innerHTML = `<div class="inv hx sv-sheet vil">${html}</div>`; el.hidden = false; S.joy.x = 0; S.joy.y = 0; const x = el.querySelector('.bag-x'); if (x) x.onclick = () => { el.hidden = true; }; after && after(el); return el; }
+function vilAct(v) {
+  const M = VIL.mod; if (!M) return; const st = vilState(), d = vday(), nm = G().P().name || '', look = v.o; try { look.lookAt(S.av.position.x, look.position.y, S.av.position.z); } catch (e) {}
+  if (v.role === 'sold') { h3npcPlay(v.o, ['M_Lengthy_Head_Nod'], 2); svToast('🛡️ Soldado: ' + M.SOLDIER_LINES[Math.floor(Math.random() * M.SOLDIER_LINES.length)]); behav('saludos'); return; }
+  if (v.role === 'wit') { const w = v.wit, first = !st.wit[v.wid]; st.wit[v.wid] = d; if (first) { axGain('gent', 2); axGain('sab', 1); behav('testigos'); } G().save(); h3npcPlay(v.o, ['Idle_Talking_Loop', 'M_Lengthy_Head_Nod'], 4);
+    if (cineWit(v, w, first)) return;
+    vilSheet(`<div class="inv-h"><b>${esc(w.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">Testigo · cuenta lo que vivió</small>${w.t.map(t => `<p class="vil-p">${esc(t)}</p>`).join('')}`); try { G().vo(w.t.join(' '), w.look === 'mujer' ? 'mujer' : 'varon'); } catch (e) {} return; }
+  if (st.greet[v.id] !== d) { st.greet[v.id] = d; const marg = v.role === 'marg'; repAdd(v.vil, marg ? 3 : 1); axGain('gent', marg ? 2 : 1); behav('saludos'); if (marg) behav('saludosMarginados'); glowAdd(marg ? 3 : 1, 'saludo'); G().save(); h3do(['M_Waving', 'Waving'], 2, .4); h3npcPlay(v.o, ['M_Waving', 'M_Thankful'], 2.5);
+    svToast(marg ? `👋 Shalom. ${M.MARGINAL[v.marg].name}: ${M.MARGINAL[v.marg].greet}` : `👋 Shalom, ${v.name}. ${repStars(v.vil) >= 4 ? '¡Qué alegría verte, ' + nm + '!' : 'Te devuelve el saludo.'}`); return; }
+  if (v.role === 'anciana') { const T = M.TALKS[v.talk]; if (cineTalk(v, T, st, d)) return; const el = vilSheet(`<div class="inv-h"><b>${esc(v.name)}, una anciana de ${esc(v.vil)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="vil-p">${esc(T[0])}</p><div class="vil-o"><button data-r="kind">Escucharla hasta el final</button><button data-r="mid">Decirle que estás apurado</button><button data-r="cold">Seguir de largo</button></div>`);
+    el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { const r = b.dataset.r; el.hidden = true; if (r === 'kind') { if (st.talk[v.id] !== d) { repAdd(v.vil, 3); axGain('gent', 3); axGain('pac', 1); behav('charlasCompletas'); } st.talk[v.id] = d; svToast('👵 ' + v.name + ': ' + T[1]); } else if (r === 'mid') { svToast(v.name + ' asiente: «Andá tranquilo, otro día seguimos».'); } else { repAdd(v.vil, -1); svToast(v.name + ' se queda mirando cómo te vas.'); } G().save(); }); return; }
+  if (v.role === 'help') { const H = M.HELPS[v.help], h = st.help[v.id]; if (h && h !== d) { st.help[v.id] = d; repAdd(v.vil, 2); axGain('amor', 1); behav('revisitas'); G().save(); svToast(`🤝 Volviste a ver a ${v.name}: «¡Te acordaste de mí! Estoy mejor, gracias por volver».`); return; } if (h === d) { svToast(`${v.name}: ${H[2]}`); return; }
+    if (S.vilBusy) return; S.vilBusy = 1; svToast('⏳ ' + H[0] + '…'); h3do(['M_Reaching_Out', 'PickUp_Table', 'M_Picking_Up'], 2.6, .8); setTimeout(() => { S.vilBusy = 0; if (!S) return; const a = S.av.position; if ((v.x - a.x) ** 2 + (v.z - a.z) ** 2 > 16) { svToast('Te alejaste antes de terminar.'); return; } st.help[v.id] = d; repAdd(v.vil, 2); axGain('amor', 2); axGain('gent', 1); behav('ayudas'); glowAdd(3, 'ayuda'); G().save(); h3npcPlay(v.o, ['M_Thankful', 'M_Cheering'], 2.5); svToast('🤝 ' + H[1] + ' ' + v.name + ': ' + H[2]); }, 2600); return; }
+  if (v.role === 'marg') { const D = M.DECIDE[v.marg], info = M.MARGINAL[v.marg]; if (st.dec[v.id]) { svToast(`${info.name}: ${st.dec[v.id] === 'kind' ? 'Desde que te sentaste conmigo, la gente del pueblo me saluda.' : 'Gracias por pasar.'}`); return; }
+    if (cineMarg(v, D, info, st)) return;
+    const el = vilSheet(`<div class="inv-h"><b>${esc(info.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">${esc(info.note)}</small><p class="vil-p">${esc(D.q)}</p><div class="vil-o">${D.o.map(([t, r]) => `<button data-r="${r}">${esc(t)}</button>`).join('')}</div>`);
+    el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { const r = b.dataset.r, s2 = svP(); el.hidden = true; st.dec[v.id] = r; const sp = G().P(); sp.story = sp.story || {}; sp.story.att = sp.story.att || { esc: 0, zel: 0, rom: 0 };
+      if (r === 'kind') { if (v.marg === 'leproso' && (s2.inv.bread || 0) > 0) svAdd('bread', -1); repAdd(v.vil, fv('gen') >= 10 ? 8 : 4); axGain('amor', 3); axGain('gen', 2); glowAdd(8, 'compasion'); sp.story.att.zel++; sp.story.att.esc++; behav('compasion'); svToast('💛 Elegiste la compasión. Tus compañeros lo notaron.'); }
+      else if (r === 'mid') { repAdd(v.vil, 1); axGain('gen', 1); svToast('Le dejaste algo. Es un comienzo.'); }
+      else { repAdd(v.vil, -2); sp.story.att.zel--; svToast('Seguiste de largo. Asher se quedó callado.'); }
+      G().save(); }); return; }
+}
+
+// testigos, ancianas y decisiones en formato cinemático (estándar de la parte 2)
+// dones: se miden solo con elecciones de rol (respuestas en conversaciones y preguntas de la fogata), nunca con acciones
+const DONL = { maestro: 'Maestro', pastor: 'Pastor', evangelista: 'Evangelista', profeta: 'Profeta', apostol: 'Apóstol', misericordia: 'Misericordia', servicio: 'Servicio' };
+function INCL(k) { try { const p = G().P(); p.dones = p.dones || {}; p.dones[k] = (p.dones[k] || 0) + 1; G().save(); } catch (e) {} }
+function donTop() { const d = G().P().dones || {}; let b = null; for (const k in d) if (DONL[k] && (!b || d[k] > d[b])) b = k; return b; }
+function cineWit(v, w, first) {
+  const steps = w.t.map((t, i) => ({ who: 'w', t, g: i === 1 ? 'point' : null }));
+  if (first) steps.push({ who: 'w', ask: '¿Querés decirme algo?', o: (VIL.wask || []).map(([t, k, r]) => ({ t, fn: () => INCL(k), then: [{ who: 'w', t: r, g: 'nod' }] })) });
+  return cine({ cast: { w: { o: v.o, name: w.name, voice: w.look === 'mujer' ? 'mujer' : 'varon' } }, steps });
+}
+function cineTalk(v, T, st, d) {
+  const kind = () => { if (st.talk[v.id] !== d) { repAdd(v.vil, 3); axGain('gent', 3); axGain('pac', 1); behav('charlasCompletas'); } st.talk[v.id] = d; G().save(); };
+  return cine({ cast: { a: { o: v.o, name: v.name, sub: 'anciana de ' + v.vil, voice: 'mujer', pitch: .85, rate: .9 } }, steps: [{ who: 'a', t: T[0] }, { who: 'a', ask: '…', o: [
+    { t: 'Me quedo a escucharla hasta el final.', quiet: true, fn: kind, then: [{ who: 'a', t: T[1], g: 'nod' }] },
+    { t: 'Perdón, estoy apurado.', then: [{ who: 'a', t: 'Andá tranquilo, otro día seguimos.' }] },
+    { t: 'Seguir de largo.', quiet: true, fn: () => { repAdd(v.vil, -1); G().save(); }, then: [{ who: 'nar', t: v.name + ' se queda mirando cómo te vas.' }] }] }] });
+}
+const MARG_R = { leproso: 'Hace años que nadie se sienta conmigo. Que Dios te bendiga.', cobrador: 'Todos me cobran a mí con la mirada. Vos no. Gracias.', mendiga: 'Mi casa es humilde, pero pasá a tomar un poco de agua.' };
+function cineMarg(v, D, info, st) {
+  const pick = r => () => { const s2 = svP(); st.dec[v.id] = r; const sp = G().P(); sp.story = sp.story || {}; sp.story.att = sp.story.att || { esc: 0, zel: 0, rom: 0 };
+    if (r === 'kind') { if (v.marg === 'leproso' && (s2.inv.bread || 0) > 0) svAdd('bread', -1); repAdd(v.vil, fv('gen') >= 10 ? 8 : 4); axGain('amor', 3); axGain('gen', 2); glowAdd(8, 'compasion'); sp.story.att.zel++; sp.story.att.esc++; behav('compasion'); }
+    else if (r === 'mid') { repAdd(v.vil, 1); axGain('gen', 1); } else { repAdd(v.vil, -2); sp.story.att.zel--; } G().save(); };
+  const R = { kind: [{ who: 'm', t: MARG_R[v.marg] || 'Gracias.', g: 'nod' }, { who: 'nar', t: 'Elegiste la compasión. Tus compañeros lo notaron.' }], mid: [{ who: 'm', t: 'Gracias. Es más de lo que me dan muchos.' }], cold: [{ who: 'nar', t: 'Seguiste de largo. Asher se quedó callado.' }] };
+  return cine({ cast: { m: { o: v.o, name: info.name, voice: v.marg === 'mendiga' ? 'mujer' : 'varon', pitch: .9 } }, steps: [{ who: 'nar', t: info.note }, { who: 'm', t: info.greet }, { who: 'nar', ask: D.q, o: D.o.map(([t, r]) => ({ t, fn: pick(r), quiet: r === 'cold', then: R[r] })) }] });
+}
+
+// pregunta de la fogata: una por día de juego; los compañeros se sientan con vos junto al fuego
+async function fireTalk() {
+  try { if (!S || !S.hx || !cineOk() || sheetUp()) return; const p = G().P(), d = vday(); p.story = p.story || {}; const st = p.story; if (st.fireDay === d) return;
+    const M = await import('./story/hero_story.js'); const Q = M.FIREQ, done = st.fireQ || [], i = Q.findIndex((q, j) => !done.includes(j)); if (i < 0) return;
+    const [who, q, opts, rep] = Q[i]; st.fireDay = d;
+    cine({ cast: { [who]: {} }, steps: [{ who: 'nar', t: 'Se hace de noche. Tus compañeros se sientan con vos junto al fuego.' }, { who, ask: q, o: opts.map(([t, k]) => ({ t, fn: () => { INCL(k); st.fireQ = (st.fireQ || []).concat(i); G().save(); }, then: [{ who, t: rep, g: 'nod' }] })) }] });
+  } catch (e) { console.warn('fogata', e); }
+}
+function vilTick(dt) {
+  if (!S || !S.hx || !VIL.list.length) return; VIL.t -= dt; if (VIL.t > 0) return; VIL.t = .5; const v = vilNearest(24), nm = v ? v.name : null;
+  if (nm !== VIL.cur) { VIL.cur = nm; if (v && VIL.mod) vilBanner(v); }
+  // con reputación alta te saludan primero (una vez por día)
+  const n = vilNearNpc(); if (n && n.vil && n.role !== 'sold' && repStars(n.vil) >= 4) { const st = vilState(), d = vday(); if (VIL.greetT[n.id] !== d) { VIL.greetT[n.id] = d; svToast(`👋 ${n.role === 'marg' ? VIL.mod.MARGINAL[n.marg].name : n.name}: ¡Shalom, ${G().P().name || 'amigo'}!`); if (fv('gent') >= 40 && Math.random() < .3) { svAdd('bread', 1); setTimeout(() => svToast('🍞 Te regalaron un pan.'), 1800); } if ((repStars(n.vil) >= 5 || fv('gent') >= 50) && Math.random() < .35) setTimeout(() => secretHint(), 3200); } }
+}
+function vilBanner(v) { let el = document.getElementById('v3vil'); if (!el) { el = document.createElement('div'); el.id = 'v3vil'; el.className = 'v3vil'; document.body.appendChild(el); } const st = repStars(v.name); el.innerHTML = `<b>${esc(v.name)}</b><span>${esc(VIL.mod.STARS_TXT[st - 1])}</span><i>${'★'.repeat(st)}${'☆'.repeat(5 - st)}</i>`; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); clearTimeout(vilBanner.t); vilBanner.t = setTimeout(() => el.classList.remove('on'), 3800); behav('visitasAldea'); }
+
+/* ===================== LUGARES SECRETOS (Hero): 12, con entrada disimulada y objetos únicos ===================== */
+const SEC = { mod: null, list: [] };
+function secP() { const p = G().P(); p.secrets = p.secrets || {}; p.relics = p.relics || []; return p; }
+async function secBuild(scene, W) {
+  if (!S.hx) return; const M = SEC.mod = await import('./story/secrets.js').catch(() => null); if (!M || !S) return; const g = G(); SEC.list = [];
+  const used = Object.values(S.npos || {}).map(q => q.slice()).concat(VIL.npcs.map(v => [v.x, v.z]), Object.values(S.mis || {}).flatMap(m => [m.gp, m.tp, m.pp].filter(Boolean)));
+  const ok = (x, z, wetOk) => { if (Math.abs(x) > Math.min(XB * .9, (W.X1 || XB) - 5)) return false; if (W.dAt(x, z) < 14) return false; if (!wetOk && waterWet(x, z, null) > .04) return false; for (const B of WATER.basins) if (Math.hypot(x - B.x, z - B.z) < B.r * 1.15 + 1) return false; const sl = Math.hypot(W.hAt(x + 1, z) - W.hAt(x - 1, z), W.hAt(x, z + 1) - W.hAt(x, z - 1)) / 2; if (sl > .4) return false; for (let k = 0; k < 8; k++) { const an = k / 8 * 6.283; if (blockedAt(x + Math.cos(an) * 1.6, z + Math.sin(an) * 1.6)) return false; } for (const u of used) if (Math.hypot(x - u[0], z - u[1]) < 10) return false; return true; };
+  M.SECRETS.forEach((d, i) => { const r = g.REGIONS.findIndex(x => x.id === d.r); if (r < 0) return; const [za, zb] = regionZ(g, r), R = rng(7700 + i * 31), poi = d.near ? (S.pois || []).find(q => q.r === r && q.k === d.near) : null;
+    let best = null; for (let t = 0; t < 200 && !best; t++) { let x, z; if (poi && t < 80) { const q = poi.k === 'river' ? poi.pts[Math.floor(R() * poi.pts.length)] : [poi.x, poi.z], a = R() * 6.283, rr = (poi.k === 'river' ? 5 : 14) + R() * 14; x = q[0] + Math.cos(a) * rr; z = q[1] + Math.sin(a) * rr; } else { x = (R() * 2 - 1) * XB * .85; z = zb + (za - zb) * (.1 + R() * .8); } if (ok(x, z, d.id === 'manantial')) best = [x, z]; }
+    if (!best) return; used.push(best); const [x, z] = best, y = Math.max(0, W.hAt(x, z)), grp = new THREE.Group();
+    if (d.entry === 'rock') { const m = new THREE.Mesh(new THREE.DodecahedronGeometry(.95, 1), new THREE.MeshStandardMaterial({ color: '#8C8374', roughness: 1, flatShading: true })); m.scale.set(1.1, .8, 1); m.position.y = .55; m.castShadow = true; grp.add(m); }
+    else if (d.entry === 'lid') { const m = new THREE.Mesh(new THREE.CylinderGeometry(.85, .9, .14, 18), new THREE.MeshStandardMaterial({ color: '#7E7466', roughness: 1 })); m.position.y = .06; grp.add(m); for (let k = 0; k < 5; k++) { const pb = new THREE.Mesh(new THREE.DodecahedronGeometry(.12, 0), new THREE.MeshStandardMaterial({ color: '#6E665A', roughness: 1 })); pb.position.set(Math.cos(k) * .7, .14, Math.sin(k * 1.3) * .6); grp.add(pb); } }
+    else { for (let k = 0; k < 5; k++) { const b = new THREE.Mesh(new THREE.IcosahedronGeometry(.55 + (k % 2) * .2, 1), new THREE.MeshStandardMaterial({ color: ['#55663A', '#4C5E30', '#66763E'][k % 3], roughness: 1, flatShading: true })); b.position.set(Math.cos(k * 1.26) * .6, .45, Math.sin(k * 1.26) * .6); b.scale.y = .8; grp.add(b); } }
+    grp.position.set(x, y, z); grp.userData.keep = 1; scene.add(grp); SEC.list.push({ d, x, z, g: grp, r }); });
+}
+function secNear() { if (!SEC.list.length) return null; const a = S.av.position, p = secP(); for (const e of SEC.list) { if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < 2.6 * 2.6) return e; } return null; }
+function secOpen(e) {
+  const p = secP(), d = e.d, first = !p.secrets[d.id], M = SEC.mod; if (S.secBusy) return;
+  const show = () => { const n = Object.keys(p.secrets).length, el = document.getElementById('v3sheet');
+    el.innerHTML = `<div class="inv hx sv-sheet vil sec"><div class="inv-h"><b>${M.ENTRY[d.entry][1]} ${esc(d.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">${first ? '¡Descubriste un lugar secreto!' : 'Lugar secreto'} · ${n} de ${M.SECRETS.length}</small><p class="vil-p">${esc(d.t)}</p>
+      <h4 class="x-h">Lo que guarda (único en todo el juego)</h4>${d.items.map(([nm, ic, ds, ref]) => `<div class="sec-it"><span>${ic}</span><div><b>${esc(nm)}</b><small>${esc(ds)}</small><em>${esc(ref)}</em></div></div>`).join('')}</div>`;
+    el.hidden = false; el.querySelector('.bag-x').onclick = () => { el.hidden = true; }; };
+  if (!first) { show(); return; }
+  S.secBusy = 1; svToast('⏳ ' + M.ENTRY[d.entry][0] + '…'); h3do(['M_Reaching_Out', 'PickUp_Table', 'M_Picking_Up'], 2.6, .8);
+  setTimeout(() => { S.secBusy = 0; if (!S) return; const a = S.av.position; if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 > 16) { svToast('Te alejaste antes de terminar.'); return; }
+    p.secrets[d.id] = vday(); d.items.forEach(([nm, ic, ds, ref]) => { if (!p.relics.some(x => x.n === nm)) p.relics.push({ n: nm, i: ic, d: ds, ref, from: d.name }); }); axGain('sab', 3); glowAdd(6, 'secreto'); behav('secretos'); G().save(); tone3d(); show(); }, 2600);
+}
+function secretHint() { const M = SEC.mod; if (!M || !SEC.list.length) return; const p = secP(), left = SEC.list.filter(e => !p.secrets[e.d.id]); if (!left.length) return; const e = left[Math.floor(Math.random() * left.length)], rn = G().REGIONS[e.r] ? G().REGIONS[e.r].name : '';
+  svToast(`🧭 Te cuentan un secreto: en la etapa ${rn} hay ${e.d.hint}.`); behav('pistas'); }
 /* tienda */
 function svShop(kind) {
   const sh = SHOPS[kind]; if (!sh) return; const el = document.getElementById('v3sheet'), s = svP(); S.joy.x = 0; S.joy.y = 0; h3do(['M_Lengthy_Head_Nod'], 1.7);
@@ -4038,10 +4307,11 @@ function svShop(kind) {
       else { const left = GEAR.filter(x => x.r === k && !gearState().own.includes(x.id)); owned = !left.length; label = 'Prenda ' + RAR[k][0].toLowerCase() + (left.length ? ' (al azar)' : ''); ico = '🧵'; }
       return `<div class="sv-rec${owned || money() < cost ? ' off' : ''}"><div><b>${ico} ${esc(label)}</b><small>${owned ? 'Ya lo tenés' : cost + ' denarios'}</small></div><button data-b="${i}" ${owned || money() < cost ? 'disabled' : ''}>Comprar</button></div>`; }).join('');
     const sells = sh.sell.filter(k => (s.inv[k] || 0) > 0).map(k => `<div class="sv-rec"><div><b>${RES[k][1]} ${RES[k][0]}</b><small>Tenés ${s.inv[k]} · ${SELL[k]} denario${SELL[k] > 1 ? 's' : ''} cada uno</small></div><button data-s="${k}">Vender 1</button><button data-sa="${k}">Todo</button></div>`).join('');
-    el.innerHTML = `<div class="inv hx sv-sheet"><div class="inv-h"><b>${esc(sh.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="sv-have"><span class="sv-chip">🪙 ${money()} denarios</span>${servV() >= 3 ? '<span class="sv-chip">10% menos por tu servicio</span>' : ''}</div>
+    el.innerHTML = `<div class="inv hx sv-sheet"><div class="inv-h"><b>${esc(sh.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="sv-have"><span class="sv-chip">🪙 ${money()} denarios</span>${servV() >= 3 ? '<span class="sv-chip">10% menos por tu servicio</span>' : ''}</div>${S.hx && kind === 'mercado' ? `<div class="vil-hag"><button data-h="0" class="${S.haggle ? '' : 'on'}">Pagar lo justo</button><button data-h="1" class="${S.haggle ? 'on' : ''}">Regatear duro (−20%)</button><small>${S.haggle ? 'Regatear te ahorra denarios, pero en la aldea lo notan.' : 'Pagar lo justo suma Gentileza y reputación.'}</small></div>` : ''}
       <h4 class="x-h">Comprar</h4>${rows}${sh.sell.length ? `<h4 class="x-h">Vender</h4>${sells || '<p class="sv-tip">No tenés nada que te compren acá.</p>'}` : ''}<p class="sv-tip">En tiempos de Jesús se pagaba con denarios: un denario era el jornal de un día de trabajo (Mateo 20:2).</p></div>`;
     el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
-    el.querySelectorAll('[data-b]').forEach(b => b.onclick = () => { const [t, k, p] = sh.buy[+b.dataset.b], cost = price(p); if (money() < cost) return;
+    el.querySelectorAll('[data-h]').forEach(b => b.onclick = () => { S.haggle = b.dataset.h === '1'; draw(); });
+    el.querySelectorAll('[data-b]').forEach(b => b.onclick = () => { const [t, k, p] = sh.buy[+b.dataset.b], cost = price(p); if (money() < cost) return; if (S.hx && kind === 'mercado') { const vv = vilNearest(60); if (S.haggle) { if (vv) repAdd(vv.name, -1); behav('regateos'); } else { if (vv) repAdd(vv.name, 1); axGain('gent', 1); behav('pagoJusto'); } }
       if (t === 't') { if (s.tools.includes(k)) return; svAdd('money', -cost); svGiveTool(k, 'Compraste'); }
       else if (t === 'r') { svAdd('money', -cost); svAdd(k, 1); }
       else { const left = GEAR.filter(x => x.r === k && !gearState().own.includes(x.id)); if (!left.length) return; svAdd('money', -cost); gearGive(left[Math.floor(Math.random() * left.length)], 'Compraste'); }
@@ -4061,10 +4331,10 @@ function svGive(bg) {
     ${opts.length ? `<div class="x-list">${opts.map(([k, n], i) => `<button data-i="${i}">${RES[k][1]} Dar ${n} ${RES[k][0].toLowerCase()}</button>`).join('')}</div>` : '<p class="sv-tip">No tenés dinero ni comida para dar. Podés vender algo en el mercado o recoger granadas.</p>'}
     <p class="sv-tip">Jesús enseñó que lo que hacemos por el que tiene hambre, lo hacemos por él (Mateo 25:35-40).</p></div>`;
   el.hidden = false; el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
-  el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const [k, n] = opts[+b.dataset.i]; if ((s.inv[k] || 0) < n) return; svAdd(k, -n); a.alms[bg.id] = day; const mult = servV() >= 25 ? 2 : 1; svXP((k === 'money' ? 4 + n * 2 : 10) * mult); servAdd(1); axGain('gen', 3); glowAdd(8, 'compartir'); h3do(['M_Reaching_Out', 'PickUp_Table'], 2.6, 1.2); h3npcPlay(bg.o, ['M_Thankful', 'M_Lengthy_Head_Nod'], 3); tone3d(); svUI();
+  el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const [k, n] = opts[+b.dataset.i]; if ((s.inv[k] || 0) < n) return; svAdd(k, -n); a.alms[bg.id] = day; const mult = servV() >= 25 ? 2 : 1; svXP((k === 'money' ? 4 + n * 2 : 10) * mult); servAdd(1); axGain('gen', 3); if (S.hx) { axGain('amor', 2); if (fv('gen') >= 40) axGain('sab', 1); if (fv('gen') >= 20 && Math.random() < .25) setTimeout(() => { svAdd('fruit', 2); svToast('🎁 Lo que compartiste volvió como regalo: 2 frutos.'); }, 4000); if (fv('gen') >= 50 && Math.random() < .3) setTimeout(() => { svAdd('bread', 2); svToast('🧺 Apareció una canasta extra de pan.'); }, 6000); if (fv('gen') >= 30) setTimeout(() => secretHint(), 2500); behav('compartir'); } glowAdd(8, 'compartir'); h3do(['M_Reaching_Out', 'PickUp_Table'], 2.6, 1.2); h3npcPlay(bg.o, ['M_Thankful', 'M_Lengthy_Head_Nod'], 3); tone3d(); svUI();
     el.innerHTML = `<div class="inv hx sv-sheet sv-faint"><h3>¡Gracias! Que Dios te bendiga.</h3><p>Tu Servicio creció a <b>${atP().serv}</b> y ganaste experiencia.</p><p class="sv-verse">El que ayuda al pobre le presta al Señor, y él se lo va a recompensar (Proverbios 19:17).</p><button class="sv-up">Seguir el camino</button></div>`; el.querySelector('.sv-up').onclick = () => { el.hidden = true; }; });
 }
 
 addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 'e') axHold(false); });
 addEventListener('touchstart', () => document.body.classList.add('v3touch'), { once: true, passive: true });
-window.W3 = { qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
+window.W3 = { dbgHero: () => ({ VIL, SEC, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineBusy, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };

@@ -38,7 +38,7 @@
    "o": [
     "En una boda en Caná de Galilea",
     "En el templo de Jerusalén",
-    "En Capernaum",
+    "En Capernaúm",
     "En el río Jordán"
    ],
    "a": 0,
@@ -388,7 +388,7 @@
    "o": [
     "Jericó",
     "Caná",
-    "Capernaum",
+    "Capernaúm",
     "Nazaret"
    ],
    "a": 0,
@@ -440,9 +440,9 @@
   },
   {
    "t": "tf",
-   "q": "El paralítico bajado por el techo fue sanado en Capernaum.",
+   "q": "El paralítico bajado por el techo fue sanado en Capernaúm.",
    "a": true,
-   "exp": "En Capernaum, la casa donde enseñaba Jesús estaba tan llena que no se podía entrar.",
+   "exp": "En Capernaúm, la casa donde enseñaba Jesús estaba tan llena que no se podía entrar.",
    "ref": "Marcos 2:1",
    "id": "mil-32"
   },
@@ -479,7 +479,7 @@
      "El agua se convirtió en vino"
     ],
     [
-     "Una casa en Capernaum",
+     "Una casa en Capernaúm",
      "El paralítico bajado por el techo"
     ],
     [
