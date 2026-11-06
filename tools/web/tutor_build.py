@@ -1,101 +1,78 @@
 #!/usr/bin/env python3
-"""Panel del tutor: seguimiento de alumnos (asistencia, pagos, exámenes, grupo y contacto individual)."""
+"""Panel del tutor: seguimiento pastoral de alumnos, lista, tiempo de mesa, calendario y voluntarios."""
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build as B
 
 body = '''
 <section class="tt-top"><div class="wrap">
-  <div class="tt-hi"><span class="kick">Habitat · Tutores</span><h1>Seguimiento de alumnos</h1><p id="ttWho">Cargando…</p></div>
+  <div class="tt-hi"><p class="tt-k">Panel de tutores</p><h1 id="ttHola">Hola</h1><p id="ttWho">Cargando…</p></div>
   <div class="tt-act">
-    <button class="tt-bell" type="button" id="ttBell" aria-label="Notificaciones">Notificaciones<span id="ttBellN" hidden></span></button>
+    <button class="tt-bell" type="button" id="ttBell" aria-label="Notificaciones"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.4-1.8H9.6A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.8V3a1.5 1.5 0 0 0-3 0v1.2A7 7 0 0 0 5 11v5l-2 2v1h18v-1Z" fill="currentColor"/></svg><span id="ttBellN" hidden></span></button>
     <a class="tt-ln" href="/campus.html">Campus</a>
   </div>
 </div></section>
 <div class="tt-noti" id="ttNoti" hidden></div>
 <nav class="tt-tabs" id="ttTabs"><div class="wrap">
-  <button data-t="alumnos" class="on">Alumnos</button><button data-t="lista">Pasar lista</button><button data-t="seg">Seguimientos</button><button data-t="mesa">Tiempo de mesa</button><button data-t="cal" hidden id="tabCal">Calendario</button><button data-t="vol" hidden id="tabVol">Voluntarios</button><button data-t="equipo" hidden id="tabEq">Equipo</button>
+  <button data-t="hoy" class="on">Hoy</button><button data-t="alumnos">Alumnos</button><button data-t="lista">Pasar lista</button><button data-t="mesa">Tiempo de mesa</button><button data-t="cal" hidden id="tabCal">Calendario</button><button data-t="vol" hidden id="tabVol">Voluntarios</button><button data-t="equipo" hidden id="tabEq">Equipo</button>
 </div></nav>
 <div class="tt-main"><div class="wrap">
-  <section id="v-alumnos" class="tt-v">
-    <div class="tt-sum" id="ttSum"></div>
-    <div class="tt-fil">
-      <input id="fQ" type="search" placeholder="Buscar alumno">
-      <select id="fPar"><option value="">Todos los tutores</option></select>
-      <select id="fCar"><option value="">Todas las carreras</option><option>Maranata</option><option>Liderazgo</option><option>Adoración</option></select>
-      <select id="fMod"><option value="">Toda modalidad</option><option>Presencial</option><option>Zoom</option><option>Asincrónico</option></select>
-      <select id="fEst"><option value="">Todos los estados</option><option value="r">🔴 Para seguimiento</option><option value="y">🟡 Para mirar</option><option value="g">🟢 Al día</option></select>
-      <button class="tt-add" type="button" id="addAlu">+ Alumno</button>
+  <section id="v-hoy" class="tt-v"></section>
+  <section id="v-alumnos" class="tt-v" hidden>
+    <div class="tt-bar">
+      <input id="fQ" type="search" placeholder="Buscar por nombre" aria-label="Buscar alumno">
+      <button class="tt-btn" type="button" id="addAlu">Sumar alumno</button>
     </div>
-    <div class="tt-list" id="ttList"><p class="tt-empty">Cargando alumnos…</p></div>
+    <div class="tt-pills" id="fPills"></div>
+    <div class="tt-people" id="ttList"><p class="tt-empty">Cargando alumnos…</p></div>
   </section>
   <section id="v-lista" class="tt-v" hidden>
-    <div class="tt-fil">
+    <div class="tt-bar">
       <label class="tt-date">Clase del <input id="lDate" type="date"></label>
-      <select id="lCar"><option value="">Todas las carreras</option><option>Maranata</option><option>Liderazgo</option><option>Adoración</option></select>
-      <select id="lMod"><option value="">Presencial y Zoom</option><option>Presencial</option><option>Zoom</option></select>
-      <select id="lPar"><option value="">Todos los tutores</option></select>
+      <button class="tt-btn s" type="button" id="lAll">Marcar todos presentes</button>
     </div>
-    <p class="tt-tip">Tocá el estado de cada alumno. Se guarda solo. «Tarde» y «Mesa» (si se quedó al tiempo de mesa) se marcan aparte.</p>
+    <div class="tt-pills" id="lPills"></div>
+    <div class="tt-prog"><i id="lBar"></i><span id="lCnt"></span></div>
+    <p class="tt-tip">Tocá a cada alumno para marcar cómo vino. Cada toque pasa al estado siguiente: presente, Zoom, ausente, justificó. Se guarda solo.</p>
     <div class="tt-roll" id="ttRoll"></div>
   </section>
-  <section id="v-seg" class="tt-v" hidden>
-    <div id="tallyBox"></div>
-    <h2 class="tt-h">Para contactar</h2>
-    <p class="tt-tip">Alumnos en rojo o amarillo que nadie contactó en forma individual en las últimas dos semanas.</p>
-    <div class="tt-list" id="ttTodo"></div>
-    <h2 class="tt-h">Últimos seguimientos individuales</h2>
-    <div class="tt-log" id="ttLog"></div>
-  </section>
   <section id="v-mesa" class="tt-v" hidden>
-    <h2 class="tt-h">Tiempo de mesa</h2>
-    <p class="tt-tip">Después de cada tiempo de mesa, el tutor a cargo deja registrado quiénes estuvieron, de qué se habló y qué notó.</p>
-    <form class="tt-blk tt-form" id="mesaF">
-      <label>Fecha<input type="date" name="fecha" required></label>
-      <label>Carrera<select name="programa"><option>Maranata</option><option>Liderazgo</option><option>Adoración</option><option>General</option></select></label>
-      <label class="w">Tutor a cargo<input name="tutor" placeholder="Quién coordinó el espacio"></label>
-      <div class="w"><b class="tt-lbl">¿Quiénes estuvieron?</b><div class="tt-chk" id="mesaAl"></div></div>
-      <label class="w">¿De qué se charló?<textarea name="temas" placeholder="Temas, preguntas que surgieron, testimonios…"></textarea></label>
-      <label class="w">¿Qué notaste?<textarea name="observaciones" placeholder="Cómo vio al grupo, alguien para acompañar, pedidos de oración…"></textarea></label>
-      <button class="tt-btn" type="submit">Guardar tiempo de mesa</button>
-    </form>
-    <div class="tt-log" id="mesaLog"></div>
+    <div class="tt-mesa">
+      <form class="tt-card tt-form" id="mesaF">
+        <h2 class="w">Registrar un tiempo de mesa</h2>
+        <label>Fecha<input type="date" name="fecha" required></label>
+        <label>Carrera<select name="programa"><option>Maranata</option><option>Liderazgo</option><option>Adoración</option><option>General</option></select></label>
+        <label class="w">Quién coordinó<input name="tutor"></label>
+        <div class="w"><p class="tt-lbl">Quiénes estuvieron <span id="mesaN"></span></p><div class="tt-faces" id="mesaAl"></div></div>
+        <label class="w">De qué se charló<textarea name="temas" placeholder="Temas, preguntas que surgieron, testimonios…"></textarea></label>
+        <label class="w">Qué notaste<textarea name="observaciones" placeholder="Cómo viste al grupo, alguien para acompañar, pedidos de oración…"></textarea></label>
+        <button class="tt-btn" type="submit">Guardar tiempo de mesa</button>
+      </form>
+      <div><h2 class="tt-h">Mesas anteriores</h2><div class="tt-log" id="mesaLog"></div></div>
+    </div>
   </section>
   <section id="v-cal" class="tt-v" hidden>
-    <div class="tt-calh"><button class="tt-btn s" type="button" id="calPrev">‹</button><h2 class="tt-h" id="calTit"></h2><button class="tt-btn s" type="button" id="calNext">›</button></div>
-    <p class="tt-tip">Lo que cargues acá aparece en la agenda del Campus y en el calendario del teléfono de cada alumno. Marcá «Tiempo de mesa» en las fechas de examen.</p>
-    <div class="tt-cal" id="calList"></div>
-    <form class="tt-blk tt-form" id="evF">
-      <h3 class="w">Nuevo evento o aviso</h3>
-      <label class="w">Título<input name="title" required placeholder="Ej.: Examen Bloque 3"></label>
-      <label>Tipo<select name="tipo"><option>Clase</option><option>Examen</option><option>Clase en vivo</option><option>Encuentro</option><option>Aviso</option><option>Feriado</option></select></label>
-      <label>Carrera<input name="curso" placeholder="Maranata, Liderazgo, Adoración o vacío para todos"></label>
-      <label>Día y hora<input type="datetime-local" name="inicio" required></label>
-      <label>Termina<input type="datetime-local" name="fin"></label>
-      <label class="w">Detalle<textarea name="descripcion"></textarea></label>
-      <label>Lugar<input name="lugar" placeholder="Sede, Zoom…"></label>
-      <label>Link<input name="link" placeholder="https://"></label>
-      <label class="w tt-inl"><input type="checkbox" name="mesa"> Tiempo de mesa después</label>
-      <button class="tt-btn" type="submit">Agregar al calendario</button>
-    </form>
+    <div class="tt-calh"><button class="tt-arrow" type="button" id="calPrev" aria-label="Mes anterior">‹</button><h2 id="calTit"></h2><button class="tt-arrow" type="button" id="calNext" aria-label="Mes siguiente">›</button></div>
+    <div class="tt-month" id="calGrid"></div>
+    <p class="tt-tip">Tocá un día para agregar una clase, un examen o un aviso. Todo lo que cargues aparece en la agenda del Campus y en el teléfono de los alumnos.</p>
   </section>
   <section id="v-vol" class="tt-v" hidden>
-    <div class="tt-calh"><button class="tt-btn s" type="button" id="volPrev">‹</button><h2 class="tt-h" id="volTit"></h2><button class="tt-btn s" type="button" id="volNext">›</button></div>
-    <p class="tt-tip">Tocá una tarea y elegí quién la hace. Una persona puede tener varias. Cada voluntario recibe el aviso por mail y en su teléfono: miércoles y jueves el mismo día (llegada 19:00), sábados el viernes (llegada 9:30).</p>
-    <div class="tt-vgrid" id="volGrid"></div>
-    <h2 class="tt-h">Equipo de voluntarios</h2>
-    <div class="tt-team" id="volTeam"></div>
-    <form class="tt-tform" id="volF"><input name="title" placeholder="Nombre" required><input name="email" type="email" placeholder="Email"><input name="telefono" placeholder="WhatsApp"><input name="disponibilidad" placeholder="Disponibilidad"><button type="submit">Agregar</button></form>
+    <div class="tt-calh"><button class="tt-arrow" type="button" id="volPrev" aria-label="Semana anterior">‹</button><h2 id="volTit"></h2><button class="tt-arrow" type="button" id="volNext" aria-label="Semana siguiente">›</button></div>
+    <div class="tt-vwrap">
+      <aside class="tt-roster"><p class="tt-lbl">Equipo</p><div id="volRoster"></div><button class="tt-btn s" type="button" id="volAdd">Sumar voluntario</button><p class="tt-tip">Arrastrá a una persona hasta la tarea. En el teléfono: tocá a la persona y después la tarea.</p></aside>
+      <div class="tt-board" id="volGrid"></div>
+    </div>
+    <div class="tt-cover" id="volMonth"></div>
   </section>
   <section id="v-equipo" class="tt-v" hidden>
     <h2 class="tt-h">Equipo de tutores</h2>
-    <p class="tt-tip">Cada persona entra con el email de su cuenta de Habitat. Rol «Pagos» puede marcar pagos; «Director» además administra el equipo.</p>
+    <p class="tt-tip">Cada persona entra con el email de su cuenta de Habitat. Pagos puede marcar pagos. Director además organiza el calendario, los voluntarios y el equipo.</p>
     <div class="tt-team" id="ttTeam"></div>
-    <form class="tt-tform" id="tForm">
-      <input name="title" placeholder="Nombre" required><input name="email" type="email" placeholder="Email de su cuenta" required>
-      <input name="pareja" placeholder="Pareja de tutores (ej. Cris y Raque)" list="parejas"><datalist id="parejas"></datalist>
-      <select name="rol"><option value="tutor">Tutor</option><option value="pagos">Pagos</option><option value="director">Director</option></select>
-      <button type="submit">Agregar</button>
+    <form class="tt-card tt-form" id="tForm">
+      <label>Nombre<input name="title" required></label><label>Email de su cuenta<input name="email" type="email" required></label>
+      <label>Pareja de tutores<input name="pareja" list="parejas" placeholder="Ej.: Cris y Raque"><datalist id="parejas"></datalist></label>
+      <label>Rol<select name="rol"><option value="tutor">Tutor</option><option value="pagos">Pagos</option><option value="director">Director</option></select></label>
+      <button class="tt-btn" type="submit">Dar acceso</button>
     </form>
   </section>
 </div></div>

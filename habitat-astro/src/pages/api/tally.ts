@@ -23,10 +23,12 @@ function text(f?: F): string {
 
 export const POST: APIRoute = async ({ request, url }) => {
   try {
-    const key = ((await q("TutConfig").eq("_id", "cronKey").limit(1).find()).items[0] as { valor?: string } | undefined)?.valor;
-    if (!key || url.searchParams.get("k") !== key) return new Response("no", { status: 401 });
+    const cfg = Object.fromEntries(((await q("TutConfig").limit(50).find()).items as { _id: string; valor?: string }[]).map((c) => [c._id, c.valor || ""]));
     const body = await request.json();
     const d = body.data || {};
+    // Se aceptan solo los formularios de Habitat registrados (o la clave interna).
+    const forms = String(cfg.tallyForms || "").split(/[\s,]+/).filter(Boolean);
+    if (url.searchParams.get("k") !== cfg.cronKey && !forms.includes(String(d.formId || ""))) return new Response("no", { status: 401 });
     const fields: F[] = d.fields || [];
     const formName = String(d.formName || "");
     const by = (re: RegExp) => fields.find((f) => re.test(String(f.label || "")));

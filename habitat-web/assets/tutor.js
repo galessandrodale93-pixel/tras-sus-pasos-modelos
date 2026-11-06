@@ -1,4 +1,4 @@
-/* Panel de tutores de Habitat: semáforo, pasar lista, ficha del alumno, seguimientos y equipo. */
+/* Panel de tutores de Habitat: hoy, alumnos, lista, tiempo de mesa, calendario, voluntarios y equipo. */
 (function () {
   var A = window.HabitatAuth;
   var $ = function (s, r) { return (r || document).querySelector(s); };
@@ -7,59 +7,58 @@
   function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
   var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   var MC = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  var DD = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'], DL = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
   function iso(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function pd(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +(p[2] || 1)); }
   function fcorta(s) { var d = pd(s); return d.getDate() + ' ' + MC[d.getMonth()]; }
+  function flarga(s) { var d = pd(s); return DL[d.getDay()] + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()]; }
   function mesTxt(m) { return MESES[+m.slice(5, 7) - 1]; }
   function monday(d) { var x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
-  function lastSat() { var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 1) % 7)); return d; }
+  function addD(d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; }
   var TODAY = new Date(); TODAY.setHours(0, 0, 0, 0);
   var CUR_M = iso(TODAY).slice(0, 7);
   function addM(m, n) { var d = pd(m + '-01'); d.setMonth(d.getMonth() + n); return iso(d).slice(0, 7); }
+  // la última clase (miércoles, jueves o sábado) hasta hoy
+  function lastClass() { var d = new Date(TODAY); for (var i = 0; i < 7; i++) { if ([3, 4, 6].indexOf(d.getDay()) >= 0) return d; d = addD(d, -1); } return TODAY; }
   var PROG = { Maranata: ['Módulo 1', 'Módulo 2', 'Módulo 3', 'Módulo 4', 'Módulo 5', 'Módulo 6', 'TP'], Liderazgo: [], 'Adoración': [] };
   for (var i = 1; i <= 12; i++) { PROG.Liderazgo.push('Bloque ' + i); PROG['Adoración'].push('Bloque ' + i); }
   PROG.Liderazgo.push('TP'); PROG['Adoración'].push('TP');
-  function progs(a) { var c = (a.carreras || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); return ['Maranata', 'Liderazgo', 'Adoración'].filter(function (p) { return c.indexOf(p.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()) >= 0; }); }
+  function nrm(t) { return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+  function progs(a) { var c = nrm(a.carreras); return ['Maranata', 'Liderazgo', 'Adoración'].filter(function (p) { return c.indexOf(nrm(p)) >= 0; }); }
   function async_(a) { return /asinc/i.test(a.modalidad || ''); }
   function becado(a) { return /becad/i.test(a.formaPago || ''); }
+  var PAL = ['#5f7f6e', '#8a6d4b', '#4f6d8a', '#8a4f5f', '#6b5f8a', '#4f8a85', '#8a7a4f', '#7a5f4f', '#55707e', '#7d6a8e'];
+  function av(name, lvl, cls) { var n = String(name || '?').trim(), h = 0; for (var i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) >>> 0; var ini = n.replace(/[^\p{L}\s]/gu, ' ').split(/\s+/).filter(Boolean).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase(); return '<span class="tt-av ' + (lvl || '') + ' ' + (cls || '') + '" style="--c:' + PAL[h % PAL.length] + '" aria-hidden="true">' + esc(ini) + '</span>'; }
+  function ring(p, label, col) { return '<span class="tt-ring" style="--p:' + Math.max(0, Math.min(100, p)) + ';--col:' + (col || 'var(--g)') + '"><span>' + label + '</span></span>'; }
 
   var D = null, ME = null, IX = {};
   function toast(t) { var e = $('#ttToast'); e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { e.classList.remove('on'); }, 2400); }
-
-  async function token() {
-    await A.api('GET', '/members/v1/members/my');
-    try { return JSON.parse(localStorage.getItem('habitat:mtok')).a; } catch (e) { return ''; }
-  }
+  async function token() { await A.api('GET', '/members/v1/members/my'); try { return JSON.parse(localStorage.getItem('habitat:mtok')).a; } catch (e) { return ''; } }
   async function api(method, body) {
     var r = await fetch('/api/tutor', { method: method, headers: { 'content-type': 'application/json', 'x-habitat-auth': await token() }, body: body ? JSON.stringify(body) : undefined });
     var j = {}; try { j = await r.json(); } catch (e) {}
-    if (!r.ok) { var er = new Error(j.error || 'No pudimos guardar.'); er.status = r.status; throw er; }
+    if (!r.ok) { var er = new Error(j.error || 'No se guardó. Revisá la conexión y probá de nuevo.'); er.status = r.status; throw er; }
     return j;
   }
-  async function send(body, item, col) {
+  // guarda y actualiza la lista local `col` (reemplaza por _id, o borra `key` si no vuelve item)
+  async function send(body, key, col) {
     try {
       var r = await api('POST', body);
-      if (col) {
-        var L = D[col], k = item;
-        var at = L.findIndex(function (x) { return x._id === (r.item && r.item._id || k); });
-        if (r.item) { if (at >= 0) L[at] = r.item; else L.push(r.item); } else if (at >= 0) L.splice(at, 1);
-        index();
-      }
+      if (col) { var L = D[col] = D[col] || [], id = r.item && r.item._id || key, at = L.findIndex(function (x) { return x._id === id; }); if (r.item) { if (at >= 0) L[at] = r.item; else L.push(r.item); } else if (at >= 0) L.splice(at, 1); index(); }
       return r;
     } catch (e) { toast(e.message); throw e; }
   }
 
   function index() {
-    IX = { asis: {}, pago: {}, ev: {}, gr: {}, seg: {}, alu: {}, nota: {} };
+    IX = { asis: {}, pago: {}, ev: {}, nota: {}, gr: {}, seg: {}, alu: {} };
     D.alumnos.forEach(function (a) { IX.alu[a._id] = a; });
     D.asistencia.forEach(function (x) { (IX.asis[x.alumnoId] = IX.asis[x.alumnoId] || []).push(x); });
     Object.keys(IX.asis).forEach(function (k) { IX.asis[k].sort(function (a, b) { return a.fecha < b.fecha ? 1 : -1; }); });
     D.pagos.forEach(function (x) { (IX.pago[x.alumnoId] = IX.pago[x.alumnoId] || {})[x.mes] = x.pagado; });
-    D.evaluaciones.forEach(function (x) { (IX.ev[x.alumnoId] = IX.ev[x.alumnoId] || {})[x.programa + '|' + x.item] = x.ok !== false; (IX.nota[x.alumnoId] = IX.nota[x.alumnoId] || {})[x.programa + '|' + x.item] = x; });
+    D.evaluaciones.forEach(function (x) { var k = x.programa + '|' + x.item; (IX.ev[x.alumnoId] = IX.ev[x.alumnoId] || {})[k] = x.ok !== false; (IX.nota[x.alumnoId] = IX.nota[x.alumnoId] || {})[k] = x; });
     D.grupo.forEach(function (x) { (IX.gr[x.alumnoId] = IX.gr[x.alumnoId] || {})[x.semana] = x.nivel; });
     D.seguimientos.forEach(function (x) { (IX.seg[x.alumnoId] = IX.seg[x.alumnoId] || []).push(x); });
     Object.keys(IX.seg).forEach(function (k) { IX.seg[k].sort(function (a, b) { return a.fecha < b.fecha ? 1 : -1; }); });
-    // mediana de exámenes por carrera, para ver quién va atrasado respecto de su grupo
     IX.med = {};
     Object.keys(PROG).forEach(function (p) {
       var c = D.alumnos.filter(function (a) { return a.activo !== false && progs(a).indexOf(p) >= 0; }).map(function (a) { return nEv(a, p); }).sort(function (x, y) { return x - y; });
@@ -68,6 +67,7 @@
   }
   function nEv(a, p) { var e = IX.ev[a._id] || {}; return PROG[p].filter(function (it) { return e[p + '|' + it]; }).length; }
   function startM(a) { var p = IX.pago[a._id]; var ks = p ? Object.keys(p).sort() : []; return ks[0] || (progs(a).indexOf('Maranata') >= 0 ? '2026-03' : '2026-08'); }
+  function activos() { return D.alumnos.filter(function (a) { return a.activo !== false; }); }
 
   /* Semáforo */
   function estado(a) {
@@ -83,104 +83,138 @@
       var L = (IX.asis[a._id] || []).slice(0, 4), ab = L.filter(function (x) { return x.estado === 'A'; }).length;
       if (L.length >= 2 && L[0].estado === 'A' && L[1].estado === 'A') why.push(['r', 'Faltó las últimas ' + (L.length >= 3 && L[2].estado === 'A' ? 3 : 2) + ' clases']);
       else if (ab >= 2) why.push(['y', 'Faltó ' + ab + ' de las últimas ' + L.length]);
-      var td = L.filter(function (x) { return x.tarde; }).length; if (td >= 2) why.push(['y', 'Llega tarde']);
+      if (L.filter(function (x) { return x.tarde; }).length >= 2) why.push(['y', 'Llega tarde']);
     }
     progs(a).forEach(function (p) { var d = IX.med[p] - nEv(a, p); if (d >= 2) why.push(['r', 'Atrasado en exámenes de ' + p]); else if (d === 1) why.push(['y', 'Le falta un examen de ' + p]); });
-    var g = IX.gr[a._id] || {}, w0 = iso(monday(TODAY)), w1 = iso(new Date(monday(TODAY).getTime() - 7 * 864e5)), w2 = iso(new Date(monday(TODAY).getTime() - 14 * 864e5));
+    var nn = IX.nota[a._id] || {}; Object.keys(nn).forEach(function (k) { if (nn[k].ok === false) why.push(['y', 'Recupera ' + k.split('|')[1]]); });
+    var g = IX.gr[a._id] || {}, w0 = iso(monday(TODAY)), w1 = iso(addD(monday(TODAY), -7)), w2 = iso(addD(monday(TODAY), -14));
     if ((g[w0] || g[w1]) === 'nada' && (g[w1] === 'nada' || g[w2] === 'nada')) why.push(['y', 'No participa en el grupo']);
     var r = why.filter(function (x) { return x[0] === 'r'; }).length, y = why.length - r;
     return { lvl: r || y >= 2 ? 'r' : y ? 'y' : 'g', why: why };
   }
   function ultSeg(a) { var s = IX.seg[a._id]; return s && s[0]; }
-
-  /* Vista: alumnos */
-  var F = { q: '', par: '', car: '', mod: '', est: '' };
-  function match(a) {
-    if (a.activo === false) return false;
-    if (F.q && (a.title || '').toLowerCase().indexOf(F.q) < 0) return false;
-    if (F.par && a.tutores !== F.par) return false;
-    if (F.car && progs(a).indexOf(F.car) < 0) return false;
-    if (F.mod && !new RegExp(F.mod.slice(0, 5), 'i').test(a.modalidad || '')) return false;
-    return true;
-  }
   function chips(st) { return st.why.length ? st.why.map(function (w) { return '<span class="tt-ch ' + w[0] + '">' + esc(w[1]) + '</span>'; }).join('') : '<span class="tt-ch">Al día</span>'; }
+  function porContactar() { var lim = iso(addD(TODAY, -14)); return activos().map(function (a) { return { a: a, s: estado(a) }; }).filter(function (x) { var u = ultSeg(x.a); return x.s.lvl !== 'g' && (!u || u.fecha < lim) && (!F.par || x.a.tutores === F.par); }).sort(function (x, y) { return (x.s.lvl === 'r' ? 0 : 1) - (y.s.lvl === 'r' ? 0 : 1); }); }
+  function asisPct(L) { return L.length ? Math.round(100 * L.filter(function (z) { return z.estado !== 'A'; }).length / L.length) : null; }
+
+  /* Hoy */
+  function renderHoy() {
+    var T = [], pc = porContactar(), lc = iso(lastClass());
+    var mine = activos().filter(function (a) { return !async_(a) && (!F.par || a.tutores === F.par); });
+    var marc = D.asistencia.filter(function (x) { return x.fecha === lc && mine.some(function (a) { return a._id === x.alumnoId; }); }).length;
+    if (pc.length) T.push('<button class="tt-task hot" data-go="contactar"><b>' + pc.length + '</b><h3>' + (pc.length === 1 ? 'persona para acompañar' : 'personas para acompañar') + '</h3><div class="tt-faces">' + pc.slice(0, 7).map(function (x) { return av(x.a.title, x.s.lvl, 'sm'); }).join('') + '</div><p>Están en rojo o amarillo y nadie les escribió en estas dos semanas. Un mensaje a tiempo hace la diferencia.</p></button>');
+    if (marc < mine.length) T.push('<button class="tt-task" data-go="lista"><b>' + marc + '/' + mine.length + '</b><h3>Lista del ' + flarga(lc) + '</h3><p>' + (marc ? 'Faltan marcar ' + (mine.length - marc) + ' alumnos.' : 'Todavía no se pasó lista de esa clase.') + '</p></button>');
+    var exm = (D.eventos || []).filter(function (e) { var f = iso(evDate(e)); return e.mesa && f <= iso(TODAY) && f >= iso(addD(TODAY, -10)) && !(D.mesa || []).some(function (m) { return m.fecha === f; }); });
+    if (exm.length) T.push('<button class="tt-task" data-go="mesa"><b>🍽️</b><h3>Tiempo de mesa del ' + fcorta(iso(evDate(exm[0]))) + '</h3><p>Contá quiénes estuvieron, de qué se habló y qué notaste.</p></button>');
+    var prox = (D.eventos || []).filter(function (e) { return e.mesa && iso(evDate(e)) > iso(TODAY); })[0];
+    if (prox) T.push('<button class="tt-task" data-go="cal"><b>' + evDate(prox).getDate() + ' ' + MC[evDate(prox).getMonth()] + '</b><h3>' + esc(prox.title) + (prox.curso ? ' · ' + esc(prox.curso) : '') + '</h3><p>Próximo examen, con tiempo de mesa después.</p></button>');
+    if ((D.tally || []).length) T.push('<button class="tt-task" data-go="tally"><b>' + D.tally.length + '</b><h3>Exámenes sin asignar</h3><p>Llegaron de Tally con un nombre que no reconocemos. Elegí a quién corresponden.</p></button>');
+    if (ME.rol === 'director') {
+      var w = monday(TODAY), dias = [2, 3, 5].map(function (n) { return iso(addD(w, n)); }), libres = 0;
+      dias.forEach(function (f) { TAREAS.forEach(function (t) { if (!(D.turnos || []).some(function (x) { return x.fecha === f && x.tarea === t[0]; })) libres++; }); });
+      T.push('<button class="tt-task" data-go="vol"><b>' + (18 - libres) + '/18</b><h3>Servicio de esta semana</h3><p>' + (libres ? libres + ' tareas sin voluntario.' : 'Todas las tareas tienen a alguien. Gracias a Dios por cada uno.') + '</p></button>');
+    }
+    if (!T.length) T.push('<div class="tt-task"><b>🙌🏽</b><h3>Todo en orden</h3><p>No hay nada pendiente para hoy.</p></div>');
+    var all = mine.length ? mine : activos(), g = 0, asis = [], pag = 0, pagN = 0;
+    all.forEach(function (a) { var s = estado(a); if (s.lvl === 'g') g++; asis = asis.concat((IX.asis[a._id] || []).filter(function (x) { return x.fecha >= iso(addD(TODAY, -30)); })); if (!becado(a)) { pagN++; if ((IX.pago[a._id] || {})[addM(CUR_M, -1)]) pag++; } });
+    var pa = asisPct(asis) || 0, ppag = pagN ? Math.round(100 * pag / pagN) : 0, pg = all.length ? Math.round(100 * g / all.length) : 0;
+    var S = D.seguimientos.slice().filter(function (s) { return !/Excel/.test(s.nota || ''); }).sort(function (a, b) { return a.fecha < b.fecha ? 1 : -1; }).slice(0, 8);
+    $('#v-hoy').innerHTML = '<div class="tt-today">' + T.join('') + '</div>' +
+      '<div class="tt-card tt-stats"><div class="tt-stat">' + ring(pa, pa + '%') + '<small>de asistencia en el último mes</small></div><div class="tt-stat">' + ring(pg, pg + '%', 'var(--gold)') + '<small>de tus alumnos al día</small></div><div class="tt-stat">' + ring(ppag, ppag + '%', '#4f6d8a') + '<small>pagó ' + mesTxt(addM(CUR_M, -1)) + '</small></div><div class="tt-pills" style="margin-left:auto">' + pairPills('hoy') + '</div></div>' +
+      '<div id="tallyBox"></div><h2 class="tt-h">Últimos contactos individuales</h2><div class="tt-tl">' + (S.length ? S.map(function (s) { var a = IX.alu[s.alumnoId] || {}; return '<div><b>' + esc(a.title || s.alumnoId) + ' · ' + esc(s.motivo || '') + '</b><span>' + esc(s.nota) + '</span><small>' + fcorta(s.fecha) + ' · ' + esc(s.tutor || '') + (s.respondio ? ' · respondió 🙌🏽' : '') + '</small></div>'; }).join('') : '<div><span>Todavía no hay contactos registrados. Cuando le escribas a alguien, anotalo en su ficha.</span></div>') + '</div>';
+    $$('#v-hoy [data-go]').forEach(function (b) { b.onclick = function () { var g = b.dataset.go; if (g === 'contactar') { F.est = 'c'; tab('alumnos'); } else if (g === 'tally') $('#tallyBox').scrollIntoView({ behavior: 'smooth' }); else tab(g); }; });
+    bindPairPills('hoy', renderHoy);
+    renderTally();
+  }
+  function pairPills(k) { return ['<button class="tt-pill' + (!F.par ? ' on' : '') + '" data-pp="">Todos</button>'].concat(parejas().map(function (p) { return '<button class="tt-pill' + (F.par === p ? ' on' : '') + '" data-pp="' + esc(p) + '">' + esc(p) + '</button>'; })).join(''); }
+  function bindPairPills(scope, fn) { $$('#v-' + scope + ' [data-pp]').forEach(function (b) { b.onclick = function () { F.par = b.dataset.pp; fn(); }; }); }
+
+  function renderTally() {
+    var P = D.tally || [], box = $('#tallyBox'); if (!box) return;
+    box.innerHTML = P.length ? '<h2 class="tt-h">Exámenes sin asignar</h2><div class="tt-team">' + P.map(function (p) { return '<div class="tt-tm">' + av(p.title, '', 'sm') + '<span><b>«' + esc(p.title) + '»</b><br><small>' + esc((p.programa || '') + ' · ' + (p.item || '') + (p.nota != null ? ' · nota ' + p.nota : '') + (p.fecha ? ' · ' + fcorta(p.fecha) : '')) + '</small></span><select data-ta="' + esc(p._id) + '" aria-label="Elegir alumno"><option value="">Es de…</option>' + D.alumnos.filter(function (a) { return progs(a).indexOf(p.programa) >= 0; }).map(function (a) { return '<option value="' + esc(a._id) + '">' + esc(a.title) + '</option>'; }).join('') + '</select><button class="tt-btn s" data-td="' + esc(p._id) + '">Descartar</button></div>'; }).join('') + '</div>' : '';
+    $$('[data-ta]').forEach(function (s) { s.onchange = function () { if (!s.value) return; send({ op: 'tally', id: s.dataset.ta, alumnoId: s.value }).then(reload).then(function () { toast('Examen asignado.'); }); }; });
+    $$('[data-td]').forEach(function (b) { b.onclick = function () { if (!b.dataset.ok) { b.dataset.ok = 1; b.textContent = '¿Descartar?'; return; } send({ op: 'tally', id: b.dataset.td, descartar: true }).then(reload); }; });
+  }
+  async function reload() { D = await api('GET'); ME = D.me; index(); refresh(); }
+
+  /* Alumnos */
+  var F = { q: '', par: '', car: '', mod: '', est: '' };
   function renderAlumnos() {
-    var L = D.alumnos.filter(match).map(function (a) { return { a: a, s: estado(a) }; });
-    var cnt = { r: 0, y: 0, g: 0 }; L.forEach(function (x) { cnt[x.s.lvl]++; });
-    $('#ttSum').innerHTML = '<div data-e=""><b>' + L.length + '</b><span>alumnos</span></div><div data-e="r"><b>' + cnt.r + '</b><span>🔴 para seguimiento</span></div><div data-e="y"><b>' + cnt.y + '</b><span>🟡 para mirar</span></div><div data-e="g"><b>' + cnt.g + '</b><span>🟢 al día</span></div>';
-    $$('#ttSum [data-e]').forEach(function (e) { e.onclick = function () { $('#fEst').value = F.est = e.dataset.e; renderAlumnos(); }; });
-    if (F.est) L = L.filter(function (x) { return x.s.lvl === F.est; });
+    var base = activos().filter(function (a) { return (!F.q || nrm(a.title).indexOf(nrm(F.q)) >= 0) && (!F.par || a.tutores === F.par) && (!F.car || progs(a).indexOf(F.car) >= 0) && (!F.mod || (a.modalidad || '') === F.mod); });
+    var L = base.map(function (a) { return { a: a, s: estado(a) }; }), cnt = { r: 0, y: 0, g: 0 }; L.forEach(function (x) { cnt[x.s.lvl]++; });
+    var pc = porContactar().map(function (x) { return x.a._id; });
+    var pill = function (k, v, t, dot) { return '<button class="tt-pill' + (F[k] === v ? ' on' : '') + '" data-k="' + k + '" data-v="' + esc(v) + '">' + (dot ? '<i style="background:' + dot + '"></i>' : '') + t + '</button>'; };
+    $('#fPills').innerHTML = pill('est', '', 'Todos · ' + L.length) + pill('est', 'c', 'Para contactar · ' + pc.length) + pill('est', 'r', 'Seguimiento · ' + cnt.r, 'var(--r)') + pill('est', 'y', 'Para mirar · ' + cnt.y, 'var(--y)') + pill('est', 'g', 'Al día · ' + cnt.g, 'var(--g)') + '<span class="tt-sep"></span>' +
+      pill('car', '', 'Todas las carreras') + ['Maranata', 'Liderazgo', 'Adoración'].map(function (c) { return pill('car', c, c); }).join('') + '<span class="tt-sep"></span>' + pill('mod', '', 'Toda modalidad') + ['Presencial', 'Zoom', 'Asincrónico'].map(function (c) { return pill('mod', c, c); }).join('') + '<span class="tt-sep"></span>' + pill('par', '', 'Todos los tutores') + parejas().map(function (p) { return pill('par', p, p); }).join('');
+    $$('#fPills [data-k]').forEach(function (b) { b.onclick = function () { F[b.dataset.k] = b.dataset.v; renderAlumnos(); }; });
+    if (F.est === 'c') L = L.filter(function (x) { return pc.indexOf(x.a._id) >= 0; }); else if (F.est) L = L.filter(function (x) { return x.s.lvl === F.est; });
     var ord = { r: 0, y: 1, g: 2 };
     L.sort(function (x, y) { return ord[x.s.lvl] - ord[y.s.lvl] || (x.a.title || '').localeCompare(y.a.title || ''); });
     $('#ttList').innerHTML = L.length ? L.map(function (x) {
-      var a = x.a, u = ultSeg(a), as = (IX.asis[a._id] || []).slice(0, 8), pr = as.length ? Math.round(100 * as.filter(function (z) { return z.estado !== 'A'; }).length / as.length) : null;
-      return '<button class="tt-row" data-id="' + esc(a._id) + '"><span class="tt-dot ' + x.s.lvl + '"></span><span class="tt-nm"><b>' + esc(a.title) + '</b><small>' + esc([a.carreras, a.modalidad, a.tutores].filter(Boolean).join(' · ')) + '</small></span><span class="tt-why">' + chips(x.s) + '</span><span class="tt-meta">' + (pr == null ? '' : '<span>' + pr + '% asist.</span>') + '<span>' + (u ? 'Contacto ' + fcorta(u.fecha) : 'Sin contacto') + '</span></span></button>';
-    }).join('') : '<p class="tt-empty">No hay alumnos con esos filtros.</p>';
-    $$('#ttList .tt-row').forEach(function (b) { b.onclick = function () { ficha(b.dataset.id); }; });
+      var a = x.a, u = ultSeg(a), as = (IX.asis[a._id] || []).slice(0, 10).reverse(), tot = progs(a).reduce(function (s, p) { return s + PROG[p].length; }, 0), done = progs(a).reduce(function (s, p) { return s + nEv(a, p); }, 0);
+      return '<button class="tt-person" data-id="' + esc(a._id) + '"><span class="tt-ph">' + av(a.title, x.s.lvl) + '<div><b>' + esc(a.title) + '</b><small>' + esc([a.carreras, a.modalidad].filter(Boolean).join(' · ')) + '</small></div></span><span class="tt-why">' + chips(x.s) + '</span>' +
+        '<span class="tt-meta"><span class="tt-strip" title="Últimas clases">' + (async_(a) ? '<small>Asincrónico</small>' : as.map(function (z) { return '<i class="' + z.estado + '"></i>'; }).join('') || '<small>Sin clases</small>') + '</span><span class="tt-mini" title="' + done + ' de ' + tot + ' exámenes y TP"><i style="width:' + (tot ? Math.round(100 * done / tot) : 0) + '%"></i></span></span>' +
+        '<span class="tt-meta"><span>' + esc(a.tutores || '') + '</span><span>' + (u ? 'Contacto ' + fcorta(u.fecha) : 'Sin contacto') + '</span></span></button>';
+    }).join('') : '<p class="tt-empty">No hay alumnos con estos filtros.</p>';
+    $$('#ttList .tt-person').forEach(function (b) { b.onclick = function () { ficha(b.dataset.id); }; });
   }
 
-  /* Vista: pasar lista */
+  /* Pasar lista */
+  var LF = { car: '', mod: '' }, CYC = ['P', 'Z', 'A', 'J', ''], STN = { P: 'Presente', Z: 'Zoom', A: 'Ausente', J: 'Justificó', '': 'Sin marcar' };
+  function listaAl() { return activos().filter(function (a) { return !async_(a) && (!LF.car || progs(a).indexOf(LF.car) >= 0) && (!LF.mod || a.modalidad === LF.mod) && (!F.par || a.tutores === F.par); }).sort(function (x, y) { return (x.title || '').localeCompare(y.title || ''); }); }
   function renderLista() {
-    var f = $('#lDate').value, car = $('#lCar').value, mod = $('#lMod').value, par = $('#lPar').value;
-    var L = D.alumnos.filter(function (a) { return a.activo !== false && !async_(a) && (!car || progs(a).indexOf(car) >= 0) && (!mod || (a.modalidad || '') === mod) && (!par || a.tutores === par); })
-      .sort(function (x, y) { return (x.title || '').localeCompare(y.title || ''); });
-    var by = {}; D.asistencia.forEach(function (x) { if (x.fecha === f) by[x.alumnoId] = x; });
+    var f = $('#lDate').value, L = listaAl(), by = {}; D.asistencia.forEach(function (x) { if (x.fecha === f) by[x.alumnoId] = x; });
+    var pill = function (k, v, t) { return '<button class="tt-pill' + (LF[k] === v ? ' on' : '') + '" data-k="' + k + '" data-v="' + v + '">' + t + '</button>'; };
+    $('#lPills').innerHTML = pill('car', '', 'Todas') + ['Maranata', 'Liderazgo', 'Adoración'].map(function (c) { return pill('car', c, c); }).join('') + '<span class="tt-sep"></span>' + pill('mod', '', 'Presencial y Zoom') + pill('mod', 'Presencial', 'Presencial') + pill('mod', 'Zoom', 'Zoom') + '<span class="tt-sep"></span>' + pairPills();
+    $$('#lPills [data-k]').forEach(function (b) { b.onclick = function () { LF[b.dataset.k] = b.dataset.v; renderLista(); }; });
+    $$('#lPills [data-pp]').forEach(function (b) { b.onclick = function () { F.par = b.dataset.pp; renderLista(); }; });
     var dn = L.filter(function (a) { return by[a._id]; }).length;
-    $('#ttRoll').innerHTML = '<p class="tt-tip">' + dn + ' de ' + L.length + ' marcados.</p>' + L.map(function (a) {
-      var x = by[a._id] || {}, e = x.estado || '', on = e && e !== 'A' && e !== 'J';
-      var B = [['P', 'Presente'], ['Z', 'Zoom'], ['A', 'Ausente'], ['J', 'Justificó']].map(function (b) { return '<button type="button" data-v="' + b[0] + '"' + (e === b[0] ? ' class="on"' : '') + '>' + b[1] + '</button>'; }).join('');
-      return '<div class="tt-rl" data-id="' + esc(a._id) + '"><span class="tt-nm"><b>' + esc(a.title) + '</b><small>' + esc((a.modalidad || '') + ' · ' + (a.tutores || '')) + '</small></span><span class="tt-seg">' + B + '</span><span class="tt-tg"><label><input type="checkbox" data-k="tarde"' + (x.tarde ? ' checked' : '') + (on ? '' : ' disabled') + '>Tarde</label><label><input type="checkbox" data-k="mesa"' + (x.mesa ? ' checked' : '') + (on ? '' : ' disabled') + '>Mesa</label></span></div>';
-    }).join('');
-    $$('#ttRoll .tt-rl').forEach(function (row) {
-      var id = row.dataset.id;
-      function cur() { return by[id] || {}; }
-      function put(o) {
+    $('#lBar').style.width = (L.length ? 100 * dn / L.length : 0) + '%'; $('#lCnt').textContent = dn + ' de ' + L.length + ' marcados';
+    $('#ttRoll').innerHTML = L.map(function (a) {
+      var x = by[a._id] || {}, e = x.estado || '', on = e === 'P' || e === 'Z';
+      return '<div class="tt-tile ' + e + '" role="button" tabindex="0" data-id="' + esc(a._id) + '">' + av(a.title) + '<b>' + esc(a.title) + '</b><span class="st">' + STN[e] + '</span><span class="tg"><button type="button" data-k="tarde"' + (x.tarde ? ' class="on"' : '') + (on ? '' : ' disabled') + '>Tarde</button><button type="button" data-k="mesa"' + (x.mesa ? ' class="on"' : '') + (on ? '' : ' disabled') + '>Mesa</button></span></div>';
+    }).join('') || '<p class="tt-empty">No hay alumnos para esta clase con estos filtros.</p>';
+    $$('#ttRoll .tt-tile').forEach(function (t) {
+      var id = t.dataset.id, cur = function () { return by[id] || {}; };
+      var put = function (o) {
         var x = Object.assign({ estado: cur().estado || '', tarde: !!cur().tarde, mesa: !!cur().mesa }, o);
-        if (x.estado === 'A' || x.estado === 'J' || !x.estado) { x.tarde = false; x.mesa = false; }
-        send({ op: 'asis', alumnoId: id, fecha: f, estado: x.estado, tarde: x.tarde, mesa: x.mesa }, id + '|' + f, 'asistencia').then(renderLista).catch(renderLista);
-      }
-      $$('.tt-seg button', row).forEach(function (b) { b.onclick = function () { put({ estado: cur().estado === b.dataset.v ? '' : b.dataset.v }); }; });
-      $$('.tt-tg input', row).forEach(function (c) { c.onchange = function () { var o = {}; o[c.dataset.k] = c.checked; put(o); }; });
+        if (x.estado !== 'P' && x.estado !== 'Z') { x.tarde = false; x.mesa = false; }
+        by[id] = Object.assign({}, cur(), x); paint(t, by[id]);
+        send({ op: 'asis', alumnoId: id, fecha: f, estado: x.estado, tarde: x.tarde, mesa: x.mesa }, id + '|' + f, 'asistencia').then(function () { var d2 = L.filter(function (a) { return by[a._id] && by[a._id].estado; }).length; $('#lBar').style.width = (100 * d2 / L.length) + '%'; $('#lCnt').textContent = d2 + ' de ' + L.length + ' marcados'; }).catch(renderLista);
+      };
+      var a = IX.alu[id];
+      var next = function () { var e = cur().estado || ''; var n = CYC[(CYC.indexOf(e) + 1) % CYC.length]; if (n === 'P' && a && a.modalidad === 'Zoom') n = 'Z'; else if (n === 'Z' && a && a.modalidad === 'Zoom' && e === 'Z') n = 'A'; put({ estado: n }); };
+      t.onclick = function (ev) { if (ev.target.closest('.tg')) return; next(); };
+      t.onkeydown = function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); next(); } };
+      $$('.tg button', t).forEach(function (b) { b.onclick = function () { var o = {}; o[b.dataset.k] = !cur()[b.dataset.k]; put(o); }; });
     });
   }
-
-  /* Vista: seguimientos */
-  function renderSeg() {
-    renderTally();
-    var lim = iso(new Date(TODAY.getTime() - 14 * 864e5));
-    var T = D.alumnos.filter(function (a) { return a.activo !== false; }).map(function (a) { return { a: a, s: estado(a) }; })
-      .filter(function (x) { var u = ultSeg(x.a); return x.s.lvl !== 'g' && (!u || u.fecha < lim); })
-      .sort(function (x, y) { return (x.s.lvl === 'r' ? 0 : 1) - (y.s.lvl === 'r' ? 0 : 1); });
-    $('#ttTodo').innerHTML = T.length ? T.map(function (x) { return '<button class="tt-row" data-id="' + esc(x.a._id) + '"><span class="tt-dot ' + x.s.lvl + '"></span><span class="tt-nm"><b>' + esc(x.a.title) + '</b><small>' + esc(x.a.tutores || '') + '</small></span><span class="tt-why">' + chips(x.s) + '</span><span class="tt-meta">' + (ultSeg(x.a) ? 'Último ' + fcorta(ultSeg(x.a).fecha) : 'Sin contacto') + '</span></button>'; }).join('') : '<p class="tt-empty">Nadie pendiente. 🙌🏽</p>';
-    $$('#ttTodo .tt-row').forEach(function (b) { b.onclick = function () { ficha(b.dataset.id); }; });
-    var S = D.seguimientos.slice().sort(function (a, b) { return a.fecha < b.fecha ? 1 : -1; }).slice(0, 40);
-    $('#ttLog').innerHTML = S.length ? S.map(function (s) { var a = IX.alu[s.alumnoId] || {}; return '<div class="tt-li"><b>' + esc(a.title || s.alumnoId) + ' · ' + esc(s.motivo || '') + '</b><span>' + esc(s.nota) + '</span><small>' + fcorta(s.fecha) + ' · ' + esc(s.tutor || '') + (s.respondio ? ' · respondió' : '') + '</small></div>'; }).join('') : '<p class="tt-empty">Todavía no hay seguimientos.</p>';
-  }
-
-  /* Tally sin asignar (en Seguimientos) */
-  function renderTally() {
-    var P = D.tally || [];
-    $('#tallyBox').innerHTML = P.length ? '<h2 class="tt-h">Exámenes de Tally sin asignar</h2><p class="tt-tip">El nombre que escribieron no coincide con ningún alumno. Elegí a quién corresponde.</p>' + P.map(function (p) { return '<div class="tt-tm"><span><b>«' + esc(p.title) + '»</b><br><small>' + esc((p.programa || '') + ' · ' + (p.item || '') + (p.nota != null ? ' · nota ' + p.nota : '') + ' · ' + (p.fecha ? fcorta(p.fecha) : '')) + '</small></span><select data-ta="' + esc(p._id) + '"><option value="">Elegir alumno…</option>' + D.alumnos.filter(function (a) { return progs(a).indexOf(p.programa) >= 0; }).map(function (a) { return '<option value="' + esc(a._id) + '">' + esc(a.title) + '</option>'; }).join('') + '</select><button class="tt-btn s" data-td="' + esc(p._id) + '">Descartar</button></div>'; }).join('') : '';
-    $$('[data-ta]').forEach(function (s) { s.onchange = function () { if (!s.value) return; send({ op: 'tally', id: s.dataset.ta, alumnoId: s.value }).then(function () { D.tally = D.tally.filter(function (x) { return x._id !== s.dataset.ta; }); return api('GET'); }).then(function (n) { D = n; ME = n.me; index(); renderSeg(); toast('Examen asignado.'); }); }; });
-    $$('[data-td]').forEach(function (b) { b.onclick = function () { if (!b.dataset.ok) { b.dataset.ok = 1; b.textContent = '¿Seguro?'; return; } send({ op: 'tally', id: b.dataset.td, descartar: true }).then(function () { D.tally = D.tally.filter(function (x) { return x._id !== b.dataset.td; }); renderSeg(); }); }; });
-  }
+  function paint(t, x) { t.className = 'tt-tile pop ' + (x.estado || ''); $('.st', t).textContent = STN[x.estado || '']; var on = x.estado === 'P' || x.estado === 'Z'; $$('.tg button', t).forEach(function (b) { b.disabled = !on; b.classList.toggle('on', !!x[b.dataset.k]); }); }
+  $('#lAll').onclick = function () {
+    var f = $('#lDate').value, by = {}; D.asistencia.forEach(function (x) { if (x.fecha === f) by[x.alumnoId] = x; });
+    var L = listaAl().filter(function (a) { return !by[a._id]; });
+    if (!L.length) { toast('Todos tienen un estado marcado.'); return; }
+    Promise.all(L.map(function (a) { return send({ op: 'asis', alumnoId: a._id, fecha: f, estado: a.modalidad === 'Zoom' ? 'Z' : 'P', tarde: false, mesa: false }, a._id + '|' + f, 'asistencia'); })).then(function () { renderLista(); toast('Marcados ' + L.length + ' presentes. Ajustá a los que faltaron.'); });
+  };
 
   /* Tiempo de mesa */
+  var MESA_SEL = {};
   function renderMesa() {
-    var f = $('#mesaF'); if (!f.fecha.value) { var ex = (D.eventos || []).filter(function (e) { return e.mesa && iso(new Date(e.inicio && e.inicio.$date || e.inicio)) <= iso(TODAY); }).pop(); f.fecha.value = ex ? iso(new Date(ex.inicio && ex.inicio.$date || ex.inicio)) : iso(lastSat()); f.tutor.value = ME.title || ''; }
-    var pg = f.programa.value;
-    $('#mesaAl').innerHTML = D.alumnos.filter(function (a) { return a.activo !== false && (pg === 'General' || progs(a).indexOf(pg) >= 0); }).sort(function (x, y) { return (x.title || '').localeCompare(y.title || ''); }).map(function (a) { return '<label><input type="checkbox" value="' + esc(a._id) + '"> ' + esc(a.title) + '</label>'; }).join('');
+    var f = $('#mesaF');
+    if (!f.fecha.value) { var ex = (D.eventos || []).filter(function (e) { return e.mesa && iso(evDate(e)) <= iso(TODAY); }).pop(); f.fecha.value = ex ? iso(evDate(ex)) : iso(lastClass()); f.tutor.value = ME.title || ''; }
+    var pg = f.programa.value, L = activos().filter(function (a) { return pg === 'General' || progs(a).indexOf(pg) >= 0; }).sort(function (x, y) { return (x.title || '').localeCompare(y.title || ''); });
+    $('#mesaAl').innerHTML = L.map(function (a) { return '<button type="button" class="tt-face' + (MESA_SEL[a._id] ? ' on' : '') + '" data-id="' + esc(a._id) + '" aria-pressed="' + !!MESA_SEL[a._id] + '">' + av(a.title) + '<span>' + esc((a.title || '').split(' ')[0]) + '</span></button>'; }).join('');
+    $('#mesaN').textContent = '· ' + Object.keys(MESA_SEL).length;
+    $$('#mesaAl .tt-face').forEach(function (b) { b.onclick = function () { var id = b.dataset.id; if (MESA_SEL[id]) delete MESA_SEL[id]; else MESA_SEL[id] = 1; b.classList.toggle('on', !!MESA_SEL[id]); b.setAttribute('aria-pressed', !!MESA_SEL[id]); $('#mesaN').textContent = '· ' + Object.keys(MESA_SEL).length; }; });
     var M = (D.mesa || []).slice().sort(function (a, b) { return a.fecha < b.fecha ? 1 : -1; });
-    $('#mesaLog').innerHTML = M.length ? M.map(function (m) { var as = (m.asistentes || '').split(',').filter(Boolean).map(function (i) { return (IX.alu[i] || {}).title || i; }); return '<div class="tt-li"><b>' + fcorta(m.fecha) + ' · ' + esc(m.programa || '') + ' · ' + esc(m.tutor || '') + '</b>' + (as.length ? '<small>Estuvieron (' + as.length + '): ' + esc(as.join(', ')) + '</small>' : '') + (m.temas ? '<span><b>Se charló:</b> ' + esc(m.temas) + '</span>' : '') + (m.observaciones ? '<span><b>Notó:</b> ' + esc(m.observaciones) + '</span>' : '') + '</div>'; }).join('') : '<p class="tt-empty">Todavía no hay tiempos de mesa registrados.</p>';
+    $('#mesaLog').innerHTML = M.length ? M.map(function (m) { var as = (m.asistentes || '').split(',').filter(Boolean); return '<div class="tt-li"><b>' + flarga(m.fecha) + ' · ' + esc(m.programa || '') + '</b><small>Coordinó ' + esc(m.tutor || '') + ' · ' + as.length + ' personas</small><div class="tt-faces" style="gap:0">' + as.slice(0, 12).map(function (i) { return av((IX.alu[i] || {}).title || i, '', 'sm'); }).join('') + '</div>' + (m.temas ? '<span><b>Se charló:</b> ' + esc(m.temas) + '</span>' : '') + (m.observaciones ? '<span><b>Notó:</b> ' + esc(m.observaciones) + '</span>' : '') + '</div>'; }).join('') : '<p class="tt-empty">Cuando registres el primer tiempo de mesa, va a aparecer acá.</p>';
   }
   $('#mesaF').programa.onchange = renderMesa;
   $('#mesaF').onsubmit = function (e) {
-    e.preventDefault(); var f = e.target, ids = $$('#mesaAl input:checked').map(function (c) { return c.value; });
+    e.preventDefault(); var f = e.target, ids = Object.keys(MESA_SEL);
     send({ op: 'mesa', fecha: f.fecha.value, programa: f.programa.value, tutor: f.tutor.value, asistentes: ids.join(','), temas: f.temas.value, observaciones: f.observaciones.value }, null, 'mesa').then(function () {
-      f.temas.value = ''; f.observaciones.value = '';
-      // marcar «Mesa» en la asistencia de los que se quedaron
       ids.forEach(function (id) { var x = D.asistencia.filter(function (z) { return z.alumnoId === id && z.fecha === f.fecha.value; })[0]; if (x && x.estado !== 'A' && !x.mesa) send({ op: 'asis', alumnoId: id, fecha: x.fecha, estado: x.estado, tarde: !!x.tarde, mesa: true }, id + '|' + x.fecha, 'asistencia'); });
-      toast('Tiempo de mesa guardado. ¡Gracias!'); renderMesa();
+      f.temas.value = ''; f.observaciones.value = ''; MESA_SEL = {}; toast('Tiempo de mesa guardado. ¡Gracias!'); renderMesa();
     });
   };
 
@@ -189,63 +223,89 @@
   function evDate(e) { return new Date(e.inicio && e.inicio.$date || e.inicio); }
   function renderCal() {
     $('#calTit').textContent = MESES[CM.getMonth()][0].toUpperCase() + MESES[CM.getMonth()].slice(1) + ' ' + CM.getFullYear();
-    var m = iso(CM).slice(0, 7), E = (D.eventos || []).filter(function (e) { return iso(evDate(e)).slice(0, 7) === m; }).sort(function (a, b) { return evDate(a) - evDate(b); });
-    var DD = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
-    $('#calList').innerHTML = E.length ? E.map(function (e) { var d = evDate(e); return '<div class="tt-tm"><span><b>' + DD[d.getDay()] + ' ' + d.getDate() + ' · ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ' · ' + esc(e.title) + '</b><br><small>' + esc([e.tipo, e.curso, e.lugar].filter(Boolean).join(' · ')) + (e.mesa ? ' · 🍽️ tiempo de mesa' : '') + '</small></span><span></span><button class="tt-btn s" data-ed="' + esc(e._id) + '">Borrar</button></div>'; }).join('') : '<p class="tt-empty">No hay nada cargado este mes.</p>';
-    $$('[data-ed]').forEach(function (b) { b.onclick = function () { if (!b.dataset.ok) { b.dataset.ok = 1; b.textContent = '¿Seguro?'; return; } send({ op: 'evento', borrar: true, id: b.dataset.ed }, b.dataset.ed, 'eventos').then(renderCal); }; });
+    var st = monday(CM), h = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'].map(function (d) { return '<div class="tt-dow">' + d + '</div>'; }).join('');
+    for (var i = 0; i < 42; i++) {
+      var d = addD(st, i), f = iso(d); if (i >= 35 && d.getMonth() !== CM.getMonth()) break;
+      var E = (D.eventos || []).filter(function (e) { return iso(evDate(e)) === f; }).sort(function (a, b) { return evDate(a) - evDate(b); });
+      var vt = (D.turnos || []).filter(function (x) { return x.fecha === f; }).length;
+      h += '<div class="tt-day' + (d.getMonth() !== CM.getMonth() ? ' out' : '') + (f === iso(TODAY) ? ' today' : '') + '" data-f="' + f + '" role="button" tabindex="0"><b>' + d.getDate() + '</b>' + E.map(function (e) { return '<button type="button" class="tt-ev ' + esc(String(e.tipo || '').split(' ')[0]) + '" data-e="' + esc(e._id) + '" title="' + esc(e.title) + '">' + (e.mesa ? '🍽️ ' : '') + esc(e.title) + '</button>'; }).join('') + (vt ? '<small class="tt-lbl" style="font-size:.66rem">🙌🏽 ' + vt + ' tareas</small>' : '') + '</div>';
+    }
+    $('#calGrid').innerHTML = h;
+    $$('#calGrid .tt-day').forEach(function (c) { c.onclick = function (ev) { var b = ev.target.closest('[data-e]'); if (b) evModal(D.eventos.filter(function (x) { return x._id === b.dataset.e; })[0]); else evModal(null, c.dataset.f); }; c.onkeydown = function (ev) { if (ev.key === 'Enter') evModal(null, c.dataset.f); }; });
+  }
+  function dtl(d) { return iso(d) + 'T' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+  function modal(html, onOpen) { var m = document.createElement('div'); m.className = 'tt-modal'; m.innerHTML = '<div class="tt-card">' + html + '</div>'; document.body.appendChild(m); var close = function () { m.remove(); }; m.onclick = function (e) { if (e.target === m || e.target.closest('[data-close]')) close(); }; onOpen(m, close); var f = m.querySelector('input,select,textarea'); if (f) f.focus(); return m; }
+  function evModal(e, fecha) {
+    var d = e ? evDate(e) : pd(fecha), dow = d.getDay();
+    if (!e) d.setHours(dow === 6 ? 10 : 19, dow === 6 ? 0 : 30);
+    var tipos = ['Clase', 'Examen', 'Clase en vivo', 'Encuentro', 'Aviso', 'Feriado'];
+    modal('<form class="tt-form"><h2 class="w">' + (e ? 'Editar' : 'Nuevo en el ' + flarga(fecha)) + '</h2><label class="w">Título<input name="title" required value="' + esc(e ? e.title : '') + '" placeholder="Ej.: Examen Bloque 3"></label><label>Tipo<select name="tipo">' + tipos.map(function (t) { return '<option' + (e && e.tipo === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select></label><label>Carrera<select name="curso"><option value="">Todas</option>' + ['Maranata', 'Liderazgo', 'Adoración'].map(function (c) { return '<option' + (e && e.curso === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select></label><label>Empieza<input type="datetime-local" name="inicio" required value="' + dtl(d) + '"></label><label>Lugar<input name="lugar" value="' + esc(e ? e.lugar : '') + '" placeholder="Sede, Zoom…"></label><label class="w">Detalle<textarea name="descripcion">' + esc(e ? e.descripcion : '') + '</textarea></label><label class="w">Link<input name="link" value="' + esc(e ? e.link : '') + '" placeholder="https://"></label><label class="w tt-inl"><input type="checkbox" name="mesa"' + (e && e.mesa ? ' checked' : '') + '> Tiempo de mesa después</label><div class="w tt-wa"><button class="tt-btn" type="submit">' + (e ? 'Guardar cambios' : 'Agregar al calendario') + '</button><button class="tt-btn s" type="button" data-close>Cancelar</button>' + (e ? '<button class="tt-btn s" type="button" data-del style="margin-left:auto;color:var(--r)">Borrar</button>' : '') + '</div></form>', function (m, close) {
+      var f = $('form', m); f.tipo.onchange = function () { if (f.tipo.value === 'Examen') f.mesa.checked = true; };
+      f.onsubmit = function (ev) { ev.preventDefault(); send({ op: 'evento', id: e ? e._id : '', title: f.title.value, tipo: f.tipo.value, curso: f.curso.value, inicio: new Date(f.inicio.value).toISOString(), descripcion: f.descripcion.value, lugar: f.lugar.value, link: f.link.value, mesa: f.mesa.checked }, e && e._id, 'eventos').then(function () { close(); toast(e ? 'Cambios guardados.' : 'Agregado al calendario.'); renderCal(); }); };
+      var del = $('[data-del]', m); if (del) del.onclick = function () { if (!del.dataset.ok) { del.dataset.ok = 1; del.textContent = '¿Borrar de verdad?'; return; } send({ op: 'evento', borrar: true, id: e._id }, e._id, 'eventos').then(function () { close(); renderCal(); }); };
+    });
   }
   $('#calPrev').onclick = function () { CM.setMonth(CM.getMonth() - 1); renderCal(); };
   $('#calNext').onclick = function () { CM.setMonth(CM.getMonth() + 1); renderCal(); };
-  $('#evF').tipo.onchange = function () { $('#evF').mesa.checked = this.value === 'Examen'; };
-  $('#evF').onsubmit = function (e) {
-    e.preventDefault(); var f = e.target, tz = function (v) { return v ? new Date(v).toISOString() : ''; };
-    send({ op: 'evento', title: f.title.value, tipo: f.tipo.value, curso: f.curso.value, inicio: tz(f.inicio.value), fin: tz(f.fin.value), descripcion: f.descripcion.value, lugar: f.lugar.value, link: f.link.value, mesa: f.mesa.checked }, null, 'eventos').then(function () { f.reset(); toast('Agregado al calendario.'); renderCal(); });
-  };
 
   /* Voluntarios */
-  var TAREAS = ['Limpieza y sillas', 'Audio', 'Diapositivas', 'Zoom', 'Asistencia presencial', 'Asistencia online'];
-  var VW = monday(TODAY);
+  var TAREAS = [['Limpieza y sillas', '🧹'], ['Audio', '🎚️'], ['Diapositivas', '🖥️'], ['Zoom', '🎥'], ['Asistencia presencial', '📋'], ['Asistencia online', '💻']];
+  var VW = monday(TODAY), SEL = null;
+  function vols() { return (D.voluntarios || []).filter(function (v) { return v.activo !== false; }); }
   function renderVol() {
-    var dias = [2, 3, 5].map(function (n) { return iso(new Date(VW.getTime() + n * 864e5)); });
+    var dias = [2, 3, 5].map(function (n) { return iso(addD(VW, n)); }), T = D.turnos || [], nm = {};
+    (D.voluntarios || []).forEach(function (v) { nm[v._id] = v.title; });
     $('#volTit').textContent = 'Semana del ' + fcorta(iso(VW));
-    var V = (D.voluntarios || []).filter(function (v) { return v.activo !== false; });
-    var nm = {}; V.forEach(function (v) { nm[v._id] = v.title; });
-    var T = D.turnos || [], DN = { 3: 'Miércoles', 4: 'Jueves', 6: 'Sábado' };
+    var semana = {}; T.forEach(function (x) { if (dias.indexOf(x.fecha) >= 0) semana[x.voluntarioId] = (semana[x.voluntarioId] || 0) + 1; });
+    $('#volRoster').innerHTML = vols().map(function (v) { return '<button type="button" class="tt-vp' + (SEL === v._id ? ' sel' : '') + '" draggable="true" data-v="' + esc(v._id) + '">' + av(v.title, '', 'sm') + '<span><span class="n">' + esc(v.title) + '</span><small>' + (semana[v._id] ? semana[v._id] + ' tareas esta semana' : 'Libre esta semana') + (v.email ? '' : ' · sin email') + '</small></span></button>'; }).join('');
     $('#volGrid').innerHTML = dias.map(function (f) {
       var d = pd(f), sab = d.getDay() === 6;
-      return '<div class="tt-blk"><h3>' + DN[d.getDay()] + ' ' + d.getDate() + ' · llegada ' + (sab ? '9:30' : '19:00') + '</h3>' + TAREAS.map(function (t) {
-        var who = T.filter(function (x) { return x.fecha === f && x.tarea === t; });
-        return '<div class="tt-vrow"><span>' + t + '</span><span class="tt-vwho">' + who.map(function (x) { return '<button class="tt-ch" data-vx="' + esc(x._id) + '" data-f="' + f + '" data-t="' + esc(t) + '" data-v="' + esc(x.voluntarioId) + '" title="Quitar">' + esc(nm[x.voluntarioId] || x.voluntarioId) + ' ✕</button>'; }).join('') + '<select data-f="' + f + '" data-t="' + esc(t) + '"><option value="">+ sumar</option>' + V.filter(function (v) { return !who.some(function (x) { return x.voluntarioId === v._id; }); }).map(function (v) { return '<option value="' + esc(v._id) + '">' + esc(v.title) + '</option>'; }).join('') + '</select></span></div>';
+      return '<div class="tt-col"><h3>' + DL[d.getDay()][0].toUpperCase() + DL[d.getDay()].slice(1) + ' ' + d.getDate() + '<small>Llegada ' + (sab ? '9:30 · clase 10:00' : '19:00 · clase 19:30') + '</small></h3>' + TAREAS.map(function (t) {
+        var who = T.filter(function (x) { return x.fecha === f && x.tarea === t[0]; });
+        return '<div class="tt-slot' + (who.length ? '' : ' empty') + (SEL ? ' can' : '') + '" data-f="' + f + '" data-t="' + esc(t[0]) + '"><span>' + t[1] + ' ' + t[0] + '</span><div class="who">' + who.map(function (x) { return '<button type="button" class="tt-chip" data-vx="' + esc(x._id) + '" data-v="' + esc(x.voluntarioId) + '" title="Quitar">' + av(nm[x.voluntarioId] || x.voluntarioId) + esc(String(nm[x.voluntarioId] || x.voluntarioId).split(' ')[0]) + ' ✕</button>'; }).join('') + '</div></div>';
       }).join('') + '</div>';
     }).join('');
-    $$('#volGrid select').forEach(function (s) { s.onchange = function () { if (!s.value) return; send({ op: 'turno', fecha: s.dataset.f, tarea: s.dataset.t, voluntarioId: s.value }, null, 'turnos').then(renderVol); }; });
-    $$('#volGrid [data-vx]').forEach(function (b) { b.onclick = function () { send({ op: 'turno', borrar: true, fecha: b.dataset.f, tarea: b.dataset.t, voluntarioId: b.dataset.v }, b.dataset.vx, 'turnos').then(renderVol); }; });
-    var mes = iso(TODAY).slice(0, 7), cnt = {}; T.forEach(function (x) { if (x.fecha.slice(0, 7) === mes) cnt[x.voluntarioId] = (cnt[x.voluntarioId] || 0) + 1; });
-    $('#volTeam').innerHTML = (D.voluntarios || []).map(function (v) { return '<div class="tt-tm"><span><b>' + esc(v.title) + '</b><br><small>' + esc([v.email || 'sin email', v.telefono, v.disponibilidad].filter(Boolean).join(' · ')) + ' · ' + (cnt[v._id] || 0) + ' tareas este mes</small></span><button class="tt-btn s" data-ve="' + esc(v._id) + '">Editar</button><span></span></div>'; }).join('');
-    $$('[data-ve]').forEach(function (b) { b.onclick = function () { var v = (D.voluntarios || []).filter(function (x) { return x._id === b.dataset.ve; })[0], f = $('#volF'); f.title.value = v.title || ''; f.email.value = v.email || ''; f.telefono.value = v.telefono || ''; f.disponibilidad.value = v.disponibilidad || ''; f.dataset.id = v._id; f.querySelector('button').textContent = 'Guardar cambios'; f.title.focus(); }; });
+    // cobertura del mes
+    var m0 = iso(VW).slice(0, 7), fechas = [], d0 = pd(m0 + '-01');
+    for (var d = new Date(d0); d.getMonth() === d0.getMonth(); d = addD(d, 1)) if ([3, 4, 6].indexOf(d.getDay()) >= 0) fechas.push(iso(d));
+    var cub = 0; fechas.forEach(function (f) { TAREAS.forEach(function (t) { if (T.some(function (x) { return x.fecha === f && x.tarea === t[0]; })) cub++; }); });
+    var cnt = {}; T.forEach(function (x) { if (x.fecha.slice(0, 7) === m0) cnt[x.voluntarioId] = (cnt[x.voluntarioId] || 0) + 1; });
+    var tot = fechas.length * TAREAS.length;
+    $('#volMonth').innerHTML = '<h2 class="tt-h">' + mesTxt(m0)[0].toUpperCase() + mesTxt(m0).slice(1) + ': ' + cub + ' de ' + tot + ' tareas cubiertas</h2><div class="tt-prog" style="margin-top:4px"><i style="width:' + (tot ? 100 * cub / tot : 0) + '%"></i></div>' + vols().filter(function (v) { return cnt[v._id]; }).sort(function (a, b) { return cnt[b._id] - cnt[a._id]; }).map(function (v) { return '<div class="tt-cbar">' + av(v.title, '', 'sm') + '<span style="width:140px">' + esc(v.title) + '</span><span class="tt-mini"><i style="width:' + Math.min(100, 100 * cnt[v._id] / 20) + '%"></i></span><span>' + cnt[v._id] + '</span></div>'; }).join('');
+    var assign = function (f, t, v) { if ((D.turnos || []).some(function (x) { return x.fecha === f && x.tarea === t && x.voluntarioId === v; })) return; send({ op: 'turno', fecha: f, tarea: t, voluntarioId: v }, null, 'turnos').then(function () { toast((nm[v] || '').split(' ')[0] + ' sirve en ' + t.toLowerCase() + ' el ' + flarga(f) + '.'); renderVol(); }); };
+    $$('#volRoster .tt-vp').forEach(function (b) {
+      b.ondragstart = function (e) { e.dataTransfer.setData('text/plain', b.dataset.v); e.dataTransfer.effectAllowed = 'copy'; };
+      b.onclick = function () { SEL = SEL === b.dataset.v ? null : b.dataset.v; renderVol(); if (SEL) toast('Ahora tocá la tarea donde va a servir.'); };
+      b.ondblclick = function () { volModal((D.voluntarios || []).filter(function (x) { return x._id === b.dataset.v; })[0]); };
+    });
+    $$('#volGrid .tt-slot').forEach(function (s) {
+      s.ondragover = function (e) { e.preventDefault(); s.classList.add('over'); };
+      s.ondragleave = function () { s.classList.remove('over'); };
+      s.ondrop = function (e) { e.preventDefault(); s.classList.remove('over'); var v = e.dataTransfer.getData('text/plain'); if (v) assign(s.dataset.f, s.dataset.t, v); };
+      s.onclick = function (e) { if (e.target.closest('.tt-chip')) return; if (SEL) { assign(s.dataset.f, s.dataset.t, SEL); } else toast('Elegí primero a alguien del equipo.'); };
+    });
+    $$('#volGrid .tt-chip').forEach(function (b) { b.onclick = function () { var s = b.closest('.tt-slot'); send({ op: 'turno', borrar: true, fecha: s.dataset.f, tarea: s.dataset.t, voluntarioId: b.dataset.v }, b.dataset.vx, 'turnos').then(renderVol); }; });
   }
-  $('#volPrev').onclick = function () { VW = new Date(VW.getTime() - 7 * 864e5); renderVol(); };
-  $('#volNext').onclick = function () { VW = new Date(VW.getTime() + 7 * 864e5); renderVol(); };
-  $('#volF').onsubmit = function (e) {
-    e.preventDefault(); var f = e.target;
-    send({ op: 'vol', id: f.dataset.id || '', title: f.title.value, email: f.email.value, telefono: f.telefono.value, disponibilidad: f.disponibilidad.value }, f.dataset.id || null, 'voluntarios').then(function () { f.reset(); delete f.dataset.id; f.querySelector('button').textContent = 'Agregar'; toast('Voluntario guardado.'); renderVol(); });
-  };
+  function volModal(v) {
+    v = v || {};
+    modal('<form class="tt-form"><div class="w tt-fh">' + av(v.title || '?', '', 'lg') + '<div><h2>' + (v._id ? esc(v.title) : 'Sumar voluntario') + '</h2><p>Con su email le llegan los avisos de cada servicio.</p></div></div><label>Nombre<input name="title" required value="' + esc(v.title || '') + '"></label><label>Email<input name="email" type="email" value="' + esc(v.email || '') + '"></label><label>WhatsApp<input name="telefono" value="' + esc(v.telefono || '') + '"></label><label>Disponibilidad<input name="disponibilidad" value="' + esc(v.disponibilidad || '') + '"></label>' + (v.clave ? '<p class="tt-tip w">Calendario con avisos para su teléfono: <a href="https://www.habitat-cfm.org/api/voluntario.ics?v=' + esc(v._id) + '&amp;k=' + esc(v.clave) + '">copiar link</a> (también lo puede sumar desde «Mi servicio» en el Campus).</p>' : '') + '<div class="w tt-wa"><button class="tt-btn" type="submit">Guardar</button><button class="tt-btn s" type="button" data-close>Cancelar</button></div></form>', function (m, close) {
+      var f = $('form', m);
+      f.onsubmit = function (e) { e.preventDefault(); send({ op: 'vol', id: v._id || '', title: f.title.value, email: f.email.value, telefono: f.telefono.value, disponibilidad: f.disponibilidad.value }, v._id, 'voluntarios').then(function () { close(); toast('Guardado.'); renderVol(); }); };
+    });
+  }
+  $('#volAdd').onclick = function () { volModal(null); };
+  $('#volPrev').onclick = function () { VW = addD(VW, -7); renderVol(); };
+  $('#volNext').onclick = function () { VW = addD(VW, 7); renderVol(); };
 
-  /* Vista: equipo */
+  /* Equipo */
   function renderEquipo() {
     var R = { director: 'Director', tutor: 'Tutor', pagos: 'Pagos' };
-    $('#ttTeam').innerHTML = D.tutores.map(function (t) { return '<div class="tt-tm"><span><b>' + esc(t.title || t.email) + '</b><br><small>' + esc((t.email || '') + (t.pareja ? ' · ' + t.pareja : '')) + '</small></span><span class="tt-ch">' + (R[t.rol] || 'Tutor') + '</span>' + (t._id !== ME._id ? '<button class="tt-btn s" data-del="' + esc(t._id) + '" data-em="' + esc(t.email || '') + '">Quitar</button>' : '<span></span>') + '</div>'; }).join('');
-    $$('#ttTeam [data-del]').forEach(function (b) { b.onclick = function () {
-      if (b.dataset.ok) { send({ op: 'tutor', borrar: true, id: b.dataset.del, email: b.dataset.em }, b.dataset.del, 'tutores').then(renderEquipo); }
-      else { b.dataset.ok = 1; b.textContent = '¿Seguro?'; }
-    }; });
+    $('#ttTeam').innerHTML = D.tutores.map(function (t) { return '<div class="tt-tm">' + av(t.title || t.email, '', 'sm') + '<span><b>' + esc(t.title || t.email) + '</b><br><small>' + esc((t.email || '') + (t.pareja ? ' · ' + t.pareja : '')) + '</small></span><span class="tt-ch">' + (R[t.rol] || 'Tutor') + '</span>' + (t._id !== ME._id ? '<button class="tt-btn s" data-del="' + esc(t._id) + '" data-em="' + esc(t.email || '') + '">Quitar acceso</button>' : '') + '</div>'; }).join('');
+    $$('#ttTeam [data-del]').forEach(function (b) { b.onclick = function () { if (!b.dataset.ok) { b.dataset.ok = 1; b.textContent = '¿Quitar?'; return; } send({ op: 'tutor', borrar: true, id: b.dataset.del, email: b.dataset.em }, b.dataset.del, 'tutores').then(renderEquipo); }; });
   }
-  $('#tForm').onsubmit = function (e) {
-    e.preventDefault(); var f = e.target, o = { op: 'tutor', title: f.title.value, email: f.email.value, pareja: f.pareja.value, rol: f.rol.value };
-    send(o, null, 'tutores').then(function () { f.reset(); renderEquipo(); toast('Listo, ya tiene acceso.'); });
-  };
+  $('#tForm').onsubmit = function (e) { e.preventDefault(); var f = e.target; send({ op: 'tutor', title: f.title.value, email: f.email.value, pareja: f.pareja.value, rol: f.rol.value }, null, 'tutores').then(function () { f.reset(); renderEquipo(); toast('Listo, ya puede entrar al panel.'); }); };
 
-  /* Ficha */
+  /* Ficha del alumno */
   var WA = {
     Faltas: 'Hola {n}! ¿Cómo estás? Te extrañamos en las últimas clases. ¿Está todo bien? Contanos si te podemos ayudar en algo 🙌🏽',
     'Exámenes': 'Hola {n}! ¿Cómo venís? Vimos que tenés exámenes pendientes. ¿Querés que te ayudemos a organizarte para rendirlos?',
@@ -253,84 +313,90 @@
     'Acompañamiento': 'Hola {n}! ¿Cómo estás? Pasaba a saludarte y a preguntarte cómo venís con la cursada.',
     Pagos: 'Hola {n}! ¿Cómo estás? Te escribo de Habitat porque nos figura pendiente la cuota de {m}. Cualquier cosa avisame y lo vemos juntos.'
   };
-  function waLink(a, k) {
-    var tel = String(a.telefono || '').replace(/\D/g, ''); if (!tel) return '';
-    if (tel.length === 10) tel = '549' + tel; else if (/^0/.test(tel)) tel = '549' + tel.replace(/^0/, '');
-    var n = (a.title || '').split(' ')[0];
-    return 'https://wa.me/' + tel + '?text=' + encodeURIComponent(WA[k].replace('{n}', n).replace('{m}', mesTxt(CUR_M)));
+  function waLink(a, k) { var tel = String(a.telefono || '').replace(/\D/g, ''); if (!tel) return ''; if (tel.length === 10) tel = '549' + tel; else if (/^0/.test(tel)) tel = '549' + tel.replace(/^0/, ''); return 'https://wa.me/' + tel + '?text=' + encodeURIComponent(WA[k].replace('{n}', (a.title || '').split(' ')[0]).replace('{m}', mesTxt(CUR_M))); }
+  var FT = 'seg';
+  function ficha(id, keepTab) {
+    var a = IX.alu[id]; if (!a) return; if (!keepTab) FT = 'seg';
+    var st = estado(a), as = IX.asis[id] || [], pa = asisPct(as);
+    var tot = progs(a).reduce(function (s, p) { return s + PROG[p].length; }, 0), done = progs(a).reduce(function (s, p) { return s + nEv(a, p); }, 0);
+    var p = IX.pago[id] || {}, ms = []; for (var m = startM(a); m <= CUR_M && ms.length < 24; m = addM(m, 1)) ms.push(m);
+    var paid = ms.filter(function (x) { return p[x]; }).length;
+    var h = '<div class="tt-fh">' + av(a.title, st.lvl, 'lg') + '<div><h2 id="drName">' + esc(a.title) + '</h2><p>' + esc([a.carreras, a.modalidad, a.tutores ? 'tutores ' + a.tutores : '', a.ciudad].filter(Boolean).join(' · ')) + '</p></div></div><div class="tt-why">' + chips(st) + '</div>' +
+      '<div class="tt-kpis"><div class="tt-kpi">' + (async_(a) ? ring(0, '—') + 'Cursa asincrónico' : ring(pa || 0, pa == null ? '—' : pa + '%') + 'Asistencia') + '</div><div class="tt-kpi">' + ring(tot ? 100 * done / tot : 0, done + '/' + tot, 'var(--gold)') + 'Exámenes y TP</div><div class="tt-kpi">' + (becado(a) ? ring(100, '🎓', '#4f6d8a') + 'Becado' : ring(ms.length ? 100 * paid / ms.length : 0, paid + '/' + ms.length, '#4f6d8a') + 'Meses pagos') + '</div></div>';
+    var tabs = [['seg', 'Seguimiento'], ['asis', 'Asistencia'], ['ex', 'Exámenes'], ['pag', 'Pagos'], ['gr', 'Grupo'], ['dat', 'Datos']];
+    h += '<div class="tt-ftabs">' + tabs.map(function (t) { return '<button data-ft="' + t[0] + '"' + (FT === t[0] ? ' class="on"' : '') + '>' + t[1] + '</button>'; }).join('') + '</div><div class="tt-fp" id="fp"></div>';
+    $('#drBody').innerHTML = h; $('#ttDrawer').hidden = false; document.body.style.overflow = 'hidden';
+    $$('[data-ft]').forEach(function (b) { b.onclick = function () { FT = b.dataset.ft; $$('[data-ft]').forEach(function (x) { x.classList.toggle('on', x === b); }); pane(a); }; });
+    pane(a);
   }
-  function ficha(id) {
-    var a = IX.alu[id]; if (!a) return;
-    var st = estado(a), pagos = ME.rol === 'pagos';
-    var as = IX.asis[id] || [], pres = as.filter(function (x) { return x.estado !== 'A'; }).length;
-    var segs = IX.seg[id] || [];
-    var motivos = ['Faltas', 'Exámenes', 'Grupo', 'Acompañamiento'].concat(pagos ? ['Pagos'] : []);
-    var h = '<div><span class="kick">' + esc([a.carreras, a.modalidad].filter(Boolean).join(' · ')) + '</span><h2 id="drName">' + esc(a.title) + '</h2><p class="tt-tip">Tutores: ' + esc(a.tutores || '—') + (a.ciudad ? ' · ' + esc(a.ciudad) : '') + '</p><div class="tt-why" style="margin-top:10px">' + chips(st) + '</div></div>';
-    h += '<div class="tt-blk"><h3>Contacto individual</h3>' + (a.telefono ? '<div class="tt-wa">' + motivos.map(function (k) { return '<a class="tt-btn wa" target="_blank" rel="noopener" data-m="' + k + '" href="' + esc(waLink(a, k)) + '">WhatsApp · ' + k + '</a>'; }).join('') + '</div><p class="tt-tip">Abre WhatsApp con un mensaje listo para revisar y mandar vos. Después anotalo abajo.</p>' : '<p class="tt-tip">Cargá su teléfono en «Datos» para escribirle por WhatsApp desde acá.</p>') +
-      '<form class="tt-form" id="segF"><label>Motivo<select name="motivo">' + motivos.map(function (k) { return '<option>' + k + '</option>'; }).join('') + '</select></label><label>Fecha<input type="date" name="fecha" value="' + iso(TODAY) + '"></label><label class="w">Qué hablaron<textarea name="nota" placeholder="Ej.: le escribí por las faltas, está con mucho trabajo y vuelve el sábado."></textarea></label><label class="w" style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="respondio" style="width:auto"> Respondió</label><button class="tt-btn" type="submit">Guardar seguimiento</button></form>' +
-      (segs.length ? '<div class="tt-log">' + segs.map(function (s) { return '<div class="tt-li"><b>' + esc(s.motivo || 'Seguimiento') + ' · ' + fcorta(s.fecha) + '</b><span>' + esc(s.nota) + '</span><small>' + esc(s.tutor || '') + (s.respondio ? ' · respondió' : '') + ' · <a href="#" data-sd="' + esc(s._id) + '">borrar</a></small></div>'; }).join('') + '</div>' : '') + '</div>';
-    h += '<div class="tt-blk"><h3>Asistencia</h3>' + (async_(a) ? '<p class="tt-tip">Cursa en modalidad asincrónica: su avance se ve en el Campus.</p>' : '<p class="tt-tip">' + (as.length ? pres + ' de ' + as.length + ' clases (' + Math.round(100 * pres / as.length) + '%) · tarde ' + as.filter(function (x) { return x.tarde; }).length + ' · tiempo de mesa ' + as.filter(function (x) { return x.mesa; }).length : 'Sin clases registradas') + '</p><div class="tt-dots">' + as.slice().reverse().map(function (x) { return '<i class="' + x.estado + '" title="' + fcorta(x.fecha) + '">' + (x.estado === 'A' ? '✕' : x.estado === 'J' ? 'J' : x.tarde ? 'T' : '✓') + '</i>'; }).join('') + '</div>') + '</div>';
-    if (becado(a)) h += '<div class="tt-blk"><h3>Pagos</h3><p class="tt-tip">Becado.</p></div>';
-    else {
-      var p = IX.pago[id] || {}, ms = []; for (var m = startM(a); m <= addM(CUR_M, 1) && ms.length < 24; m = addM(m, 1)) ms.push(m);
-      h += '<div class="tt-blk"><h3>Pagos' + (a.formaPago ? ' · ' + esc(a.formaPago) : '') + (a.matricula ? ' · matrícula paga' : '') + '</h3><div class="tt-grid" id="pgG">' + ms.map(function (m) { var v = p[m]; return '<button type="button" data-m="' + m + '" class="' + (v ? 'ok' : m < CUR_M || (m === CUR_M && TODAY.getDate() > 10) ? 'no' : '') + '"' + (pagos ? '' : ' disabled') + '>' + MC[+m.slice(5) - 1] + (v ? ' ✓' : '') + '</button>'; }).join('') + '</div>' + (pagos ? '<p class="tt-tip">Tocá un mes para marcarlo como pagado o pendiente.</p>' : '<p class="tt-tip">Los pagos los marca Raquel.</p>') + '</div>';
+  function pane(a) {
+    var id = a._id, box = $('#fp'), pagos = ME.rol === 'pagos';
+    if (FT === 'seg') {
+      var motivos = ['Faltas', 'Exámenes', 'Grupo', 'Acompañamiento'].concat(pagos ? ['Pagos'] : []), segs = IX.seg[id] || [];
+      box.innerHTML = (a.telefono ? '<div class="tt-wa">' + motivos.map(function (k) { return '<a class="tt-btn wa" target="_blank" rel="noopener" data-m="' + k + '" href="' + esc(waLink(a, k)) + '">WhatsApp · ' + k + '</a>'; }).join('') + '</div><p class="tt-tip">Abre WhatsApp con un mensaje listo para revisar y mandar vos. Después anotalo acá abajo.</p>' : '<p class="tt-tip">Cargá su WhatsApp en «Datos» para escribirle desde acá con un mensaje ya armado.</p>') +
+        '<form class="tt-card tt-form" id="segF"><label>Motivo<select name="motivo">' + motivos.map(function (k) { return '<option>' + k + '</option>'; }).join('') + '</select></label><label>Fecha<input type="date" name="fecha" value="' + iso(TODAY) + '"></label><label class="w">Qué hablaron<textarea name="nota" placeholder="Ej.: le escribí por las faltas, está con mucho trabajo y vuelve el sábado."></textarea></label><label class="w tt-inl"><input type="checkbox" name="respondio"> Respondió</label><button class="tt-btn w" type="submit">Guardar contacto</button></form>' +
+        '<div class="tt-tl">' + (segs.length ? segs.map(function (s) { return '<div><b>' + esc(s.motivo || 'Seguimiento') + ' · ' + fcorta(s.fecha) + '</b><span>' + esc(s.nota) + '</span><small>' + esc(s.tutor || '') + (s.respondio ? ' · respondió 🙌🏽' : '') + ' · <a href="#" data-sd="' + esc(s._id) + '">borrar</a></small></div>'; }).join('') : '<div><span>Sin contactos individuales todavía.</span></div>') + '</div>';
+      var sf = $('#segF');
+      $$('.tt-wa a', box).forEach(function (l) { l.addEventListener('click', function () { sf.motivo.value = l.dataset.m; sf.nota.focus(); }); });
+      sf.onsubmit = function (e) { e.preventDefault(); send({ op: 'seg', alumnoId: id, motivo: sf.motivo.value, fecha: sf.fecha.value, nota: sf.nota.value, respondio: sf.respondio.checked }, null, 'seguimientos').then(function () { toast('Contacto guardado.'); ficha(id, 1); refresh(); }); };
+      $$('[data-sd]', box).forEach(function (l) { l.onclick = function (e) { e.preventDefault(); if (!l.dataset.ok) { l.dataset.ok = 1; l.textContent = '¿seguro?'; return; } send({ op: 'seg-del', id: l.dataset.sd }, l.dataset.sd, 'seguimientos').then(function () { ficha(id, 1); refresh(); }); }; });
     }
-    progs(a).forEach(function (pg) { var e = IX.ev[id] || {}, nn = IX.nota[id] || {}; h += '<div class="tt-blk"><h3>Exámenes y TP · ' + pg + '</h3><div class="tt-grid" data-pg="' + pg + '">' + PROG[pg].map(function (it) { var x = nn[pg + '|' + it], k = pg + '|' + it; return '<button type="button" data-it="' + it + '" class="' + (e[k] ? 'ok' : x ? 'no' : '') + '" title="' + (x && x.fecha ? 'Rendido el ' + fcorta(x.fecha) : '') + '">' + it.replace('Módulo', 'Mód.').replace('Bloque', 'Bl.') + (x && x.nota != null ? ' · ' + x.nota : e[k] ? ' ✓' : '') + '</button>'; }).join('') + '</div>' + PROG[pg].filter(function (it) { return nn[pg + '|' + it] && nn[pg + '|' + it].archivo; }).map(function (it) { return '<a class="tt-file" target="_blank" rel="noopener" href="' + esc(nn[pg + '|' + it].archivo) + '">📄 Ver ' + it + '</a>'; }).join('') + '<p class="tt-tip">Las notas de Tally llegan solas. Rojo: rindió con menos de 60 y tiene que volver a rendir.</p></div>'; });
-    var g = IX.gr[id] || {}, wk = []; for (var k = 0; k < 6; k++) wk.push(iso(new Date(monday(TODAY).getTime() - k * 7 * 864e5)));
-    h += '<div class="tt-blk"><h3>Grupo de WhatsApp</h3><div class="tt-wk">' + wk.map(function (w) { var v = g[w] || ''; return '<div><span>Semana del ' + fcorta(w) + '</span><select data-w="' + w + '"><option value="">—</option><option value="activo"' + (v === 'activo' ? ' selected' : '') + '>Participa</option><option value="poco"' + (v === 'poco' ? ' selected' : '') + '>Poco</option><option value="nada"' + (v === 'nada' ? ' selected' : '') + '>No participa</option></select></div>'; }).join('') + '</div></div>';
-    h += '<div class="tt-blk"><h3>Kids &amp; Hero</h3><p class="tt-tip">Muy pronto vas a ver acá sus horas de juego, nivel, insignias y los dones que va descubriendo.</p></div>';
-    h += '<div class="tt-blk"><h3>Datos</h3><form class="tt-form" id="aluF">' + aluFields(a, pagos) + '<button class="tt-btn" type="submit">Guardar datos</button></form></div>';
-    $('#drBody').innerHTML = h; $('#ttDrawer').hidden = false; document.body.style.overflow = 'hidden'; $('.tt-dr').scrollTop = 0;
-    var sf = $('#segF');
-    $$('.tt-wa a').forEach(function (l) { l.addEventListener('click', function () { sf.motivo.value = l.dataset.m; sf.nota.focus(); }); });
-    sf.onsubmit = function (e) { e.preventDefault(); send({ op: 'seg', alumnoId: id, motivo: sf.motivo.value, fecha: sf.fecha.value, nota: sf.nota.value, respondio: sf.respondio.checked }, null, 'seguimientos').then(function () { toast('Seguimiento guardado.'); ficha(id); refresh(); }); };
-    $$('[data-sd]').forEach(function (l) { l.onclick = function (e) { e.preventDefault(); if (!l.dataset.ok) { l.dataset.ok = 1; l.textContent = '¿seguro?'; return; } send({ op: 'seg-del', id: l.dataset.sd }, l.dataset.sd, 'seguimientos').then(function () { ficha(id); refresh(); }); }; });
-    $$('#pgG button').forEach(function (b) { b.onclick = function () { var m = b.dataset.m; send({ op: 'pago', alumnoId: id, mes: m, pagado: !(IX.pago[id] || {})[m] }, id + '|' + m, 'pagos').then(function () { ficha(id); refresh(); }); }; });
-    $$('[data-pg]').forEach(function (gr) { $$('button', gr).forEach(function (b) { b.onclick = function () { var pg = gr.dataset.pg, it = b.dataset.it; send({ op: 'eval', alumnoId: id, programa: pg, item: it, ok: !(IX.ev[id] || {})[pg + '|' + it] }, null, null).then(function (r) { var k = id + '|' + pg + '|' + it; D.evaluaciones = D.evaluaciones.filter(function (x) { return !(x.alumnoId === id && x.programa === pg && x.item === it); }); if (r.item) D.evaluaciones.push(r.item); index(); ficha(id); refresh(); }); }; }); });
-    $$('[data-w]').forEach(function (s) { s.onchange = function () { send({ op: 'grupo', alumnoId: id, semana: s.dataset.w, nivel: s.value }, id + '|' + s.dataset.w, 'grupo').then(refresh); }; });
-    $('#aluF').onsubmit = function (e) { e.preventDefault(); saveAlu(e.target, id); };
+    if (FT === 'asis') {
+      var as = IX.asis[id] || [];
+      box.innerHTML = async_(a) ? '<p class="tt-tip">Cursa en modalidad asincrónica: su avance se ve en el Campus.</p>' : '<p class="tt-tip">' + (as.length ? as.filter(function (x) { return x.estado !== 'A'; }).length + ' de ' + as.length + ' clases · llegó tarde ' + as.filter(function (x) { return x.tarde; }).length + ' veces · se quedó a la mesa ' + as.filter(function (x) { return x.mesa; }).length + ' veces' : 'Sin clases registradas.') + '</p><div class="tt-grid">' + as.map(function (x) { return '<button type="button" disabled class="' + (x.estado === 'A' ? 'no' : x.estado === 'J' ? '' : 'ok') + '">' + fcorta(x.fecha) + '<small>' + STN[x.estado] + (x.tarde ? ' · tarde' : '') + (x.mesa ? ' · mesa' : '') + '</small></button>'; }).join('') + '</div>';
+    }
+    if (FT === 'ex') {
+      box.innerHTML = progs(a).map(function (pg) { var e = IX.ev[id] || {}, nn = IX.nota[id] || {}; return '<h3 class="tt-lbl">' + pg + '</h3><div class="tt-grid" data-pg="' + pg + '">' + PROG[pg].map(function (it) { var k = pg + '|' + it, x = nn[k]; return '<button type="button" data-it="' + it + '" class="' + (e[k] ? 'ok' : x ? 'no' : '') + '">' + it.replace('Módulo', 'Mód.').replace('Bloque', 'Bl.') + '<small>' + (x && x.nota != null ? 'nota ' + x.nota : e[k] ? 'hecho' : x ? 'recupera' : '—') + '</small></button>'; }).join('') + '</div>' + PROG[pg].filter(function (it) { return nn[pg + '|' + it] && nn[pg + '|' + it].archivo; }).map(function (it) { return '<a class="tt-file" target="_blank" rel="noopener" href="' + esc(nn[pg + '|' + it].archivo) + '">📄 Ver PDF del ' + it + '</a>'; }).join(' '); }).join('') + '<p class="tt-tip">Las notas de Tally llegan solas. En rojo: rindió con menos de 60 y vuelve a rendir. Tocá un casillero para marcarlo a mano.</p>';
+      $$('[data-pg]', box).forEach(function (gr) { $$('button', gr).forEach(function (b) { b.onclick = function () { var pg = gr.dataset.pg, it = b.dataset.it; send({ op: 'eval', alumnoId: id, programa: pg, item: it, ok: !(IX.ev[id] || {})[pg + '|' + it] }).then(function (r) { D.evaluaciones = D.evaluaciones.filter(function (x) { return !(x.alumnoId === id && x.programa === pg && x.item === it); }); if (r.item) D.evaluaciones.push(r.item); index(); ficha(id, 1); refresh(); }); }; }); });
+    }
+    if (FT === 'pag') {
+      if (becado(a)) { box.innerHTML = '<p class="tt-tip">Becado: no paga cuota.</p>'; return; }
+      var p = IX.pago[id] || {}, ms = []; for (var m = startM(a); m <= addM(CUR_M, 1) && ms.length < 24; m = addM(m, 1)) ms.push(m);
+      box.innerHTML = '<p class="tt-tip">' + esc(a.formaPago || 'Forma de pago sin cargar') + (a.matricula ? ' · matrícula paga' : '') + '</p><div class="tt-grid">' + ms.map(function (m) { var v = p[m], late = m < CUR_M || (m === CUR_M && TODAY.getDate() > 10); return '<button type="button" data-m="' + m + '" class="' + (v ? 'ok' : late ? 'no' : '') + '"' + (pagos ? '' : ' disabled') + '>' + MC[+m.slice(5) - 1] + '<small>' + (v ? 'pagó' : late ? 'pendiente' : '—') + '</small></button>'; }).join('') + '</div><p class="tt-tip">' + (pagos ? 'Tocá un mes para marcarlo como pagado o pendiente.' : 'Los pagos los marca Raquel.') + '</p>';
+      $$('[data-m]', box).forEach(function (b) { b.onclick = function () { var m = b.dataset.m; send({ op: 'pago', alumnoId: id, mes: m, pagado: !(IX.pago[id] || {})[m] }, id + '|' + m, 'pagos').then(function () { ficha(id, 1); refresh(); }); }; });
+    }
+    if (FT === 'gr') {
+      var g = IX.gr[id] || {}, wk = []; for (var k = 5; k >= 0; k--) wk.push(iso(addD(monday(TODAY), -7 * k)));
+      var G = { '': ['—', 'Sin marcar'], activo: ['💬', 'Participa'], poco: ['🙂', 'Poco'], nada: ['🔇', 'No participa'] }, ORD = ['', 'activo', 'poco', 'nada'];
+      box.innerHTML = '<p class="tt-tip">¿Cómo participó en el grupo de WhatsApp cada semana? Tocá para cambiar.</p><div class="tt-wk">' + wk.map(function (w) { var v = g[w] || ''; return '<button type="button" data-w="' + w + '" data-v="' + v + '"><em>' + G[v][0] + '</em>' + fcorta(w) + '<small>' + G[v][1] + '</small></button>'; }).join('') + '</div>';
+      $$('[data-w]', box).forEach(function (b) { b.onclick = function () { var n = ORD[(ORD.indexOf(b.dataset.v) + 1) % ORD.length]; send({ op: 'grupo', alumnoId: id, semana: b.dataset.w, nivel: n }, id + '|' + b.dataset.w, 'grupo').then(function () { pane(a); refresh(); }); }; });
+    }
+    if (FT === 'dat') {
+      box.innerHTML = '<form class="tt-card tt-form" id="aluF">' + aluFields(a, pagos) + '<button class="tt-btn w" type="submit">Guardar datos</button></form><div class="tt-card"><p class="tt-lbl">Kids &amp; Hero</p><p class="tt-tip">Muy pronto vas a ver acá sus horas de juego, nivel, insignias y los dones que va descubriendo.</p></div>';
+      $('#aluF').onsubmit = function (e) { e.preventDefault(); saveAlu(e.target, id); };
+    }
   }
   function aluFields(a, pagos) {
     var f = function (k, l, t, w) { return '<label' + (w ? ' class="w"' : '') + '>' + l + '<input name="' + k + '" type="' + (t || 'text') + '" value="' + esc(a[k] || '') + '"></label>'; };
-    var pars = parejas();
     return f('title', 'Nombre', 'text', 1) + f('carreras', 'Carreras (ej. Maranata y Liderazgo)') +
       '<label>Modalidad<select name="modalidad">' + ['Presencial', 'Zoom', 'Asincrónico'].map(function (m) { return '<option' + (a.modalidad === m ? ' selected' : '') + '>' + m + '</option>'; }).join('') + '</select></label>' +
-      '<label>Tutores<input name="tutores" list="parejasA" value="' + esc(a.tutores || '') + '"><datalist id="parejasA">' + pars.map(function (p) { return '<option>' + esc(p) + '</option>'; }).join('') + '</datalist></label>' +
+      '<label>Tutores<input name="tutores" list="parejasA" value="' + esc(a.tutores || '') + '"><datalist id="parejasA">' + parejas().map(function (p) { return '<option>' + esc(p) + '</option>'; }).join('') + '</datalist></label>' +
       f('ciudad', 'Ciudad') + f('telefono', 'WhatsApp', 'tel') + f('email', 'Email', 'email') + f('cumple', 'Cumpleaños', 'date') +
-      (pagos ? '<label>Forma de pago<select name="formaPago">' + ['', 'Débito automático', 'Transferencia', 'Efectivo', 'Becado'].map(function (m) { return '<option' + ((a.formaPago || '') === m ? ' selected' : '') + '>' + m + '</option>'; }).join('') + '</select></label><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="matricula" style="width:auto"' + (a.matricula ? ' checked' : '') + '> Matrícula paga</label>' : '') +
-      '<label class="w">Notas<textarea name="notas">' + esc(a.notas || '') + '</textarea></label>' +
-      (a._id ? '<label class="w" style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="baja" style="width:auto"' + (a.activo === false ? ' checked' : '') + '> Dejó de cursar (no aparece en las listas)</label>' : '');
+      (pagos ? '<label>Forma de pago<select name="formaPago">' + ['', 'Débito automático', 'Transferencia', 'Efectivo', 'Becado'].map(function (m) { return '<option' + ((a.formaPago || '') === m ? ' selected' : '') + '>' + m + '</option>'; }).join('') + '</select></label><label class="tt-inl"><input type="checkbox" name="matricula"' + (a.matricula ? ' checked' : '') + '> Matrícula paga</label>' : '') +
+      '<label class="w">Notas<textarea name="notas">' + esc(a.notas || '') + '</textarea></label>' + (a._id ? '<label class="w tt-inl"><input type="checkbox" name="baja"' + (a.activo === false ? ' checked' : '') + '> Dejó de cursar (no aparece en las listas)</label>' : '');
   }
   function saveAlu(f, id) {
     var o = { op: 'alumno', alumnoId: id || '', title: f.title.value, carreras: f.carreras.value, modalidad: f.modalidad.value, tutores: f.tutores.value, ciudad: f.ciudad.value, telefono: f.telefono.value, email: f.email.value, cumple: f.cumple.value, notas: f.notas.value, activo: !(f.baja && f.baja.checked) };
     if (f.formaPago) { o.formaPago = f.formaPago.value; o.matricula = f.matricula.checked; }
-    send(o, id, 'alumnos').then(function (r) { toast('Datos guardados.'); refresh(); ficha(r.item._id); });
+    send(o, id, 'alumnos').then(function (r) { toast('Datos guardados.'); refresh(); FT = 'dat'; ficha(r.item._id, 1); });
   }
-  function nuevo() {
-    $('#drBody').innerHTML = '<div><span class="kick">Nuevo alumno</span><h2 id="drName">Sumar alumno</h2></div><div class="tt-blk"><form class="tt-form" id="aluF">' + aluFields({ modalidad: 'Presencial', tutores: ME.pareja || '' }, ME.rol === 'pagos') + '<button class="tt-btn" type="submit">Crear</button></form></div>';
-    $('#ttDrawer').hidden = false; document.body.style.overflow = 'hidden';
-    $('#aluF').onsubmit = function (e) { e.preventDefault(); saveAlu(e.target, ''); };
-  }
+  function nuevo() { $('#drBody').innerHTML = '<div class="tt-fh">' + av('+', '', 'lg') + '<div><h2 id="drName">Sumar alumno</h2><p>Con nombre, carrera y tutores ya aparece en las listas.</p></div></div><form class="tt-card tt-form" id="aluF">' + aluFields({ modalidad: 'Presencial', tutores: ME.pareja || '' }, ME.rol === 'pagos') + '<button class="tt-btn w" type="submit">Sumar</button></form>'; $('#ttDrawer').hidden = false; document.body.style.overflow = 'hidden'; $('#aluF').onsubmit = function (e) { e.preventDefault(); saveAlu(e.target, ''); }; }
   function closeDr() { $('#ttDrawer').hidden = true; document.body.style.overflow = ''; }
   $$('[data-x]').forEach(function (e) { e.onclick = closeDr; });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDr(); });
-
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeDr(); var m = $('.tt-modal'); if (m) m.remove(); } });
   function parejas() { var s = {}; D.alumnos.forEach(function (a) { if (a.tutores) s[a.tutores] = 1; }); D.tutores.forEach(function (t) { if (t.pareja) s[t.pareja] = 1; }); return Object.keys(s).sort(); }
 
-  /* Notificaciones: cada dos semanas, recordatorio para el grupo y resumen de la quincena */
+  /* Notificaciones cada dos semanas */
   var ANCHOR = new Date(2026, 10, 2);
   function notis() {
-    var per = Math.floor((TODAY - ANCHOR) / (14 * 864e5)), seen = ls('tt:n') || '';
-    var ini = new Date(ANCHOR.getTime() + per * 14 * 864e5), desde = iso(new Date(ini.getTime() - 14 * 864e5));
-    var mine = D.alumnos.filter(function (a) { return a.activo !== false && (!ME.pareja || a.tutores === ME.pareja); });
-    var E = mine.map(function (a) { return { a: a, s: estado(a) }; });
-    var r = E.filter(function (x) { return x.s.lvl === 'r'; }), y = E.filter(function (x) { return x.s.lvl === 'y'; });
+    var per = Math.floor((TODAY - ANCHOR) / (14 * 864e5)), seen = ls('tt:n') || '', ini = addD(ANCHOR, per * 14), desde = iso(addD(ini, -14));
+    var mine = activos().filter(function (a) { return !ME.pareja || a.tutores === ME.pareja; });
+    var E = mine.map(function (a) { return { a: a, s: estado(a) }; }), r = E.filter(function (x) { return x.s.lvl === 'r'; }), y = E.filter(function (x) { return x.s.lvl === 'y'; });
     var segQ = D.seguimientos.filter(function (s) { return s.fecha >= desde && mine.some(function (a) { return a._id === s.alumnoId; }); }).length;
-    var cls = D.asistencia.filter(function (x) { return x.fecha >= desde && mine.some(function (a) { return a._id === x.alumnoId; }); });
-    var pct = cls.length ? Math.round(100 * cls.filter(function (x) { return x.estado !== 'A'; }).length / cls.length) : null;
+    var pct = asisPct(D.asistencia.filter(function (x) { return x.fecha >= desde && mine.some(function (a) { return a._id === x.alumnoId; }); }));
     var N = [
-      { k: 'g' + per, t: 'Toca escribir en el grupo', h: '<p>Cada dos semanas, un mensaje al grupo de WhatsApp de tus alumnos: una palabra, una pregunta sobre la última clase, un aviso o simplemente un saludo. Mantiene vivo el grupo y ayuda a ver quién se está alejando.</p>' },
-      { k: 'r' + per, t: 'Resumen de la quincena' + (ME.pareja ? ' · ' + ME.pareja : ''), h: '<ul><li>' + mine.length + ' alumnos · 🔴 ' + r.length + ' para seguimiento · 🟡 ' + y.length + ' para mirar</li>' + (pct != null ? '<li>Asistencia de las últimas dos semanas: ' + pct + '%</li>' : '') + '<li>Seguimientos individuales en la quincena: ' + segQ + '</li>' + r.slice(0, 6).map(function (x) { return '<li><b>' + esc(x.a.title) + '</b>: ' + esc(x.s.why.map(function (w) { return w[1]; }).join(', ')) + '</li>'; }).join('') + '</ul>' }
+      { k: 'g' + per, t: 'Toca escribir en el grupo', h: '<p>Cada dos semanas, un mensaje al grupo de WhatsApp de tus alumnos: una palabra, una pregunta sobre la última clase o simplemente un saludo. Mantiene vivo el grupo y ayuda a ver quién se está alejando.</p>' },
+      { k: 'r' + per, t: 'Tu quincena' + (ME.pareja ? ' · ' + ME.pareja : ''), h: '<ul><li>' + mine.length + ' alumnos: ' + r.length + ' para seguimiento y ' + y.length + ' para mirar</li>' + (pct != null ? '<li>Asistencia de estas dos semanas: ' + pct + '%</li>' : '') + '<li>Contactos individuales: ' + segQ + '</li>' + r.slice(0, 5).map(function (x) { return '<li><b>' + esc(x.a.title) + '</b>: ' + esc(x.s.why.map(function (w) { return w[1]; }).join(', ')) + '</li>'; }).join('') + '</ul>' }
     ];
     var un = N.filter(function (n) { return seen.indexOf('|' + n.k) < 0; });
     $('#ttBellN').textContent = un.length; $('#ttBellN').hidden = !un.length;
@@ -340,29 +406,26 @@
     if (un.length && !notis.shown) { notis.shown = 1; box.hidden = false; draw(); }
   }
 
-  function refresh() { var t = (document.querySelector('.tt-tabs .on') || {}).dataset; t = t ? t.t : 'alumnos'; if (t === 'alumnos') renderAlumnos(); if (t === 'lista') renderLista(); if (t === 'seg') renderSeg(); if (t === 'equipo') renderEquipo(); if (t === 'mesa') renderMesa(); if (t === 'cal') renderCal(); if (t === 'vol') renderVol(); }
-  $$('#ttTabs button').forEach(function (b) { b.onclick = function () { $$('#ttTabs button').forEach(function (x) { x.classList.toggle('on', x === b); }); $$('.tt-v').forEach(function (v) { v.hidden = v.id !== 'v-' + b.dataset.t; }); refresh(); }; });
+  function cur() { var b = $('.tt-tabs .on'); return b ? b.dataset.t : 'hoy'; }
+  function refresh() { var t = cur(); ({ hoy: renderHoy, alumnos: renderAlumnos, lista: renderLista, mesa: renderMesa, cal: renderCal, vol: renderVol, equipo: renderEquipo }[t] || renderHoy)(); }
+  function tab(t) { var b = $('#ttTabs [data-t="' + t + '"]'); if (!b || b.hidden) return; $$('#ttTabs button').forEach(function (x) { x.classList.toggle('on', x === b); }); $$('.tt-v').forEach(function (v) { v.hidden = v.id !== 'v-' + t; }); try { history.replaceState(null, '', '#' + t); } catch (e) {} refresh(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  $$('#ttTabs button').forEach(function (b) { b.onclick = function () { tab(b.dataset.t); }; });
 
   (async function init() {
     if (!A.loggedIn()) { try { sessionStorage.setItem('habitat:ret', '/tutor.html'); } catch (e) {} location.replace('/ingresar.html'); return; }
     try { D = await api('GET'); }
-    catch (e) { $('#ttWho').textContent = e.status === 403 ? 'Tu cuenta todavía no tiene acceso al panel de tutores. Pedíselo a la dirección de Habitat.' : 'No pudimos cargar el panel. Probá de nuevo en un momento.'; $('#ttList').innerHTML = ''; return; }
+    catch (e) { $('#ttHola').textContent = e.status === 403 ? 'Tu cuenta todavía no tiene acceso' : 'No se pudo cargar el panel'; $('#ttWho').textContent = e.status === 403 ? 'Pedile acceso a la dirección de Habitat con el email con el que entrás al Campus.' : 'Revisá tu conexión y recargá la página.'; $('#v-hoy').innerHTML = ''; return; }
     ME = D.me; index();
-    var R = { director: 'Director', tutor: 'Tutor', pagos: 'Pagos' };
-    $('#ttWho').textContent = 'Hola ' + (ME.title || '') + ' · ' + (R[ME.rol] || 'Tutor') + (ME.pareja ? ' · ' + ME.pareja : '');
-    $('#tabEq').hidden = ME.rol !== 'director'; $('#tabCal').hidden = ME.rol !== 'director'; $('#tabVol').hidden = ME.rol !== 'director';
-    var opts = parejas().map(function (p) { return '<option>' + esc(p) + '</option>'; }).join('');
-    $('#fPar').insertAdjacentHTML('beforeend', opts); $('#lPar').insertAdjacentHTML('beforeend', opts); $('#parejas').innerHTML = opts;
-    if (ME.pareja && parejas().indexOf(ME.pareja) >= 0) { $('#fPar').value = F.par = ME.pareja; $('#lPar').value = ME.pareja; }
-    $('#fQ').oninput = function () { F.q = this.value.trim().toLowerCase(); renderAlumnos(); };
-    $('#fPar').onchange = function () { F.par = this.value; renderAlumnos(); };
-    $('#fCar').onchange = function () { F.car = this.value; renderAlumnos(); };
-    $('#fMod').onchange = function () { F.mod = this.value; renderAlumnos(); };
-    $('#fEst').onchange = function () { F.est = this.value; renderAlumnos(); };
+    var R = { director: 'Director', tutor: 'Tutor', pagos: 'Pagos' }, h = new Date().getHours();
+    $('#ttHola').textContent = (h < 12 ? 'Buen día' : h < 20 ? 'Buenas tardes' : 'Buenas noches') + ', ' + (ME.title || '').split(' ')[0];
+    $('#ttWho').textContent = (R[ME.rol] || 'Tutor') + (ME.pareja ? ' · ' + ME.pareja : '') + ' · ' + DL[TODAY.getDay()] + ' ' + TODAY.getDate() + ' de ' + MESES[TODAY.getMonth()];
+    var dir = ME.rol === 'director'; $('#tabEq').hidden = !dir; $('#tabCal').hidden = !dir; $('#tabVol').hidden = !dir;
+    $('#parejas').innerHTML = parejas().map(function (p) { return '<option>' + esc(p) + '</option>'; }).join('');
+    if (ME.pareja && parejas().indexOf(ME.pareja) >= 0) F.par = ME.pareja;
+    $('#fQ').oninput = function () { F.q = this.value.trim(); renderAlumnos(); };
     $('#addAlu').onclick = nuevo;
-    $('#lDate').value = iso(lastSat());
-    ['#lDate', '#lCar', '#lMod', '#lPar'].forEach(function (s) { $(s).onchange = renderLista; });
-    renderAlumnos(); notis();
-    var h = location.hash.replace('#', ''); if (h) { var b = document.querySelector('#ttTabs [data-t="' + h + '"]'); if (b && !b.hidden) b.click(); }
+    $('#lDate').value = iso(lastClass()); $('#lDate').onchange = renderLista;
+    notis();
+    var hh = location.hash.replace('#', ''); if (hh && $('#ttTabs [data-t="' + hh + '"]') && !$('#ttTabs [data-t="' + hh + '"]').hidden) tab(hh); else renderHoy();
   })();
 })();
