@@ -191,7 +191,7 @@ body.tutor{background:var(--paper)}
 .tt-wk button em{font-style:normal;font-size:1.1rem}
 .tt-file{font:600 .84rem var(--sans);color:var(--ink)}
 .tt-toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(140px);background:var(--ink);color:var(--cream);padding:12px 20px;border-radius:999px;font:600 .88rem var(--sans);transition:transform .35s var(--ease);z-index:99;max-width:calc(100% - 32px)}
-.tt-toast.on{transform:translateX(-50%) translateY(0)}
+.tt-toast{visibility:hidden}.tt-toast.on{transform:translateX(-50%) translateY(0);visibility:visible}
 .tt-modal{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:16px;background:rgba(16,37,29,.45);animation:fade .2s}
 .tt-modal .tt-card{width:min(560px,100%);max-height:90vh;overflow:auto;animation:slide .3s var(--ease)}
 @media (max-width:860px){
