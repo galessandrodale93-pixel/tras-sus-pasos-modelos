@@ -2960,7 +2960,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){const n=D
 /* ---------- Narración grabada: narrador, varón y mujer (voces aprobadas, Kokoro es-419) ----------
    Cada texto tiene su MP3 en app/voice/<hash>.mp3 (hash FNV-1a de "voz|texto"); se baja recién cuando hace falta.
    Si un texto no tiene archivo (por ejemplo, porque lleva el nombre del jugador), lo lee la voz del aparato. */
-const VO={log:[],on:(()=>{try{return localStorage.getItem('tsp:narr')!=='0';}catch(e){return true;}})(),base:new URL('./voice/',import.meta.url).href,idx:null,el:null,q:[],cur:null,ok:false};
+const VO={log:[],on:(()=>{try{return localStorage.getItem('tsp:narr')!=='0';}catch(e){return true;}})(),base:(window.ASSET_BASE!==undefined?(window.ASSET_BASE?window.ASSET_BASE+'app/voice/':new URL('./voice/',import.meta.url).href):'https://tsp-assets.galessandrodale-93.workers.dev/app/voice/'),idx:null,el:null,q:[],cur:null,ok:false};
 const voH=s=>{let x=0x811c9dc5;for(let i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,0x01000193)>>>0;}return x.toString(16).padStart(8,'0');};
 function voIdx(){if(!VO.idx)VO.idx=fetch(VO.base+'index.json').then(r=>r.ok?r.json():[]).then(a=>new Set(a)).catch(()=>new Set());return VO.idx;}
 // los celulares solo dejan sonar audio después de un toque: se "abre" un reproductor en el primer toque y se reusa

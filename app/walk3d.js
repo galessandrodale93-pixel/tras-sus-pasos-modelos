@@ -268,7 +268,9 @@ const fbm = (x, y) => vnoise(x, y) * .5 + vnoise(x * 2.07, y * 2.07) * .25 + vno
 const sstep = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 function noiseTex(size, fn, rep) { const c = document.createElement('canvas'); c.width = c.height = size; const x = c.getContext('2d'), im = x.createImageData(size, size); for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) { const v = fn(i, j), k = (j * size + i) * 4; im.data[k] = v[0]; im.data[k + 1] = v[1]; im.data[k + 2] = v[2]; im.data[k + 3] = 255; } x.putImageData(im, 0, 0); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep, rep); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = matchMedia('(pointer: coarse)').matches ? 8 : 12; return t; }
 /* texturas del suelo (generadas para el juego, se repiten sin cortes) */
-const TEXB = new URL('./tex/', import.meta.url).href;
+// archivos pesados desde R2 (dirección fija: la caché no se pierde con cada versión del juego); window.ASSET_BASE = '' usa las rutas del repositorio
+const ABASE = window.ASSET_BASE !== undefined ? window.ASSET_BASE : 'https://tsp-assets.galessandrodale-93.workers.dev/';
+const TEXB = ABASE ? ABASE + 'app/tex/' : new URL('./tex/', import.meta.url).href;
 function texL(name, aniso) { const t = new THREE.TextureLoader().load(TEXB + name); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; return t; }
 function groundMat(Q, kids) {
   const an = Q.sh > 2048 ? 12 : 8, U = { tG: { value: texL('grass.jpg', an) }, tY: { value: texL('dry.jpg', an) }, tD: { value: texL('dirt.jpg', an) }, tR: { value: texL('rock.jpg', an) }, nG: { value: null }, nY: { value: null }, nD: { value: null }, nR: { value: null }, nOn: { value: 0 }, pbr: { value: 0 }, det: { value: 0 }, lo: { value: 0 } }; TEXK.tdet = U.det; TEXK.tlo = U.lo;
@@ -336,7 +338,7 @@ function waterWet(x, z, rf) { let w = 0; for (const b of WATER.basins) { const d
 
 /* ---------- cielo real (HDRI CC0 de Poly Haven): amanecer y mediodía, con reflejos del cielo en los materiales ---------- */
 const SKY = { tex: {}, env: {}, res: '', rot: [-1.462, -2.631], dir: [[.575, .083, -.814], [-.300, .742, -.599]], gen: null };
-const SKYB = new URL('./sky/', import.meta.url).href;
+const SKYB = ABASE ? ABASE + 'app/sky/' : new URL('./sky/', import.meta.url).href;
 let _r0 = null; const renderer0 = () => _r0;
 function skyRes() { return ['1k', '2k', '2k', '4k'][QUAL.lv]; }
 function skyLoad(sky, kids, r) {
@@ -633,7 +635,7 @@ try { if ('serviceWorker' in navigator && location.protocol === 'https:' && !/lo
 // y se guarda con la misma dirección que pide el juego, así el service worker la encuentra
 // orden de fuentes: R2 de Cloudflare (Worker tsp-assets, rápido y con CDN) → raw.githubusercontent → githack
 const DLM = { rx: /^https:\/\/(rawcdn|raw)\.githack\.com\/galessandrodale93-pixel\/tras-sus-pasos-modelos\/[0-9a-f]{7,40}\//, raw: 'https://raw.githubusercontent.com/galessandrodale93-pixel/tras-sus-pasos-modelos/main/', r2: 'https://tsp-assets.galessandrodale-93.workers.dev/', r2ok: /^(tex|hd|ph|hero|promo|app\/(sky|voice|flora|lobby|icons|tex))\/[\w\-./]+\.(glb|ktx2|webp|jpg|jpeg|png|mp3|mp4|wasm|bin)$/i };
-const dlSrc = u => { const m = u.match(DLM.rx); if (!m) return [u]; const p = u.slice(m[0].length).split('?')[0], L = []; if (DLM.r2ok.test(p)) L.push(DLM.r2 + p); L.push(u.replace(DLM.rx, m0 => m0.replace(/^https:\/\/(rawcdn|raw)\.githack\.com\//, 'https://raw.githubusercontent.com/'))); L.push(u); return L; };
+const dlSrc = u => { if (DLM.r2 && u.startsWith(DLM.r2)) return [u, 'https://raw.githubusercontent.com/galessandrodale93-pixel/tras-sus-pasos-modelos/main/' + u.slice(DLM.r2.length)]; const m = u.match(DLM.rx); if (!m) return [u]; const p = u.slice(m[0].length).split('?')[0], L = []; if (DLM.r2ok.test(p)) L.push(DLM.r2 + p); L.push(u.replace(DLM.rx, m0 => m0.replace(/^https:\/\/(rawcdn|raw)\.githack\.com\//, 'https://raw.githubusercontent.com/'))); L.push(u); return L; };
 const DLCT = { js: 'application/javascript', css: 'text/css', json: 'application/json', wasm: 'application/wasm', glb: 'model/gltf-binary', ktx2: 'image/ktx2', webp: 'image/webp', jpg: 'image/jpeg', png: 'image/png', mp3: 'audio/mpeg', bin: 'application/octet-stream' };
 async function dlFetch(c, files, prog) {
   const q = files.slice().sort((a, b) => b[1] - a[1]), fail = []; let got = 0; const t0 = performance.now(), tot = files.reduce((a, f) => a + f[1], 0) || 1;
@@ -645,7 +647,7 @@ async function dlFetch(c, files, prog) {
 const dlFmt = (got, tot, sp, eta) => `${(got / 1048576).toFixed(0)} de ${(tot / 1048576).toFixed(0)} MB · ${(got / tot * 100).toFixed(0)}% · ${(sp / 1048576).toFixed(1)} MB/s · faltan ${eta > 90 ? Math.ceil(eta / 60) + ' min' : Math.ceil(eta) + ' s'}`;
 async function dlList(lv) {
   const man = await (await fetch(DLW.root + 'app/assets.json', { cache: 'no-store' })).json(), T = ['bajo', 'medio', 'alto', 'ultra'][lv];
-  const paths = man.tiers[T] || [], abs = man.abs || []; return { files: paths.map(p => [DLW.root + p, man.size[p] || 0]).concat(abs.map(([u, n]) => [u, n])), mb: man.mb[T] };
+  const paths = man.tiers[T] || [], abs = man.abs || []; return { files: paths.map(p => [(ABASE && DLM.r2ok.test(p) ? ABASE : DLW.root) + p, man.size[p] || 0]).concat(abs.map(([u, n]) => [u, n])), mb: man.mb[T] };
 }
 // primera vez en una compu: ofrecer bajar todo el mundo de una vez (como la pantalla de carga de los juegos de PC)
 async function dlAsk() {
@@ -722,14 +724,15 @@ async function lobby() {
   let list = null, c = null, miss = [], files = [];
   try { list = await dlList(3); files = list.files; c = await caches.open(DLW.cache); const have = new Set((await c.keys()).map(r => r.url)); miss = files.filter(([u]) => !have.has(u)); } catch (e) { LOBBY.done = true; U.prog(null, 'Armando el mundo…'); return U; }
   const tot = files.reduce((a, f) => a + f[1], 0) || 1, MB = n => (n / 1048576).toFixed(0);
-  if (!miss.length) { LOBBY.done = true; U.prog(1, 'Mundo guardado en este aparato ✓ · Armando el mundo…'); return U; }
+  const purge = () => { try { const keep = new Set(files.map(f => f[0])); c.keys().then(K => K.forEach(rq => { const m = rq.url.match(DLM.rx); if (m && DLM.r2ok.test(rq.url.slice(m[0].length)) && !keep.has(rq.url)) c.delete(rq); })); } catch (e) {} };
+  if (!miss.length) { LOBBY.done = true; purge(); U.prog(1, 'Mundo guardado en este aparato ✓ · Armando el mundo…'); return U; }
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
   U.note.textContent = `Se guarda el mundo completo en máxima calidad (${MB(tot)} MB). Solo la primera vez: después entrás al instante, aun sin internet.`;
   return new Promise(resolve => {
     const run = async () => { U.go.hidden = true; const base = tot - miss.reduce((a, f) => a + f[1], 0);
       const fail = await dlFetch(c, miss, (g, t, sp, eta) => { const G2 = base + g; U.prog(G2 / tot, 'Descargando mundo en máxima calidad · ' + dlFmt(G2, tot, sp, (tot - G2) / Math.max(1, sp))); });
       if (fail.length) { miss = fail; U.go.hidden = false; U.go.textContent = 'Reintentar'; U.note.textContent = `Faltan ${fail.length} archivos (se cortó la conexión). Tocá «Reintentar».`; U.go.onclick = () => run(); return; }
-      LOBBY.done = true; U.prog(1, '¡Listo! Mundo guardado ✓'); U.note.textContent = 'Todo listo para jugar sin cortes.'; U.go.hidden = false; U.go.textContent = '¡Listo! Entrar'; U.go.classList.add('ready');
+      LOBBY.done = true; purge(); U.prog(1, '¡Listo! Mundo guardado ✓'); U.note.textContent = 'Todo listo para jugar sin cortes.'; U.go.hidden = false; U.go.textContent = '¡Listo! Entrar'; U.go.classList.add('ready');
       U.go.onclick = () => { U.go.hidden = true; U.note.textContent = ''; U.prog(null, 'Armando el mundo…'); resolve(U); }; };
     run();
   });
@@ -2449,7 +2452,7 @@ function ambWorld(scene, W, allPts, zMax, hx) {
    Texturas PBR CC0 de Poly Haven (large_sandstone_blocks, old_sandstone_02, marble_01, brown_planks_05, metal_plate). */
 const PBR = {};
 /* ---------- texturas PBR comprimidas en la placa de video (KTX2): 1k en Bajo/Medio, 2k en Alto, 4k en Ultra (paquete HD) ---------- */
-const TEXK = { L: null, reg: [], cache: {}, res: '', base: new URL('../tex/', import.meta.url).href, hd: window.HD_BASE || new URL('../hd/', import.meta.url).href, terrain: null, hd4: new Set([]) };
+const TEXK = { L: null, reg: [], cache: {}, res: '', base: ABASE ? ABASE + 'tex/' : new URL('../tex/', import.meta.url).href, hd: window.HD_BASE || (ABASE ? ABASE + 'hd/' : new URL('../hd/', import.meta.url).href), terrain: null, hd4: new Set([]) };
 const texRes = lv => ['1k', '1k', '2k', '4k'][lv];
 async function texLoader() {
   if (TEXK.L) return TEXK.L; if (!S) return null;
@@ -2765,7 +2768,7 @@ async function heroLoad() {
   if (H3.ok || H3.fail) return;
   try {
     globalThis.__THREE = THREE; const mod = await import(H3_BASE + 'gltf.js'), L = new mod.GLTFLoader();
-    const ld = u => new Promise((r, j) => L.load(H3_BASE + u, r, undefined, j));
+    const ld = u => new Promise((r, j) => L.load((ABASE ? ABASE + 'hero/' : H3_BASE) + u, r, undefined, j));
     const [m, f, an] = await Promise.race([Promise.all([ld(qEarly() >= 3 ? 'hero_m_hd.glb' : 'hero_m.glb'), ld(qEarly() >= 3 ? 'hero_f_hd.glb' : 'hero_f.glb'), ld('hero_anims.glb')]), new Promise((_, j) => setTimeout(() => j(new Error('tiempo')), 45000))]);
     H3.skClone = mod.skClone; const all = gl => { const r = new THREE.Group(); gl.scenes.forEach(x => r.add(x)); return r; }; H3.sex.m = h3Template(all(m)); H3.sex.f = h3Template(all(f));
     H3.clips = Object.fromEntries(an.animations.map(c => [c.name, c]));
@@ -2925,7 +2928,7 @@ function h3npcTick(dt) {
 /* ---------- Poly Haven (CC0): árboles, rocas, plantas y objetos reales escaneados ----------
    Cada modelo se baja recién cuando el jugador se acerca a la zona donde aparece (por franjas),
    se dibuja con instancias y las franjas lejanas se apagan, para que ande fluido en el celular. */
-const PHB = new URL('../ph/', import.meta.url).href;
+const PHB = ABASE ? ABASE + 'ph/' : new URL('../ph/', import.meta.url).href;
 const PH = { L: null, cache: {}, bands: [], one: [], uT: { value: 0 }, kids: false, near: 0 };
 const PH_BAND = 150; // franjas grandes: menos dibujos por modelo
 async function phLoader() { if (!PH.L) PH.L = (async () => { globalThis.__THREE = THREE; const mod = await import(H3_BASE + 'gltf.js'), L = new mod.GLTFLoader(); if (mod.MeshoptDecoder) L.setMeshoptDecoder(mod.MeshoptDecoder); try { const K = await texLoader(); if (K) L.setKTX2Loader(K); } catch (e) {} return L; })(); return PH.L; }
