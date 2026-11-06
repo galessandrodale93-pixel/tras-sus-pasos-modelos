@@ -28,13 +28,14 @@
 <main>
 
 <section class="tt-top"><div class="wrap">
-  <div class="tt-hi"><p class="tt-k">Panel de tutores</p><h1 id="ttHola">Hola</h1><p id="ttWho">Cargando…</p></div>
+  <div class="tt-hi"><p class="tt-k">Panel de tutores</p><h1 id="ttHola">Hola</h1><p id="ttWho">Cargando…</p><figure class="tt-word" id="ttWord" hidden><blockquote id="ttWordT"></blockquote><figcaption><span id="ttWordR"></span><button type="button" id="ttWordN">Otra palabra</button></figcaption></figure></div>
   <div class="tt-act">
     <button class="tt-bell" type="button" id="ttBell" aria-label="Notificaciones"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.4-1.8H9.6A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.8V3a1.5 1.5 0 0 0-3 0v1.2A7 7 0 0 0 5 11v5l-2 2v1h18v-1Z" fill="currentColor"/></svg><span id="ttBellN" hidden></span></button>
+    <a class="tt-ln" href="/voluntario.html" id="toVol" hidden>Mi servicio</a>
     <a class="tt-ln" href="/campus.html">Campus</a>
   </div>
 </div></section>
-<div class="tt-noti" id="ttNoti" hidden></div>
+<div class="tt-pop" id="ttNoti" hidden role="dialog" aria-label="Notificaciones"></div>
 <nav class="tt-tabs" id="ttTabs"><div class="wrap">
   <button data-t="hoy" class="on">Hoy</button><button data-t="alumnos">Alumnos</button><button data-t="lista">Pasar lista</button><button data-t="mesa">Tiempo de mesa</button><button data-t="cal" hidden id="tabCal">Calendario</button><button data-t="vol" hidden id="tabVol">Voluntarios</button><button data-t="equipo" hidden id="tabEq">Equipo</button>
 </div></nav>
@@ -113,6 +114,7 @@
 </div></footer>
 <script src="/assets/site.js"></script>
 <script src="/assets/auth.js"></script>
+<script src="/assets/aliento.js"></script>
 <script src="/assets/tutor.js"></script>
 </body>
 </html>

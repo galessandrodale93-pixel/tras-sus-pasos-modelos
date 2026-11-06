@@ -56,7 +56,7 @@ export const GET: APIRoute = async ({ url }) => {
           emailHtmlContent: html(v.title || "", target, tareas, extra),
           senderName: "Habitat CFM",
           senderEmailAddress: C.remitente || "galessandrodale.93@gmail.com",
-          toRecipients: [{ emailAddress: v.email }],
+          toRecipients: [{ emailAddress: String(v.email).split(/[,;\s]+/)[0] }],
           type: "TRANSACTIONAL",
         },
         idempotencyKey: crypto.randomUUID(),

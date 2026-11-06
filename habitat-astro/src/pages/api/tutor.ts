@@ -178,6 +178,11 @@ export const POST: APIRoute = async ({ request }) => {
         if (x.id) { it._id = s(x.id, 120); await save("CampusEventos", it); return json({ ok: true, item: it }); }
         return json({ ok: true, item: await ins("CampusEventos", it) });
       }
+      case "grupo-listo": {
+        const cur = (await q("TutTutores").eq("_id", me._id).limit(1).find()).items[0] as Record<string, unknown>;
+        const it = { _id: me._id, title: cur.title, email: cur.email, pareja: cur.pareja, rol: cur.rol, grupoUlt: new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10) };
+        await save("TutTutores", it); return json({ ok: true, item: it });
+      }
       case "tutor": {
         if (me.rol !== "director") return json({ error: "Solo los directores administran el equipo." }, 403);
         const email = s(x.email, 120).toLowerCase(); if (!/^\S+@\S+\.\S+$/.test(email)) return json({ error: "email" }, 400);

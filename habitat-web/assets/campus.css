@@ -361,3 +361,5 @@ a.rg,a.rg *{text-decoration:none}
 .bb-side cite{display:block;font-style:normal;font-size:12px;opacity:.7;margin-top:4px}
 .bb-side textarea{width:100%;min-height:120px;border:1px solid rgba(0,0,0,.15);border-radius:12px;padding:10px 12px;font:inherit}
 @media (max-width:900px){.bb{grid-template-columns:1fr}.bb-side{position:sticky;bottom:0;top:auto;z-index:5;box-shadow:0 -8px 24px rgba(0,0,0,.08)}.bb-side:not(.sel){display:none}.bb-side blockquote{max-height:110px}.bb-side textarea{min-height:70px}}
+.hi-act .out.gold{background:var(--gold-2);color:var(--ink);border-color:var(--gold-2)}
+.hi-act [hidden]{display:none!important}

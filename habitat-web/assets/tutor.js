@@ -120,10 +120,11 @@
     var pa = asisPct(asis) || 0, ppag = pagN ? Math.round(100 * pag / pagN) : 0, pg = all.length ? Math.round(100 * g / all.length) : 0;
     var S = D.seguimientos.slice().filter(function (s) { return !/Excel/.test(s.nota || ''); }).sort(function (a, b) { return a.fecha < b.fecha ? 1 : -1; }).slice(0, 8);
     $('#v-hoy').innerHTML = '<div class="tt-today">' + T.join('') + '</div>' +
-      '<div class="tt-card tt-stats"><div class="tt-stat">' + ring(pa, pa + '%') + '<small>de asistencia en el último mes</small></div><div class="tt-stat">' + ring(pg, pg + '%', 'var(--gold)') + '<small>de tus alumnos al día</small></div><div class="tt-stat">' + ring(ppag, ppag + '%', '#4f6d8a') + '<small>pagó ' + mesTxt(addM(CUR_M, -1)) + '</small></div><div class="tt-pills" style="margin-left:auto">' + pairPills('hoy') + '</div></div>' +
+      renderQuincena() + '<div class="tt-card tt-stats"><div class="tt-stat">' + ring(pa, pa + '%') + '<small>de asistencia en el último mes</small></div><div class="tt-stat">' + ring(pg, pg + '%', 'var(--gold)') + '<small>de tus alumnos al día</small></div><div class="tt-stat">' + ring(ppag, ppag + '%', '#4f6d8a') + '<small>pagó ' + mesTxt(addM(CUR_M, -1)) + '</small></div></div>' +
       '<div id="tallyBox"></div><h2 class="tt-h">Últimos contactos individuales</h2><div class="tt-tl">' + (S.length ? S.map(function (s) { var a = IX.alu[s.alumnoId] || {}; return '<div><b>' + esc(a.title || s.alumnoId) + ' · ' + esc(s.motivo || '') + '</b><span>' + esc(s.nota) + '</span><small>' + fcorta(s.fecha) + ' · ' + esc(s.tutor || '') + (s.respondio ? ' · respondió 🙌🏽' : '') + '</small></div>'; }).join('') : '<div><span>Todavía no hay contactos registrados. Cuando le escribas a alguien, anotalo en su ficha.</span></div>') + '</div>';
     $$('#v-hoy [data-go]').forEach(function (b) { b.onclick = function () { var g = b.dataset.go; if (g === 'contactar') { F.est = 'c'; tab('alumnos'); } else if (g === 'tally') $('#tallyBox').scrollIntoView({ behavior: 'smooth' }); else tab(g); }; });
     bindPairPills('hoy', renderHoy);
+    bindQuincena($('#v-hoy'));
     renderTally();
   }
   function pairPills(k) { return ['<button class="tt-pill' + (!F.par ? ' on' : '') + '" data-pp="">Todos</button>'].concat(parejas().map(function (p) { return '<button class="tt-pill' + (F.par === p ? ' on' : '') + '" data-pp="' + esc(p) + '">' + esc(p) + '</button>'; })).join(''); }
@@ -172,7 +173,7 @@
     $('#lBar').style.width = (L.length ? 100 * dn / L.length : 0) + '%'; $('#lCnt').textContent = dn + ' de ' + L.length + ' marcados';
     $('#ttRoll').innerHTML = L.map(function (a) {
       var x = by[a._id] || {}, e = x.estado || '', on = e === 'P' || e === 'Z';
-      return '<div class="tt-tile ' + e + '" role="button" tabindex="0" data-id="' + esc(a._id) + '">' + av(a.title) + '<b>' + esc(a.title) + '</b><span class="st">' + STN[e] + '</span><span class="tg"><button type="button" data-k="tarde"' + (x.tarde ? ' class="on"' : '') + (on ? '' : ' disabled') + '>Tarde</button><button type="button" data-k="mesa"' + (x.mesa ? ' class="on"' : '') + (on ? '' : ' disabled') + '>Mesa</button></span></div>';
+      return '<div class="tt-tile ' + e + '" role="button" tabindex="0" data-id="' + esc(a._id) + '">' + av(a.title) + '<b>' + esc(a.title) + '</b><span class="st">' + STN[e] + '</span><span class="tg"><button type="button" data-k="tarde" title="Llegó tarde"' + (x.tarde ? ' class="on"' : '') + (on ? '' : ' disabled') + '>⏰ Llegó tarde</button><button type="button" data-k="mesa" title="Se quedó al tiempo de mesa"' + (x.mesa ? ' class="on"' : '') + (on ? '' : ' disabled') + '>🍽️ Se quedó a la mesa</button></span></div>';
     }).join('') || '<p class="tt-empty">No hay alumnos para esta clase con estos filtros.</p>';
     $$('#ttRoll .tt-tile').forEach(function (t) {
       var id = t.dataset.id, cur = function () { return by[id] || {}; };
@@ -386,25 +387,50 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeDr(); var m = $('.tt-modal'); if (m) m.remove(); } });
   function parejas() { var s = {}; D.alumnos.forEach(function (a) { if (a.tutores) s[a.tutores] = 1; }); D.tutores.forEach(function (t) { if (t.pareja) s[t.pareja] = 1; }); return Object.keys(s).sort(); }
 
-  /* Notificaciones cada dos semanas */
+  /* Quincena y notificaciones */
   var ANCHOR = new Date(2026, 10, 2);
+  function quincena() { var per = Math.floor((TODAY - ANCHOR) / (14 * 864e5)), ini = addD(ANCHOR, per * 14); return { per: per, ini: ini, fin: addD(ini, 13) }; }
+  function quinData() {
+    var Q = quincena(), desde = iso(Q.ini), hasta = iso(Q.fin);
+    var mine = activos().filter(function (a) { return !F.par || a.tutores === F.par; });
+    var E = mine.map(function (a) { return { a: a, s: estado(a) }; }), rojos = E.filter(function (x) { return x.s.lvl !== 'g'; });
+    var hecho = function (a) { return (IX.seg[a._id] || []).some(function (s) { return s.fecha >= desde && s.fecha <= hasta; }); };
+    var clases = []; for (var d = new Date(Q.ini); d <= TODAY && d <= Q.fin; d = addD(d, 1)) if ([3, 4, 6].indexOf(d.getDay()) >= 0) clases.push(iso(d));
+    var pres = mine.filter(function (a) { return !async_(a); });
+    var listas = clases.map(function (f) { var n = D.asistencia.filter(function (x) { return x.fecha === f && pres.some(function (a) { return a._id === x.alumnoId; }); }).length; return { f: f, n: n }; }).filter(function (c) { return c.n > 0 || c.f >= iso(addD(TODAY, -2)); });
+    return { Q: Q, mine: mine, rojos: rojos, hecho: hecho, grupo: (ME.grupoUlt || '') >= desde, listas: listas, pres: pres.length };
+  }
+  function renderQuincena() {
+    var q = quinData(), dias = Math.round((q.Q.fin - TODAY) / 864e5), cont = q.rojos.filter(function (x) { return q.hecho(x.a); }).length;
+    var listasOk = q.listas.every(function (c) { return c.n >= q.pres; });
+    var it = function (done, title, sub, extra, act) { return '<div class="tt-qi' + (done ? ' done' : '') + '"><span class="tt-ck" aria-hidden="true">' + (done ? '✓' : '') + '</span><div><b>' + title + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + (extra || '') + '</div>' + (act || '') + '</div>'; };
+    return '<div class="tt-card tt-q"><div class="tt-qh"><div><h2>Tu quincena</h2><small>Del ' + fcorta(iso(q.Q.ini)) + ' al ' + fcorta(iso(q.Q.fin)) + ' · ' + (dias > 0 ? 'quedan ' + dias + ' días' : 'último día') + '</small></div><div class="tt-pills">' + pairPills() + '</div></div>' +
+      it(q.grupo, 'Escribir en el grupo de WhatsApp', q.grupo ? 'Hecho el ' + fcorta(ME.grupoUlt) + '. ¡Gracias!' : 'Una palabra, una pregunta sobre la última clase o un saludo. Ayuda a ver quién se está alejando.', '', q.grupo ? '' : '<button class="tt-btn s" type="button" id="gListo">Ya escribí</button>') +
+      it(q.rojos.length && cont === q.rojos.length, 'Acompañar a los que están en rojo o amarillo', q.rojos.length ? cont + ' de ' + q.rojos.length + ' contactados esta quincena. Tocá una cara para abrir su ficha.' : 'Nadie necesita seguimiento por ahora.', q.rojos.length ? '<div class="tt-mini" style="max-width:none"><i style="width:' + Math.round(100 * cont / q.rojos.length) + '%"></i></div><div class="tt-faces">' + q.rojos.map(function (x) { return '<button type="button" data-id="' + esc(x.a._id) + '" class="' + (q.hecho(x.a) ? 'ok' : '') + '" title="' + esc(x.a.title) + '">' + av(x.a.title, x.s.lvl, 'sm') + '</button>'; }).join('') + '</div>' : '') +
+      it(q.listas.length && listasOk, 'Pasar lista en cada clase', q.listas.length ? q.listas.map(function (c) { return fcorta(c.f) + ': ' + c.n + '/' + q.pres; }).join(' · ') : 'Todavía no hubo clases en esta quincena.', '', q.listas.length && !listasOk ? '<button class="tt-btn s" type="button" data-go="lista">Pasar lista</button>' : '') + '</div>';
+  }
+  function bindQuincena(root) {
+    var g = $('#gListo', root); if (g) g.onclick = function () { send({ op: 'grupo-listo' }).then(function (r) { ME.grupoUlt = r.item.grupoUlt; toast('¡Bien! Quedó registrado.'); refresh(); notis(); }); };
+    $$('.tt-q .tt-faces button', root).forEach(function (b) { b.onclick = function () { ficha(b.dataset.id); }; });
+    $$('.tt-q [data-go]', root).forEach(function (b) { b.onclick = function () { tab(b.dataset.go); }; });
+    $$('.tt-q [data-pp]', root).forEach(function (b) { b.onclick = function () { F.par = b.dataset.pp; refresh(); }; });
+  }
   function notis() {
-    var per = Math.floor((TODAY - ANCHOR) / (14 * 864e5)), seen = ls('tt:n') || '', ini = addD(ANCHOR, per * 14), desde = iso(addD(ini, -14));
-    var mine = activos().filter(function (a) { return !ME.pareja || a.tutores === ME.pareja; });
-    var E = mine.map(function (a) { return { a: a, s: estado(a) }; }), r = E.filter(function (x) { return x.s.lvl === 'r'; }), y = E.filter(function (x) { return x.s.lvl === 'y'; });
-    var segQ = D.seguimientos.filter(function (s) { return s.fecha >= desde && mine.some(function (a) { return a._id === s.alumnoId; }); }).length;
-    var pct = asisPct(D.asistencia.filter(function (x) { return x.fecha >= desde && mine.some(function (a) { return a._id === x.alumnoId; }); }));
-    var N = [
-      { k: 'g' + per, t: 'Toca escribir en el grupo', h: '<p>Cada dos semanas, un mensaje al grupo de WhatsApp de tus alumnos: una palabra, una pregunta sobre la última clase o simplemente un saludo. Mantiene vivo el grupo y ayuda a ver quién se está alejando.</p>' },
-      { k: 'r' + per, t: 'Tu quincena' + (ME.pareja ? ' · ' + ME.pareja : ''), h: '<ul><li>' + mine.length + ' alumnos: ' + r.length + ' para seguimiento y ' + y.length + ' para mirar</li>' + (pct != null ? '<li>Asistencia de estas dos semanas: ' + pct + '%</li>' : '') + '<li>Contactos individuales: ' + segQ + '</li>' + r.slice(0, 5).map(function (x) { return '<li><b>' + esc(x.a.title) + '</b>: ' + esc(x.s.why.map(function (w) { return w[1]; }).join(', ')) + '</li>'; }).join('') + '</ul>' }
-    ];
+    var q = quinData(), seen = ls('tt:seen') || '', N = [];
+    if (!q.grupo) N.push({ k: 'g' + q.Q.per, e: '💬', t: 'Toca escribir en el grupo', s: 'Esta quincena todavía no registraste un mensaje al grupo.', go: 'hoy' });
+    var pc = porContactar(); if (pc.length) N.push({ k: 'c' + q.Q.per + '-' + pc.length, e: '🤝', t: pc.length + (pc.length === 1 ? ' persona para acompañar' : ' personas para acompañar'), s: pc.slice(0, 3).map(function (x) { return x.a.title; }).join(', ') + (pc.length > 3 ? '…' : ''), go: 'contactar' });
+    if ((D.tally || []).length) N.push({ k: 't' + D.tally.length, e: '📝', t: 'Exámenes sin asignar', s: 'Llegaron de Tally y hay que elegir de quién son.', go: 'hoy' });
+    var exm = (D.eventos || []).filter(function (e) { var f = iso(evDate(e)); return e.mesa && f <= iso(TODAY) && f >= iso(addD(TODAY, -10)) && !(D.mesa || []).some(function (m) { return m.fecha === f; }); });
+    if (exm.length) N.push({ k: 'm' + exm[0]._id, e: '🍽️', t: 'Registrar el tiempo de mesa', s: 'Del ' + fcorta(iso(evDate(exm[0]))) + '.', go: 'mesa' });
     var un = N.filter(function (n) { return seen.indexOf('|' + n.k) < 0; });
     $('#ttBellN').textContent = un.length; $('#ttBellN').hidden = !un.length;
     var box = $('#ttNoti');
-    function draw() { box.innerHTML = '<div class="wrap">' + N.map(function (n) { return '<div class="tt-n"><b>' + n.t + '</b>' + n.h + '<button class="nx" data-k="' + n.k + '">Marcar como leída</button></div>'; }).join('') + '</div>'; $$('.nx', box).forEach(function (b) { b.onclick = function () { ls('tt:n', (ls('tt:n') || '') + '|' + b.dataset.k); b.closest('.tt-n').remove(); notis(); if (!box.querySelector('.tt-n')) box.hidden = true; }; }); }
-    $('#ttBell').onclick = function () { box.hidden = !box.hidden; if (!box.hidden) draw(); };
-    if (un.length && !notis.shown) { notis.shown = 1; box.hidden = false; draw(); }
+    var draw = function () { box.innerHTML = '<h3>Notificaciones</h3>' + (N.length ? N.map(function (n) { return '<button class="tt-ni' + (seen.indexOf('|' + n.k) < 0 ? ' new' : '') + '" data-go="' + n.go + '"><em>' + n.e + '</em><span><b>' + n.t + '</b><small>' + esc(n.s) + '</small></span></button>'; }).join('') : '<p class="tt-tip" style="padding:12px">No tenés nada pendiente. 🙌🏽</p>'); $$('[data-go]', box).forEach(function (b) { b.onclick = function () { box.hidden = true; var g = b.dataset.go; if (g === 'contactar') { F.est = 'c'; tab('alumnos'); } else tab(g); }; }); };
+    $('#ttBell').onclick = function (e) { e.stopPropagation(); box.hidden = !box.hidden; if (!box.hidden) { draw(); ls('tt:seen', seen + N.map(function (n) { return '|' + n.k; }).join('')); $('#ttBellN').hidden = true; } };
+    document.addEventListener('click', function (e) { if (!box.hidden && !box.contains(e.target)) box.hidden = true; });
   }
+  function palabra() { if (!window.HabitatAliento) return; var w = window.HabitatAliento('tutor'); $('#ttWordT').textContent = w.t; $('#ttWordR').textContent = w.r || 'Para vos, hoy'; $('#ttWord').hidden = false; }
+  $('#ttWordN').onclick = palabra;
 
   function cur() { var b = $('.tt-tabs .on'); return b ? b.dataset.t : 'hoy'; }
   function refresh() { var t = cur(); ({ hoy: renderHoy, alumnos: renderAlumnos, lista: renderLista, mesa: renderMesa, cal: renderCal, vol: renderVol, equipo: renderEquipo }[t] || renderHoy)(); }
@@ -425,7 +451,8 @@
     $('#fQ').oninput = function () { F.q = this.value.trim(); renderAlumnos(); };
     $('#addAlu').onclick = nuevo;
     $('#lDate').value = iso(lastClass()); $('#lDate').onchange = renderLista;
-    notis();
+    notis(); palabra();
+    try { var tk = await token(); fetch('/api/rol', { headers: { 'x-habitat-auth': tk } }).then(function (r) { return r.json(); }).then(function (r) { if (r.voluntario) $('#toVol').hidden = false; }); } catch (e) {}
     var hh = location.hash.replace('#', ''); if (hh && $('#ttTabs [data-t="' + hh + '"]') && !$('#ttTabs [data-t="' + hh + '"]').hidden) tab(hh); else renderHoy();
   })();
 })();
