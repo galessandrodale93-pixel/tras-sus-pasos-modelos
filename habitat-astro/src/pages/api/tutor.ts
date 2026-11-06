@@ -51,10 +51,17 @@ export const GET: APIRoute = async ({ request }) => {
   try {
     const me = await who(request);
     if (!me) return json({ error: "Tu cuenta no tiene acceso al panel de tutores." }, 403);
-    const [alumnos, asistencia, pagos, evaluaciones, grupo, seguimientos, tutores] = await Promise.all(
-      ["TutAlumnos", "TutAsistencia", "TutPagos", "TutEvaluaciones", "TutGrupo", "TutSeguimientos", "TutTutores"].map(all),
+    const [alumnos, asistencia, pagos, evaluaciones, grupo, seguimientos, tutores, mesa, tally, voluntarios, turnos, ev] = await Promise.all(
+      ["TutAlumnos", "TutAsistencia", "TutPagos", "TutEvaluaciones", "TutGrupo", "TutSeguimientos", "TutTutores", "TutMesa", "TutTally", "VolVoluntarios", "VolTurnos"].map(all)
+        .concat([q("CampusEventos").ge("inicio", new Date(Date.now() - 120 * 864e5)).ascending("inicio").limit(500).find().then((r) => r.items)]),
     );
-    return json({ me, alumnos, asistencia, pagos, evaluaciones, grupo, seguimientos, tutores: tutores.map(({ email, ...t }) => (me.rol === "director" ? { email, ...t } : t)) });
+    const dir = me.rol === "director";
+    return json({
+      me, alumnos, asistencia, pagos, evaluaciones, grupo, seguimientos, mesa, tally,
+      tutores: tutores.map(({ email, ...t }) => (dir ? { email, ...t } : t)),
+      voluntarios: voluntarios.map(({ clave, ...v }) => (dir ? { clave, ...v } : v)),
+      turnos, eventos: (ev as Record<string, unknown>[]).map(({ _createdDate, _updatedDate, _owner, ...x }) => x),
+    });
   } catch (e) {
     console.error("tutor GET", e);
     return json({ error: "No pudimos cargar el panel." }, 500);
@@ -124,6 +131,52 @@ export const POST: APIRoute = async ({ request }) => {
         else if (nuevo) { it.formaPago = ""; it.matricula = false; }
         delete it._createdDate; delete it._updatedDate; delete it._owner;
         await save("TutAlumnos", it); return json({ ok: true, item: it });
+      }
+      case "mesa": {
+        if (x.borrar) { await rem("TutMesa", s(x.id, 120)); return json({ ok: true }); }
+        const f = s(x.fecha, 10); if (!DATE.test(f)) return json({ error: "fecha" }, 400);
+        const data = { fecha: f, programa: s(x.programa, 60), tutor: s(x.tutor, 80) || por, asistentes: s(x.asistentes, 4000), temas: s(x.temas, 4000), observaciones: s(x.observaciones, 4000), por };
+        if (!data.temas && !data.observaciones) return json({ error: "Contá de qué se habló o qué notaste." }, 400);
+        if (x.id) { const it = { _id: s(x.id, 120), ...data }; await save("TutMesa", it); return json({ ok: true, item: it }); }
+        return json({ ok: true, item: await ins("TutMesa", data) });
+      }
+      case "tally": {
+        const id = s(x.id, 60);
+        const p = (await q("TutTally").eq("_id", id).limit(1).find()).items[0] as Record<string, unknown> | undefined;
+        if (!p) return json({ error: "Ya no está pendiente." }, 404);
+        if (!x.descartar) {
+          needAlu(); const pg = String(p.programa || ""), it = String(p.item || ""), nota = typeof p.nota === "number" ? p.nota : null;
+          await save("TutEvaluaciones", { _id: alu + "|" + asc(pg) + "|" + asc(it), alumnoId: alu, programa: pg, item: it, ok: nota == null || nota >= 60, nota, fecha: p.fecha, fuente: "Tally", por, archivo: p.archivo || "" });
+        }
+        await rem("TutTally", id); return json({ ok: true });
+      }
+      case "vol": {
+        if (me.rol !== "director") return json({ error: "Solo la dirección organiza a los voluntarios." }, 403);
+        if (x.borrar) { await rem("VolVoluntarios", s(x.id, 80)); return json({ ok: true }); }
+        const title = s(x.title, 80); if (!title) return json({ error: "Falta el nombre." }, 400);
+        const id = s(x.id, 80) || asc(title);
+        const cur = (await q("VolVoluntarios").eq("_id", id).limit(1).find()).items[0] as Record<string, unknown> | undefined;
+        const it = { _id: id, title, email: s(x.email, 120).toLowerCase(), telefono: s(x.telefono, 40), disponibilidad: s(x.disponibilidad, 200), activo: x.activo === undefined ? true : b(x.activo), clave: (cur && cur.clave) || crypto.randomUUID().replace(/-/g, "").slice(0, 16) };
+        await save("VolVoluntarios", it); return json({ ok: true, item: it });
+      }
+      case "turno": {
+        if (me.rol !== "director") return json({ error: "Solo la dirección organiza a los voluntarios." }, 403);
+        const f = s(x.fecha, 10), t = s(x.tarea, 40), v = s(x.voluntarioId, 80);
+        if (!DATE.test(f) || !t || !ID.test(v)) return json({ error: "datos" }, 400);
+        const _id = f + "|" + asc(t) + "|" + v;
+        if (x.borrar) { await rem("VolTurnos", _id).catch(() => null); return json({ ok: true }); }
+        const it = { _id, fecha: f, tarea: t, voluntarioId: v, nota: s(x.nota, 300), avisado: "" };
+        await save("VolTurnos", it); return json({ ok: true, item: it });
+      }
+      case "evento": {
+        if (me.rol !== "director") return json({ error: "Solo la dirección edita el calendario." }, 403);
+        if (x.borrar) { await rem("CampusEventos", s(x.id, 120)); return json({ ok: true }); }
+        const ini = new Date(s(x.inicio, 40)); if (isNaN(+ini)) return json({ error: "Revisá la fecha y la hora." }, 400);
+        const fin = x.fin ? new Date(s(x.fin, 40)) : null;
+        const it: Record<string, unknown> = { title: s(x.title, 160) || "Habitat", tipo: s(x.tipo, 40) || "Aviso", inicio: ini, descripcion: s(x.descripcion, 2000), link: s(x.link, 400), lugar: s(x.lugar, 160), curso: s(x.curso, 120), programId: s(x.programId, 40), mesa: b(x.mesa), destacado: b(x.destacado) };
+        if (fin && !isNaN(+fin)) it.fin = fin;
+        if (x.id) { it._id = s(x.id, 120); await save("CampusEventos", it); return json({ ok: true, item: it }); }
+        return json({ ok: true, item: await ins("CampusEventos", it) });
       }
       case "tutor": {
         if (me.rol !== "director") return json({ error: "Solo los directores administran el equipo." }, 403);

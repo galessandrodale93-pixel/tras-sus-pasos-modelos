@@ -98,3 +98,21 @@ body.tutor{background:var(--paper)}
   .tt-form{grid-template-columns:1fr}
   .tt-tabs{top:calc(58px + env(safe-area-inset-top,0px))}
 }
+.tt-calh{display:flex;align-items:center;gap:12px}
+.tt-calh .tt-h{margin:0;min-width:0;flex:1}
+.tt-cal{display:grid;gap:8px}
+.tt-vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.tt-vrow{display:grid;gap:6px;padding:8px 0;border-top:1px solid var(--line)}
+.tt-vrow>span:first-child{font-weight:600;font-size:.86rem}
+.tt-vwho{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tt-vwho .tt-ch{border:0;cursor:pointer}
+.tt-vwho select{font:500 .8rem var(--sans);padding:6px 8px;border:1px dashed var(--line);border-radius:999px;background:var(--paper);color:var(--muted)}
+.tt-chk{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px;margin-top:6px}
+.tt-chk label{display:flex!important;gap:8px;align-items:center;font:500 .86rem var(--sans)!important;color:var(--ink)!important;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:8px 10px;cursor:pointer}
+.tt-chk input{width:auto!important}
+.tt-lbl{font:600 .75rem var(--sans);color:var(--muted)}
+.tt-inl{display:flex!important;gap:8px;align-items:center}
+.tt-inl input{width:auto!important}
+.tt-form h3{font:600 .78rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.tt-file{display:inline-block;margin-right:10px;font:600 .82rem var(--sans);color:var(--ink)}
+.tt-tm select{font:500 .85rem var(--sans);padding:8px;border:1px solid var(--line);border-radius:9px;max-width:100%}

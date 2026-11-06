@@ -71,6 +71,11 @@ campus = '''
   <div class="st"><b id="sHrs">–</b><span>de formación</span></div>
   <div class="st"><b id="sFin">–</b><span>programas completos</span></div>
 </div></section>
+<section class="cx-sec" id="servicio" hidden><div class="wrap">
+  <div class="cx-h"><h2>Mi servicio</h2><span class="cal-act"><a id="svCal" href="#">+ Avisos en mi teléfono</a></span></div>
+  <div class="ag" id="svList"></div>
+  <p class="ag-tip" id="svAn"></p>
+</div></section>
 <section class="cx-sec" id="agenda"><div class="wrap">
   <div class="cx-h"><h2>Agenda y avisos</h2><span class="cal-act"><a id="calG" href="#" target="_blank" rel="noopener">+ Google Calendar</a><a id="calI" href="#">+ iPhone / Outlook</a></span></div>
   <div class="ag" id="agList"><p class="cx-empty">Cargando la agenda…</p></div>
@@ -94,6 +99,12 @@ var A=window.HabitatAuth,D=window.CampusData;
 if(!A.loggedIn()){location.replace('/ingresar.html');return;}
 document.getElementById('outBtn').onclick=function(){A.logout();};
 var X=window.CampusExtra;
+(async function(){try{await A.api('GET','/members/v1/members/my');var tk=JSON.parse(localStorage.getItem('habitat:mtok')).a;var r=await fetch('/api/voluntario',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();});
+ if(!r.voluntario||!r.turnos||!r.turnos.length)return;var hoy=new Date(Date.now()-3*3600e3).toISOString().slice(0,10),man=new Date(Date.now()+21*3600e3).toISOString().slice(0,10);
+ document.getElementById('servicio').hidden=false;document.getElementById('svCal').href=r.voluntario.ics.replace(/^https:/,'webcal:');
+ document.getElementById('svList').innerHTML=r.turnos.map(function(t){var d=new Date(t.fecha+'T12:00:00-03:00'),hot=t.fecha===hoy||t.fecha===man;return '<div class="ag-it'+(hot?' hot':'')+'"><div class="ag-d"><b>'+d.getDate()+'</b><small>'+t.dia.slice(0,3)+'</small></div><div class="ag-t"><span class="ag-k">'+(t.fecha===hoy?'Hoy':t.fecha===man?'Mañana':'Servicio')+'</span><b>'+X.esc(t.tareas.join(' · '))+'</b><small>Llegada '+t.llegada+' h · la clase empieza '+t.clase+' h</small></div></div>';}).join('');
+ document.getElementById('svAn').textContent=r.animo+' Sumá «Avisos en mi teléfono» y te llega el recordatorio el día que te toca (los sábados, el viernes).';
+}catch(e){}})();
 function agenda(pids){X.agenda(pids).then(function(L){
  var now=Date.now(),up=L.filter(function(e){return (e.end||e.ini).getTime()>=now-3600e3;}),av=L.filter(function(e){return /aviso/i.test(e.tipo||'')&&e.ini.getTime()<=now;}).reverse().slice(0,4);
  var n=X.unseen(L);var bn=document.getElementById('bellN');if(n){bn.textContent=n;bn.hidden=false;}
