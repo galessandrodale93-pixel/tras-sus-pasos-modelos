@@ -4010,7 +4010,7 @@ function svBuild(scene, W) {
   // tu casa, si ya la construiste
   const s = svP(); if (s.house) svPlaceHouse(scene, s.house, true);
   if (s.bag && s.bag.left > 0) svDropBag(s.bag, true);
-  try { econBuild(scene, W); } catch (e) { console.warn('econ', e); } try { vilBuild(scene, W).then(() => secBuild(scene, W)).catch(e => console.warn('sec', e)); } catch (e) { console.warn('vil', e); }
+  try { econBuild(scene, W); } catch (e) { console.warn('econ', e); } try { vilBuild(scene, W).then(() => secBuild(scene, W)).then(() => matBuild(scene, W)).catch(e => console.warn('sec', e)); } catch (e) { console.warn('vil', e); }
   svUI();
 }
 function svToolMesh(t) {
@@ -4028,6 +4028,7 @@ function svNear() {
   if (st.fishing) return { k: 'fishing' };
   { const v = vilNearNpc(); if (v) return { k: 'vil', v, label: vilLabel(v) }; }
   { const e = secNear(); if (e) return { k: 'sec', e, label: secP().secrets[e.d.id] ? 'Ver el lugar secreto' : SEC.mod.ENTRY[e.d.entry][0] }; }
+  { const m = matNear(); if (m) return m; }
   for (const b of (st.beggars || [])) if (d2(b.x, b.z) < 6) return { k: 'beg', b, label: 'Ayudar' };
   for (const m of (st.stalls || [])) if (d2(m.x, m.z) < 9) return { k: 'shop', shop: 'mercado', label: 'Comprar y vender' };
   if (S.inRoom && SHOPS[S.inRoom.trade]) return { k: 'shop', shop: S.inRoom.trade, label: 'Comprar y vender' };
@@ -4064,6 +4065,8 @@ function svAct() {
   if (n.k === 'fishing') { svFishTap(); return; }
   if (n.k === 'vil') { vilAct(n.v); return; }
   if (n.k === 'sec') { secOpen(n.e); return; }
+  if (n.k === 'mato') { matObj(n.e); return; }
+  if (n.k === 'matp') { matTalk(n.e); return; }
   if (n.k === 'shop') { svShop(n.shop); return; }
   if (n.k === 'beg') { svGive(n.b); return; }
   if (n.k === 'bag') { svPickBag(); return; }
@@ -4692,6 +4695,50 @@ function vilTick(dt) {
 function vilBanner(v) { let el = document.getElementById('v3vil'); if (!el) { el = document.createElement('div'); el.id = 'v3vil'; el.className = 'v3vil'; document.body.appendChild(el); } const st = repStars(v.name); el.innerHTML = `<b>${esc(v.name)}</b><span>${esc(VIL.mod.STARS_TXT[st - 1])}</span><i>${'★'.repeat(st)}${'☆'.repeat(5 - st)}</i>`; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); clearTimeout(vilBanner.t); vilBanner.t = setTimeout(() => el.classList.remove('on'), 3800); behav('visitasAldea'); }
 
 /* ===================== LUGARES SECRETOS (Hero): 12, con entrada disimulada y objetos únicos ===================== */
+/* ---------- el material del alumno en el mundo (canales 1 y 2): objetos para mirar y gente con segunda charla ---------- */
+const MAT = { mod: null, objs: [], npcs: [] };
+function matP() { const p = G().P(); p.mat = p.mat || {}; p.mat.seen = p.mat.seen || {}; p.mat.talk = p.mat.talk || {}; p.mat.sabi = p.mat.sabi || 0; return p.mat; }
+// Sabiduría del material: se guarda aparte hasta que se publique el atributo Sabiduría separado de Alegría
+function matSab(n) { const pm = matP(); pm.sabi += n; }
+function matMesh(k) {
+  const g = new THREE.Group(), M = (c, r) => new THREE.MeshStandardMaterial({ color: c, roughness: r ?? .92, metalness: 0 }), st = M('#9A9282'), wd = M('#6E5034');
+  const add = (geo, m, x, y, z, s) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); if (s) o.scale.set(...s); o.castShadow = true; o.receiveShadow = true; g.add(o); return o; };
+  if (k === 'manger') { add(new THREE.BoxGeometry(1.3, .5, .6), st, 0, .25, 0); add(new THREE.BoxGeometry(1.1, .12, .42), M('#3A3026'), 0, .47, 0); for (let i = 0; i < 9; i++) { const h = add(new THREE.CylinderGeometry(.012, .012, .5, 3), M('#D9B866'), (Math.random() - .5) * .9, .52, (Math.random() - .5) * .3); h.rotation.z = 1.4 + Math.random() * .3; } }
+  else if (k === 'oven') { add(new THREE.SphereGeometry(.7, 16, 10, 0, 6.29, 0, 1.6), M('#B08A60'), 0, 0, 0); add(new THREE.CircleGeometry(.22, 12), M('#2A1E14'), 0, .28, .66).rotation.y = 0; }
+  else if (k === 'milestone') { add(new THREE.CylinderGeometry(.22, .28, 1.3, 10), st, 0, .65, 0); add(new THREE.BoxGeometry(.5, .08, .5), st, 0, .02, 0); }
+  else if (k === 'mill') { add(new THREE.CylinderGeometry(.42, .45, .16, 18), M('#7A746A'), 0, .08, 0); add(new THREE.CylinderGeometry(.4, .4, .14, 18), M('#857E72'), 0, .24, 0); add(new THREE.CylinderGeometry(.03, .03, .34, 6), wd, .26, .42, 0); }
+  else if (k === 'doves') { add(new THREE.BoxGeometry(1.2, .7, .6), wd, 0, .35, 0); for (let i = 0; i < 3; i++) { add(new THREE.SphereGeometry(.09, 10, 8), M('#D8D2C8'), -.35 + i * .35, .8, 0, [1, .8, 1.5]); } add(new THREE.BoxGeometry(1.4, .06, .8), M('#B89A6A'), 0, 1.2, 0); [-.6, .6].forEach(x => add(new THREE.CylinderGeometry(.03, .03, 1.2, 6), wd, x, .6, .35)); }
+  else if (k === 'mezuza') { add(new THREE.BoxGeometry(.12, 1.8, .12), wd, 0, .9, 0); add(new THREE.BoxGeometry(.07, .22, .05), M('#C9A060', .5), .02, 1.35, .08); }
+  else if (k === 'lamb') { add(new THREE.SphereGeometry(.32, 12, 10), M('#F2EEE4', 1), 0, .5, 0, [1.3, .9, .9]); add(new THREE.SphereGeometry(.14, 10, 8), M('#3A3026'), .42, .62, 0); [[-.22, -.14], [-.22, .14], [.22, -.14], [.22, .14]].forEach(([x, z]) => add(new THREE.CylinderGeometry(.035, .035, .32, 5), M('#3A3026'), x, .16, z)); }
+  else if (k === 'cairn') { for (let i = 0; i < 7; i++) add(new THREE.DodecahedronGeometry(.22 - i * .02, 0), st, (Math.random() - .5) * .2, .15 + i * .2, (Math.random() - .5) * .2); }
+  else if (k === 'loaves') { for (let i = 0; i < 5; i++) add(new THREE.SphereGeometry(.16, 10, 8), M('#B8A486'), Math.cos(i * 1.3) * .35, .08, Math.sin(i * 1.3) * .35, [1.1, .55, 1]); }
+  return g;
+}
+async function matBuild(scene, W) {
+  if (!S.hx) return; const M = MAT.mod = await import('./story/material.js').catch(() => null); if (!M || !S) return; MAT.objs = []; MAT.npcs = []; const R = rng(8800), pm = matP();
+  const used = VIL.npcs.map(v => [v.x, v.z]).concat(SEC.list.map(e => [e.x, e.z]));
+  const ok = (x, z) => !blockedAt(x, z) && waterWet(x, z, null) < .05 && Math.abs(x) < XB * .9 && W.dAt(x, z) > 2.2 && !used.some(([a, b]) => (a - x) ** 2 + (b - z) ** 2 < 16);
+  const spot = d => { const poi = (S.pois || []).find(q => q.r === d.r && q.k === d.near); if (!poi) return null; for (let t = 0; t < 220; t++) { const q = poi.k === 'river' ? poi.pts[Math.floor(R() * poi.pts.length)] : [poi.x, poi.z], a = R() * 6.283, rr = (poi.k === 'river' ? 4 : 8) + R() * (t < 60 ? 12 : 26), x = q[0] + Math.cos(a) * rr, z = q[1] + Math.sin(a) * rr; if (ok(x, z)) { used.push([x, z]); return [x, z]; } } return null; };
+  M.OBJS.forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, g = matMesh(d.k); g.position.set(x, Math.max(0, W.hAt(x, z)), z); g.rotation.y = R() * 6.28;
+    const ring = new THREE.Mesh(new THREE.RingGeometry(.8, .9, 32), new THREE.MeshBasicMaterial({ color: '#FFE39A', transparent: true, opacity: .45, depthWrite: false, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .03; ring.visible = !pm.seen[d.id]; g.add(ring);
+    g.userData.keep = 1; scene.add(g); MAT.objs.push({ d, x, z, g, ring }); phCyl(x, z, .45); });
+  M.GENTE.forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, o = buildHeroAvatar(Object.assign({ anim: ['M_Standing_Idle', 'M_Idle'] }, d.look)); o.position.set(x, Math.max(0, W.hAt(x, z)), z); o.rotation.y = R() * 6.28; scene.add(o); MAT.npcs.push({ d, x, z, o }); });
+}
+function matNear() { const a = S.av.position, r2 = 2.4 * 2.4; for (const e of MAT.npcs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return { k: 'matp', e, label: 'Hablar · ' + e.d.name };
+  for (const e of MAT.objs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return { k: 'mato', e, label: 'Mirar' }; return null; }
+function matObj(e) {
+  const pm = matP(), d = e.d, first = !pm.seen[d.id]; pm.seen[d.id] = vday(); if (e.ring) e.ring.visible = false;
+  if (first) { matSab(1); glowAdd(1, 'mirar'); behav('objetos'); G().save(); }
+  vilSheet(`<div class="inv-h"><b>${esc(d.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="vil-p">${esc(d.t)}</p><small class="vil-k mat-src">📖 Del material · ${esc(d.src)}</small>${first ? '<small class="vil-k">+1 Sabiduría</small>' : ''}`);
+  h3do(['M_Kneeling_Inspecting', 'M_Looking', 'M_Thinking'], 2.4);
+}
+function matTalk(e) {
+  const pm = matP(), d = e.d, n = pm.talk[d.id] || 0, lines = n === 0 ? d.t1 : d.t2; pm.talk[d.id] = Math.min(2, n + 1);
+  if (n === 1) { matSab(2); behav('segundasCharlas'); } G().save(); try { e.o.lookAt(S.av.position.x, e.o.position.y, S.av.position.z); } catch (er) {}
+  const done = () => { if (n === 0) svToast('💬 Si volvés a hablarle, te va a contar algo más.'); else if (n === 1) svToast('📖 +2 Sabiduría · ' + d.src); };
+  if (cineOk() && e.o.userData && e.o.userData.h3) { try { cine({ cast: { m: { name: d.name.replace(/^(Un|Una) /, ''), sub: d.sub, o: e.o } }, steps: lines.map(t => ({ who: 'm', t })), onDone: done }); return; } catch (er) {} }
+  vilSheet(`<div class="inv-h"><b>${esc(d.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">${esc(d.sub)}</small>${lines.map(t => `<p class="vil-p">${esc(t)}</p>`).join('')}`); talkGo(e.o, 4); done();
+}
 const SEC = { mod: null, list: [] };
 function secP() { const p = G().P(); p.secrets = p.secrets || {}; p.relics = p.relics || []; return p; }
 async function secBuild(scene, W) {
@@ -4760,4 +4807,4 @@ function svGive(bg) {
 
 addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 'e') axHold(false); });
 addEventListener('touchstart', () => document.body.classList.add('v3touch'), { once: true, passive: true });
-window.W3 = { dbgHero: () => ({ VIL, SEC, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineBusy, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
+window.W3 = { dbgHero: () => ({ VIL, SEC, MAT, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineBusy, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
