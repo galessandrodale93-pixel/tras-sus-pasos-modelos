@@ -2428,7 +2428,7 @@ function showArCard(kind,data={}){
 }
 function gameOver(){
   const p=P(),id=ar.n.id,sc=ar.game.score,best=p.games[id]||0,gain=Math.max(0,sc-best);
-  if(gain>0)p.games[id]=sc;
+  if(gain>0)p.games[id]=sc;try{const al=branch==='ados'&&window.W3&&W3.fvOf?W3.fvOf('ale'):0;if(gain>0&&al>=20)p.bonus=(p.bonus||0)+Math.round(gain*(al>=50?.2:al>=30?.15:.1));}catch(e){}
   if(sc>=300)award('jugador');
   save();showArCard('over',{score:sc,best:Math.max(best,sc),gain});
 }
@@ -2624,7 +2624,7 @@ function openExam1(r,onPass,BANK){
     if(x.t==='reflect'){const ta=card.querySelector('.ex-ta'),chk=card.querySelector('.ex-check');ta.oninput=()=>{chk.disabled=ta.value.trim().length<15;};chk.onclick=()=>{reflect=ta.value.trim();next(null);};}
   };
   const end=()=>{const pass=ok>=need,ex=p.exams=p.exams||{},prev=ex[R.id]||{},first=pass&&!prev.passed,pts=ok*15+(first?100:0);
-    ex[R.id]={best:Math.max(prev.best||0,ok),of:graded,passed:prev.passed||pass,pts:(prev.pts||0)+(first?pts:0),reflect:reflect||prev.reflect||'',at:new Date().toISOString(),n:prev.n||1,tries:(prev.tries||(prev.hist||[]).length)+1,last:items.map(x=>x.id),hist:[...(prev.hist||[]),{ok,of:graded,pass,at:Date.now()}].slice(-12)};save();refreshHud();
+    ex[R.id]={best:Math.max(prev.best||0,ok),of:graded,passed:prev.passed||pass,pts:(prev.pts||0)+(first?pts:0),reflect:reflect||prev.reflect||'',at:new Date().toISOString(),n:(()=>{try{if(branch==='ados'&&pass&&window.W3&&W3.axGain)W3.axGain('sab',first?4:1);}catch(e){}return prev.n||1;})(),tries:(prev.tries||(prev.hist||[]).length)+1,last:items.map(x=>x.id),hist:[...(prev.hist||[]),{ok,of:graded,pass,at:Date.now()}].slice(-12)};save();refreshHud();
     box.innerHTML=`<div class="ex-card ex-end ${pass?'pass':'fail'}"><div class="ex-seal">${pass?'🏆':'📖'}</div><small>Examen de ${esc(R.name)}</small><h2>${pass?'¡Etapa aprobada!':'Todavía no'}</h2><div class="ex-score"><b>${ok}</b><span>de ${graded} correctas</span></div>
       <p>${pass?(first?`Sumaste ${pts} puntos. ¡Seguí el camino!`:'Ya habías aprobado esta etapa. ¡Bien repasado!'):`Necesitás ${need}. Repasá estos temas y volvé a intentarlo cuando quieras:`}</p>
       ${wrong.length?'<ul class="ex-rev">'+wrong.map(w=>`<li><b>${esc(w.q||'Completar el pasaje')}</b><small>${esc(w.ref||'')}</small></li>`).join('')+'</ul>':''}
@@ -2654,7 +2654,7 @@ async function hstOpen(r){const M=await hstLoad();if(!M)return;const R=REGIONS[r
   if(hstCineOpen(M,R,C))return;
   const nm=P().name||'';hstCard(`<small class="hst-k">Capítulo ${C.n}</small><h2>${esc(C.t)}</h2>${C.open.map(t=>`<p class="hst-p">${esc(t.replace('{name}',nm))}</p>`).join('')}${hstSay(M,C.say.slice(0,2))}`);try{vo(C.open.join(' ').replace('{name}',nm),'narrador',{queue:1});}catch(e){}}
 async function hstClose(r){const M=await hstLoad();if(!M)return;const R=REGIONS[r],C=M.HCHAP[R.id];if(!C)return;const st=hstP();if(st.close[R.id])return;st.close[R.id]=1;
-  const got=[R.id].concat(R.id==='cruz'?['resurreccion']:[]).filter(id=>M.HSCROLL[id]&&!st.scroll.includes(id));got.forEach(id=>st.scroll.push(id));save();
+  const got=[R.id].concat(R.id==='cruz'?['resurreccion']:[]).filter(id=>M.HSCROLL[id]&&!st.scroll.includes(id));got.forEach(id=>st.scroll.push(id));try{if(got.length&&window.W3&&W3.axGain)W3.axGain('sab',2*got.length);}catch(e){}save();
   const fr=got.map(id=>{const f=M.HSCROLL[id];return `<div class="hst-scroll"><small>📜 Fragmento del rollo · ${esc(f.ref)}</small>${f.q?`<p class="hst-q">«${esc(f.q)}»</p>`:''}<p>${esc(f.t)}</p></div>`;}).join('');
   const extra=C.say.slice(2);{const at=(st.att||{});if((at.zel||0)>=2)extra.push(['zel','Te vi con los que nadie mira. Yo no me hubiera acercado… pero me quedé pensando.']);else if((at.zel||0)<=-2)extra.push(['zel','A veces pasamos de largo, ¿no? Yo también.']);if((at.esc||0)>=2)extra.push(['esc','La misericordia que mostraste vale más que muchos sacrificios. Así lo enseñaban los profetas.']);}if(hstCineClose(M,R,C,extra,got,st))return;hstCard(`<small class="hst-k">Fin del capítulo ${C.n} · ${esc(C.t)}</small>${extra.length?hstSay(M,extra):''}<p class="hst-hook">${esc(C.hook)}</p>${fr}<p class="hst-n">Rollo de Isaías: ${st.scroll.length} de 9 fragmentos.${R.id==='cruz'?' Frente a la cruz, Eleazar lo lee completo.':''}</p>${st.scroll.length?'<button class="hst-ghost" data-hst="scroll">Leer el rollo</button>':''}`,R.id==='cruz'?()=>hstScroll(true):null);}
 async function hstScroll(full){const M=await hstLoad();if(!M)return;const st=hstP(),have=new Set(st.scroll),O=['nacimiento','infancia','galilea','milagros','cruz5','parabolas','bautismo','jerusalen','resurreccion','cruz12'];

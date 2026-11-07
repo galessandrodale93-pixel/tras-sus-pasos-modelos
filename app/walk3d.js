@@ -685,7 +685,7 @@ const KL = {};
   // orientar al personaje hacia la próxima parada
   buildPois(scene, pois, hx, HW, rng(77), ribbon); S.pois = pois; buildTowns(scene, g, hx, HW, pois); ambReset(); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; setTimeout(() => tutOpen(), 1500); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); }, 0);
   try { scatterNodes(g, HW); if (S.npos[g.P().pos]) { const q = S.npos[g.P().pos]; av.position.set(q[0], 0, q[1]); } } catch (e) { console.warn('hitos', e); } S.spawn = [av.position.x, av.position.z];
-  S0 = S; insMigrate(); setTimeout(glowUI, 400); S.mis = buildMissions(scene, g, hx, HW); { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
+  S0 = S; try { attrMigrate(); } catch (e) { console.warn('migración de atributos', e); } insMigrate(); setTimeout(glowUI, 400); S.mis = buildMissions(scene, g, hx, HW); { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
   const nx = nextList()[0]; if (nx) { const N = g.NODES[nx], [bx, bz] = toV(N.x, N.y); S.yaw = Math.atan2(bx - ax, bz - az); }
   av.rotation.y = S.yaw;
   camera.position.set(ax - Math.sin(S.yaw) * 6.6, 3.3, az - Math.cos(S.yaw) * 6.6);
@@ -1304,7 +1304,7 @@ function misCarry(m, on) {
 }
 function misDone(m) {
   const p = misState(), d = m.d; p.missions[d.id] = true; p.mact = null; G().save(); G().refreshHud && G().refreshHud(); misCarry(m, false); if (m.ring) m.ring.visible = false; if (m.pick) m.pick.visible = false;
-  if (S.hx) { const help = ['deliver', 'fetch', 'act'].includes(d.kind); if (help) { axGain('amor', 3); const b = [0, 5, 5, 10, 10, 10][ft('amor')]; if (b) { const pp = G().P(); pp.bonus = (pp.bonus || 0) + b; } } axGain('sab', 2); axGain('fid', 1); if (fv('sab') >= 40) { S.boostT = 30; setTimeout(() => svToast('😊 ¡Alegría! 30 segundos de paso rápido.'), 2200); } behav('misiones'); }
+  if (S.hx) { const help = ['deliver', 'fetch', 'act'].includes(d.kind); if (help) { axGain('amor', 3); const b = [0, 5, 5, 10, 10, 10][ft('amor')]; if (b) { const pp = G().P(); pp.bonus = (pp.bonus || 0) + b; } } axGain('ale', 2); axGain('fid', 1); if (fv('ale') >= 40) { S.boostT = 30; setTimeout(() => svToast('😊 ¡Alegría! 30 segundos de paso rápido.'), 2200); } behav('misiones'); }
   misPop('¡Misión cumplida! +' + MIS_PTS, d.done); tone3d(); try { const who = d.target || d.giver; G().vo(d.done, who.look && who.look.g === 'chica' ? 'mujer' : 'varon'); } catch (e) {} glowAdd(10, 'mision'); h3npcPlay(m.target || m.giver, ['M_Thankful', 'M_Cheering'], 3); if (m.target && m.giver) setTimeout(() => h3npcPlay(m.giver, ['M_Clapping', 'M_Thankful'], 2.5), 600);
   if (Math.random() < .5) setTimeout(() => gearGive(gearRoll(), 'Recompensa de la misión'), 3400);
   if (S && S.hx) setTimeout(() => svMissionReward(d), 1800);
@@ -3898,7 +3898,7 @@ const ATTRK = [
 ];
 const FRUITS = [
   ['amor', 'Amor', 'Crece ayudando.', ['+10% en misiones de ayuda', 'Los que ayudaste vuelven con una misión nueva', '+20% en misiones de ayuda', 'Tus ayudas suben la reputación de la aldea', 'Si te desmayás, alguien que ayudaste cuida tu bolsa: no se pierde aunque pase el tiempo']],
-  ['sab', 'Alegría', 'Crece cumpliendo misiones y animando a otros.', ['+5% de experiencia', 'Las estrellas de los minijuegos valen más', '+10% de experiencia', '30 s de carrera rápida al completar una misión', '+15% de experiencia y compañeros más animados']],
+  ['ale', 'Alegría', 'Crece cumpliendo misiones y animando a otros.', ['+5% de experiencia', 'Las estrellas de los minijuegos valen más', '+10% de experiencia', '30 s de carrera rápida al completar una misión', '+15% de experiencia y compañeros más animados']],
   ['paz', 'Paz', 'Crece jugando los minijuegos con golpes.', ['Parpadeo de invulnerabilidad de 0,5 s tras un golpe', '1 s de invulnerabilidad', '+1 corazón', '2 s de invulnerabilidad', 'Escudo de paz: el primer golpe de cada partida no resta']],
   ['pac', 'Paciencia', 'Crece pescando con caña.', ['Los peces pican 10% antes', 'Ventana más larga para tirar', 'Pican 20% antes', 'Chance de sacar dos peces', 'Peces raros que valen más']],
   ['gent', 'Gentileza', 'Crece tratando bien a la gente de las aldeas.', ['-5% en los precios', 'Te saludan primero y te dan pistas', '-10% en los precios', 'Te regalan comida', 'Misiones escondidas']],
@@ -3907,7 +3907,8 @@ const FRUITS = [
   ['dom', 'Control propio', 'Crece comiendo con medida y cuidando tus fuerzas.', ['-10% de hambre', 'Comer te llena más', '-20% de hambre', 'Si te desmayás, tenés 1 minuto más para buscar la bolsa', '-35% de hambre']]
 ];
 const BODY = [['fue', 'Fuerza', 'Talás y picás con menos golpes, y sacás más madera.'], ['agi', 'Agilidad', 'Caminás más rápido y saltás más alto.']];
-const ATTRH = FRUITS.map(([k, n, d]) => [k, n, d]).concat(BODY);
+const SABI = ['sab', 'Sabiduría', 'Crece escuchando a los testigos, descubriendo lugares secretos, mirando los objetos del camino, leyendo la Escritura, respondiendo a Teófilo y aprobando exámenes.', ['+40% de experiencia por trabajar', '+80% de experiencia por trabajar', '+120% de experiencia por trabajar', '+160% de experiencia por trabajar', '+200% de experiencia por trabajar']];
+const ATTRH = FRUITS.map(([k, n, d]) => [k, n, d]).concat([[SABI[0], SABI[1], SABI[2]]], BODY);
 const attrList = () => (S && S.hx) || (G().branch === 'ados') ? ATTRH : ATTRK;
 const ATTR = new Proxy([], { get: (o, k) => { const L = attrList(), v = L[k]; return typeof v === 'function' ? v.bind(L) : v; } });
 // valor del fruto (0–50) y escalón (0–5)
@@ -3933,6 +3934,15 @@ const AXN = new Proxy({}, { get: (o, k) => { const x = attrList().find(q => q[0]
 const axNeed = l => 30 + l * 22; // cada nivel pide un poco más
 function axP() { const a = atP(); a.xp = a.xp || {}; a.xl = a.xl || {}; return a; }
 function axLv(k) { const a = atP(); return (a.xl && a.xl[k]) || 0; }
+// Sabiduría pasa a ser un atributo propio y Alegría se guarda en 'ale'. Para quien ya jugaba: la experiencia que venía de las
+// misiones (2 por misión) pasa a Alegría y se descuenta de Sabiduría; los puntos de Sabiduría del material se suman al atributo real.
+function attrMigrate() {
+  if (!S || !S.hx) return; const p = G().P(), a = axP(); p.story = p.story || {}; let dirty = false;
+  const tot = k => { let t = a.xp[k] || 0; for (let l = 0; l < (a.xl[k] || 0); l++) t += axNeed(l); return t; }, set = (k, t) => { let l = 0; while (t >= axNeed(l) && l < 30) { t -= axNeed(l); l++; } a.xl[k] = l; a.xp[k] = t; };
+  if (!p.story.aleMig) { p.story.aleMig = 1; const m = ((p.behav && p.behav.misiones) || 0) * 2; set('ale', tot('ale') + m); set('sab', Math.max(0, tot('sab') - m)); dirty = true; }
+  const pm = p.mat; if (pm && (pm.sabi || 0) > (pm.sabiM || 0)) { set('sab', tot('sab') + pm.sabi - (pm.sabiM || 0)); pm.sabiM = pm.sabi; dirty = true; }
+  if (dirty) G().save();
+}
 function axGain(k, n) {
   if (!AXN[k] || !S) return; const a = axP(); a.xp[k] = (a.xp[k] || 0) + n; let up = false;
   while (a.xp[k] >= axNeed(a.xl[k] || 0) && (a.xl[k] || 0) < 30) { a.xp[k] -= axNeed(a.xl[k] || 0); a.xl[k] = (a.xl[k] || 0) + 1; up = true; }
@@ -3967,7 +3977,7 @@ function attrSync() {
 async function attrOpen() { try { if (document.getElementById('view3d').hidden) await show3d(true); } catch (e) {} if (S) setTimeout(() => openBag('at'), 200); }
 function ptsFree() { const a = atP(); return Math.max(0, (Math.min(LV_MAX, lvlNow()) - 1) * ATTR_PER_LV - (a.spent || 0)); }
 function humHalo() { const g = new THREE.Group(), r = new THREE.Mesh(new THREE.TorusGeometry(.32, .025, 8, 32), new THREE.MeshBasicMaterial({ color: '#FFD25E', transparent: true, opacity: .85, blending: THREE.AdditiveBlending, depthWrite: false })); r.rotation.x = Math.PI / 2; r.position.y = 2.15; g.add(r); g.name = 'humHalo'; return g; }
-function svXP(n) { const p = G().P(); p.bonus = (p.bonus || 0) + Math.round(n * (S && S.hx ? 1 + [0, .05, .05, .1, .1, .15][ft('sab')] : 1 + atr('sab') * .2)); }
+function svXP(n) { const p = G().P(); p.bonus = (p.bonus || 0) + Math.round(n * (S && S.hx ? 1 + [0, .05, .05, .1, .1, .15][ft('ale')] + atr('sab') * .2 : 1 + atr('sab') * .2)); }
 function svAdd(k, n) { const s = svP(); s.inv[k] = Math.max(0, (s.inv[k] || 0) + n); }
 function svHas(need) { const s = svP(); return Object.entries(need).every(([k, n]) => (s.inv[k] || 0) >= n); }
 function svPay(need) { Object.entries(need).forEach(([k, n]) => svAdd(k, -n)); }
@@ -4235,14 +4245,14 @@ function invSurv(body) {
   if (st) st.onclick = () => { if (!nearHome()) { svToast('Tenés que estar en tu casa para usar el cofre.'); return; } Object.entries(s.inv).forEach(([k, n]) => { s.chest[k] = (s.chest[k] || 0) + n; }); s.inv = {}; G().save(); invSurv(body); };
   if (tk) tk.onclick = () => { if (!nearHome()) { svToast('Tenés que estar en tu casa para usar el cofre.'); return; } Object.entries(s.chest).forEach(([k, n]) => svAdd(k, n)); s.chest = {}; G().save(); invSurv(body); };
 }
-function perksHtml(k) { const f = FRUITS.find(x => x[0] === k); if (!f) return ''; const t = ft(k); return `<span class="sv-perk">${t ? `✓ ${esc(f[3][t - 1])}` : ''}${t < 5 ? `${t ? ' · ' : ''}Con ${(t + 1) * 10}: ${esc(f[3][t])}` : ''}</span>`; }
+function perksHtml(k) { const f = FRUITS.find(x => x[0] === k) || (k === 'sab' ? SABI : null); if (!f) return ''; const t = ft(k); return `<span class="sv-perk">${t ? `✓ ${esc(f[3][t - 1])}` : ''}${t < 5 ? `${t ? ' · ' : ''}Con ${(t + 1) * 10}: ${esc(f[3][t])}` : ''}</span>`; }
 function invAttr(body) {
   const AP = invAttr.pend || (invAttr.pend = {}), pt = Object.values(AP).reduce((x, y) => x + y, 0);
   const a = atP(), free = ptsFree() - pt, lv = Math.min(LV_MAX, lvlNow()), h = a.hum || 0;
   let glowH = ''; if (S && S.hx) { const g = glowState(), gl = glowLv(g.pts), ga = 12 * gl * gl, gb = 12 * (gl + 1) * (gl + 1), pc = gl >= GLW.lvMax ? 100 : Math.round((g.pts - ga) / (gb - ga) * 100); glowH = `<div class="sv-glow"><b>✦ Resplandor ${gl}</b><small>Crece con misiones de servicio, compartir con quien lo necesita, respuestas correctas y versículos.</small><span class="sv-axbar"><i style="width:${pc}%"></i></span></div>`; }
   body.innerHTML = `<div class="sv-inv">${glowH}<p class="sv-tip">Nivel ${lv} de ${LV_MAX}. Cada vez que subís de nivel ganás <b>${ATTR_PER_LV} puntos</b> para repartir como quieras (máximo ${ATTR_MAX} por atributo). Cada 5 puntos se nota un escalón más.</p><div class="sv-free">Puntos para repartir: <b>${free}</b></div>${pt ? `<div class="sv-conf"><p>Vas a sumar ${ATTR.filter(([k]) => AP[k]).map(([k, n]) => `<b>${n} +${AP[k]}</b>`).join(', ')}. <em>Una vez confirmados, los puntos quedan fijos y no se pueden cambiar.</em></p><div><button class="sv-undo">Deshacer</button><button class="sv-ok">${invAttr.ask ? 'Sí, confirmar' : 'Confirmar'}</button></div></div>` : ''}
     <div class="sv-bulk"><span>Sumar de a</span>${[1, 5, 10].map(n => `<button data-n="${n}" class="${(S.bulk || 1) === n ? 'on' : ''}">${n}</button>`).join('')}</div>
-    ${(S.hx ? [['__h', 'Frutos del Espíritu · Gálatas 5:22-23']].concat(FRUITS.map(x => [x[0], x[1], x[2]]), [['__h', 'Cuerpo']], BODY) : ATTRK).map(([k, n, d]) => k === '__h' ? `<h4 class="sv-sec">${n}</h4>` : `<div class="sv-attr"><div><b>${n} <em>${a[k] + axLv(k)}</em>${AP[k] ? `<span class="sv-pend">+${AP[k]}</span>` : ''}${axLv(k) ? `<span class="sv-axlv">(+${axLv(k)} por práctica)</span>` : ''}</b><small>${d}</small>${S.hx ? perksHtml(k) : ''}<span class="sv-axbar" title="Experiencia de ${n}"><i style="width:${Math.min(100, ((axP().xp[k] || 0) / axNeed(axLv(k))) * 100).toFixed(0)}%"></i></span><span class="sv-pips">${Array.from({ length: 10 }, (_, i) => `<i class="${i < Math.floor(a[k] / 5) ? 'on' : ''}"></i>`).join('')}</span></div><button data-k="${k}" ${free > 0 && a[k] + (AP[k] || 0) < ATTR_MAX ? '' : 'disabled'} aria-label="Subir ${n}">+</button></div>`).join('')}
+    ${(S.hx ? [['__h', 'Frutos del Espíritu · Gálatas 5:22-23']].concat(FRUITS.map(x => [x[0], x[1], x[2]]), [['__h', 'Sabiduría'], [SABI[0], SABI[1], SABI[2]], ['__h', 'Cuerpo']], BODY) : ATTRK).map(([k, n, d]) => k === '__h' ? `<h4 class="sv-sec">${n}</h4>` : `<div class="sv-attr"><div><b>${n} <em>${a[k] + axLv(k)}</em>${AP[k] ? `<span class="sv-pend">+${AP[k]}</span>` : ''}${axLv(k) ? `<span class="sv-axlv">(+${axLv(k)} por práctica)</span>` : ''}</b><small>${d}</small>${S.hx ? perksHtml(k) : ''}<span class="sv-axbar" title="Experiencia de ${n}"><i style="width:${Math.min(100, ((axP().xp[k] || 0) / axNeed(axLv(k))) * 100).toFixed(0)}%"></i></span><span class="sv-pips">${Array.from({ length: 10 }, (_, i) => `<i class="${i < Math.floor(a[k] / 5) ? 'on' : ''}"></i>`).join('')}</span></div><button data-k="${k}" ${free > 0 && a[k] + (AP[k] || 0) < ATTR_MAX ? '' : 'disabled'} aria-label="Subir ${n}">+</button></div>`).join('')}
     <div class="sv-attr sv-hum"><div><b>Humildad <em>${h}</em></b><small>Es la única que no se compra con puntos: crece solo cuando le das puntos tuyos a otros en una sala con amigos. Jesús enseñó que el que se humilla será enaltecido (Lucas 14:11).</small></div></div>
     <ul class="sv-perks">${HUM_PERKS.map(([n, t, d]) => `<li class="${h >= n ? 'on' : ''}"><b>${n} · ${t}</b><small>${d}</small></li>`).join('')}</ul>
     <div class="sv-attr sv-hum"><div><b>Servicio <em>${a.serv || 0}</em></b><small>También es único: crece solo haciendo obras para los demás, como ayudar a los mendigos del camino o cumplir misiones.</small></div></div>
@@ -4703,7 +4713,7 @@ function vilBanner(v) { let el = document.getElementById('v3vil'); if (!el) { el
 const MAT = { mod: null, objs: [], npcs: [] };
 function matP() { const p = G().P(); p.mat = p.mat || {}; p.mat.seen = p.mat.seen || {}; p.mat.talk = p.mat.talk || {}; p.mat.sabi = p.mat.sabi || 0; return p.mat; }
 // Sabiduría del material: se guarda aparte hasta que se publique el atributo Sabiduría separado de Alegría
-function matSab(n) { const pm = matP(); pm.sabi += n; }
+function matSab(n) { const pm = matP(); pm.sabi += n; pm.sabiM = (pm.sabiM || 0) + n; axGain('sab', n); }
 function matMesh(k) {
   const g = new THREE.Group(), M = (c, r) => new THREE.MeshStandardMaterial({ color: c, roughness: r ?? .92, metalness: 0 }), st = M('#9A9282'), wd = M('#6E5034');
   const add = (geo, m, x, y, z, s) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); if (s) o.scale.set(...s); o.castShadow = true; o.receiveShadow = true; g.add(o); return o; };
@@ -4890,10 +4900,10 @@ function svGive(bg) {
     ${opts.length ? `<div class="x-list">${opts.map(([k, n], i) => `<button data-i="${i}">${RES[k][1]} Dar ${n} ${RES[k][0].toLowerCase()}</button>`).join('')}</div>` : '<p class="sv-tip">No tenés dinero ni comida para dar. Podés vender algo en el mercado o recoger granadas.</p>'}
     <p class="sv-tip">Jesús enseñó que lo que hacemos por el que tiene hambre, lo hacemos por él (Mateo 25:35-40).</p></div>`;
   el.hidden = false; el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
-  el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const [k, n] = opts[+b.dataset.i]; if ((s.inv[k] || 0) < n) return; svAdd(k, -n); a.alms[bg.id] = day; const mult = servV() >= 25 ? 2 : 1; svXP((k === 'money' ? 4 + n * 2 : 10) * mult); servAdd(1); axGain('gen', 3); if (S.hx) { axGain('amor', 2); if (fv('gen') >= 40) axGain('sab', 1); if (fv('gen') >= 20 && Math.random() < .25) setTimeout(() => { svAdd('fruit', 2); svToast('🎁 Lo que compartiste volvió como regalo: 2 frutos.'); }, 4000); if (fv('gen') >= 50 && Math.random() < .3) setTimeout(() => { svAdd('bread', 2); svToast('🧺 Apareció una canasta extra de pan.'); }, 6000); if (fv('gen') >= 30) setTimeout(() => secretHint(), 2500); behav('compartir'); } glowAdd(8, 'compartir'); h3do(['M_Reaching_Out', 'PickUp_Table'], 2.6, 1.2); h3npcPlay(bg.o, ['M_Thankful', 'M_Lengthy_Head_Nod'], 3); tone3d(); svUI();
+  el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const [k, n] = opts[+b.dataset.i]; if ((s.inv[k] || 0) < n) return; svAdd(k, -n); a.alms[bg.id] = day; const mult = servV() >= 25 ? 2 : 1; svXP((k === 'money' ? 4 + n * 2 : 10) * mult); servAdd(1); axGain('gen', 3); if (S.hx) { axGain('amor', 2); if (fv('gen') >= 40) axGain('ale', 1); if (fv('gen') >= 20 && Math.random() < .25) setTimeout(() => { svAdd('fruit', 2); svToast('🎁 Lo que compartiste volvió como regalo: 2 frutos.'); }, 4000); if (fv('gen') >= 50 && Math.random() < .3) setTimeout(() => { svAdd('bread', 2); svToast('🧺 Apareció una canasta extra de pan.'); }, 6000); if (fv('gen') >= 30) setTimeout(() => secretHint(), 2500); behav('compartir'); } glowAdd(8, 'compartir'); h3do(['M_Reaching_Out', 'PickUp_Table'], 2.6, 1.2); h3npcPlay(bg.o, ['M_Thankful', 'M_Lengthy_Head_Nod'], 3); tone3d(); svUI();
     el.innerHTML = `<div class="inv hx sv-sheet sv-faint"><h3>¡Gracias! Que Dios te bendiga.</h3><p>Tu Servicio creció a <b>${atP().serv}</b> y ganaste experiencia.</p><p class="sv-verse">El que ayuda al pobre le presta al Señor, y él se lo va a recompensar (Proverbios 19:17).</p><button class="sv-up">Seguir el camino</button></div>`; el.querySelector('.sv-up').onclick = () => { el.hidden = true; }; });
 }
 
 addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 'e') axHold(false); });
 addEventListener('touchstart', () => document.body.classList.add('v3touch'), { once: true, passive: true });
-window.W3 = { dbgHero: () => ({ VIL, SEC, MAT, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineBusy, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
+window.W3 = { dbgHero: () => ({ VIL, SEC, MAT, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineBusy, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
