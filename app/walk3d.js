@@ -3000,7 +3000,7 @@ function buildHero3(av) {
   return o;
 }
 /* idles de los personajes: cada uno con su manera de estar (Mixamo + Quaternius) */
-const H3_IDLES = ['Idle_Loop', 'Idle_Talking_Loop', 'M_Idle', 'M_Thinking', 'M_Looking', 'M_Holding_Idle', 'M_Lengthy_Head_Nod', 'M_Idle', 'Idle_Talking_Loop', 'M_Looking_Around'];
+const H3_IDLES = ['Idle_Loop', 'M_Standing_Idle', 'M_Idle', 'M_Thinking', 'M_Looking', 'M_Holding_Idle', 'M_Idle', 'M_Standing_Idle', 'M_Looking_Around'];
 const H3_ONCE = /^(Death01|Interact|PickUp_Table|M_Standing_Up|M_Kneeling_Down|M_Throw|M_Picking_Up|M_Quick_Formal_Bow|M_Sit_To_Stand|M_Stand_To_Sit|M_Lifting_Object|M_Pick_Fruit.*|M_Yawn|M_Looking_Around|M_Shaking_Hands_2|M_Drinking|M_Thankful|M_Cheering|M_Kneeling_Inspecting)$/;
 function h3idleFor(av, npc) {
   const ok = k => !!H3.clips[k];
@@ -3027,7 +3027,7 @@ function h3pose(av, t, dt, st) {
   const u = av.userData.h3, B = u.bones, p = st.poseW || 0, q = st.waveW || 0, air = (st.jy || 0) > .02;
   const has = k => !!H3.clips[k], me = st === S, mxPray = st.pose === 'pray' && has('M_Praying'), mxWave = (st.waveT || 0) > 0 && !u.moving && has('M_Waving');
   const fish = me && st.sv && st.sv.fishing, weak = me && st.sv && (st.sv.gray || 0) > .35, carry = me && !!st.carry;
-  let want = st.pose === 'pray' ? (mxPray ? 'M_Praying' : 'Fixing_Kneeling') : air ? 'Jump_Loop' : u.moving ? (st.sprint && has('Sprint_Loop') ? 'Sprint_Loop' : u.run === false ? (u.npcFormal && has('Walk_Formal_Loop') ? 'Walk_Formal_Loop' : 'Walk_Loop') : 'Jog_Fwd_Loop') : (st.talk && has('Idle_Talking_Loop') ? 'Idle_Talking_Loop' : (u.idleK && has(u.idleK) ? u.idleK : 'Idle_Loop'));
+  let want = st.pose === 'pray' ? (mxPray ? 'M_Praying' : 'Fixing_Kneeling') : air ? 'Jump_Loop' : u.moving ? (st.sprint && has('Sprint_Loop') ? 'Sprint_Loop' : u.run === false ? (u.npcFormal && has('Walk_Formal_Loop') ? 'Walk_Formal_Loop' : 'Walk_Loop') : 'Jog_Fwd_Loop') : (st.talk && has('M_Idle') ? 'M_Idle' : (u.idleK && has(u.idleK) ? u.idleK : 'Idle_Loop'));
   if (u.moving && !air) { if (carry && has('M_Holding_Walk') && !st.sprint) want = 'M_Holding_Walk'; else if (weak && has('M_Sad_Walk')) want = 'M_Sad_Walk'; }
   if (!u.moving && !air && st.pose !== 'pray') {
     if (st.down && has('Death01')) want = 'Death01'; else if (st.actT > 0 && has(st.actK)) want = st.actK; else if (st.sit && has('Sitting_Idle_Loop')) want = 'Sitting_Idle_Loop';
@@ -3051,6 +3051,7 @@ function h3pose(av, t, dt, st) {
     h3aim(av, B, 'upperarm_r', 'lowerarm_r', .18, -.88, .48, p); h3aim(av, B, 'lowerarm_r', 'hand_r', .38, .8, .45, p); h3aim(av, B, 'upperarm_l', 'lowerarm_l', -.18, -.88, .48, p); h3aim(av, B, 'lowerarm_l', 'hand_l', -.38, .8, .45, p); }
   if (q > .01 && !mxWave && u.cur !== 'M_Waving') { h3aim(av, B, 'upperarm_r', 'lowerarm_r', -.85, .38, .18, q); h3aim(av, B, 'lowerarm_r', 'hand_r', -.15 + Math.sin(t * 11) * .38, 1, .15, q); }
   if (me) toolPose(av, B, t, dt, st);
+  if (me && u.talkT > -.4 && u.talkAge != null) { talkLayer(av, u, dt, null); if (u.talkT <= -.4) u.talkAge = null; }
   if (u.lamp.visible) { const V = h3vec(); B.hand_r.getWorldPosition(V.a); av.worldToLocal(V.a); u.lamp.position.copy(V.a); u.lamp.position.y -= .1 / av.scale.y; }
 }
 /* ---------- herramientas en la mano mientras se hace la acción: caña o red al pescar, hacha al talar, pico al picar, pedernal al encender ---------- */
@@ -3145,11 +3146,34 @@ function fireSpit(f, secs) {
   const step = now => { const k = Math.min(1, (now - t0) / (secs * 1000)); fm.color.copy(c0).lerp(c1, k); fish.rotation.x = k * 6.28 * 2; if (k < 1 && f.g.parent) requestAnimationFrame(step); else { f.g.remove(g); f.spit = null; fm.dispose(); } };
   requestAnimationFrame(step);
 }
+/* ---------- conversación natural para quien habla: respira, mueve apenas la cabeza, mira a quien escucha
+   y cada tanto hace un gesto suave con una mano. Reemplaza los clips de gesticulación exagerada. ---------- */
+const TALK_BASE = ['M_Standing_Idle', 'M_Idle', 'Idle_Loop'];
+function talkGo(o, secs, g) {
+  const u = o && o.userData && o.userData.h3; if (!u) return; if (o !== (S && S.av)) h3npcPlay(o, TALK_BASE, secs);
+  u.talkT = secs; u.talkAge = 0; u.talkPh = u.talkPh ?? Math.random() * 6.28; u.gestT = g === 'point' ? .4 : 1.2 + Math.random() * 1.8; u.gest = null; u.nodT = g === 'nod' ? .2 : 1.5 + Math.random() * 2;
+}
+function talkLayer(o, u, dt, tgt) {
+  const B = u.bones; if (!B || !B.Head || !B.neck_01) return; u.talkT -= dt; u.talkAge += dt; const tt = (u.talkPh += dt);
+  const w = Math.max(0, Math.min(1, u.talkAge * 2.5, (u.talkT + .4) * 2.5)); if (w <= 0) return; o.updateMatrixWorld(true);
+  const V = h3vec(); // mirar a quien escucha (en el espacio del personaje)
+  let lx = 0, ly = 0, lz = 1; if (tgt) { B.Head.getWorldPosition(V.a); V.d.copy(tgt).sub(V.a); o.getWorldQuaternion(V.rq); V.d.applyQuaternion(V.rq.invert()); const L = Math.hypot(V.d.x, V.d.z) || 1; lx = Math.max(-.6, Math.min(.6, V.d.x / L)); lz = Math.max(.6, V.d.z / L); ly = Math.max(-.25, Math.min(.2, V.d.y / L)); }
+  // asentimiento corto y ocasional (acompaña lo que dice), más una deriva lenta y pequeña
+  u.nodT -= dt; if (u.nodT <= 0) { u.nod = 0; u.nodT = 2.2 + Math.random() * 3; } if (u.nod != null) { u.nod += dt; if (u.nod > .7) u.nod = null; }
+  const nod = u.nod != null ? Math.sin(u.nod / .7 * Math.PI) * .09 : 0, sway = Math.sin(tt * .9) * .035 + Math.sin(tt * 2.1 + 1) * .015;
+  h3aim(o, B, 'neck_01', 'Head', lx * .5 + sway, .55 + ly * .4 - nod, lz, w * .55);
+  // respiración: el pecho sube y baja muy poco
+  if (B.spine_02 && B.spine_03) h3aim(o, B, 'spine_02', 'spine_03', 0, 1, .06 + Math.sin(tt * 1.7) * .025, w * .25);
+  // gesto de mano suave: el antebrazo sube un poco y abre la palma, y vuelve; alterna manos, nunca seguido
+  u.gestT -= dt; if (!u.gest && u.gestT <= 0 && u.talkT > 1.2) { u.gest = { s: Math.random() < .6 ? 'r' : 'l', k: 0, d: 1.3 + Math.random() * .6 }; u.gestT = 3.5 + Math.random() * 3.5; }
+  if (u.gest) { const gs = u.gest; gs.k += dt / gs.d; if (gs.k >= 1) u.gest = null; else { const e = Math.sin(gs.k * Math.PI), sx = gs.s === 'r' ? -1 : 1, lo = 'lowerarm_' + gs.s, hd = 'hand_' + gs.s;
+    if (B[lo] && B[hd]) { h3aim(o, B, lo, hd, sx * .25, -.05 + e * .15, 1, e * .55 * w); h3aim(o, B, hd, hd === 'hand_r' ? (B.middle_01_r ? 'middle_01_r' : hd) : (B.middle_01_l ? 'middle_01_l' : hd), sx * .35, .1, 1, e * .3 * w); } } }
+}
 function h3npcTick(dt) {
   if (!S || !H3.npcs.length) return; const a = S.av.position;
   for (const o of H3.npcs) { if (!o.parent) continue; const u = o.userData.h3;
     if (u.backT > 0 && (u.backT -= dt) <= 0) { const a = u.act[u.idleK], b = u.act[u.cur]; a.reset(); a.setLoop(THREE.LoopRepeat); a.play(); if (b && b !== a) a.crossFadeFrom(b, .4, false); u.cur = u.idleK; }
-    const e = o.matrixWorld.elements, d = (e[12] - a.x) ** 2 + (e[14] - a.z) ** 2, vis = d < [1600, 2500, 4900, 8100][QUAL.lv]; if (o.visible !== vis) o.visible = vis; if (d < 1600 && vis) { u.mixer.update(dt); if (u.headS && u.bones.Head) u.bones.Head.scale.setScalar(u.headS); } }
+    const e = o.matrixWorld.elements, d = (e[12] - a.x) ** 2 + (e[14] - a.z) ** 2, vis = d < [1600, 2500, 4900, 8100][QUAL.lv]; if (o.visible !== vis) o.visible = vis; if (d < 1600 && vis) { u.mixer.update(dt); if (u.headS && u.bones.Head) u.bones.Head.scale.setScalar(u.headS); if (u.talkT > -.4 && u.talkAge != null) { const V = h3vec(); S.av.getWorldPosition(V.b); V.b.y += 1.5 * S.av.scale.y; talkLayer(o, u, dt, CINE.on && S.camera ? S.camera.position : V.b); if (u.talkT <= -.4) u.talkAge = null; } } }
 }
 
 /* ---------- Poly Haven (CC0): árboles, rocas, plantas y objetos reales escaneados ----------
@@ -4265,7 +4289,7 @@ function econBuild(scene, W) {
       bx(2.4, .1, 1.1, WOODL(), 0, .85, 0, gr); [[-1.1, -.45], [1.1, -.45], [-1.1, .45], [1.1, .45]].forEach(([a, b]) => cy(.05, .05, 2.2, WOOD(), a, 1.1, b, gr, 6)); const roof = bx(2.7, .06, 1.5, tm('awn' + r, cloth, { side: THREE.DoubleSide }), 0, 2.2, 0, gr); roof.rotation.x = .12;
       for (let i = 0; i < 6; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(.09, 8, 6), tm('fr' + (i % 3), ['#C0392B', '#E9A52C', '#66763E'][i % 3])); f.position.set(-.9 + i * .36, .97, (i % 2 - .5) * .3); gr.add(f); } jar(gr, .9, .2, .95, '#B4704A', .7);
       gr.position.set(x, y, z); gr.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; gr.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(gr); S.cols.push({ x0: x - .7, x1: x + .7, z0: z - 1.3, z1: z + 1.3 });
-      const sell = buildHeroAvatar({ g: R() < .5 ? 'chico' : 'chica', age: 18, skin: '#C99A72', hair: '#2A1B14', outfit: cloth, anim: ['Idle_Talking_Loop', 'M_Holding_Idle', 'M_Box_Idle'] }); const sx = x + side * 1.2; sell.position.set(sx, W.hAt(sx, z), z); sell.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; scene.add(sell);
+      const sell = buildHeroAvatar({ g: R() < .5 ? 'chico' : 'chica', age: 18, skin: '#C99A72', hair: '#2A1B14', outfit: cloth, anim: ['M_Standing_Idle', 'M_Holding_Idle', 'M_Box_Idle'] }); const sx = x + side * 1.2; sell.position.set(sx, W.hAt(sx, z), z); sell.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; scene.add(sell);
       const lb = textSprite('Mercado', true); lb.scale.multiplyScalar(.7); lb.position.set(x, y + 2.9, z); scene.add(lb); st.stalls.push({ x, z }); } }
     // mendigo junto al camino
     { const m = ns[Math.min(ns.length - 1, 4)], side = r % 2 ? -1 : 1, x = m.position.x + side * 3.2, z = m.position.z - 2; if (!blockedAt(x, z)) {
@@ -4357,8 +4381,8 @@ function cineStep() {
   const first = !CINE.cam.kind; if (st.o) { if (spkO && spkO !== S.av) { cineShot('ots', spkO, first ? .95 : .7); clearTimeout(CINE.askT); CINE.askT = setTimeout(() => { if (CINE.st === st) cineShot('ots', S.av, .8, true); }, 2000); } else cineShot('ots', S.av, first ? .95 : .75, true); } else if (st.who === 'nar') cineShot('wide', null, first ? .95 : 1.1); else cineShot('ots', spkO, first ? .95 : .7);
   CINE.face = spkO && spkO !== S.av ? spkO : null;
   const secs = Math.max(2.2, Math.min(9, t.length / 15));
-  if (spkO && spkO !== S.av) { h3npcPlay(spkO, st.g === 'point' ? ['M_Pointing_Gesture', 'M_Talking'] : st.g === 'nod' ? ['M_Lengthy_Head_Nod', 'M_Talking'] : ['M_Talking', 'Idle_Talking_Loop'], secs); if (Math.random() < .5) h3do(['M_Lengthy_Head_Nod', 'M_Thinking'], 2.2); }
-  else if (spkO === S.av) h3do(['M_Talking', 'Idle_Talking_Loop'], secs);
+  if (spkO && spkO !== S.av) { talkGo(spkO, secs, st.g); if (Math.random() < .5) h3do(['M_Lengthy_Head_Nod', 'M_Thinking'], 2.2); }
+  else if (spkO === S.av) talkGo(S.av, secs);
   Object.keys(CINE.sc.cast).forEach(k => { const o = CINE.sc.cast[k].o; if (o !== spkO && Math.random() < .35) h3npcPlay(o, ['M_Lengthy_Head_Nod', 'M_Thinking'], 2); });
   if (st.o) { op.innerHTML = st.o.map((x, i) => `<button type="button" data-i="${i}">${esc(x.t)}</button>`).join(''); op.querySelectorAll('button').forEach(b => b.onclick = e => { e.stopPropagation(); const x = st.o[+b.dataset.i]; try { x.fn && x.fn(); } catch (er) {} CINE.q = (x.quiet ? [] : [{ who: 'me', t: x.t }]).concat(x.then || [], CINE.q); cineStep(); }); try { op.querySelector('button').focus({ preventScroll: true }); } catch (e) {} }
   const t0 = performance.now();
@@ -4396,13 +4420,13 @@ async function vilBuild(scene, W) {
   const put = (look, x, z, face, role, extra) => { for (let t = 0; t < 30 && !free(x, z); t++) { x += (R() - .5) * 4; z += (R() - .5) * 4; } if (!free(x, z)) return null; const o = buildHeroAvatar(look); o.position.set(x, Math.max(0, W.hAt(x, z)), z); o.rotation.y = face; scene.add(o); const v = Object.assign({ id: role + '-' + VIL.npcs.length, o, x, z, role, name: M.VNAMES[Math.floor(R() * M.VNAMES.length)] }, extra || {}); VIL.npcs.push(v); return v; };
   const helpers = ['aguatera', 'pescador', 'vendedor'], margs = ['leproso', 'cobrador', 'mendiga'];
   VIL.list.forEach((vl, i) => { const ang = R() * 6.28, sk = ['#C99A72', '#B98A62', '#D6A57C'][i % 3];
-    put({ g: 'chica', age: 18, skin: sk, hair: '#BDBDBD', outfit: '#6A5A7A', anim: ['M_Lengthy_Head_Nod', 'Idle_Talking_Loop'] }, vl.x + Math.cos(ang) * 6, vl.z + Math.sin(ang) * 6, ang + Math.PI, 'anciana', { vil: vl.name, talk: i % M.TALKS.length });
+    put({ g: 'chica', age: 18, skin: sk, hair: '#BDBDBD', outfit: '#6A5A7A', anim: ['M_Standing_Idle', 'M_Idle'] }, vl.x + Math.cos(ang) * 6, vl.z + Math.sin(ang) * 6, ang + Math.PI, 'anciana', { vil: vl.name, talk: i % M.TALKS.length });
     const h = helpers[i % 3]; put({ g: h === 'aguatera' ? 'chica' : 'chico', age: 18, skin: sk, hair: '#2A1B14', outfit: ['#8A6A44', '#5A6A7A', '#8E2E22'][i % 3], anim: ['M_Holding_Idle', 'M_Box_Idle'] }, vl.x + Math.cos(ang + 2) * 7, vl.z + Math.sin(ang + 2) * 7, ang + 2 + Math.PI, 'help', { vil: vl.name, help: h });
     const mg = margs[i % 3]; put({ g: mg === 'mendiga' ? 'chica' : 'chico', age: 18, skin: '#B98A62', hair: '#6A6A6A', outfit: '#8A8478', anim: ['M_Sad_Idle', 'Crouch_Idle_Loop', 'M_Kneeling_Idle'] }, vl.x + Math.cos(ang + 4) * 16, vl.z + Math.sin(ang + 4) * 16, ang + 4 + Math.PI, 'marg', { vil: vl.name, marg: mg }); });
   // testigos: uno o dos por etapa, cerca de una aldea de esa etapa (o del camino)
   g.REGIONS.forEach((Rg, r) => { const W2 = M.WITNESS[Rg.id]; if (!W2) return; const vl = VIL.list.find(v => v.r === r); const ns = Object.keys(g.NODES).filter(id => id.startsWith(Rg.id + '-n')).map(id => S.markers[id]).filter(Boolean); const base = vl ? [vl.x, vl.z] : ns.length ? [ns[0].position.x + 8, ns[0].position.z] : null; if (!base) return;
     W2.forEach((w, j) => { const ang = R() * 6.28, look = { mujer: { g: 'chica', outfit: '#8A5A6A' }, pastor: { g: 'chico', outfit: '#7A6A4A' }, pescador: { g: 'chico', outfit: '#3E5A6A' }, rico: { g: 'chico', outfit: '#6A2E5A' }, hombre: { g: 'chico', outfit: '#6A5A44' } }[w.look] || { g: 'chico', outfit: '#6A5A44' };
-      put(Object.assign({ age: 18, skin: '#C99A72', hair: '#2A1B14', anim: ['Idle_Talking_Loop', 'M_Lengthy_Head_Nod'] }, look), base[0] + Math.cos(ang) * (10 + j * 4), base[1] + Math.sin(ang) * (10 + j * 4), ang + Math.PI, 'wit', { vil: vl ? vl.name : null, wit: w, region: r, wid: Rg.id + j }); }); });
+      put(Object.assign({ age: 18, skin: '#C99A72', hair: '#2A1B14', anim: ['M_Standing_Idle', 'M_Idle'] }, look), base[0] + Math.cos(ang) * (10 + j * 4), base[1] + Math.sin(ang) * (10 + j * 4), ang + Math.PI, 'wit', { vil: vl ? vl.name : null, wit: w, region: r, wid: Rg.id + j }); }); });
   // tensión hacia Jerusalén: más soldados en las últimas etapas
   ['jerusalen', 'cruz'].forEach(id => { const r = g.REGIONS.findIndex(x => x.id === id); if (r < 0) return; Object.keys(g.NODES).filter(k => k.startsWith(id + '-n')).forEach((k, j) => { const [x, z] = toV(g.NODES[k].x, g.NODES[k].y), sd = j % 2 ? 1 : -1; put({ g: 'chico', age: 18, skin: '#D6A57C', hair: '#3A2A1A', outfit: '#8E2E22', anim: ['M_Standing_Idle', 'M_Holding_Idle'] }, x + sd * 5, z - 2, sd > 0 ? -Math.PI / 2 : Math.PI / 2, 'sold', { vil: null }); }); });
 }
@@ -4414,7 +4438,7 @@ function vilSheet(html, after) { const el = document.getElementById('v3sheet'); 
 function vilAct(v) {
   const M = VIL.mod; if (!M) return; const st = vilState(), d = vday(), nm = G().P().name || '', look = v.o; try { look.lookAt(S.av.position.x, look.position.y, S.av.position.z); } catch (e) {}
   if (v.role === 'sold') { h3npcPlay(v.o, ['M_Lengthy_Head_Nod'], 2); svToast('🛡️ Soldado: ' + M.SOLDIER_LINES[Math.floor(Math.random() * M.SOLDIER_LINES.length)]); behav('saludos'); return; }
-  if (v.role === 'wit') { const w = v.wit, first = !st.wit[v.wid]; st.wit[v.wid] = d; if (first) { axGain('gent', 2); axGain('sab', 1); behav('testigos'); } G().save(); h3npcPlay(v.o, ['Idle_Talking_Loop', 'M_Lengthy_Head_Nod'], 4);
+  if (v.role === 'wit') { const w = v.wit, first = !st.wit[v.wid]; st.wit[v.wid] = d; if (first) { axGain('gent', 2); axGain('sab', 1); behav('testigos'); } G().save(); talkGo(v.o, 4);
     if (cineWit(v, w, first)) return;
     vilSheet(`<div class="inv-h"><b>${esc(w.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">Testigo · cuenta lo que vivió</small>${w.t.map(t => `<p class="vil-p">${esc(t)}</p>`).join('')}`); try { G().vo(w.t.join(' '), w.look === 'mujer' ? 'mujer' : 'varon'); } catch (e) {} return; }
   if (st.greet[v.id] !== d) { st.greet[v.id] = d; const marg = v.role === 'marg'; repAdd(v.vil, marg ? 3 : 1); axGain('gent', marg ? 2 : 1); behav('saludos'); if (marg) behav('saludosMarginados'); glowAdd(marg ? 3 : 1, 'saludo'); G().save(); h3do(['M_Waving', 'Waving'], 2, .4); h3npcPlay(v.o, ['M_Waving', 'M_Thankful'], 2.5);
