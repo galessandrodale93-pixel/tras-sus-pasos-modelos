@@ -553,7 +553,7 @@ function heroFlora(scene, W, allPts, zMax, R, Q) {
   const trunkM = new THREE.MeshStandardMaterial({ color: '#8A7058', roughness: 1, map: texL('rock.jpg', 4) });
   const leafM = new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: .9, map: texL('leaves.jpg', 4) }); leafM.map.repeat.set(1.6, 1.6);
   // copas con borde de hojas: en el contorno (donde la superficie se ve de canto) se recorta según la textura, así la masa deja de verse como una bola lisa
-  leafM.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n{float fe=abs(dot(normalize(vNormal),normalize(vViewPosition)));float lum=dot(diffuseColor.rgb,vec3(.333));if(fe<.55&&lum<mix(.62,.18,fe/.55))discard;diffuseColor.rgb*=mix(.78,1.08,smoothstep(.2,.9,fe));}'); }; leafM.customProgramCacheKey = () => 'leafEdge'; leafM.side = THREE.DoubleSide;
+  leafM.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n{float fe=abs(dot(normalize(vNormal),normalize(vViewPosition)));float lum=dot(diffuseColor.rgb,vec3(.333));if(fe<.55&&lum<mix(.62,.18,fe/.55))discard;diffuseColor.rgb*=mix(.78,1.08,smoothstep(.2,.9,fe));}'); }; leafM.customProgramCacheKey = () => 'leafEdge'; leafM.shadowSide = THREE.FrontSide; leafM.side = THREE.DoubleSide;
   // olivos: tronco torcido y copa de varias masas
   FLORA.olive = olive; FLORA.rock = rock; FLORA.oT = inst(new THREE.CylinderGeometry(.12, .22, 1, 6), trunkM, olive, o => { const h = 1.5 * o.s; put(o.x, o.y + h / 2, o.z, (o.v - .5) * .3, o.rot, (o.v - .5) * .25, o.s, h, o.s); }, true);
   const blobs = []; olive.forEach(o => { for (let j = 0; j < 6; j++) { const a = j / 6 * 6.28 + o.rot, r = j ? .55 : 0; blobs.push({ o, x: Math.cos(a) * r, z: Math.sin(a) * r, y: 1.55 + (j ? -.1 + hsh(j, o.x) * .35 : .35), s: .55 + hsh(o.z, j) * .3 }); } });
@@ -696,6 +696,7 @@ const KL = {};
 }
 function resize() { if (!S) return; const r = S.root.getBoundingClientRect(); const w = r.width || innerWidth, h = r.height || innerHeight; S.renderer.setSize(w, h, false); S.camera.aspect = w / h; S.camera.updateProjectionMatrix(); if (S.fx) { S.fx.setPixelRatio(S.renderer.getPixelRatio()); S.fx.setSize(w, h); } }
 /* gráficos altos en PC: resplandor suave (bloom) con antialias; si la compu no da, se apaga solo */
+function fxBad() { return /Apple|Metal/i.test(QUAL.gpu || ''); }
 const FX_BASE = window.FX_BASE || new URL('../hero/', import.meta.url).href;
 let FXM = null;
 async function fxInit() {
@@ -704,7 +705,7 @@ async function fxInit() {
   const mob = matchMedia('(pointer: coarse)').matches, r = S.renderer, sz = r.getDrawingBufferSize(new THREE.Vector2()), rt = new THREE.WebGLRenderTarget(sz.x, sz.y, { type: THREE.HalfFloatType, samples: mob ? 2 : 4 });
   const c = new FXM.EffectComposer(r, rt); c.addPass(new FXM.RenderPass(S.scene, S.camera));
   c.addPass(new FXM.UnrealBloomPass(new THREE.Vector2(sz.x / 2, sz.y / 2), S.hx ? .2 : .14, .4, 1.0)); c.addPass(new FXM.OutputPass());
-  S.fxC = c; S.fx = QUAL.lv >= 3 ? c : null; resize();
+  S.fxC = c; S.fx = QUAL.lv >= 3 && !fxBad() ? c : null; resize();
 }
 /* ---------- el avatar 3D en los minijuegos: cuadros renderizados del mismo personaje (ropa, piel, pelo y proporciones) ---------- */
 const AVS = { key: '', p: null };
@@ -873,7 +874,7 @@ function qApply() {
   // Bajo: sin sombras (en el celular es lo que más cuesta); al cambiar, los materiales se recompilan una vez
   { const want = lv > 0; if (r.shadowMap.enabled !== want) { r.shadowMap.enabled = want; S.scene.traverse(o => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { m.needsUpdate = true; }); }); } }
   if (TEXK.tlo) TEXK.tlo.value = lv === 0 ? 1 : 0; WATER.mats.forEach(m => { m.clearcoat = lv ? 1 : 0; m.envMap = lv ? m.userData.env || m.envMap : null; m.needsUpdate = true; });
-  if (S.fxC) S.fx = lv >= 3 ? S.fxC : null;
+  if (S.fxC) S.fx = lv >= 3 && !fxBad() ? S.fxC : null;
   if (lv < 2) S.scene.environment = null; else skyEnv();
   try { texTier(lv); } catch (e) {} if (TEXK.tdet) TEXK.tdet.value = lv >= 2 ? 1 : 0;
   FLORA.acc = 0; PH.near = 0; resize();
@@ -1756,7 +1757,7 @@ function buildTowns(scene, g, hx, HW, pois) {
 /* destino marcado en el mapa: columna de luz y flecha en el piso */
 function wpSync() {
   if (!S) return; const yAt = (x, z) => S.W ? S.W.hAt(x, z) : 0;
-  if (!S.wpObj) { const g = new THREE.Group(); const beam = new THREE.Mesh(new THREE.CylinderGeometry(.25, .6, 30, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#FF6A4A', transparent: true, opacity: .35, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide })); beam.position.y = 15; g.add(beam); const ring = new THREE.Mesh(new THREE.RingGeometry(1, 1.3, 40), new THREE.MeshBasicMaterial({ color: '#FF6A4A', transparent: true, opacity: .85, side: THREE.DoubleSide, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.y = .1; g.add(ring); g.userData.ring = ring; S.scene.add(g); S.wpObj = g;
+  if (!S.wpObj) { const g = new THREE.Group(); const beam = new THREE.Mesh(new THREE.CylinderGeometry(.05, .16, 12, 10, 1, true), new THREE.MeshBasicMaterial({ color: '#E8A070', transparent: true, opacity: .2, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, fog: true })); beam.position.y = 6; g.add(beam); const ring = new THREE.Mesh(new THREE.RingGeometry(1, 1.3, 40), new THREE.MeshBasicMaterial({ color: '#FF6A4A', transparent: true, opacity: .85, side: THREE.DoubleSide, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.y = .1; g.add(ring); g.userData.ring = ring; S.scene.add(g); S.wpObj = g;
     const sh = new THREE.Shape(); sh.moveTo(0, .9); sh.lineTo(.55, .1); sh.lineTo(.2, .1); sh.lineTo(.2, -.6); sh.lineTo(-.2, -.6); sh.lineTo(-.2, .1); sh.lineTo(-.55, .1); sh.closePath(); const ag = new THREE.ShapeGeometry(sh); ag.rotateX(Math.PI / 2); /* la punta mira a +Z, hacia donde apunta rotation.y = atan2(dx, dz) */ const ar = new THREE.Mesh(ag, new THREE.MeshBasicMaterial({ color: '#FFD25E', transparent: true, opacity: .9, depthWrite: false, side: THREE.DoubleSide })); const ap = new THREE.Group(); ar.scale.setScalar(1.5); ap.add(ar); ar.position.z = 0; S.scene.add(ap); S.wpArrow = ap; }
   S.wpObj.visible = S.wpArrow.visible = !!S.wp; if (S.wp) S.wpObj.position.set(S.wp.x, yAt(S.wp.x, S.wp.z), S.wp.z);
   let el = document.getElementById('v3wp'); if (!el) { el = document.createElement('div'); el.id = 'v3wp'; el.className = 'v3mis v3wp'; el.innerHTML = '<i><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3l7 16-7-4-7 4Z" fill="currentColor"/></svg></i><span></span><button aria-label="Quitar destino">✕</button>'; document.body.appendChild(el); el.querySelector('button').onclick = () => { S.wp = null; wpSync(); }; }
@@ -2568,7 +2569,7 @@ function reLook() {
 function gearDropTick(dt, t) {
   if (!S || document.getElementById('view3d').hidden) return;
   const dr = S.gdrop;
-  if (dr) { dr.life -= dt; dr.m.rotation.y = t * 1.2; dr.m.position.y = dr.y + .9 + Math.sin(t * 2.2) * .12; dr.beam.material.opacity = .28 + Math.sin(t * 3) * .1;
+  if (dr) { dr.life -= dt; dr.m.rotation.y = t * 1.2; dr.m.position.y = dr.y + .9 + Math.sin(t * 2.2) * .12; dr.beam.material.opacity = .18 + Math.sin(t * 3) * .05;
     const a = S.av.position; if ((dr.m.position.x - a.x) ** 2 + (dr.m.position.z - a.z) ** 2 < 2.8) { S.scene.remove(dr.m); S.gdrop = null; gearGive(dr.it, '¡Encontraste ropa de la época!'); return; }
     if (dr.life <= 0) { S.scene.remove(dr.m); S.gdrop = null; } return; }
   if (S.walking || S.freeMoving) S.gwalk = (S.gwalk || 0) + dt;
@@ -2579,7 +2580,7 @@ function gearDropTick(dt, t) {
   if (!okp) return; const y = S.W ? Math.max(0, S.W.hAt(x, z)) : 0, R = RAR[it.r][1], m = new THREE.Group(), cm = new THREE.MeshStandardMaterial({ color: it.c, roughness: .8, emissive: R, emissiveIntensity: .25 });
   const bun = new THREE.Mesh(new THREE.SphereGeometry(.3, 14, 10), cm); bun.scale.set(1.2, .75, 1); m.add(bun); const knot = new THREE.Mesh(new THREE.ConeGeometry(.12, .22, 8), cm); knot.position.y = .26; m.add(knot);
   const tie = new THREE.Mesh(new THREE.TorusGeometry(.1, .025, 6, 14), new THREE.MeshStandardMaterial({ color: R, emissive: R, emissiveIntensity: .8 })); tie.rotation.x = Math.PI / 2; tie.position.y = .16; m.add(tie);
-  const beam = new THREE.Mesh(new THREE.CylinderGeometry(.12, .5, 14, 14, 1, true), new THREE.MeshBasicMaterial({ color: R, transparent: true, opacity: .3, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide })); beam.position.y = 6.5; m.add(beam);
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(.04, .14, 7, 10, 1, true), new THREE.MeshBasicMaterial({ color: R, transparent: true, opacity: .22, depthWrite: false, side: THREE.DoubleSide, fog: true })); beam.position.y = 3.3; m.add(beam);
   const halo = new THREE.Mesh(new THREE.RingGeometry(.5, .62, 32), new THREE.MeshBasicMaterial({ color: R, transparent: true, opacity: .6, side: THREE.DoubleSide, depthWrite: false })); halo.rotation.x = -Math.PI / 2; halo.position.y = -.85; m.add(halo);
   m.position.set(x, y + .9, z); S.scene.add(m); S.gdrop = { m, beam, it, y, life: 240 };
   G().toast('✨ Algo brilla cerca del camino… ¡andá a buscarlo antes de que desaparezca!');
@@ -3353,7 +3354,7 @@ function phGet(id) {
 function phMat(m, o) {
   const k = '_ph' + (o.wind ? 'w' + o.wind : '') + (o.grass ? 'g' : '') + (PH.kids ? 'k' : ''); if (m[k]) return m[k];
   const c = m.clone(); if (PH.kids && c.color) c.color.multiplyScalar(1.12);
-  if (o.wind) { if (o.wind < 3) c.side = THREE.DoubleSide; c.onBeforeCompile = sh => { sh.uniforms.uT = PH.uT; const W = o.wind > 2 ? ['1.5', '7.', '.022', '.6'] : o.wind > 1 ? ['0.', '.8', '.06', '1.4'] : ['0.', '1.3', '.04', '1.2'];
+  if (o.wind) { if (o.wind < 3) { c.side = THREE.DoubleSide; c.shadowSide = THREE.FrontSide; } c.onBeforeCompile = sh => { sh.uniforms.uT = PH.uT; const W = o.wind > 2 ? ['1.5', '7.', '.022', '.6'] : o.wind > 1 ? ['0.', '.8', '.06', '1.4'] : ['0.', '1.3', '.04', '1.2'];
     sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <project_vertex>', 'vec4 wp=vec4(transformed,1.);vec3 bp=vec3(0.);\n#ifdef USE_INSTANCING\nwp=instanceMatrix*wp;bp=instanceMatrix[3].xyz;\n#endif\nwp=modelMatrix*wp;bp=(modelMatrix*vec4(bp,1.)).xyz;\nfloat hh=wp.y-bp.y,k=clamp((hh-' + W[0] + ')/' + W[1] + ',0.,1.);k*=k;float ph=uT*' + W[3] + '+bp.x*.37+bp.z*.29;\nwp.x+=(sin(ph)*.7+sin(ph*2.3+1.)*.3)*' + W[2] + '*k*max(hh,1.)+sin(uT*3.1+wp.x*2.3+wp.z*1.9)*.012*k;wp.z+=cos(ph*.8+.6)*' + W[2] + '*.5*k*max(hh,1.);\nvec4 mvPosition=viewMatrix*wp;gl_Position=projectionMatrix*mvPosition;'); }; c.customProgramCacheKey = () => 'phw2' + o.wind; }
   if (o.grass) seasonMat(c);
   m[k] = c; return c;
