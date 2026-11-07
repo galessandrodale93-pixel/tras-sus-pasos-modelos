@@ -1910,7 +1910,8 @@ function timp(m, t, vol) {
 const MUS = window.MUS_URLS || {
   // Hero, exploración: «The Road Beyond the Ruins» (elegida por Gui), en bucle con fundido de 3 s
   hero: [new URL('./music/hero_exploracion.mp3', import.meta.url).href],
-  kids: ['https://music.wixstatic.com/mp3/43ca3b_d7081c84642a4f9785d7acc74dbcceee.mp3', 'https://music.wixstatic.com/mp3/43ca3b_9aad181d11764abc8134acebda29167c.mp3', 'https://music.wixstatic.com/mp3/43ca3b_7bf0fa95563e49a495e3106aec385f8b.mp3', 'https://music.wixstatic.com/mp3/43ca3b_1d6feb9892734a2a9e73d38860ffe0ad.mp3'],
+  // Kids, exploración: «The Light Beyond the Crystals» (piano), en bucle con fundido de 3 s
+  kids: [new URL('./music/kids_exploracion.mp3', import.meta.url).href],
   orar: ['https://music.wixstatic.com/mp3/43ca3b_538f7365d7e248f1bf574404060d1d65.mp3', 'https://music.wixstatic.com/mp3/43ca3b_b29f4283091e41ebb259f0338ad83024.mp3', 'https://music.wixstatic.com/mp3/43ca3b_0ec4648425c24a579ef24a9a0b7caa81.mp3', 'https://music.wixstatic.com/mp3/43ca3b_c88f06c8392149c2a87c327e80823a50.mp3']
 };
 const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
