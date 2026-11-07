@@ -3346,11 +3346,63 @@ async function phAlpha(id, root) {
     if (mp) { a.offset.copy(mp.offset); a.repeat.copy(mp.repeat); a.rotation = mp.rotation; a.center.copy(mp.center); a.wrapS = mp.wrapS; a.wrapT = mp.wrapT; if ('channel' in mp) a.channel = mp.channel; }
     a.needsUpdate = true; m.alphaMap = a; m.alphaTest = .5; m.transparent = false; m.depthWrite = true; m.side = THREE.DoubleSide; m.needsUpdate = true; }); });
 }
+/* ---------- packs pagos (licencia estándar): pasto (Grass Field Pack), árboles (Realistic Tree Pack 13P) y palmeras (Cubebrush y CGTrader).
+   Viven solo en el R2 de Gui, nunca en el repo. R2_BASE es la URL pública del bucket (r2.dev o dominio propio).
+   Si está vacía, si falta un manifiesto o si algo no carga, sigue el pasto y los árboles de siempre.
+   Calidad de textura: Baja y Media 1k, Alta 2k, Ultra y la versión de Windows 4k. Para probar sin publicar: ?r2=https://…
+   en la dirección, o localStorage 'tsp:r2'. ---------- */
+const R2_BASE = 'https://pub-e5804be7c3c34eeca20229d760c593a3.r2.dev';
+const GRP = { base: null, man: {}, slots: {}, ready: null, mats: {}, tex: {} };
+function grpBase() { if (GRP.base != null) return GRP.base; let b = R2_BASE; try { const q = new URLSearchParams(location.search).get('r2'); b = q || localStorage.getItem('tsp:r2') || window.TSP_R2 || b; } catch (e) {} b = (b || '').trim(); GRP.base = b && /^(https:\/\/|http:\/\/localhost[:/])/.test(b) ? b.replace(/\/?$/, '/') : ''; return GRP.base; }
+function grpInit() {
+  if (GRP.ready) return GRP.ready; const base = grpBase(); if (!base) return (GRP.ready = Promise.resolve(null));
+  const get = pre => { const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null, to = setTimeout(() => ctl && ctl.abort(), 25000);
+    return fetch(base + pre + 'manifest.json', { signal: ctl ? ctl.signal : undefined, mode: 'cors' }).then(r => r.ok ? r.json() : null).then(m => { clearTimeout(to); if (!m || !m.slots || m.format !== 1) return null; m.pre = pre; GRP.man[pre] = m; for (const k in m.slots) GRP.slots[k] = Object.assign({ pre, m }, m.slots[k]); return m; }).catch(e => { clearTimeout(to); console.warn('R2 ' + pre + ' no disponible, sigue lo de siempre', e && e.name); return null; }); };
+  GRP.ready = Promise.all([get('grass/'), get('trees/'), get('palms/')]).then(r => r.some(Boolean) ? GRP.slots : null);
+  return GRP.ready;
+}
+function grpWin() { return /Electron/i.test(navigator.userAgent) || !!window.TSP_DESKTOP; }
+function grpTier() { return grpWin() || QUAL.lv >= 3 ? '4k' : QUAL.lv >= 2 ? '2k' : '1k'; }
+async function grpTex(url, srgb) {
+  if (!GRP.tex[url]) GRP.tex[url] = texLoader().then(K => { if (!K) throw new Error('sin KTX2'); return K.loadAsync(url); }).then(t => { t.colorSpace = srgb ? THREE.SRGBColorSpace : (THREE.NoColorSpace || ''); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = Math.min(4, S && S.renderer ? S.renderer.capabilities.getMaxAnisotropy() : 1); return t; });
+  return GRP.tex[url];
+}
+async function grpMat(sl, name) {
+  const tier = grpTier(), tint = sl.tint && sl.tint[name], k = sl.pre + name + ':' + tier + (tint || '') + (sl.m.mats && sl.m.mats[name] && sl.m.mats[name].still === false ? 'w' : ''); if (GRP.mats[k]) return GRP.mats[k];
+  return (GRP.mats[k] = (async () => { const d = (sl.m.mats || {})[name] || { color: name + '_color', normal: name + '_normal', orm: name + '_orm', alpha: true }, tt = d.tiers && !d.tiers.includes(tier) ? d.tiers[d.tiers.length - 1] : tier, u = GRP.base + sl.pre + 'tex/' + tt + '/';
+    const [map, nor, orm] = await Promise.all([grpTex(u + d.color + '.ktx2', true), d.normal ? grpTex((d.normalTiers && !d.normalTiers.includes(tt) ? GRP.base + sl.pre + 'tex/' + d.normalTiers[d.normalTiers.length - 1] + '/' : u) + d.normal + '.ktx2').catch(() => null) : null, d.orm ? grpTex((d.ormTiers && !d.ormTiers.includes(tt) ? GRP.base + sl.pre + 'tex/' + d.ormTiers[d.ormTiers.length - 1] + '/' : u) + d.orm + '.ktx2').catch(() => null) : null]);
+    const m = new THREE.MeshStandardMaterial({ name: 'grp_' + name, map, normalMap: nor, roughnessMap: orm, aoMap: orm, aoMapIntensity: .8, roughness: 1, metalness: 0, color: tint || '#FFFFFF' });
+    if (d.alpha) { m.alphaTest = .5; m.side = THREE.DoubleSide; } if (nor) m.normalScale.set(.8, .8); m.userData.still = !!d.still; return m; })());
+}
+// lo lejano: dos tarjetas cruzadas con el árbol dibujado (impostor), del mismo tamaño que el modelo
+async function grpImp(sl, name) {
+  const I = sl.m.impostor && sl.m.impostor[name]; if (!I) return null; const tex = await grpTex(GRP.base + sl.pre + I.file, true).catch(() => null); if (!tex) return null; tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+  const g = new THREE.BufferGeometry(), P = [], U = [], N = [], X = [], [u0, v0, u1, v1] = I.uv || [0, 0, 1, 1], x0 = I.x0 ?? -I.w / 2, x1 = x0 + I.w, y0 = I.y0 || 0; for (let k = 0; k < 2; k++) { const a = k * Math.PI / 2, ca = Math.cos(a), sa = Math.sin(a), o = P.length / 3; P.push(x0 * ca, y0, x0 * sa, x1 * ca, y0, x1 * sa, x1 * ca, y0 + I.h, x1 * sa, x0 * ca, y0 + I.h, x0 * sa); U.push(u0, v1, u1, v1, u1, v0, u0, v0); N.push(0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0); X.push(o, o + 1, o + 2, o, o + 2, o + 3); }
+  g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3)); g.setIndex(X);
+  const mk = I.file + ((sl.tint && sl.tint.leaf) || ''); GRP.imat = GRP.imat || {}; return { geo: g, mat: GRP.imat[mk] || (GRP.imat[mk] = new THREE.MeshLambertMaterial({ map: tex, alphaTest: .5, side: THREE.DoubleSide, color: (sl.tint && sl.tint.leaf) || '#FFFFFF' })) };
+}
+// devuelve las variantes igual que phGet (cada modelo es una variante); null si no corresponde o falla
+async function grpVars(id) {
+  const slots = await grpInit(); if (!slots) return null; const sl = slots[id]; if (!sl) return null;
+  const L = await phLoader(), LD = sl.m.lod || {}, tier = grpWin() || QUAL.lv >= 3 ? 'full' : QUAL.lv >= 2 ? (LD.mid ? 'mid' : 'full') : 'lite', lod = LD[tier] || 'LOD0';
+  const list = (tier === 'lite' && sl.lite && sl.lite.length ? sl.lite : sl.models);
+  const vars = await Promise.all(list.map(name => { const kk = (sl.mk && sl.mk[name]) || sl.k || 1, sc = new THREE.Matrix4().makeScale(kk, kk, kk); return new Promise((r, j) => L.load(GRP.base + sl.pre + 'models/' + name + '.glb', r, undefined, j)).then(async g => { g.scene.updateMatrixWorld(true); const node = g.scene.getObjectByName(lod) || g.scene.getObjectByName('LOD0') || g.scene, ms = [];
+    const todo = []; node.traverse(o => { if (o.isMesh) todo.push(o); });
+    for (const o of todo) { const mt = await grpMat(sl, (o.material && o.material.name) || 'field'); ms.push({ geo: o.geometry, mat: mt, m: sc.clone().multiply(o.matrixWorld) }); }
+    const im = await grpImp(sl, name); if (im) ms.imp = Object.assign(im, { m: sc.clone() }); return ms; }).catch(() => []); }));
+  const ok = vars.filter(v => v.length); return ok.length ? ok : null;
+}
+// olivos del pack: se esconden los de siempre y el hacha sigue funcionando (se tala la instancia del modelo nuevo)
+function trpOlive(vars) {
+  if (!vars || !vars.length || FLORA.trp || !FLORA.oT) return; FLORA.trp = 1; const orig = FLORA.oT; orig.visible = false; if (FLORA.oB) FLORA.oB.visible = false;
+  FLORA.oT = { uuid: orig.uuid, getMatrixAt: (i, M) => orig.getMatrixAt(i, M), setMatrixAt: (i, M) => { orig.setMatrixAt(i, M); const e = M.elements; trpHide(i, !e[0] && !e[5] && !e[10]); }, instanceMatrix: { set needsUpdate(v) {} }, set visible(v) { orig.visible = v; } };
+}
+function trpHide(i, hide) { const z = M4zero(); for (const B of PH.bands) { if (!B.idx) continue; const L = B.idx.get(i); if (!L) continue; B.store = B.store || new Map(); L.forEach(([im, li], k) => { const key = i + ':' + k; if (hide) { if (!B.store.has(key)) { const m = new THREE.Matrix4(); im.getMatrixAt(li, m); B.store.set(key, m); } im.setMatrixAt(li, z); } else { const m = B.store.get(key); if (m) { im.setMatrixAt(li, m); B.store.delete(key); } } im.instanceMatrix.needsUpdate = true; }); } }
 function phGet(id) {
-  if (!PH.cache[id]) PH.cache[id] = phLoader().then(L => new Promise((r, j) => L.load(PHB + id + '.glb', r, undefined, j))).then(async g => {
+  if (!PH.cache[id]) PH.cache[id] = grpVars(id).catch(() => null).then(v => { if (id === 'trp_olive') { trpOlive(v); return v || []; } if (id === 'trp_palm') { if (v && v.length && !FLORA.trpP) { FLORA.trpP = 1; FLORA.chunks = FLORA.chunks.filter(im => { if (!im.userData.dpalm) return true; im.visible = false; if (im.parent) im.parent.remove(im); return false; }); } return v || []; } return v; }).then(v => v || phLoader().then(L => new Promise((r, j) => L.load(PHB + id + '.glb', r, undefined, j))).then(async g => {
     await phAlpha(id, g.scene); g.scene.updateMatrixWorld(true); const vars = (g.scene.children.length ? g.scene.children : [g.scene]).map(c => { const ms = []; c.traverse(o => { if (o.isMesh) ms.push({ geo: o.geometry, mat: o.material, m: o.matrixWorld.clone() }); }); return ms; }).filter(v => v.length);
     return vars;
-  }).catch(e => { console.warn('ph', id, e); return []; });
+  })).catch(e => { console.warn('ph', id, e); return []; });
   return PH.cache[id];
 }
 function phMat(m, o) {
@@ -3503,8 +3555,9 @@ function dpalmPlace(scene, list) {
   const by = new Map(); list.forEach((it, i) => { const k = (i % 3) + ':' + Math.floor(it.z / 72); if (!by.has(k)) by.set(k, []); by.get(k).push(it); });
   by.forEach((L, key) => { const vi = +key.split(':')[0], zc = (Math.floor(L[0].z / 72) + .5) * 72, v = DPALM.vars[vi];
     [[v.trunk, mT, true], [v.fr, mL, true], [v.dates, mD, false]].forEach(([geo, mat, sh]) => { if (!geo) return; const im = new THREE.InstancedMesh(geo, mat, L.length);
-      L.forEach((it, i) => { E.set(0, it.ry, 0); Q.setFromEuler(E); M4.compose(V.set(it.x, it.y, it.z), Q, SC.setScalar(it.s)); im.setMatrixAt(i, M4); }); im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.castShadow = sh && QUAL.lv > 0; im.receiveShadow = true; im.userData.n = L.length; im.userData.zc = zc; im.userData.tree = 1; scene.add(im); FLORA.chunks.push(im); }); });
+      L.forEach((it, i) => { E.set(0, it.ry, 0); Q.setFromEuler(E); M4.compose(V.set(it.x, it.y, it.z), Q, SC.setScalar(it.s)); im.setMatrixAt(i, M4); }); im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.castShadow = sh && QUAL.lv > 0; im.receiveShadow = true; im.userData.n = L.length; im.userData.zc = zc; im.userData.tree = 1; im.userData.dpalm = 1; scene.add(im); FLORA.chunks.push(im); }); });
   list.forEach(it => phCyl(it.x, it.z, .32 * it.s));
+  try { if (grpBase()) { const RP = rng(6161); phPlace('trp_palm', list.map((it, i) => ({ x: it.x, y: it.y, z: it.z, ry: RP() * 6.283, s: it.s * (.82 + RP() * .36), v: Math.floor(RP() * 97) })), { shadow: true, wind: 3, far: 1, imp: 1 }); } } catch (e) {}
 }
 // troncos y arbustos chocan como el resto de los obstáculos (cilindro simple); los modelos de Poly Haven se suman cuando se arma su franja
 const PH_RAD = { island_tree_01: .45, island_tree_02: .5, island_tree_03: .4, tree_small_02: .32, jacaranda_tree: .55, quiver_tree_01: .4, quiver_tree_02: .35, pine_tree_01: .4, dead_quiver_trunk: .35, searsia_lucida: .6, searsia_burchellii: .6, wild_rooibos_bush: .5, shrub_01: .55, shrub_02: .5, shrub_03: .5, shrub_04: .45, pine_sapling_medium: .35 };
@@ -3520,9 +3573,14 @@ async function phBuild(B) {
   B.built = true; if (!_phM) { _phM = new THREE.Matrix4(); _phQ = new THREE.Quaternion(); _phE = new THREE.Euler(); _phV = new THREE.Vector3(); _phS = new THREE.Vector3(); } const vars = await phGet(B.id); if (!vars.length || !S) return; const per = vars.map(() => []);
   B.list.forEach((it, i) => per[it.v != null ? it.v % vars.length : i % vars.length].push(it));
   vars.forEach((ms, vi) => { const L = per[vi]; if (!L.length) return;
-    ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, B.o), L.length);
-      L.forEach((it, i) => { _phE.set(it.rx || 0, it.ry || 0, it.rz || 0, 'YXZ'); _phQ.setFromEuler(_phE); _phS.set(it.s, it.sy ?? it.s, it.s); _phM.compose(_phV.set(it.x, it.y, it.z), _phQ, _phS).multiply(mm.m); im.setMatrixAt(i, _phM); });
+    ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, mm.mat.userData && mm.mat.userData.still ? Object.assign({}, B.o, { wind: 0 }) : B.o), L.length);
+      L.forEach((it, i) => { _phE.set(it.rx || 0, it.ry || 0, it.rz || 0, 'YXZ'); _phQ.setFromEuler(_phE); _phS.set(it.s, it.sy ?? it.s, it.s); _phM.compose(_phV.set(it.x, it.y, it.z), _phQ, _phS).multiply(mm.m); im.setMatrixAt(i, _phM); if (B.o.olive && it.oi != null) { B.idx = B.idx || new Map(); const e = B.idx.get(it.oi) || []; e.push([im, i]); B.idx.set(it.oi, e); } });
       im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.castShadow = !!B.o.shadow && QUAL.lv > 0; im.receiveShadow = true; im.userData.n = L.length; if (B.o.near) im.count = Math.floor(L.length * QT.near[QUAL.lv]); B.ims.push(im); }); const r0 = PH_RAD[B.id]; if (r0) { const c = B.o.near ? Math.floor(L.length * QT.near[QUAL.lv]) : L.length; for (let i = 0; i < c; i++) phCyl(L[i].x, L[i].z, r0 * (L[i].s || 1)); } });
+  vars.forEach((ms, vi) => { const L = per[vi], I = ms.imp; if (!I || !L.length) return; const im = new THREE.InstancedMesh(I.geo, I.mat, L.length);
+    L.forEach((it, i) => { _phE.set(0, it.ry || 0, 0, 'YXZ'); _phQ.setFromEuler(_phE); _phS.set(it.s, it.sy ?? it.s, it.s); _phM.compose(_phV.set(it.x, it.y, it.z), _phQ, _phS).multiply(I.m); im.setMatrixAt(i, _phM); if (B.o.olive && it.oi != null) { B.idx = B.idx || new Map(); const e = B.idx.get(it.oi) || []; e.push([im, i]); B.idx.set(it.oi, e); } });
+    im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.receiveShadow = false; B.ig = B.ig || new THREE.Group(); B.ig.add(im); });
+  if (B.ig) { S.scene.add(B.ig); B.ig.visible = false; }
+  if (B.o.olive && S.sv && S.sv.felled) for (const i of S.sv.felled.keys()) trpHide(i, true);
   // se compila el material antes de mostrarlo (evita el tirón la primera vez que aparece en pantalla)
   const g = new THREE.Group(); B.ims.forEach(im => g.add(im)); S.scene.add(g); g.visible = false; B.g = g;
   try { if (S.renderer.compileAsync) await S.renderer.compileAsync(g, S.camera, S.scene); } catch (e) {} B.ok = true;
@@ -3535,10 +3593,10 @@ function phOne(id, parent, x, y, z, ry, s, o) {
 function phTick(dt) {
   if (!S || !PH.bands.length) return; PH.uT.value = S.t || 0; PH.near -= dt; if (PH.near > 0) return; PH.near = .5;
   const cz = S.av.position.z, see = (S.hx ? 120 : 140) * QT.see[QUAL.lv], pre = see + 50; let next = null, nd = 1e9;
-  for (const B of PH.bands) { const d = Math.abs(B.zc - cz) - PH_BAND / 2, lim = B.o.far ? see * 1.6 : B.o.near ? see * .55 : see; if (B.g && B.o.shadow) { const cs = QUAL.lv >= 2 && d < [0, 0, 40, 70][QUAL.lv]; if (B.cs !== cs) { B.cs = cs; B.ims.forEach(im => { im.castShadow = cs; }); } } if (!B.built && d < (B.o.far ? pre * 1.6 : pre) && d < nd) { nd = d; next = B; } if (B.g) { B.g.visible = !!B.ok && d < lim; if (B.g.visible && B.ims && B.ims.length && B.thin !== QUAL.lv + ':' + B.ims.length) { B.thin = QUAL.lv + ':' + B.ims.length; const f = [.45, .65, 1, 1][QUAL.lv]; B.ims.forEach(im => { if (im.userData.n0 == null) im.userData.n0 = im.count; const g = im.geometry, tri = (g.index ? g.index.count : g.attributes.position.count) / 3; im.count = tri > 1500 ? Math.max(1, Math.floor(im.userData.n0 * f)) : im.userData.n0; }); } } }
+  for (const B of PH.bands) { const d = Math.abs(B.zc - cz) - PH_BAND / 2, lim = B.o.far ? see * 1.6 : B.o.near ? see * .55 : see; if (B.g && B.o.shadow) { const cs = QUAL.lv >= 2 && d < [0, 0, 40, 70][QUAL.lv]; if (B.cs !== cs) { B.cs = cs; B.ims.forEach(im => { im.castShadow = cs; }); } } if (!B.built && d < (B.o.imp ? pre * 2.6 : B.o.far ? pre * 1.6 : pre) && d < nd) { nd = d; next = B; } if (B.ig) B.ig.visible = !!B.ok && d >= lim && d < lim * 2.6; if (B.g) { B.g.visible = !!B.ok && d < lim; if (B.g.visible && B.ims && B.ims.length && B.thin !== QUAL.lv + ':' + B.ims.length) { B.thin = QUAL.lv + ':' + B.ims.length; const f = [.45, .65, 1, 1][QUAL.lv]; B.ims.forEach(im => { if (im.userData.n0 == null) im.userData.n0 = im.count; const g = im.geometry, tri = (g.index ? g.index.count : g.attributes.position.count) / 3; im.count = tri > 1500 ? Math.max(1, Math.floor(im.userData.n0 * f)) : im.userData.n0; }); } } }
   if (next && QUAL.ema < 34) { phBuild(next); PH.near = .12; } else if (next) PH.near = .3; // de a una franja por vez, para no trabar un cuadro
 }
-function phWorld(scene, W, allPts, zMax, hx, R0) {
+function phWorld(scene, W, allPts, zMax, hx, R0) { try { grpInit(); if (grpBase() && FLORA.olive && FLORA.olive.length) phPlace('trp_olive', FLORA.olive.map((o, i) => ({ x: o.x, y: o.y - .05, z: o.z, ry: o.rot, s: o.s, oi: i, v: i })), { shadow: true, wind: 3, far: 1, olive: 1, imp: 1 }); } catch (e) {}
   SEAS.base = null; SEAS.rain = null; SEAS.olB = null; SEAS.acc = 9;
   const R = rng(9091), coarse = matchMedia('(pointer: coarse)').matches, k = (hx ? 1 : .8) * (coarse ? .7 : 1); PH.kids = !hx; PH.bands = [];
   const yAt = (x, z) => W.hAt(x, z), Z0 = zMax + 30, Z1 = 25;
@@ -5200,4 +5258,4 @@ function svGive(bg) {
 
 addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 'e') axHold(false); });
 addEventListener('touchstart', () => document.body.classList.add('v3touch'), { once: true, passive: true });
-window.W3 = { dbgHero: () => ({ VIL, SEC, MAT, AU, SND, MIX, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineOk2, cineBusy, crossScene, dawnScene, dawnBuild, diaryOpen, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
+window.W3 = { dbgHero: () => ({ VIL, SEC, MAT, AU, SND, MIX, GRP, PH, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineOk2, cineBusy, crossScene, dawnScene, dawnBuild, diaryOpen, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
