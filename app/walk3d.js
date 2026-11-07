@@ -692,7 +692,7 @@ const KL = {};
   camera.position.set(ax - Math.sin(S.yaw) * 6.6, 3.3, az - Math.cos(S.yaw) * 6.6);
   S.fill = new THREE.DirectionalLight(hx ? '#FFD9B0' : '#FFFFFF', hx ? .5 : .5); scene.add(S.fill); scene.add(S.fill.target);
   wireInput(); wireJoy(); if (!window.__acts) { window.__acts = 1; wireActs(); auButtons(); } resize(); addEventListener('resize', resize);
-  renderer.info.autoReset = false; qInit(); fxInit(); if (hx) svBuild(scene, HW, R); try { phWorld(scene, HW, allPts, zMax, hx, R); } catch (e) { console.warn('ph', e); } PG.ready = false; PG.ims.forEach(im => im.parent && im.parent.remove(im)); PG.ims = []; PG.cache.clear(); setTimeout(() => { pgBuild().catch(e => console.warn('pasto nuevo', e)); }, 1500); try { ambWorld(scene, HW, allPts, zMax, hx); } catch (e) { console.warn('amb', e); } try { mergeHouses(scene); } catch (e) { console.warn('merge', e); } setTimeout(() => { try { if (!/[?&]nomerge/.test(location.search)) worldMerge(scene); } catch (e) { console.warn('wmerge', e); } }, 1200); setTimeout(() => { try { if (S && S.renderer.compileAsync) S.renderer.compileAsync(S.scene, S.camera); } catch (e) {} }, 300);
+  renderer.info.autoReset = false; qInit(); fxInit(); if (hx) svBuild(scene, HW, R); try { phWorld(scene, HW, allPts, zMax, hx, R); } catch (e) { console.warn('ph', e); } PG.ready = false; PG.ims.forEach(im => im.parent && im.parent.remove(im)); PG.ims = []; PG.cache.clear(); setTimeout(() => { pgBuild().catch(e => r2log('pasto nuevo falló: ' + ((e && e.message) || e))); }, 1500); try { ambWorld(scene, HW, allPts, zMax, hx); } catch (e) { console.warn('amb', e); } try { mergeHouses(scene); } catch (e) { console.warn('merge', e); } setTimeout(() => { try { if (!/[?&]nomerge/.test(location.search)) worldMerge(scene); } catch (e) { console.warn('wmerge', e); } }, 1200); setTimeout(() => { try { if (S && S.renderer.compileAsync) S.renderer.compileAsync(S.scene, S.camera); } catch (e) {} }, 300);
   const me = S, run = n => { if (S !== me) return; requestAnimationFrame(run); loop(n); }; requestAnimationFrame(run);
 }
 function resize() { if (!S) return; const r = S.root.getBoundingClientRect(); const w = r.width || innerWidth, h = r.height || innerHeight; S.renderer.setSize(w, h, false); S.camera.aspect = w / h; S.camera.updateProjectionMatrix(); if (S.fx) { S.fx.setPixelRatio(S.renderer.getPixelRatio()); S.fx.setSize(w, h); } }
@@ -3359,7 +3359,7 @@ function grpBase() { if (GRP.base != null) return GRP.base; let b = R2_BASE; try
 function grpInit() {
   if (GRP.ready) return GRP.ready; const base = grpBase(); if (!base) return (GRP.ready = Promise.resolve(null));
   const get = pre => { const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null, to = setTimeout(() => ctl && ctl.abort(), 25000);
-    return fetch(base + pre + 'manifest.json', { signal: ctl ? ctl.signal : undefined, mode: 'cors' }).then(r => r.ok ? r.json() : null).then(m => { clearTimeout(to); if (!m || !m.slots || m.format !== 1) return null; m.pre = pre; GRP.man[pre] = m; for (const k in m.slots) GRP.slots[k] = Object.assign({ pre, m }, m.slots[k]); return m; }).catch(e => { clearTimeout(to); console.warn('R2 ' + pre + ' no disponible, sigue lo de siempre', e && e.name); return null; }); };
+    return fetch(base + pre + 'manifest.json', { signal: ctl ? ctl.signal : undefined, mode: 'cors' }).then(r => r.ok ? r.json() : null).then(m => { clearTimeout(to); r2log(pre + 'manifest: ' + (m ? 'ok' : 'no')); if (!m || !m.slots || m.format !== 1) return null; m.pre = pre; GRP.man[pre] = m; for (const k in m.slots) GRP.slots[k] = Object.assign({ pre, m }, m.slots[k]); return m; }).catch(e => { clearTimeout(to); console.warn('R2 ' + pre + ' no disponible, sigue lo de siempre', e && e.name); return null; }); };
   GRP.ready = Promise.all([get('grass/'), get('trees/'), get('palms/')]).then(r => r.some(Boolean) ? GRP.slots : null);
   return GRP.ready;
 }
@@ -3384,6 +3384,7 @@ async function grpImp(sl, name) {
   const mk = I.file + ((sl.tint && sl.tint.leaf) || ''); GRP.imat = GRP.imat || {}; return { geo: g, mat: GRP.imat[mk] || (GRP.imat[mk] = new THREE.MeshLambertMaterial({ map: tex, alphaTest: .5, side: THREE.DoubleSide, color: (sl.tint && sl.tint.leaf) || '#FFFFFF' })) };
 }
 // devuelve las variantes igual que phGet (cada modelo es una variante); null si no corresponde o falla
+const R2LOG = []; function r2log(m) { try { R2LOG.push(m); console.warn('[R2]', m); if (/[?&]r2dbg=1/.test(location.search)) { let b = document.getElementById('r2dbg'); if (!b) { b = document.createElement('pre'); b.id = 'r2dbg'; b.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:99999;max-width:92vw;max-height:45vh;overflow:auto;background:rgba(0,0,0,.82);color:#9f9;font:11px/1.35 monospace;padding:8px;border-radius:8px;white-space:pre-wrap'; document.body.appendChild(b); } b.textContent = R2LOG.slice(-40).join('\n'); } } catch (e) {} }
 async function grpVars(id) {
   const slots = await grpInit(); if (!slots) return null; const sl = slots[id]; if (!sl) return null;
   const L = await phLoader(), LD = sl.m.lod || {}, tier = grpWin() || QUAL.lv >= 3 ? 'full' : QUAL.lv >= 2 ? (LD.mid ? 'mid' : 'full') : 'lite', lod = LD[tier] || 'LOD0';
@@ -3391,8 +3392,8 @@ async function grpVars(id) {
   const vars = await Promise.all(list.map(name => { const kk = (sl.mk && sl.mk[name]) || sl.k || 1, sc = new THREE.Matrix4().makeScale(kk, kk, kk); return new Promise((r, j) => L.load(GRP.base + sl.pre + 'models/' + name + '.glb', r, undefined, j)).then(async g => { g.scene.updateMatrixWorld(true); const node = g.scene.getObjectByName(lod) || g.scene.getObjectByName('LOD0') || g.scene, ms = [];
     const todo = []; node.traverse(o => { if (o.isMesh) todo.push(o); });
     for (const o of todo) { const mt = await grpMat(sl, (o.material && o.material.name) || 'field'); ms.push({ geo: o.geometry, mat: mt, m: sc.clone().multiply(o.matrixWorld) }); }
-    const im = await grpImp(sl, name); if (im) ms.imp = Object.assign(im, { m: sc.clone() }); return ms; }).catch(() => []); }));
-  const ok = vars.filter(v => v.length); return ok.length ? ok : null;
+    const im = await grpImp(sl, name); if (im) ms.imp = Object.assign(im, { m: sc.clone() }); return ms; }).catch(e => { r2log(id + ' / ' + name + ': ' + ((e && (e.message || e.type)) || e)); return []; }); }));
+  const ok = vars.filter(v => v.length); r2log(id + ': ' + ok.length + ' de ' + list.length + ' modelos'); return ok.length ? ok : null;
 }
 // olivos del pack: se esconden los de siempre y el hacha sigue funcionando (se tala la instancia del modelo nuevo)
 function trpOlive(vars) {
@@ -3675,10 +3676,10 @@ async function pgBuild() {
   for (const id of Object.keys(man.slots)) { const vars = await grpVars(id).catch(() => null); if (!vars || !vars.length || !S) continue;
     const tri = vars.reduce((t, ms) => t + ms.reduce((u, mm) => u + (mm.geo.index ? mm.geo.index.count : mm.geo.attributes.position.count) / 3, 0), 0) / vars.length;
     groups.push({ id, w: PG_W[id] ?? .05, vars, tri, fl: /dandelion|celandine|heliophila/.test(id) }); }
-  if (!groups.length || !S) return; const wsum = groups.reduce((t, g) => t + g.w, 0); groups.forEach(g => { g.w /= wsum; });
+  r2log('pasto nuevo: ' + groups.length + ' grupos'); if (!groups.length || !S) return; const wsum = groups.reduce((t, g) => t + g.w, 0); groups.forEach(g => { g.w /= wsum; });
   PG.avgTri = groups.reduce((t, g) => t + g.w * g.tri, 0) || 500; const lvMax = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), cap = Math.min(26000, Math.ceil(PG_TRI[lvMax] / PG.avgTri));
   for (const g of groups) { g.ims = g.vars.map(ms => { const n = Math.ceil(cap * g.w / g.vars.length * 1.5) + 24; return ms.map(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 1, grass: 1 }), n); im.count = 0; im.frustumCulled = false; im.receiveShadow = true; im.castShadow = false; im.userData.m = mm.m; im.userData.cap = n; S.scene.add(im); PG.ims.push(im); return im; }); }); }
-  PG.groups = groups; PG.ready = true; PG.cx = 1e9;
+  PG.groups = groups; PG.ready = true; PG.cx = 1e9; r2log('pasto nuevo listo: ' + PG.ims.length + ' mallas, ' + Math.round(PG.avgTri) + ' triángulos por planta');
   try { if (S.renderer.compileAsync) await S.renderer.compileAsync(S.scene, S.camera); } catch (e) {}
 }
 // lo que va en una parcela de 16 m (se calcula una sola vez y queda guardado)
@@ -3709,7 +3710,7 @@ function pgFill() {
       const ims = PG.groups[it.gi].ims[it.vi]; let full = false; for (const im of ims) if (cnt[idx.get(im)] >= im.userData.cap) full = true; if (full) continue;
       _pgE.set(0, it.ry, 0); _pgQ.setFromEuler(_pgE); for (const im of ims) { const k = idx.get(im), i = cnt[k]++; _pgM.compose(_pgV.set(it.x, it.y, it.z), _pgQ, _pgS.setScalar(it.s)).multiply(im.userData.m); im.setMatrixAt(i, _pgM); im.setColorAt(i, _pgC.setRGB(it.c, it.c, it.c * .96)); }
       used++; if (used >= lim) break; } }
-  PG.ims.forEach((im, k) => { im.count = cnt[k]; im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; });
+  if (!PG.logged) { PG.logged = 1; r2log('pasto dibujado: ' + used + ' plantas'); } PG.ims.forEach((im, k) => { im.count = cnt[k]; im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; });
 }
 function pgTick(dt) {
   if (!PG.ready || !S || !S.av) return; PG.acc -= dt; if (PG.acc > 0) return; PG.acc = .25; const a = S.av.position;
