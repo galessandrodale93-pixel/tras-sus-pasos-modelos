@@ -4082,6 +4082,9 @@ function svAct() {
   if (n.k === 'mates') { escAct(n.e); if (n.e.lb) n.e.lb.visible = false; return; }
   if (n.k === 'matg') { pergOpen(n.e); return; }
   if (n.k === 'matv') { memOpen(n.e); return; }
+  if (n.k === 'matj') { jueOpen(n.e); return; }
+  if (n.k === 'matn') { senOpen(n.e); return; }
+  if (n.k === 'mat7') { sieteOpen(); return; }
   if (n.k === 'reflex') { matReflex(); return; }
   if (n.k === 'shop') { svShop(n.shop); return; }
   if (n.k === 'beg') { svGive(n.b); return; }
@@ -4755,11 +4758,12 @@ async function matBuild(scene, W) {
   try { pergBuild(scene, W, rng(8811), used); } catch (e) { console.warn('pergaminos', e); }
   try { memBuild(scene, W, rng(8822), ok, used); } catch (e) { console.warn('versículos', e); }
   try { vidaButton(); } catch (e) {}
+  try { jueBuild(scene, W, spot); sieteBuild(scene, W, spot); senBuild(scene, W, rng(8833), used); } catch (e) { console.warn('minijuegos', e); }
   (M.ESC || []).forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, o = buildHeroAvatar(Object.assign({ anim: ['M_Standing_Idle', 'M_Idle'] }, d.look)); o.position.set(x, Math.max(0, W.hAt(x, z)), z); o.rotation.y = R() * 6.28; scene.add(o); const lb = textSprite('!', true); lb.scale.multiplyScalar(.35); lb.position.set(0, 2.25, 0); lb.visible = !(pm.esc && pm.esc[d.id] != null); o.add(lb); MAT.npcs.push({ d: { id: 'esc-' + d.id, name: d.name, sub: d.sub, esc: d }, x, z, o, lb }); });
   M.GENTE.forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, o = buildHeroAvatar(Object.assign({ anim: ['M_Standing_Idle', 'M_Idle'] }, d.look)); o.position.set(x, Math.max(0, W.hAt(x, z)), z); o.rotation.y = R() * 6.28; scene.add(o); MAT.npcs.push({ d, x, z, o }); });
 }
 function matNear() { const a = S.av.position, r2 = 2.4 * 2.4; for (const e of MAT.npcs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return e.d.esc ? { k: 'mates', e, label: 'Hablar · ' + e.d.name } : e.d.teo ? { k: 'mateo', e, label: 'Hablar · Teófilo' } : { k: 'matp', e, label: 'Hablar · ' + e.d.name };
-  for (const e of MAT.objs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return { k: 'mato', e, label: 'Mirar' }; return memNear() || pergNear(); }
+  for (const e of MAT.objs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return { k: 'mato', e, label: 'Mirar' }; return jueNear() || memNear() || pergNear(); }
 function matObj(e) {
   const pm = matP(), d = e.d, first = !pm.seen[d.id]; pm.seen[d.id] = vday(); if (e.ring) e.ring.visible = false;
   if (first) { matSab(1); glowAdd(1, 'mirar'); behav('objetos'); G().save(); }
@@ -4871,6 +4875,58 @@ function memOpen(e) {
   let pos = 0; const draw = el => { el.querySelector('.mem-v').innerHTML = W.map((w, i) => { const h = hide.indexOf(i); if (h < 0) return esc(w); return h < pos ? `<b class="mem-ok">${esc(w)}</b>` : `<span class="mem-gap">${'＿'.repeat(Math.max(3, clean(w).length))}</span>${esc(w.replace(clean(w), ''))}`; }).join(' '); };
   vilSheet(head + `<p class="vil-p mem-v"></p><small class="vil-k">Paso ${lv + 1} de 3 · Tocá las palabras que faltan, en orden.</small><div class="vil-o mem-bank">${bank.map((w, i) => `<button data-w="${i}">${esc(w)}</button>`).join('')}</div>`, el => { draw(el);
     el.querySelectorAll('[data-w]').forEach(b => b.onclick = () => { if (pos >= hide.length) return; const w = bank[+b.dataset.w]; if (w === clean(W[hide[pos]])) { b.disabled = true; pos++; draw(el); if (pos >= hide.length) { up(); setTimeout(() => { el.hidden = true; svToast(lv + 1 >= 3 ? `✨ ¡Memorizaste ${d.ref}! Versículos de memoria: ${done()} de ${total}` : '📖 Muy bien. Volvé a esta piedra para el último paso.'); }, 900); } } else { b.classList.add('mem-no'); setTimeout(() => b.classList.remove('mem-no'), 500); } }); });
+}
+/* ---------- minijuegos por concepto (canal 5): un puesto por etapa que abre su juego; etapa V se juega caminando (las siete señales) y la VIII es una pausa sin puntaje ---------- */
+function jueMesh(kind) {
+  const g = new THREE.Group(), M = (c, r) => new THREE.MeshStandardMaterial({ color: c, roughness: r == null ? .9 : r }), add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; }, wd = M('#7A5532');
+  if (kind === 'sign') { add(new THREE.CylinderGeometry(.06, .07, 1.9, 8), wd, 0, .95, 0); const ar = add(new THREE.BoxGeometry(1.2, .34, .06), M('#E8DCC0'), .3, 1.6, 0); const tip = add(new THREE.ConeGeometry(.24, .34, 3), ar.material, .98, 1.6, 0); tip.rotation.z = -Math.PI / 2; g.userData.lit = [ar, tip]; return g; }
+  if (kind === 'seat') { add(new THREE.BoxGeometry(1.5, .42, .55), M('#9A9286', .97), 0, .21, 0); add(new THREE.DodecahedronGeometry(.22, 0), M('#8A8274', 1), .95, .12, .2); const c = add(new THREE.CylinderGeometry(.05, .06, .18, 10), M('#E8DCC0'), -.5, .5, 0); add(new THREE.SphereGeometry(.05, 8, 6), new THREE.MeshBasicMaterial({ color: '#FFC870' }), -.5, .63, 0); g.userData.flame = g.children[g.children.length - 1]; return g; }
+  add(new THREE.BoxGeometry(1.3, .08, .8), wd, 0, .72, 0); [[-.55, -.32], [.55, -.32], [-.55, .32], [.55, .32]].forEach(([x, z]) => add(new THREE.BoxGeometry(.08, .7, .08), wd, x, .35, z));
+  add(new THREE.BoxGeometry(1.36, .02, .5), M('#7A2E2A'), 0, .77, 0); add(new THREE.BoxGeometry(.6, .03, .4), M('#D9C8A0'), -.15, .79, 0);
+  for (let i = 0; i < 5; i++) add(new THREE.CylinderGeometry(.04, .04, .05, 10), M(['#C9A060', '#3A2A1A'][i % 2], .5), -.33 + i * .09, .82, .05 * (i % 2));
+  add(new THREE.CylinderGeometry(.07, .09, .2, 10), M('#B88A50', .6), .45, .88, -.1); const fl = add(new THREE.SphereGeometry(.05, 8, 6), new THREE.MeshBasicMaterial({ color: '#FFC870' }), .45, 1.02, -.1); g.userData.flame = fl;
+  return g;
+}
+function jueBuild(scene, W, spot) {
+  const M = MAT.mod, pm = matP(); pm.jue = pm.jue || {}; MAT.jue = [];
+  (M.JUEGOS || []).forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, g = jueMesh('stand'); g.position.set(x, Math.max(0, W.hAt(x, z)), z); g.rotation.y = Math.atan2(S.av ? S.av.position.x - x : 0, 1);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(1, 1.1, 32), new THREE.MeshBasicMaterial({ color: '#FFD27A', transparent: true, opacity: .5, depthWrite: false, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .03; ring.visible = !pm.jue[d.type]; g.add(ring);
+    const lb = textSprite('🎲', true); lb.scale.multiplyScalar(.3); lb.position.set(0, 1.55, 0); g.add(lb); g.userData.keep = 1; scene.add(g); MAT.jue.push({ d, x, z, g, ring }); phCyl(x, z, .7); });
+}
+function senBuild(scene, W, R, used) {
+  const M = MAT.mod, g = G(), pm = matP(); pm.sen = pm.sen || {}; MAT.sen = []; if (!M.SENALES || g.REGIONS.length < 5) return; const [za, zb] = regionZ(g, 4);
+  const ok = (x, z) => !blockedAt(x, z) && waterWet(x, z, null) < .05 && Math.abs(x) < XB * .85 && W.dAt(x, z) > 4 && !used.some(([a, b]) => (a - x) ** 2 + (b - z) ** 2 < 36);
+  M.SENALES.forEach((d, i) => { let p = null; for (let t = 0; t < 200 && !p; t++) { const x = (R() * 2 - 1) * XB * .78, z = za - (za - zb) * ((i + .2 + R() * .6) / M.SENALES.length); if (ok(x, z)) p = [x, z]; } if (!p) return; used.push(p);
+    const [x, z] = p, o = jueMesh('sign'); o.position.set(x, Math.max(0, W.hAt(x, z)), z); o.userData.keep = 1; scene.add(o); MAT.sen.push({ d, i, x, z, o }); phCyl(x, z, .25); });
+  // cada cartel apunta al siguiente, como dice el material: no te quedes mirando el cartel, seguí hacia donde apunta
+  MAT.sen.forEach((e, k) => { const n = MAT.sen[k + 1] || MAT.sen[k - 1]; if (n) e.o.rotation.y = Math.atan2(-(n.z - e.z), n.x - e.x); senLit(e, !!pm.sen[e.d.id]); });
+}
+function senLit(e, on) { (e.o.userData.lit || []).forEach(m => { m.material = m.material.clone(); m.material.emissive = new THREE.Color(on ? '#FFC870' : '#000'); m.material.emissiveIntensity = on ? .7 : 0; }); }
+function sieteBuild(scene, W, spot) {
+  const M = MAT.mod; MAT.siete = null; if (!M.SIETE) return; const p = spot({ r: 7, near: 'golgota' }); if (!p) return; const [x, z] = p, g = jueMesh('seat'); g.position.set(x, Math.max(0, W.hAt(x, z)), z); g.userData.keep = 1; scene.add(g); MAT.siete = { x, z, g }; phCyl(x, z, .8);
+}
+function jueNear() {
+  const a = S.av.position, d2 = (e, r) => (e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r * r, pm = matP();
+  for (const e of MAT.jue || []) if (d2(e, 2.6)) return { k: 'matj', e, label: 'Jugar · ' + e.d.title };
+  for (const e of MAT.sen || []) if (d2(e, 2.4)) return { k: 'matn', e, label: pm.sen && pm.sen[e.d.id] ? 'Releer la señal' : 'Leer el cartel' };
+  if (MAT.siete && d2(MAT.siete, 2.6)) return { k: 'mat7', e: MAT.siete, label: 'Sentarse un momento' }; return null;
+}
+function jueOpen(e) {
+  const g = G(), pm = matP(), d = e.d; if (!g.playMat) return; S.joy.x = 0; S.joy.y = 0;
+  g.playMat(d, () => { if (!pm.jue[d.type]) { pm.jue[d.type] = vday(); matSab(2); glowAdd(3, 'minijuego'); behav('minijuegosMaterial'); if (e.ring) e.ring.visible = false; g.save(); svToast('🎲 ' + d.title + ' · +2 Sabiduría'); } });
+}
+function senOpen(e) {
+  const M = MAT.mod, pm = matP(), d = e.d, first = !pm.sen[d.id]; pm.sen[d.id] = pm.sen[d.id] || vday(); senLit(e, true);
+  const got = M.SENALES.filter(x => pm.sen[x.id]).length, all = got === M.SENALES.length;
+  if (first) { matSab(1); behav('senales'); if (all) { matSab(4); glowAdd(8, 'senales'); behav('senalesTodas'); tone3d(); } G().save(); }
+  vilSheet(`<div class="inv-h"><b>🪧 Señal ${e.i + 1} de ${M.SENALES.length} · ${esc(d.t)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="vil-p">${esc(d.s)}</p><small class="vil-k">${esc(d.ref)} · encontraste ${got} de ${M.SENALES.length}${got < M.SENALES.length ? ' · la flecha apunta hacia la próxima' : ''}</small>${first && all ? (M.SENALES_FIN || []).map(t => `<p class="vil-p"><b>${esc(t)}</b></p>`).join('') : ''}<small class="vil-k mat-src">📖 Del material · Etapa V · Más profundo: las señales</small>`);
+}
+function sieteOpen() {
+  const M = MAT.mod, pm = matP(), L = M.SIETE; let i = -1; S.joy.x = 0; S.joy.y = 0; h3do(['M_Sitting_Idle', 'Sitting_Idle', 'M_Standing_Idle'], 3, 0);
+  const el = vilSheet('', null), step = () => { i++; if (i >= L.length) { const first = !pm.siete; pm.siete = pm.siete || vday(); if (first) { behav('sietePalabras'); G().save(); }
+      vilSheet(`<div class="inv-h"><b>✝ Las siete palabras</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="vil-p">Jesús dijo siete frases desde la cruz. Quedate en silencio un momento antes de seguir caminando.</p><small class="vil-k">Esto no tiene puntaje. Si querés, escribí algo en tu diario junto al fuego.</small><small class="vil-k mat-src">📖 Del material · Etapa VIII · Las siete palabras · NTV</small>`); return; }
+    const [t, ref, s] = L[i]; vilSheet(`<div class="inv-h"><b>✝ ${i + 1} de ${L.length}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="vil-p mem-v">«${esc(t)}»</p><small class="vil-k">${esc(ref)}</small><p class="vil-p">${esc(s)}</p><div class="vil-o"><button data-n disabled>Quedate un momento…</button></div>`, el2 => { const b = el2.querySelector('[data-n]'); setTimeout(() => { if (!b.isConnected) return; b.disabled = false; b.textContent = i + 1 < L.length ? 'Seguir' : 'Terminar'; }, 5000); b.onclick = step; }); };
+  step();
 }
 /* ---------- misiones de escena con decisiones (canal 4) ---------- */
 function escAct(e) {

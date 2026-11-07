@@ -288,3 +288,36 @@ export const ESC = [
     ask: 'Si te lo preguntara a vos, ¿qué le responderías?', o: [['Sí, te amo', [['fid', 1]], [['nar', 'Tres veces Pedro lo había negado junto a un fuego; ahora, junto a otro fuego, tres veces le dijo que lo amaba.']]],
       ['Quiero amarte más', [['fid', 1]], [['nar', 'Jesús no descartó a Pedro. Le volvió a encargar que cuidara de sus ovejas.']]], ['Todavía no sé', [], [['nar', 'Jesús esperó a Tomás en su duda y le dio a Pedro una nueva oportunidad. Te espera también a vos.']]]], src: 'Etapa IX · El desayuno en la playa' }
 ];
+
+/* ---------- minijuegos por concepto (canal 5): uno por etapa, ninguna mecánica repetida; la V se juega caminando y la VIII no tiene puntaje ---------- */
+const SKY = ['#FFE3C2', '#EEF5FF'];
+export const JUEGOS = [
+  { r: 0, near: 'village', type: 'tent', title: 'La carpa entre nosotros', how: 'Armá la carpa pieza por pieza, en orden. Con cada pieza se va completando Juan 1:14: Dios plantó su carpa en medio de nuestro barrio.', src: 'Etapa I · La Palabra se hizo hombre' },
+  { r: 1, near: 'taller', type: 'roots', title: 'Cuatro raíces', how: 'Jesús crecía en sabiduría, en estatura, en el favor de Dios y en el de la gente. Tocá las tareas que aparecen para que ninguna de las cuatro se seque.', src: 'Etapa II · Lucas 2:52' },
+  { r: 2, near: 'desert', type: 'voices', title: 'Tres voces en el desierto', how: 'A cada tentación, elegí la respuesta de la Escritura bien entendida. Cuidado: el diablo también cita un salmo, pero sacado de contexto.', src: 'Etapa III · Las tentaciones (Deuteronomio 6–8)' },
+  { r: 3, near: 'village', type: 'mustard', title: 'Semilla de mostaza', how: 'Regá y sacá los yuyos. Tu semilla crece un poco cada vez que jugás y no vuelve a empezar: el reino ya llegó, pero todavía no del todo.', src: 'Etapa IV · El reino de Dios' },
+  { r: 5, near: 'inn', type: 'surprise', title: 'La sorpresa', how: 'Escuchá la parábola línea por línea y tocá el botón justo en el momento que habría sorprendido a los que la oían.', src: 'Etapa VI · Cómo leer una parábola' },
+  { r: 6, near: 'upper', type: 'seder', title: 'La mesa de la Pascua', how: 'Cada cosa de la mesa de la Pascua recordaba algo. Uní cada una con su significado.', src: 'Etapa VII · La última cena' },
+  { r: 8, near: 'shore', type: 'clues', title: 'Investigación', how: 'Como Teófilo, juntá las cinco pistas de la resurrección: uní cada pista con lo que la respalda.', src: 'Etapa IX · Más profundo: las evidencias' }
+].map(d => Object.assign({ sky: SKY }, d));
+/* Etapa V · Señales del camino: las siete señales del evangelio de Juan, como carteles repartidos por la etapa */
+export const SENALES = [
+  { id: 'cana', t: 'El agua en vino', s: 'En una boda en Caná, el agua se convierte en vino, y del mejor.', ref: 'Juan 2:1-11' },
+  { id: 'funcionario', t: 'El hijo del funcionario', s: 'Jesús sana al hijo de un funcionario que le pidió ayuda.', ref: 'Juan 4:46-54' },
+  { id: 'betesda', t: 'El paralítico de Betesda', s: 'Un hombre que esperaba junto al estanque se levanta y camina.', ref: 'Juan 5:1-15' },
+  { id: 'panes', t: 'Los panes', s: 'Cinco panes y dos pescados alcanzan para miles. Después Jesús dice: yo soy el pan de vida.', ref: 'Juan 6:1-14, 35' },
+  { id: 'agua', t: 'Sobre el agua', s: 'En medio de la tormenta, Jesús llega a la barca caminando sobre el lago.', ref: 'Juan 6:16-21' },
+  { id: 'ciego', t: 'El ciego de nacimiento', s: 'Un hombre ciego de nacimiento se lava en el estanque de Siloé y vuelve viendo. Jesús dice: yo soy la luz del mundo.', ref: 'Juan 9 · Juan 8:12' },
+  { id: 'lazaro', t: 'Lázaro', s: 'Lázaro había muerto, y sale vivo de la tumba. Jesús dice: yo soy la resurrección y la vida.', ref: 'Juan 11' }
+];
+export const SENALES_FIN = ['Encontraste las siete señales. Cada una es como un cartel en el camino.', 'No te quedes mirando el cartel: seguí hacia donde apunta. Juan escribió estas señales para que creamos que Jesús es el Mesías, el Hijo de Dios, y tengamos vida (Juan 20:31).'];
+/* Etapa VIII · Las siete palabras: sin puntaje, una pausa por palabra. Textos NTV del material, con su sentido en palabras del material */
+export const SIETE = [
+  ['Padre, perdónalos, porque no saben lo que hacen.', 'Lucas 23:34', 'Perdón para los que lo crucifican.'],
+  ['Hoy estarás conmigo en el paraíso.', 'Lucas 23:43', 'Gracia para un criminal arrepentido a último momento.'],
+  ['Mujer, ahí tienes a tu hijo. Ahí tienes a tu madre.', 'Juan 19:26-27', 'Cuidado de su mamá en medio del dolor.'],
+  ['Dios mío, Dios mío, ¿por qué me has abandonado?', 'Mateo 27:46', 'El peso del pecado y la distancia. Es el comienzo del Salmo 22.'],
+  ['Tengo sed.', 'Juan 19:28', 'Su humanidad real y su sufrimiento físico.'],
+  ['¡Todo está cumplido!', 'Juan 19:30', 'La obra terminada: la deuda está pagada.'],
+  ['Padre, encomiendo mi espíritu en tus manos.', 'Lucas 23:46', 'Confianza total en el Padre hasta el final.']
+];

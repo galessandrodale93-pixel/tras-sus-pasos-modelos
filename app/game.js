@@ -2375,8 +2375,115 @@ function Plinko(th, f) {
       c.textAlign = 'left'; if (ball) { c.fillStyle = '#FFD25E'; c.beginPath(); c.arc(ball.x, ball.y, 8, 0, 7); c.fill(); } else lab(c, th, 'Tocá arriba para soltar la piedrita', GW / 2, 166, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.2); } };
 }
 
-const ENGINES={stone:Stone,mirror:Mirror,match3:Match3,code:Code,snake:Snake,chain:Chain,plinko:Plinko,rooster:Rooster,carry:Carry,forgive:Forgive,hold:Hold,puzzle:Puzzle,dark:Dark,breakout:Breakout,pave:Pave,spot:Spot,coins:Coins,wash:Wash,missing:Missing,awake:Awake,guess:Guess,sow:Sow,hotcold:HotCold,kind:Kind,rotate:Rotate,scale:Scale,blocks:Blocks,emoji:Emoji,flood:Flood,roof:Roof,count:Count,trace:Trace,reveal:Reveal,hop:Hop,sort:Sort,pour:Pour,spell:Spell,net:Net,row:Row,pipes:Pipes,lights:Lights,match:Match,run:Runner,fly:Flyer,cross:Crosser,catch:Catcher,memo:Memo,maze:Maze,simon:Simon,verso:Verso,herd:Herd,pop:Pop,swarm:Swarm,slide:Slide,balance:Balance,order:Order,words:Words,stack:Stack,diff:Diff,tf:TrueFalse,lantern:Lantern,rhythm:Rhythm,connect:Connect};
-const TAPG=['stone','mirror','match3','code','snake','chain','plinko','rooster','carry','forgive','pave','spot','coins','missing','awake','guess','hotcold','kind','rotate','scale','blocks','emoji','flood','roof','count','reveal','hop','sort','spell','net','row','pipes','lights','match','memo','simon','verso','pop','slide','order','diff','tf','rhythm','connect','stack','balance'],DRAGG=['hold','puzzle','dark','breakout','wash','sow','trace','pour','herd','swarm','words','lantern'];
+
+/* ===== minijuegos por concepto del material (canal 5): uno por etapa, ninguno repite mecánica ===== */
+const MG_INK = th => th.hx ? '#F3E6CC' : '#22324F', MG_CARD = th => th.hx ? 'rgba(28,22,14,.86)' : 'rgba(255,255,255,.92)', MG_ED = th => th.hx ? 'rgba(233,195,122,.5)' : 'rgba(34,64,127,.25)';
+function mgText(c, th, t, x, y, w, size, al) { c.fillStyle = MG_INK(th); c.font = `800 ${size || 14}px Nunito,sans-serif`; c.textAlign = al || 'left'; wrapT(c, t, w).forEach((l, i) => c.fillText(l, x, y + i * ((size || 14) + 5))); c.textAlign = 'left'; }
+function mgBtn(c, th, b, hot) { c.fillStyle = hot ? (th.hx ? 'rgba(233,195,122,.35)' : 'rgba(255,210,94,.6)') : MG_CARD(th); rr(c, b.x, b.y, b.w, b.h, 12); c.fill(); c.strokeStyle = MG_ED(th); c.lineWidth = 1.5; c.stroke(); mgText(c, th, b.t, b.x + 10, b.y + 20, b.w - 20, 13); }
+const mgHit = (b, d) => d && d.x >= b.x && d.x <= b.x + b.w && d.y >= b.y && d.y <= b.y + b.h;
+// I · La carpa entre nosotros: armá la carpa pieza por pieza y se va completando Juan 1:14
+function Tent(th, f) {
+  const V = 'Entonces la Palabra se hizo hombre y vino a vivir entre nosotros.'.split(' '), P = [['Estacas', '📍'], ['Palo del frente', '🪵'], ['Palo de atrás', '🪵'], ['Cumbrera', '➖'], ['La lona', '⛺'], ['Las cuerdas', '🪢'], ['La puerta', '🚪'], ['Una lámpara', '🪔'], ['La alfombra', '🟫'], ['¡A vivir adentro!', '🏠']];
+  let step = 0, score = 0, left = 45 / f, full = left, over = false, fb = '', fT = 0, opts = [];
+  const deal = () => { const want = step, pool = shuffle([...Array(P.length).keys()].filter(i => i !== want)).slice(0, 2); opts = shuffle([want, ...pool]).map((i, k) => ({ i, x: 20 + k * 112, y: 410, w: 104, h: 70, t: P[i][1] + ' ' + P[i][0] })); };
+  deal();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap') return; const b = opts.find(o => mgHit(o, d)); if (!b) return; if (b.i === step) { step++; score += 30; burstAt(b.x + b.w / 2, b.y); fb = '¡Bien!'; fT = .6; if (step >= P.length) { score += Math.round(left * 4); over = true; return; } deal(); } else { left -= 3; fb = 'Esa pieza va después'; fT = .9; } },
+    update(dt) { if (over) return; left -= dt; fT = Math.max(0, fT - dt); if (left <= 0) { left = 0; over = true; } },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'ARMÁ LA CARPA', 16, 27);
+      const k = step / P.length, cx = GW / 2, base = 330; c.fillStyle = th.hx ? '#5A4A32' : '#C9B48A'; c.fillRect(30, base, GW - 60, 6);
+      // cada pieza armada se ve sólida; la que sigue aparece como un contorno punteado, que es la pista
+      const piece = (i, ghost) => { c.save(); if (ghost) { c.globalAlpha = .35 + .2 * Math.sin(t * 5); c.setLineDash([5, 4]); c.strokeStyle = MG_INK(th); c.lineWidth = 2; }
+        const sh = (fill, path) => { c.beginPath(); path(); if (ghost) c.stroke(); else { c.fillStyle = fill; c.fill(); } };
+        const rect = (x, y, w, h) => () => c.rect(x, y, w, h);
+        if (i === 0) [cx - 116, cx + 110, cx - 74, cx + 68].forEach(x => sh('#5A3A22', rect(x, base - 6, 6, 14)));
+        if (i === 1) sh('#7A5532', rect(cx - 70, base - 110, 6, 110)); if (i === 2) sh('#7A5532', rect(cx + 64, base - 110, 6, 110)); if (i === 3) sh('#7A5532', rect(cx - 70, base - 116, 140, 6));
+        if (i === 4) sh(th.hx ? '#B89A6A' : '#E8D7B0', () => { c.moveTo(cx - 110, base); c.lineTo(cx, base - 118); c.lineTo(cx + 110, base); c.closePath(); });
+        if (i === 5) { if (ghost) { c.beginPath(); c.moveTo(cx, base - 118); c.lineTo(cx - 116, base); c.moveTo(cx, base - 118); c.lineTo(cx + 116, base); c.stroke(); } else { c.strokeStyle = '#3A2A1A'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(cx, base - 118); c.lineTo(cx - 116, base); c.moveTo(cx, base - 118); c.lineTo(cx + 116, base); c.stroke(); } }
+        if (i === 6) sh('#3A2A1A', () => { c.moveTo(cx - 22, base); c.lineTo(cx, base - 50); c.lineTo(cx + 22, base); c.closePath(); });
+        if (i === 7) sh('#FFD27A', () => c.arc(cx, base - 20, 5 + Math.sin(t * 6), 0, 7)); if (i === 8) sh('#8A3A2A', rect(cx - 60, base - 2, 120, 4));
+        if (i === 9) sh('#FFD27A', () => c.arc(cx, base - 140, 6, 0, 7)); c.restore(); };
+      for (let i = 0; i < Math.min(step, P.length); i++) piece(i, false); if (step < P.length) piece(step, true);
+      const shown = Math.round(V.length * k); c.fillStyle = MG_CARD(th); rr(c, 16, 46, GW - 32, 86, 14); c.fill(); mgText(c, th, V.slice(0, shown).join(' ') + (shown < V.length ? ' …' : ''), 28, 74, GW - 56, 16); lab(c, th, 'Juan 1:14 · NTV', 28, 122);
+      lab(c, th, 'La pieza que sigue está punteada en el dibujo', 20, 400); opts.forEach(o => mgBtn(c, th, o)); if (fT > 0) mgText(c, th, fb, GW / 2, 370, 300, 15, 'center'); } };
+}
+// II · Cuatro raíces: Jesús crecía en sabiduría, estatura, el favor de Dios y el de la gente (Lucas 2:52)
+function Roots(th, f) {
+  const B = [['Sabiduría', '📜', '#6A8ADA'], ['Estatura', '🪵', '#C08A3A'], ['Dios', '🙏', '#E8C46A'], ['Gente', '🤝', '#7AB84A']];
+  let v = [.6, .6, .6, .6], score = 0, left = 50 / f, full = left, over = false, tasks = [], sp = 0, tt = 0;
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap') return; const i = tasks.findIndex(q => Math.hypot(q.x - d.x, q.y - d.y) < 30); if (i < 0) return; const q = tasks[i]; v[q.b] = Math.min(1, v[q.b] + .22); burstAt(q.x, q.y); tasks.splice(i, 1); score += 5; },
+    update(dt) { if (over) return; tt += dt; left -= dt; if (left <= 0) { left = 0; over = true; } v = v.map(x => Math.max(0, x - dt * (.05 + tt * .0012) * f)); if (Math.min(...v) > .3) score += dt * 6; if (Math.min(...v) <= 0) over = true;
+      sp -= dt; if (sp <= 0) { sp = .9 / f; const b = Math.floor(Math.random() * 4); tasks.push({ b, x: 40 + Math.random() * (GW - 80), y: 150 + Math.random() * 180, t: 2.6 }); } tasks.forEach(q => q.t -= dt); tasks = tasks.filter(q => q.t > 0); },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'CUATRO RAÍCES', 16, 27); mgText(c, th, 'Tocá las tareas para que ninguna raíz se seque.', 16, 58, GW - 32, 13);
+      tasks.forEach(q => { c.globalAlpha = Math.min(1, q.t); c.font = '30px serif'; c.textAlign = 'center'; c.fillText(B[q.b][1], q.x, q.y + 10); c.textAlign = 'left'; c.globalAlpha = 1; });
+      B.forEach(([n, ic, col], i) => { const x = 18 + i * 85, y = 360, h = 130; c.fillStyle = MG_CARD(th); rr(c, x, y, 70, h, 12); c.fill(); c.fillStyle = col; rr(c, x + 8, y + 8 + (h - 46) * (1 - v[i]), 54, (h - 46) * v[i], 8); c.fill(); c.font = '20px serif'; c.textAlign = 'center'; c.fillText(ic, x + 35, y + h - 18); c.textAlign = 'left'; lab(c, th, n, x + 35, y + h - 2, 'center'); }); } };
+}
+// III · Tres voces en el desierto: a cada tentación, la respuesta de la Escritura bien entendida (Deuteronomio)
+function Voices(th, f) {
+  const R = [['Si sos el Hijo de Dios, convertí estas piedras en pan.', ['La gente vive de cada palabra que sale de la boca de Dios, además del pan (Deuteronomio 8:3).', 1], ['Está escrito que Dios mandará a sus ángeles para cuidarte: usalo a tu favor.', 0], ['Tenés hambre: usá tu poder para vos.', 0]],
+    ['Tirate desde lo más alto del templo: los ángeles te van a sostener.', ['No hay que poner a prueba al Señor (Deuteronomio 6:16).', 1], ['Si un versículo lo dice, hacelo aunque sea para probar a Dios.', 0], ['Así todos van a ver que sos especial.', 0]],
+    ['Todo esto te doy si me adorás.', ['Solo a Dios hay que adorar y servir (Deuteronomio 6:13).', 1], ['Es un atajo para llegar al trono sin la cruz.', 0], ['Una vez no cuenta.', 0]]];
+  let i = 0, score = 0, lives = 3, over = false, opts = [], fb = '', fT = 0, order = [0, 1, 2];
+  const deal = () => { const r = R[order[i]]; opts = shuffle(r.slice(1).map((o, k) => ({ t: o[0], ok: o[1] }))).map((o, k) => Object.assign(o, { x: 16, y: 256 + k * 86, w: GW - 32, h: 76 })); };
+  deal();
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap' || fT > 0) return; const b = opts.find(o => mgHit(o, d)); if (!b) return; if (b.ok) { score += 40; fb = '✔ Así respondió Jesús, con la Escritura bien entendida.'; burstAt(b.x + b.w / 2, b.y); } else { lives--; fb = '✖ Esa voz no viene de Dios. La identidad de Hijo amado va primero.'; } fT = 1.6; },
+    update(dt) { if (over) return; if (fT > 0) { fT -= dt; if (fT <= 0) { i++; if (i >= order.length || lives <= 0) { over = true; return; } deal(); } } },
+    draw(c, t) { skyBg(c, th, t); lab(c, th, 'TRES VOCES EN EL DESIERTO · ' + '❤'.repeat(Math.max(0, lives)), 16, 27); c.fillStyle = MG_CARD(th); rr(c, 16, 50, GW - 32, 140, 16); c.fill(); lab(c, th, 'LA TENTACIÓN', 30, 76); mgText(c, th, R[order[Math.min(i, order.length - 1)]][0], 30, 104, GW - 60, 17);
+      opts.forEach(o => mgBtn(c, th, o, fT > 0 && o.ok)); if (fT > 0) { c.fillStyle = th.hx ? 'rgba(14,10,4,.9)' : 'rgba(255,255,255,.95)'; rr(c, 16, 196, GW - 32, 48, 12); c.fill(); mgText(c, th, fb, 28, 214, GW - 56, 12); } } };
+}
+// IV · Semilla de mostaza: el reino ya llegó y todavía no del todo; tu semilla crece de una partida a la otra
+function Mustard(th, f) {
+  const p = P(); p.mat = p.mat || {}; let g = p.mat.must || 0, score = 0, left = 35 / f, full = left, over = false, weeds = [], water = .6, sp = 0, birds = [];
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap') return; const w = weeds.findIndex(q => Math.hypot(q.x - d.x, q.y - d.y) < 26); if (w >= 0) { burstAt(weeds[w].x, weeds[w].y); weeds.splice(w, 1); score += 8; return; } if (d.y < 120) { water = Math.min(1, water + .25); score += 2; } },
+    update(dt) { if (over) return; left -= dt; if (left <= 0) { left = 0; over = true; p.mat.must = g; save(); return; } water = Math.max(0, water - dt * .07 * f); sp -= dt; if (sp <= 0) { sp = 1.4 / f; weeds.push({ x: 60 + Math.random() * (GW - 120), y: 420 + Math.random() * 50 }); }
+      const ok = water > .25 && weeds.length < 4; if (ok) { g = Math.min(1, g + dt * .006); score += dt * 4; } if (g >= 1 && birds.length < 4 && Math.random() < dt) birds.push({ x: Math.random() * GW, y: 60, t: 0 }); birds.forEach(b => { b.t += dt; }); },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'MOSTAZA · ' + Math.round(g * 100) + '%', 16, 27); c.fillStyle = 'rgba(120,160,220,.6)'; rr(c, 16, 50, GW - 32, 60, 12); c.fill(); mgText(c, th, '☁ Tocá la nube para regar · sacá los yuyos', 28, 86, GW - 56, 13);
+      c.fillStyle = 'rgba(90,140,220,.7)'; rr(c, 16, 116, (GW - 32) * water, 6, 3); c.fill(); c.fillStyle = th.hx ? '#4A3626' : '#8A6A44'; c.fillRect(0, 470, GW, 50);
+      const h = 12 + g * 300, cx = GW / 2; c.strokeStyle = '#6E5034'; c.lineWidth = 3 + g * 10; c.beginPath(); c.moveTo(cx, 470); c.lineTo(cx, 470 - h); c.stroke();
+      if (g > .15) { c.fillStyle = '#6E9A3A'; const r = 8 + g * 90; for (let k = 0; k < 6; k++) { c.beginPath(); c.arc(cx + Math.cos(k) * r * .6, 470 - h + Math.sin(k * 2) * r * .3, r * .55, 0, 7); c.fill(); } }
+      weeds.forEach(q => { c.font = '22px serif'; c.textAlign = 'center'; c.fillText('🌿', q.x, q.y); c.textAlign = 'left'; }); birds.forEach(b => { c.font = '18px serif'; c.fillText('🐦', cx - 40 + (b.x % 80), 470 - h - 10 + Math.sin(b.t * 3) * 6); });
+      if (g >= 1) mgText(c, th, 'Una semilla mínima se hizo árbol y los pájaros anidan en sus ramas.', GW / 2, 160, GW - 40, 13, 'center'); } };
+}
+// VI · La sorpresa: escuchá la parábola y tocá el momento donde está la sorpresa
+function Surprise(th, f) {
+  const S2 = [{ n: 'El buen samaritano', L: ['Un hombre bajaba de Jerusalén a Jericó.', 'Lo asaltaron y lo dejaron medio muerto.', 'Pasó un sacerdote y siguió de largo.', 'Pasó un levita y también siguió de largo.', 'Pasó un samaritano, y sintió compasión.', 'Le vendó las heridas y lo llevó a una posada.'], s: 4, why: 'Judíos y samaritanos tenían siglos de enemistad: que el héroe fuera un samaritano era escandaloso.' },
+    { n: 'El hijo que vuelve', L: ['El hijo menor gastó toda su herencia.', 'Con hambre, decidió volver a la casa de su padre.', 'Ensayó lo que iba a decir: que lo tomara como empleado.', 'El padre lo vio de lejos y corrió hacia él.', 'Lo abrazó, lo besó y organizó una fiesta.'], s: 3, why: 'En esa cultura un hombre mayor no corría en público: el padre deja de lado su dignidad por su hijo.' }];
+  let k = 0, line = 0, lt = 0, score = 0, over = false, fb = '', fT = 0, done = false; const btn = { x: 60, y: 430, w: GW - 120, h: 60, t: '¡Acá está la sorpresa!' };
+  return { get score() { return score }, get over() { return over },
+    input(kk, d) { if (over || kk !== 'tap' || done) return; if (!mgHit(btn, d)) return; const st = S2[k]; if (line === st.s) { score += 60; fb = '✔ ' + st.why; } else if (line < st.s) { fb = 'Todavía no: esperá un poco más.'; score = Math.max(0, score - 5); return; } else { score += 20; fb = 'Casi: la sorpresa fue un poco antes. ' + st.why; } done = true; fT = 3.2; },
+    update(dt) { if (over) return; if (done) { fT -= dt; if (fT <= 0) { k++; line = 0; lt = 0; done = false; if (k >= S2.length) over = true; } return; } lt += dt; if (lt > 2.4 / f) { lt = 0; line++; if (line >= S2[k].L.length) { fb = 'Se te pasó. ' + S2[k].why; done = true; fT = 3.2; line = S2[k].L.length - 1; } } },
+    draw(c, t) { skyBg(c, th, t); lab(c, th, 'LA SORPRESA · ' + S2[Math.min(k, S2.length - 1)].n.toUpperCase(), 16, 27); const st = S2[Math.min(k, S2.length - 1)];
+      st.L.slice(0, line + 1).forEach((l, i) => { c.globalAlpha = i === line ? 1 : .55; mgText(c, th, l, 20, 70 + i * 52, GW - 40, 15); c.globalAlpha = 1; }); mgBtn(c, th, btn, false); if (done) { c.fillStyle = th.hx ? 'rgba(14,10,4,.9)' : 'rgba(255,255,255,.95)'; rr(c, 16, 360, GW - 32, 60, 12); c.fill(); mgText(c, th, fb, 26, 380, GW - 52, 12); } } };
+}
+// VII · La mesa de la Pascua: cada cosa en la mesa tiene un significado, y Jesús le da un sentido nuevo al pan y a la copa
+function Seder(th, f) {
+  const I = [['🍞 Pan sin levadura', 'por el apuro de la salida de Egipto'], ['🌿 Hierbas amargas', 'por la amargura de la esclavitud'], ['🐑 Cordero', 'la sangre en las puertas protegió a las familias'], ['🍷 La copa', 'se bebían varias copas mientras se contaba la historia']];
+  let sel = -1, done = [], score = 0, over = false, fb = '', fT = 0, order = shuffle([0, 1, 2, 3]), end = 0;
+  const items = I.map((x, i) => ({ i, x: 16, y: 70 + i * 80, w: 130, h: 70, t: x[0] })), mean = order.map((i, k) => ({ i, x: 154, y: 70 + k * 80, w: GW - 170, h: 70, t: I[i][1] }));
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap') return; if (end) { if (end > 1.5) over = true; return; } const a = items.find(o => mgHit(o, d) && !done.includes(o.i)); if (a) { sel = a.i; return; } const m = mean.find(o => mgHit(o, d) && !done.includes(o.i)); if (m && sel >= 0) { if (m.i === sel) { done.push(sel); score += 40; burstAt(m.x + 40, m.y); fb = '✔'; if (done.length === 4) end = .01; } else { fb = 'No es ese el significado.'; score = Math.max(0, score - 5); } sel = -1; fT = .8; } },
+    update(dt) { fT = Math.max(0, fT - dt); if (end) end += dt; },
+    draw(c, t) { skyBg(c, th, t); lab(c, th, 'LA MESA DE LA PASCUA', 16, 27); mgText(c, th, 'Tocá una cosa de la mesa y después su significado.', 16, 50, GW - 32, 12);
+      items.forEach(o => { c.globalAlpha = done.includes(o.i) ? .4 : 1; mgBtn(c, th, o, sel === o.i); c.globalAlpha = 1; }); mean.forEach(o => { c.globalAlpha = done.includes(o.i) ? .4 : 1; mgBtn(c, th, o); c.globalAlpha = 1; });
+      if (end) { c.fillStyle = th.hx ? 'rgba(14,10,4,.92)' : 'rgba(255,255,255,.96)'; rr(c, 16, 366, GW - 32, 146, 14); c.fill(); mgText(c, th, 'En esa misma cena, Jesús le da un sentido nuevo al pan y a la copa: él es el Cordero cuya entrega trae una liberación más grande. Por eso la iglesia sigue partiendo el pan en memoria de él.', 28, 392, GW - 56, 13); lab(c, th, 'Tocá para terminar', GW / 2, 504, 'center'); } } };
+}
+// IX · Investigación: juntá las cinco pistas y armá el caso de la resurrección
+function Clues(th, f) {
+  const C = [['La tumba vacía', 'Hasta los enemigos lo reconocían: tuvieron que inventar que habían robado el cuerpo.'], ['Las apariciones', 'Muchas personas, en lugares y momentos distintos, incluso más de quinientas a la vez.'], ['Las primeras testigos', 'Fueron mujeres: si alguien inventaba la historia, habría elegido testigos más creíbles para esa época.'], ['Los discípulos', 'Hombres escondidos y asustados se volvieron valientes y dieron la vida por anunciarlo.'], ['La iglesia en Jerusalén', 'Nació en la misma ciudad donde cualquiera podía ir a ver la tumba.']];
+  let sel = -1, done = [], score = 0, over = false, left = 60 / f, full = left, fb = '', fT = 0, end = 0, ord = shuffle([0, 1, 2, 3, 4]);
+  const pist = C.map((x, i) => ({ i, x: 16 + (i % 3) * 110, y: 44 + Math.floor(i / 3) * 54, w: 104, h: 48, t: x[0] })), ev = ord.map((i, k) => ({ i, x: 16, y: 156 + k * 70, w: GW - 32, h: 62, t: '🔎 ' + C[i][1] }));
+  return { get score() { return score }, get over() { return over },
+    input(k, d) { if (over || k !== 'tap') return; if (end) { if (end > 1.5) over = true; return; } const a = pist.find(o => mgHit(o, d) && !done.includes(o.i)); if (a) { sel = a.i; return; } const e = ev.find(o => mgHit(o, d) && !done.includes(o.i)); if (e && sel >= 0) { if (e.i === sel) { done.push(sel); score += 30; burstAt(e.x + 30, e.y); if (done.length === 5) { score += Math.round(left * 3); end = .01; } } else { left -= 4; fb = 'Esa prueba no va con esa pista.'; fT = 1; } sel = -1; } },
+    update(dt) { if (over) return; fT = Math.max(0, fT - dt); if (end) { end += dt; return; } left -= dt; if (left <= 0) { left = 0; over = true; } },
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'PISTAS ' + done.length + ' DE 5', 16, 27); pist.forEach(o => { c.globalAlpha = done.includes(o.i) ? .4 : 1; mgBtn(c, th, o, sel === o.i); c.globalAlpha = 1; }); ev.forEach(o => { c.globalAlpha = done.includes(o.i) ? .4 : 1; mgBtn(c, th, o); c.globalAlpha = 1; });
+      if (fT > 0) mgText(c, th, fb, GW / 2, 512, GW - 40, 12, 'center'); if (end) { c.fillStyle = th.hx ? 'rgba(14,10,4,.92)' : 'rgba(255,255,255,.96)'; rr(c, 16, 380, GW - 32, 120, 14); c.fill(); mgText(c, th, 'Caso armado. La resurrección se recibe con fe, y es una fe con buenas razones.', 28, 410, GW - 56, 14); lab(c, th, 'Tocá para terminar', GW / 2, 488, 'center'); } } };
+}
+
+const ENGINES={tent:Tent,roots:Roots,voices:Voices,mustard:Mustard,surprise:Surprise,seder:Seder,clues:Clues,stone:Stone,mirror:Mirror,match3:Match3,code:Code,snake:Snake,chain:Chain,plinko:Plinko,rooster:Rooster,carry:Carry,forgive:Forgive,hold:Hold,puzzle:Puzzle,dark:Dark,breakout:Breakout,pave:Pave,spot:Spot,coins:Coins,wash:Wash,missing:Missing,awake:Awake,guess:Guess,sow:Sow,hotcold:HotCold,kind:Kind,rotate:Rotate,scale:Scale,blocks:Blocks,emoji:Emoji,flood:Flood,roof:Roof,count:Count,trace:Trace,reveal:Reveal,hop:Hop,sort:Sort,pour:Pour,spell:Spell,net:Net,row:Row,pipes:Pipes,lights:Lights,match:Match,run:Runner,fly:Flyer,cross:Crosser,catch:Catcher,memo:Memo,maze:Maze,simon:Simon,verso:Verso,herd:Herd,pop:Pop,swarm:Swarm,slide:Slide,balance:Balance,order:Order,words:Words,stack:Stack,diff:Diff,tf:TrueFalse,lantern:Lantern,rhythm:Rhythm,connect:Connect};
+const TAPG=['tent','roots','voices','mustard','surprise','seder','clues','stone','mirror','match3','code','snake','chain','plinko','rooster','carry','forgive','pave','spot','coins','missing','awake','guess','hotcold','kind','rotate','scale','blocks','emoji','flood','roof','count','reveal','hop','sort','spell','net','row','pipes','lights','match','memo','simon','verso','pop','slide','order','diff','tf','rhythm','connect','stack','balance'],DRAGG=['hold','puzzle','dark','breakout','wash','sow','trace','pour','herd','swarm','words','lantern'];
 let ar=null;const bursts=[];
 function burstAt(x,y){bursts.push({x,y,t:0});}
 function splash(x,y){bursts.push({x,y,t:0,w:1});}
@@ -2918,7 +3025,7 @@ const go=()=>{try{const d=document,el=d.documentElement;if(d.fullscreenElement||
 const once=e=>{const t=e.target&&e.target.closest&&e.target.closest('button,a,[role=button],.pick,.card');if(!t)return;removeEventListener('pointerup',once,true);go();};addEventListener('pointerup',once,true);}catch(e){}})();
 function tspTitle(){try{if(document.title!=='Kids & Hero')document.title='Kids & Hero';}catch(e){}}
 tspTitle();
-window.GAME={hstTest:r=>HST.q.push(['close',r]),hstScroll:()=>hstScroll(false),hstHas:()=>branch==='ados'&&hstP().scroll.length>0,stageLine,lobbyLines,vo:(t,v,o)=>vo(t,v,o),voState:()=>({log:VO.log.slice(-12),on:VO.on,src:VO.el&&VO.el.src,paused:VO.el?VO.el.paused:null,cur:VO.cur&&VO.cur.t,q:VO.q.length}),voStop:()=>voStop(),voOn:()=>VO.on,NODES,EDGES,ADJ,REGIONS,VIGN,TOP,RH,WIDTH,get branch(){return branch},level:()=>lvOf(total(P())),EXAMS,P,reachable,visited,isDone,bfs,arrive,save,toast,refreshHud,syncMap(){refreshMap();const n=NODES[P().pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));}};
+window.GAME={playMat:(def,done)=>{if(ar)return false;startArcade({id:'mat-'+def.type,game:def},done||null);return true;},hstTest:r=>HST.q.push(['close',r]),hstScroll:()=>hstScroll(false),hstHas:()=>branch==='ados'&&hstP().scroll.length>0,stageLine,lobbyLines,vo:(t,v,o)=>vo(t,v,o),voState:()=>({log:VO.log.slice(-12),on:VO.on,src:VO.el&&VO.el.src,paused:VO.el?VO.el.paused:null,cur:VO.cur&&VO.cur.t,q:VO.q.length}),voStop:()=>voStop(),voOn:()=>VO.on,NODES,EDGES,ADJ,REGIONS,VIGN,TOP,RH,WIDTH,get branch(){return branch},level:()=>lvOf(total(P())),EXAMS,P,reachable,visited,isDone,bfs,arrive,save,toast,refreshHud,syncMap(){refreshMap();const n=NODES[P().pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));}};
 function enterMap(){
   if(worldFor!==branch)buildWorld();
   const p=P();
