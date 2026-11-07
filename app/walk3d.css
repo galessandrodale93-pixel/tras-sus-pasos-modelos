@@ -720,3 +720,14 @@ body.v3talk .v3glow,body.v3talk .v3hint,body.v3talk .v3mmbox,body.v3talk .v3mapb
 .lb-fail{margin-top:12px;padding:14px 16px;border-radius:14px;background:rgba(60,14,8,.78);border:1px solid rgba(255,150,120,.45);color:#FFE6DA;text-align:center;display:grid;gap:8px;justify-items:center}
 .lb-fail b{font:800 16px/1.3 Nunito,system-ui,sans-serif}.lb-fail p{margin:0;font:600 13px/1.45 Nunito,system-ui,sans-serif;opacity:.9}
 .v3seas{position:fixed;z-index:7;left:50%;top:calc(70px + env(safe-area-inset-top,0px));transform:translate(-50%,-6px);padding:7px 16px;border-radius:999px;background:rgba(14,12,9,.62);color:#FFF1CC;font:800 13px/1 Nunito,system-ui,sans-serif;letter-spacing:.02em;border:1px solid rgba(233,195,122,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .8s,transform .8s}.v3seas.on{opacity:1;transform:translate(-50%,0)}
+/* marcos tallados (9-slice, webp livianos): Hero en metal oxidado con oro romano y volutas; Kids en piedra clara con rosetas */
+body.v3on .hud-in{border:13px solid transparent!important;border-image:url(ui/f_kids_panel.webp) 48 fill / 13px stretch!important;background:none!important;border-radius:0!important;box-shadow:none!important;filter:drop-shadow(0 6px 12px rgba(0,0,0,.28))}
+body[data-branch="ados"].v3on .hud-in{border-image-source:url(ui/f_hero_panel.webp)!important;filter:drop-shadow(0 8px 16px rgba(0,0,0,.5))}
+.inv-slot,.inv-cell{border:9px solid transparent!important;border-image:url(ui/f_kids_slot.webp) 30 fill / 9px stretch!important;background:none!important;border-radius:0!important}
+body[data-branch="ados"] .inv-slot,body[data-branch="ados"] .inv-cell,.inv.hx .inv-slot,.inv.hx .inv-cell{border-image-source:url(ui/f_hero_slot.webp)!important}
+.inv-slot.full,.inv-slot.sel,.inv-cell.sel{box-shadow:0 0 12px -2px var(--rc,#FFD25E)}
+.lvup div{border:20px solid transparent!important;border-image:url(ui/f_kids_panel.webp) 48 fill / 20px stretch!important;background:none!important;border-radius:0!important;box-shadow:none!important;filter:drop-shadow(0 0 30px rgba(255,210,94,.5));color:#3A2A14}
+.lvup div small{color:#9A6A1C}
+body[data-branch="ados"] .lvup div{border-image-source:url(ui/f_hero_panel.webp)!important;color:#FFF6E2}
+body[data-branch="ados"] .lvup div small{color:#FFD25E}
+@media (max-width:520px){body.v3on .hud-in{border-width:10px!important;border-image-width:10px!important}.inv-slot,.inv-cell{border-width:7px!important;border-image-width:7px!important}}
