@@ -3243,15 +3243,20 @@ function phMat(m, o) {
 /* ---------- estaciones: cambian solas cada 8 semanas reales (primavera → verano → otoño → invierno, ciclo de 32 semanas),
    contadas desde una fecha fija común para que todos vean la misma. Entre una y otra hay 4 días de transición.
    Solo cambian tintes, densidad de flores, nubes y lluvia: no se recargan texturas. ---------- */
-const SEAS = { auto: false, EPOCH: Date.UTC(2026, 10, 2, 3), LEN: 8 * 7 * 864e5, XF: 4 * 864e5,
+const SEAS = { auto: true, EPOCH: Date.UTC(2026, 10, 2, 3), LEN: 8 * 7 * 864e5, XF: 4 * 864e5,
   NAMES: ['Primavera', 'Verano', 'Otoño', 'Invierno'], ICON: ['🌸', '☀️', '🍂', '🌧️'],
+  // frase del material que se muestra una vez, al entrar, cada vez que empieza una estación nueva (canal 10)
+  FRASE: ['Las laderas de Galilea se llenan de flores silvestres, como las anémonas rojas. Muchos piensan que en ellas pensaba Jesús cuando dijo que miraran los lirios del campo (Mateo 6:28).',
+    'En verano todo se seca y se dora, y llega la cosecha de higos, uvas y aceitunas.',
+    'Vuelven las lluvias: las tempranas que Dios le prometía a su pueblo (Deuteronomio 11:14).',
+    'En Israel llueve en otoño e invierno. Después llegan las lluvias tardías, que también eran una promesa de Dios (Deuteronomio 11:14).'],
   // tinte del pasto, cuánto se seca, flores (anémonas, amarillas, adelfas), lluvia y cielo gris
   P: [{ t: [.42, .62, .22], dry: .08, an: 1, ye: 1, ol: .45, rain: .04, gray: 0 }, { t: [.78, .62, .3], dry: .72, an: 0, ye: .15, ol: 1, rain: 0, gray: 0 },
     { t: [.66, .48, .26], dry: .5, an: 0, ye: .05, ol: .25, rain: .22, gray: .38 }, { t: [.38, .55, .28], dry: .18, an: .12, ye: .3, ol: 0, rain: .42, gray: .55 }],
   u: { sTint: { value: { r: .42, g: .62, b: .22 } }, sDry: { value: .08 }, jud: { value: { x: 0, y: 0, z: 0 } } }, cur: null, acc: 9, rainOn: false };
 function seasonNow(t) {
   t = t ?? Date.now(); if (!SEAS.auto) t = SEAS.EPOCH + 864e5; const n = Math.floor((t - SEAS.EPOCH) / SEAS.LEN), i = ((n % 4) + 4) % 4, into = (t - SEAS.EPOCH) - n * SEAS.LEN, k = Math.max(0, (into - (SEAS.LEN - SEAS.XF)) / SEAS.XF), sk = k * k * (3 - 2 * k);
-  const A = SEAS.P[i], B = SEAS.P[(i + 1) % 4], L = (a, b) => a + (b - a) * sk; return { i, k: sk, name: SEAS.NAMES[i], icon: SEAS.ICON[i], t: [0, 1, 2].map(j => L(A.t[j], B.t[j])), dry: L(A.dry, B.dry), an: L(A.an, B.an), ye: L(A.ye, B.ye), ol: L(A.ol, B.ol), rain: L(A.rain, B.rain), gray: L(A.gray, B.gray) };
+  const A = SEAS.P[i], B = SEAS.P[(i + 1) % 4], L = (a, b) => a + (b - a) * sk; return { i, n, k: sk, name: SEAS.NAMES[i], icon: SEAS.ICON[i], t: [0, 1, 2].map(j => L(A.t[j], B.t[j])), dry: L(A.dry, B.dry), an: L(A.an, B.an), ye: L(A.ye, B.ye), ol: L(A.ol, B.ol), rain: L(A.rain, B.rain), gray: L(A.gray, B.gray) };
 }
 function seasonApply(s) { const v = SEAS.u.sTint.value; v.r = s.t[0]; v.g = s.t[1]; v.b = s.t[2]; SEAS.u.sDry.value = s.dry; }
 SEAS.cur = seasonNow(); seasonApply(SEAS.cur);
@@ -3309,7 +3314,9 @@ function seasonTick(dt) {
   // cielo más gris y luz más baja con nubes o lluvia
   if (!SEAS.base && S.scene) { SEAS.base = { lights: [] }; S.scene.traverse(o => { if (o.isDirectionalLight || o.isHemisphereLight) SEAS.base.lights.push([o, o.intensity]); }); if (S.scene.fog) SEAS.base.fog = S.scene.fog.color.clone(); }
   const g = Math.min(1, s.gray + (SEAS.rainOn ? .35 : 0)); if (SEAS.base) { SEAS.base.lights.forEach(([o, i0]) => { o.intensity = i0 * (1 - g * (o.isDirectionalLight ? .45 : .15)); }); if (SEAS.base.fog && S.scene.fog) S.scene.fog.color.copy(SEAS.base.fog).lerp(new THREE.Color('#9AA2A8'), g * .6); }
-  if (SEAS.auto && !SEAS.told && document.getElementById('view3d') && !document.getElementById('view3d').hidden) { SEAS.told = true; const el = document.createElement('div'); el.className = 'v3seas'; el.textContent = s.icon + ' ' + s.name + ' en Galilea'; document.body.appendChild(el); setTimeout(() => el.classList.add('on'), 50); setTimeout(() => { el.classList.remove('on'); setTimeout(() => el.remove(), 900); }, 4200); }
+  if (SEAS.auto && !SEAS.told && document.getElementById('view3d') && !document.getElementById('view3d').hidden) { SEAS.told = true; let fr = '';
+    try { const p = G().P(); p.story = p.story || {}; if (p.story.seas !== s.n) { p.story.seas = s.n; fr = SEAS.FRASE[s.i] || ''; G().save(); } } catch (e) {}
+    const el = document.createElement('div'); el.className = 'v3seas' + (fr ? ' fr' : ''); el.innerHTML = `<b>${s.icon} ${s.name} en Galilea</b>${fr ? `<span>${fr}</span>` : ''}`; document.body.appendChild(el); setTimeout(() => el.classList.add('on'), 50); setTimeout(() => { el.classList.remove('on'); setTimeout(() => el.remove(), 900); }, fr ? 9000 : 4200); }
 }
 /* ---------- palmera datilera (Phoenix dactylifera) hecha a mano: tronco con las bases de hojas viejas en rombos,
    copa de 22 hojas pinnadas que se arquean, hojas secas colgando y racimos de dátiles. Todo en pocas geometrías
