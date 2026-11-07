@@ -1908,12 +1908,26 @@ function timp(m, t, vol) {
 }
 /* música grabada: pistas largas en partes de 15 minutos, una sigue a la otra; al orar, otra pista con fundido */
 const MUS = window.MUS_URLS || {
-  hero: ['https://music.wixstatic.com/mp3/43ca3b_db5aa7127fb44e1dbb606560c6b664fa.mp3', 'https://music.wixstatic.com/mp3/43ca3b_f4826634d6a64fa0ba1931ec39552189.mp3', 'https://music.wixstatic.com/mp3/43ca3b_7ff55051d17349809d8966f973c6e7d3.mp3', 'https://music.wixstatic.com/mp3/43ca3b_72fbdb514edb4baf80ece16dafe7e8c1.mp3'],
+  // Hero, exploración: «The Road Beyond the Ruins» (elegida por Gui), en bucle con fundido de 3 s
+  hero: [new URL('./music/hero_exploracion.mp3', import.meta.url).href],
   kids: ['https://music.wixstatic.com/mp3/43ca3b_d7081c84642a4f9785d7acc74dbcceee.mp3', 'https://music.wixstatic.com/mp3/43ca3b_9aad181d11764abc8134acebda29167c.mp3', 'https://music.wixstatic.com/mp3/43ca3b_7bf0fa95563e49a495e3106aec385f8b.mp3', 'https://music.wixstatic.com/mp3/43ca3b_1d6feb9892734a2a9e73d38860ffe0ad.mp3'],
   orar: ['https://music.wixstatic.com/mp3/43ca3b_538f7365d7e248f1bf574404060d1d65.mp3', 'https://music.wixstatic.com/mp3/43ca3b_b29f4283091e41ebb259f0338ad83024.mp3', 'https://music.wixstatic.com/mp3/43ca3b_0ec4648425c24a579ef24a9a0b7caa81.mp3', 'https://music.wixstatic.com/mp3/43ca3b_c88f06c8392149c2a87c327e80823a50.mp3']
 };
 const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+// pista única en bucle sin cortes: dos reproductores que se cruzan 3 s antes del final
+function musLoop(url) {
+  const mk = () => { const a = new Audio(); a.preload = 'auto'; a.volume = 0; a.src = url; return a; };
+  const t = { list: [url], loop: true, a: mk(), b: null, cur: 'a', xf: false, v: 0, ok: true, primed: false, get el() { return this[this.cur]; } };
+  t.a.onerror = () => { t.ok = false; }; return t;
+}
+function musLoopTick(t) {
+  const A = t.el, o = t.cur === 'a' ? 'b' : 'a', v = Math.max(0, Math.min(1, t.v)), now = performance.now();
+  if (!t.xf && A.duration && !A.paused && A.currentTime > A.duration - 3) { if (!t[o]) { t[o] = new Audio(); t[o].preload = 'auto'; t[o].src = t.list[0]; } const B = t[o]; t.xf = true; t.x0 = now; try { B.currentTime = 0; } catch (e) {} B.volume = 0; B.play().catch(() => {}); }
+  if (t.xf) { const B = t[o], k = Math.min(1, (now - t.x0) / 3000); try { A.volume = v * (1 - k); B.volume = v * k; } catch (e) {} if (k >= 1 || A.ended) { A.pause(); t.cur = o; t.xf = false; } }
+  if (t.want <= 0 && t.v < .01) { const B = t[o]; if (B && !B.paused) B.pause(); }
+}
 function musTrack(list) {
+  if (list.length === 1) return musLoop(list[0]);
   const t = { list, i: Math.floor(Math.random() * list.length), el: new Audio(), v: 0, ok: true, primed: false }; t.el.preload = 'auto'; t.el.volume = 0;
   t.el.src = list[t.i]; t.el.onended = () => { t.i = (t.i + 1) % list.length; t.el.src = list[t.i]; t.el.play().catch(() => {}); };
   t.el.onerror = () => { t.err = (t.err || 0) + 1; if (t.err > 3) { t.ok = false; return; } t.i = (t.i + 1) % list.length; t.el.src = list[t.i]; };
@@ -1925,7 +1939,7 @@ function musInit() {
 }
 function musGesture() { // en un toque del usuario: habilita la reproducción (iPhone/Safari lo exigen)
   const m = AU.mus; if (!m) return;
-  [m.adv, m.pray].forEach(t => { if (t.primed) return; t.primed = true; const p = t.el.play(); if (p) p.then(() => { if (t.want <= 0) t.el.pause(); }).catch(() => { t.primed = false; }); });
+  [m.adv, m.pray].forEach(t => { if (t.primed) return; t.primed = true; if (t.loop && !t.b) { t.b = new Audio(); t.b.preload = 'auto'; t.b.src = t.list[0]; t.b.volume = 0; const q = t.b.play(); if (q) q.then(() => t.b.pause()).catch(() => {}); } const p = t.el.play(); if (p) p.then(() => { if (t.want <= 0) t.el.pause(); }).catch(() => { t.primed = false; }); });
 }
 function musTick() {
   const m = AU.mus; if (!m) return false; if (S && (S.hx ? 'hero' : 'kids') !== m.br) { m.adv.el.pause(); m.adv = musTrack(MUS[S.hx ? 'hero' : 'kids']); m.br = S.hx ? 'hero' : 'kids'; m.adv.primed = false; }
@@ -1937,6 +1951,7 @@ function musTick() {
     try { t.el.volume = Math.max(0, Math.min(1, t.v)); } catch (e) {}
     if (t.want > 0 && t.el.paused && t.primed) t.el.play().catch(() => {});
     if (t.want <= 0 && !t.el.paused && (t.v < .01 || IOS)) t.el.pause();
+    if (t.loop) musLoopTick(t);
   }
   return true;
 }
