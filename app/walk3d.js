@@ -1979,7 +1979,7 @@ function musGesture() { // en un toque del usuario: habilita la reproducción (i
 function musTick() {
   const m = AU.mus; if (!m) return false; if (S && (S.hx ? 'hero' : 'kids') !== m.br) { m.adv.el.pause(); m.adv = musTrack(MUS[S.hx ? 'hero' : 'kids']); m.br = S.hx ? 'hero' : 'kids'; m.adv.primed = false; }
   if (!m.adv.ok && !m.pray.ok) return false;
-  const arcOpen = !document.getElementById('arcade').hidden, shown = !document.getElementById('view3d').hidden && !arcOpen, pray = S && S.pose === 'pray', on = AU.on && shown, kidsMg = !!(m.mg && arcOpen && !(S && S.hx) && G().branch !== 'ados');
+  const arcOpen = !document.getElementById('arcade').hidden, shown = !document.getElementById('view3d').hidden && !arcOpen, pray = S && (S.pose === 'pray' || S.solemn === 2), on = AU.on && shown && !(S && S.solemn === 1), kidsMg = !!(m.mg && arcOpen && !(S && S.hx) && G().branch !== 'ados');
   m.adv.want = on && !pray ? (AU.speaking || AU.narr ? .22 : .55) : 0; m.pray.want = on && pray ? (AU.speaking || AU.narr ? .35 : .7) : 0; if (m.mg) m.mg.want = AU.on && kidsMg ? (AU.speaking || AU.narr ? .22 : .5) : 0;
   for (const t of [m.adv, m.pray, m.mg]) { if (!t) continue;
     if (!t.ok) continue; const step = t.want > t.v ? .045 : .07; t.v += Math.max(-step, Math.min(step, t.want - t.v));
@@ -2125,7 +2125,7 @@ const SONG = {
 function auTick() {
   const c = AU.ctx; if (!c || !S) return; try { sndTick(.09); } catch (e) { if (!AU.sndErr) { AU.sndErr = 1; console.warn('ambiente', e); } }
   const shown = !document.getElementById('view3d').hidden && document.getElementById('arcade').hidden;
-  const pray = S.pose === 'pray', tm = c.currentTime + .35;
+  const pray = S.pose === 'pray' || S.solemn === 2, tm = c.currentTime + .35;
   if (musTick()) { AU.master.gain.setTargetAtTime(0, c.currentTime, .2); AU.next = c.currentTime + .1; AU.snext = c.currentTime + .1; return; }
   if (AU.mus && !AU.bank) Object.keys(SMP).forEach(loadInst); // si la música grabada falla, vuelve la orquesta sintetizada
   AU.master.gain.setTargetAtTime(AU.on && shown ? .9 * mixV('mus') : 0, c.currentTime, .4);
@@ -3889,7 +3889,7 @@ function loop(now) {
   // con un minijuego abierto el mundo 3D no se dibuja: toda la máquina queda para el minijuego
   const arc = S.arcEl || (S.arcEl = document.getElementById('arcade')); if (arc && !arc.hidden) { S.last = 0; return; }
   const raw = now - (S.last || now), t = now / 1000, dt = Math.min(.05, raw / 1000); S.last = now; S.t = t; S.renderer.info.reset(); if (raw > 0 && raw < 250) qFrame(raw);
-  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); floraTick(dt); miniTick(dt); compassTick(dt); vilTick(dt); foamTick(t); const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
+  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); floraTick(dt); miniTick(dt); compassTick(dt); vilTick(dt); foamTick(t); dawnTick(dt); const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
   for (const id in S.items) { const m = S.items[id];
     if (m.userData.gone) { m.userData.gone += dt; const k = m.userData.gone / .5; m.scale.setScalar(1 + k); m.position.y += dt * 2; m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = Math.max(0, 1 - k); } }); if (k >= 1) { S.scene.remove(m); delete S.items[id]; } continue; }
     m.rotation.y = t * 1.6; m.position.y = (m.userData.by || 0) + .85 + Math.sin(t * 2.4 + id.length) * .12;
@@ -4700,8 +4700,8 @@ function cineStep() {
   sub.classList.toggle('nar', st.who === 'nar'); sub.classList.toggle('ask', !!st.o); who.textContent = st.who === 'me' ? (nm || 'Vos') : c ? c.name : ''; who.hidden = st.who === 'nar'; tx.textContent = t;
   sub.classList.remove('in'); void sub.offsetWidth; sub.classList.add('in'); op.innerHTML = ''; CINE.ready = false; setTimeout(() => { CINE.ready = true; }, 450);
   // cámara: narrador → plano general; habla un personaje → sobre el hombro del jugador; habla el jugador o elige → contraplano
-  const first = !CINE.cam.kind; if (st.o) { if (spkO && spkO !== S.av) { cineShot('ots', spkO, first ? .95 : .7); clearTimeout(CINE.askT); CINE.askT = setTimeout(() => { if (CINE.st === st) cineShot('ots', S.av, .8, true); }, 2000); } else cineShot('ots', S.av, first ? .95 : .75, true); } else if (st.who === 'nar') cineShot('wide', null, first ? .95 : 1.1); else cineShot('ots', spkO, first ? .95 : .7);
-  CINE.face = spkO && spkO !== S.av ? spkO : null;
+  const first = !CINE.cam.kind; if (st.cam) { const C = CINE.cam || {}; CINE.cam = { from: C.cur || C.from, to: st.cam, t: 0, dur: st.dur || 2.5, kind: 'fix' }; } else if (st.o) { if (spkO && spkO !== S.av) { cineShot('ots', spkO, first ? .95 : .7); clearTimeout(CINE.askT); CINE.askT = setTimeout(() => { if (CINE.st === st) cineShot('ots', S.av, .8, true); }, 2000); } else cineShot('ots', S.av, first ? .95 : .75, true); } else if (st.who === 'nar') cineShot('wide', null, first ? .95 : 1.1); else cineShot('ots', spkO, first ? .95 : .7);
+  CINE.face = spkO && spkO !== S.av ? spkO : null; if (st.quiet && !st.o) { sub.classList.remove('in'); CINE.autoT = setTimeout(() => { if (CINE.st === st) cineStep(); }, 2600); return; }
   const secs = Math.max(2.2, Math.min(9, t.length / 15));
   if (spkO && spkO !== S.av) { talkGo(spkO, secs, st.g); if (Math.random() < .5) h3do(['M_Lengthy_Head_Nod', 'M_Thinking'], 2.2); }
   else if (spkO === S.av) talkGo(S.av, secs);
@@ -4734,6 +4734,72 @@ function cineTick(dt) {
   if (C.release && C.t >= 1) { CINE.cam = null; S.camera.fov = CINE.fov0; S.camera.updateProjectionMatrix(); }
 }
 addEventListener('keydown', e => { if (!CINE.on) return; const k = e.key; if (k === ' ' || k === 'Enter') { e.preventDefault(); e.stopImmediatePropagation(); if (!(CINE.st && CINE.st.o)) cineNext(); } else if (k === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); cineSkip(); } else if (/^[1-3]$/.test(k) && CINE.st && CINE.st.o) { const b = document.querySelectorAll('.cine-opts button')[+k - 1]; if (b) b.click(); e.stopImmediatePropagation(); } else e.stopImmediatePropagation(); }, true);
+/* ===== Parte 3: la cruz (reverente; en Kids suave y sin sangre) y el tercer día ===== */
+const P3 = {};
+function p3Dark(k, secs) { let el = document.getElementById('v3dark'); if (!el) { el = document.createElement('div'); el.id = 'v3dark'; el.className = 'v3dark'; document.body.appendChild(el); } el.style.transition = `opacity ${secs || 4}s ease`; requestAnimationFrame(() => { el.style.opacity = String(k); }); }
+function p3Poi(k) { return (S.pois || []).find(q => q.k === k); }
+// figura en la cruz del medio: postura de brazos abiertos (pose de reposo del esqueleto), cabeza inclinada; vista siempre de lejos
+function p3Figure(kids) {
+  const p = p3Poi('golgota'); if (!p) return null; const y = S.W ? S.W.hAt(p.x, p.z) : 0, face = p.x < 0 ? Math.PI / 2 : -Math.PI / 2;
+  const o = buildHeroAvatar({ g: 'chico', age: 18, skin: '#B98A62', hair: '#2A1B14', outfit: '#E8DDC6', tintK: .2, anim: ['Idle_Loop'] });
+  const i = H3.npcs.indexOf(o); if (i >= 0) H3.npcs.splice(i, 1); // sin animación: queda en la postura de reposo del modelo, con los brazos abiertos
+  const B = (o.userData.h3 || {}).bones || {}; if (B.Head) B.Head.rotation.x += .45; if (B.neck_01) B.neck_01.rotation.x += .12;
+  o.position.set(p.x + Math.sin(face) * .22, y + 3.75, p.z); o.rotation.y = face; o.userData.keep = 1; S.scene.add(o);
+  { const H = o.userData.h3; if (H && H.mixer) H.mixer.stopAllAction(); // brazos abiertos sobre el travesaño
+    const aim = (bn, cn, sx) => { const b = B[bn], c = B[cn]; if (!b || !c || !b.parent) return; o.updateMatrixWorld(true); const p0 = b.getWorldPosition(new THREE.Vector3()), cur = c.getWorldPosition(new THREE.Vector3()).sub(p0).normalize(), want = new THREE.Vector3(sx, .2, 0).normalize().applyQuaternion(o.quaternion), dq = new THREE.Quaternion().setFromUnitVectors(cur, want), bw = b.getWorldQuaternion(new THREE.Quaternion()), pw = b.parent.getWorldQuaternion(new THREE.Quaternion()); b.quaternion.copy(pw.invert().multiply(dq.multiply(bw))); };
+    aim('upperarm_l', 'lowerarm_l', 1); aim('lowerarm_l', 'hand_l', 1); aim('upperarm_r', 'lowerarm_r', -1); aim('lowerarm_r', 'hand_r', -1); o.updateMatrixWorld(true); }
+  if (B.Head) { // corona de espinas
+    const cr = new THREE.Group(), m = new THREE.MeshStandardMaterial({ color: '#4A3A22', roughness: .9 }); const ring = new THREE.Mesh(new THREE.TorusGeometry(.105, .014, 5, 18), m); ring.rotation.x = Math.PI / 2; cr.add(ring);
+    for (let k = 0; k < 14; k++) { const a = k / 14 * 6.283, sp = new THREE.Mesh(new THREE.ConeGeometry(.006, .04, 4), m); sp.position.set(Math.cos(a) * .105, 0, Math.sin(a) * .105); sp.rotation.z = Math.cos(a) * 1.2; sp.rotation.x = -Math.sin(a) * 1.2; cr.add(sp); }
+    B.Head.add(cr); cr.position.set(0, .14, .01); cr.scale.setScalar(1 / (o.scale.x || 1)); }
+  if (!kids) { const wm = new THREE.MeshStandardMaterial({ color: '#5A0E0A', roughness: .6 }); ['hand_l', 'hand_r', 'foot_l', 'foot_r'].forEach(n => { const b = B[n]; if (!b) return; const d = new THREE.Mesh(new THREE.SphereGeometry(.022, 8, 6), wm); b.add(d); d.position.set(0, .03, 0); }); }
+  return o;
+}
+function p3Shot(kind) { // planos contemplativos y lejanos
+  const p = p3Poi('golgota'); if (!p) return null; const y = S.W ? S.W.hAt(p.x, p.z) : 0, sx = p.x < 0 ? 1 : -1;
+  if (kind === 'far') return { p: [p.x + sx * 34, y + 4, p.z - 14], l: [p.x, y + 4.6, p.z], f: 30 };
+  if (kind === 'low') return { p: [p.x + sx * 16, y + 1.2, p.z + 9], l: [p.x, y + 5, p.z], f: 34 };
+  if (kind === 'sky') return { p: [p.x + sx * 22, y + 2, p.z + 2], l: [p.x - sx * 10, y + 14, p.z], f: 40 };
+  return { p: [p.x + sx * 24, y + 3, p.z + 5], l: [p.x, y + 4.4, p.z], f: 32 };
+}
+function crossScene(kids) {
+  return new Promise(res => {
+    if (!S || !cineOk2() || !p3Poi('golgota')) return res(false);
+    const M = P3.mod; const L = M ? (kids ? M.CROSS.kids : M.CROSS.hero) : ['Al mediodía, una oscuridad cubrió toda la tierra.'];
+    const fig = p3Figure(kids); S.solemn = 1; setTimeout(() => { if (S && S.solemn === 1) S.solemn = 2; }, 3500); p3Dark(kids ? .45 : .62, 5);
+    const shots = ['far', 'low', 'mid', 'sky'], steps = L.map((t, i) => ({ who: 'nar', t, cam: p3Shot(shots[i % shots.length]), dur: i ? 3.5 : 2.5 }));
+    steps.unshift({ who: 'nar', t: '…', cam: p3Shot('far'), dur: 2.5, quiet: 1 });
+    const ok = cine({ cast: {}, steps, solemn: 1, onDone: () => { p3Dark(0, 6); setTimeout(() => { if (S) S.solemn = 0; }, 4000); if (fig) setTimeout(() => S && S.scene.remove(fig), 1200); res(true); } });
+    if (!ok) { p3Dark(0, 1); S.solemn = 0; if (fig) S.scene.remove(fig); res(false); }
+  });
+}
+function cineOk2() { return !!(S && H3.ok && !CINE.on && !S.walking && document.getElementById('view3d') && !document.getElementById('view3d').hidden); }
+// el tercer día: amanecer, flores por todo el camino, luz cálida y gente corriendo hacia la ciudad
+function dawnBuild() {
+  if (P3.dawn || !S) return; const g = G(), ids = Object.keys(g.NODES).filter(k => k.startsWith('resurreccion-')), pts = ids.map(k => S.npos && S.npos[k] ? S.npos[k] : toV(g.NODES[k].x, g.NODES[k].y)); if (!pts.length) return;
+  const cols = ['#F4F0E2', '#F2C14E', '#E86A8A', '#B98AFF', '#FF9A4A', '#FFFFFF'], N = QUAL.lv >= 2 ? 2600 : QUAL.lv ? 1400 : 600, R = rng(333);
+  const geo = new THREE.SphereGeometry(.09, 6, 4), mat = new THREE.MeshStandardMaterial({ roughness: .6, emissive: '#3A2A10', emissiveIntensity: .25 }), im = new THREE.InstancedMesh(geo, mat, N), m = new THREE.Matrix4(), c = new THREE.Color();
+  let n = 0; for (let i = 0; i < N * 3 && n < N; i++) { const q = pts[Math.floor(R() * pts.length)], a = R() * 6.283, r = 2 + R() * 34, x = q[0] + Math.cos(a) * r, z = q[1] + Math.sin(a) * r; if (blockedAt(x, z) || waterWet(x, z, null) > .05) continue; const y = (S.W ? S.W.hAt(x, z) : 0) + .12 + R() * .1, s = .7 + R() * .9; m.makeScale(s, s * .7, s); m.setPosition(x, y, z); im.setMatrixAt(n, m); im.setColorAt(n, c.set(cols[Math.floor(R() * cols.length)])); n++; }
+  im.count = n; im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; im.userData.keep = 1; S.scene.add(im); P3.dawn = im;
+  if (S.renderer) S.renderer.toneMappingExposure *= 1.12;
+}
+function dawnRunners() {
+  const t = p3Poi('tomb'), a = S.av.position; if (!t) return; const list = [];
+  for (let i = 0; i < 5; i++) { const g2 = i % 2 ? 'chica' : 'chico', o = buildHeroAvatar({ g: g2, age: 18, skin: ['#C99A72', '#B98A62', '#D6A57C'][i % 3], hair: '#2A1B14', outfit: ['#8A5A6A', '#6A5A44', '#3E5A6A', '#7A6A4A', '#5A6A7A'][i], anim: ['Jog_Fwd_Loop'] }); const x = t.x + (i - 2) * 1.6, z = t.z + 2 + i * .8; o.position.set(x, S.W ? S.W.hAt(x, z) : 0, z); S.scene.add(o); list.push({ o, tx: a.x + (i - 2) * 3, tz: a.z + 6 + i, life: 14 }); }
+  P3.run = list;
+}
+function dawnTick(dt) { if (!P3.run) return; P3.run = P3.run.filter(r => { r.life -= dt; const o = r.o, dx = r.tx - o.position.x, dz = r.tz - o.position.z, d = Math.hypot(dx, dz); if (r.life <= 0 || d < 1) { S.scene.remove(o); const i = H3.npcs.indexOf(o); if (i >= 0) H3.npcs.splice(i, 1); return false; } const sp = Math.min(d, 4.2 * dt); o.position.x += dx / d * sp; o.position.z += dz / d * sp; o.position.y = S.W ? Math.max(0, S.W.hAt(o.position.x, o.position.z)) : 0; o.rotation.y = Math.atan2(dx, dz); return true; }); if (!P3.run.length) P3.run = null; }
+function dawnScene() {
+  return new Promise(res => { if (!S || !cineOk2()) return res(false); const M = P3.mod, L = M ? M.CROSS.dawn : []; dawnBuild(); dawnRunners(); p3Dark(0, 1);
+    const t = p3Poi('tomb'), y = t && S.W ? S.W.hAt(t.x, t.z) : 0, a = S.av.position;
+    const steps = L.map((tx, i) => ({ who: 'nar', t: tx, cam: i === 0 && t ? { p: [t.x + 10, y + 3, t.z + 14], l: [t.x, y + 1.6, t.z + 2], f: 38 } : i === 1 && t ? { p: [t.x + 3, y + 1.8, t.z + 7], l: [t.x, y + 1.1, t.z + 2.2], f: 40 } : { p: [a.x + 9, a.y + 5, a.z - 6], l: [a.x, a.y + 1, a.z + 8], f: 50 }, dur: 3 }));
+    if (!cine({ cast: {}, steps, onDone: () => res(true) })) res(false); });
+}
+function diaryOpen(id, html) {
+  const el = document.getElementById('v3sheet'); el.innerHTML = `<div class="inv hx sv-sheet diary"><div class="inv-h"><b>📔 Mi diario</b><button class="bag-x" aria-label="Cerrar">✕</button></div>${html}<div class="dia-b"><a class="dia-go" href="https://www.habitat-cfm.org/diario.html" target="_blank" rel="noopener">✍️ Escribir lo mío</a><button class="dia-ok" type="button">Seguir</button></div></div>`; el.hidden = false; S.joy.x = 0; S.joy.y = 0;
+  return new Promise(res => { const close = () => { el.hidden = true; res(); }; el.querySelector('.bag-x').onclick = close; el.querySelector('.dia-ok').onclick = close; el.querySelector('.dia-go').onclick = () => { try { const p = G().P(); p.story = p.story || {}; p.story.diary = (p.story.diary || []).concat(id); G().save(); } catch (e) {} }; });
+}
+import('./story/hero_story.js').then(m => { P3.mod = m; }).catch(() => {});
 async function vilBuild(scene, W) {
   if (!S.hx) return; const M = VIL.mod = await import('./story/villages.js').catch(() => null); import('./story/hero_story.js').then(m => { VIL.wask = m.WASK; }).catch(() => {}); if (!M || !S) return; const g = G(), R = rng(5150);
   const VN = { village: null, taller: 'Nazaret', roofhouse: 'Capernaúm', inn: 'Jericó', upper: 'Jerusalén' };
@@ -5113,4 +5179,4 @@ function svGive(bg) {
 
 addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 'e') axHold(false); });
 addEventListener('touchstart', () => document.body.classList.add('v3touch'), { once: true, passive: true });
-window.W3 = { dbgHero: () => ({ VIL, SEC, MAT, AU, SND, MIX, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineBusy, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
+window.W3 = { dbgHero: () => ({ VIL, SEC, MAT, AU, SND, MIX, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineOk2, cineBusy, crossScene, dawnScene, dawnBuild, diaryOpen, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };

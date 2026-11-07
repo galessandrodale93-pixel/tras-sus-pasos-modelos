@@ -742,3 +742,10 @@ body[data-branch="ados"] .lvup div small{color:#FFD25E}
 .v3mix .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}.v3mix .hd strong{font-size:15px;color:#FFE3A6}.v3mix .hd button{background:none;border:0;color:inherit;font-size:16px;width:32px;height:32px;cursor:pointer}
 .v3mix label{display:grid;grid-template-columns:1fr 112px 30px;align-items:center;gap:8px;padding:6px 0}.v3mix input{width:100%;accent-color:#E2AC55}.v3mix b{text-align:right;font-variant-numeric:tabular-nums}.v3mix p{margin:6px 0 0;font-size:11.5px;opacity:.75;font-weight:600}
 .v3mix.kids{background:rgba(255,255,255,.95);color:#22324F;border-color:rgba(34,64,127,.2)}.v3mix.kids .hd strong{color:#22407F}
+
+.v3dark{position:fixed;inset:0;z-index:5;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 35%,rgba(30,22,40,.75),rgba(6,4,10,.97))}
+.diary .dia-p{font:italic 500 17px/1.55 Georgia,'Times New Roman',serif;color:#F3E7CF;margin:10px 0 6px;padding:14px 16px;border-radius:12px;background:linear-gradient(180deg,rgba(242,196,107,.08),rgba(242,196,107,.02));border:1px solid rgba(242,196,107,.2)}
+.diary .dia-k{display:block;color:#E9C37A;font:800 11px/1.2 Nunito,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase}
+.diary .dia-b{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.diary .dia-go{flex:1 1 180px;text-align:center;text-decoration:none;background:linear-gradient(180deg,#F2C46B,#D9A04A);color:#2A1A08;font:800 15px/1 Nunito,system-ui,sans-serif;padding:12px 14px;border-radius:12px}
+.diary .dia-ok{flex:0 1 120px;background:transparent;color:#F3E7CF;border:1px solid rgba(242,196,107,.4);border-radius:12px;font:700 14px/1 Nunito,system-ui,sans-serif;padding:12px 14px;cursor:pointer}

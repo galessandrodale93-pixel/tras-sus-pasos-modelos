@@ -105,3 +105,21 @@ export const FIREQ = [
   ['esc', 'Cuando leés las Escrituras, ¿qué es lo que más te gusta?', [['Entenderlas bien para poder enseñarlas.', 'maestro'], ['Encontrar palabras de ánimo para alguien que lo necesita.', 'pastor'], ['Ver lo que Dios le pide a su pueblo hoy.', 'profeta'], ['Encontrar historias para contarle a gente nueva.', 'evangelista']], 'La Palabra tiene algo para cada uno. Seguí leyendo, muchacho.'],
   ['zel', 'Si pudieras empezar algo nuevo para Dios en Capernaúm, ¿qué sería?', [['Un grupo nuevo en un barrio donde no hay ninguno.', 'apostol'], ['Una mesa abierta para los que no tienen qué comer.', 'misericordia'], ['Una escuela para chicos que quieren aprender las Escrituras.', 'maestro'], ['Un equipo que arregle las casas de las viudas.', 'servicio']], '¡Contá conmigo! Yo pongo las manos.']
 ];
+// diario del protagonista al cerrar cada etapa (primera persona, palabras propias)
+export const DIARY = {
+  nacimiento: 'Hoy no pude dormir pensando en los pastores. Dios les avisó primero a ellos, gente que trabaja de noche, como yo. Me pregunto si mi papá también lo va a querer conocer.',
+  infancia: 'Un carpintero de un pueblo chico. Eleazar dice que lo vio en el templo cuando era un chico. Me gusta pensar que Dios también ve el trabajo de todos los días.',
+  bautismo: 'Hoy vi el río lleno de gente. Juan le dijo Cordero de Dios. Asher no sabe qué pensar y yo tampoco, pero algo cambió cuando salió del agua.',
+  galilea: 'Enseña a pocos pasos de mi barca. Lucio vigila, Asher espera una pelea y Eleazar lee los profetas. Yo solo quiero escucharlo un poco más.',
+  milagros: 'Vi caminar a un hombre que no podía moverse. Le pedí a Dios por mi papá. Todavía no sé qué va a pasar, pero ya no tengo miedo de pedir.',
+  parabolas: 'Habla de semillas, de ovejas y de un padre que corre a abrazar a su hijo. Esta noche me di cuenta de que esas historias hablan de mí.',
+  jerusalen: 'Entró en un burro y la gente tendió mantos en el camino. Lucio dice que lo quieren arrestar. Mañana es la Pascua y tengo el corazón apretado.',
+  cruz: 'No tengo palabras. El cielo se oscureció y todos nos quedamos en silencio. Eleazar leyó el rollo de Isaías y entendí que todo era por nosotros. Por mí.',
+  resurreccion: '¡Está vivo! Las mujeres corrían, la piedra estaba corrida y el campo amaneció lleno de flores. La pregunta que me acompañó todo el camino ya tiene respuesta.'
+};
+// la cruz: narración reverente (paráfrasis; Isaías 53:5 y Marcos 15:39 en NTV, como en el material)
+export const CROSS = {
+  hero: ['Al mediodía, una oscuridad cubrió toda la tierra hasta las tres de la tarde.', 'Lo clavaron en una cruz entre dos criminales. Le habían puesto una corona de espinas.', 'La gente que pasaba se quedaba en silencio. Algunas mujeres miraban desde lejos.', 'Pero él fue traspasado por nuestras rebeliones y aplastado por nuestros pecados.'],
+  kids: ['Al mediodía, el cielo se puso oscuro.', 'Jesús dio su vida en la cruz por amor a nosotros.', 'Sus amigos y su mamá estaban cerca, muy tristes.'],
+  dawn: ['El primer día de la semana, muy temprano, unas mujeres fueron a la tumba.', 'La piedra estaba corrida y la tumba, vacía.', 'Corrieron a contarlo. Todo el campo amanecía distinto.']
+};
