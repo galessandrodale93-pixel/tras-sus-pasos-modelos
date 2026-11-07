@@ -1962,21 +1962,25 @@ const MUS = window.MUS_URLS || {
   orar: ['https://music.wixstatic.com/mp3/43ca3b_538f7365d7e248f1bf574404060d1d65.mp3', 'https://music.wixstatic.com/mp3/43ca3b_b29f4283091e41ebb259f0338ad83024.mp3', 'https://music.wixstatic.com/mp3/43ca3b_0ec4648425c24a579ef24a9a0b7caa81.mp3', 'https://music.wixstatic.com/mp3/43ca3b_c88f06c8392149c2a87c327e80823a50.mp3']
 };
 const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+// en iOS el volumen de un <audio> no se puede cambiar desde el código: la música pasa por el mismo AudioContext del ambiente
+// (un nodo de ganancia por pista), así el deslizador y los fundidos funcionan y todo se desbloquea con el mismo toque
+function auEl(url) { const a = new Audio(); if (IOS) a.crossOrigin = 'anonymous'; a.preload = 'auto'; if (url) a.src = url; return a; }
+function auVol(el, v) { if (!el) return; v = Math.max(0, Math.min(1, v)); if (IOS && AU.ctx) { if (!el._g) { try { const s = AU.ctx.createMediaElementSource(el), g = AU.ctx.createGain(); s.connect(g); g.connect(AU.ctx.destination); el._g = g; } catch (e) { el._g = { bad: 1 }; } } if (!el._g.bad) { el._g.gain.value = v; return; } } try { el.volume = v; } catch (e) {} }
 // pista única en bucle sin cortes: dos reproductores que se cruzan 3 s antes del final
 function musLoop(url) {
-  const mk = () => { const a = new Audio(); a.preload = 'auto'; a.volume = 0; a.src = url; return a; };
+  const mk = () => { const a = auEl(url); auVol(a, 0); return a; };
   const t = { list: [url], loop: true, a: mk(), b: null, cur: 'a', xf: false, v: 0, ok: true, primed: false, get el() { return this[this.cur]; } };
   t.a.onerror = () => { t.ok = false; }; return t;
 }
 function musLoopTick(t) {
-  const A = t.el, o = t.cur === 'a' ? 'b' : 'a', v = Math.max(0, Math.min(1, t.v)), now = performance.now();
-  if (!t.xf && A.duration && !A.paused && A.currentTime > A.duration - 3) { if (!t[o]) { t[o] = new Audio(); t[o].preload = 'auto'; t[o].src = t.list[0]; } const B = t[o]; t.xf = true; t.x0 = now; try { B.currentTime = 0; } catch (e) {} B.volume = 0; B.play().catch(() => {}); }
-  if (t.xf) { const B = t[o], k = Math.min(1, (now - t.x0) / 3000); try { A.volume = v * (1 - k); B.volume = v * k; } catch (e) {} if (k >= 1 || A.ended) { A.pause(); t.cur = o; t.xf = false; } }
+  const A = t.el, o = t.cur === 'a' ? 'b' : 'a', v = Math.max(0, Math.min(1, t.v * mixV('mus'))), now = performance.now();
+  if (!t.xf && A.duration && !A.paused && A.currentTime > A.duration - 3) { if (!t[o]) t[o] = auEl(t.list[0]); const B = t[o]; t.xf = true; t.x0 = now; try { B.currentTime = 0; } catch (e) {} auVol(B, 0); B.play().catch(() => {}); }
+  if (t.xf) { const B = t[o], k = Math.min(1, (now - t.x0) / 3000); auVol(A, v * (1 - k)); auVol(B, v * k); if (k >= 1 || A.ended) { A.pause(); t.cur = o; t.xf = false; } }
   if (t.want <= 0 && t.v < .01) { const B = t[o]; if (B && !B.paused) B.pause(); }
 }
 function musTrack(list) {
   if (list.length === 1) return musLoop(list[0]);
-  const t = { list, i: Math.floor(Math.random() * list.length), el: new Audio(), v: 0, ok: true, primed: false }; t.el.preload = 'auto'; t.el.volume = 0;
+  const t = { list, i: Math.floor(Math.random() * list.length), el: auEl(), v: 0, ok: true, primed: false }; auVol(t.el, 0);
   t.el.src = list[t.i]; t.el.onended = () => { t.i = (t.i + 1) % list.length; t.el.src = list[t.i]; t.el.play().catch(() => {}); };
   t.el.onerror = () => { t.err = (t.err || 0) + 1; if (t.err > 3) { t.ok = false; return; } t.i = (t.i + 1) % list.length; t.el.src = list[t.i]; };
   return t;
@@ -1987,7 +1991,7 @@ function musInit() {
 }
 function musGesture() { // en un toque del usuario: habilita la reproducción (iPhone/Safari lo exigen)
   const m = AU.mus; if (!m) return;
-  [m.adv, m.pray, m.mg].filter(Boolean).forEach(t => { if (t.primed) return; t.primed = true; if (t.loop && !t.b) { t.b = new Audio(); t.b.preload = 'auto'; t.b.src = t.list[0]; t.b.volume = 0; const q = t.b.play(); if (q) q.then(() => t.b.pause()).catch(() => {}); } const p = t.el.play(); if (p) p.then(() => { if (t.want <= 0) t.el.pause(); }).catch(() => { t.primed = false; }); });
+  [m.adv, m.pray, m.mg].filter(Boolean).forEach(t => { if (t.primed) return; t.primed = true; if (t.loop && !t.b) { t.b = auEl(t.list[0]); auVol(t.b, 0); const q = t.b.play(); if (q) q.then(() => t.b.pause()).catch(() => {}); } const p = t.el.play(); if (p) p.then(() => { if (t.want <= 0) t.el.pause(); }).catch(() => { t.primed = false; }); });
 }
 function musTick() {
   const m = AU.mus; if (!m) return false; if (S && (S.hx ? 'hero' : 'kids') !== m.br) { m.adv.el.pause(); m.adv = musTrack(MUS[S.hx ? 'hero' : 'kids']); m.br = S.hx ? 'hero' : 'kids'; m.adv.primed = false; }
@@ -1996,7 +2000,7 @@ function musTick() {
   m.adv.want = on && !pray ? (AU.speaking || AU.narr ? .22 : .55) : 0; m.pray.want = on && pray ? (AU.speaking || AU.narr ? .35 : .7) : 0; if (m.mg) m.mg.want = AU.on && kidsMg ? (AU.speaking || AU.narr ? .22 : .5) : 0;
   for (const t of [m.adv, m.pray, m.mg]) { if (!t) continue;
     if (!t.ok) continue; const step = t.want > t.v ? .045 : .07; t.v += Math.max(-step, Math.min(step, t.want - t.v));
-    try { t.el.volume = Math.max(0, Math.min(1, t.v * mixV('mus'))); } catch (e) {}
+    if (!t.xf) auVol(t.el, t.v * mixV('mus'));
     if (t.want > 0 && t.el.paused && t.primed) t.el.play().catch(() => {});
     if (t.want <= 0 && !t.el.paused && (t.v < .01 || IOS)) t.el.pause();
     if (t.loop) musLoopTick(t);
@@ -2020,7 +2024,7 @@ function auStart() {
 /* ---------- mezcla en tres buses (Música, Ambiente, Efectos y voz) y paisaje sonoro ambiente.
    Todo el ambiente se sintetiza en el navegador (viento, agua, pájaros, grillos, murmullo, fuego, ovejas, pasos):
    no usa grabaciones de terceros, así que no hay licencias que cumplir (obra propia, CC0). ---------- */
-const MIX = (() => { let m = { mus: .8, amb: .7, sfx: .9 }; try { Object.assign(m, JSON.parse(localStorage.getItem('tsp:mix') || '{}')); } catch (e) {} return m; })();
+const MIX = (() => { let m = { mus: .7, amb: .4, sfx: 1 }; try { Object.assign(m, JSON.parse(localStorage.getItem('tsp:mix') || '{}')); } catch (e) {} return m; })();
 const mixV = k => Math.max(0, Math.min(1, +MIX[k] || 0));
 function mixSet(k, v) { MIX[k] = Math.max(0, Math.min(1, v)); try { localStorage.setItem('tsp:mix', JSON.stringify(MIX)); } catch (e) {} }
 window.TSP_MIX = { v: mixV, set: mixSet };
@@ -2224,7 +2228,8 @@ function auButtons() {
   box.querySelector('[data-a="music"]').onpointerdown = e => { e.preventDefault(); e.stopPropagation(); AU.on = !AU.on; pref2('music', AU.on ? '1' : '0'); auStart(); paint(); };
   box.querySelector('[data-a="voice"]').onpointerdown = e => { e.preventDefault(); e.stopPropagation(); AU.voice = !AU.voice; pref2('voice', AU.voice ? '1' : '0'); if (!AU.voice) stopVoice(); paint(); };
   paint();
-  const unlock = () => { auStart(); }; addEventListener('pointerdown', unlock, { passive: true }); addEventListener('keydown', unlock);
+  const unlock = e => { auStart(); if (!AU.ttsOk && e && e.type !== 'pointerdown') { AU.ttsOk = true; try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (er) {} } if (AU.ctx && AU.ctx.state !== 'running') AU.ctx.resume().catch(() => {}); };
+  ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'].forEach(k => addEventListener(k, unlock, { passive: true, capture: true }));
 }
 
 /* ---------- lecturas en voz alta y testimonios: quedan guardados solo en este aparato ---------- */
