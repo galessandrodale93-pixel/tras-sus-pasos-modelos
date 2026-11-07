@@ -1912,6 +1912,8 @@ const MUS = window.MUS_URLS || {
   hero: [new URL('./music/hero_exploracion.mp3', import.meta.url).href],
   // Kids, exploración: «The Light Beyond the Crystals» (piano), en bucle con fundido de 3 s
   kids: [new URL('./music/kids_exploracion.mp3', import.meta.url).href],
+  // Kids, minijuegos: «The Inn at the End of the Old Road» (cortada a 3:12 con fundido); Hero mantiene su música hasta que Gui elija
+  kidsMg: [new URL('./music/kids_minijuegos.mp3', import.meta.url).href],
   orar: ['https://music.wixstatic.com/mp3/43ca3b_538f7365d7e248f1bf574404060d1d65.mp3', 'https://music.wixstatic.com/mp3/43ca3b_b29f4283091e41ebb259f0338ad83024.mp3', 'https://music.wixstatic.com/mp3/43ca3b_0ec4648425c24a579ef24a9a0b7caa81.mp3', 'https://music.wixstatic.com/mp3/43ca3b_c88f06c8392149c2a87c327e80823a50.mp3']
 };
 const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -1936,18 +1938,18 @@ function musTrack(list) {
 }
 function musInit() {
   if (AU.mus || !MUS.orar.length) return; const br = S && S.hx ? 'hero' : 'kids'; if (!MUS[br].length) return;
-  AU.mus = { br, adv: musTrack(MUS[br]), pray: musTrack(MUS.orar) };
+  AU.mus = { br, adv: musTrack(MUS[br]), pray: musTrack(MUS.orar), mg: MUS.kidsMg && MUS.kidsMg.length ? musTrack(MUS.kidsMg) : null };
 }
 function musGesture() { // en un toque del usuario: habilita la reproducción (iPhone/Safari lo exigen)
   const m = AU.mus; if (!m) return;
-  [m.adv, m.pray].forEach(t => { if (t.primed) return; t.primed = true; if (t.loop && !t.b) { t.b = new Audio(); t.b.preload = 'auto'; t.b.src = t.list[0]; t.b.volume = 0; const q = t.b.play(); if (q) q.then(() => t.b.pause()).catch(() => {}); } const p = t.el.play(); if (p) p.then(() => { if (t.want <= 0) t.el.pause(); }).catch(() => { t.primed = false; }); });
+  [m.adv, m.pray, m.mg].filter(Boolean).forEach(t => { if (t.primed) return; t.primed = true; if (t.loop && !t.b) { t.b = new Audio(); t.b.preload = 'auto'; t.b.src = t.list[0]; t.b.volume = 0; const q = t.b.play(); if (q) q.then(() => t.b.pause()).catch(() => {}); } const p = t.el.play(); if (p) p.then(() => { if (t.want <= 0) t.el.pause(); }).catch(() => { t.primed = false; }); });
 }
 function musTick() {
   const m = AU.mus; if (!m) return false; if (S && (S.hx ? 'hero' : 'kids') !== m.br) { m.adv.el.pause(); m.adv = musTrack(MUS[S.hx ? 'hero' : 'kids']); m.br = S.hx ? 'hero' : 'kids'; m.adv.primed = false; }
   if (!m.adv.ok && !m.pray.ok) return false;
-  const shown = !document.getElementById('view3d').hidden && document.getElementById('arcade').hidden, pray = S && S.pose === 'pray', on = AU.on && shown;
-  m.adv.want = on && !pray ? (AU.speaking || AU.narr ? .22 : .55) : 0; m.pray.want = on && pray ? (AU.speaking || AU.narr ? .35 : .7) : 0;
-  for (const t of [m.adv, m.pray]) {
+  const arcOpen = !document.getElementById('arcade').hidden, shown = !document.getElementById('view3d').hidden && !arcOpen, pray = S && S.pose === 'pray', on = AU.on && shown, kidsMg = !!(m.mg && arcOpen && !(S && S.hx) && G().branch !== 'ados');
+  m.adv.want = on && !pray ? (AU.speaking || AU.narr ? .22 : .55) : 0; m.pray.want = on && pray ? (AU.speaking || AU.narr ? .35 : .7) : 0; if (m.mg) m.mg.want = AU.on && kidsMg ? (AU.speaking || AU.narr ? .22 : .5) : 0;
+  for (const t of [m.adv, m.pray, m.mg]) { if (!t) continue;
     if (!t.ok) continue; const step = t.want > t.v ? .045 : .07; t.v += Math.max(-step, Math.min(step, t.want - t.v));
     try { t.el.volume = Math.max(0, Math.min(1, t.v)); } catch (e) {}
     if (t.want > 0 && t.el.paused && t.primed) t.el.play().catch(() => {});
