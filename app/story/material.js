@@ -214,3 +214,33 @@ export const VIDA = [
   { id: 'v8a', r: 8, t: 'Como María Magdalena, contale a alguien que Jesús está vivo y qué significa eso para vos.' },
   { id: 'v8b', r: 8, t: 'Como los de Emaús, leé la Biblia esta semana con alguien más.' }
 ];
+/* Versículos de memoria (canal 3): cada uno queda atado a un lugar fijo del mapa, en una piedra grabada.
+   Textos NTV tal como aparecen en el material. Los de Juan 6:35 y 8:12 no tienen texto en el material: se buscan en la Biblia. */
+export const MEM = [
+  { id: 'l211', r: 0, near: 'pastores', ref: 'Lucas 2:11', t: '¡El Salvador —sí, el Mesías, el Señor— ha nacido hoy en Belén, la ciudad de David!' },
+  { id: 'j114', r: 0, near: 'village', ref: 'Juan 1:14', t: 'Entonces la Palabra se hizo hombre y vino a vivir entre nosotros.' },
+  { id: 'l252', r: 1, near: 'taller', ref: 'Lucas 2:52', t: 'Jesús crecía en sabiduría y en estatura, y en el favor de Dios y de toda la gente.' },
+  { id: 'j129', r: 2, near: 'river', ref: 'Juan 1:29', t: '¡Miren! ¡El Cordero de Dios, que quita el pecado del mundo!' },
+  { id: 'h415', r: 2, near: 'desert', ref: 'Hebreos 4:15', t: 'Nuestro Sumo Sacerdote comprende nuestras debilidades, porque enfrentó todas y cada una de las pruebas que enfrentamos nosotros, sin embargo, él nunca pecó.' },
+  { id: 'l418', r: 3, near: 'village', ref: 'Lucas 4:18', t: 'El Espíritu del Señor está sobre mí, porque me ha ungido para llevar la Buena Noticia a los pobres.' },
+  { id: 'm514', r: 3, near: 'lake', ref: 'Mateo 5:14', t: 'Ustedes son la luz del mundo, como una ciudad en lo alto de una colina que no puede esconderse.' },
+  { id: 'j635', r: 4, near: 'feeding', ref: 'Juan 6:35', t: '', look: 'Jesús dice que él es el pan de vida. Buscá el versículo en tu Biblia y leelo en voz alta.' },
+  { id: 'j812', r: 4, near: 'roofhouse', ref: 'Juan 8:12', t: '', look: 'Jesús dice que él es la luz del mundo. Buscá el versículo en tu Biblia y leelo en voz alta.' },
+  { id: 'm138', r: 5, near: 'field', ref: 'Mateo 13:8', t: 'Pero otras semillas cayeron en tierra fértil, ¡y produjeron una cosecha que fue treinta, sesenta y hasta cien veces más numerosa de lo que se había sembrado!' },
+  { id: 'l157', r: 5, near: 'field', ref: 'Lucas 15:7', t: 'De la misma manera, ¡hay más alegría en el cielo por un pecador perdido que se arrepiente y regresa a Dios que por noventa y nueve justos que no se extraviaron!' },
+  { id: 'l1520', r: 5, near: 'inn', ref: 'Lucas 15:20', t: 'Lleno de amor y de compasión, corrió hacia su hijo, lo abrazó y lo besó.' },
+  { id: 'mc1045', r: 6, near: 'upper', ref: 'Marcos 10:45', t: 'Pues ni aun el Hijo del Hombre vino para que le sirvan, sino para servir a otros y para dar su vida en rescate por muchos.' },
+  { id: 'l1910', r: 5, near: 'inn', ref: 'Lucas 19:10', t: 'Pues el Hijo del Hombre vino a buscar y a salvar a los que están perdidos.' },
+  { id: 'm219', r: 6, near: 'upper', ref: 'Mateo 21:9', t: '¡Alaben a Dios por el Hijo de David! ¡Bendiciones al que viene en el nombre del Señor!' },
+  { id: 'j1334', r: 6, near: 'upper', ref: 'Juan 13:34', t: 'Así que ahora les doy un nuevo mandamiento: ámense unos a otros. Tal como yo los he amado, ustedes deben amarse unos a otros.' },
+  { id: 'l2242', r: 6, near: 'garden', ref: 'Lucas 22:42', t: 'Padre, si quieres, te pido que quites esta copa de sufrimiento de mí. Sin embargo, quiero que se haga tu voluntad, no la mía.' },
+  { id: 'j1917', r: 7, near: 'golgota', ref: 'Juan 19:17', t: 'Él, cargando su propia cruz, fue al sitio llamado Lugar de la Calavera (en hebreo, Gólgota).' },
+  { id: 'j1930', r: 7, near: 'golgota', ref: 'Juan 19:30', t: 'Después de probar el vino, Jesús dijo: «¡Todo está cumplido!». Entonces inclinó la cabeza y entregó su espíritu.' },
+  { id: 'is535', r: 7, near: 'golgota', ref: 'Isaías 53:5', t: 'Pero él fue traspasado por nuestras rebeliones y aplastado por nuestros pecados.' },
+  { id: 'mc1539', r: 7, near: 'golgota', ref: 'Marcos 15:39', t: '¡Este hombre era verdaderamente el Hijo de Dios!' },
+  { id: 'ro58', r: 7, near: 'tomb', ref: 'Romanos 5:8', t: 'Pero Dios mostró el gran amor que nos tiene al enviar a Cristo a morir por nosotros cuando todavía éramos pecadores.' },
+  { id: 'm286', r: 7, near: 'tomb', ref: 'Mateo 28:6', t: '¡No está aquí! Ha resucitado tal como dijo que sucedería. Vengan, vean el lugar donde estaba su cuerpo.' },
+  { id: 'l2432', r: 8, near: 'village', ref: 'Lucas 24:32', t: 'Entonces se dijeron el uno al otro: «¿No ardía nuestro corazón cuando nos hablaba en el camino y nos explicaba las Escrituras?».' },
+  { id: 'm2819', r: 8, near: 'shore', ref: 'Mateo 28:19', t: 'Por lo tanto, vayan y hagan discípulos de todas las naciones, bautizándolos en el nombre del Padre y del Hijo y del Espíritu Santo.' },
+  { id: '1co1520', r: 8, near: 'shore', ref: '1 Corintios 15:20', t: 'Lo cierto es que Cristo sí resucitó de los muertos. Él es el primer fruto de una gran cosecha, el primero de todos los que murieron.' }
+];

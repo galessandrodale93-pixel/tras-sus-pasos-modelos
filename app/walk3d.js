@@ -4080,6 +4080,7 @@ function svAct() {
   if (n.k === 'matp') { matTalk(n.e); return; }
   if (n.k === 'mateo') { matTeo(n.e); return; }
   if (n.k === 'matg') { pergOpen(n.e); return; }
+  if (n.k === 'matv') { memOpen(n.e); return; }
   if (n.k === 'reflex') { matReflex(); return; }
   if (n.k === 'shop') { svShop(n.shop); return; }
   if (n.k === 'beg') { svGive(n.b); return; }
@@ -4751,11 +4752,12 @@ async function matBuild(scene, W) {
     g.userData.keep = 1; scene.add(g); MAT.objs.push({ d, x, z, g, ring }); phCyl(x, z, .45); });
   try { teoBuild(scene, W, R, ok, used); } catch (e) { console.warn('teofilo', e); }
   try { pergBuild(scene, W, rng(8811), used); } catch (e) { console.warn('pergaminos', e); }
+  try { memBuild(scene, W, rng(8822), ok, used); } catch (e) { console.warn('versículos', e); }
   try { vidaButton(); } catch (e) {}
   M.GENTE.forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, o = buildHeroAvatar(Object.assign({ anim: ['M_Standing_Idle', 'M_Idle'] }, d.look)); o.position.set(x, Math.max(0, W.hAt(x, z)), z); o.rotation.y = R() * 6.28; scene.add(o); MAT.npcs.push({ d, x, z, o }); });
 }
 function matNear() { const a = S.av.position, r2 = 2.4 * 2.4; for (const e of MAT.npcs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return e.d.teo ? { k: 'mateo', e, label: 'Hablar · Teófilo' } : { k: 'matp', e, label: 'Hablar · ' + e.d.name };
-  for (const e of MAT.objs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return { k: 'mato', e, label: 'Mirar' }; return pergNear(); }
+  for (const e of MAT.objs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return { k: 'mato', e, label: 'Mirar' }; return memNear() || pergNear(); }
 function matObj(e) {
   const pm = matP(), d = e.d, first = !pm.seen[d.id]; pm.seen[d.id] = vday(); if (e.ring) e.ring.visible = false;
   if (first) { matSab(1); glowAdd(1, 'mirar'); behav('objetos'); G().save(); }
@@ -4837,6 +4839,36 @@ function vidaButton() {
   if (!S || !S.hx) return; const box = document.getElementById('v3acts'); if (!box || box.querySelector('[data-a="vida"]')) return;
   box.insertAdjacentHTML('beforeend', '<button data-a="vida" aria-label="Desafíos de la vida real" title="Desafíos de la vida real">📝</button>');
   box.querySelector('[data-a="vida"]').onpointerdown = e => { e.preventDefault(); e.stopPropagation(); if (!MAT.mod) { svToast('Cargando los desafíos…'); return; } vidaOpen(); };
+}
+/* ---------- versículos de memoria atados a un lugar (canal 3): una piedra grabada por versículo; cada visita avanza un paso
+   como enseña el material: leerlo en voz alta, completar las últimas palabras y después completarlo con varias palabras tapadas ---------- */
+function memBuild(scene, W, R, ok, used) {
+  const M = MAT.mod; if (!M.MEM) return; MAT.mem = []; const pm = matP(); pm.mem = pm.mem || {};
+  M.MEM.forEach(d => { const poi = (S.pois || []).find(q => q.r === d.r && q.k === d.near); if (!poi) return; let p = null;
+    for (let t = 0; t < 200 && !p; t++) { const q = poi.k === 'river' ? poi.pts[Math.floor(R() * poi.pts.length)] : [poi.x, poi.z], a = R() * 6.283, rr = poi.k === 'lake' ? 33 + R() * 16 : (poi.k === 'river' ? 4 : 7) + R() * (t < 80 ? 12 : 24), x = q[0] + Math.cos(a) * rr, z = q[1] + Math.sin(a) * rr; if (ok(x, z)) p = [x, z]; }
+    if (!p) return; used.push(p); const [x, z] = p, g = new THREE.Group(), st = new THREE.MeshStandardMaterial({ color: '#B8B0A0', roughness: .95 });
+    const sl = new THREE.Mesh(new THREE.BoxGeometry(.9, 1.4, .22), st); sl.position.y = .7; sl.castShadow = true; g.add(sl); const top = new THREE.Mesh(new THREE.CylinderGeometry(.45, .45, .22, 16, 1, false, 0, Math.PI), st); top.rotation.z = Math.PI / 2; top.rotation.y = Math.PI / 2; top.position.y = 1.4; g.add(top);
+    for (let i = 0; i < 5; i++) { const ln = new THREE.Mesh(new THREE.BoxGeometry(.6 - (i % 2) * .12, .03, .01), new THREE.MeshStandardMaterial({ color: '#5A5246' })); ln.position.set(0, 1.25 - i * .14, .115); g.add(ln); }
+    const glow = new THREE.Mesh(new THREE.RingGeometry(.7, .8, 28), new THREE.MeshBasicMaterial({ color: '#BFE3FF', transparent: true, opacity: .45, depthWrite: false, side: THREE.DoubleSide })); glow.rotation.x = -Math.PI / 2; glow.position.y = .03; glow.visible = (pm.mem[d.id] || 0) < 3; g.add(glow);
+    g.position.set(x, Math.max(0, W.hAt(x, z)), z); g.rotation.y = R() * 6.28; g.userData.keep = 1; scene.add(g); MAT.mem.push({ d, x, z, g, glow }); phCyl(x, z, .55); });
+}
+function memNear() { if (!MAT.mem) return null; const a = S.av.position, pm = matP(); for (const e of MAT.mem) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < 2.4 * 2.4) { const l = (pm.mem || {})[e.d.id] || 0; return { k: 'matv', e, label: l >= 3 ? 'Repasar el versículo' : l ? 'Seguir memorizando' : 'Leer el versículo' }; } return null; }
+function memWords(t) { return t.split(/\s+/); }
+function memOpen(e) {
+  const M = MAT.mod, pm = matP(), d = e.d; pm.mem = pm.mem || {}; const lv = pm.mem[d.id] || 0, total = M.MEM.length;
+  const done = () => Object.values(pm.mem).filter(v => v >= 3).length;
+  const up = () => { pm.mem[d.id] = lv + 1; if (lv + 1 >= 3) { matSab(3); glowAdd(5, 'versiculo'); behav('versiculosMemoria'); if (e.glow) e.glow.visible = false; tone3d(); } else matSab(1); G().save(); };
+  const head = `<div class="inv-h"><b>📖 ${esc(d.ref)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div>`;
+  if (!d.t) { vilSheet(head + `<p class="vil-p">${esc(d.look)}</p><div class="vil-o"><button data-ok>Ya lo busqué y lo leí</button></div><small class="vil-k">Versículos de memoria: ${done()} de ${total}</small>`, el => { el.querySelector('[data-ok]').onclick = () => { pm.mem[d.id] = 3; matSab(3); glowAdd(5, 'versiculo'); if (e.glow) e.glow.visible = false; G().save(); el.hidden = true; svToast(`📖 ${d.ref} · versículos de memoria: ${done()} de ${total}`); }; }); return; }
+  const W = memWords(d.t);
+  if (lv === 0 || lv >= 3) { vilSheet(head + `<p class="vil-p mem-v">${esc(d.t)}</p><small class="vil-k">${lv >= 3 ? '✔ Ya lo tenés en el corazón. Decilo de memoria antes de mirarlo.' : 'Paso 1 de 3 · Leelo en voz alta tres veces, con la cita.'}</small><div class="vil-o">${lv >= 3 ? '' : '<button data-ok>Ya lo leí tres veces</button>'}</div><small class="vil-k">Versículos de memoria: ${done()} de ${total} · NTV</small>`, el => { const b = el.querySelector('[data-ok]'); if (b) b.onclick = () => { up(); el.hidden = true; svToast('📖 Bien. Volvé a esta piedra para el paso 2.'); }; }); return; }
+  // pasos 2 y 3: palabras tapadas (las últimas, o varias repartidas) y se eligen en orden desde un banco de palabras
+  const clean = w => w.replace(/[¡!¿?.,;:«»—()]/g, '');
+  let hide = []; if (lv === 1) hide = [W.length - 2, W.length - 1]; else { const cand = W.map((w, i) => i).filter(i => clean(W[i]).length > 3); for (let k = 0; k < cand.length && hide.length < Math.min(5, cand.length); k += Math.max(1, Math.floor(cand.length / 5))) hide.push(cand[k]); }
+  const bank = hide.map(i => clean(W[i])).concat(lv === 2 ? ['camino', 'corazón', 'tierra'].filter(x => !hide.some(i => clean(W[i]) === x)).slice(0, 2) : []).sort(() => Math.random() - .5);
+  let pos = 0; const draw = el => { el.querySelector('.mem-v').innerHTML = W.map((w, i) => { const h = hide.indexOf(i); if (h < 0) return esc(w); return h < pos ? `<b class="mem-ok">${esc(w)}</b>` : `<span class="mem-gap">${'＿'.repeat(Math.max(3, clean(w).length))}</span>${esc(w.replace(clean(w), ''))}`; }).join(' '); };
+  vilSheet(head + `<p class="vil-p mem-v"></p><small class="vil-k">Paso ${lv + 1} de 3 · Tocá las palabras que faltan, en orden.</small><div class="vil-o mem-bank">${bank.map((w, i) => `<button data-w="${i}">${esc(w)}</button>`).join('')}</div>`, el => { draw(el);
+    el.querySelectorAll('[data-w]').forEach(b => b.onclick = () => { if (pos >= hide.length) return; const w = bank[+b.dataset.w]; if (w === clean(W[hide[pos]])) { b.disabled = true; pos++; draw(el); if (pos >= hide.length) { up(); setTimeout(() => { el.hidden = true; svToast(lv + 1 >= 3 ? `✨ ¡Memorizaste ${d.ref}! Versículos de memoria: ${done()} de ${total}` : '📖 Muy bien. Volvé a esta piedra para el último paso.'); }, 900); } } else { b.classList.add('mem-no'); setTimeout(() => b.classList.remove('mem-no'), 500); } }); });
 }
 const SEC = { mod: null, list: [] };
 function secP() { const p = G().P(); p.secrets = p.secrets || {}; p.relics = p.relics || []; return p; }

@@ -735,3 +735,5 @@ body[data-branch="ados"] .lvup div small{color:#FFD25E}
 .vil .diary-past{margin:6px 0 4px;color:#D9CBB0;font:600 13px Nunito,sans-serif}.vil .diary-past summary{cursor:pointer;color:#E9C37A}
 .vil .mat-src{opacity:.75}
 .sv-rec.done{opacity:.72}.sv-rec.done small{display:block;margin-top:3px;color:#9FD28A}
+.vil .mem-v{font:700 16px/1.55 Fraunces,Georgia,serif}.vil .mem-gap{color:#E9C37A;letter-spacing:-.05em}.vil .mem-ok{color:#9FD28A}.vil .mem-bank button.mem-no{background:rgba(200,60,40,.45)!important}.vil .mem-bank button:disabled{opacity:.35}
+.vil .mem-bank{display:flex!important;flex-wrap:wrap;gap:6px}.vil .mem-bank button{width:auto!important;flex:0 0 auto;padding:8px 12px!important}
