@@ -3398,6 +3398,71 @@ function trpOlive(vars) {
   FLORA.oT = { uuid: orig.uuid, getMatrixAt: (i, M) => orig.getMatrixAt(i, M), setMatrixAt: (i, M) => { orig.setMatrixAt(i, M); const e = M.elements; trpHide(i, !e[0] && !e[5] && !e[10]); }, instanceMatrix: { set needsUpdate(v) {} }, set visible(v) { orig.visible = v; } };
 }
 function trpHide(i, hide) { const z = M4zero(); for (const B of PH.bands) { if (!B.idx) continue; const L = B.idx.get(i); if (!L) continue; B.store = B.store || new Map(); L.forEach(([im, li], k) => { const key = i + ':' + k; if (hide) { if (!B.store.has(key)) { const m = new THREE.Matrix4(); im.getMatrixAt(li, m); B.store.set(key, m); } im.setMatrixAt(li, z); } else { const m = B.store.get(key); if (m) { im.setMatrixAt(li, m); B.store.delete(key); } } im.instanceMatrix.needsUpdate = true; }); } }
+/* ---------- animales pagos (Fab y otros, licencia estándar), desde el R2: ovejas Dorper, burros y cabras monteses (íbices) con
+   movimiento simple por shader (bajan la cabeza para pastar, se balancean y se corren despacio), y muflones y gallinas con su propio
+   esqueleto y sus animaciones. Lo lejano se oculta y las animaciones se actualizan menos seguido a distancia. Sin R2, no aparece nada nuevo. ---------- */
+const AN = { man: null, list: [], sk: [], uT: { value: 0 }, acc: 0 };
+function anMat(base, sp) { // pastar: los vértices de la cabeza (_head) giran alrededor del cuello según una fase por instancia
+  const m = base.clone(), nk = sp.neck || [.7, .3], fw = sp.fw || 1;
+  m.onBeforeCompile = sh => { sh.uniforms.uT = AN.uT; sh.vertexShader = 'uniform float uT;\nattribute float _head;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+    { float ph = 0.;
+    #ifdef USE_INSTANCING
+    ph = instanceMatrix[3].x * .37 + instanceMatrix[3].z * .53;
+    #endif
+    float g = smoothstep(.25, .75, sin(uT * .32 + ph) * .5 + .5), an = -g * .85 * ${fw.toFixed(1)}, cy = ${nk[0].toFixed(3)}, cz = ${(nk[1] * fw).toFixed(3)};
+    vec2 q = vec2(transformed.y - cy, transformed.z - cz); float c = cos(an * _head), s = sin(an * _head);
+    transformed.y = cy + q.x * c - q.y * s; transformed.z = cz + q.x * s + q.y * c; transformed.x += sin(uT * 1.1 + ph) * .012 * (1. - _head); }`); };
+  m.customProgramCacheKey = () => 'anGraze' + (sp.id || ''); return m;
+}
+async function anInit() { const base = grpBase(); if (!base) return null; if (AN.ready) return AN.ready;
+  AN.ready = fetch(base + 'animals/manifest.json', { mode: 'cors' }).then(r => r.ok ? r.json() : null).then(m => (m && m.format === 1 ? (AN.man = m) : null)).catch(() => null); return AN.ready; }
+const anSl = (m, sp) => ({ pre: 'animals/' + sp.dir + '/', m: { mats: m.mats } });
+function anSpots(kind, R, W) { // dónde va cada especie, según la zona
+  const P = S.pois || [], out = [], add = (p, n, r0, r1, f) => { for (let t = 0, k = 0; t < n * 30 && k < n; t++) { const a = R() * 6.283, r = r0 + R() * (r1 - r0), x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (Math.abs(x) > XB * .9 || blockedAt(x, z) || waterWet(x, z, null) > .02 || W.dAt(x, z) < 3) continue; if (f && !f(x, z)) continue; out.push([x, z]); k++; } };
+  if (kind === 'sheep') P.filter(p => /^(pastores|field|village)$/.test(p.k)).forEach(p => add(p, p.k === 'village' ? 1 : 2, 22, 60));
+  if (kind === 'donkey') P.filter(p => /^(village|taller|roofhouse|inn|upper)$/.test(p.k)).forEach(p => add(p, 2, 9, 20));
+  if (kind === 'bighorn' || kind === 'ovis') P.filter(p => /^(desert|river|garden)$/.test(p.k)).forEach(p => add(p, kind === 'ovis' ? 2 : 2, 30, 85, (x, z) => W.hAt(x, z) > 1.5));
+  if (kind === 'chicken') P.filter(p => /^(village|taller|roofhouse|inn)$/.test(p.k)).forEach(p => add(p, 2, 6, 14));
+  return out;
+}
+async function anBuild() {
+  const man = await anInit(); if (!man || !S || AN.built) return; AN.built = 1; const W = S.W, L = await phLoader(), R = rng(7373), lite = QUAL.lv <= 1, lod = lite ? 'LOD1' : 'LOD0';
+  const M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3(), CL = new THREE.Color();
+  for (const sp of man.species) { const sl = anSl(man, sp); let g; try { g = await new Promise((r, j) => L.load(GRP.base + sl.pre + 'models/' + sp.dir + '.glb', r, undefined, j)); } catch (e) { console.warn('animal', sp.id, e && e.message); continue; } if (!S) return;
+    const spots = anSpots(sp.id, R, W); if (!spots.length) continue;
+    if (!sp.skinned) { // instanciados, en grupos alrededor de cada lugar
+      const node = g.scene.getObjectByName(lod) || g.scene.getObjectByName('LOD0') || g.scene, parts = []; g.scene.updateMatrixWorld(true); node.traverse(o => { if (o.isMesh) parts.push(o); });
+      const items = []; spots.forEach(([cx, cz]) => { const n = sp.group[0] + Math.floor(R() * (sp.group[1] - sp.group[0] + 1)); for (let i = 0; i < n; i++) { const x = cx + (R() - .5) * sp.spread, z = cz + (R() - .5) * sp.spread; if (blockedAt(x, z) || waterWet(x, z, null) > .02) continue; items.push({ x, z, cx, cz, ry: R() * 6.28, s: (sp.k || 1) * (.88 + R() * .24), t: R() * 50, dark: R() < (sp.dark || 0) }); } });
+      if (!items.length) continue; const ims = [];
+      for (const pm of parts) { const mt = anMat(await grpMat(sl, (pm.material && pm.material.name) || sp.id), sp), im = new THREE.InstancedMesh(pm.geometry, mt, items.length); im.castShadow = QUAL.lv > 0; im.receiveShadow = true;
+        items.forEach((it, i) => { E.set(0, it.ry, 0); Q.setFromEuler(E); M4.compose(V.set(it.x, Math.max(0, W.hAt(it.x, it.z)), it.z), Q, SC.setScalar(it.s)).multiply(pm.matrixWorld); im.setMatrixAt(i, M4); im.setColorAt(i, CL.set(it.dark ? '#6A5E54' : '#FFFFFF').multiplyScalar(.92 + R() * .16)); });
+        im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; im.computeBoundingSphere(); im.frustumCulled = false; S.scene.add(im); ims.push([im, pm.matrixWorld.clone()]); }
+      AN.list.push({ sp, items, ims }); continue; }
+    // con esqueleto: cada animal es un clon con su propio mezclador de animaciones
+    const clips = Object.fromEntries(g.animations.map(a => [a.name, a])); g.scene.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
+    for (const [cx, cz] of spots) { const n = sp.group[0] + Math.floor(R() * (sp.group[1] - sp.group[0] + 1)); for (let i = 0; i < n; i++) {
+      const o = (H3.skClone || (x => x.clone()))(g.scene), vr = sp.variants ? sp.variants[Math.floor(R() * sp.variants.length)] : null; const mats = {};
+      const todo = []; o.traverse(m => { if (m.isMesh) todo.push(m); }); for (const m of todo) { const nm = (m.material && m.material.name) || sp.id, key = vr ? nm + '_' + vr : nm; m.material = mats[key] || (mats[key] = await grpMat(sl, (man.mats[key] ? key : nm))); m.castShadow = QUAL.lv > 0; }
+      const x = cx + (R() - .5) * sp.spread, z = cz + (R() - .5) * sp.spread; o.position.set(x, Math.max(0, W.hAt(x, z)), z); o.rotation.y = R() * 6.28; o.scale.setScalar((sp.k || 1) * (.9 + R() * .2)); S.scene.add(o);
+      const mx = new THREE.AnimationMixer(o), act = k => clips[k] && mx.clipAction(clips[k]); const a0 = act('eat') || act('idle'); if (a0) { a0.play(); a0.time = R() * 3; }
+      AN.sk.push({ sp, o, mx, act, cur: a0, cx, cz, t: R() * 8, mode: 'eat', tx: x, tz: z, l0: o.getObjectByName('LOD0'), l1: o.getObjectByName('LOD1'), skip: 0 }); } }
+  }
+}
+function anTick(dt) {
+  if (!S || (!AN.list.length && !AN.sk.length)) return; AN.uT.value = S.t || 0; const a = S.av.position, W = S.W;
+  // instanciados: los grupos cercanos se corren despacio (tres o cuatro metros alrededor de su lugar)
+  AN.acc += dt; if (AN.acc > .1) { const st = AN.acc; AN.acc = 0; const M4 = anTick.m || (anTick.m = new THREE.Matrix4()), Q = anTick.q || (anTick.q = new THREE.Quaternion()), E = anTick.e || (anTick.e = new THREE.Euler()), V = anTick.v || (anTick.v = new THREE.Vector3()), SC = anTick.s || (anTick.s = new THREE.Vector3());
+    for (const G of AN.list) { let touched = false; G.items.forEach((it, i) => { if ((it.x - a.x) ** 2 + (it.z - a.z) ** 2 > 60 * 60) return; it.t += st * .12; const dx = Math.sin(it.t * .7 + i) * .05 * st, dz = Math.cos(it.t * .5 + i * 1.7) * .05 * st, nx = it.x + dx, nz = it.z + dz;
+      if ((nx - it.cx) ** 2 + (nz - it.cz) ** 2 < (G.sp.spread * .7) ** 2 && !blockedAt(nx, nz)) { it.x = nx; it.z = nz; it.ry += (Math.atan2(dx, dz) - it.ry) * .02; }
+      E.set(0, it.ry, 0); Q.setFromEuler(E); G.ims.forEach(([im, mw]) => { M4.compose(V.set(it.x, Math.max(0, W.hAt(it.x, it.z)), it.z), Q, SC.setScalar(it.s)).multiply(mw); im.setMatrixAt(i, M4); }); touched = true; });
+      if (touched) G.ims.forEach(([im]) => { im.instanceMatrix.needsUpdate = true; }); } }
+  // con esqueleto: animación completa cerca, cada tres cuadros a media distancia, oculto lejos
+  for (const k of AN.sk) { const o = k.o, d2 = (o.position.x - a.x) ** 2 + (o.position.z - a.z) ** 2, vis = d2 < 110 * 110; if (o.visible !== vis) o.visible = vis; if (!vis) continue;
+    if (k.l0 && k.l1) { const near = d2 < 28 * 28 && QUAL.lv > 0; k.l0.visible = near; k.l1.visible = !near; }
+    k.t -= dt; if (k.t <= 0) { k.t = 4 + Math.random() * 7; const r = Math.random(); k.mode = r < .45 ? 'eat' : r < .75 ? 'walk' : 'idle'; if (k.mode === 'walk') { const an = Math.random() * 6.28; k.tx = k.cx + Math.cos(an) * k.sp.spread * .6; k.tz = k.cz + Math.sin(an) * k.sp.spread * .6; } const nx = k.act(k.mode) || k.act('idle'); if (nx && nx !== k.cur) { nx.reset().play(); if (k.cur) nx.crossFadeFrom(k.cur, .4, false); k.cur = nx; } }
+    if (k.mode === 'walk') { const dx = k.tx - o.position.x, dz = k.tz - o.position.z, L2 = Math.hypot(dx, dz); if (L2 > .3) { const sp = (k.sp.walk || .6) * dt, nx = o.position.x + dx / L2 * sp, nz = o.position.z + dz / L2 * sp; if (!blockedAt(nx, nz) && waterWet(nx, nz, null) < .02) { o.position.set(nx, Math.max(0, W.hAt(nx, nz)), nz); o.rotation.y = Math.atan2(dx, dz); } else k.t = 0; } else k.t = Math.min(k.t, .2); }
+    k.skip = (k.skip + 1) % (d2 < 35 * 35 ? 1 : 3); if (!k.skip) k.mx.update(d2 < 35 * 35 ? dt : dt * 3); }
+}
 function phGet(id) {
   if (!PH.cache[id]) PH.cache[id] = grpVars(id).catch(() => null).then(v => { if (id === 'trp_olive') { trpOlive(v); return v || []; } if (id === 'trp_palm') { if (v && v.length && !FLORA.trpP) { FLORA.trpP = 1; FLORA.chunks = FLORA.chunks.filter(im => { if (!im.userData.dpalm) return true; im.visible = false; if (im.parent) im.parent.remove(im); return false; }); } return v || []; } return v; }).then(v => v || phLoader().then(L => new Promise((r, j) => L.load(PHB + id + '.glb', r, undefined, j))).then(async g => {
     await phAlpha(id, g.scene); g.scene.updateMatrixWorld(true); const vars = (g.scene.children.length ? g.scene.children : [g.scene]).map(c => { const ms = []; c.traverse(o => { if (o.isMesh) ms.push({ geo: o.geometry, mat: o.material, m: o.matrixWorld.clone() }); }); return ms; }).filter(v => v.length);
@@ -3596,7 +3661,7 @@ function phTick(dt) {
   for (const B of PH.bands) { const d = Math.abs(B.zc - cz) - PH_BAND / 2, lim = B.o.far ? see * 1.6 : B.o.near ? see * .55 : see; if (B.g && B.o.shadow) { const cs = QUAL.lv >= 2 && d < [0, 0, 40, 70][QUAL.lv]; if (B.cs !== cs) { B.cs = cs; B.ims.forEach(im => { im.castShadow = cs; }); } } if (!B.built && d < (B.o.imp ? pre * 2.6 : B.o.far ? pre * 1.6 : pre) && d < nd) { nd = d; next = B; } if (B.ig) B.ig.visible = !!B.ok && d >= lim && d < lim * 2.6; if (B.g) { B.g.visible = !!B.ok && d < lim; if (B.g.visible && B.ims && B.ims.length && B.thin !== QUAL.lv + ':' + B.ims.length) { B.thin = QUAL.lv + ':' + B.ims.length; const f = [.45, .65, 1, 1][QUAL.lv]; B.ims.forEach(im => { if (im.userData.n0 == null) im.userData.n0 = im.count; const g = im.geometry, tri = (g.index ? g.index.count : g.attributes.position.count) / 3; im.count = tri > 1500 ? Math.max(1, Math.floor(im.userData.n0 * f)) : im.userData.n0; }); } } }
   if (next && QUAL.ema < 34) { phBuild(next); PH.near = .12; } else if (next) PH.near = .3; // de a una franja por vez, para no trabar un cuadro
 }
-function phWorld(scene, W, allPts, zMax, hx, R0) { try { grpInit(); if (grpBase() && FLORA.olive && FLORA.olive.length) phPlace('trp_olive', FLORA.olive.map((o, i) => ({ x: o.x, y: o.y - .05, z: o.z, ry: o.rot, s: o.s, oi: i, v: i })), { shadow: true, wind: 3, far: 1, olive: 1, imp: 1 }); } catch (e) {}
+function phWorld(scene, W, allPts, zMax, hx, R0) { try { if (grpBase()) setTimeout(() => { anBuild().catch(e => console.warn('animales', e)); }, 4000); } catch (e) {} try { grpInit(); if (grpBase() && FLORA.olive && FLORA.olive.length) phPlace('trp_olive', FLORA.olive.map((o, i) => ({ x: o.x, y: o.y - .05, z: o.z, ry: o.rot, s: o.s, oi: i, v: i })), { shadow: true, wind: 3, far: 1, olive: 1, imp: 1 }); } catch (e) {}
   SEAS.base = null; SEAS.rain = null; SEAS.olB = null; SEAS.acc = 9;
   const R = rng(9091), coarse = matchMedia('(pointer: coarse)').matches, k = (hx ? 1 : .8) * (coarse ? .7 : 1); PH.kids = !hx; PH.bands = [];
   const yAt = (x, z) => W.hAt(x, z), Z0 = zMax + 30, Z1 = 25;
@@ -3968,7 +4033,7 @@ function loop(now) {
   // con un minijuego abierto el mundo 3D no se dibuja: toda la máquina queda para el minijuego
   const arc = S.arcEl || (S.arcEl = document.getElementById('arcade')); if (arc && !arc.hidden) { S.last = 0; return; }
   const raw = now - (S.last || now), t = now / 1000, dt = Math.min(.05, raw / 1000); S.last = now; S.t = t; S.renderer.info.reset(); if (raw > 0 && raw < 1500) qFrame(Math.min(raw, 250));
-  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); floraTick(dt); miniTick(dt); compassTick(dt); vilTick(dt); foamTick(t); dawnTick(dt); const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
+  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); floraTick(dt); miniTick(dt); compassTick(dt); vilTick(dt); foamTick(t); dawnTick(dt); try { anTick(dt); } catch (e) {} const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
   for (const id in S.items) { const m = S.items[id];
     if (m.userData.gone) { m.userData.gone += dt; const k = m.userData.gone / .5; m.scale.setScalar(1 + k); m.position.y += dt * 2; m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = Math.max(0, 1 - k); } }); if (k >= 1) { S.scene.remove(m); delete S.items[id]; } continue; }
     m.rotation.y = t * 1.6; m.position.y = (m.userData.by || 0) + .85 + Math.sin(t * 2.4 + id.length) * .12;
@@ -5258,4 +5323,4 @@ function svGive(bg) {
 
 addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 'e') axHold(false); });
 addEventListener('touchstart', () => document.body.classList.add('v3touch'), { once: true, passive: true });
-window.W3 = { dbgHero: () => ({ VIL, SEC, MAT, AU, SND, MIX, GRP, PH, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineOk2, cineBusy, crossScene, dawnScene, dawnBuild, diaryOpen, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
+window.W3 = { dbgHero: () => ({ VIL, SEC, MAT, AU, SND, MIX, GRP, PH, AN, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineOk2, cineBusy, crossScene, dawnScene, dawnBuild, diaryOpen, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
