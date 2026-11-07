@@ -562,7 +562,7 @@ function heroFlora(scene, W, allPts, zMax, R, Q) {
   FLORA.cyp = cyp; FLORA.bush = bush;
   // arbustos y piedras
   const bb = []; bush.forEach(o => { for (let j = 0; j < 3; j++) bb.push({ o, dx: (hsh(j, o.x) - .5) * .9, dz: (hsh(o.z, j) - .5) * .9, r: .35 + hsh(j + 3, o.z) * .3 }); });
-  inst(new THREE.IcosahedronGeometry(1, 1), leafM, bb, ({ o, dx, dz, r }) => { put(o.x + dx * o.s, o.y + r * .55 * o.s, o.z + dz * o.s, 0, o.rot, 0, r * o.s * 1.2, r * o.s * .8, r * o.s * 1.2); return ['#4C5E30', '#5D6B3A', '#6B6A3C'][Math.floor(o.v * 3)]; }, true);
+  if (!FLORA.paidT) inst(new THREE.IcosahedronGeometry(1, 1), leafM, bb, ({ o, dx, dz, r }) => { put(o.x + dx * o.s, o.y + r * .55 * o.s, o.z + dz * o.s, 0, o.rot, 0, r * o.s * 1.2, r * o.s * .8, r * o.s * 1.2); return ['#4C5E30', '#5D6B3A', '#6B6A3C'][Math.floor(o.v * 3)]; }, true);
   FLORA.rI = inst(new THREE.DodecahedronGeometry(1, 1), new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: .95, flatShading: true, map: texL('rock.jpg', 4) }), rock, o => { put(o.x, o.y - .12 * o.s, o.z, o.rot, o.rot * 2, o.v, (.35 + o.v * .7) * o.s, (.25 + o.v * .4) * o.s, (.35 + o.v * .6) * o.s); return ['#C9C0B0', '#D8CFBE', '#B8B0A2'][Math.floor(o.v * 3)]; }, true);
   // matas de pasto: tarjetas cruzadas con textura y viento (más densas cerca del camino)
   const cg = new THREE.BufferGeometry(), cp = [], cu = [], ci = [];
@@ -572,8 +572,8 @@ function heroFlora(scene, W, allPts, zMax, R, Q) {
   gm.onBeforeCompile = sh => { sh.uniforms.uT = uT; sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <project_vertex>', 'vec4 mvPosition=vec4(transformed,1.);\n#ifdef USE_INSTANCING\nmvPosition=instanceMatrix*mvPosition;\n#endif\nfloat k=position.y*position.y;mvPosition.x+=sin(uT*1.8+mvPosition.x*.35+mvPosition.z*.28)*.12*k;mvPosition.z+=cos(uT*1.3+mvPosition.x*.22)*.06*k;\nmvPosition=modelViewMatrix*mvPosition;gl_Position=projectionMatrix*mvPosition;'); };
   seasonMat(gm);
   const gl = []; for (let i = 0; i < Q.grass / 3.6; i++) { const p = allPts[Math.floor(R() * allPts.length)], a = R() * 6.28, wide = R() < .45, r = 1.2 + Math.pow(R(), 1.5) * 15, x = wide ? (R() - .5) * XB * 2.2 : p[0] + Math.cos(a) * r, z = wide ? p[1] + (R() - .5) * 10 : p[1] + Math.sin(a) * r; if (W.dAt(x, z) < 1.3 || W.hAt(x, z) > 7) continue; gl.push({ x, z, h: .32 + R() * .5, w: .6 + R() * .7, rot: R() * 6.28, c: R() }); }
-  try { flowerField(scene, W, allPts, R, put, M4, CL, Q); } catch (e) { console.warn('flores', e); }
-  chunkInst(scene, cg, gm, gl, (o, i, im) => { put(o.x, W.hAt(o.x, o.z) - .03, o.z, 0, o.rot, 0, o.w, o.h, o.w); im.setMatrixAt(i, M4); im.setColorAt(i, FLORA.kids ? CL.setRGB(1.15 + o.c * .25, 1.35 + o.c * .2, .8 + o.c * .15) : CL.setRGB(1.05 + o.c * .3, 1.1 + o.c * .25, .85 + o.c * .2)); }, { recv: true });
+  if (!FLORA.paidG) try { flowerField(scene, W, allPts, R, put, M4, CL, Q); } catch (e) { console.warn('flores', e); }
+  if (!FLORA.paidG) chunkInst(scene, cg, gm, gl, (o, i, im) => { put(o.x, W.hAt(o.x, o.z) - .03, o.z, 0, o.rot, 0, o.w, o.h, o.w); im.setMatrixAt(i, M4); im.setColorAt(i, FLORA.kids ? CL.setRGB(1.15 + o.c * .25, 1.35 + o.c * .2, .8 + o.c * .15) : CL.setRGB(1.05 + o.c * .3, 1.1 + o.c * .25, .85 + o.c * .2)); }, { recv: true });
   return uT;
 }
 
@@ -621,7 +621,8 @@ const KL = {};
   const zMax = -totalY * SC;
   let HW = null, uGrass = null;
   const pois = planPois(g), doors = planDoors(g), poiPts = pois.flatMap(q => q.flat).concat(doors.flatMap(q => q.flat)); waterPlan(pois); MAPT.tiles.clear();
-  { const flat = g.VIGN.map(([r, x, y]) => toV(x, g.TOP + r * g.RH + y)).concat(poiPts); FLORA.kids = !hx; FLORA.chunks = []; HW = heroWorld(scene, g, allPts, flat, zMax, QL, hx ? null : KL); uGrass = heroFlora(scene, HW, allPts, zMax, R, hx ? QL : Object.assign({}, QL, { grass: QL.grass * .8, trees: QL.trees * .8 })); realFlora(scene, HW, allPts, QL, uGrass); if (!hx) { ground.visible = false; KL.sun.position.set(-14, 26, 12); } }
+  buildStep('vegetación'); { let ok = null; try { ok = await withTO(grpInit(), 9000, 'r2'); } catch (e) {} FLORA.paidG = !!(ok && GRP.man['grass/']); FLORA.paidT = !!(ok && GRP.man['trees/']); }
+  { const flat = g.VIGN.map(([r, x, y]) => toV(x, g.TOP + r * g.RH + y)).concat(poiPts); FLORA.kids = !hx; FLORA.chunks = []; HW = heroWorld(scene, g, allPts, flat, zMax, QL, hx ? null : KL); uGrass = heroFlora(scene, HW, allPts, zMax, R, hx ? QL : Object.assign({}, QL, { grass: QL.grass * .8, trees: QL.trees * .8 })); if (!FLORA.paidG) realFlora(scene, HW, allPts, QL, uGrass); if (!hx) { ground.visible = false; KL.sun.position.set(-14, 26, 12); } }
   const spots = { tree: [], bush: [], rock: [] };
   for (let i = 0; i < (HW ? 0 : 1500); i++) {
     const x = (R() - .5) * (XB * 2 + 40), z = R() * zMax - 6; if (near(x, z, 2.2)) continue;
@@ -691,7 +692,7 @@ const KL = {};
   camera.position.set(ax - Math.sin(S.yaw) * 6.6, 3.3, az - Math.cos(S.yaw) * 6.6);
   S.fill = new THREE.DirectionalLight(hx ? '#FFD9B0' : '#FFFFFF', hx ? .5 : .5); scene.add(S.fill); scene.add(S.fill.target);
   wireInput(); wireJoy(); if (!window.__acts) { window.__acts = 1; wireActs(); auButtons(); } resize(); addEventListener('resize', resize);
-  renderer.info.autoReset = false; qInit(); fxInit(); if (hx) svBuild(scene, HW, R); try { phWorld(scene, HW, allPts, zMax, hx, R); } catch (e) { console.warn('ph', e); } try { ambWorld(scene, HW, allPts, zMax, hx); } catch (e) { console.warn('amb', e); } try { mergeHouses(scene); } catch (e) { console.warn('merge', e); } setTimeout(() => { try { if (!/[?&]nomerge/.test(location.search)) worldMerge(scene); } catch (e) { console.warn('wmerge', e); } }, 1200); setTimeout(() => { try { if (S && S.renderer.compileAsync) S.renderer.compileAsync(S.scene, S.camera); } catch (e) {} }, 300);
+  renderer.info.autoReset = false; qInit(); fxInit(); if (hx) svBuild(scene, HW, R); try { phWorld(scene, HW, allPts, zMax, hx, R); } catch (e) { console.warn('ph', e); } PG.ready = false; PG.ims.forEach(im => im.parent && im.parent.remove(im)); PG.ims = []; PG.cache.clear(); setTimeout(() => { pgBuild().catch(e => console.warn('pasto nuevo', e)); }, 1500); try { ambWorld(scene, HW, allPts, zMax, hx); } catch (e) { console.warn('amb', e); } try { mergeHouses(scene); } catch (e) { console.warn('merge', e); } setTimeout(() => { try { if (!/[?&]nomerge/.test(location.search)) worldMerge(scene); } catch (e) { console.warn('wmerge', e); } }, 1200); setTimeout(() => { try { if (S && S.renderer.compileAsync) S.renderer.compileAsync(S.scene, S.camera); } catch (e) {} }, 300);
   const me = S, run = n => { if (S !== me) return; requestAnimationFrame(run); loop(n); }; requestAnimationFrame(run);
 }
 function resize() { if (!S) return; const r = S.root.getBoundingClientRect(); const w = r.width || innerWidth, h = r.height || innerHeight; S.renderer.setSize(w, h, false); S.camera.aspect = w / h; S.camera.updateProjectionMatrix(); if (S.fx) { S.fx.setPixelRatio(S.renderer.getPixelRatio()); S.fx.setSize(w, h); } }
@@ -793,6 +794,7 @@ function qEarly() { if (_qE != null) return _qE; let m = 'auto'; try { m = QOLD[
 function qLevelFor(g) {
   const coarse = matchMedia('(pointer: coarse)').matches, mem = navigator.deviceMemory || 4, good = /RTX|RX ?[67]\d{3}|Radeon Pro|Apple M\d|GTX|Radeon|Iris Xe|Arc|Adreno \(TM\) 7[3-9]\d|Mali-G7[1-9]|Immortalis|Xclipse|Apple GPU/i.test(g), discrete = /RTX|GTX|RX ?[67]\d{3}|Radeon Pro/i.test(g);
   if (/SwiftShader|llvmpipe|Software/i.test(g)) return { lv: 0, max: 1 };
+  if (/Intel.*HD Graphics( [2-5]\d{3})?$|Intel.*HD Graphics [2-5]\d{3}|Intel.*Iris(?!.*Xe)|GeForce GT ?[67]\d\dM|Radeon R9 M2\d\d|Radeon HD [5-8]\d{3}M/i.test(g)) return { lv: /HD Graphics( [2-5]\d{3})?$/i.test(g) ? 0 : 1, max: 2 }; // compus de 2012 a 2016 (como una Mac de 2014)
   if (coarse) return { lv: 1, max: 1 }; // celulares y tablets: Medio como máximo (memoria de WebGL limitada, sobre todo en iPhone)
   if (discrete) return { lv: 3, max: 3 };
   if (good) return { lv: 2, max: 3 };
@@ -3372,7 +3374,7 @@ async function grpMat(sl, name) {
   return (GRP.mats[k] = (async () => { const d = (sl.m.mats || {})[name] || { color: name + '_color', normal: name + '_normal', orm: name + '_orm', alpha: true }, tt = d.tiers && !d.tiers.includes(tier) ? d.tiers[d.tiers.length - 1] : tier, u = GRP.base + sl.pre + 'tex/' + tt + '/';
     const [map, nor, orm] = await Promise.all([grpTex(u + d.color + '.ktx2', true), d.normal ? grpTex((d.normalTiers && !d.normalTiers.includes(tt) ? GRP.base + sl.pre + 'tex/' + d.normalTiers[d.normalTiers.length - 1] + '/' : u) + d.normal + '.ktx2').catch(() => null) : null, d.orm ? grpTex((d.ormTiers && !d.ormTiers.includes(tt) ? GRP.base + sl.pre + 'tex/' + d.ormTiers[d.ormTiers.length - 1] + '/' : u) + d.orm + '.ktx2').catch(() => null) : null]);
     const m = new THREE.MeshStandardMaterial({ name: 'grp_' + name, map, normalMap: nor, roughnessMap: orm, aoMap: orm, aoMapIntensity: .8, roughness: 1, metalness: 0, color: tint || '#FFFFFF' });
-    if (d.alpha) { m.alphaTest = .5; m.side = THREE.DoubleSide; } if (nor) m.normalScale.set(.8, .8); m.userData.still = !!d.still; return m; })());
+    if (d.alpha) { m.alphaTest = .42; m.side = THREE.DoubleSide; m.alphaToCoverage = true; } if (nor) m.normalScale.set(.8, .8); m.userData.still = !!d.still; return m; })());
 }
 // lo lejano: dos tarjetas cruzadas con el árbol dibujado (impostor), del mismo tamaño que el modelo
 async function grpImp(sl, name) {
@@ -3628,8 +3630,12 @@ function dpalmPlace(scene, list) {
 const PH_RAD = { island_tree_01: .45, island_tree_02: .5, island_tree_03: .4, tree_small_02: .32, jacaranda_tree: .55, quiver_tree_01: .4, quiver_tree_02: .35, pine_tree_01: .4, dead_quiver_trunk: .35, searsia_lucida: .6, searsia_burchellii: .6, wild_rooibos_bush: .5, shrub_01: .55, shrub_02: .5, shrub_03: .5, shrub_04: .45, pine_sapling_medium: .35 };
 function phCyl(x, z, r, oi) { if (!S || !S.cols) return; S.cols.push({ x0: x - r, x1: x + r, z0: z - r, z1: z + r, cx: x, cz: z, r, oi }); }
 // registra un grupo de instancias; se construye cuando el jugador se acerca a su franja
+const PG_DROP = new Set(['grass_medium_01', 'grass_medium_02', 'grass_bermuda_01', 'celandine_01', 'dandelion_01', 'flower_heliophila', 'nettle_plant', 'wild_rooibos_bush', 'leipoldtia_schultzei', 'searsia_burchellii']);
+const PG_TSUB = { pine_sapling_small: 'tree_small_02', pine_sapling_medium: 'island_tree_03', quiver_tree_01: 'island_tree_01', quiver_tree_02: 'island_tree_03', jacaranda_tree: 'island_tree_01', searsia_lucida: 'tree_small_02' };
 function phPlace(id, items, o) {
-  o = o || {}; if (/^grass_/.test(id)) o.grass = 1; const by = new Map();
+  o = o || {}; if (FLORA.paidG && PG_DROP.has(id)) return;
+  if (FLORA.paidT && PG_TSUB[id]) { id = PG_TSUB[id]; items = items.map(it => Object.assign({}, it, { s: Math.max(.8, Math.min(1.3, it.s || 1)) })); o = Object.assign({}, o); }
+  if (FLORA.paidT && /^(island_tree_0[13]|tree_small_02)$/.test(id)) o = Object.assign({}, o, { shadow: true, wind: 3, far: 1, imp: 1 }); if (/^grass_/.test(id)) o.grass = 1; const by = new Map();
   items.forEach(it => { const b = Math.floor(it.z / PH_BAND); if (!by.has(b)) by.set(b, []); by.get(b).push(it); });
   by.forEach((list, b) => PH.bands.push({ id, list, o, zc: (b + .5) * PH_BAND, built: false, ims: [] }));
 }
@@ -3654,6 +3660,59 @@ async function phBuild(B) {
 function phOne(id, parent, x, y, z, ry, s, o) {
   phGet(id).then(vars => { if (!vars.length) return; const v = vars[(o && o.v) || 0] || vars[0], g = new THREE.Group(); v.forEach(mm => { const m = new THREE.Mesh(mm.geo, phMat(mm.mat, o || {})); m.matrixAutoUpdate = false; m.matrix.copy(mm.m); m.castShadow = true; m.receiveShadow = true; g.add(m); });
     g.position.set(x, y, z); g.rotation.set((o && o.rx) || 0, ry || 0, 0); g.scale.setScalar(s || 1); parent.add(g); if (o && o.done) o.done(g); });
+}
+
+/* ---------- pasto nuevo (Grass Field Pack) en todo el terreno: se dibuja solo alrededor del jugador, con un tope de triángulos
+   por calidad, en matas con claros (ruido), dejando libres el camino, el agua, las casas y lo alto de las lomas. Viento suave. ---------- */
+const PG = { ims: [], groups: [], cache: new Map(), cx: 1e9, cz: 1e9, acc: 0, lv: -1, ready: false };
+const PG_CELL = 16, PG_R = [24, 36, 52, 70], PG_TRI = [2.5e5, 6e5, 1.4e6, 2.4e6];
+const PG_W = { grass_bermuda_01: .44, grass_medium_01: .24, grass_medium_02: .18, dandelion_01: .05, celandine_01: .05, flower_heliophila: .04 };
+const pgH = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
+function pgNoise(x, z) { const ix = Math.floor(x), iz = Math.floor(z), fx = x - ix, fz = z - iz, ux = fx * fx * (3 - 2 * fx), uz = fz * fz * (3 - 2 * fz);
+  const a = pgH(ix, iz), b = pgH(ix + 1, iz), c = pgH(ix, iz + 1), d = pgH(ix + 1, iz + 1); return a + (b - a) * ux + (c - a) * uz + (a - b - c + d) * ux * uz; }
+async function pgBuild() {
+  if (!FLORA.paidG || PG.ready || !S) return; const man = GRP.man['grass/']; if (!man) return; const groups = [];
+  for (const id of Object.keys(man.slots)) { const vars = await grpVars(id).catch(() => null); if (!vars || !vars.length || !S) continue;
+    const tri = vars.reduce((t, ms) => t + ms.reduce((u, mm) => u + (mm.geo.index ? mm.geo.index.count : mm.geo.attributes.position.count) / 3, 0), 0) / vars.length;
+    groups.push({ id, w: PG_W[id] ?? .05, vars, tri, fl: /dandelion|celandine|heliophila/.test(id) }); }
+  if (!groups.length || !S) return; const wsum = groups.reduce((t, g) => t + g.w, 0); groups.forEach(g => { g.w /= wsum; });
+  PG.avgTri = groups.reduce((t, g) => t + g.w * g.tri, 0) || 500; const lvMax = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), cap = Math.min(26000, Math.ceil(PG_TRI[lvMax] / PG.avgTri));
+  for (const g of groups) { g.ims = g.vars.map(ms => { const n = Math.ceil(cap * g.w / g.vars.length * 1.5) + 24; return ms.map(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 1, grass: 1 }), n); im.count = 0; im.frustumCulled = false; im.receiveShadow = true; im.castShadow = false; im.userData.m = mm.m; im.userData.cap = n; S.scene.add(im); PG.ims.push(im); return im; }); }); }
+  PG.groups = groups; PG.ready = true; PG.cx = 1e9;
+  try { if (S.renderer.compileAsync) await S.renderer.compileAsync(S.scene, S.camera); } catch (e) {}
+}
+// lo que va en una parcela de 16 m (se calcula una sola vez y queda guardado)
+function pgCell(ix, iz) {
+  const key = ix + ',' + iz; let L = PG.cache.get(key); if (L) return L; L = []; const W = S.W, R = rng((ix * 73856093) ^ (iz * 19349663) ^ 0x51ed);
+  const x0 = ix * PG_CELL, z0 = iz * PG_CELL, cx = x0 + PG_CELL / 2, cz = z0 + PG_CELL / 2;
+  if (Math.abs(cx) > XB + 60) { PG.cache.set(key, L); return L; }
+  const poi = (S_poiPts || []).filter(p => Math.abs(p[0] - cx) < PG_CELL && Math.abs(p[1] - cz) < PG_CELL);
+  const dens = Math.min(1.25, PG_TRI[Math.min(3, Math.max(QUAL.max || 0, QUAL.lv))] / PG.avgTri / (Math.PI * PG_R[3] * PG_R[3] * .8)), n = Math.round(dens * PG_CELL * PG_CELL * 1.6);
+  for (let i = 0; i < n; i++) { const x = x0 + R() * PG_CELL, z = z0 + R() * PG_CELL, r1 = R(), r2 = R();
+    const cl = pgNoise(x * .06, z * .06) * .75 + pgNoise(x * .21 + 40, z * .21) * .35; if (r1 > cl * cl * 1.5) continue; // matas y claros
+    const d = W.dAt(x, z); if (d < 1.5 || (d < 3.2 && r2 > (d - 1.5) / 1.7)) continue; // el camino queda libre, con borde natural
+    const h = W.hAt(x, z); if (h > 9 || (h > 5.5 && r2 > (9 - h) / 3.5)) continue;
+    if (waterWet(x, z, null) > .04 || blockedAt(x, z) || poi.some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < 14)) continue;
+    // qué planta: flores donde el ruido lo marca (manchones), el resto pasto
+    const G = PG.groups, fz = pgNoise(x * .045 + 90, z * .045 - 30) > .66, wantF = fz && R() < .55, pool = G.map((g, k) => k).filter(k => G[k].fl === wantF), P = pool.length ? pool : G.map((g, k) => k);
+    let pick = R() * P.reduce((t, k) => t + G[k].w, 0), gi = P[P.length - 1]; for (const k of P) { pick -= G[k].w; if (pick <= 0) { gi = k; break; } }
+    const g = G[gi]; L.push({ x, y: h - .03, z, ry: R() * 6.283, s: .8 + R() * .45, gi, vi: Math.floor(R() * g.vars.length), r: R(), c: .88 + R() * .2 }); }
+  PG.cache.set(key, L); if (PG.cache.size > 2600) { const it = PG.cache.keys(); for (let k = 0; k < 600; k++) PG.cache.delete(it.next().value); } return L;
+}
+const _pgM = new THREE.Matrix4(), _pgQ = new THREE.Quaternion(), _pgE = new THREE.Euler(), _pgV = new THREE.Vector3(), _pgS = new THREE.Vector3(), _pgC = new THREE.Color();
+function pgFill() {
+  const a = S.av.position, Rr = PG_R[QUAL.lv], tri = PG_TRI[QUAL.lv], cnt = PG.ims.map(() => 0), idx = new Map(); PG.ims.forEach((im, k) => idx.set(im, k)); let used = 0;
+  const lim = Math.ceil(tri / PG.avgTri), c0x = Math.floor((a.x - Rr) / PG_CELL), c1x = Math.floor((a.x + Rr) / PG_CELL), c0z = Math.floor((a.z - Rr) / PG_CELL), c1z = Math.floor((a.z + Rr) / PG_CELL);
+  const cells = []; for (let ix = c0x; ix <= c1x; ix++) for (let iz = c0z; iz <= c1z; iz++) { const dx = (ix + .5) * PG_CELL - a.x, dz = (iz + .5) * PG_CELL - a.z; cells.push([dx * dx + dz * dz, ix, iz]); } cells.sort((p, q) => p[0] - q[0]);
+  for (const [, ix, iz] of cells) { if (used >= lim) break; for (const it of pgCell(ix, iz)) { const dd = Math.hypot(it.x - a.x, it.z - a.z); if (dd > Rr) continue; if (dd > Rr * .55 && it.r > 1 - (dd - Rr * .55) / (Rr * .45) * .7) continue; // más ralo lejos
+      const ims = PG.groups[it.gi].ims[it.vi]; let full = false; for (const im of ims) if (cnt[idx.get(im)] >= im.userData.cap) full = true; if (full) continue;
+      _pgE.set(0, it.ry, 0); _pgQ.setFromEuler(_pgE); for (const im of ims) { const k = idx.get(im), i = cnt[k]++; _pgM.compose(_pgV.set(it.x, it.y, it.z), _pgQ, _pgS.setScalar(it.s)).multiply(im.userData.m); im.setMatrixAt(i, _pgM); im.setColorAt(i, _pgC.setRGB(it.c, it.c, it.c * .96)); }
+      used++; if (used >= lim) break; } }
+  PG.ims.forEach((im, k) => { im.count = cnt[k]; im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; });
+}
+function pgTick(dt) {
+  if (!PG.ready || !S || !S.av) return; PG.acc -= dt; if (PG.acc > 0) return; PG.acc = .25; const a = S.av.position;
+  if (PG.lv !== QUAL.lv || (a.x - PG.cx) ** 2 + (a.z - PG.cz) ** 2 > 36) { PG.lv = QUAL.lv; PG.cx = a.x; PG.cz = a.z; pgFill(); }
 }
 function phTick(dt) {
   if (!S || !PH.bands.length) return; PH.uT.value = S.t || 0; PH.near -= dt; if (PH.near > 0) return; PH.near = .5;
@@ -3762,7 +3821,7 @@ function phWorld(scene, W, allPts, zMax, hx, R0) { try { if (grpBase()) setTimeo
   { const L = (DPALM.spots || []).slice(); DPALM.spots = [];
     const RP = rng(5151), nP = matchMedia('(pointer: coarse)').matches ? 9 : 18; (S.pois || []).filter(p => p.k === 'lake').forEach(p => { let tries = 0; for (let n = 0; n < nP && tries < 400; tries++) { const a = RP() * 6.283; let r = 20; while (r < 90 && W.hAt(p.x + Math.cos(a) * r, p.z + Math.sin(a) * r) < -.01) r += .5; r += 2.5 + RP() * 14; const x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r;
       if (W.dAt(x, z) < 3.2 || blockedAt(x, z) || Math.abs(W.hAt(x - 1, z) - W.hAt(x + 1, z)) > .8 || L.some(q => (q.x - x) ** 2 + (q.z - z) ** 2 < 16)) continue; L.push({ x, y: W.hAt(x, z) - .05, z, ry: RP() * 6.28, s: .85 + RP() * .35 }); n++; } });
-    try { regionStone(scene); } catch (e) { console.warn('piedra', e); } try { dpalmPlace(scene, L); } catch (e) { console.warn('palmeras', e); } try { oleanders(scene, W, rng(5252)); } catch (e) { console.warn('adelfas', e); } }
+    try { regionStone(scene); } catch (e) { console.warn('piedra', e); } try { dpalmPlace(scene, L); } catch (e) { console.warn('palmeras', e); } try { if (!FLORA.paidG) oleanders(scene, W, rng(5252)); } catch (e) { console.warn('adelfas', e); } }
   (FLORA.olive || []).forEach((o, i) => phCyl(o.x, o.z, .3 * o.s, i)); (FLORA.bush || []).forEach(o => phCyl(o.x, o.z, .55 * o.s));
   const P3 = {}, put3 = (id, o) => (P3[id] = P3[id] || []).push(o);
   for (const p of towns) { ring(p, 4, 10, (x, z, y, ry) => put3(R() < .5 ? 'periwinkle_plant' : 'weed_plant_02', { x, z, y, ry, s: 1 }), 4);
@@ -4033,7 +4092,7 @@ function loop(now) {
   // con un minijuego abierto el mundo 3D no se dibuja: toda la máquina queda para el minijuego
   const arc = S.arcEl || (S.arcEl = document.getElementById('arcade')); if (arc && !arc.hidden) { S.last = 0; return; }
   const raw = now - (S.last || now), t = now / 1000, dt = Math.min(.05, raw / 1000); S.last = now; S.t = t; S.renderer.info.reset(); if (raw > 0 && raw < 1500) qFrame(Math.min(raw, 250));
-  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); floraTick(dt); miniTick(dt); compassTick(dt); vilTick(dt); foamTick(t); dawnTick(dt); try { anTick(dt); } catch (e) {} const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
+  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); try { pgTick(dt); } catch (e) {} floraTick(dt); miniTick(dt); compassTick(dt); vilTick(dt); foamTick(t); dawnTick(dt); try { anTick(dt); } catch (e) {} const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
   for (const id in S.items) { const m = S.items[id];
     if (m.userData.gone) { m.userData.gone += dt; const k = m.userData.gone / .5; m.scale.setScalar(1 + k); m.position.y += dt * 2; m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = Math.max(0, 1 - k); } }); if (k >= 1) { S.scene.remove(m); delete S.items[id]; } continue; }
     m.rotation.y = t * 1.6; m.position.y = (m.userData.by || 0) + .85 + Math.sin(t * 2.4 + id.length) * .12;
