@@ -3,7 +3,7 @@
 import type { APIRoute } from "astro";
 import { auth } from "@wix/essentials";
 import { items } from "@wix/data";
-import { animo, grupos, type Ev } from "../../lib/vol";
+import { animo, esLista, grupos, type Ev } from "../../lib/vol";
 
 const q = auth.elevate(items.query);
 const e = (s: unknown) => String(s ?? "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
@@ -32,7 +32,10 @@ export const GET: APIRoute = async ({ url }) => {
     L.push("BEGIN:VEVENT", "UID:vol-" + v._id + "-" + g.tipo + "-" + f + "@habitat-cfm.org", stamp, ini, fin,
       fold("SUMMARY:" + e((clase ? "Servicio en Habitat · " : g.titulo + " · ") + tareas)), fold("DESCRIPTION:" + e(msg)), "LOCATION:" + e(g.lugar),
       "BEGIN:VALARM", "ACTION:DISPLAY", g.manana ? "TRIGGER:-PT14H30M" : "TRIGGER:-PT7H", fold("DESCRIPTION:" + e((g.manana ? "Mañana: " : "Hoy: ") + g.titulo + " · " + tareas + (g.llegada ? ". A las " + g.llegada + "." : "."))), "END:VALARM",
-      "BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:-PT1H", fold("DESCRIPTION:" + e("En una hora: " + g.titulo)), "END:VALARM", "END:VEVENT");
+      "BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:-PT1H", fold("DESCRIPTION:" + e("En una hora: " + g.titulo)), "END:VALARM");
+    // quien toma lista: aviso durante la clase para cargar los presentes
+    if (clase && g.llegada && g.tareas.some(esLista)) L.push("BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:PT1H", fold("DESCRIPTION:" + e("Cargá la lista de hoy en Mi servicio: habitat-cfm.org/voluntario.html#lista")), "END:VALARM");
+    L.push("END:VEVENT");
   }
   L.push("END:VCALENDAR");
   return new Response(L.join("\r\n") + "\r\n", { headers: { "Content-Type": "text/calendar; charset=utf-8", "Cache-Control": "public, max-age=900" } });

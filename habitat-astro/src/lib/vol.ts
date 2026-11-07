@@ -45,3 +45,20 @@ export function grupos(fecha: string, ts: { tarea: string; nota?: string }[], ev
     return { fecha, tipo, titulo: e.title || E.titulo, icono: E.icono, tareas: L.map((t) => (t.nota ? t.tarea + " (" + t.nota + ")" : t.tarea)), notas: e.nota ? [e.nota] : [], llegada: hora, inicio: hora, lugar: e.lugar || (tipo === "mesa" ? "Zoom" : "Habitat CFM"), link: e.link || "", versiculos: e.versiculos || "", encargado: L.some((t) => /encargad/i.test(t.tarea) || tipo === "mesa"), manana: !hora || hora < "13:00" };
   });
 }
+
+// Tomar lista: los voluntarios de "Asistencia presencial" / "Asistencia online" cargan los presentes de su clase.
+export const esLista = (t: string) => /^Asistencia (presencial|online)/i.test(t);
+export const modoLista = (t: string) => (/online/i.test(t) ? "Zoom" : "Presencial");
+const nrm = (t: unknown) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+export const PROGS = ["Maranata", "Liderazgo", "Adoración"];
+export const progsDe = (carreras: unknown) => PROGS.filter((p) => nrm(carreras).includes(nrm(p)));
+// alumnos que esperamos en la clase de esa fecha, según la modalidad del voluntario
+export function alumnosLista(alumnos: Record<string, unknown>[], clases: { fecha?: string; programa?: string }[], fecha: string, modo: string) {
+  const hoy = new Set(clases.filter((c) => c.fecha === fecha).flatMap((c) => progsDe(c.programa)));
+  return alumnos
+    .filter((a) => a.activo !== false && !/asinc/i.test(String(a.modalidad || "")))
+    .filter((a) => (modo === "Zoom" ? /zoom/i.test(String(a.modalidad || "")) : !/zoom/i.test(String(a.modalidad || ""))))
+    .filter((a) => !hoy.size || progsDe(a.carreras).some((p) => hoy.has(p)))
+    .map((a) => ({ _id: String(a._id), title: String(a.title || ""), carreras: String(a.carreras || ""), modalidad: String(a.modalidad || "") }))
+    .sort((x, y) => x.title.localeCompare(y.title));
+}

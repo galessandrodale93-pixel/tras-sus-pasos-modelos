@@ -35,6 +35,8 @@
 .vs-l b{font-weight:600}
 .vs-selah{display:grid;gap:8px;background:var(--soft);border-radius:14px;padding:14px}.vs-selah textarea{width:100%;min-height:90px;font:inherit;padding:10px;border:1px solid var(--line);border-radius:10px}
 .vs-l b.yo{background:var(--yb);color:var(--y);padding:1px 8px;border-radius:999px}
+.vs-lista{display:grid;gap:14px;padding:22px}.vs-lista .tt-prog{flex:0 0 220px}.vs-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.vs-av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--soft);font:700 .95rem var(--sans);color:var(--ink)}
 @media (max-width:760px){.vs-row{grid-template-columns:1fr}}
 </style>
 </head>
@@ -54,6 +56,7 @@
 </div></section>
 <div class="tt-main"><div class="wrap tt-v" id="vMain">
   <div class="vs-next tt-card" id="vNext"><p class="tt-empty">Cargando tus turnos…</p></div>
+  <div class="tt-card vs-lista" id="lista" hidden></div>
   <div class="vs-row">
     <div class="tt-card"><h2 class="tt-h">Tus próximos turnos</h2><div class="tt-tl" id="vList"></div></div>
     <div class="tt-card vs-cal"><h2 class="tt-h">Avisos en tu teléfono</h2><p class="tt-tip">Sumá tu calendario de servicio y te llega el recordatorio: lo de la tarde y la noche el mismo día, lo de la mañana el día anterior. También Zarza, el tiempo de mesa por Zoom y Selah. Si cambian los turnos, se actualiza solo.</p><div class="tt-wa"><a class="tt-btn" id="vIcs" href="#">Sumar a mi teléfono</a><a class="tt-btn s" id="vGcal" href="#" target="_blank" rel="noopener">Google Calendar</a></div><div class="tt-stats" id="vStats"></div></div>
@@ -79,7 +82,7 @@
 <script src="/assets/aliento.js"></script>
 <script>
 (async function(){
-var A=window.HabitatAuth,$=function(s){return document.querySelector(s);};
+var A=window.HabitatAuth,$=function(s){return document.querySelector(s);},$$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
 function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var DL=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],MS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 var IC={'Limpieza y sillas':'🧹','Audio':'🎚️','Diapositivas':'🖥️','Zoom':'🎥','Asistencia presencial':'📋','Asistencia online':'💻','Zarza':'🎶','Tiempo de mesa · Maranata':'🍽️','Tiempo de mesa · Liderazgo':'🍽️','Tiempo de mesa · Adoración':'🍽️','Selah · Encargado':'📖','Selah':'📖'};
@@ -106,6 +109,29 @@ if(T.length){var n=T[0],dd=Math.round((pd(n.fecha)-pd(hoy))/864e5);
  $('#vNext').innerHTML='<p class="tt-lbl">'+(dd===0?'Hoy':dd===1?'Mañana':'En '+dd+' días')+(n.tipo!=='clase'?' · '+n.icono+' '+esc(n.titulo):'')+'</p><h2>'+larga(n.fecha)[0].toUpperCase()+larga(n.fecha).slice(1)+'</h2><div class="vs-tasks">'+n.tareas.map(function(t){return '<span class="vs-task"><em>'+ico(t)+'</em>'+esc(t)+'</span>';}).join('')+'</div><p class="vs-time">'+cuando(n)+'</p>'+(n.link?'<p class="tt-tip">Link: <a href="'+esc(n.link)+'" target="_blank" rel="noopener">'+esc(n.link)+'</a></p>':'')+(n.notas&&n.notas.length?'<p class="tt-tip">'+esc(n.notas.join(' · '))+'</p>':'')+selah(n)+'<p class="tt-tip">'+esc(r.animo||'')+'</p>';bindSelah();}
 else $('#vNext').innerHTML='<h2>Por ahora no tenés turnos</h2><p class="tt-tip">'+esc(r.animo||'')+'</p>';
 $('#vList').innerHTML=T.map(function(t){return '<div><b>'+larga(t.fecha)+(t.tipo!=='clase'?' · '+esc(t.titulo):'')+'</b><span>'+t.tareas.map(function(x){return ico(x)+' '+esc(x);}).join(' · ')+'</span><small>'+(t.tipo==='clase'?'Llegada '+t.llegada:t.inicio?'A las '+t.inicio:'Horario a confirmar')+'</small></div>';}).join('')||'<div><span>Sin turnos por delante.</span></div>';
+
+/* Tomar lista: solo si hoy (o hace hasta 3 días) te tocó Asistencia presencial u online */
+(async function(){var box=$('#lista'),R={};try{R=await fetch('/api/lista',{headers:{'x-habitat-auth':tk}}).then(function(x){return x.json();});}catch(e){}
+var C=R.clases||[];if(!C.length)return;box.hidden=false;var cur=0,qs='';
+var STN={P:'Presente',Z:'Por Zoom',A:'Ausente',J:'Justificó','':'Sin marcar'};
+function ini(n){return String(n||'?').trim().split(/\s+/).slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();}
+function toast(t){var e=$('#ttToast');e.textContent=t;e.classList.add('on');setTimeout(function(){e.classList.remove('on');},2600);}
+function draw(){var c=C[cur],M=c.marcas,si=c.modo==='Zoom'?'Z':'P',L=c.alumnos.filter(function(a){return !qs||a.title.toLowerCase().indexOf(qs)>=0;});
+ var dn=c.alumnos.filter(function(a){return M[a._id]&&M[a._id].estado;}).length,dd=Math.round((pd(hoy)-pd(c.fecha))/864e5);
+ box.innerHTML='<div class="tt-bar"><div><p class="tt-lbl">'+(dd===0?'Hoy':dd===1?'Ayer':'Hace '+dd+' días')+' · '+(c.modo==='Zoom'?'💻 Asistencia online':'📋 Asistencia presencial')+'</p><h2 class="tt-h">Tomar lista · '+larga(c.fecha)+'</h2></div>'+(C.length>1?'<div class="vs-tabs">'+C.map(function(x,i){return '<button type="button" class="tt-pill'+(i===cur?' on':'')+'" data-i="'+i+'">'+larga(x.fecha).split(' ').slice(0,2).join(' ')+'</button>';}).join('')+'</div>':'')+'</div>'+
+ '<p class="tt-tip">Tocá a cada alumno: un toque lo marca '+(si==='Z'?'presente por Zoom':'presente')+', otro toque ausente y otro lo deja sin marcar. Se guarda solo y lo ve el equipo de tutores. Tenés hasta 3 días para completarla.</p>'+
+ '<div class="tt-bar"><input type="search" id="lQ" placeholder="Buscar alumno" value="'+esc(qs)+'"><div class="tt-prog"><i style="width:'+(c.alumnos.length?100*dn/c.alumnos.length:0)+'%"></i><span>'+dn+' de '+c.alumnos.length+' marcados</span></div></div>'+
+ '<div class="tt-roll">'+(L.map(function(a){var x=M[a._id]||{},e=x.estado||'',on=e==='P'||e==='Z';return '<div class="tt-tile '+e+'" role="button" tabindex="0" data-id="'+esc(a._id)+'"><span class="vs-av">'+ini(a.title)+'</span><b>'+esc(a.title)+'</b><span class="st">'+STN[e]+'</span><span class="tg">'+(si==='P'?'<button type="button" data-k="tarde"'+(x.tarde?' class="on"':'')+(on?'':' disabled')+'>⏰ Tarde</button>':'')+'<button type="button" data-k="mesa"'+(x.mesa?' class="on"':'')+(on?'':' disabled')+'>🍽️ Mesa</button></span></div>';}).join('')||'<p class="tt-empty">'+(c.alumnos.length?'Nadie con ese nombre.':'No hay alumnos '+(si==='Z'?'por Zoom':'presenciales')+' para esta clase.')+'</p>')+'</div>';
+ $$('.vs-tabs [data-i]').forEach(function(b){b.onclick=function(){cur=+b.dataset.i;qs='';draw();};});
+ var q=$('#lQ');q.oninput=function(){qs=q.value.toLowerCase();var p=q.selectionStart;draw();var n=$('#lQ');n.focus();n.setSelectionRange(p,p);};
+ $$('.tt-roll .tt-tile').forEach(function(t){var id=t.dataset.id;
+  function put(o){var old=M[id]||{},x=Object.assign({estado:old.estado||'',tarde:!!old.tarde,mesa:!!old.mesa},o);if(x.estado!=='P'&&x.estado!=='Z'){x.tarde=false;x.mesa=false;}
+   M[id]=x;draw();fetch('/api/lista',{method:'POST',headers:{'content-type':'application/json','x-habitat-auth':tk},body:JSON.stringify({fecha:c.fecha,alumnoId:id,estado:x.estado,tarde:x.tarde,mesa:x.mesa})}).then(function(r){return r.json();}).then(function(r){if(!r.ok){toast(r.error||'No se guardó.');M[id]=old;draw();}}).catch(function(){toast('Sin conexión: no se guardó.');M[id]=old;draw();});}
+  function next(){var e=(M[id]||{}).estado||'';put({estado:e===si?'A':e==='A'?'':si});}
+  t.onclick=function(ev){if(ev.target.closest('.tg'))return;next();};
+  t.onkeydown=function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();next();}};
+  $$('.tg button',t).forEach(function(b){b.onclick=function(){var o={};o[b.dataset.k]=!(M[id]||{})[b.dataset.k];put(o);};});});}
+draw();if(location.hash==='#lista')box.scrollIntoView({behavior:'smooth',block:'start'});})();
 var ics=r.voluntario.ics;$('#vIcs').href=ics.replace(/^https:/,'webcal:');$('#vGcal').href='https://calendar.google.com/calendar/r?cid='+encodeURIComponent(ics.replace(/^https:/,'webcal:'));
 var sv=r.servido||{};$('#vStats').innerHTML='<div class="tt-stat"><span class="tt-ring" style="--p:'+Math.min(100,(sv.dias||0)*4)+';--col:var(--gold)"><span>'+(sv.dias||0)+'</span></span><small>días que serviste este año</small></div><div class="tt-stat"><span class="tt-ring" style="--p:'+Math.min(100,(sv.tareas||0)*2)+'"><span>'+(sv.tareas||0)+'</span></span><small>tareas cumplidas</small></div>';
 var E=r.equipo||[],by={};E.forEach(function(t){(by[t.fecha]=by[t.fecha]||[]).push(t);});
