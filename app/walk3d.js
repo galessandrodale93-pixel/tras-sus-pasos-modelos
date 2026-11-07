@@ -1983,7 +1983,7 @@ function musTick() {
   m.adv.want = on && !pray ? (AU.speaking || AU.narr ? .22 : .55) : 0; m.pray.want = on && pray ? (AU.speaking || AU.narr ? .35 : .7) : 0; if (m.mg) m.mg.want = AU.on && kidsMg ? (AU.speaking || AU.narr ? .22 : .5) : 0;
   for (const t of [m.adv, m.pray, m.mg]) { if (!t) continue;
     if (!t.ok) continue; const step = t.want > t.v ? .045 : .07; t.v += Math.max(-step, Math.min(step, t.want - t.v));
-    try { t.el.volume = Math.max(0, Math.min(1, t.v)); } catch (e) {}
+    try { t.el.volume = Math.max(0, Math.min(1, t.v * mixV('mus'))); } catch (e) {}
     if (t.want > 0 && t.el.paused && t.primed) t.el.play().catch(() => {});
     if (t.want <= 0 && !t.el.paused && (t.v < .01 || IOS)) t.el.pause();
     if (t.loop) musLoopTick(t);
@@ -2004,6 +2004,105 @@ function auStart() {
   try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {}
   setInterval(auTick, 90);
 }
+/* ---------- mezcla en tres buses (Música, Ambiente, Efectos y voz) y paisaje sonoro ambiente.
+   Todo el ambiente se sintetiza en el navegador (viento, agua, pájaros, grillos, murmullo, fuego, ovejas, pasos):
+   no usa grabaciones de terceros, así que no hay licencias que cumplir (obra propia, CC0). ---------- */
+const MIX = (() => { let m = { mus: .8, amb: .7, sfx: .9 }; try { Object.assign(m, JSON.parse(localStorage.getItem('tsp:mix') || '{}')); } catch (e) {} return m; })();
+const mixV = k => Math.max(0, Math.min(1, +MIX[k] || 0));
+function mixSet(k, v) { MIX[k] = Math.max(0, Math.min(1, v)); try { localStorage.setItem('tsp:mix', JSON.stringify(MIX)); } catch (e) {} }
+window.TSP_MIX = { v: mixV, set: mixSet };
+const SND = { on: false, t: 0, birdT: 1, crT: 0, fireT: 0, sheepT: 6, stepT: 0, side: 1 };
+function sndInit() {
+  const c = AU.ctx; if (!c || SND.on) return; SND.on = true;
+  AU.amb = c.createGain(); AU.amb.gain.value = 0; AU.amb.connect(c.destination);
+  AU.sfx = c.createGain(); AU.sfx.gain.value = mixV('sfx'); AU.sfx.connect(c.destination);
+  const sr = c.sampleRate, len = sr * 4, pink = c.createBuffer(2, len, sr);
+  for (let ch = 0; ch < 2; ch++) { const d = pink.getChannelData(ch); let b0 = 0, b1 = 0, b2 = 0; for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; b0 = .99765 * b0 + w * .099; b1 = .963 * b1 + w * .2965; b2 = .57 * b2 + w * 1.0527; d[i] = (b0 + b1 + b2 + w * .1848) * .2; }
+    const f = sr * .25; for (let i = 0; i < f; i++) { const k = i / f; d[i] = d[i] * k + d[len - f + i] * (1 - k); } } // costura sin clic
+  SND.pink = pink;
+  const loop = (type, freq, q) => { const s = c.createBufferSource(); s.buffer = pink; s.loop = true; s.loopStart = .25; s.loopEnd = 4; const f = c.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q || .7; const g = c.createGain(); g.gain.value = 0; s.connect(f); f.connect(g); g.connect(AU.amb); s.start(c.currentTime + Math.random() * 2, Math.random() * 3); return { s, f, g }; };
+  SND.wind = loop('bandpass', 420, .5); SND.wind2 = loop('lowpass', 180, .5);
+  SND.water = loop('lowpass', 700, .9); SND.waterHi = loop('bandpass', 2400, 1.4);
+  SND.crowd = loop('bandpass', 520, 1.8); SND.crowd2 = loop('bandpass', 1300, 2.2);
+}
+const sndClamp = v => Math.max(0, Math.min(1, v));
+function sndPan(x, z) { // izquierda/derecha según dónde está la fuente respecto de la cámara
+  const c = AU.ctx, p = c.createStereoPanner ? c.createStereoPanner() : c.createGain();
+  if (p.pan && S && S.camera) { const dx = x - S.camera.position.x, dz = z - S.camera.position.z, cy = Math.atan2(dx, dz), fy = S.camera.rotation ? S.camera.rotation.y : 0; p.pan.value = Math.max(-.9, Math.min(.9, -Math.sin(cy - fy - Math.PI))); }
+  return p;
+}
+function sndChirp(x, z, vol, kid) { // pájaro: 2-5 notas con barrido de frecuencia
+  const c = AU.ctx, t0 = c.currentTime + .02, n = 2 + Math.floor(Math.random() * 4), base = (kid ? 2600 : 2100) + Math.random() * 1600, pn = sndPan(x, z); pn.connect(AU.amb);
+  for (let i = 0; i < n; i++) { const t = t0 + i * (.09 + Math.random() * .07), o = c.createOscillator(), g = c.createGain(), up = Math.random() < .5; o.type = 'sine';
+    o.frequency.setValueAtTime(base * (up ? .8 : 1.2), t); o.frequency.exponentialRampToValueAtTime(base * (up ? 1.25 : .75), t + .07);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .012); g.gain.exponentialRampToValueAtTime(.0001, t + .08); o.connect(g); g.connect(pn); o.start(t); o.stop(t + .1); }
+}
+function sndCrickets(vol) { // grillo: tren de pulsos agudos
+  const c = AU.ctx, t0 = c.currentTime + .02, o = c.createOscillator(), g = c.createGain(), pn = sndPan((S.av.position.x + (Math.random() - .5) * 30), S.av.position.z + (Math.random() - .5) * 30); o.type = 'square'; o.frequency.value = 4300 + Math.random() * 500;
+  const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 4600; bp.Q.value = 6; g.gain.value = 0;
+  for (let i = 0; i < 4; i++) { const t = t0 + i * .055; g.gain.setValueAtTime(vol, t); g.gain.setValueAtTime(0, t + .03); }
+  o.connect(bp); bp.connect(g); g.connect(pn); pn.connect(AU.amb); o.start(t0); o.stop(t0 + .3);
+}
+function sndCrack(x, z, vol) { // chasquido de leña
+  const c = AU.ctx, t = c.currentTime + .01, s = c.createBufferSource(), g = c.createGain(), f = c.createBiquadFilter(), pn = sndPan(x, z); s.buffer = SND.pink; f.type = 'highpass'; f.frequency.value = 1200 + Math.random() * 2500;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + .03 + Math.random() * .05); s.connect(f); f.connect(g); g.connect(pn); pn.connect(AU.amb); s.start(t, Math.random() * 3, .1);
+}
+function sndBleat(x, z, vol) { // oveja: diente de sierra con vibrato y formante
+  const c = AU.ctx, t = c.currentTime + .02, o = c.createOscillator(), lfo = c.createOscillator(), lg = c.createGain(), f = c.createBiquadFilter(), g = c.createGain(), pn = sndPan(x, z), b = 360 + Math.random() * 160, d = .5 + Math.random() * .4;
+  o.type = 'sawtooth'; o.frequency.setValueAtTime(b, t); o.frequency.linearRampToValueAtTime(b * .86, t + d); lfo.frequency.value = 7 + Math.random() * 3; lg.gain.value = b * .045; lfo.connect(lg); lg.connect(o.frequency);
+  f.type = 'bandpass'; f.frequency.value = 1100; f.Q.value = 1.6; g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .06); g.gain.setValueAtTime(vol, t + d - .12); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+  o.connect(f); f.connect(g); g.connect(pn); pn.connect(AU.amb); o.start(t); lfo.start(t); o.stop(t + d + .05); lfo.stop(t + d + .05);
+}
+function sndStep(vol, hard) { // pasos (bus de efectos): golpe grave + roce de tierra o piedra
+  const c = AU.ctx, t = c.currentTime + .01, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = SND.pink; f.type = 'bandpass'; f.frequency.value = (hard ? 1800 : 650) * (.85 + Math.random() * .3); f.Q.value = .9;
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .008); g.gain.exponentialRampToValueAtTime(.0001, t + (hard ? .07 : .12)); s.connect(f); f.connect(g); g.connect(AU.sfx); s.start(t, Math.random() * 3, .16);
+}
+function sndUI(kind) { // sonidos de interfaz que pasan por el bus de efectos
+  const c = AU.ctx; if (!c || !SND.on) return; const t = c.currentTime + .01, notes = kind === 'ok' ? [76, 83] : kind === 'gift' ? [72, 76, 79, 84] : [69];
+  notes.forEach((m, i) => { const o = c.createOscillator(), g = c.createGain(); o.type = 'triangle'; o.frequency.value = 440 * Math.pow(2, (m - 69) / 12); g.gain.setValueAtTime(.0001, t + i * .07); g.gain.exponentialRampToValueAtTime(.14, t + i * .07 + .015); g.gain.exponentialRampToValueAtTime(.0001, t + i * .07 + .35); o.connect(g); g.connect(AU.sfx); o.start(t + i * .07); o.stop(t + i * .07 + .4); });
+}
+function sndDist(list, x, z, fr) { let d = 1e9, best = null; for (const p of list) { const q = Math.hypot(p.x - x, p.z - z) - (fr ? fr(p) : 0); if (q < d) { d = q; best = p; } } return [d, best]; }
+function sndTick(dt) {
+  const c = AU.ctx; if (!c) return; sndInit(); if (!S || !S.av) return;
+  const now = c.currentTime, view = !document.getElementById('view3d').hidden, arc = !document.getElementById('arcade').hidden, cine = !!(typeof CINE !== 'undefined' && CINE && CINE.on);
+  const duck = AU.speaking || AU.narr ? .45 : 1, pray = S.pose === 'pray' ? .6 : 1, a = S.av.position, hx = !!S.hx, dn = dayNow(), dawn = dn.i === 0 ? 1 - dn.k * .85 : dn.k * .15, dark = document.querySelector('.v3dark') ? 1 : 0;
+  const busA = view && !arc ? mixV('amb') * duck * pray : 0;
+  AU.amb.gain.setTargetAtTime(busA, now, busA > AU.amb.gain.value ? .9 : .25); AU.sfx.gain.setTargetAtTime(mixV('sfx'), now, .1);
+  if (busA <= 0.001 && AU.amb.gain.value < .01) return;
+  // viento: siempre, más fuerte en Hero y en lo alto; ráfagas lentas
+  SND.t += dt; const gust = .55 + .45 * Math.sin(SND.t * .21) * Math.sin(SND.t * .037 + 1.3), alt = sndClamp((a.y || 0) / 12);
+  SND.wind.g.gain.setTargetAtTime((hx ? .22 : .12) * gust * (1 + alt), now, .8); SND.wind.f.frequency.setTargetAtTime(300 + gust * 380 + alt * 300, now, 1.2); SND.wind2.g.gain.setTargetAtTime((hx ? .16 : .08) * (.6 + gust * .4), now, 1.2);
+  // agua: orilla del lago, costas y río
+  const W = (typeof WATER !== 'undefined' && WATER) || {}; let wd = 1e9; for (const b of W.basins || []) wd = Math.min(wd, Math.hypot(a.x - b.x, a.z - b.z) - b.r * 1.12); if (W.river) for (const q of W.river) wd = Math.min(wd, Math.hypot(a.x - q[0], a.z - q[1]) - 3);
+  const wk = sndClamp(1 - Math.max(0, wd) / 26), lap = .65 + .35 * Math.sin(SND.t * 1.3) * Math.sin(SND.t * .53 + .7);
+  SND.water.g.gain.setTargetAtTime(wk * .55 * lap, now, .35); SND.waterHi.g.gain.setTargetAtTime(wk * .09 * (1.2 - lap), now, .3);
+  // murmullo de gente cerca de pueblos, plaza y templo
+  const towns = (S.pois || []).filter(p => p.k === 'village' || p.k === 'temple' || p.k === 'vil' || p.k === 'shop'); const [td] = sndDist(towns.length ? towns : [{ x: 1e6, z: 1e6 }], a.x, a.z);
+  const ck = sndClamp(1 - Math.max(0, td - 10) / 32) * (1 - dark), mur = .6 + .4 * Math.sin(SND.t * .9) * Math.sin(SND.t * 2.3);
+  SND.crowd.g.gain.setTargetAtTime(ck * (hx ? .2 : .14) * mur, now, .6); SND.crowd2.g.gain.setTargetAtTime(ck * .06 * (1.3 - mur), now, .5);
+  // pájaros (de día, más al amanecer y en Kids) y grillos al amanecer
+  SND.birdT -= dt; if (SND.birdT <= 0 && !dark) { SND.birdT = (hx ? 2.4 : 1.4) + Math.random() * (hx ? 5 : 3.5) - dawn; const an = Math.random() * 6.28, r = 8 + Math.random() * 25; sndChirp(a.x + Math.cos(an) * r, a.z + Math.sin(an) * r, (hx ? .035 : .05) * (.5 + Math.random() * .5) * (1 - wk * .4), !hx); }
+  SND.crT -= dt; if (SND.crT <= 0) { SND.crT = .35 + Math.random() * .6; const cv = (dawn > .55 ? (dawn - .55) * 2.2 : 0) + dark * .9; if (cv > .05) sndCrickets(.012 * cv); }
+  // fogatas, braseros y antorchas cercanas
+  const fires = (S.sv && S.sv.fires || []).concat((typeof AMB !== 'undefined' && AMB.src || []).filter(f => f.s >= .3)); const [fd, fb] = sndDist(fires.length ? fires : [{ x: 1e6, z: 1e6 }], a.x, a.z);
+  SND.fireT -= dt; if (fb && fd < 14 && SND.fireT <= 0) { const k = 1 - fd / 14; SND.fireT = .05 + Math.random() * (.5 - k * .4); sndCrack(fb.x, fb.z, .12 * k * k); }
+  // ovejas
+  const sheep = (S.pois || []).filter(p => p.k === 'sheep'); const [sd, sb] = sndDist(sheep.length ? sheep : [{ x: 1e6, z: 1e6 }], a.x, a.z);
+  SND.sheepT -= dt; if (sb && sd < 40 && SND.sheepT <= 0) { SND.sheepT = 4 + Math.random() * 9; sndBleat(sb.x + (Math.random() - .5) * 6, sb.z + (Math.random() - .5) * 6, .05 * (1 - sd / 40)); }
+  // pasos del avatar (bus de efectos)
+  const mov = S.moving || S.freeMoving; if (mov && !cine) { SND.stepT -= dt; if (SND.stepT <= 0) { SND.stepT = hx ? .4 : .34; sndStep(hx ? .2 : .15, ck > .5); } } else SND.stepT = .05;
+}
+function mixPanel() {
+  let el = document.getElementById('v3mix'); if (el) { el.hidden = !el.hidden; el.classList.toggle('kids', !(S && S.hx)); return; }
+  el = document.createElement('div'); el.id = 'v3mix'; el.className = 'v3mix' + (S && S.hx ? '' : ' kids');
+  const row = (k, lab, ic) => `<label><span>${ic} ${lab}</span><input type="range" min="0" max="100" step="1" data-k="${k}" value="${Math.round(mixV(k) * 100)}" aria-label="Volumen de ${lab}"><b>${Math.round(mixV(k) * 100)}</b></label>`;
+  el.innerHTML = `<div class="hd"><strong>Sonido</strong><button type="button" aria-label="Cerrar">✕</button></div>${row('mus', 'Música', '🎵')}${row('amb', 'Ambiente', '🌿')}${row('sfx', 'Efectos y voz', '👣')}<p>La música se apaga con 🎵; la voz que lee versículos, con 🗣️.</p>`;
+  document.body.appendChild(el);
+  el.querySelector('.hd button').onclick = () => { el.hidden = true; };
+  el.querySelectorAll('input').forEach(r => { r.oninput = () => { mixSet(r.dataset.k, r.value / 100); r.nextElementSibling.textContent = r.value; auStart(); if (r.dataset.k === 'sfx') sndUI('tick'); }; });
+  ['pointerdown', 'keydown', 'wheel'].forEach(e => el.addEventListener(e, ev => ev.stopPropagation()));
+}
+
 /* composición épica al estilo de las aventuras de Narnia: 16 compases en 4/4.
    A = tema heroico en cornos (o flauta), B = las cuerdas toman la melodía y todo crece.
    Cada vuelta suma orquesta: 1) flauta, arpa y cuerdas suaves 2) cornos, timbales 3) tutti con violines arriba */
@@ -2024,12 +2123,12 @@ const SONG = {
   soak: { bpm: 44, prog: [[36, 43, 52, 55, 59, 64], [33, 40, 48, 52, 55, 60], [29, 36, 45, 48, 52, 57], [31, 38, 47, 50, 55, 62]] }
 };
 function auTick() {
-  const c = AU.ctx; if (!c || !S) return;
+  const c = AU.ctx; if (!c || !S) return; try { sndTick(.09); } catch (e) { if (!AU.sndErr) { AU.sndErr = 1; console.warn('ambiente', e); } }
   const shown = !document.getElementById('view3d').hidden && document.getElementById('arcade').hidden;
   const pray = S.pose === 'pray', tm = c.currentTime + .35;
   if (musTick()) { AU.master.gain.setTargetAtTime(0, c.currentTime, .2); AU.next = c.currentTime + .1; AU.snext = c.currentTime + .1; return; }
   if (AU.mus && !AU.bank) Object.keys(SMP).forEach(loadInst); // si la música grabada falla, vuelve la orquesta sintetizada
-  AU.master.gain.setTargetAtTime(AU.on && shown ? .9 : 0, c.currentTime, .4);
+  AU.master.gain.setTargetAtTime(AU.on && shown ? .9 * mixV('mus') : 0, c.currentTime, .4);
   AU.adv.gain.setTargetAtTime(pray ? 0 : (AU.speaking || AU.narr ? .45 : 1), c.currentTime, pray ? .8 : 1.6);
   AU.soak.gain.setTargetAtTime(pray ? (AU.speaking ? .7 : 1) : 0, c.currentTime, pray ? 2.2 : .9);
   if (!AU.on || !shown) { AU.next = Math.max(AU.next, c.currentTime + .1); AU.snext = Math.max(AU.snext, c.currentTime + .1); return; }
@@ -2082,7 +2181,7 @@ function say(txt, ref, onend) {
   if (AU.voice && G().vo && G().voOn()) { caption(txt, ref, 60); AU.speaking = true; AU.voSay = true; G().vo(txt, 'narrador', { onend: () => { AU.speaking = false; AU.voSay = false; caption(null); onend && onend(); } }); return; }
   if (!AU.voice || !('speechSynthesis' in window)) { caption(txt, ref, 9); onend && setTimeout(onend, 9000); return; }
   try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt.replace(/SEÑOR/g, 'Señor') + '. ' + ref.replace(/(\d+):(\d+)-(\d+)/, '$1, versículos $2 al $3').replace(/(\d+):(\d+)/, '$1, versículo $2')); const v = esVoice(); if (v) u.voice = v; u.lang = v ? v.lang : 'es-419'; u.rate = 1.06; u.pitch = .96; u.volume = .85;
-    AU.speaking = true; caption(txt, ref, 60); const t0 = performance.now(), minMs = 2500 + txt.length * 55; u.onend = u.onerror = () => { setTimeout(() => { AU.speaking = false; caption(null); onend && onend(); }, Math.max(0, minMs - (performance.now() - t0))); }; speechSynthesis.speak(u); } catch (e) { AU.speaking = false; }
+    u.volume = mixV('sfx'); AU.speaking = true; caption(txt, ref, 60); const t0 = performance.now(), minMs = 2500 + txt.length * 55; u.onend = u.onerror = () => { setTimeout(() => { AU.speaking = false; caption(null); onend && onend(); }, Math.max(0, minMs - (performance.now() - t0))); }; speechSynthesis.speak(u); } catch (e) { AU.speaking = false; }
 }
 function caption(txt, ref, secs) {
   let el = document.getElementById('v3say'); if (!el) { el = document.createElement('div'); el.id = 'v3say'; el.className = 'v3say'; document.body.appendChild(el); }
@@ -2106,7 +2205,8 @@ function voiceTick(dt) {
 }
 function auButtons() {
   const box = document.getElementById('v3acts'); if (!box || box.querySelector('[data-a="music"]')) return;
-  box.insertAdjacentHTML('afterbegin', '<button data-a="music" aria-label="Música" title="Música"></button><button data-a="voice" aria-label="Voz que lee versículos" title="Voz"></button>');
+  box.insertAdjacentHTML('afterbegin', '<button data-a="music" aria-label="Música" title="Música"></button><button data-a="voice" aria-label="Voz que lee versículos" title="Voz"></button><button data-a="mix" aria-label="Volumen de música, ambiente y efectos" title="Sonido">🎚️</button>');
+  box.querySelector('[data-a="mix"]').onpointerdown = e => { e.preventDefault(); e.stopPropagation(); auStart(); mixPanel(); };
   const paint = () => { box.querySelector('[data-a="music"]').textContent = AU.on ? '🎵' : '🔇'; box.querySelector('[data-a="voice"]').textContent = AU.voice ? '🗣️' : '🤐'; box.querySelector('[data-a="music"]').classList.toggle('off', !AU.on); box.querySelector('[data-a="voice"]').classList.toggle('off', !AU.voice); };
   box.querySelector('[data-a="music"]').onpointerdown = e => { e.preventDefault(); e.stopPropagation(); AU.on = !AU.on; pref2('music', AU.on ? '1' : '0'); auStart(); paint(); };
   box.querySelector('[data-a="voice"]').onpointerdown = e => { e.preventDefault(); e.stopPropagation(); AU.voice = !AU.voice; pref2('voice', AU.voice ? '1' : '0'); if (!AU.voice) stopVoice(); paint(); };
@@ -3314,7 +3414,8 @@ function seasonTick(dt) {
   // cielo más gris y luz más baja con nubes o lluvia
   if (!SEAS.base && S.scene) { SEAS.base = { lights: [] }; S.scene.traverse(o => { if (o.isDirectionalLight || o.isHemisphereLight) SEAS.base.lights.push([o, o.intensity]); }); if (S.scene.fog) SEAS.base.fog = S.scene.fog.color.clone(); }
   const g = Math.min(1, s.gray + (SEAS.rainOn ? .35 : 0)); if (SEAS.base) { SEAS.base.lights.forEach(([o, i0]) => { o.intensity = i0 * (1 - g * (o.isDirectionalLight ? .45 : .15)); }); if (SEAS.base.fog && S.scene.fog) S.scene.fog.color.copy(SEAS.base.fog).lerp(new THREE.Color('#9AA2A8'), g * .6); }
-  if (SEAS.auto && !SEAS.told && document.getElementById('view3d') && !document.getElementById('view3d').hidden) { SEAS.told = true; let fr = '';
+  const tst = document.getElementById('toast'), busy = (tst && tst.classList.contains('on')) || (typeof CINE !== 'undefined' && CINE.on) || !document.getElementById('arcade').hidden;
+  if (SEAS.auto && !SEAS.told && !busy && document.getElementById('view3d') && !document.getElementById('view3d').hidden) { SEAS.told = true; let fr = '';
     try { const p = G().P(); p.story = p.story || {}; if (p.story.seas !== s.n) { p.story.seas = s.n; fr = SEAS.FRASE[s.i] || ''; G().save(); } } catch (e) {}
     const el = document.createElement('div'); el.className = 'v3seas' + (fr ? ' fr' : ''); el.innerHTML = `<b>${s.icon} ${s.name} en Galilea</b>${fr ? `<span>${fr}</span>` : ''}`; document.body.appendChild(el); setTimeout(() => el.classList.add('on'), 50); setTimeout(() => { el.classList.remove('on'); setTimeout(() => el.remove(), 900); }, fr ? 9000 : 4200); }
 }
@@ -5012,4 +5113,4 @@ function svGive(bg) {
 
 addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 'e') axHold(false); });
 addEventListener('touchstart', () => document.body.classList.add('v3touch'), { once: true, passive: true });
-window.W3 = { dbgHero: () => ({ VIL, SEC, MAT, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineBusy, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
+window.W3 = { dbgHero: () => ({ VIL, SEC, MAT, AU, SND, MIX, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineBusy, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };

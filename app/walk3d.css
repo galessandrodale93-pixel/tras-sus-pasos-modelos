@@ -737,3 +737,8 @@ body[data-branch="ados"] .lvup div small{color:#FFD25E}
 .sv-rec.done{opacity:.72}.sv-rec.done small{display:block;margin-top:3px;color:#9FD28A}
 .vil .mem-v{font:700 16px/1.55 Fraunces,Georgia,serif}.vil .mem-gap{color:#E9C37A;letter-spacing:-.05em}.vil .mem-ok{color:#9FD28A}.vil .mem-bank button.mem-no{background:rgba(200,60,40,.45)!important}.vil .mem-bank button:disabled{opacity:.35}
 .vil .mem-bank{display:flex!important;flex-wrap:wrap;gap:6px}.vil .mem-bank button{width:auto!important;flex:0 0 auto;padding:8px 12px!important}
+
+.v3mix{position:fixed;z-index:9;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(150px + env(safe-area-inset-bottom,0px));width:min(300px,calc(100vw - 32px));padding:12px 14px 10px;border-radius:16px;background:rgba(20,16,11,.92);color:#F3E6CC;border:1px solid rgba(233,195,122,.35);font:700 13px/1.3 Nunito,system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.v3mix .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}.v3mix .hd strong{font-size:15px;color:#FFE3A6}.v3mix .hd button{background:none;border:0;color:inherit;font-size:16px;width:32px;height:32px;cursor:pointer}
+.v3mix label{display:grid;grid-template-columns:1fr 112px 30px;align-items:center;gap:8px;padding:6px 0}.v3mix input{width:100%;accent-color:#E2AC55}.v3mix b{text-align:right;font-variant-numeric:tabular-nums}.v3mix p{margin:6px 0 0;font-size:11.5px;opacity:.75;font-weight:600}
+.v3mix.kids{background:rgba(255,255,255,.95);color:#22324F;border-color:rgba(34,64,127,.2)}.v3mix.kids .hd strong{color:#22407F}
