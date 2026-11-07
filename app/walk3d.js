@@ -3699,8 +3699,9 @@ function pgCell(ix, iz) {
     const g = G[gi]; L.push({ x, y: h - .03, z, ry: R() * 6.283, s: .8 + R() * .45, gi, vi: Math.floor(R() * g.vars.length), r: R(), c: .88 + R() * .2 }); }
   PG.cache.set(key, L); if (PG.cache.size > 2600) { const it = PG.cache.keys(); for (let k = 0; k < 600; k++) PG.cache.delete(it.next().value); } return L;
 }
-const _pgM = new THREE.Matrix4(), _pgQ = new THREE.Quaternion(), _pgE = new THREE.Euler(), _pgV = new THREE.Vector3(), _pgS = new THREE.Vector3(), _pgC = new THREE.Color();
+let _pgM, _pgQ, _pgE, _pgV, _pgS, _pgC;
 function pgFill() {
+  if (!_pgM) { _pgM = new THREE.Matrix4(); _pgQ = new THREE.Quaternion(); _pgE = new THREE.Euler(); _pgV = new THREE.Vector3(); _pgS = new THREE.Vector3(); _pgC = new THREE.Color(); }
   const a = S.av.position, Rr = PG_R[QUAL.lv], tri = PG_TRI[QUAL.lv], cnt = PG.ims.map(() => 0), idx = new Map(); PG.ims.forEach((im, k) => idx.set(im, k)); let used = 0;
   const lim = Math.ceil(tri / PG.avgTri), c0x = Math.floor((a.x - Rr) / PG_CELL), c1x = Math.floor((a.x + Rr) / PG_CELL), c0z = Math.floor((a.z - Rr) / PG_CELL), c1z = Math.floor((a.z + Rr) / PG_CELL);
   const cells = []; for (let ix = c0x; ix <= c1x; ix++) for (let iz = c0z; iz <= c1z; iz++) { const dx = (ix + .5) * PG_CELL - a.x, dz = (iz + .5) * PG_CELL - a.z; cells.push([dx * dx + dz * dz, ix, iz]); } cells.sort((p, q) => p[0] - q[0]);
