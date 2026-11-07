@@ -791,11 +791,12 @@ function qDetectGL() { try { const c = document.createElement('canvas'), gl = c.
 let _qE = null;
 function qEarly() { if (_qE != null) return _qE; let m = 'auto'; try { m = QOLD[localStorage.getItem('tsp:q')] || localStorage.getItem('tsp:q') || 'auto'; } catch (e) {} return (_qE = QN[m] && m !== 'auto' ? { ultra: 3, alto: 2, medio: 1, bajo: 0 }[m] : qLevelFor(qDetectGL()).lv); }
 function qLevelFor(g) {
-  const coarse = matchMedia('(pointer: coarse)').matches, mem = navigator.deviceMemory || 4, good = /RTX|RX ?[67]\d{3}|Radeon Pro|Apple M\d|GTX|Radeon|Iris Xe|Arc|Adreno \(TM\) 7[3-9]\d|Mali-G7[1-9]|Immortalis|Xclipse|Apple GPU/i.test(g);
+  const coarse = matchMedia('(pointer: coarse)').matches, mem = navigator.deviceMemory || 4, good = /RTX|RX ?[67]\d{3}|Radeon Pro|Apple M\d|GTX|Radeon|Iris Xe|Arc|Adreno \(TM\) 7[3-9]\d|Mali-G7[1-9]|Immortalis|Xclipse|Apple GPU/i.test(g), discrete = /RTX|GTX|RX ?[67]\d{3}|Radeon Pro/i.test(g);
   if (/SwiftShader|llvmpipe|Software/i.test(g)) return { lv: 0, max: 1 };
   if (coarse) return { lv: 1, max: 1 }; // celulares y tablets: Medio como máximo (memoria de WebGL limitada, sobre todo en iPhone)
-  if (good) return { lv: 3, max: 3 };
-  return { lv: 2, max: 3 };
+  if (discrete) return { lv: 3, max: 3 };
+  if (good) return { lv: 2, max: 3 };
+  return { lv: 1, max: 3 };
 }
 const HOWTO = {
   kids: [['🚶', 'Caminá', 'Mové el círculo de abajo (o las flechas) para caminar por donde quieras.'], ['🗺️', 'El mapa', 'Tocá «Mapa» para ver dónde estás y elegir a dónde ir.'], ['🎮', 'Juegos', 'En cada parada hay una historia de Jesús y un juego. ¡Cada juego es distinto!'], ['🌟', 'Brillá', 'Con el botón de la estrella hacés una pose y te llenás de luz. Ayudar a otros te hace brillar más.'], ['💪', 'Tus fuerzas', 'Cuando subís de nivel ganás puntos para tus fuerzas. Tocá la estrellita de arriba para elegirlas.'], ['🏅', 'Tus puntos', 'Los puntos que juntás se guardan y siguen sumando en todos los cursos.']],
@@ -886,6 +887,7 @@ function qLabel() { return QN[QUAL.mode] + (QUAL.mode === 'auto' ? ' · ' + QL[Q
 function qFrame(raw) {
   QUAL.fr++; QUAL.ft[QUAL.fi++ % 300] = raw; QUAL.ema += (Math.min(raw, 100) - QUAL.ema) * .05;
   if (QUAL.mode === 'auto' && !window.__fxKeep) { QUAL.cool -= raw;
+    if (QUAL.ema > 33) { QUAL.vslow = (QUAL.vslow || 0) + raw; if (QUAL.vslow > 2500 && QUAL.lv > 0) { QUAL.vslow = 0; QUAL.slow = 0; QUAL.cool = 12000; QUAL.lv--; QUAL.dpr = 0; qApply(); return; } } else QUAL.vslow = 0;
     if (QUAL.ema > 20) { QUAL.slow += raw; QUAL.fast = 0; } else if (QUAL.ema < 12.5) { QUAL.fast += raw; QUAL.slow = 0; } else { QUAL.slow = 0; QUAL.fast = 0; }
     if (QUAL.slow > (QUAL.fr < 900 ? 700 : 2000)) { QUAL.slow = 0; QUAL.cool = 8000; if (QUAL.dpr > QUAL.cap * .8 + .01) { QUAL.dpr = Math.max(.75, QUAL.dpr - .15); S.renderer.setPixelRatio(QUAL.dpr); resize(); } else if (QUAL.lv > 0) { QUAL.lv--; QUAL.dpr = 0; qApply(); } else if (QUAL.dpr > .76) { QUAL.dpr = Math.max(.75, QUAL.dpr - .15); S.renderer.setPixelRatio(QUAL.dpr); resize(); } }
     else if (QUAL.fast > 7000 && QUAL.cool <= 0) { QUAL.fast = 0; QUAL.cool = 6000; if (QUAL.dpr < QUAL.cap - .01) { QUAL.dpr = Math.min(QUAL.cap, QUAL.dpr + .1); S.renderer.setPixelRatio(QUAL.dpr); resize(); } else if (QUAL.lv < QUAL.max) { QUAL.lv++; QUAL.dpr = 0; qApply(); } } }
@@ -3534,7 +3536,7 @@ function phTick(dt) {
   if (!S || !PH.bands.length) return; PH.uT.value = S.t || 0; PH.near -= dt; if (PH.near > 0) return; PH.near = .5;
   const cz = S.av.position.z, see = (S.hx ? 120 : 140) * QT.see[QUAL.lv], pre = see + 50; let next = null, nd = 1e9;
   for (const B of PH.bands) { const d = Math.abs(B.zc - cz) - PH_BAND / 2, lim = B.o.far ? see * 1.6 : B.o.near ? see * .55 : see; if (B.g && B.o.shadow) { const cs = QUAL.lv >= 2 && d < [0, 0, 40, 70][QUAL.lv]; if (B.cs !== cs) { B.cs = cs; B.ims.forEach(im => { im.castShadow = cs; }); } } if (!B.built && d < (B.o.far ? pre * 1.6 : pre) && d < nd) { nd = d; next = B; } if (B.g) { B.g.visible = !!B.ok && d < lim; if (B.g.visible && B.ims && B.ims.length && B.thin !== QUAL.lv + ':' + B.ims.length) { B.thin = QUAL.lv + ':' + B.ims.length; const f = [.45, .65, 1, 1][QUAL.lv]; B.ims.forEach(im => { if (im.userData.n0 == null) im.userData.n0 = im.count; const g = im.geometry, tri = (g.index ? g.index.count : g.attributes.position.count) / 3; im.count = tri > 1500 ? Math.max(1, Math.floor(im.userData.n0 * f)) : im.userData.n0; }); } } }
-  if (next) { phBuild(next); PH.near = .12; } // de a una franja por vez, para no trabar un cuadro
+  if (next && QUAL.ema < 34) { phBuild(next); PH.near = .12; } else if (next) PH.near = .3; // de a una franja por vez, para no trabar un cuadro
 }
 function phWorld(scene, W, allPts, zMax, hx, R0) {
   SEAS.base = null; SEAS.rain = null; SEAS.olB = null; SEAS.acc = 9;
@@ -3907,7 +3909,7 @@ function loop(now) {
   const root = S.root; if (!root || root.hidden || root.closest('main').hidden || document.hidden) { S.last = 0; return; }
   // con un minijuego abierto el mundo 3D no se dibuja: toda la máquina queda para el minijuego
   const arc = S.arcEl || (S.arcEl = document.getElementById('arcade')); if (arc && !arc.hidden) { S.last = 0; return; }
-  const raw = now - (S.last || now), t = now / 1000, dt = Math.min(.05, raw / 1000); S.last = now; S.t = t; S.renderer.info.reset(); if (raw > 0 && raw < 250) qFrame(raw);
+  const raw = now - (S.last || now), t = now / 1000, dt = Math.min(.05, raw / 1000); S.last = now; S.t = t; S.renderer.info.reset(); if (raw > 0 && raw < 1500) qFrame(Math.min(raw, 250));
   const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); floraTick(dt); miniTick(dt); compassTick(dt); vilTick(dt); foamTick(t); dawnTick(dt); const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
   for (const id in S.items) { const m = S.items[id];
     if (m.userData.gone) { m.userData.gone += dt; const k = m.userData.gone / .5; m.scale.setScalar(1 + k); m.position.y += dt * 2; m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = Math.max(0, 1 - k); } }); if (k >= 1) { S.scene.remove(m); delete S.items[id]; } continue; }
