@@ -596,6 +596,121 @@
    "t": "reflect",
    "q": "Jesús resucitado te conoce por tu nombre y camina con vos. ¿Qué le querés contar hoy?",
    "id": "res-41"
+  },
+  {
+   "t": "mc",
+   "q": "¿A cuántas personas a la vez se apareció Jesús resucitado, según Pablo?",
+   "o": [
+    "A más de quinientas",
+    "A doce",
+    "A setenta",
+    "A tres"
+   ],
+   "a": 0,
+   "exp": "Muchos todavía vivían cuando Pablo lo escribió.",
+   "ref": "1 Corintios 15:6",
+   "id": "res-m01"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué quiere decir que Cristo es el primer fruto de la resurrección?",
+   "o": [
+    "Que su resurrección es la primera de una cosecha: los que son suyos también van a resucitar",
+    "Que fue el primero en plantar un árbol",
+    "Que resucitó antes que Lázaro",
+    "Que comió fruta al resucitar"
+   ],
+   "a": 0,
+   "exp": "Es el versículo de esta etapa.",
+   "ref": "1 Corintios 15:20",
+   "id": "res-m02"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada pista de la resurrección con lo que la respalda",
+   "p": [
+    [
+     "La tumba vacía",
+     "Hasta los enemigos tuvieron que inventar que robaron el cuerpo"
+    ],
+    [
+     "Las primeras testigos",
+     "Fueron mujeres, algo que nadie habría inventado en esa época"
+    ],
+    [
+     "El cambio de los discípulos",
+     "Hombres asustados se volvieron valientes y dieron la vida"
+    ],
+    [
+     "La iglesia en Jerusalén",
+     "Nació en la ciudad donde cualquiera podía ver la tumba"
+    ]
+   ],
+   "exp": "La resurrección se recibe con fe, y es una fe con buenas razones.",
+   "id": "res-m03"
+  },
+  {
+   "t": "tf",
+   "q": "Los guardias de la tumba recibieron dinero para decir que los discípulos habían robado el cuerpo mientras dormían.",
+   "a": true,
+   "exp": "Los sacerdotes les pagaron para tapar lo que había pasado.",
+   "ref": "Mateo 28:11-15",
+   "id": "res-m04"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué el material dice que nadie muere por algo que sabe que es mentira?",
+   "o": [
+    "Porque los discípulos dieron la vida por anunciar que Jesús vivía",
+    "Porque los romanos no castigaban a nadie",
+    "Porque los discípulos eran muy ricos",
+    "Porque nadie les creyó"
+   ],
+   "a": 0,
+   "exp": "El cambio de los discípulos es una de las pistas más fuertes.",
+   "id": "res-m05"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué encargo le hizo Jesús a Pedro después de preguntarle tres veces si lo amaba?",
+   "o": [
+    "Que cuidara de sus ovejas",
+    "Que volviera a pescar",
+    "Que escribiera un evangelio",
+    "Que se quedara en Galilea"
+   ],
+   "a": 0,
+   "exp": "Tres veces lo había negado; ahora tres veces le respondió que lo amaba.",
+   "ref": "Juan 21:15-17",
+   "id": "res-m06"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuándo resucitó Jesús?",
+   "o": [
+    "El primer día de la semana",
+    "El sábado a la noche",
+    "Una semana después de morir",
+    "El día de Pentecostés"
+   ],
+   "a": 0,
+   "exp": "Por eso los cristianos se reúnen el domingo.",
+   "ref": "Mateo 28:1",
+   "id": "res-m07"
+  },
+  {
+   "t": "app",
+   "q": "Un compañero te pregunta por qué creés que Jesús está vivo. ¿Qué le contestás?",
+   "o": [
+    "Le contás algunas pistas, como la tumba vacía y el cambio de los discípulos, y qué significa para vos",
+    "Le decís que no se pregunta",
+    "Le decís que es un cuento lindo",
+    "Cambiás de tema"
+   ],
+   "a": 0,
+   "exp": "El desafío de esta etapa: contarle a alguien, como María Magdalena, que Jesús está vivo.",
+   "ref": "Juan 20:18",
+   "id": "res-m08"
   }
  ]
 }

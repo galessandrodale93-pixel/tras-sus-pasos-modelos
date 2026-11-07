@@ -608,6 +608,122 @@
    "t": "reflect",
    "q": "Leé Isaías 53:5 despacio y poné tu nombre: \"fue traspasado por mis rebeliones\". ¿Qué le querés decir a Jesús después de esto?",
    "id": "cru-41"
+  },
+  {
+   "t": "mc",
+   "q": "¿A quién eligió liberar la multitud en lugar de Jesús?",
+   "o": [
+    "A Barrabás",
+    "A Simón de Cirene",
+    "A Nicodemo",
+    "A Malco"
+   ],
+   "a": 0,
+   "exp": "Pilato se lavó las manos y entregó a Jesús.",
+   "ref": "Mateo 27:15-26",
+   "id": "cru-m01"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada palabra de la cruz con su cita",
+   "p": [
+    [
+     "Padre, perdónalos, porque no saben lo que hacen.",
+     "Lucas 23:34"
+    ],
+    [
+     "Tengo sed.",
+     "Juan 19:28"
+    ],
+    [
+     "¡Todo está cumplido!",
+     "Juan 19:30"
+    ],
+    [
+     "Padre, encomiendo mi espíritu en tus manos.",
+     "Lucas 23:46"
+    ]
+   ],
+   "exp": "Son cuatro de las siete palabras que Jesús dijo desde la cruz.",
+   "id": "cru-m02"
+  },
+  {
+   "t": "mc",
+   "q": "¿A quién le prometió Jesús que estaría con él en el paraíso?",
+   "o": [
+    "A uno de los criminales, arrepentido",
+    "A Pilato",
+    "Al oficial romano",
+    "A Pedro"
+   ],
+   "a": 0,
+   "exp": "Gracia para un criminal arrepentido a último momento.",
+   "ref": "Lucas 23:43",
+   "id": "cru-m03"
+  },
+  {
+   "t": "mc",
+   "q": "La frase Dios mío, Dios mío, ¿por qué me has abandonado? es el comienzo de…",
+   "o": [
+    "El Salmo 22",
+    "El Salmo 23",
+    "Isaías 53",
+    "Génesis 1"
+   ],
+   "a": 0,
+   "exp": "Muestra el peso del pecado y la distancia que Jesús cargó.",
+   "ref": "Mateo 27:46",
+   "id": "cru-m04"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué muestra la frase Tengo sed?",
+   "o": [
+    "Su humanidad real y su sufrimiento físico",
+    "Que no había agua en Jerusalén",
+    "Que quería bajar de la cruz",
+    "Que estaba enojado"
+   ],
+   "a": 0,
+   "exp": "Jesús sufrió en un cuerpo real.",
+   "ref": "Juan 19:28",
+   "id": "cru-m05"
+  },
+  {
+   "t": "mc",
+   "q": "Según Romanos 5:8, ¿cómo mostró Dios su amor?",
+   "o": [
+    "Enviando a Cristo a morir por nosotros cuando todavía éramos pecadores",
+    "Dándonos una vida sin problemas",
+    "Premiando a los que se portan bien",
+    "Mandando más profetas"
+   ],
+   "a": 0,
+   "exp": "Es el versículo de esta etapa.",
+   "ref": "Romanos 5:8",
+   "id": "cru-m06"
+  },
+  {
+   "t": "tf",
+   "q": "Al pie de la cruz, Jesús encomendó a su mamá al cuidado de Juan.",
+   "a": true,
+   "exp": "Cuidó a su madre en medio del dolor.",
+   "ref": "Juan 19:26-27",
+   "id": "cru-m07"
+  },
+  {
+   "t": "app",
+   "q": "Un amigo está pasando un momento muy duro y no sabés qué decirle. ¿Qué hacés, como Simón de Cirene?",
+   "o": [
+    "Lo acompañás y lo ayudás a cargar, aunque no tengas palabras",
+    "Esperás a que se le pase",
+    "Le decís que no es para tanto",
+    "Te alejás para no incomodar"
+   ],
+   "a": 0,
+   "exp": "El desafío de esta etapa: acompañar a alguien en un momento duro.",
+   "ref": "Marcos 15:21",
+   "id": "cru-m08"
   }
  ]
 }

@@ -563,6 +563,118 @@
    "t": "reflect",
    "q": "María aceptó que se cumpliera en ella la palabra de Dios. ¿Qué te cuesta entregarle a Dios con esa confianza?",
    "id": "nac-40"
+  },
+  {
+   "t": "mc",
+   "q": "¿A quién fue a visitar María después del anuncio del ángel?",
+   "o": [
+    "A Elisabet, la madre de Juan el Bautista",
+    "A Ana, la profetisa",
+    "A Marta, en Betania",
+    "A su prima Salomé"
+   ],
+   "a": 0,
+   "exp": "María visitó a Elisabet, y ahí cantó el Magnificat.",
+   "ref": "Lucas 1:39-56",
+   "id": "nac-m01"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo se llama el canto de alabanza de María?",
+   "o": [
+    "Magnificat",
+    "Shemá",
+    "Hosanna",
+    "Aleluya"
+   ],
+   "a": 0,
+   "exp": "Es el canto que María dijo en la casa de Elisabet, alabando a Dios.",
+   "ref": "Lucas 1:46-55",
+   "id": "nac-m02"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué significa el nombre Belén?",
+   "o": [
+    "Casa del pan",
+    "Ciudad de paz",
+    "Lugar de estrellas",
+    "Monte santo"
+   ],
+   "a": 0,
+   "exp": "Belén significa casa del pan. El que después diría que es el pan de vida nació ahí.",
+   "ref": "Miqueas 5:2",
+   "id": "nac-m03"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué significa el nombre Jesús?",
+   "o": [
+    "El Señor salva",
+    "Dios con nosotros",
+    "Hijo de David",
+    "Príncipe de paz"
+   ],
+   "a": 0,
+   "exp": "Jesús significa el Señor salva. Emanuel, el otro nombre, significa Dios está con nosotros.",
+   "ref": "Mateo 1:21-23",
+   "id": "nac-m04"
+  },
+  {
+   "t": "tf",
+   "q": "La palabra que usa Juan para decir que Jesús vino a vivir entre nosotros es la misma que se usaba para armar una carpa.",
+   "a": true,
+   "exp": "Por eso el material dice que Dios plantó su carpa en medio de nuestro barrio.",
+   "ref": "Juan 1:14",
+   "id": "nac-m05"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué es la encarnación?",
+   "o": [
+    "Que la Palabra, que era Dios, se hizo hombre y vino a vivir entre nosotros",
+    "Que Jesús fue un profeta muy bueno",
+    "Que un ángel tomó forma humana por un tiempo",
+    "Que Dios mandó una carta a su pueblo"
+   ],
+   "a": 0,
+   "exp": "La encarnación es el centro de la Navidad: Dios se hizo hombre.",
+   "ref": "Juan 1:14",
+   "id": "nac-m06"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada regalo de los magos con lo que significaba",
+   "p": [
+    [
+     "Oro",
+     "Rey"
+    ],
+    [
+     "Incienso",
+     "Dios"
+    ],
+    [
+     "Mirra",
+     "Su muerte"
+    ]
+   ],
+   "exp": "Los regalos anunciaban quién era el niño: rey, Dios y el que iba a morir por nosotros.",
+   "id": "nac-m07"
+  },
+  {
+   "t": "app",
+   "q": "En tu grupo alguien dice que Dios está lejos y no le importan las cosas de todos los días. ¿Qué le podés contar, como enseña la encarnación?",
+   "o": [
+    "Que Dios se hizo hombre y vino a vivir entre nosotros, y le contás algo concreto que Dios hizo en tu vida",
+    "Que tiene razón, Dios está ocupado en cosas más grandes",
+    "Que no hable de eso en el grupo",
+    "Que lea solamente el Antiguo Testamento"
+   ],
+   "a": 0,
+   "exp": "El desafío de esta etapa es contarle a alguien una cosa concreta que Dios hizo en tu vida.",
+   "ref": "Juan 1:14",
+   "id": "nac-m08"
   }
  ]
 }

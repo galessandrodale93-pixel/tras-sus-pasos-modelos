@@ -573,6 +573,118 @@
    "t": "reflect",
    "q": "Jesús dijo que sus seguidores son luz. ¿En qué lugar de tu semana (la escuela, tu casa, tus amigos) te toca brillar?",
    "id": "gal-40"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo resume Marcos el mensaje de Jesús al empezar en Galilea?",
+   "o": [
+    "El reino de Dios está cerca: arrepiéntanse y crean la buena noticia",
+    "Amen a sus enemigos",
+    "Vendan todo lo que tienen",
+    "Vayan a Jerusalén"
+   ],
+   "a": 0,
+   "exp": "Es la gran noticia de esta etapa: Dios empieza a reinar de una manera nueva.",
+   "ref": "Marcos 1:15",
+   "id": "gal-m01"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué profeta leyó Jesús en la sinagoga de Nazaret?",
+   "o": [
+    "Isaías",
+    "Jeremías",
+    "Ezequiel",
+    "Daniel"
+   ],
+   "a": 0,
+   "exp": "Leyó sobre el Ungido que trae buenas noticias a los pobres, y dijo que se cumplía ese día.",
+   "ref": "Lucas 4:16-21 · Isaías 61:1-2",
+   "id": "gal-m02"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué quiso hacer la gente de Nazaret después de escucharlo?",
+   "o": [
+    "Tirarlo por un barranco",
+    "Hacerlo rey",
+    "Nombrarlo jefe de la sinagoga",
+    "Seguirlo a Capernaum"
+   ],
+   "a": 0,
+   "exp": "Su propio pueblo lo rechazó.",
+   "ref": "Lucas 4:28-30",
+   "id": "gal-m03"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué pueblo junto al mar de Galilea fue la base del ministerio de Jesús?",
+   "o": [
+    "Capernaum",
+    "Nazaret",
+    "Jericó",
+    "Betania"
+   ],
+   "a": 0,
+   "exp": "Desde Capernaum recorrió Galilea; ahí sanó a la suegra de Pedro.",
+   "ref": "Marcos 1:21-31",
+   "id": "gal-m04"
+  },
+  {
+   "t": "tf",
+   "q": "Jesús se levantaba de madrugada, cuando todavía estaba oscuro, para ir a orar a un lugar solitario.",
+   "a": true,
+   "exp": "Aun con mucha gente buscándolo, priorizaba estar con el Padre.",
+   "ref": "Marcos 1:35",
+   "id": "gal-m05"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué quiere decir que el reino de Dios es ya, pero todavía no?",
+   "o": [
+    "Que llegó con Jesús, pero todavía no del todo: seguimos viendo enfermedad, injusticia y muerte",
+    "Que nunca va a llegar",
+    "Que ya llegó completo y no hay que esperar nada",
+    "Que es solo para después de morir"
+   ],
+   "a": 0,
+   "exp": "Por eso lo comparó con una semilla de mostaza que crece.",
+   "ref": "Marcos 1:15",
+   "id": "gal-m06"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada parte del Sermón del monte con su enseñanza",
+   "p": [
+    [
+     "Bienaventuranzas",
+     "Felices los que reconocen su necesidad de Dios"
+    ],
+    [
+     "La ley más honda",
+     "Además de no matar, sacar el odio del corazón"
+    ],
+    [
+     "Las dos casas",
+     "Una sobre la roca resiste la tormenta; otra sobre la arena se derrumba"
+    ]
+   ],
+   "exp": "Mateo 5 a 7 reúne lo central de la enseñanza de Jesús.",
+   "id": "gal-m07"
+  },
+  {
+   "t": "app",
+   "q": "Querés orar más pero siempre agarrás el celular apenas te despertás. ¿Qué podés hacer, como Jesús en Capernaum?",
+   "o": [
+    "Levantarte diez minutos antes para orar antes de agarrar el celular",
+    "Orar solo cuando tengas un problema",
+    "Dejar de orar porque no te sale",
+    "Esperar a tener más tiempo libre"
+   ],
+   "a": 0,
+   "exp": "Es el desafío de esta etapa.",
+   "ref": "Marcos 1:35",
+   "id": "gal-m08"
   }
  ]
 }

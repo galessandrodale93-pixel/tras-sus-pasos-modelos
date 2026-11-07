@@ -562,6 +562,119 @@
    "t": "reflect",
    "q": "Jesús le preguntó a Bartimeo qué quería que hiciera por él. Si te lo preguntara hoy, ¿qué le responderías?",
    "id": "mil-41"
+  },
+  {
+   "t": "mc",
+   "q": "¿Para qué escribió Juan las señales en su evangelio?",
+   "o": [
+    "Para que creamos que Jesús es el Mesías, el Hijo de Dios, y tengamos vida",
+    "Para asustar a los romanos",
+    "Para que aprendamos a hacer milagros",
+    "Para contar la historia de Israel"
+   ],
+   "a": 0,
+   "exp": "Cada señal es como un cartel en el camino: hay que seguir hacia donde apunta.",
+   "ref": "Juan 20:31",
+   "id": "mil-m01"
+  },
+  {
+   "t": "order",
+   "q": "Ordená las siete señales como aparecen en el evangelio de Juan",
+   "items": [
+    "El agua en vino",
+    "El hijo del funcionario",
+    "El paralítico de Betesda",
+    "La multiplicación de los panes",
+    "Jesús sobre el agua",
+    "El ciego de nacimiento",
+    "La resurrección de Lázaro"
+   ],
+   "exp": "El evangelio de Juan está organizado alrededor de estas siete señales.",
+   "id": "mil-m02"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le dijo Jesús a la hija de Jairo para levantarla?",
+   "o": [
+    "Talita cum",
+    "Efatá",
+    "Hosanna",
+    "Maranata"
+   ],
+   "a": 0,
+   "exp": "Significa niña, levántate.",
+   "ref": "Marcos 5:41",
+   "id": "mil-m03"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada señal con el Yo soy que la acompaña",
+   "p": [
+    [
+     "Los panes",
+     "Yo soy el pan de vida"
+    ],
+    [
+     "El ciego de nacimiento",
+     "Yo soy la luz del mundo"
+    ],
+    [
+     "Lázaro",
+     "Yo soy la resurrección y la vida"
+    ]
+   ],
+   "exp": "Al lado de varias señales, Jesús dice una frase que empieza con Yo soy.",
+   "id": "mil-m04"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué recuerda el Yo soy que usa Jesús?",
+   "o": [
+    "El nombre con el que Dios se presentó a Moisés en la zarza ardiente",
+    "La frase de un rey de Israel",
+    "Un saludo de los romanos",
+    "Una oración del templo"
+   ],
+   "a": 0,
+   "exp": "Por eso sus oyentes entendían que Jesús hablaba como Dios.",
+   "ref": "Éxodo 3:14",
+   "id": "mil-m05"
+  },
+  {
+   "t": "tf",
+   "q": "Cuando le bajaron el paralítico por el techo, Jesús primero le perdonó los pecados y después lo sanó.",
+   "a": true,
+   "exp": "Mostró que tenía autoridad para perdonar, algo que solo Dios puede hacer.",
+   "ref": "Marcos 2:1-12",
+   "id": "mil-m06"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué devolvía Jesús, además de la salud, cuando sanaba a alguien excluido?",
+   "o": [
+    "Su lugar en la familia y en la comunidad",
+    "Su dinero perdido",
+    "Un puesto en el templo",
+    "Nada más que la salud"
+   ],
+   "a": 0,
+   "exp": "Por eso le dijo hija a la mujer, tocó a los leprosos y llamó a Bartimeo delante de todos.",
+   "ref": "Marcos 5:34",
+   "id": "mil-m07"
+  },
+  {
+   "t": "app",
+   "q": "Tenés poco para dar, pero en tu grupo se está juntando ayuda para una familia. ¿Qué hacés, como el muchacho de los panes?",
+   "o": [
+    "Ofrecés lo tuyo aunque parezca poco, confiando en lo que Dios puede hacer",
+    "No das nada porque no alcanza",
+    "Esperás a tener más",
+    "Das solo si te ven"
+   ],
+   "a": 0,
+   "exp": "Cinco panes y dos pescados alcanzaron para miles.",
+   "ref": "Juan 6:9",
+   "id": "mil-m08"
   }
  ]
 }

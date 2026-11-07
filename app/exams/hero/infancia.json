@@ -528,6 +528,122 @@
    "t": "reflect",
    "q": "Jesús fue fiel en lo cotidiano antes de lo extraordinario. ¿Qué tarea \"chica\" podés hacer hoy como si fuera para él?",
    "id": "inf-38"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le anunció Simeón a María en el templo?",
+   "o": [
+    "Que una espada le atravesaría el alma",
+    "Que su hijo sería sacerdote",
+    "Que debía volver a Belén",
+    "Que tendría muchos nietos"
+   ],
+   "a": 0,
+   "exp": "Simeón llamó a Jesús luz para las naciones y le anunció a María el dolor que vendría.",
+   "ref": "Lucas 2:34-35",
+   "id": "inf-m01"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuántos años tenía la profetisa Ana?",
+   "o": [
+    "Ochenta y cuatro",
+    "Cuarenta",
+    "Cien",
+    "Setenta"
+   ],
+   "a": 0,
+   "exp": "Ana habló del niño a todos los que esperaban la redención.",
+   "ref": "Lucas 2:36-38",
+   "id": "inf-m02"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuál es la primera frase de Jesús que registran los evangelios?",
+   "o": [
+    "Que tenía que estar en la casa de su Padre",
+    "Que el reino de Dios estaba cerca",
+    "Que lo siguieran",
+    "Que era el pan de vida"
+   ],
+   "a": 0,
+   "exp": "A los doce años, en el templo, les respondió eso a sus padres.",
+   "ref": "Lucas 2:49",
+   "id": "inf-m03"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué significa tékton, la palabra griega que se usa para el oficio de Jesús?",
+   "o": [
+    "Constructor",
+    "Pescador",
+    "Maestro",
+    "Pastor"
+   ],
+   "a": 0,
+   "exp": "Lo conocían como el carpintero; tékton es un constructor que trabajaba madera y piedra.",
+   "ref": "Marcos 6:3",
+   "id": "inf-m04"
+  },
+  {
+   "t": "tf",
+   "q": "Según Marcos, Jesús tuvo hermanos llamados Santiago, José, Judas y Simón, y también hermanas.",
+   "a": true,
+   "exp": "La gente de Nazaret los nombraba cuando se preguntaba de dónde sacaba esa sabiduría.",
+   "ref": "Marcos 6:3",
+   "id": "inf-m05"
+  },
+  {
+   "t": "match",
+   "q": "Jesús crecía en cuatro áreas. Uní cada una con lo que representa",
+   "p": [
+    [
+     "Sabiduría",
+     "Su mente y su manera de entender la vida"
+    ],
+    [
+     "Estatura",
+     "Su cuerpo"
+    ],
+    [
+     "El favor de Dios",
+     "Su relación con el Padre"
+    ],
+    [
+     "El favor de la gente",
+     "Sus relaciones"
+    ]
+   ],
+   "exp": "Lucas resume treinta años escondidos con estas cuatro áreas de crecimiento.",
+   "id": "inf-m06"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué oración decía cada familia judía por la mañana y por la noche?",
+   "o": [
+    "El Shemá: escuchá, Israel, el Señor nuestro Dios es el único Señor",
+    "El Padre Nuestro",
+    "El Magnificat",
+    "El Salmo 23"
+   ],
+   "a": 0,
+   "exp": "Jesús creció rezando las oraciones de Israel, como el Shemá.",
+   "ref": "Deuteronomio 6:4-5",
+   "id": "inf-m07"
+  },
+  {
+   "t": "app",
+   "q": "Hay una tarea de tu casa que siempre esquivás. ¿Qué harías si querés crecer como Jesús en Nazaret?",
+   "o": [
+    "La hacés sin que te la pidan y sin anunciarlo",
+    "Esperás a que alguien más la haga",
+    "La hacés solo si te pagan",
+    "La hacés y la publicás para que todos vean"
+   ],
+   "a": 0,
+   "exp": "Dios también obra en lo cotidiano. Ese es el desafío de esta etapa.",
+   "ref": "Lucas 2:51-52",
+   "id": "inf-m08"
   }
  ]
 }

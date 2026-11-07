@@ -612,6 +612,117 @@
    "t": "reflect",
    "q": "En la historia del pródigo, ¿te sentís más el hijo que se fue o el que se quedó enojado? El Padre corre hacia los dos.",
    "id": "par-42"
+  },
+  {
+   "t": "mc",
+   "q": "¿A qué otras cosas comparó Jesús el reino, además de la semilla de mostaza?",
+   "o": [
+    "A la levadura, un tesoro escondido y una perla de gran valor",
+    "A un ejército, una espada y un trono",
+    "A un palacio, una corona y un cetro",
+    "A una tormenta y un rayo"
+   ],
+   "a": 0,
+   "exp": "Son cosas chicas o escondidas que tienen un valor enorme.",
+   "ref": "Mateo 13:31-46",
+   "id": "par-m01"
+  },
+  {
+   "t": "mc",
+   "q": "Según el material, ¿qué hay que buscar al leer una parábola?",
+   "o": [
+    "A quién se la cuenta, la sorpresa, el punto central, dónde me ubico y qué respondo",
+    "Solo el final",
+    "Cuántos personajes hay",
+    "Los nombres de los lugares"
+   ],
+   "a": 0,
+   "exp": "Así se lee una parábola sin quedarse en la superficie.",
+   "id": "par-m02"
+  },
+  {
+   "t": "mc",
+   "q": "¿Por qué era escandaloso que el héroe del relato fuera un samaritano?",
+   "o": [
+    "Judíos y samaritanos tenían siglos de enemistad",
+    "Los samaritanos eran romanos",
+    "Los samaritanos no podían viajar",
+    "Era un sacerdote famoso"
+   ],
+   "a": 0,
+   "exp": "Diferían en dónde adorar a Dios y muchos judíos daban un rodeo para no pasar por Samaria.",
+   "ref": "Lucas 10:25-37",
+   "id": "par-m03"
+  },
+  {
+   "t": "tf",
+   "q": "En esa cultura un hombre mayor no corría en público, y por eso sorprende que el padre del pródigo corriera hacia su hijo.",
+   "a": true,
+   "exp": "El padre deja de lado su dignidad por amor a su hijo.",
+   "ref": "Lucas 15:20",
+   "id": "par-m04"
+  },
+  {
+   "t": "mc",
+   "q": "Pedir la herencia en vida, como hizo el hijo menor, era casi como decirle al padre…",
+   "o": [
+    "Que deseaba que ya estuviera muerto",
+    "Que quería trabajar con él",
+    "Que lo extrañaba",
+    "Que se iba a casar"
+   ],
+   "a": 0,
+   "exp": "Por eso el abrazo del padre es todavía más sorprendente.",
+   "ref": "Lucas 15:12",
+   "id": "par-m05"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cómo termina la historia del hermano mayor?",
+   "o": [
+    "Abierta: no sabemos si entró a la fiesta",
+    "Se va de la casa",
+    "Lo echan",
+    "Entra y baila con su hermano"
+   ],
+   "a": 0,
+   "exp": "Jesús se la estaba contando a los fariseos: el final queda para que cada uno responda.",
+   "ref": "Lucas 15:25-32",
+   "id": "par-m06"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada historia de Lucas 15 con lo que se pierde",
+   "p": [
+    [
+     "El pastor",
+     "Una oveja de cien"
+    ],
+    [
+     "La mujer",
+     "Una moneda de diez"
+    ],
+    [
+     "El padre",
+     "Un hijo"
+    ]
+   ],
+   "exp": "Las tres terminan en fiesta: hay alegría en el cielo por uno que vuelve.",
+   "id": "par-m07"
+  },
+  {
+   "t": "app",
+   "q": "Esta semana ves a un compañero que siempre queda solo en los recreos. ¿Qué hacés, como el samaritano?",
+   "o": [
+    "Te acercás y le hacés lugar, aunque no sea de tu grupo",
+    "Pensás que alguien más lo va a ayudar",
+    "Te reís con los demás",
+    "Esperás a que él venga"
+   ],
+   "a": 0,
+   "exp": "El desafío es acercarte a alguien que está tirado al costado del camino.",
+   "ref": "Lucas 10:37",
+   "id": "par-m08"
   }
  ]
 }

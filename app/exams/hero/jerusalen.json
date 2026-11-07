@@ -593,6 +593,118 @@
    "t": "reflect",
    "q": "En Getsemaní, Jesús le contó al Padre lo que sentía y después se rindió a su voluntad. ¿Qué te gustaría contarle hoy, con la misma sinceridad?",
    "id": "jer-40"
+  },
+  {
+   "t": "mc",
+   "q": "¿Para qué dice Jesús que vino, según Marcos 10:45?",
+   "o": [
+    "Para servir y dar su vida en rescate por muchos",
+    "Para ser servido",
+    "Para gobernar Jerusalén",
+    "Para juzgar a los romanos"
+   ],
+   "a": 0,
+   "exp": "Es el versículo de esta etapa.",
+   "ref": "Marcos 10:45",
+   "id": "jer-m01"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuánto dio la viuda pobre en el templo?",
+   "o": [
+    "Dos moneditas, todo lo que tenía",
+    "Una bolsa de oro",
+    "Un cordero",
+    "La décima parte de su sueldo"
+   ],
+   "a": 0,
+   "exp": "Jesús dijo que dio más que todos, porque dio todo.",
+   "ref": "Marcos 12:41-44",
+   "id": "jer-m02"
+  },
+  {
+   "t": "match",
+   "q": "Uní cada cosa de la mesa de la Pascua con lo que recordaba",
+   "p": [
+    [
+     "Pan sin levadura",
+     "El apuro de la salida de Egipto"
+    ],
+    [
+     "Hierbas amargas",
+     "La amargura de la esclavitud"
+    ],
+    [
+     "El cordero",
+     "La sangre en las puertas que protegió a las familias"
+    ]
+   ],
+   "exp": "En la última cena Jesús le dio un sentido nuevo al pan y a la copa.",
+   "id": "jer-m03"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué profeta había anunciado un nuevo pacto, el que Jesús nombra con la copa?",
+   "o": [
+    "Jeremías",
+    "Jonás",
+    "Amós",
+    "Malaquías"
+   ],
+   "a": 0,
+   "exp": "Dios prometió escribir su ley en el corazón de su pueblo.",
+   "ref": "Jeremías 31:31-34",
+   "id": "jer-m04"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué significa el nombre Getsemaní?",
+   "o": [
+    "Prensa de aceite",
+    "Jardín de flores",
+    "Monte de los olivos",
+    "Casa de oración"
+   ],
+   "a": 0,
+   "exp": "Ahí Jesús oró que se hiciera la voluntad del Padre y no la suya.",
+   "ref": "Marcos 14:32-36",
+   "id": "jer-m05"
+  },
+  {
+   "t": "tf",
+   "q": "Zaqueo devolvió cuatro veces lo robado, mucho más de lo que pedía la ley.",
+   "a": true,
+   "exp": "La ley pedía devolver lo robado más una quinta parte; Zaqueo fue mucho más allá.",
+   "ref": "Lucas 19:8",
+   "id": "jer-m06"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuál fue el nuevo mandamiento que Jesús dio en la última cena?",
+   "o": [
+    "Que se amen unos a otros como él los amó",
+    "Que guarden el sábado",
+    "Que no coman cerdo",
+    "Que vayan al templo cada día"
+   ],
+   "a": 0,
+   "exp": "Lo dijo después de lavarles los pies.",
+   "ref": "Juan 13:34",
+   "id": "jer-m07"
+  },
+  {
+   "t": "app",
+   "q": "En tu casa hay una tarea humilde que nadie quiere hacer. ¿Qué harías como Jesús con la toalla?",
+   "o": [
+    "La hacés en silencio, como un servicio escondido",
+    "La dejás para el que tenga menos años",
+    "Pedís algo a cambio",
+    "La hacés para que te feliciten"
+   ],
+   "a": 0,
+   "exp": "El desafío de esta etapa es un lavado de pies moderno.",
+   "ref": "Juan 13:14-15",
+   "id": "jer-m08"
   }
  ]
 }

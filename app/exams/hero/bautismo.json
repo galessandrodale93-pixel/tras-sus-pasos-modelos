@@ -551,6 +551,106 @@
    "t": "reflect",
    "q": "Cuando venga la tentación, ¿qué versículo podés tener guardado en el corazón para responder como Jesús?",
    "id": "bau-39"
+  },
+  {
+   "t": "mc",
+   "q": "¿Qué le respondía Juan el Bautista a la gente que le preguntaba qué tenía que hacer?",
+   "o": [
+    "Que el que tiene dos camisas comparta con el que no tiene",
+    "Que se fueran a vivir al desierto",
+    "Que ayunaran cuarenta días",
+    "Que dejaran de trabajar"
+   ],
+   "a": 0,
+   "exp": "El arrepentimiento se ve en la vida diaria: compartir y ser justo.",
+   "ref": "Lucas 3:11",
+   "id": "bau-m01"
+  },
+  {
+   "t": "mc",
+   "q": "¿En qué año del gobierno del emperador Tiberio empezó a predicar Juan, según Lucas?",
+   "o": [
+    "En el año quince",
+    "En el primero",
+    "En el año treinta",
+    "En el último"
+   ],
+   "a": 0,
+   "exp": "Lucas ubica el momento con precisión de historiador.",
+   "ref": "Lucas 3:1",
+   "id": "bau-m02"
+  },
+  {
+   "t": "mc",
+   "q": "¿Cuántos días ayunó Jesús en el desierto?",
+   "o": [
+    "Cuarenta",
+    "Siete",
+    "Doce",
+    "Tres"
+   ],
+   "a": 0,
+   "exp": "Después del ayuno vinieron las tres tentaciones.",
+   "ref": "Mateo 4:2",
+   "id": "bau-m03"
+  },
+  {
+   "t": "tf",
+   "q": "En la segunda tentación el diablo también citó un salmo, pero sacado de contexto.",
+   "a": true,
+   "exp": "Por eso no alcanza con citar la Biblia: hay que entenderla bien, como hizo Jesús.",
+   "ref": "Mateo 4:6",
+   "id": "bau-m04"
+  },
+  {
+   "t": "mc",
+   "q": "¿De qué libro sacó Jesús sus tres respuestas al diablo?",
+   "o": [
+    "Deuteronomio",
+    "Salmos",
+    "Isaías",
+    "Génesis"
+   ],
+   "a": 0,
+   "exp": "Las tres respuestas vienen de Deuteronomio 6 a 8.",
+   "ref": "Deuteronomio 6–8",
+   "id": "bau-m05"
+  },
+  {
+   "t": "tf",
+   "q": "Jesús fue tentado en todo igual que nosotros, pero nunca pecó.",
+   "a": true,
+   "exp": "Por eso nos entiende y puede ayudarnos cuando somos tentados.",
+   "ref": "Hebreos 4:15",
+   "id": "bau-m06"
+  },
+  {
+   "t": "mc",
+   "q": "¿Quién fue el primero en llevar a su hermano Simón a conocer a Jesús?",
+   "o": [
+    "Andrés",
+    "Juan",
+    "Felipe",
+    "Natanael"
+   ],
+   "a": 0,
+   "exp": "Andrés siguió a Jesús y enseguida fue a buscar a su hermano.",
+   "ref": "Juan 1:40-42",
+   "id": "bau-m07"
+  },
+  {
+   "t": "app",
+   "q": "Un amigo te dice que no importa hacer trampa en una prueba porque todos lo hacen. ¿Cómo respondés como Jesús en el desierto?",
+   "o": [
+    "Le contestás con una verdad de la Escritura bien entendida y no lo hacés",
+    "Le das la razón para no quedar mal",
+    "Le decís que solo esta vez",
+    "Te enojás y no le hablás más"
+   ],
+   "a": 0,
+   "exp": "El desafío de esta etapa: elegir una tentación concreta y buscar un versículo que le responda.",
+   "ref": "Mateo 4:1-11",
+   "id": "bau-m08"
   }
  ]
 }
