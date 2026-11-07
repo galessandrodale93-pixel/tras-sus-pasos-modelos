@@ -1847,8 +1847,8 @@ function drawMap(cv) {
 function mapZoom(f, px, py) { const cv = document.querySelector('#v3map canvas'); if (!cv || !S.mapV) return; const sc = cv.parentElement, cw = sc.clientWidth, ch = sc.clientHeight; px = px ?? cw / 2; py = py ?? ch / 2; const [wx, wz] = cv._toWorld(px, py); S.mapV.s *= f; drawMap(cv); const [wx2, wz2] = cv._toWorld(px, py); S.mapV.cx += wx - wx2; S.mapV.cz += wz - wz2; drawMap(cv); }
 function openMap() {
   let ov = document.getElementById('v3map');
-  if (!ov) { ov = document.createElement('div'); ov.id = 'v3map'; ov.className = 'v3map'; ov.innerHTML = '<div class="v3map-in"><div class="v3map-h"><b>Mapa</b><span>Arrastrá para moverte · rueda o pellizco para acercar · tocá un lugar para ir</span><div class="v3map-zz"><button class="v3map-z" data-z="in" aria-label="Acercar">＋</button><button class="v3map-z" data-z="out" aria-label="Alejar">－</button><button class="v3map-z" data-z="me" aria-label="Centrar en mí">◎</button></div><button class="bag-x" aria-label="Cerrar mapa">✕</button></div><div class="v3map-sc"><canvas></canvas></div><div class="v3map-f"><span><i class="k4"></i>Vos</span><span><i class="k1"></i>Paradas</span><span><i class="k2"></i>Misiones</span><span><i class="k3"></i>Lugares</span><span><i class="k5"></i>Camino</span><span><i class="k6"></i>Agua</span><button class="v3map-classic">Vista clásica</button></div></div>'; document.body.appendChild(ov);
-    ov.querySelector('.bag-x').onclick = () => { ov.hidden = true; }; ov.onclick = e => { if (e.target === ov) ov.hidden = true; }; ov.querySelector('.v3map-classic').onclick = () => { ov.hidden = true; show3d(false); };
+  if (!ov) { ov = document.createElement('div'); ov.id = 'v3map'; ov.className = 'v3map'; ov.innerHTML = '<div class="v3map-in"><div class="v3map-h"><b>Mapa</b><span>Arrastrá para moverte · rueda o pellizco para acercar · tocá un lugar para ir</span><div class="v3map-zz"><button class="v3map-z" data-z="in" aria-label="Acercar">＋</button><button class="v3map-z" data-z="out" aria-label="Alejar">－</button><button class="v3map-z" data-z="me" aria-label="Centrar en mí">◎</button></div><button class="bag-x" aria-label="Cerrar mapa">✕</button></div><div class="v3map-sc"><canvas></canvas></div><div class="v3map-f"><span><i class="k4"></i>Vos</span><span><i class="k1"></i>Paradas</span><span><i class="k2"></i>Misiones</span><span><i class="k3"></i>Lugares</span><span><i class="k5"></i>Camino</span><span><i class="k6"></i>Agua</span></div></div>'; document.body.appendChild(ov);
+    ov.querySelector('.bag-x').onclick = () => { ov.hidden = true; }; ov.onclick = e => { if (e.target === ov) ov.hidden = true; }; 
     ov.querySelectorAll('.v3map-z').forEach(b => b.onclick = () => { const z = b.dataset.z; if (z === 'me') { S.mapV.cx = S.av.position.x; S.mapV.cz = S.av.position.z; drawMap(ov.querySelector('canvas')); } else mapZoom(z === 'in' ? 1.6 : 1 / 1.6); });
     const cvm = ov.querySelector('canvas'), P = new Map(); let moved = 0, pinch = 0;
     cvm.onwheel = e => { e.preventDefault(); const r = cvm.getBoundingClientRect(); mapZoom(Math.exp(-e.deltaY * .0015), e.clientX - r.left, e.clientY - r.top); };
@@ -4157,15 +4157,17 @@ function idle(dt) {
 
 /* ---------- entrada pública ---------- */
 let loading = null, builtFor = null;
+function v3fail(msg) { document.body.classList.remove('v3boot'); let box = document.getElementById('v3fail'); if (!box) { box = document.createElement('div'); box.id = 'v3fail'; box.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#14110C;color:#F3E6D6;font:600 16px Nunito,sans-serif;text-align:center;padding:24px'; document.body.appendChild(box); }
+  box.innerHTML = '<div style="max-width:420px"><p style="font-size:19px;font-weight:800;margin:0 0 10px">No pudimos abrir el mundo</p><p style="margin:0 0 18px;opacity:.85">' + msg + '</p><button type="button" style="border:0;border-radius:99px;padding:12px 22px;background:#E9B44C;color:#2A1B08;font:800 15px Nunito,sans-serif;cursor:pointer">Probar de nuevo</button></div>'; box.querySelector('button').onclick = () => location.reload(); }
 async function show3d(on) {
   const root = document.getElementById('view3d'), btn = document.getElementById('viewToggle'); if (!root || !btn) return;
   setPref(on ? '3d' : 'map');
   if (!on) { document.body.classList.remove('v3boot'); root.hidden = true; btn.innerHTML = '<span>Vista 3D</span>'; document.body.classList.remove('v3on'); G().syncMap(); return; }
   root.hidden = false; document.body.classList.add('v3on'); btn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Mapa</span>';
   const g = G(), key = g.branch + '|' + g.P().id + '|' + JSON.stringify(g.P().avatar);
-  if (!THREE) { if (!loading) loading = import(THREE_URL); try { THREE = await loading; } catch (e) { document.body.classList.remove('v3boot'); root.hidden = true; document.body.classList.remove('v3on'); btn.hidden = true; return; } }
+  if (!THREE) { if (!loading) loading = import(THREE_URL); try { THREE = await loading; } catch (e) { loading = null; v3fail('Revisá la conexión a internet y volvé a intentar.'); return; } }
   let LBU = null; if (builtFor !== key || !S) { if (!window.__noLobby && !/[?&]lobby=0/.test(location.search)) { try { LBU = await lobby(); } catch (e) { console.warn('lobby', e); } } if (S) { S.renderer.dispose(); S = null; } builtFor = key; BSTEP.u = LBU; BSTEP.log = [];
-    let ok = false; try { await withTO(build(), 120000, 'armado'); ok = true; } catch (e) { builtFor = null; buildFail(LBU, e); if (!LBU) { document.body.classList.remove('v3boot'); root.hidden = true; document.body.classList.remove('v3on'); } return; } finally { BSTEP.u = null; if (LBU && ok) LBU.close(); } }
+    let ok = false; try { await withTO(build(), 120000, 'armado'); ok = true; } catch (e) { builtFor = null; buildFail(LBU, e); if (!LBU) v3fail('Probá de nuevo. Si sigue pasando, elegí la calidad Baja en el menú.'); return; } finally { BSTEP.u = null; if (LBU && ok) LBU.close(); } }
   else { const n = g.NODES[g.P().pos], [x, z] = (S.npos && S.npos[n.id]) || toV(n.x, n.y); S.av.position.set(x, 0, z); S.sig = ''; S.onStop = g.P().pos; S.quiet = false; }
   resize(); refresh(); bagBtn(); try { fanInit(); miniInit(); bagHud(); } catch (e) { console.warn('hud', e); } setTimeout(fullHint, 1500); setTimeout(iosHint, 1800); setTimeout(fidDaily, 5000); document.body.classList.remove('v3boot');
 }
@@ -4173,8 +4175,8 @@ export function enter() {
   const btn = document.getElementById('viewToggle'); if (!btn) return;
   btn.hidden = false; btn.onclick = () => { if (document.getElementById('view3d').hidden) show3d(true); else if (S) openMap(); };
   const ok = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } })();
-  if (!ok) { btn.hidden = true; document.body.classList.remove('v3boot'); return; }
-  show3d(pref() === '3d');
+  if (!ok) { btn.hidden = true; v3fail('Este navegador no puede mostrar gráficos 3D. Probá con Chrome o Safari actualizados.'); return; }
+  setPref('3d'); show3d(true);
 }
 
 /* =====================================================================

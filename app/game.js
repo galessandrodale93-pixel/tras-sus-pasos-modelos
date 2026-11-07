@@ -3035,7 +3035,7 @@ function enterMap(){
   $('#hudAv').innerHTML=headBox(p.avatar);$('#avBody').innerHTML=`<g class="idle">${avatarSVG(p.avatar)}</g>`;
   const tw=Math.max(40,p.name.length*6.4+18);$('#tagBg').setAttribute('x',-tw/2);$('#tagBg').setAttribute('width',tw);$('#tagTx').textContent=p.name;
   // si se juega en 3D, el mapa viejo no se ve ni un instante: lo tapa la pantalla de carga hasta que el mundo nuevo está listo
-  {let v='3d';try{v=localStorage.getItem('tsp-view')||'3d';}catch(e){}if(v==='3d')document.body.classList.add('v3boot');}
+  document.body.classList.add('v3boot');
   show('mapView');refreshMap();const n=NODES[p.pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));
   if(p.pos==='start'&&!isDone('nacimiento-n1'))setTimeout(()=>toast(`¡Hola, ${p.name}! Tocá la parada que brilla para empezar.`),500);
   import(new URL('./walk3d.js', import.meta.url).href).then(m=>m.enter()).catch(e=>{console.warn(e);document.body.classList.remove('v3boot');});
