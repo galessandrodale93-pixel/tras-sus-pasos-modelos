@@ -4079,6 +4079,7 @@ function svAct() {
   if (n.k === 'mato') { matObj(n.e); return; }
   if (n.k === 'matp') { matTalk(n.e); return; }
   if (n.k === 'mateo') { matTeo(n.e); return; }
+  if (n.k === 'mates') { escAct(n.e); if (n.e.lb) n.e.lb.visible = false; return; }
   if (n.k === 'matg') { pergOpen(n.e); return; }
   if (n.k === 'matv') { memOpen(n.e); return; }
   if (n.k === 'reflex') { matReflex(); return; }
@@ -4754,9 +4755,10 @@ async function matBuild(scene, W) {
   try { pergBuild(scene, W, rng(8811), used); } catch (e) { console.warn('pergaminos', e); }
   try { memBuild(scene, W, rng(8822), ok, used); } catch (e) { console.warn('versículos', e); }
   try { vidaButton(); } catch (e) {}
+  (M.ESC || []).forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, o = buildHeroAvatar(Object.assign({ anim: ['M_Standing_Idle', 'M_Idle'] }, d.look)); o.position.set(x, Math.max(0, W.hAt(x, z)), z); o.rotation.y = R() * 6.28; scene.add(o); const lb = textSprite('!', true); lb.scale.multiplyScalar(.35); lb.position.set(0, 2.25, 0); lb.visible = !(pm.esc && pm.esc[d.id] != null); o.add(lb); MAT.npcs.push({ d: { id: 'esc-' + d.id, name: d.name, sub: d.sub, esc: d }, x, z, o, lb }); });
   M.GENTE.forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, o = buildHeroAvatar(Object.assign({ anim: ['M_Standing_Idle', 'M_Idle'] }, d.look)); o.position.set(x, Math.max(0, W.hAt(x, z)), z); o.rotation.y = R() * 6.28; scene.add(o); MAT.npcs.push({ d, x, z, o }); });
 }
-function matNear() { const a = S.av.position, r2 = 2.4 * 2.4; for (const e of MAT.npcs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return e.d.teo ? { k: 'mateo', e, label: 'Hablar · Teófilo' } : { k: 'matp', e, label: 'Hablar · ' + e.d.name };
+function matNear() { const a = S.av.position, r2 = 2.4 * 2.4; for (const e of MAT.npcs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return e.d.esc ? { k: 'mates', e, label: 'Hablar · ' + e.d.name } : e.d.teo ? { k: 'mateo', e, label: 'Hablar · Teófilo' } : { k: 'matp', e, label: 'Hablar · ' + e.d.name };
   for (const e of MAT.objs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return { k: 'mato', e, label: 'Mirar' }; return memNear() || pergNear(); }
 function matObj(e) {
   const pm = matP(), d = e.d, first = !pm.seen[d.id]; pm.seen[d.id] = vday(); if (e.ring) e.ring.visible = false;
@@ -4869,6 +4871,15 @@ function memOpen(e) {
   let pos = 0; const draw = el => { el.querySelector('.mem-v').innerHTML = W.map((w, i) => { const h = hide.indexOf(i); if (h < 0) return esc(w); return h < pos ? `<b class="mem-ok">${esc(w)}</b>` : `<span class="mem-gap">${'＿'.repeat(Math.max(3, clean(w).length))}</span>${esc(w.replace(clean(w), ''))}`; }).join(' '); };
   vilSheet(head + `<p class="vil-p mem-v"></p><small class="vil-k">Paso ${lv + 1} de 3 · Tocá las palabras que faltan, en orden.</small><div class="vil-o mem-bank">${bank.map((w, i) => `<button data-w="${i}">${esc(w)}</button>`).join('')}</div>`, el => { draw(el);
     el.querySelectorAll('[data-w]').forEach(b => b.onclick = () => { if (pos >= hide.length) return; const w = bank[+b.dataset.w]; if (w === clean(W[hide[pos]])) { b.disabled = true; pos++; draw(el); if (pos >= hide.length) { up(); setTimeout(() => { el.hidden = true; svToast(lv + 1 >= 3 ? `✨ ¡Memorizaste ${d.ref}! Versículos de memoria: ${done()} de ${total}` : '📖 Muy bien. Volvé a esta piedra para el último paso.'); }, 900); } } else { b.classList.add('mem-no'); setTimeout(() => b.classList.remove('mem-no'), 500); } }); });
+}
+/* ---------- misiones de escena con decisiones (canal 4) ---------- */
+function escAct(e) {
+  const pm = matP(), d = e.d.esc; pm.esc = pm.esc || {}; try { e.o.lookAt(S.av.position.x, e.o.position.y, S.av.position.z); } catch (er) {}
+  const cast = { m: { name: d.name, sub: d.sub, o: e.o, voice: d.g === 'mujer' ? 'mujer' : 'varon' } }, st = x => x.map(([who, t]) => ({ who, t }));
+  if (pm.esc[d.id] != null) { if (cineOk()) cine({ cast, steps: [{ who: 'm', t: 'Gracias por estar acá.' }] }); return; }
+  const opts = d.o.map(([t, gain, then], i) => ({ t, fn: () => { pm.esc[d.id] = i; gain.forEach(([k, n]) => k === 'sab' ? matSab(n) : axGain(k, n)); if (gain.length) glowAdd(3, 'escena'); behav('escenas'); G().save(); }, then: st(then).concat([{ who: 'nar', t: '📖 ' + d.src }]) }));
+  if (cineOk()) { cine({ cast, steps: st(d.pre).concat([{ who: 'm', ask: d.ask, o: opts }]) }); return; }
+  vilSheet(`<div class="inv-h"><b>${esc(d.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div>${d.pre.map(([, t]) => `<p class="vil-p">${esc(t)}</p>`).join('')}<p class="vil-p"><b>${esc(d.ask)}</b></p><div class="vil-o">${opts.map((o, i) => `<button data-i="${i}">${esc(o.t)}</button>`).join('')}</div>`, el => el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const o = opts[+b.dataset.i]; o.fn(); vilSheet(`<div class="inv-h"><b>${esc(d.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div>${o.then.map(s => `<p class="vil-p">${esc(s.t)}</p>`).join('')}`); }));
 }
 const SEC = { mod: null, list: [] };
 function secP() { const p = G().P(); p.secrets = p.secrets || {}; p.relics = p.relics || []; return p; }
