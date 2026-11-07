@@ -1029,7 +1029,20 @@ function scatterNodes(g, HW) {
   });
 }
 const COMP = { el: null, t: 0 };
+/* el HUD de arriba se acomoda midiendo el marco del panel: Día, Mapa y la bolsa van justo debajo, y la guía «Rumbo a…»
+   se corre debajo de todo si en el centro chocaría con el panel (celular en vertical). Corre en Hero y en Kids. */
+const HUDL = { t: 0 };
+function hudLay() {
+  const h = document.querySelector('body.v3on .hud-in'), B = document.body.style; if (!h) return; const r = h.getBoundingClientRect(); if (!r.width || !r.height) return;
+  const hb = Math.round(r.bottom + 8); if (B.getPropertyValue('--hudB') !== hb + 'px') B.setProperty('--hudB', hb + 'px');
+  const c = COMP.el; if (!c || c.hidden) return; const w = c.offsetWidth || 190, L = (innerWidth - w) / 2, R = L + w;
+  const sv = document.querySelector('body.v3on .v3surv') || document.getElementById('v3mmbox'), sr = sv && sv.offsetParent !== null ? sv.getBoundingClientRect() : null;
+  const hit = q => q && L < q.right + 8 && R > q.left - 8; let top = '';
+  if (hit(r)) top = Math.round(Math.max(r.bottom, hit(sr) ? sr.bottom : 0) + 8) + 'px';
+  if (B.getPropertyValue('--compT') !== top) { if (top) B.setProperty('--compT', top); else B.removeProperty('--compT'); }
+}
 function compassTick(dt) {
+  HUDL.t = (HUDL.t || 0) - dt; if (HUDL.t <= 0) { HUDL.t = .25; try { hudLay(); } catch (e) {} }
   if (!S || !S.hx) return; COMP.t -= dt; if (COMP.t > 0) return; COMP.t = .2;
   if (!COMP.el) { COMP.el = document.createElement('div'); COMP.el.className = 'v3comp'; COMP.el.innerHTML = '<i><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3l6 15-6-3.5L6 18Z" fill="currentColor"/></svg></i><span></span>'; COMP.el.onclick = () => openMap(); document.body.appendChild(COMP.el); }
   const a = S.av.position, bg = S.sv && S.sv.bag; if (bg && !S.walking && !sheetUp()) { const dx = bg.x - a.x, dz = bg.z - a.z, d = Math.hypot(dx, dz), C = S.yaw + S.camYaw, th = Math.atan2(dx * -Math.cos(C) + dz * Math.sin(C), dx * Math.sin(C) + dz * Math.cos(C)); COMP.el.hidden = d < 2; COMP.el.firstChild.style.transform = `rotate(${th}rad)`; COMP.el.lastChild.textContent = `Tu bolsa · ${Math.round(d)} m`; return; }

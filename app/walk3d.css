@@ -749,3 +749,7 @@ body[data-branch="ados"] .lvup div small{color:#FFD25E}
 .diary .dia-b{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
 .diary .dia-go{flex:1 1 180px;text-align:center;text-decoration:none;background:linear-gradient(180deg,#F2C46B,#D9A04A);color:#2A1A08;font:800 15px/1 Nunito,system-ui,sans-serif;padding:12px 14px;border-radius:12px}
 .diary .dia-ok{flex:0 1 120px;background:transparent;color:#F3E7CF;border:1px solid rgba(242,196,107,.4);border-radius:12px;font:700 14px/1 Nunito,system-ui,sans-serif;padding:12px 14px;cursor:pointer}
+
+/* HUD superior en flujo: debajo del marco tallado, sin superponerse (lo mide hudLay) */
+body.v3on .v3surv,body.v3on .v3mmbox,.v3mmbox{top:var(--hudB,calc(80px + env(safe-area-inset-top,0px)))!important}
+.v3comp{top:var(--compT,calc(12px + env(safe-area-inset-top,0px)))!important}
