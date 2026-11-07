@@ -3332,11 +3332,11 @@ function dpalmMats() {
   return DPALM.mats = { trunk: new THREE.MeshStandardMaterial({ map: t.bark, roughness: .95, metalness: 0 }), leaf: new THREE.MeshStandardMaterial({ map: t.leaf, alphaTest: .45, side: THREE.DoubleSide, roughness: .8, metalness: 0, vertexColors: true }),
     date: new THREE.MeshStandardMaterial({ color: '#B8632A', roughness: .55, metalness: 0 }) };
 }
-function dpalmGeo(seed) {
+function dpalmGeo(seed, lo) {
   const R = rng(seed), H = 6.5 + R() * 2.5, bend = (R() - .5) * .9, trunkR = .24 + R() * .05;
   const at = t => new THREE.Vector3(Math.sin(t * 1.6) * bend * t, t * H, 0); // tronco apenas curvo
   // tronco: anillos con radio que se afina, UV que repite los rombos
-  const tp = [], tu = [], ti = [], SEG = 14, RING = 28;
+  const tp = [], tu = [], ti = [], SEG = lo ? 8 : 12, RING = lo ? 12 : 22;
   for (let j = 0; j <= RING; j++) { const t = j / RING, c = at(t), r = trunkR * (1.25 - t * .35) * (1 + (j === 0 ? .25 : 0)); for (let i = 0; i <= SEG; i++) { const a = i / SEG * 6.283; tp.push(c.x + Math.cos(a) * r, c.y, c.z + Math.sin(a) * r); tu.push(i / SEG * 2, t * H * 1.6); } }
   for (let j = 0; j < RING; j++) for (let i = 0; i < SEG; i++) { const a = j * (SEG + 1) + i, b = a + SEG + 1; ti.push(a, b, a + 1, b, b + 1, a + 1); }
   const trunk = new THREE.BufferGeometry(); trunk.setAttribute('position', new THREE.Float32BufferAttribute(tp, 3)); trunk.setAttribute('uv', new THREE.Float32BufferAttribute(tu, 2)); trunk.setIndex(ti); trunk.computeVertexNormals();
@@ -3345,21 +3345,21 @@ function dpalmGeo(seed) {
   const quad = (p0, dir, side, len, w, col) => { const o = lp.length / 3; const n = new THREE.Vector3().crossVectors(dir, side).normalize().multiplyScalar(w / 2);
     const p1 = p0.clone().addScaledVector(side, len); [p0.clone().sub(n), p0.clone().add(n), p1.clone().add(n), p1.clone().sub(n)].forEach(v => lp.push(v.x, v.y, v.z)); lu.push(0, 1, 1, 1, 1, 0, 0, 0); for (let k = 0; k < 4; k++) lc.push(col.r, col.g, col.b); li.push(o, o + 1, o + 2, o, o + 2, o + 3); };
   const frond = (az, el, L, dead) => {
-    const N = 26, pts = []; let p = top.clone().add(new THREE.Vector3(0, -.15, 0)), d = new THREE.Vector3(Math.cos(az) * Math.cos(el), Math.sin(el), Math.sin(az) * Math.cos(el));
+    const N = lo ? 14 : 26, pts = []; let p = top.clone().add(new THREE.Vector3(0, -.15, 0)), d = new THREE.Vector3(Math.cos(az) * Math.cos(el), Math.sin(el), Math.sin(az) * Math.cos(el));
     for (let k = 0; k <= N; k++) { pts.push({ p: p.clone(), d: d.clone() }); p.addScaledVector(d, L / N); d.y -= (dead ? .16 : .055 + (1 - el) * .02) * (L / 3); d.normalize(); }
     const right = new THREE.Vector3(-Math.sin(az), 0, Math.cos(az));
-    for (let k = 4; k < N; k++) { const q = pts[k], t = k / N, ll = (.55 - Math.abs(t - .45) * .55) * (dead ? .8 : 1), up = new THREE.Vector3().crossVectors(right, q.d).normalize();
+    for (let k = lo ? 2 : 4; k < N; k++) { const q = pts[k], t = k / N, ll = (.55 - Math.abs(t - .45) * .55) * (dead ? .8 : 1), up = new THREE.Vector3().crossVectors(right, q.d).normalize();
       if (dead) C.setRGB(.55 + R() * .1, .42 + R() * .08, .28); else C.setRGB(.82 + R() * .25, .9 + R() * .2, .78 + R() * .15);
-      [1, -1].forEach(sg => { const side = right.clone().multiplyScalar(sg).addScaledVector(up, .55).addScaledVector(q.d, .25).normalize(); quad(q.p, q.d, side, ll, .06, C); }); }
+      [1, -1].forEach(sg => { const side = right.clone().multiplyScalar(sg).addScaledVector(up, .55).addScaledVector(q.d, .25).normalize(); quad(q.p, q.d, side, ll, lo ? .1 : .06, C); }); }
     // raquis
     for (let k = 0; k < N; k++) { const a = pts[k].p, b = pts[k + 1].p, side = right.clone().multiplyScalar(.035); const o = lp.length / 3; [a.clone().sub(side), a.clone().add(side), b.clone().add(side), b.clone().sub(side)].forEach(v => lp.push(v.x, v.y, v.z)); lu.push(.45, .9, .55, .9, .55, .1, .45, .1); for (let q = 0; q < 4; q++) lc.push(.75, .7, .5); li.push(o, o + 1, o + 2, o, o + 2, o + 3); }
   };
-  for (let i = 0; i < 22; i++) frond(i * 2.399 + R() * .3, .35 + (i % 3) * .28 + R() * .15, 2.6 + R() * .9, false);
-  for (let i = 0; i < 8; i++) frond(i * .785 + R() * .4, -.45 - R() * .4, 1.8 + R() * .5, true);
+  for (let i = 0; i < (lo ? 16 : 22); i++) frond(i * 2.399 + R() * .3, .35 + (i % 3) * .28 + R() * .15, 2.6 + R() * .9, false);
+  for (let i = 0; i < (lo ? 5 : 8); i++) frond(i * .785 + R() * .4, -.45 - R() * .4, 1.8 + R() * .5, true);
   const fr = new THREE.BufferGeometry(); fr.setAttribute('position', new THREE.Float32BufferAttribute(lp, 3)); fr.setAttribute('uv', new THREE.Float32BufferAttribute(lu, 2)); fr.setAttribute('color', new THREE.Float32BufferAttribute(lc, 3)); fr.setIndex(li); fr.computeVertexNormals();
   // racimos de dátiles bajo la copa
-  const dg = []; const base = new THREE.DodecahedronGeometry(.035, 0); for (let k = 0; k < 3 + Math.floor(R() * 3); k++) { const a = R() * 6.28, cx = top.x + Math.cos(a) * .35, cz = top.z + Math.sin(a) * .35, cy = top.y - .45;
-    for (let q = 0; q < 34; q++) { const g = base.clone(), h = R() * .55; g.translate(cx + Math.cos(a) * h * .3 + (R() - .5) * .16, cy - h, cz + Math.sin(a) * h * .3 + (R() - .5) * .16); dg.push(g); } }
+  const dg = []; const base = new THREE.OctahedronGeometry(.04, 0); for (let k = 0; k < 3 + Math.floor(R() * 3); k++) { const a = R() * 6.28, cx = top.x + Math.cos(a) * .35, cz = top.z + Math.sin(a) * .35, cy = top.y - .45;
+    for (let q = 0; q < (lo ? 10 : 22); q++) { const g = base.clone(), h = R() * .55; g.translate(cx + Math.cos(a) * h * .3 + (R() - .5) * .16, cy - h, cz + Math.sin(a) * h * .3 + (R() - .5) * .16); dg.push(g); } }
   const dates = dg.length ? mergeGeos(dg) : null;
   return { trunk, fr, dates, top };
 }
@@ -3369,12 +3369,13 @@ function mergeGeos(list) { // une geometrías no indexadas o indexadas en una so
   const out = new THREE.BufferGeometry(); out.setAttribute('position', new THREE.BufferAttribute(P, 3)); out.setAttribute('normal', new THREE.BufferAttribute(N, 3)); return out;
 }
 function dpalmPlace(scene, list) {
-  if (!list.length) return; const M = dpalmMats(); if (!DPALM.vars) DPALM.vars = [11, 23, 37].map(dpalmGeo);
+  if (!list.length) return; const M = dpalmMats(), lo = matchMedia('(pointer: coarse)').matches || QUAL.lv < 2; if (!DPALM.vars || DPALM.lo !== lo) { DPALM.vars = [11, 23, 37].map(sd => dpalmGeo(sd, lo)); DPALM.lo = lo; }
   const mT = phMat(M.trunk, { wind: 3 }), mL = phMat(M.leaf, { wind: 3 }), mD = phMat(M.date, { wind: 3 }), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
-  DPALM.vars.forEach((v, vi) => { const L = list.filter((_, i) => i % 3 === vi); if (!L.length) return;
+  const by = new Map(); list.forEach((it, i) => { const k = (i % 3) + ':' + Math.floor(it.z / 72); if (!by.has(k)) by.set(k, []); by.get(k).push(it); });
+  by.forEach((L, key) => { const vi = +key.split(':')[0], zc = (Math.floor(L[0].z / 72) + .5) * 72, v = DPALM.vars[vi];
     [[v.trunk, mT, true], [v.fr, mL, true], [v.dates, mD, false]].forEach(([geo, mat, sh]) => { if (!geo) return; const im = new THREE.InstancedMesh(geo, mat, L.length);
-      L.forEach((it, i) => { E.set(0, it.ry, 0); Q.setFromEuler(E); M4.compose(V.set(it.x, it.y, it.z), Q, SC.setScalar(it.s)); im.setMatrixAt(i, M4); }); im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.castShadow = sh && QUAL.lv > 0; im.receiveShadow = true; scene.add(im); });
-    L.forEach(it => phCyl(it.x, it.z, .32 * it.s)); });
+      L.forEach((it, i) => { E.set(0, it.ry, 0); Q.setFromEuler(E); M4.compose(V.set(it.x, it.y, it.z), Q, SC.setScalar(it.s)); im.setMatrixAt(i, M4); }); im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.castShadow = sh && QUAL.lv > 0; im.receiveShadow = true; im.userData.n = L.length; im.userData.zc = zc; im.userData.tree = 1; scene.add(im); FLORA.chunks.push(im); }); });
+  list.forEach(it => phCyl(it.x, it.z, .32 * it.s));
 }
 // troncos y arbustos chocan como el resto de los obstáculos (cilindro simple); los modelos de Poly Haven se suman cuando se arma su franja
 const PH_RAD = { island_tree_01: .45, island_tree_02: .5, island_tree_03: .4, tree_small_02: .32, jacaranda_tree: .55, quiver_tree_01: .4, quiver_tree_02: .35, pine_tree_01: .4, dead_quiver_trunk: .35, searsia_lucida: .6, searsia_burchellii: .6, wild_rooibos_bush: .5, shrub_01: .55, shrub_02: .5, shrub_03: .5, shrub_04: .45, pine_sapling_medium: .35 };
@@ -3507,7 +3508,7 @@ function phWorld(scene, W, allPts, zMax, hx, R0) {
   ['flower_empodium', 'flower_gazania', 'flower_stinkkruid', 'flower_ursinia', 'crystalline_iceplant', 'cheiridopsis_succulent', 'didelta_spinosa', 'othonna_cerarioides', 'dry_quiver_leaf'].forEach(id => phPlace(id, nearPath(70 * k, 2.2, 14, .9, 1.4), { wind: 1, near: 1 }));
   (S.pois || []).filter(p => p.k === 'river').forEach(p => { ['fern_02', 'moss_01', 'shrub_sorrel_01'].forEach(id => { const L = []; for (let i = 0; i < 26; i++) { const q = p.pts[Math.floor(R() * p.pts.length)], sd = R() < .5 ? -1 : 1, x = q[0] + sd * (4.4 + R() * 3), z = q[1] + (R() - .5) * 2; L.push({ x, z, y: yAt(x, z) - .03, ry: R() * 6.28, s: .8 + R() * .5 }); } phPlace(id, L, { wind: 1, near: 1 }); }); });
   { const L = (DPALM.spots || []).slice(); DPALM.spots = [];
-    const RP = rng(5151); (S.pois || []).filter(p => p.k === 'lake').forEach(p => { let tries = 0; for (let n = 0; n < 18 && tries < 400; tries++) { const a = RP() * 6.283; let r = 20; while (r < 90 && W.hAt(p.x + Math.cos(a) * r, p.z + Math.sin(a) * r) < -.01) r += .5; r += 2.5 + RP() * 14; const x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r;
+    const RP = rng(5151), nP = matchMedia('(pointer: coarse)').matches ? 9 : 18; (S.pois || []).filter(p => p.k === 'lake').forEach(p => { let tries = 0; for (let n = 0; n < nP && tries < 400; tries++) { const a = RP() * 6.283; let r = 20; while (r < 90 && W.hAt(p.x + Math.cos(a) * r, p.z + Math.sin(a) * r) < -.01) r += .5; r += 2.5 + RP() * 14; const x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r;
       if (W.dAt(x, z) < 3.2 || blockedAt(x, z) || Math.abs(W.hAt(x - 1, z) - W.hAt(x + 1, z)) > .8 || L.some(q => (q.x - x) ** 2 + (q.z - z) ** 2 < 16)) continue; L.push({ x, y: W.hAt(x, z) - .05, z, ry: RP() * 6.28, s: .85 + RP() * .35 }); n++; } });
     try { regionStone(scene); } catch (e) { console.warn('piedra', e); } try { dpalmPlace(scene, L); } catch (e) { console.warn('palmeras', e); } try { oleanders(scene, W, rng(5252)); } catch (e) { console.warn('adelfas', e); } }
   (FLORA.olive || []).forEach((o, i) => phCyl(o.x, o.z, .3 * o.s, i)); (FLORA.bush || []).forEach(o => phCyl(o.x, o.z, .55 * o.s));
