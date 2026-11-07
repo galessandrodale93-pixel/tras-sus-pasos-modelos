@@ -731,3 +731,7 @@ body[data-branch="ados"] .inv-slot,body[data-branch="ados"] .inv-cell,.inv.hx .i
 body[data-branch="ados"] .lvup div{border-image-source:url(ui/f_hero_panel.webp)!important;color:#FFF6E2}
 body[data-branch="ados"] .lvup div small{color:#FFD25E}
 @media (max-width:520px){body.v3on .hud-in{border-width:10px!important;border-image-width:10px!important}.inv-slot,.inv-cell{border-width:7px!important;border-image-width:7px!important}}
+.vil .diary-t{width:100%;box-sizing:border-box;margin:8px 0;padding:10px 12px;border-radius:12px;border:1px solid rgba(233,195,122,.35);background:rgba(0,0,0,.35);color:#F3E6CC;font:600 14px/1.45 Nunito,system-ui,sans-serif;resize:vertical}
+.vil .diary-past{margin:6px 0 4px;color:#D9CBB0;font:600 13px Nunito,sans-serif}.vil .diary-past summary{cursor:pointer;color:#E9C37A}
+.vil .mat-src{opacity:.75}
+.sv-rec.done{opacity:.72}.sv-rec.done small{display:block;margin-top:3px;color:#9FD28A}

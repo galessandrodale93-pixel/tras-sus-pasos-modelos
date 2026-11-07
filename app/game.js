@@ -303,7 +303,7 @@ const OUTFITS=['#5B8DEF','#EF6F61','#2FAE7C','#F2B33D','#9B7BE8'];
 const CACHE='tsp-cache-v4';
 let branch=null,profiles=[],current=null,saveT=null;
 const P=()=>current;
-const blank=()=>({done:{},visited:['start'],pos:'start',regions:{},medals:[],maps:[],verses:[],games:{},trivia:0,streak:0,best:0,rankId:null,items:{},gear:{own:[],eq:{}},missions:{},mact:null,exams:{},want:{},lvSeen:0,photo:'',surv:null,attr:null,bonus:0,ins:null,glow:null,story:null,vil:null,behav:null,dones:null,rep:null,secrets:null,relics:null,seen:null,fidDay:null,fidRun:null,fidWeek:null,prayDay:null,badges:null,playMs:0,lastBag:null});
+const blank=()=>({done:{},visited:['start'],pos:'start',regions:{},medals:[],maps:[],verses:[],games:{},trivia:0,streak:0,best:0,rankId:null,items:{},gear:{own:[],eq:{}},missions:{},mact:null,exams:{},want:{},lvSeen:0,photo:'',surv:null,attr:null,bonus:0,ins:null,glow:null,story:null,vil:null,behav:null,dones:null,rep:null,secrets:null,relics:null,seen:null,fidDay:null,fidRun:null,fidWeek:null,prayDay:null,badges:null,playMs:0,lastBag:null,mat:null,vida:null});
 const KEYS=Object.keys(blank());
 function serialize(p){const o={};KEYS.forEach(k=>o[k]=p[k]);return JSON.stringify(o);}
 function save(){
@@ -315,7 +315,7 @@ function save(){
    horas de juego, etapas, exámenes (aprobado, nota, intentos), nivel, insignias, dones (elecciones de rol) y frutos (acciones) */
 function campusSummary(p){const ex=p.exams||{},exams={};REGIONS.forEach(R=>{const e=ex[R.id];if(e)exams[R.id]={etapa:R.name,aprobado:!!e.passed,nota:e.best||0,de:e.of||0,intentos:e.tries||(e.hist||[]).length||1,fecha:e.at||null};});
   let lv=1;try{lv=lvOf(total(p));}catch(e){}
-  return {v:1,rama:branch,horas:Math.round((p.playMs||0)/36e5*10)/10,etapas:stagesDone(p),etapasTotal:REGIONS.length,examenes:exams,nivel:lv,puntos:total(p),insignias:(p.badges||[]).map(b=>({curso:b.name,don:b.donName||null,fecha:b.at})),dones:p.dones||{},frutos:(branch==='ados'&&window.W3&&W3.fruitVals)?W3.fruitVals():{},acciones:p.behav||{},actualizado:new Date().toISOString()};}
+  return {v:1,rama:branch,horas:Math.round((p.playMs||0)/36e5*10)/10,etapas:stagesDone(p),etapasTotal:REGIONS.length,examenes:exams,nivel:lv,puntos:total(p),insignias:(p.badges||[]).map(b=>({curso:b.name,don:b.donName||null,fecha:b.at})),dones:p.dones||{},frutos:(branch==='ados'&&window.W3&&W3.fruitVals)?W3.fruitVals():{},acciones:p.behav||{},vidaReal:Object.entries(p.vida||{}).map(([id,v])=>({id,fecha:v.d,texto:v.t})),sabiduriaMaterial:(p.mat&&p.mat.sabi)||0,actualizado:new Date().toISOString()};}
 async function pushCloud(){
   const p=current;if(!p||p.demo)return;
   try{

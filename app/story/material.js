@@ -49,3 +49,95 @@ export const GENTE = [
     t1: ['Todos me miran mal, pero vine igual a bautizarme.'],
     t2: ['Juan no me echó.', 'Me dijo que no cobre más de lo que corresponde.'], src: 'Etapa III · La voz en el desierto' }
 ];
+/* Teófilo (canal 8): un griego curioso, el destinatario de Lucas 1:3, aparece una vez por etapa con la pregunta difícil.
+   o: tres respuestas; la marcada con ok es la del material. e: la explicación, en globos de dos oraciones como máximo. */
+export const TEO_INTRO = ['Me llamo Teófilo. Soy griego y estoy investigando con cuidado todo lo que se cuenta de Jesús.', 'Cada vez que nos crucemos, te voy a hacer una pregunta difícil.'];
+export const TEO = [
+  { r: 0, q: '¿Cómo puede nacer alguien de una virgen? Eso suena imposible.', o: [['Es algo que solo Dios puede hacer: si creó el universo, formar una vida es una obra pequeña para él.', 1], ['Es solo una forma linda de decir que María era muy buena.', 0], ['Nadie lo creía en esa época, se agregó mucho después.', 0]],
+    e: ['Mateo y Lucas escriben por separado y coinciden en que María concibió por obra del Espíritu Santo.', 'Muestra que Jesús es un regalo que viene de arriba, y que al nacer de una mujer es verdaderamente uno de nosotros.'], src: 'Etapa I · Pregunta difícil' },
+  { r: 1, q: 'Si Jesús era Dios, ¿cómo puede ser que creciera en sabiduría?', o: [['Al hacerse hombre eligió vivir con nuestras limitaciones: aprendió a caminar, a leer y a trabajar.', 1], ['En realidad ya sabía todo y fingía aprender.', 0], ['Porque todavía no era Dios: lo fue recién en el bautismo.', 0]],
+    e: ['Siguió siendo Dios y eligió recorrer el camino humano completo, sin usar sus privilegios como atajo.', 'Por eso puede acompañarte en cada etapa de tu crecimiento: él también fue adolescente.'], src: 'Etapa II · Pregunta difícil' },
+  { r: 2, q: 'El bautismo de Juan era para arrepentirse. ¿Por qué se bautizó Jesús, si no tenía pecado?', o: [['Para identificarse con nosotros: se metió en la fila de los pecadores, como uno más.', 1], ['Porque también necesitaba que le perdonaran algo.', 0], ['Para que Juan se hiciera famoso.', 0]],
+    e: ['Desde el primer día se puso en nuestro lugar, algo que llega a su punto máximo en la cruz.', 'Además, ahí el Padre lo presentó y el Espíritu lo ungió para su misión.'], src: 'Etapa III · Pregunta difícil' },
+  { r: 3, q: 'Podía elegir a los mejores alumnos de Jerusalén. ¿Por qué eligió pescadores y un cobrador de impuestos?', o: [['Porque el poder del reino viene de Dios, y él puede usar a cualquiera que se deje formar.', 1], ['Porque los sabios no lo querían escuchar.', 0], ['Porque los pescadores eran más fuertes para viajar.', 0]],
+    e: ['Más tarde los líderes se sorprendieron de ver a gente común sin estudios, y se dieron cuenta de que habían estado con Jesús.', 'Eso incluye a un adolescente de hoy: lo que busca es disposición a seguirlo.'], src: 'Etapa IV · Pregunta difícil' },
+  { r: 4, q: 'Los milagros van contra las leyes de la naturaleza. ¿Cómo pueden ser posibles?', o: [['Las leyes describen cómo funciona normalmente el mundo, y su Creador sigue siendo libre de actuar en él.', 1], ['Son solo cuentos para enseñar algo.', 0], ['Eran trucos que la gente de esa época no entendía.', 0]],
+    e: ['Los evangelios los cuentan con nombres, lugares y detalles, y hasta los enemigos de Jesús los reconocían.', 'La pregunta más honesta es otra: ¿qué hago con lo que estas señales dicen de Jesús?'], src: 'Etapa V · Pregunta difícil' },
+  { r: 5, q: '¿Por qué Jesús enseñaba con parábolas en vez de explicar las cosas directamente?', o: [['Porque abren y cierran a la vez: al que busca le quedan grabadas y lo llevan a preguntar más.', 1], ['Porque la gente de esa época no sabía leer.', 0], ['Para que nadie entendiera lo que decía.', 0]],
+    e: ['Una historia entra por donde las discusiones no entran.', 'Las parábolas te invitan a ser buscador.'], src: 'Etapa VI · Pregunta difícil' },
+  { r: 6, q: 'Judas estuvo tres años con Jesús. ¿Cómo pudo traicionarlo?', o: [['Fue su propia decisión: el amor por el dinero le fue endureciendo el corazón.', 1], ['No tuvo opción, estaba obligado a hacerlo.', 0], ['Jesús nunca lo quiso como a los demás.', 0]],
+    e: ['Jesús lo sabía y aun así le lavó los pies y compartió el pan con él.', 'Judas y Pedro fallaron la misma noche; la diferencia está en hacia dónde fueron con su culpa.'], src: 'Etapa VII · Pregunta difícil' },
+  { r: 7, q: '¿No podía Dios simplemente perdonar? ¿Por qué tenía que morir Jesús?', o: [['Perdonar algo grande tiene un costo, y en la cruz Dios mismo, en su Hijo, absorbió ese costo.', 1], ['Porque Dios estaba enojado y necesitaba descargarse.', 0], ['Fue un accidente: las autoridades le ganaron.', 0]],
+    e: ['Dios es amor y también es justo: toma en serio el mal, porque destruye a las personas que ama.', 'Jesús entregó su vida voluntariamente. En la cruz se encuentran la justicia y el amor de Dios.'], src: 'Etapa VIII · Pregunta difícil' },
+  { r: 8, q: 'Decime la verdad: ¿la resurrección pasó de verdad?', o: [['Hay pistas fuertes: la tumba vacía, las apariciones, las primeras testigos y el cambio de los discípulos.', 1], ['Es imposible saberlo, así que da igual.', 0], ['Fue una forma de decir que sus ideas siguieron vivas.', 0]],
+    e: ['Hombres asustados se volvieron valientes y dieron la vida por anunciarlo: nadie muere por algo que sabe que es mentira.', 'Se recibe con fe, y es una fe con buenas razones.'], src: 'Etapa IX · Pregunta difícil' }
+];
+export const TEO_END = ['Voy a seguir investigando. Me dijeron que Lucas está escribiendo una segunda parte.', 'Gracias por caminar conmigo estas preguntas.'];
+/* Fogata de reflexión (canal 7): una pregunta por etapa para pensar a solas con Dios. Se escribe en un diario privado,
+   que queda solo en este aparato y nadie lee, o se puede quedar en silencio. */
+export const FOGATA = [
+  { r: 0, q: 'María aceptó que se cumpliera en ella la palabra de Dios. ¿Qué te cuesta entregarle a Dios con esa confianza?', src: 'Etapa I · Para entrar en intimidad' },
+  { r: 1, q: 'Jesús creció en sabiduría, en estatura, en el favor de Dios y en el de la gente. ¿En cuál te gustaría pedirle ayuda esta semana?', src: 'Etapa II · Para entrar en intimidad' },
+  { r: 2, q: 'Antes de hacer un solo milagro, Jesús escuchó al Padre llamarlo su Hijo amado. ¿Qué voces intentan decirte quién sos?', src: 'Etapa III · Para entrar en intimidad' },
+  { r: 3, q: 'Pedro obedeció cuando la orden no tenía lógica. ¿Hay algo que Dios te está pidiendo que todavía no entendés?', src: 'Etapa IV · Para entrar en intimidad' },
+  { r: 4, q: 'Jesús le preguntó a Bartimeo qué quería que hiciera por él. Si te lo preguntara hoy, ¿qué le responderías?', src: 'Etapa V · Para entrar en intimidad' },
+  { r: 5, q: 'En la historia del hijo pródigo, ¿te sentís más el que se fue o el que se quedó enojado? El Padre corre hacia los dos.', src: 'Etapa VI · Para entrar en intimidad' },
+  { r: 6, q: 'En Getsemaní, Jesús le contó al Padre lo que sentía. ¿Qué te gustaría contarle hoy, con la misma sinceridad?', src: 'Etapa VII · Para entrar en intimidad' },
+  { r: 7, q: 'Leé despacio Isaías 53:5 y poné tu nombre. ¿Qué le querés decir a Jesús después de esto?', src: 'Etapa VIII · Para entrar en intimidad' },
+  { r: 8, q: 'Jesús resucitado te conoce por tu nombre. Si te preguntara si lo amás, ¿qué le responderías?', src: 'Etapa IX · Para entrar en intimidad' }
+];
+/* Pergaminos del Antiguo Testamento (canal 6): coleccionables escondidos que unen un texto antiguo con la escena.
+   Completar los de una etapa enciende un brillo de Resplandor. */
+export const PERG = [
+  { id: 'g315', r: 0, ref: 'Génesis 3:15', t: 'Dios promete que un descendiente de la mujer va a aplastar la cabeza de la serpiente. Es la primera promesa de un Salvador.' },
+  { id: 'g123', r: 0, ref: 'Génesis 12:3', t: 'Por la descendencia de Abraham iban a ser bendecidas todas las naciones. Los magos extranjeros que llegan a Belén son el primer anticipo.' },
+  { id: '2s7', r: 0, ref: '2 Samuel 7:12-16', t: 'Dios le promete a David un hijo con un trono que no tendrá fin. Jesús nace en Belén, la ciudad de David.' },
+  { id: 'is96', r: 0, ref: 'Isaías 9:6', t: 'Un niño llamado Consejero Admirable, Dios Poderoso, Padre Eterno y Príncipe de Paz. En Belén, esa promesa duerme en un pesebre.' },
+  { id: '1s226', r: 1, ref: '1 Samuel 2:26', t: 'El niño Samuel crecía en estatura y en el favor del Señor y de la gente. Lucas usa casi las mismas palabras para Jesús.' },
+  { id: 'os111', r: 1, ref: 'Oseas 11:1', t: 'De Egipto llamé a mi hijo, dice Dios por medio de Oseas. La huida a Egipto y el regreso repiten la historia de Israel.' },
+  { id: 'dt64', r: 1, ref: 'Deuteronomio 6:4-5', t: 'El Shemá: el Señor nuestro Dios es el único Señor, y hay que amarlo con todo el corazón. Jesús lo rezó cada mañana y cada noche.' },
+  { id: 'g12', r: 2, ref: 'Génesis 1:2', t: 'En la creación, el Espíritu de Dios se movía sobre las aguas. En el Jordán el Espíritu vuelve sobre las aguas: empieza una nueva creación.' },
+  { id: 'arca', r: 2, ref: 'Génesis 8:11', t: 'La paloma volvió al arca de Noé con una ramita de olivo, señal de un mundo nuevo. En el bautismo, el Espíritu baja como una paloma.' },
+  { id: 'desierto', r: 2, ref: 'Deuteronomio 8:2-3', t: 'Israel anduvo cuarenta años por el desierto y cayó en la prueba. Jesús pasa cuarenta días ahí y vence con las mismas palabras de Deuteronomio.' },
+  { id: 'sinai', r: 3, ref: 'Éxodo 19–20', t: 'Moisés subió al monte Sinaí y bajó con la ley. Jesús sube a un monte y enseña la ley del reino con autoridad propia.' },
+  { id: 'tribus', r: 3, ref: 'Génesis 49', t: 'Israel tenía doce tribus. Jesús elige doce apóstoles: está formando un pueblo nuevo.' },
+  { id: 'jubileo', r: 3, ref: 'Levítico 25', t: 'Cada cincuenta años se perdonaban las deudas y se liberaba a los esclavos. En Nazaret, Jesús anuncia que con él llega el gran jubileo de Dios.' },
+  { id: 'mana', r: 4, ref: 'Éxodo 16', t: 'Dios alimentó a su pueblo con maná en el desierto. Jesús da de comer a miles y dice que él es el pan verdadero bajado del cielo.' },
+  { id: 'eliseo', r: 4, ref: '2 Reyes 4:42-44', t: 'Eliseo multiplicó veinte panes para cien hombres. Jesús multiplica cinco panes para miles.' },
+  { id: 's107', r: 4, ref: 'Salmo 107', t: 'El salmo describe a Dios calmando la tormenta y llevando a los marineros al puerto. En la barca, Jesús hace lo que solo Dios hace.' },
+  { id: 'is35', r: 4, ref: 'Isaías 35:5-6', t: 'Cuando Dios viniera a salvar, los ciegos verían y los cojos saltarían. Los milagros de Jesús muestran que ese día llegó.' },
+  { id: 'natan', r: 5, ref: '2 Samuel 12:1-7', t: 'Natán le contó a David la historia de un rico que le robó la única ovejita a un pobre. David se enojó y terminó reconociendo su propio pecado.' },
+  { id: 'ez34', r: 5, ref: 'Ezequiel 34', t: 'Dios promete que él mismo va a buscar a sus ovejas perdidas. Jesús, al contar la oveja perdida, se presenta como ese pastor.' },
+  { id: '2s1530', r: 6, ref: '2 Samuel 15:30', t: 'David subió llorando el monte de los Olivos cuando su hijo lo traicionó. Jesús, el Hijo de David, sube el mismo monte traicionado por un amigo.' },
+  { id: 's11822', r: 6, ref: 'Salmo 118:22', t: 'La piedra que los constructores rechazaron se convirtió en la piedra principal. Jesús lo citó esa misma semana en el templo.' },
+  { id: 'jer31', r: 6, ref: 'Jeremías 31:31-34', t: 'Dios promete un pacto nuevo, escrito en el corazón. En la última cena, Jesús le da un sentido nuevo al pan y a la copa.' },
+  { id: 'g22', r: 7, ref: 'Génesis 22', t: 'Isaac pregunta dónde está el cordero, y Abraham responde que Dios lo va a proveer. Según la tradición, Jerusalén está sobre esos montes.' },
+  { id: 's22', r: 7, ref: 'Salmo 22', t: 'Siglos antes, el salmo describe las burlas, las manos y los pies traspasados y la ropa sorteada. Termina con una victoria: los confines de la tierra se vuelven al Señor.' },
+  { id: 'is53', r: 7, ref: 'Isaías 53', t: 'El siervo de Dios fue herido por nuestras rebeliones y cargó con nuestro pecado. Es la cruz, anunciada siglos antes.' },
+  { id: 'jonas', r: 8, ref: 'Jonás 1:17', t: 'Jonás estuvo tres días en el vientre del gran pez. Jesús lo usó como señal de su propia resurrección.' },
+  { id: 'os62', r: 8, ref: 'Oseas 6:2', t: 'Oseas habla de un pueblo que Dios levanta al tercer día. Jesús resucita al tercer día.' },
+  { id: 'is258', r: 8, ref: 'Isaías 25:8', t: 'Dios va a destruir la muerte para siempre y va a secar las lágrimas de todos los rostros. La resurrección de Jesús es el comienzo de eso.' },
+  { id: 'ez37', r: 8, ref: 'Ezequiel 37', t: 'Ezequiel ve un valle de huesos secos que vuelven a la vida por el Espíritu de Dios. La tumba vacía anuncia esa vida nueva.' }
+];
+/* Misiones de la vida real (canal 4): el «Desafío de la semana» de cada etapa. Son opcionales: el jugador las marca como hechas
+   con una reflexión corta, y quedan en su perfil para que su tutor las vea. */
+export const VIDA = [
+  { id: 'v0a', r: 0, t: 'Contale a alguien una cosa concreta que Dios hizo en tu vida, aunque te parezca chica.' },
+  { id: 'v0b', r: 0, t: 'Como María, anotá algo que estés viviendo con Dios, para guardarlo en el corazón.' },
+  { id: 'v1a', r: 1, t: 'Hacé una tarea de tu casa que normalmente esquivás, sin que te la pidan y sin anunciarlo.' },
+  { id: 'v1b', r: 1, t: 'Armate tu propio Shemá: un versículo corto para decir al despertarte y otro antes de dormir.' },
+  { id: 'v2a', r: 2, t: 'Elegí una tentación concreta y buscá un versículo que le responda. Escribilo y memorizalo.' },
+  { id: 'v2b', r: 2, t: 'Si todavía no te bautizaste, hablá con tu líder o tu tutor sobre qué significa dar ese paso.' },
+  { id: 'v3a', r: 3, t: 'Leé un capítulo del Sermón del monte por día (Mateo 5, 6 y 7) y poné en práctica una sola frase.' },
+  { id: 'v3b', r: 3, t: 'Levantate diez minutos antes para orar antes de agarrar el celular.' },
+  { id: 'v4a', r: 4, t: 'Hacé una lista de tres amigos o familiares que necesitan a Jesús y orá por ellos cada día.' },
+  { id: 'v4b', r: 4, t: 'Como el muchacho de los panes, ofrecé algo tuyo que parece poco para ayudar a alguien.' },
+  { id: 'v5a', r: 5, t: 'Escribí tu propia parábola de diez líneas, en tu escuela o tu barrio, y compartila con tu grupo.' },
+  { id: 'v5b', r: 5, t: 'Buscá a alguien que esté tirado al costado del camino esta semana y acercate.' },
+  { id: 'v6a', r: 6, t: 'Hacé un lavado de pies moderno: un servicio humilde y escondido para alguien de tu familia o tu grupo.' },
+  { id: 'v6b', r: 6, t: 'Si tenés algo que devolver o reparar, como Zaqueo, dá ese paso esta semana.' },
+  { id: 'v7a', r: 7, t: 'Escribí una carta a Jesús agradeciéndole por la cruz, con tus palabras.' },
+  { id: 'v7b', r: 7, t: 'Como Simón de Cirene, acompañá a alguien que está pasando un momento duro.' },
+  { id: 'v8a', r: 8, t: 'Como María Magdalena, contale a alguien que Jesús está vivo y qué significa eso para vos.' },
+  { id: 'v8b', r: 8, t: 'Como los de Emaús, leé la Biblia esta semana con alguien más.' }
+];

@@ -4034,6 +4034,7 @@ function svNear() {
   if (S.inRoom && SHOPS[S.inRoom.trade]) return { k: 'shop', shop: S.inRoom.trade, label: 'Comprar y vender' };
   if (st.bag && d2(st.bag.x, st.bag.z) < 4) return { k: 'bag', label: 'Recoger tus cosas' };
   const fire = svFireNear(); if (fire && (s.inv.fish || 0) > 0) return { k: 'cook', label: 'Cocinar pescado', fire };
+  if (fire && fire.lit !== false && MAT.mod) return { k: 'reflex', label: 'Sentarte junto al fuego', fire };
   let best = null, bd = 2.6 * 2.6;
   st.fruit.trees.forEach((o, i) => { const d = d2(o.x, o.z); if (d < bd && o.n > 0) { bd = d; best = { k: 'fruit', i, label: 'Recoger granadas' }; } });
   (FLORA.olive || []).forEach((o, i) => { if (st.felled.has(i)) return; const d = d2(o.x, o.z); if (d < bd) { bd = d; best = { k: 'tree', i, label: svTool('axe') ? 'Talar' : 'Necesitás un hacha', need: !svTool('axe') }; } });
@@ -4067,6 +4068,9 @@ function svAct() {
   if (n.k === 'sec') { secOpen(n.e); return; }
   if (n.k === 'mato') { matObj(n.e); return; }
   if (n.k === 'matp') { matTalk(n.e); return; }
+  if (n.k === 'mateo') { matTeo(n.e); return; }
+  if (n.k === 'matg') { pergOpen(n.e); return; }
+  if (n.k === 'reflex') { matReflex(); return; }
   if (n.k === 'shop') { svShop(n.shop); return; }
   if (n.k === 'beg') { svGive(n.b); return; }
   if (n.k === 'bag') { svPickBag(); return; }
@@ -4722,10 +4726,13 @@ async function matBuild(scene, W) {
   M.OBJS.forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, g = matMesh(d.k); g.position.set(x, Math.max(0, W.hAt(x, z)), z); g.rotation.y = R() * 6.28;
     const ring = new THREE.Mesh(new THREE.RingGeometry(.8, .9, 32), new THREE.MeshBasicMaterial({ color: '#FFE39A', transparent: true, opacity: .45, depthWrite: false, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .03; ring.visible = !pm.seen[d.id]; g.add(ring);
     g.userData.keep = 1; scene.add(g); MAT.objs.push({ d, x, z, g, ring }); phCyl(x, z, .45); });
+  try { teoBuild(scene, W, R, ok, used); } catch (e) { console.warn('teofilo', e); }
+  try { pergBuild(scene, W, rng(8811), used); } catch (e) { console.warn('pergaminos', e); }
+  try { vidaButton(); } catch (e) {}
   M.GENTE.forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, o = buildHeroAvatar(Object.assign({ anim: ['M_Standing_Idle', 'M_Idle'] }, d.look)); o.position.set(x, Math.max(0, W.hAt(x, z)), z); o.rotation.y = R() * 6.28; scene.add(o); MAT.npcs.push({ d, x, z, o }); });
 }
-function matNear() { const a = S.av.position, r2 = 2.4 * 2.4; for (const e of MAT.npcs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return { k: 'matp', e, label: 'Hablar · ' + e.d.name };
-  for (const e of MAT.objs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return { k: 'mato', e, label: 'Mirar' }; return null; }
+function matNear() { const a = S.av.position, r2 = 2.4 * 2.4; for (const e of MAT.npcs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return e.d.teo ? { k: 'mateo', e, label: 'Hablar · Teófilo' } : { k: 'matp', e, label: 'Hablar · ' + e.d.name };
+  for (const e of MAT.objs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return { k: 'mato', e, label: 'Mirar' }; return pergNear(); }
 function matObj(e) {
   const pm = matP(), d = e.d, first = !pm.seen[d.id]; pm.seen[d.id] = vday(); if (e.ring) e.ring.visible = false;
   if (first) { matSab(1); glowAdd(1, 'mirar'); behav('objetos'); G().save(); }
@@ -4738,6 +4745,75 @@ function matTalk(e) {
   const done = () => { if (n === 0) svToast('💬 Si volvés a hablarle, te va a contar algo más.'); else if (n === 1) svToast('📖 +2 Sabiduría · ' + d.src); };
   if (cineOk() && e.o.userData && e.o.userData.h3) { try { cine({ cast: { m: { name: d.name.replace(/^(Un|Una) /, ''), sub: d.sub, o: e.o } }, steps: lines.map(t => ({ who: 'm', t })), onDone: done }); return; } catch (er) {} }
   vilSheet(`<div class="inv-h"><b>${esc(d.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">${esc(d.sub)}</small>${lines.map(t => `<p class="vil-p">${esc(t)}</p>`).join('')}`); talkGo(e.o, 4); done();
+}
+/* ---------- Teófilo, el viajero preguntón (canal 8), y la fogata de reflexión con diario privado (canal 7) ---------- */
+function matStageAt(z) { const g = G(); for (let r = 0; r < g.REGIONS.length; r++) { const [a, b] = regionZ(g, r); if (z <= a + 20 && z >= b - 20) return r; } return 0; }
+function teoBuild(scene, W, R, ok, used) {
+  const M = MAT.mod; if (!M.TEO) return;
+  M.TEO.forEach(d => { const cands = (S.pois || []).filter(q => q.r === d.r).sort((a, b) => (/lake|shore|river/.test(a.k) ? 1 : 0) - (/lake|shore|river/.test(b.k) ? 1 : 0)); let p = null;
+    for (const poi of cands) for (let t = 0; t < 200 && !p; t++) { const q = poi.k === 'river' ? poi.pts[Math.floor(R() * poi.pts.length)] : [poi.x, poi.z], a = R() * 6.283, rr = 6 + R() * (t < 80 ? 10 : 22), x = q[0] + Math.cos(a) * rr, z = q[1] + Math.sin(a) * rr; if (ok(x, z)) p = [x, z]; }
+    if (!p) return; used.push(p); const [x, z] = p, o = buildHeroAvatar({ g: 'chico', age: 18, skin: '#D6A57C', hair: '#3A2412', outfit: '#E8E2D2', anim: ['M_Standing_Idle', 'M_Idle'] }); o.position.set(x, Math.max(0, W.hAt(x, z)), z); o.rotation.y = R() * 6.28; scene.add(o);
+    const lb = textSprite('Teófilo', true); lb.scale.multiplyScalar(.4); lb.position.set(0, 2.2, 0); o.add(lb); MAT.npcs.push({ d: { id: 'teo' + d.r, name: 'Teófilo', sub: 'un griego que investiga', teo: d }, x, z, o }); });
+}
+function matTeo(e) {
+  const M = MAT.mod, pm = matP(), d = e.d.teo; pm.teo = pm.teo || {}; const first = !Object.keys(pm.teo).length, seen = pm.teo[d.r] != null;
+  try { e.o.lookAt(S.av.position.x, e.o.position.y, S.av.position.z); } catch (er) {}
+  const cast = { t: { name: 'Teófilo', sub: 'un griego que investiga', o: e.o } };
+  if (seen) { if (cineOk()) cine({ cast, steps: [{ who: 't', t: d.r === 8 ? M.TEO_END[1] : 'Sigo pensando en lo que me contaste. Nos vemos en la próxima etapa.' }] }); else svToast('Teófilo: sigo pensando en lo que me contaste.'); return; }
+  const intro = first ? M.TEO_INTRO.map(t => ({ who: 't', t })) : [{ who: 't', t: '¡Otra vez nos cruzamos! Tengo una pregunta nueva.' }];
+  const after = (ok, i) => () => { pm.teo[d.r] = i; matSab(ok ? 3 : 1); behav('teofilo'); G().save(); };
+  const expl = ok => [{ who: 't', t: ok ? 'Tiene sentido. Lo voy a anotar.' : 'Mmm, no me cierra del todo. Te cuento lo que encontré yo.' }].concat(d.e.map(t => ({ who: 't', t })), d.r === 8 ? M.TEO_END.map(t => ({ who: 't', t })) : [], [{ who: 'nar', t: '📖 ' + d.src + (ok ? ' · +3 Sabiduría' : ' · +1 Sabiduría') }]);
+  const opts = d.o.map(([t, ok], i) => ({ t, fn: after(ok, i), then: expl(!!ok) }));
+  for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
+  if (cineOk()) { cine({ cast, steps: intro.concat([{ who: 't', ask: d.q, o: opts }]) }); return; }
+  vilSheet(`<div class="inv-h"><b>Teófilo</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="vil-p">${esc(d.q)}</p><div class="vil-o">${opts.map((o, i) => `<button data-i="${i}">${esc(o.t)}</button>`).join('')}</div>`, el => el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const o = opts[+b.dataset.i]; o.fn(); vilSheet(`<div class="inv-h"><b>Teófilo</b><button class="bag-x" aria-label="Cerrar">✕</button></div>${o.then.map(s => `<p class="vil-p">${esc(s.t)}</p>`).join('')}`); }));
+}
+// diario privado: queda solo en este aparato (localStorage); no se sube al perfil ni lo ve nadie
+function diaryKey() { return 'tsp:diario:' + ((G().P() || {}).id || 'p'); }
+function diaryGet() { try { return JSON.parse(localStorage.getItem(diaryKey()) || '[]'); } catch (e) { return []; } }
+function diaryPut(L) { try { localStorage.setItem(diaryKey(), JSON.stringify(L.slice(-200))); return true; } catch (e) { return false; } }
+function matReflex() {
+  const M = MAT.mod; if (!M || !M.FOGATA) return; const r = matStageAt(S.av.position.z), d = M.FOGATA.find(x => x.r === r) || M.FOGATA[0], pm = matP(), day = vday(), L = diaryGet();
+  S.sit = true; S.joy.x = 0; S.joy.y = 0; const rn = (G().REGIONS[r] || {}).name || '';
+  const reward = () => { pm.fire = pm.fire || {}; if (pm.fire[r] !== day) { pm.fire[r] = day; axGain('paz', 1); glowAdd(2, 'fogata'); behav('fogataReflexion'); G().save(); return true; } return false; };
+  const past = L.filter(x => x.r === r).slice(-5).reverse();
+  vilSheet(`<div class="inv-h"><b>🔥 Junto al fuego</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">Para pensar a solas con Dios · ${esc(rn)}</small><p class="vil-p">${esc(d.q)}</p>
+    <textarea class="diary-t" rows="4" maxlength="1200" placeholder="Si querés, escribilo acá. Es tu diario privado: queda solo en este aparato y nadie lo lee."></textarea>
+    <div class="vil-o"><button data-a="save">Guardar en mi diario</button><button data-a="quiet">Quedarme en silencio</button></div>
+    ${past.length ? `<details class="diary-past"><summary>Lo que escribiste antes (${past.length})</summary>${past.map(x => `<p class="vil-p"><small>${esc(x.d)}</small><br>${esc(x.t)}</p>`).join('')}</details>` : ''}<small class="vil-k mat-src">📖 Del material · ${esc(d.src)}</small>`, el => {
+    const close = () => { S.sit = false; }; const x = el.querySelector('.bag-x'); if (x) x.addEventListener('click', close);
+    el.querySelector('[data-a="save"]').onclick = () => { const t = el.querySelector('.diary-t').value.trim(); if (!t) { svToast('Escribí algo o elegí quedarte en silencio.'); return; } L.push({ r, d: day, t }); const okS = diaryPut(L); el.hidden = true; close(); const got = reward(); svToast(okS ? '📓 Lo guardaste en tu diario.' + (got ? ' +1 Paz' : '') : 'No se pudo guardar en este aparato.'); };
+    el.querySelector('[data-a="quiet"]').onclick = () => { el.hidden = true; const got = reward(); svToast('🤫 Te quedás en silencio junto al fuego.' + (got ? ' +1 Paz' : '')); setTimeout(() => { if (S) S.sit = false; }, 20000); };
+  });
+}
+/* ---------- pergaminos del Antiguo Testamento (canal 6): escondidos lejos del camino, con un brillo apenas visible ---------- */
+function pergBuild(scene, W, R, used) {
+  const M = MAT.mod; if (!M.PERG) return; MAT.perg = []; const g = G(), pm = matP(); pm.perg = pm.perg || {};
+  const ok = (x, z) => !blockedAt(x, z) && waterWet(x, z, null) < .05 && Math.abs(x) < XB * .88 && W.dAt(x, z) > 7 && !used.some(([a, b]) => (a - x) ** 2 + (b - z) ** 2 < 25);
+  M.PERG.forEach(d => { if (d.r >= g.REGIONS.length) return; const [za, zb] = regionZ(g, d.r); let p = null; for (let t = 0; t < 160 && !p; t++) { const x = (R() * 2 - 1) * XB * .8, z = zb + (za - zb) * (.08 + R() * .84); if (ok(x, z)) p = [x, z]; } if (!p) return; used.push(p);
+    const [x, z] = p, o = itemMesh('scroll'); o.position.set(x, Math.max(0, W.hAt(x, z)) + .35, z); o.scale.setScalar(.8); o.visible = !pm.perg[d.id]; o.userData.keep = 1; scene.add(o); MAT.perg.push({ d, x, z, o }); });
+}
+function pergNear() { if (!MAT.perg) return null; const a = S.av.position, pm = matP(); for (const e of MAT.perg) if (!pm.perg[e.d.id] && (e.x - a.x) ** 2 + (e.z - a.z) ** 2 < 2.4 * 2.4) return { k: 'matg', e, label: 'Abrir el pergamino' }; return null; }
+function pergOpen(e) {
+  const M = MAT.mod, pm = matP(), d = e.d; pm.perg[d.id] = vday(); e.o.visible = false; matSab(2); behav('pergaminos'); h3do(['M_Picking_Up', 'PickUp_Table'], 1.8, .6);
+  const all = M.PERG.filter(x => x.r === d.r), got = all.filter(x => pm.perg[x.id]).length, rn = (G().REGIONS[d.r] || {}).name || '', full = got === all.length;
+  if (full) { glowAdd(10, 'pergaminos'); behav('pergaminosEtapa'); } G().save(); tone3d();
+  vilSheet(`<div class="inv-h"><b>📜 ${esc(d.ref)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">Pergamino del Antiguo Testamento · ${esc(rn)} · ${got} de ${all.length}</small><p class="vil-p">${esc(d.t)}</p>${full ? '<p class="vil-p"><b>✨ Juntaste todos los pergaminos de esta etapa: se encendió un brillo de Resplandor.</b></p>' : ''}<small class="vil-k mat-src">📖 Del material · Conectá los puntos · +2 Sabiduría</small>`);
+}
+/* ---------- desafíos de la vida real (canal 4): botón 📝, se marcan como hechos con una reflexión corta que queda en el perfil ---------- */
+function vidaOpen() {
+  const M = MAT.mod; if (!M || !M.VIDA || !S) return; const p = G().P(); p.vida = p.vida || {}; const r = matStageAt(S.av.position.z), rn = (G().REGIONS[r] || {}).name || '';
+  const L = M.VIDA.filter(v => v.r === r), prev = M.VIDA.filter(v => v.r < r && !p.vida[v.id]).slice(-2);
+  const row = v => { const d = p.vida[v.id]; return `<div class="sv-rec${d ? ' done' : ''}"><div><b>${esc(v.t)}</b>${d ? `<small>✔ ${esc(d.d)}${d.t ? ' · ' + esc(d.t) : ''}</small>` : ''}</div>${d ? '' : `<button data-v="${v.id}">Lo hice</button>`}</div>`; };
+  vilSheet(`<div class="inv-h"><b>📝 Desafíos de la vida real</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">Etapa ${esc(rn)} · son opcionales: hacelos fuera de la pantalla y marcalos cuando los hayas vivido</small>${L.map(row).join('')}${prev.length ? '<h4 class="x-h">Te quedaron de antes</h4>' + prev.map(row).join('') : ''}<small class="vil-k mat-src">📖 Del material · Desafío de la semana · lo que escribas acá lo puede ver tu tutor</small>`, el => {
+    el.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { const v = M.VIDA.find(x => x.id === b.dataset.v);
+      vilSheet(`<div class="inv-h"><b>📝 ¿Cómo te fue?</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="vil-p">${esc(v.t)}</p><textarea class="diary-t" rows="3" maxlength="280" placeholder="Contalo en una o dos frases (opcional). Esto lo puede leer tu tutor."></textarea><div class="vil-o"><button data-ok>Marcar como hecho</button></div>`, el2 => {
+        el2.querySelector('[data-ok]').onclick = () => { p.vida[v.id] = { d: vday(), t: el2.querySelector('.diary-t').value.trim().slice(0, 280) }; matSab(2); axGain('fid', 1); glowAdd(4, 'vida'); behav('vidaReal'); G().save(); el2.hidden = true; svToast('✔ ¡Bien! Lo marcaste como hecho. +2 Sabiduría'); }; }); }); });
+}
+function vidaButton() {
+  if (!S || !S.hx) return; const box = document.getElementById('v3acts'); if (!box || box.querySelector('[data-a="vida"]')) return;
+  box.insertAdjacentHTML('beforeend', '<button data-a="vida" aria-label="Desafíos de la vida real" title="Desafíos de la vida real">📝</button>');
+  box.querySelector('[data-a="vida"]').onpointerdown = e => { e.preventDefault(); e.stopPropagation(); if (!MAT.mod) { svToast('Cargando los desafíos…'); return; } vidaOpen(); };
 }
 const SEC = { mod: null, list: [] };
 function secP() { const p = G().P(); p.secrets = p.secrets || {}; p.relics = p.relics || []; return p; }
