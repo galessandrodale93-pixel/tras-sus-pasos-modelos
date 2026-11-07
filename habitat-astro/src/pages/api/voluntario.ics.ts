@@ -34,7 +34,7 @@ export const GET: APIRoute = async ({ url }) => {
       "BEGIN:VALARM", "ACTION:DISPLAY", g.manana ? "TRIGGER:-PT14H30M" : "TRIGGER:-PT7H", fold("DESCRIPTION:" + e((g.manana ? "Mañana: " : "Hoy: ") + g.titulo + " · " + tareas + (g.llegada ? ". A las " + g.llegada + "." : "."))), "END:VALARM",
       "BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:-PT1H", fold("DESCRIPTION:" + e("En una hora: " + g.titulo)), "END:VALARM");
     // quien toma lista: aviso durante la clase para cargar los presentes
-    if (clase && g.llegada && g.tareas.some(esLista)) L.push("BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:PT1H", fold("DESCRIPTION:" + e("Cargá la lista de hoy en Mi servicio: habitat-cfm.org/voluntario.html#lista")), "END:VALARM");
+    if (clase && g.llegada && g.tareas.some(esLista)) L.push("BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:PT1H", fold("DESCRIPTION:" + e("Cuando tomes lista, cargala en la web: habitat-cfm.org/voluntario.html#lista")), "END:VALARM");
     L.push("END:VEVENT");
   }
   L.push("END:VCALENDAR");

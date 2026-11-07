@@ -15,8 +15,8 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
 function html(nombre: string, tareas: string[]) {
   return `<div style="font-family:Georgia,serif;max-width:560px;margin:auto;color:#10251d;background:#fbf8f2;padding:28px;border-radius:16px">
 <p style="font:600 12px Arial;letter-spacing:.14em;color:#b8904f;text-transform:uppercase;margin:0 0 10px">Habitat · Voluntarios</p>
-<h1 style="font-size:26px;margin:0 0 14px">Es hora de cargar la lista 📋</h1>
-<p style="font:16px/1.6 Arial">Hola ${esc(nombre.split(" ")[0])}! Hoy estás a cargo de <b>${esc(tareas.join(" y ").toLowerCase())}</b>. Cuando tengas un momento, cargá quién vino: tocás a cada alumno y se guarda solo.</p>
+<h1 style="font-size:26px;margin:0 0 14px">Cargá la lista en la web 📋</h1>
+<p style="font:16px/1.6 Arial">Hola ${esc(nombre.split(" ")[0])}! Hoy estás a cargo de <b>${esc(tareas.join(" y ").toLowerCase())}</b>. Cuando termines de tomar lista en la clase, volcala en la web: entrás a «Mi servicio», tocás a cada alumno y se guarda solo.</p>
 <p style="margin:22px 0"><a href="https://www.habitat-cfm.org/voluntario.html#lista" style="background:#10251d;color:#fbf8f2;font:700 16px Arial;padding:14px 22px;border-radius:999px;text-decoration:none">Cargar la lista</a></p>
 <p style="font:14px/1.6 Arial;color:#5d6b64">También podés marcar si llegó tarde o si se quedó al tiempo de mesa. Tenés hasta 3 días para completarla; después, cualquier corrección la hace Raquel.</p>
 <p style="font:italic 16px/1.6 Georgia;border-left:3px solid #b8904f;padding-left:14px;margin:20px 0">Gracias por cuidar a cada alumno: detrás de cada nombre hay alguien que Dios está formando.</p>
@@ -44,7 +44,7 @@ export const GET: APIRoute = async ({ url }) => {
       if (dry) { out.push({ vid, email: v.email, tareas, clase: horario(hoy).clase }); continue; }
       const body = {
         emailTransmission: {
-          emailSubject: "Cargá la lista de hoy en Habitat 📋",
+          emailSubject: "Cuando tomes lista, cargala en la web 📋",
           emailHtmlContent: html(v.title || "", tareas),
           senderName: "Habitat CFM",
           senderEmailAddress: C.remitente || "galessandrodale.93@gmail.com",
