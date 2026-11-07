@@ -15,7 +15,26 @@ export const OBJS = [
   // III · Bautismo
   { id: 'cordero', r: 2, near: 'river', k: 'lamb', name: 'Un cordero junto al río', t: 'Junto a este río, Juan presentó a Jesús con una frase que resume el evangelio: «¡Miren! ¡El Cordero de Dios, que quita el pecado del mundo!».', src: 'Etapa III · Cuarenta días en el desierto (Juan 1:29, NTV)' },
   { id: 'cuarenta', r: 2, near: 'desert', k: 'cairn', name: 'Un montón de piedras', t: 'Cuarenta años de Israel en el desierto, cuarenta días de Moisés en el monte y de Elías en el camino. Donde Israel cayó en la prueba, Jesús se mantuvo fiel.', src: 'Etapa III · Una ventana al texto' },
-  { id: 'piedras', r: 2, near: 'desert', k: 'loaves', name: 'Piedras con forma de pan', t: 'Débil y con hambre, Jesús escuchó la tentación de convertirlas en pan. Respondió con la Escritura: la gente vive de cada palabra que sale de la boca de Dios.', src: 'Etapa III · Cuarenta días en el desierto (Deuteronomio 8:3)' }
+  { id: 'piedras', r: 2, near: 'desert', k: 'loaves', name: 'Piedras con forma de pan', t: 'Débil y con hambre, Jesús escuchó la tentación de convertirlas en pan. Respondió con la Escritura: la gente vive de cada palabra que sale de la boca de Dios.', src: 'Etapa III · Cuarenta días en el desierto (Deuteronomio 8:3)' },
+  // IV · Galilea
+  { id: 'barca', r: 3, near: 'lake', k: 'boat', name: 'Una barca de pescadores', t: 'En 1986 apareció en el barro de esta orilla una barca de madera del siglo I, de unos 8 metros. Una barca así usaban Pedro y sus compañeros.', src: 'Etapa IV · Una ventana al texto' },
+  { id: 'redes', r: 3, near: 'lake', k: 'nets', name: 'Redes tendidas', t: 'Pedro había pescado toda la noche sin sacar nada. Aun así echó las redes donde Jesús le dijo, y casi se hunden las dos barcas.', src: 'Etapa IV · Remá mar adentro' },
+  { id: 'tinajas', r: 3, near: 'village', k: 'jars', name: 'Seis tinajas de piedra', t: 'Eran para el lavado ceremonial, de unos cien litros cada una. En la boda de Caná, Jesús las llenó de vino nuevo y abundante.', src: 'Etapa V · Una boda en Caná' },
+  // V · Milagros
+  { id: 'techo', r: 4, near: 'roofhouse', k: 'roof', name: 'Un techo con un agujero', t: 'Los techos eran planos, de ramas y barro. Cuatro amigos lo abrieron para bajar a su amigo paralítico delante de Jesús.', src: 'Etapa V · El techo abierto' },
+  { id: 'canastas', r: 4, near: 'feeding', k: 'baskets', name: 'Doce canastas', t: 'Cinco panes de cebada y dos pescados, la comida de los pobres, alcanzaron para miles. Con lo que sobró llenaron doce canastas.', src: 'Etapa V · Panes, peces y un lago bajo los pies' },
+  // VI · Parábolas
+  { id: 'terrenos', r: 5, near: 'field', k: 'soils', name: 'Cuatro terrenos', t: 'Camino, piedras, espinos y tierra buena, uno al lado del otro. La semilla es la misma; lo que cambia es cómo se recibe.', src: 'Etapa VI · El sembrador' },
+  { id: 'sicomoro', r: 5, near: 'inn', k: 'tree', name: 'Un sicómoro', t: 'Zaqueo no veía por la multitud, así que corrió y se trepó a un árbol así. Jesús se detuvo justo ahí y lo llamó por su nombre.', src: 'Etapa VII · Zaqueo' },
+  // VII · Jerusalén
+  { id: 'mesa', r: 6, near: 'upper', k: 'table', name: 'La mesa de la Pascua', t: 'Pan sin levadura por el apuro de la salida y hierbas amargas por la esclavitud. En esta cena, Jesús le dio un sentido nuevo al pan y a la copa.', src: 'Etapa VII · Una ventana al texto' },
+  { id: 'prensa', r: 6, near: 'garden', k: 'press', name: 'Una prensa de aceite', t: 'Getsemaní significa prensa de aceite: ahí se aplastaban las aceitunas. Esa noche Jesús oró ahí, aplastado por la angustia.', src: 'Etapa VII · Getsemaní' },
+  // VIII · La cruz
+  { id: 'letrero', r: 7, near: 'golgota', k: 'sign', name: 'Un letrero en tres idiomas', t: 'En hebreo, latín y griego decía: Jesús de Nazaret, el Rey de los judíos. Todos los que pasaban podían leerlo.', src: 'Etapa VIII · La cruz' },
+  { id: 'cortina', r: 7, near: 'golgota', k: 'curtain', name: 'Un trozo de cortina rasgada', t: 'Cuando Jesús murió, la cortina del templo se rasgó de arriba abajo. El camino a la presencia de Dios quedó abierto.', src: 'Etapa VIII · La cruz (Marcos 15:38)' },
+  // IX · Resurrección
+  { id: 'lienzos', r: 7, near: 'tomb', k: 'linens', name: 'Lienzos y un paño doblado', t: 'Los lienzos quedaron tirados y el paño de la cabeza, doblado aparte. Juan vio y creyó.', src: 'Etapa IX · La tumba vacía' },
+  { id: 'brasas', r: 8, near: 'shore', k: 'embers', name: 'Un fuego de brasas', t: 'Al amanecer, en la playa, Jesús esperaba a sus amigos con pescado y pan sobre las brasas. Junto a un fuego así, Pedro lo había negado.', src: 'Etapa IX · El desayuno en la playa' }
 ];
 export const GENTE = [
   // I · Nacimiento
@@ -47,7 +66,61 @@ export const GENTE = [
     t2: ['Me dijo que no use mi fuerza para sacarle plata a la gente.', 'El arrepentimiento se ve en lo de todos los días.'], src: 'Etapa III · La voz en el desierto' },
   { id: 'cobrador', r: 2, near: 'river', name: 'Un cobrador de impuestos', sub: 'espera su turno en la orilla', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#4A3A2A', outfit: '#3E5A6A' },
     t1: ['Todos me miran mal, pero vine igual a bautizarme.'],
-    t2: ['Juan no me echó.', 'Me dijo que no cobre más de lo que corresponde.'], src: 'Etapa III · La voz en el desierto' }
+    t2: ['Juan no me echó.', 'Me dijo que no cobre más de lo que corresponde.'], src: 'Etapa III · La voz en el desierto' },
+  // IV · Galilea
+  { id: 'mateo', r: 3, near: 'lake', name: 'Mateo', sub: 'cobraba impuestos para Roma', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#2A1B14', outfit: '#3E5A6A' },
+    t1: ['Yo estaba en mi mesa de impuestos cuando me llamó. Dejé todo y lo seguí.'],
+    t2: ['En el grupo también está Simón, que era zelote, enemigo jurado de Roma.', 'Imaginate las discusiones. Con nosotros Jesús empezó a cambiar el mundo.'], src: 'Etapa IV · Los doce' },
+  { id: 'zelote', r: 3, near: 'lake', name: 'Simón el zelote', sub: 'uno de los doce', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#1A120C', outfit: '#6E2F22' },
+    t1: ['Yo quería echar a los romanos a la fuerza. Ahora camino al lado de un cobrador de impuestos.'],
+    t2: ['Antes de elegirnos, Jesús pasó toda la noche orando en un monte.', 'Nos eligió para estar con él, y después para enviarnos.'], src: 'Etapa IV · Los doce' },
+  { id: 'encargado', r: 3, near: 'village', name: 'El encargado de la fiesta', sub: 'en una boda de Caná', look: { g: 'chico', age: 18, skin: '#D6A57C', hair: '#4A4A4A', outfit: '#8A5A2A' },
+    t1: ['¡Probé el mejor vino de la boda al final! No sé de dónde salió.'],
+    t2: ['Quedarse sin vino era una vergüenza enorme para la familia del novio.', 'Los sirvientes sí saben de dónde vino. Yo no.'], src: 'Etapa V · Una boda en Caná' },
+  // V · Milagros
+  { id: 'suegra', r: 4, near: 'roofhouse', name: 'La suegra de Pedro', sub: 'ya sanada, sirviendo', g: 'mujer', look: { g: 'chica', age: 18, skin: '#C99A72', hair: '#9A9A9A', outfit: '#6A5A7A' },
+    t1: ['Estaba en cama con fiebre. Él me tomó de la mano, me levantó, y la fiebre se fue.'],
+    t2: ['Esa misma tarde, cuando terminó el sábado, todo el pueblo trajo a sus enfermos a esta puerta.', 'Y a la madrugada, cuando todavía estaba oscuro, él se fue solo a orar.'], src: 'Etapa IV · Un día en Capernaum' },
+  { id: 'jairo', r: 4, near: 'feeding', name: 'Jairo', sub: 'líder de la sinagoga', look: { g: 'chico', age: 18, skin: '#D6A57C', hair: '#4A3A2A', outfit: '#3E4A6A' },
+    t1: ['Mi hija de doce años se estaba muriendo. Jesús me dijo que no tuviera miedo, que solo creyera.'],
+    t2: ['La tomó de la mano y le dijo en arameo Talita cum: niña, levántate.', 'Y después pidió que le dieran de comer.'], src: 'Etapa V · Tocar el manto y una niña que se levanta' },
+  // VI · Parábolas
+  { id: 'posadero', r: 5, near: 'inn', name: 'El posadero', sub: 'del camino a Jericó', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#3A2A1A', outfit: '#7A6A4A' },
+    t1: ['Un samaritano me trajo a un herido en su propio burro. Me dejó dos monedas de plata para que lo cuidara.'],
+    t2: ['Dos monedas eran el sueldo de dos días.', 'Y prometió pagar lo que faltara. ¿Quién hace eso por un desconocido?'], src: 'Etapa VI · El buen samaritano' },
+  { id: 'mayor', r: 5, near: 'field', name: 'El hermano mayor', sub: 'no quiere entrar a la fiesta', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#2A1B14', outfit: '#5A6A4A' },
+    t1: ['Yo trabajé siempre y nunca me hicieron una fiesta. Mi hermano vuelve y le matan el ternero más gordo.'],
+    t2: ['Mi papá salió a buscarme también a mí.', 'Todavía no sé si voy a entrar.'], src: 'Etapa VI · El hijo pródigo' },
+  { id: 'bartimeo', r: 5, near: 'inn', name: 'Bartimeo', sub: 'antes mendigaba en Jericó', look: { g: 'chico', age: 18, skin: '#A8784E', hair: '#2A1B14', outfit: '#8A7A5A' },
+    t1: ['Me decían que me callara, pero grité más fuerte. Tiré mi manto y fui hacia él.'],
+    t2: ['El manto era mi abrigo y mi lugar para recibir monedas.', 'Ahora veo, y sigo a Jesús por el camino.'], src: 'Etapa V · En primer plano · Bartimeo' },
+  { id: 'zaqueo', r: 5, near: 'inn', name: 'Zaqueo', sub: 'jefe de cobradores de Jericó', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#3A2A1A', outfit: '#4A3A6A' },
+    t1: ['Me trepé a un sicómoro para verlo pasar. Me llamó por mi nombre y se hospedó en mi casa.'],
+    t2: ['Voy a devolver cuatro veces más a los que engañé.', 'Y la mitad de lo que tengo es para los pobres.'], src: 'Etapa VII · Zaqueo' },
+  // VII · Jerusalén
+  { id: 'viuda', r: 6, near: 'upper', name: 'Una viuda pobre', sub: 'viene de la ofrenda del templo', look: { g: 'chica', age: 18, skin: '#C99A72', hair: '#BDBDBD', outfit: '#5A4A6A' },
+    t1: ['Eché dos moneditas en la ofrenda. Era todo lo que tenía.'],
+    t2: ['Dicen que Jesús me vio y dijo que di más que todos.', 'Yo pensé que nadie se había dado cuenta.'], src: 'Etapa VII · El templo' },
+  { id: 'diaspora', r: 6, near: 'upper', name: 'Un peregrino de lejos', sub: 'vino del mundo judío para la Pascua', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#1A120C', outfit: '#8A6A44' },
+    t1: ['Vine de muy lejos para la Pascua. La ciudad está llena de peregrinos de todo el mundo judío.'],
+    t2: ['Cada familia come un cordero recordando la salida de Egipto.', 'Mientras se come, se cuenta la historia.'], src: 'Etapa VII · Una ventana al texto' },
+  // VIII · La cruz
+  { id: 'cirene', r: 7, near: 'golgota', name: 'Simón de Cirene', sub: 'venía del campo', look: { g: 'chico', age: 18, skin: '#8A5A3A', hair: '#1A120C', outfit: '#7A6A4A' },
+    t1: ['Los soldados me obligaron a cargar la cruz detrás de él. Yo solo venía del campo.'],
+    t2: ['Mis hijos se llaman Alejandro y Rufo.', 'Nunca me voy a olvidar de ese camino.'], src: 'Etapa VIII · El camino de la cruz' },
+  { id: 'oficial', r: 7, near: 'golgota', name: 'El oficial romano', sub: 'estuvo frente a la cruz', look: { g: 'chico', age: 18, skin: '#D6A57C', hair: '#3A2A1A', outfit: '#9A2418' },
+    t1: ['Vi morir a muchos. Ninguno murió así.'],
+    t2: ['Cuando la tierra tembló, lo dije en voz alta: «¡Este hombre era verdaderamente el Hijo de Dios!».'], src: 'Etapa VIII · La cruz (Marcos 15:39, NTV)' },
+  { id: 'arimatea', r: 7, near: 'tomb', name: 'José de Arimatea', sub: 'miembro del concilio', look: { g: 'chico', age: 18, skin: '#D6A57C', hair: '#BDBDBD', outfit: '#3E4A6A' },
+    t1: ['Seguía a Jesús en secreto. Esa tarde me animé a pedirle el cuerpo a Pilato.'],
+    t2: ['Nicodemo vino conmigo. Lo pusimos en una tumba nueva, cavada en la roca, en este huerto.'], src: 'Etapa VIII · La sepultura' },
+  // IX · Resurrección
+  { id: 'cleofas', r: 8, near: 'village', name: 'Cleofas', sub: 'volvió de Emaús', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#2A1B14', outfit: '#6E5A3A' },
+    t1: ['Caminábamos tristes hacia Emaús y un viajero se nos unió. Recién lo reconocimos cuando partió el pan.'],
+    t2: ['Le contamos todo con desilusión: habíamos esperado que él fuera el que iba a liberar a Israel.', 'No sabíamos que lo teníamos al lado.'], src: 'Etapa IX · Emaús' },
+  { id: 'tomas', r: 8, near: 'shore', name: 'Tomás', sub: 'uno de los doce', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#2A1B14', outfit: '#4A6A6A' },
+    t1: ['Dije que no creería hasta ver las marcas de los clavos. Ocho días después, él volvió.'],
+    t2: ['Me mostró sus manos y su costado, y me dijo que no siguiera dudando.', 'Yo, el que más dudaba, le dije: «¡Mi Señor y mi Dios!».'], src: 'Etapa IX · Tomás' }
 ];
 /* Teófilo (canal 8): un griego curioso, el destinatario de Lucas 1:3, aparece una vez por etapa con la pregunta difícil.
    o: tres respuestas; la marcada con ok es la del material. e: la explicación, en globos de dos oraciones como máximo. */
