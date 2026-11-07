@@ -3050,7 +3050,100 @@ function h3pose(av, t, dt, st) {
   if (p > .01 && !mxPray) { h3aim(av, B, 'spine_01', 'spine_02', 0, 1, .05, p); h3aim(av, B, 'spine_02', 'spine_03', 0, 1, .05, p); h3aim(av, B, 'spine_03', 'neck_01', 0, 1, .08, p); h3aim(av, B, 'neck_01', 'Head', 0, 1, .3, p);
     h3aim(av, B, 'upperarm_r', 'lowerarm_r', .18, -.88, .48, p); h3aim(av, B, 'lowerarm_r', 'hand_r', .38, .8, .45, p); h3aim(av, B, 'upperarm_l', 'lowerarm_l', -.18, -.88, .48, p); h3aim(av, B, 'lowerarm_l', 'hand_l', -.38, .8, .45, p); }
   if (q > .01 && !mxWave && u.cur !== 'M_Waving') { h3aim(av, B, 'upperarm_r', 'lowerarm_r', -.85, .38, .18, q); h3aim(av, B, 'lowerarm_r', 'hand_r', -.15 + Math.sin(t * 11) * .38, 1, .15, q); }
+  if (me) toolPose(av, B, t, dt, st);
   if (u.lamp.visible) { const V = h3vec(); B.hand_r.getWorldPosition(V.a); av.worldToLocal(V.a); u.lamp.position.copy(V.a); u.lamp.position.y -= .1 / av.scale.y; }
+}
+/* ---------- herramientas en la mano mientras se hace la acción: caña o red al pescar, hacha al talar, pico al picar, pedernal al encender ---------- */
+const TOOLH = { line: null, bob: null, net: null, rope: null, fish: null, mats: null };
+function toolMats() {
+  if (TOOLH.mats) return TOOLH.mats; const M = (c, r, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: r ?? .85, metalness: 0 }, o || {}));
+  return TOOLH.mats = { wood: M('#7A5532', .8), dark: M('#4A3020', .85), iron: M('#8A8E96', .38, { metalness: .75 }), cane: M('#B89A62', .7), rope: M('#C9B48A', .95), stone: M('#34343C', .55), red: M('#C8402E', .6), white: M('#F2EEE4', .6),
+    netw: new THREE.MeshStandardMaterial({ color: '#D8C9A2', roughness: 1, wireframe: true, transparent: true, opacity: .85 }), fish: M('#A9B4BC', .35, { metalness: .35 }) };
+}
+function toolMesh(geo, mat, x, y, z, parent) { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; parent.add(m); return m; }
+function toolGroup(av, k) {
+  const u = av.userData.h3; if (!u || !u.bones || !u.bones.hand_r) return null; u.tools = u.tools || {}; if (u.tools[k]) return u.tools[k];
+  const T = toolMats(), g = new THREE.Group(), inn = new THREE.Group(); g.add(inn);
+  if (k === 'axe') { const fb = new THREE.Group(); inn.add(fb); toolMesh(new THREE.CylinderGeometry(.018, .022, .62, 8), T.wood, 0, .19, 0, fb); const bl = toolMesh(new THREE.BoxGeometry(.02, .1, .16), T.iron, 0, .44, .07, fb); bl.rotation.x = .08;
+    phOne('wooden_axe', inn, 0, -.12, 0, 0, 1, { done: () => { fb.visible = false; } }); }
+  else if (k === 'pick') { toolMesh(new THREE.CylinderGeometry(.018, .022, .66, 8), T.wood, 0, .21, 0, inn); const h = toolMesh(new THREE.BoxGeometry(.03, .04, .42), T.iron, 0, .5, 0, inn); h.rotation.x = .12;
+    const tp = toolMesh(new THREE.ConeGeometry(.02, .09, 6), T.iron, 0, .5, .25, inn); tp.rotation.x = Math.PI / 2; const tq = toolMesh(new THREE.ConeGeometry(.02, .09, 6), T.iron, 0, .5, -.25, inn); tq.rotation.x = -Math.PI / 2; }
+  else if (k === 'rod') { toolMesh(new THREE.CylinderGeometry(.022, .026, .32, 8), T.dark, 0, 0, 0, inn); toolMesh(new THREE.CylinderGeometry(.006, .02, 1.7, 6), T.cane, 0, 1, 0, inn);
+    const rl = toolMesh(new THREE.TorusGeometry(.035, .01, 6, 12), T.iron, .03, .1, 0, inn); rl.rotation.y = Math.PI / 2; const tip = new THREE.Object3D(); tip.position.set(0, 1.85, 0); inn.add(tip); g.userData.tip = tip; }
+  else if (k === 'net') { const b = toolMesh(new THREE.IcosahedronGeometry(.16, 1), T.netw, 0, .1, .05, inn); b.scale.set(1, .75, 1); toolMesh(new THREE.TorusGeometry(.12, .012, 6, 14), T.rope, 0, .1, .05, inn); }
+  else if (k === 'flint') { toolMesh(new THREE.DodecahedronGeometry(.045, 0), T.stone, 0, .05, .02, inn); toolMesh(new THREE.BoxGeometry(.07, .018, .03), T.iron, .02, .1, .03, inn); }
+  g.scale.setScalar(1 / Math.max(.5, av.scale.x)); g.rotation.set(0, 0, Math.PI / 2); g.visible = false; g.traverse(o => { o.frustumCulled = false; }); u.bones.hand_r.add(g); u.tools[k] = g; return g;
+}
+// la línea de la caña y la red flotando van en la escena (no en la mano)
+function toolWorld() {
+  if (TOOLH.line || !S) return; const T = toolMats();
+  const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(16 * 3), 3)); TOOLH.line = new THREE.Line(lg, new THREE.LineBasicMaterial({ color: '#EDEDED', transparent: true, opacity: .8 })); TOOLH.line.frustumCulled = false; S.scene.add(TOOLH.line);
+  const bob = new THREE.Group(); toolMesh(new THREE.SphereGeometry(.05, 10, 8), T.red, 0, 0, 0, bob); toolMesh(new THREE.SphereGeometry(.05, 10, 8, 0, 6.29, 0, 1.4), T.white, 0, .005, 0, bob); S.scene.add(bob); TOOLH.bob = bob;
+  const net = new THREE.Group(); const disk = toolMesh(new THREE.CircleGeometry(1.1, 18, 0, 6.29), T.netw, 0, 0, 0, net); disk.rotation.x = -Math.PI / 2; const rim = toolMesh(new THREE.TorusGeometry(1.1, .02, 6, 30), T.rope, 0, 0, 0, net); rim.rotation.x = Math.PI / 2;
+  for (let i = 0; i < 8; i++) { const a = i / 8 * 6.28; toolMesh(new THREE.CylinderGeometry(.04, .04, .05, 8), T.wood, Math.cos(a) * 1.1, .02, Math.sin(a) * 1.1, net); } S.scene.add(net); TOOLH.net = net;
+  const fish = new THREE.Group(); const bd = toolMesh(new THREE.SphereGeometry(.07, 10, 8), T.fish, 0, 0, 0, fish); bd.scale.set(.55, 2.2, 1); const tl = toolMesh(new THREE.ConeGeometry(.06, .1, 4), T.fish, 0, -.19, 0, fish); tl.rotation.x = Math.PI; S.scene.add(fish); TOOLH.fish = fish;
+  [TOOLH.line, bob, net, fish].forEach(o => { o.visible = false; });
+}
+function toolWaterSpot(dist) { // el primer punto con agua delante del personaje
+  const a = S.av.position, fx = Math.sin(S.yaw), fz = Math.cos(S.yaw), WL = WATER.WL; let d = 1.5;
+  for (; d < 14; d += .5) if (S.W.hAt(a.x + fx * d, a.z + fz * d) < WL - .04) break; d = d >= 14 ? dist : d + dist * .5;
+  return [a.x + fx * d, WL + .02, a.z + fz * d];
+}
+function toolLine(p0, p1, sag) { const P = TOOLH.line.geometry.attributes.position; for (let i = 0; i < 16; i++) { const k = i / 15; P.setXYZ(i, p0.x + (p1.x - p0.x) * k, p0.y + (p1.y - p0.y) * k - Math.sin(k * Math.PI) * sag, p0.z + (p1.z - p0.z) * k); } P.needsUpdate = true; TOOLH.line.visible = true; }
+// orienta la herramienta según el antebrazo (mango perpendicular al puño) o, la caña, hacia adelante y arriba
+const _ta = { a: null };
+function toolAim(av, B, g, k, f, st) {
+  if (!g || !B.lowerarm_r || !B.hand_r) return; const T = _ta.a || (_ta.a = { p: new THREE.Vector3(), h: new THREE.Vector3(), d: new THREE.Vector3(), r: new THREE.Vector3(), x: new THREE.Vector3(), y: new THREE.Vector3(), z: new THREE.Vector3(), s: new THREE.Vector3(), q: new THREE.Quaternion(), pq: new THREE.Quaternion(), m: new THREE.Matrix4() });
+  B.lowerarm_r.getWorldPosition(T.p); B.hand_r.getWorldPosition(T.h); T.d.copy(T.h).sub(T.p).normalize(); av.getWorldQuaternion(T.q); T.r.set(-1, 0, 0).applyQuaternion(T.q);
+  if (k === 'rod') { const c = f && f.t < .9 ? Math.min(1, f.t / .9) : 1, up = (st.catchT || 0) > 0 ? .4 : 0; T.y.set(0, 1 - c * .45 + up, -.45 + c * 1.45 - up * .6).normalize().applyQuaternion(T.q); }
+  else T.y.crossVectors(T.r, T.d).normalize();
+  T.z.copy(T.d).addScaledVector(T.y, -T.d.dot(T.y)); if (T.z.lengthSq() < 1e-4) T.z.set(0, 0, 1).applyQuaternion(T.q); T.z.normalize(); T.x.crossVectors(T.y, T.z).normalize();
+  T.m.makeBasis(T.x, T.y, T.z); T.q.setFromRotationMatrix(T.m); B.hand_r.getWorldQuaternion(T.pq); g.quaternion.copy(T.pq.invert().multiply(T.q));
+  T.s.copy(T.h).addScaledVector(T.d, .06); B.hand_r.worldToLocal(T.s); g.position.copy(T.s); B.hand_r.getWorldScale(T.p); g.scale.setScalar(1 / Math.max(.05, T.p.x)); g.updateMatrixWorld(true);
+}
+function toolPose(av, B, t, dt, st) {
+  const sv = st.sv, f = sv && sv.fishing; toolWorld(); if (!TOOLH.line) return;
+  if ((st.catchT || 0) > 0) st.catchT -= dt; if ((st.toolT || 0) > 0) { st.toolT -= dt; if (st.toolT <= 0) st.toolK = null; }
+  let want = null; if (f) want = f.mode === 'net' ? (f.t < .9 ? 'net' : null) : 'rod'; else if (st.catchT > 0) want = 'rod'; else if (st.toolK) want = st.toolK;
+  const u = av.userData.h3; if (want) toolGroup(av, want); if (u.tools) for (const k in u.tools) u.tools[k].visible = k === want;
+  // golpe de hacha: brazos arriba sobre el hombro y bajan de golpe hacia adelante
+  if ((st.chopT || 0) > 0 && (want === 'axe')) { st.chopT -= dt; const ph = 1 - Math.max(0, st.chopT) / (st.chopD || .85), w = Math.min(1, ph * 8, Math.max(0, st.chopT) * 10 + (st.chopT > 0 ? .4 : 0));
+    const up = ph < .55 ? ph / .55 : ph < .72 ? 1 - (ph - .55) / .17 : 0, e = up * up * (3 - 2 * up);
+    const dx = -.08 - e * .2, dy = -.35 + e * 1.3, dz = 1 - e * 1.25;
+    h3aim(av, B, 'upperarm_r', 'lowerarm_r', dx, dy, dz, w); h3aim(av, B, 'lowerarm_r', 'hand_r', dx * .5, dy + .15, dz + .2, w);
+    h3aim(av, B, 'upperarm_l', 'lowerarm_l', -dx * .2 - .12, dy - .1, dz, w); h3aim(av, B, 'lowerarm_l', 'hand_l', -.18, dy + .1, dz + .25, w);
+    h3aim(av, B, 'spine_02', 'spine_03', 0, 1, .1 + (1 - e) * .35, w * .6); }
+  if (want && u.tools[want]) toolAim(av, B, u.tools[want], want, f, st);
+  // caña: línea desde la punta hasta la boya; la boya vuela al lanzar y se hunde cuando pica
+  const g = u.tools && u.tools.rod, V = h3vec();
+  if (want === 'rod' && g && g.userData.tip) { g.userData.tip.getWorldPosition(V.a);
+    if (st.catchT > 0) { TOOLH.bob.visible = false; TOOLH.fish.visible = true; TOOLH.fish.position.set(V.a.x, V.a.y - .75 - Math.sin(t * 9) * .04, V.a.z); TOOLH.fish.rotation.z = Math.sin(t * 14) * .5; V.b.copy(TOOLH.fish.position); V.b.y += .2; toolLine(V.a, V.b, 0); }
+    else { if (!f.spot) f.spot = toolWaterSpot(4.5); const k = Math.max(0, Math.min(1, (f.t - .9) / .6)), bite = f.t >= f.bite && f.t <= f.bite + (f.win || 1); TOOLH.fish.visible = false;
+      if (f.t < .9) { TOOLH.line.visible = false; TOOLH.bob.visible = false; }
+      else { const s = f.spot; TOOLH.bob.visible = true; TOOLH.bob.position.set(V.a.x + (s[0] - V.a.x) * k, k < 1 ? V.a.y + (s[1] - V.a.y) * k + Math.sin(k * Math.PI) * 1.2 : s[1] + Math.sin(t * 2.2) * .015 - (bite ? .05 + Math.abs(Math.sin(t * 13)) * .05 : 0), V.a.z + (s[2] - V.a.z) * k);
+        V.b.copy(TOOLH.bob.position); toolLine(V.a, V.b, k < 1 ? 0 : (bite ? .02 : .35)); } } }
+  else if (f && f.mode === 'net') { if (!f.spot) f.spot = toolWaterSpot(2.5); const s = f.spot, k = Math.max(0, Math.min(1, (f.t - .7) / .6)); TOOLH.bob.visible = false; TOOLH.fish.visible = false;
+    if (k > 0) { B.hand_r.getWorldPosition(V.a); TOOLH.net.visible = true; TOOLH.net.position.set(V.a.x + (s[0] - V.a.x) * k, k < 1 ? V.a.y + (s[1] - V.a.y) * k + Math.sin(k * Math.PI) : s[1] - Math.min(.12, (f.t - 1.3) * .03), V.a.z + (s[2] - V.a.z) * k); TOOLH.net.scale.setScalar(.25 + k * .75); TOOLH.net.rotation.y = f.t * .1;
+      V.b.copy(TOOLH.net.position); toolLine(V.a, V.b, .25); } else { TOOLH.net.visible = false; TOOLH.line.visible = false; } }
+  else { TOOLH.line.visible = false; TOOLH.bob.visible = false; TOOLH.net.visible = false; TOOLH.fish.visible = st.catchT > 0 && TOOLH.fish.visible; if (!(st.catchT > 0)) TOOLH.fish.visible = false; }
+}
+// chispas del pedernal antes de que prenda el fuego
+function fireSparks(x, y, z, n) {
+  if (!S) return; const g = new THREE.Group(), m = new THREE.MeshBasicMaterial({ color: '#FFD27A', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }), P = [];
+  for (let i = 0; i < n; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(.018, 5, 4), m); s.position.set(x, y, z); g.add(s); P.push({ s, v: [(Math.random() - .5) * 1.6, .8 + Math.random() * 1.6, (Math.random() - .5) * 1.6] }); }
+  S.scene.add(g); const t0 = performance.now(); let last = t0;
+  const step = now => { const dt = Math.min(.05, (now - last) / 1000), age = (now - t0) / 1000; last = now; P.forEach(p => { p.v[1] -= 4 * dt; p.s.position.x += p.v[0] * dt; p.s.position.y = Math.max(y - .02, p.s.position.y + p.v[1] * dt); p.s.position.z += p.v[2] * dt; }); m.opacity = Math.max(0, 1 - age / .55);
+    if (age < .55 && S) requestAnimationFrame(step); else { S && S.scene.remove(g); m.dispose(); } };
+  requestAnimationFrame(step);
+}
+// pescado en un espetón sobre el fuego mientras se cocina; se va dorando
+function fireSpit(f, secs) {
+  if (!f || !f.g || f.spit) return; const T = toolMats(), g = new THREE.Group(); [-1, 1].forEach(sd => { const st = toolMesh(new THREE.CylinderGeometry(.018, .02, .72, 6), T.wood, sd * .42, .36, 0, g); st.rotation.z = sd * .08; });
+  const bar = toolMesh(new THREE.CylinderGeometry(.012, .012, 1, 6), T.wood, 0, .66, 0, g); bar.rotation.z = Math.PI / 2;
+  const fm = T.fish.clone(); const fish = new THREE.Group(); const bd = toolMesh(new THREE.SphereGeometry(.07, 10, 8), fm, 0, 0, 0, fish); bd.scale.set(2.4, .6, 1); const tl = toolMesh(new THREE.ConeGeometry(.06, .1, 4), fm, -.2, 0, 0, fish); tl.rotation.z = Math.PI / 2; fish.position.set(0, .62, 0); g.add(fish);
+  f.g.add(g); f.spit = g; const t0 = performance.now(), c0 = new THREE.Color('#A9B4BC'), c1 = new THREE.Color('#8A5A2A');
+  const step = now => { const k = Math.min(1, (now - t0) / (secs * 1000)); fm.color.copy(c0).lerp(c1, k); fish.rotation.x = k * 6.28 * 2; if (k < 1 && f.g.parent) requestAnimationFrame(step); else { f.g.remove(g); f.spit = null; fm.dispose(); } };
+  requestAnimationFrame(step);
 }
 function h3npcTick(dt) {
   if (!S || !H3.npcs.length) return; const a = S.av.position;
@@ -3745,7 +3838,7 @@ function svFireNear() {
 }
 
 /* ---------- acciones ---------- */
-function svSwing(k) { if (k === 'rock') h3do(['M_Digging', 'Interact'], 1.5, .9); else h3do(['M_Pull_Heavy_Object', 'Interact'], 1.1); try { const A = svSwing.A = svSwing.A || new (window.AudioContext || window.webkitAudioContext)(), o = A.createOscillator(), g = A.createGain(); o.type = 'square'; o.frequency.value = 140 + Math.random() * 40; g.gain.setValueAtTime(.08, A.currentTime); g.gain.exponentialRampToValueAtTime(.0001, A.currentTime + .12); o.connect(g); g.connect(A.destination); o.start(); o.stop(A.currentTime + .13); } catch (e) {} }
+function svSwing(k) { if (k === 'rock') { S.toolK = 'pick'; S.toolT = 1.6; h3do(['M_Digging', 'Interact'], 1.5, .9); } else { S.toolK = 'axe'; S.toolT = 1.3; S.chopT = S.chopD = .85; h3do(['M_Idle', 'Idle_Loop'], .95); } try { const A = svSwing.A = svSwing.A || new (window.AudioContext || window.webkitAudioContext)(), o = A.createOscillator(), g = A.createGain(); o.type = 'square'; o.frequency.value = 140 + Math.random() * 40; g.gain.setValueAtTime(.08, A.currentTime); g.gain.exponentialRampToValueAtTime(.0001, A.currentTime + .12); o.connect(g); g.connect(A.destination); o.start(); o.stop(A.currentTime + .13); } catch (e) {} }
 function svHide(im, i, on) { im.getMatrixAt(i, svHide.m = svHide.m || new THREE.Matrix4()); if (!on) { svHide.store.set(im.uuid + i, svHide.m.clone()); im.setMatrixAt(i, M4zero()); } else { const m = svHide.store.get(im.uuid + i); if (m) im.setMatrixAt(i, m); } im.instanceMatrix.needsUpdate = true; }
 svHide.store = new Map();
 function svAct() {
@@ -3764,11 +3857,11 @@ function svAct() {
     if (n.k === 'tree') { svHide(FLORA.oT, n.i, false); for (let j = 0; j < 6; j++) svHide(FLORA.oB, n.i * 6 + j, false); st.felled.set(n.i, SV.TREE); const w = 2 + (atr('fue') >= 3 ? 1 : 0); svAdd('wood', w); svXP(2); svToast('🪵 Conseguiste ' + w + ' de madera. El árbol vuelve a crecer en unos minutos.'); }
     else { svHide(FLORA.rI, n.i, false); st.mined.set(n.i, SV.ROCK); svAdd('stone', 2); svXP(2); svToast('🪨 Conseguiste 2 piedras.'); }
     G().save(); svUI(); return; }
-  if (n.k === 'cook') { h3do(['M_Kneeling_Idle', 'PickUp_Table'], 2.6); const k = s.inv.fish; svAdd('fish', -k); svAdd('cooked', k); svXP(k); G().save(); svToast('🍢 Cocinaste ' + k + (k > 1 ? ' pescados.' : ' pescado.') + ' Ya se pueden comer (tecla C o el botón de comer).'); svUI(); return; }
+  if (n.k === 'cook') { h3do(['M_Kneeling_Idle', 'PickUp_Table'], 2.6); try { fireSpit(n.fire, 3.2); } catch (e) {} const k = s.inv.fish; svAdd('fish', -k); svAdd('cooked', k); svXP(k); G().save(); svToast('🍢 Cocinaste ' + k + (k > 1 ? ' pescados.' : ' pescado.') + ' Ya se pueden comer (tecla C o el botón de comer).'); svUI(); return; }
   if (n.k === 'fish') { if (svTool('rod')) { st.fishing = S.hx ? { mode: 'rod', t: 0, bite: Math.max(1, (2 + Math.random() * 4) * [1, .9, .9, .8, .8, .8][ft('pac')]), win: 1.1 + (fv('pac') >= 20 ? .7 : 0) + fv('pac') * .01 } : { mode: 'rod', t: 0, bite: Math.max(1.2, 2 + Math.random() * 4 - atr('pac') * .35), win: 1.1 + atr('pac') * .15 }; svToast('🎣 Tiraste la caña. Cuando pique, tocá la acción (E).'); }
     else { st.fishing = { mode: 'net', t: 0, bite: 5 - atr('pac') * .2 }; svToast('🕸️ Tiraste la red. Esperá un momento…'); } S.joy.x = 0; S.joy.y = 0; svUI(); }
 }
-function svFishTap() { const f = S.sv.fishing; if (!f || f.mode !== 'rod') return; if (f.t >= f.bite && f.t <= f.bite + f.win) { axGain('pac', 3); const n = 1 + (S.hx ? (fv('pac') >= 40 && Math.random() < .3 ? 1 : 0) : (Math.random() < atr('pac') * .06 ? 1 : 0)); svAdd('fish', n); if (S.hx && fv('pac') >= 50 && Math.random() < .15) { svAdd('money', 3); svToast('✨ ¡Un pez raro! Lo vendiste por 3 denarios.'); } svXP(2); G().save(); svToast('🐟 ¡Sacaste ' + (n > 1 ? 'dos peces!' : 'un pez!') + ' Cocinalo en una fogata antes de comerlo.'); } else svToast('Muy rápido. Esperá a que pique.'); S.sv.fishing = null; svUI(); }
+function svFishTap() { const f = S.sv.fishing; if (!f || f.mode !== 'rod') return; if (f.t >= f.bite && f.t <= f.bite + f.win) { axGain('pac', 3); const n = 1 + (S.hx ? (fv('pac') >= 40 && Math.random() < .3 ? 1 : 0) : (Math.random() < atr('pac') * .06 ? 1 : 0)); svAdd('fish', n); if (S.hx && fv('pac') >= 50 && Math.random() < .15) { svAdd('money', 3); svToast('✨ ¡Un pez raro! Lo vendiste por 3 denarios.'); } S.catchT = 1.6; h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 1.6); svXP(2); G().save(); svToast('🐟 ¡Sacaste ' + (n > 1 ? 'dos peces!' : 'un pez!') + ' Cocinalo en una fogata antes de comerlo.'); } else svToast('Muy rápido. Esperá a que pique.'); S.sv.fishing = null; svUI(); }
 function svEat() {
   if (!svOn() || S.down) return; const s = svP(), k = (s.inv.cooked || 0) > 0 ? 'cooked' : (s.inv.bread || 0) > 0 ? 'bread' : (s.inv.fruit || 0) > 0 ? 'fruit' : null;
   if (!k) { svToast((s.inv.fish || 0) > 0 ? 'El pescado crudo hay que cocinarlo primero en una fogata.' : 'No tenés comida. Buscá granados o pescá.'); return; }
@@ -3786,7 +3879,7 @@ function svCraft() {
     el.innerHTML = `<div class="inv hx sv-sheet"><div class="inv-h"><b>Fabricar y construir</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="sv-have">${have}</div><p class="sv-tip">Talá árboles y picá piedras. Con la madera hacé tablones y con la piedra, bloques. Con eso construís tu casa y después los muebles.</p>${rows}${s.house ? '' : '<p class="sv-tip">Cuando tengas tu casa, vas a poder hacer muebles: cama, mesa, banco, horno, cofre y lámpara.</p>'}</div>`;
     el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
     el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { const r = RECIPES.find(x => x.id === b.dataset.r); if (!svHas(r.need)) return;
-      if (r.place === 'fire') { svPay(r.need); svFire(); h3do(['M_Kneeling_Idle', 'PickUp_Table'], 2.4); el.hidden = true; }
+      if (r.place === 'fire') { svPay(r.need); S.toolK = 'flint'; S.toolT = 2.2; h3do(['M_Kneeling_Idle', 'PickUp_Table'], 2.6); svFire(undefined, undefined, true); el.hidden = true; }
       else if (r.place === 'house') { const spot = svHouseSpot(); if (!spot) { svToast('Acá no se puede construir. Alejate del camino y de otras construcciones.'); return; } svPay(r.need); s.house = spot; svPlaceHouse(S.scene, spot); h3do(['M_Lifting_Object', 'PickUp_Table'], 3, .8, 1.2); svXP(30); svToast('🏠 ¡Construiste tu casa! Ahora podés hacerle muebles.'); el.hidden = true; }
       else if (r.furn) { svPay(r.need); s.furn.push(r.id); svFurnish(r.id); h3do(['M_Box_Idle', 'PickUp_Table'], 2); svXP(8); svToast('Agregaste: ' + r.name + '.'); draw(); }
       else { Object.entries(r.out).forEach(([k, n]) => svAdd(k, n)); svPay(r.need); h3do(['M_Pull_Heavy_Object', 'Interact'], 1.4); svXP(1); draw(); }
@@ -3794,12 +3887,13 @@ function svCraft() {
   };
   el.hidden = false; el.onclick = e => { if (e.target === el) el.hidden = true; }; draw();
 }
-function svFire(x, z) {
+function svFire(x, z, slow) {
   const a = S.av.position; x = x ?? a.x + Math.sin(S.yaw) * 1.6; z = z ?? a.z + Math.cos(S.yaw) * 1.6; const y = S.W.hAt(x, z), g = new THREE.Group();
   for (let i = 0; i < 5; i++) { const l = cy(.06, .07, .8, tm('wd', '#6A4A2E'), 0, .1, 0, g); l.rotation.z = Math.PI / 2 - .25; l.rotation.y = i / 5 * 6.28; }
   { const old = new THREE.Group(); for (let i = 0; i < 8; i++) { const r = new THREE.Mesh(new THREE.DodecahedronGeometry(.12, 0), tm('st', '#8C8374')); r.position.set(Math.cos(i / 8 * 6.28) * .5, .06, Math.sin(i / 8 * 6.28) * .5); old.add(r); } g.add(old); phOne('stone_fire_pit', g, 0, -.03, 0, 0, .55, { done: () => { old.visible = false; } }); }
   const fl = new THREE.Mesh(new THREE.ConeGeometry(.22, .6, 8), new THREE.MeshBasicMaterial({ color: '#FFB347', transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false })); fl.position.y = .4; g.add(fl);
-  g.position.set(x, y, z); S.scene.add(g); const f = { x, z, y, g, fl, left: SV.FIRE }; S.sv.fires.push(f); if (AMB.ready) { f.amb = ambFire(x, y + .25, z, .7); fl.visible = false; } svXP(2); svToast('🔥 Encendiste una fogata. Acercate con pescado crudo para cocinarlo.'); if (S.hx) setTimeout(fireTalk, 5000);
+  g.position.set(x, y, z); S.scene.add(g); const f = { x, z, y, g, fl, left: SV.FIRE }; S.sv.fires.push(f); const lite = () => { if (!g.parent) return; if (AMB.ready) { f.amb = ambFire(x, y + .25, z, .7); fl.visible = false; } else fl.visible = true; f.lit = true; };
+  if (slow) { fl.visible = false; [.35, .8, 1.25].forEach(d => setTimeout(() => fireSparks(x, y + .14, z, 14), d * 1000)); setTimeout(lite, 1550); } else lite(); svXP(2); svToast('🔥 Encendiste una fogata. Acercate con pescado crudo para cocinarlo.'); if (S.hx) setTimeout(fireTalk, 5000);
 }
 function svHouseSpot() {
   const a = S.av.position; if (!S.W) return null; const ok = (x, z) => { if (Math.abs(x) > XB - 6) return false; for (let u = -4.5; u <= 4.5; u += 1.5) for (let v = -4.5; v <= 4.5; v += 1.5) { if (blockedAt(x + u, z + v) || S.W.dAt(x + u, z + v) < 1.6) return false; } return Math.abs(S.W.hAt(x - 3, z - 3) - S.W.hAt(x + 3, z + 3)) < 1.6; };
