@@ -696,7 +696,7 @@ const KL = {};
   const me = S, run = n => { if (S !== me) return; requestAnimationFrame(run); loop(n); }; requestAnimationFrame(run);
 }
 // tres formas de pantalla, cada una con su propio CSS: pc, movil-v (celular parado) y movil-h (celular acostado)
-function layoutClass() { const coarse = matchMedia('(pointer: coarse)').matches, w = innerWidth, h = innerHeight, lay = !coarse && w >= 900 ? 'pc' : (w > h ? 'movil-h' : 'movil-v'); if (document.body.dataset.layout !== lay) document.body.dataset.layout = lay; return lay; }
+function layoutClass() { const coarse = matchMedia('(pointer: coarse)').matches, w = innerWidth, h = innerHeight, lay = !coarse && w >= 900 ? 'pc' : (w > h ? 'movil-h' : 'movil-v'); try { if (document.body && document.body.dataset && document.body.dataset.layout !== lay) document.body.dataset.layout = lay; } catch (e) {} return lay; }
 layoutClass(); addEventListener('resize', layoutClass); try { screen.orientation && screen.orientation.addEventListener('change', () => setTimeout(layoutClass, 50)); } catch (e) {}
 function resize() { if (!S) return; layoutClass(); const r = S.root.getBoundingClientRect(); const w = r.width || innerWidth, h = r.height || innerHeight; S.renderer.setSize(w, h, false); S.camera.aspect = w / h; S.camera.updateProjectionMatrix(); if (S.fx) { S.fx.setPixelRatio(S.renderer.getPixelRatio()); S.fx.setSize(w, h); } }
 /* gráficos altos en PC: resplandor suave (bloom) con antialias; si la compu no da, se apaga solo */
