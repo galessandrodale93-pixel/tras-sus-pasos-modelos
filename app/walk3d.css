@@ -12,6 +12,8 @@ body:has(#v3sheet:not([hidden])) .hud{display:none}
 .v3k{font:900 11px "Nunito",sans-serif;letter-spacing:.22em;text-transform:uppercase;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.7)}
 .view-toggle{position:fixed;z-index:6;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));border-radius:99px;padding:11px 18px;font:800 13px "Nunito",sans-serif;color:#fff;background:rgba(10,14,26,.72);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 body.v3on .map-hint{display:none}
+/* mientras el mundo 3D está activo, el mapa viejo de abajo queda oculto del todo (antes asomaba por transparencias) */
+body.v3on #mapView,body.v3boot #mapView{visibility:hidden!important;pointer-events:none}
 body[data-branch="ados"] .v3b{border-radius:10px;letter-spacing:.06em;text-transform:uppercase;font-size:13.5px;background:linear-gradient(180deg,#FFE3A6,#E2AC55 60%,#B97A2E);color:#1B1206}
 .v3hint{position:fixed;z-index:4;left:50%;bottom:calc(228px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);width:max-content;max-width:calc(100vw - 32px);text-align:center;font:800 12px "Nunito",sans-serif;color:rgba(255,255,255,.9);text-shadow:0 1px 8px rgba(0,0,0,.6);background:rgba(10,14,26,.5);border-radius:99px;padding:6px 14px;opacity:0;pointer-events:none;transition:opacity .6s,transform .6s}
 .v3hint.on{opacity:1;transform:translate(-50%,0)}
