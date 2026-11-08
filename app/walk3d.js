@@ -3887,6 +3887,14 @@ async function grpImp(sl, name) {
   const mk = I.file + ((sl.tint && sl.tint.leaf) || ''); GRP.imat = GRP.imat || {}; return { geo: g, mat: GRP.imat[mk] || (GRP.imat[mk] = new THREE.MeshLambertMaterial({ map: tex, alphaTest: .5, side: THREE.DoubleSide, color: (sl.tint && sl.tint.leaf) || '#FFFFFF' })) };
 }
 // devuelve las variantes igual que phGet (cada modelo es una variante); null si no corresponde o falla
+// archivos que no cargaron (de cualquier cargador de three) y errores sueltos: quedan en el diagnóstico con nombre corto, sin repetir
+const R2FAIL = new Set(); function r2fail(url, why) { try { const u = String(url || ''), k = u.split('?')[0].split('/').slice(-2).join('/') || u; if (R2FAIL.has(k)) return; R2FAIL.add(k); if (R2FAIL.size <= 6) r2log('no cargó: ' + k + (why ? ' (' + why + ')' : '')); else if (R2FAIL.size === 7) r2log('… y más archivos sin cargar (resumen al final)'); if (r2summary.done) { clearTimeout(r2summary.t); r2summary.t = setTimeout(r2summary, 4000); } } catch (e) {} }
+function r2hooks() { try { if (THREE && THREE.DefaultLoadingManager && !THREE.DefaultLoadingManager.__tsp) { THREE.DefaultLoadingManager.__tsp = 1; const prev = THREE.DefaultLoadingManager.onError; THREE.DefaultLoadingManager.onError = u => { r2fail(u); if (prev) try { prev(u); } catch (e) {} }; } } catch (e) {}
+  if (r2hooks.on) return; r2hooks.on = 1; const seen = new Set(), say = (k, m) => { const t = k + ': ' + String(m || '').slice(0, 140); if (seen.has(t) || seen.size > 30) return; seen.add(t); r2log(t); };
+  window.addEventListener('error', e => { if (e && e.message) say('error', e.message); else if (e && e.target && e.target.src) r2fail(e.target.src, e.target.tagName.toLowerCase()); }, true);
+  window.addEventListener('unhandledrejection', e => { const r = e && e.reason; say('promesa', r && (r.message || r)); }); }
+// resumen del aparato y de lo que faltó, al terminar de armar el mundo
+function r2summary() { r2summary.done = 1; try { const d = document.body.dataset.layout || '?', gpu = (QUAL.gpu || 'gpu ?').replace(/ANGLE \(|\)|Direct3D11 vs_5_0 ps_5_0|, or similar/g, '').slice(0, 60); r2log(`aparato: ${gpu} · ${QL[QUAL.lv]}${QUAL.mode === 'auto' ? ' (auto)' : ''} · ${d} · ${innerWidth}×${innerHeight} @${(devicePixelRatio || 1).toFixed(1)}`); if (R2FAIL.size) { const by = {}; R2FAIL.forEach(k => { const f = k.includes('/') ? k.split('/')[0] : 'otros'; by[f] = (by[f] || 0) + 1; }); r2log('faltaron ' + R2FAIL.size + ' archivos: ' + Object.entries(by).sort((x, y) => y[1] - x[1]).map(([f, n]) => f + ' ' + n).join(' · ')); } else r2log('todos los archivos cargaron ✓'); } catch (e) {} }
 const R2LOG = []; function r2log(m) { try { R2LOG.push(m); console.warn('[R2]', m); let dbg = /[?&]r2dbg=1/.test(location.search); try { if (dbg) localStorage.setItem('tsp:r2dbg', '1'); if (/[?&]r2dbg=0/.test(location.search)) localStorage.removeItem('tsp:r2dbg'); dbg = dbg || localStorage.getItem('tsp:r2dbg') === '1'; } catch (e) {} if (dbg) { let b = document.getElementById('r2dbg'); if (!b) { b = document.createElement('pre'); b.id = 'r2dbg'; b.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:99999;max-width:92vw;max-height:45vh;overflow:auto;background:rgba(0,0,0,.82);color:#9f9;font:11px/1.35 monospace;padding:8px;border-radius:8px;white-space:pre-wrap'; document.body.appendChild(b); } b.textContent = R2LOG.slice(-40).join('\n'); } } catch (e) {} }
 async function grpVars(id, forceTier) {
   const slots = await grpInit(); if (!slots) return null; const sl = slots[id]; if (!sl) return null;
@@ -3973,7 +3981,7 @@ function phGet(id) {
   if (!PH.cache[id]) PH.cache[id] = grpVars(id).catch(() => null).then(v => { if (id === 'trp_olive') { trpOlive(v); return v || []; } if (id === 'trp_palm') { if (v && v.length && !FLORA.trpP) { FLORA.trpP = 1; FLORA.chunks = FLORA.chunks.filter(im => { if (!im.userData.dpalm) return true; im.visible = false; if (im.parent) im.parent.remove(im); return false; }); } return v || []; } return v; }).then(v => v || phLoader().then(L => new Promise((r, j) => L.load(PHB + id + '.glb', r, undefined, j))).then(async g => {
     await phAlpha(id, g.scene); g.scene.updateMatrixWorld(true); const vars = (g.scene.children.length ? g.scene.children : [g.scene]).map(c => { const ms = []; c.traverse(o => { if (o.isMesh) ms.push({ geo: o.geometry, mat: o.material, m: o.matrixWorld.clone() }); }); return ms; }).filter(v => v.length);
     return vars;
-  })).catch(e => { console.warn('ph', id, e); return []; });
+  })).catch(e => { console.warn('ph', id, e); r2fail('ph/' + id + '.glb', e && e.message); return []; });
   return PH.cache[id];
 }
 function phMat(m, o) {
@@ -4770,8 +4778,8 @@ async function show3d(on) {
   root.hidden = false; document.body.classList.add('v3on'); btn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Mapa</span>';
   const g = G(), key = g.branch + '|' + g.P().id + '|' + JSON.stringify(g.P().avatar);
   if (!THREE) { if (!loading) loading = import(THREE_URL); try { THREE = await loading; } catch (e) { loading = null; v3fail('Revisá la conexión a internet y volvé a intentar.'); return; } }
-  let LBU = null; if (builtFor !== key || !S) { if (!window.__noLobby && !/[?&]lobby=0/.test(location.search)) { try { LBU = await lobby(); } catch (e) { console.warn('lobby', e); } } if (S) { S.renderer.dispose(); S = null; } builtFor = key; BSTEP.u = LBU; BSTEP.log = [];
-    let ok = false; try { await withTO(build(), 120000, 'armado'); ok = true; } catch (e) { builtFor = null; buildFail(LBU, e); if (!LBU) v3fail('Probá de nuevo. Si sigue pasando, elegí la calidad Baja en el menú.'); return; } finally { BSTEP.u = null; if (LBU && ok) LBU.close(); } }
+  r2hooks(); let LBU = null; if (builtFor !== key || !S) { if (!window.__noLobby && !/[?&]lobby=0/.test(location.search)) { try { LBU = await lobby(); } catch (e) { console.warn('lobby', e); } } if (S) { S.renderer.dispose(); S = null; } builtFor = key; BSTEP.u = LBU; BSTEP.log = [];
+    let ok = false; try { await withTO(build(), 120000, 'armado'); ok = true; } catch (e) { builtFor = null; buildFail(LBU, e); if (!LBU) v3fail('Probá de nuevo. Si sigue pasando, elegí la calidad Baja en el menú.'); return; } finally { BSTEP.u = null; if (LBU && ok) LBU.close(); } if (ok) setTimeout(r2summary, 6000); }
   else { const n = g.NODES[g.P().pos], [x, z] = (S.npos && S.npos[n.id]) || toV(n.x, n.y); S.av.position.set(x, 0, z); S.sig = ''; S.onStop = g.P().pos; S.quiet = false; }
   resize(); refresh(); bagBtn(); try { fanInit(); miniInit(); bagHud(); } catch (e) { console.warn('hud', e); } setTimeout(fullHint, 1500); setTimeout(iosHint, 1800); setTimeout(fidDaily, 5000); document.body.classList.remove('v3boot');
 }
