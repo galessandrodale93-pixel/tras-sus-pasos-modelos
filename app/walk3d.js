@@ -3754,11 +3754,14 @@ async function galTrees() {
     im.instanceMatrix.needsUpdate = true; im.castShadow = QUAL.lv > 0; im.receiveShadow = true; im.frustumCulled = true; im.computeBoundingSphere(); S.scene.add(im); GT.ims.push(im); }); });
   r2log('árboles: ' + spots.length + ' (' + models.map(m => m.nm + ' ' + m.list.length).join(', ') + ')');
   try { const t7 = models.find(m => m.nm === 'tree_7'); if (t7 && t7.list.length) { const bb = new THREE.Box3(); t7.ms.forEach(mm => { mm.geo.computeBoundingBox(); bb.union(mm.geo.boundingBox.clone().applyMatrix4(mm.m)); });
-      const top = bb.max.y, rad = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z) / 2, Rf = rng(4242), gran = [], lim = [];
-      t7.list.forEach((o, i) => { const u = Rf(); if (u > .28) return; const sc = .85 + hsh(o.x, o.z) * .35, L = u < .17 ? gran : lim;
-        for (let k = 0; k < 7; k++) { const an = Rf() * 6.283, rr = rad * sc * (.45 + Rf() * .4), y = o.y + top * sc * (.55 + Rf() * .28); L.push({ x: o.x + Math.cos(an) * rr, y, z: o.z + Math.sin(an) * rr, ry: Rf() * 6.283, s: 1.25, v: k }); } });
-      if (gran.length) phPlace('food_pomegranate_01', gran, { far: 1 }); if (lim.length) phPlace('lemon', lim, { far: 1 }); FLORA.fruitTrees = { top, rad };
-      r2log('frutos: ' + gran.length / 7 + ' granados y ' + lim.length / 7 + ' limoneros'); } } catch (e) { r2log('frutos: ' + e.message); }
+      const top = bb.max.y, rad = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z) / 2, Rf = rng(4242), FT = [];
+      t7.list.forEach(o => { const u = Rf(); if (u > .28) return; const sc = .85 + hsh(o.x, o.z) * .35, kind = u < .17 ? 'fruit' : 'lemon', fm = [];
+        for (let k = 0; k < 7; k++) { const an = Rf() * 6.283, rr = rad * sc * (.45 + Rf() * .4), y = o.y + top * sc * (.55 + Rf() * .28); fm.push(new THREE.Matrix4().compose(new THREE.Vector3(o.x + Math.cos(an) * rr, y, o.z + Math.sin(an) * rr), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Rf() * 6.283, 0)), new THREE.Vector3(1.25, 1.25, 1.25))); }
+        FT.push({ x: o.x, z: o.z, y: o.y, s: sc, n: 7, n0: 7, t: 0, fm, kind, ims: [], base: 0 }); });
+      for (const kind of ['fruit', 'lemon']) { const L = FT.filter(f => f.kind === kind); if (!L.length) continue; const vars = await phGet(kind === 'fruit' ? 'food_pomegranate_01' : 'lemon'); const ms = (vars && vars[0]) || []; if (!ms.length) continue;
+        ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, mm.mat, L.length * 7); im.userData.m = mm.m; L.forEach((f, i) => { f.base = i * 7; f.ims.push(im); f.fm.forEach((m, k) => im.setMatrixAt(i * 7 + k, m.clone().multiply(mm.m))); }); im.instanceMatrix.needsUpdate = true; im.castShadow = QUAL.lv > 1; im.computeBoundingSphere(); S.scene.add(im); GT.ims.push(im); }); }
+      if (S.sv) S.sv.fruit.trees = FT.filter(f => f.ims.length); FLORA.fruitTrees = FT;
+      r2log('frutales: ' + FT.filter(f => f.kind === 'fruit').length + ' granados y ' + FT.filter(f => f.kind === 'lemon').length + ' limoneros'); } } catch (e) { r2log('frutos: ' + e.message); }
 }
 async function galRocks() {
   if (!S || GT.rdone) return; GT.rdone = 1; const W = S.W, Rn = rng(9090), zEnd = S.zEnd || 600, ids = ['namaqualand_boulder_02', 'namaqualand_boulder_03', 'rock_07', 'stone_01', 'namaqualand_stones_01'], P = {}; ids.forEach(i => P[i] = []);
@@ -4277,9 +4280,9 @@ const TOOLS = {
 const TOOL_ORDER = ['flint', 'axe', 'rod', 'pick', 'net'];
 const RES = {
   wood: ['Madera', '🪵'], stone: ['Piedra', '🪨'], plank: ['Tablones', '🟫'], block: ['Bloques de piedra', '🧱'],
-  fruit: ['Granadas', '🍎'], fish: ['Pescado crudo', '🐟'], cooked: ['Pescado asado', '🍢']
+  fruit: ['Granadas', '🍎'], lemon: ['Limones', '🍋'], fish: ['Pescado crudo', '🐟'], cooked: ['Pescado asado', '🍢']
 };
-const FOOD = { cooked: 25 * 60, fruit: 10 * 60 };
+const FOOD = { cooked: 25 * 60, fruit: 10 * 60, lemon: 5 * 60 };
 // Kids: atributos de siempre. Hero: frutos del Espíritu (Gálatas 5:22-23, NTV) + Cuerpo. Las claves viejas se reusan (nadie pierde puntos):
 // dom→Control propio, pac→Paciencia, gen→Bondad, sab→Alegría; fue y agi pasan a Cuerpo; amor, paz, gent y fid son nuevos. Humildad sigue igual (hum).
 const ATTRK = [
@@ -4402,7 +4405,7 @@ function svBuild(scene, W) {
     o.fm = []; for (let k = 0; k < 5; k++) { const an = k / 5 * 6.28 + i, fm = new THREE.Matrix4().compose(v.set(o.x + Math.cos(an) * .85 * o.s, o.y + (1.55 + (k % 2) * .4) * o.s, o.z + Math.sin(an) * .85 * o.s), q.identity(), sc.set(1, 1, 1)); o.fm.push(fm); FR.setMatrixAt(i * 5 + k, fm); } });
   [TR, CN, FR].forEach(m => { m.castShadow = true; m.receiveShadow = true; m.instanceMatrix.needsUpdate = true; scene.add(m); });
   if (FLORA.paidT || BARE) { TR.visible = CN.visible = false; if (BARE) FR.visible = false; try { if (!BARE) phPlace('tree_small_02', trees.map((o, i) => ({ x: o.x, y: o.y - .04, z: o.z, ry: (i * 2.39) % 6.28, s: .78 * o.s, v: i })), { shadow: true, wind: 3, far: 1, imp: 1 }); } catch (e) {} }
-  st.fruit = { trees, FR };
+  st.fruit = { trees: BARE ? [] : trees, FR };
   // herramientas flotando en lugares de la época (si todavía no las tenés)
   const spot = (k, dx, dz) => { const p = (S.pois || []).find(q => q.k === k); return p ? [p.x + dx * p.side, p.z + dz] : null; };
   const start = S.allPts[0] || [0, 0];
@@ -4441,7 +4444,7 @@ function svNear() {
   const fire = svFireNear(); if (fire && (s.inv.fish || 0) > 0) return { k: 'cook', label: 'Cocinar pescado', fire };
   if (fire && fire.lit !== false && MAT.mod) return { k: 'reflex', label: 'Sentarte junto al fuego', fire };
   let best = null, bd = 2.6 * 2.6;
-  st.fruit.trees.forEach((o, i) => { const d = d2(o.x, o.z); if (d < bd && o.n > 0) { bd = d; best = { k: 'fruit', i, label: 'Recoger granadas' }; } });
+  st.fruit.trees.forEach((o, i) => { const d = d2(o.x, o.z); if (d < bd && o.n > 0) { bd = d; best = { k: 'fruit', i, label: o.kind === 'lemon' ? 'Recoger limones' : 'Recoger granadas' }; } });
   (FLORA.olive || []).forEach((o, i) => { if (st.felled.has(i)) return; const d = d2(o.x, o.z); if (d < bd) { bd = d; best = { k: 'tree', i, label: svTool('axe') ? 'Talar' : 'Necesitás un hacha', need: !svTool('axe') }; } });
   (FLORA.rock || []).forEach((o, i) => { if (st.mined.has(i)) return; const r = .6 + (.35 + o.v * .7) * o.s, d = d2(o.x, o.z); if (d < (r + 1.4) ** 2 && d < bd + 2) { bd = d; best = { k: 'rock', i, label: svTool('pick') ? 'Picar piedra' : 'Necesitás un pico', need: !svTool('pick') }; } });
   if (best) return best;
@@ -4462,6 +4465,8 @@ function svFireNear() {
 
 /* ---------- acciones ---------- */
 function svSwing(k) { if (k === 'rock') { S.toolK = 'pick'; S.toolT = 1.6; h3do(['M_Digging', 'Interact'], 1.5, .9); } else { S.toolK = 'axe'; S.toolT = 1.3; S.chopT = S.chopD = .85; h3do(['M_Idle', 'Idle_Loop'], .95); } try { const A = svSwing.A = svSwing.A || new (window.AudioContext || window.webkitAudioContext)(), o = A.createOscillator(), g = A.createGain(); o.type = 'square'; o.frequency.value = 140 + Math.random() * 40; g.gain.setValueAtTime(.08, A.currentTime); g.gain.exponentialRampToValueAtTime(.0001, A.currentTime + .12); o.connect(g); g.connect(A.destination); o.start(); o.stop(A.currentTime + .13); } catch (e) {} }
+function svFruitShow(o, i, on) { const st = S.sv; if (o.ims && o.ims.length) { o.ims.forEach(im => { for (let k = 0; k < o.n0; k++) im.setMatrixAt(o.base + k, on ? o.fm[k].clone().multiply(im.userData.m) : M4zero()); im.instanceMatrix.needsUpdate = true; }); return; }
+  for (let k = 0; k < 5; k++) st.fruit.FR.setMatrixAt(i * 5 + k, on ? o.fm[k] : M4zero()); st.fruit.FR.instanceMatrix.needsUpdate = true; }
 function svHide(im, i, on) { im.getMatrixAt(i, svHide.m = svHide.m || new THREE.Matrix4()); if (!on) { svHide.store.set(im.uuid + i, svHide.m.clone()); im.setMatrixAt(i, M4zero()); } else { const m = svHide.store.get(im.uuid + i); if (m) im.setMatrixAt(i, m); } im.instanceMatrix.needsUpdate = true; }
 svHide.store = new Map();
 function svAct() {
@@ -4484,7 +4489,7 @@ function svAct() {
   if (n.k === 'shop') { svShop(n.shop); return; }
   if (n.k === 'beg') { svGive(n.b); return; }
   if (n.k === 'bag') { svPickBag(); return; }
-  if (n.k === 'fruit') { const o = st.fruit.trees[n.i], c = o.n; for (let k = 0; k < 5; k++) st.fruit.FR.setMatrixAt(n.i * 5 + k, M4zero()); st.fruit.FR.instanceMatrix.needsUpdate = true; o.n = 0; o.t = SV.FRUIT; h3do([['M_Pick_Fruit', 'M_Pick_Fruit_1', 'M_Pick_Fruit_2'][Math.floor(Math.random() * 3)], 'PickUp_Table'], 2.4, .4); svAdd('fruit', c); svXP(1); axGain('dom', 1); G().save(); svToast('🍎 Recogiste ' + c + ' granadas.'); svUI(); return; }
+  if (n.k === 'fruit') { const o = st.fruit.trees[n.i], c = o.n, res = o.kind === 'lemon' ? 'lemon' : 'fruit'; svFruitShow(o, n.i, false); o.n = 0; o.t = SV.FRUIT; h3do([['M_Pick_Fruit', 'M_Pick_Fruit_1', 'M_Pick_Fruit_2'][Math.floor(Math.random() * 3)], 'PickUp_Table'], 2.4, .4); svAdd(res, c); svXP(1); axGain('dom', 1); G().save(); svToast(res === 'lemon' ? '🍋 Recogiste ' + c + ' limones.' : '🍎 Recogiste ' + c + ' granadas.'); svUI(); return; }
   if (n.k === 'tree' || n.k === 'rock') { const key = n.k + n.i; st.hits = st.hitKey === key ? st.hits + 1 : 1; st.hitKey = key; svSwing(n.k); const need = Math.max(2, 5 - Math.floor(atr('fue') / 1.5)); axGain('fue', 1); AXS.workT = 6;
     if (st.hits < need) { svToast((n.k === 'tree' ? '🪓 ' : '⛏️ ') + 'Golpe ' + st.hits + ' de ' + need); return; } st.hits = 0;
     if (n.k === 'tree') { svHide(FLORA.oT, n.i, false); for (let j = 0; j < 6; j++) svHide(FLORA.oB, n.i * 6 + j, false); st.felled.set(n.i, SV.TREE); const w = 2 + (atr('fue') >= 3 ? 1 : 0); svAdd('wood', w); svXP(2); svToast('🪵 Conseguiste ' + w + ' de madera. El árbol vuelve a crecer en unos minutos.'); }
@@ -4496,9 +4501,9 @@ function svAct() {
 }
 function svFishTap() { const f = S.sv.fishing; if (!f || f.mode !== 'rod') return; if (f.t >= f.bite && f.t <= f.bite + f.win) { axGain('pac', 3); const n = 1 + (S.hx ? (fv('pac') >= 40 && Math.random() < .3 ? 1 : 0) : (Math.random() < atr('pac') * .06 ? 1 : 0)); svAdd('fish', n); if (S.hx && fv('pac') >= 50 && Math.random() < .15) { svAdd('money', 3); svToast('✨ ¡Un pez raro! Lo vendiste por 3 denarios.'); } S.catchT = 1.6; h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 1.6); svXP(2); G().save(); svToast('🐟 ¡Sacaste ' + (n > 1 ? 'dos peces!' : 'un pez!') + ' Cocinalo en una fogata antes de comerlo.'); } else svToast('Muy rápido. Esperá a que pique.'); S.sv.fishing = null; svUI(); }
 function svEat() {
-  if (!svOn() || S.down) return; const s = svP(), k = (s.inv.cooked || 0) > 0 ? 'cooked' : (s.inv.bread || 0) > 0 ? 'bread' : (s.inv.fruit || 0) > 0 ? 'fruit' : null;
+  if (!svOn() || S.down) return; const s = svP(), k = (s.inv.cooked || 0) > 0 ? 'cooked' : (s.inv.bread || 0) > 0 ? 'bread' : (s.inv.fruit || 0) > 0 ? 'fruit' : (s.inv.lemon || 0) > 0 ? 'lemon' : null;
   if (!k) { svToast((s.inv.fish || 0) > 0 ? 'El pescado crudo hay que cocinarlo primero en una fogata.' : 'No tenés comida. Buscá granados o pescá.'); return; }
-  h3do(['M_Drinking', 'PickUp_Table'], 2.4, .6, 1.2); svAdd(k, -1); s.sat = Math.min(SV.FULL, s.sat + FOOD[k] * (S.hx && fv('dom') >= 20 ? 1.25 : 1)); s.warned = 0; G().save(); if (humV() >= 1 && MP.code) xSend({ k: 'share', by: meInfo().name, x: S.av.position.x, z: S.av.position.z }); svToast(k === 'cooked' ? '🍢 Comiste pescado asado. ¡Recuperaste fuerzas!' : k === 'bread' ? '🥖 Comiste pan.' : '🍎 Comiste una granada.'); svUI();
+  h3do(['M_Drinking', 'PickUp_Table'], 2.4, .6, 1.2); svAdd(k, -1); s.sat = Math.min(SV.FULL, s.sat + FOOD[k] * (S.hx && fv('dom') >= 20 ? 1.25 : 1)); s.warned = 0; G().save(); if (humV() >= 1 && MP.code) xSend({ k: 'share', by: meInfo().name, x: S.av.position.x, z: S.av.position.z }); svToast(k === 'cooked' ? '🍢 Comiste pescado asado. ¡Recuperaste fuerzas!' : k === 'bread' ? '🥖 Comiste pan.' : k === 'lemon' ? '🍋 Comiste un limón. ¡Qué ácido!' : '🍎 Comiste una granada.'); svUI();
 }
 
 /* ---------- fabricar y construir ---------- */
@@ -4605,7 +4610,7 @@ function survTick(dt, t) {
   // regenerar árboles, rocas y frutos
   for (const [i, left] of st.felled) { if (left - dt <= 0) { st.felled.delete(i); svHide(FLORA.oT, i, true); for (let j = 0; j < 6; j++) svHide(FLORA.oB, i * 6 + j, true); } else st.felled.set(i, left - dt); }
   for (const [i, left] of st.mined) { if (left - dt <= 0) { st.mined.delete(i); svHide(FLORA.rI, i, true); } else st.mined.set(i, left - dt); }
-  st.fruit.trees.forEach((o, i) => { if (o.n > 0) return; o.t -= dt; if (o.t <= 0) { o.n = 5; o.fm.forEach((m, k) => st.fruit.FR.setMatrixAt(i * 5 + k, m)); st.fruit.FR.instanceMatrix.needsUpdate = true; } });
+  st.fruit.trees.forEach((o, i) => { if (o.n > 0) return; o.t -= dt; if (o.t <= 0) { o.n = o.n0 || 5; svFruitShow(o, i, true); } });
   // fogatas
   let lit = null; st.fires = st.fires.filter(f => { f.left -= dt; f.fl.scale.set(1 + Math.sin(t * 13) * .12, 1 + Math.sin(t * 9 + 1) * .2, 1); if (f.left <= 0) { S.scene.remove(f.g); ambOff(f.amb); return false; } if (!lit || (f.x - S.av.position.x) ** 2 + (f.z - S.av.position.z) ** 2 < (lit.x - S.av.position.x) ** 2 + (lit.z - S.av.position.z) ** 2) lit = f; return true; });
   if (lit) { st.fl.position.set(lit.x, lit.y + 1, lit.z); st.fl.intensity = 5 + Math.sin(t * 17) * 1.2; } else st.fl.intensity = 0;
@@ -4691,7 +4696,7 @@ function playerPick(title, onPick) {
 }
 
 /* ---------- intercambio de materiales y comida (Hero) ---------- */
-const XRES = ['money', 'wood', 'stone', 'plank', 'block', 'fruit', 'bread', 'fish', 'cooked'];
+const XRES = ['money', 'wood', 'stone', 'plank', 'block', 'fruit', 'lemon', 'bread', 'fish', 'cooked'];
 function xTrade() {
   playerPick('¿Con quién querés intercambiar?', to => {
     const el = document.getElementById('v3sheet'), s = svP(), give = {}, want = {};
@@ -4867,15 +4872,15 @@ function prayTogetherTick(dt) {
    - Servicio: atributo único que solo crece haciendo obras para los demás.
    ===================================================================== */
 RES.money = ['Denarios', '🪙']; RES.bread = ['Pan', '🥖']; FOOD.bread = 15 * 60;
-const SELL = { wood: 1, stone: 1, plank: 3, block: 3, fruit: 1, fish: 2, cooked: 3, bread: 1 };
+const SELL = { wood: 1, stone: 1, plank: 3, block: 3, fruit: 1, lemon: 1, fish: 2, cooked: 3, bread: 1 };
 const SHOPS = {
   carpintero: { name: 'La carpintería', buy: [['t', 'axe', 15], ['t', 'pick', 18], ['r', 'plank', 4]], sell: ['wood', 'plank'] },
   alfarero: { name: 'El alfarero', buy: [['r', 'block', 4], ['t', 'flint', 6]], sell: ['stone', 'block'] },
-  panadero: { name: 'La panadería', buy: [['r', 'bread', 2]], sell: ['fruit'] },
+  panadero: { name: 'La panadería', buy: [['r', 'bread', 2]], sell: ['fruit', 'lemon'] },
   pescador: { name: 'La casa del pescador', buy: [['t', 'rod', 12], ['t', 'net', 20], ['r', 'cooked', 4]], sell: ['fish', 'cooked'] },
   tejedora: { name: 'La tejedora', buy: [['g', 'c', 10], ['g', 'r', 30]], sell: [] },
   posada: { name: 'La posada', buy: [['r', 'bread', 2], ['r', 'cooked', 4]], sell: ['fruit', 'fish'] },
-  mercado: { name: 'Puesto del mercado', buy: [['r', 'bread', 2], ['r', 'fruit', 2], ['t', 'flint', 6]], sell: ['wood', 'stone', 'plank', 'block', 'fruit', 'fish', 'cooked'] }
+  mercado: { name: 'Puesto del mercado', buy: [['r', 'bread', 2], ['r', 'fruit', 2], ['t', 'flint', 6]], sell: ['wood', 'stone', 'plank', 'block', 'fruit', 'lemon', 'fish', 'cooked'] }
 };
 const SERV_PERKS = [
   [3, 'Te conocen en el mercado', 'Los comerciantes te hacen precio: todo cuesta un 10% menos.'],
