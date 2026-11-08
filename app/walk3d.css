@@ -755,3 +755,20 @@ body[data-branch="ados"] .lvup div small{color:#FFD25E}
 /* HUD superior en flujo: debajo del marco tallado, sin superponerse (lo mide hudLay) */
 body.v3on .v3surv,body.v3on .v3mmbox,.v3mmbox{top:var(--hudB,calc(80px + env(safe-area-inset-top,0px)))!important}
 .v3comp{top:var(--compT,calc(12px + env(safe-area-inset-top,0px)))!important}
+
+/* ---------- ajustes por forma de pantalla (body[data-layout]) ---------- */
+/* celular acostado: poca altura; la mochila se ensancha, las pestañas van en una sola fila y el contenido usa dos columnas donde se puede */
+body[data-layout="movil-h"] .inv{max-width:min(92vw,760px);max-height:calc(100vh - 12px - env(safe-area-inset-top,0px));padding-top:10px}
+body[data-layout="movil-h"] .inv-tabs{grid-template-columns:repeat(6,1fr)}
+body[data-layout="movil-h"] .inv-tabs button{padding:7px 2px;font-size:11px}
+body[data-layout="movil-h"] .inv-h{margin-bottom:6px}
+body[data-layout="movil-h"] .inv-grid{grid-template-columns:repeat(8,minmax(0,1fr))}
+body[data-layout="movil-h"] .inv-doll{grid-template-rows:repeat(3,54px);grid-template-columns:54px 1fr 54px;gap:8px}
+body[data-layout="movil-h"] .inv-slot{width:54px;height:54px}
+/* celular parado: ancho completo, pestañas en 3 columnas (como hasta ahora) */
+body[data-layout="movil-v"] .inv{max-width:100%;border-radius:22px 22px 0 0}
+body[data-layout="movil-v"] #v3sheet{align-items:flex-end;padding-top:0}
+/* PC: panel centrado y más ancho, pestañas en una fila */
+body[data-layout="pc"] .inv{max-width:560px}
+body[data-layout="pc"] .inv-tabs{grid-template-columns:repeat(6,1fr)}
+body[data-layout="pc"] #v3sheet{align-items:center;padding-top:0}
