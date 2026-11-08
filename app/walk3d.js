@@ -3618,7 +3618,7 @@ function mergeGeos(list) { // une geometrías no indexadas o indexadas en una so
   const out = new THREE.BufferGeometry(); out.setAttribute('position', new THREE.BufferAttribute(P, 3)); out.setAttribute('normal', new THREE.BufferAttribute(N, 3)); return out;
 }
 function dpalmPlace(scene, list) {
-  if (!list.length) return; const M = dpalmMats(), lo = matchMedia('(pointer: coarse)').matches || QUAL.lv < 2; if (!DPALM.vars || DPALM.lo !== lo) { DPALM.vars = [11, 23, 37].map(sd => dpalmGeo(sd, lo)); DPALM.lo = lo; }
+  if (!list.length || BARE) return; const M = dpalmMats(), lo = matchMedia('(pointer: coarse)').matches || QUAL.lv < 2; if (!DPALM.vars || DPALM.lo !== lo) { DPALM.vars = [11, 23, 37].map(sd => dpalmGeo(sd, lo)); DPALM.lo = lo; }
   const mT = phMat(M.trunk, { wind: 3 }), mL = phMat(M.leaf, { wind: 3 }), mD = phMat(M.date, { wind: 3 }), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
   const by = new Map(); list.forEach((it, i) => { const k = (i % 3) + ':' + Math.floor(it.z / 72); if (!by.has(k)) by.set(k, []); by.get(k).push(it); });
   by.forEach((L, key) => { const vi = +key.split(':')[0], zc = (Math.floor(L[0].z / 72) + .5) * 72, v = DPALM.vars[vi];
@@ -3685,6 +3685,7 @@ async function pgBuild() {
   PG.avgTri = groups.reduce((t, g) => t + g.w * g.tri, 0) || 500; const lvMax = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), cap = Math.min(40000, Math.ceil(PG_TRI[lvMax] * 1.5 / PG.avgTri));
   for (const g of groups) { g.ims = g.vars.map(ms => { const n = Math.ceil(cap * g.w / g.vars.length * 1.5) + 24; return ms.map(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 4, grass: 1 }), n); im.count = 0; im.frustumCulled = false; im.receiveShadow = true; im.castShadow = false; im.userData.m = mm.m; im.userData.cap = n; S.scene.add(im); PG.ims.push(im); return im; }); }); }
   try { pgBake(groups); } catch (e) { r2log('horneado: ' + ((e && e.message) || e)); }
+  if (/[?&]vivero=1/.test(location.search)) vivero(groups).catch(e => r2log('vivero: ' + ((e && e.message) || e)));
   PG.groups = groups; PG.ready = true; PG.cx = 1e9; r2log('pasto nuevo listo: ' + PG.ims.length + ' mallas, ' + Math.round(PG.avgTri) + ' triángulos por planta');
   try { if (S.renderer.compileAsync) await S.renderer.compileAsync(S.scene, S.camera); } catch (e) {}
 }
@@ -3722,6 +3723,18 @@ function pgBake(groups) {
   const prevT = r.getRenderTarget(), prevC = r.getClearColor(new THREE.Color()), prevA = r.getClearAlpha();
   r.setRenderTarget(rt); r.clear(); r.render(sc, cam); r.setRenderTarget(prevT); r.setClearColor(prevC, prevA);
   TEXK.tU.tG.value = rt.texture; TEXK.tU.gS.value = 1 / T; TEXK.baked = rt.texture; r2log('suelo horneado: ' + SZ + 'px, mosaico de ' + T + ' m');
+}
+async function vivero(groups) {
+  const a = S.av.position, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(0, 0, 0), V = new THREE.Vector3(), SC = new THREE.Vector3(), yAt = (x, z) => S.W.hAt(x, z);
+  const put = (ms, x, z, sc, wind) => ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind, grass: wind > 3 ? 1 : 0 }), 1); M.compose(V.set(x, yAt(x, z), z), Q.setFromEuler(E), SC.setScalar(sc)).multiply(mm.m); im.setMatrixAt(0, M); im.instanceMatrix.needsUpdate = true; im.castShadow = true; S.scene.add(im); });
+  const label = (t, x, z, h) => { const lb = textSprite(t.toUpperCase().replace(/_/g, ' '), true); lb.position.set(x, yAt(x, z) + h, z); lb.scale.multiplyScalar(.6); S.scene.add(lb); };
+  // árboles del pack: fila de fondo, 14 m entre uno y otro
+  const tm = GRP.man['trees/']; let k = 0;
+  if (tm) for (const id of Object.keys(tm.slots)) { const vars = await grpVars(id).catch(() => null); if (!vars) continue; vars.forEach((ms, vi) => { const x = a.x - 60 + k * 14, z = a.z - 40; k++; put(ms, x, z, 1, 3); label((vars.names && vars.names[vi]) || id, x, z, 9); }); }
+  // plantas del pack (todas, incluidas las que no se usan en el pasto): filas de 8, 5 m entre plantas
+  const gm = GRP.man['grass/']; let j = 0;
+  if (gm) for (const id of Object.keys(gm.slots)) { const vars = await grpVars(id, 'lite').catch(() => null); if (!vars) continue; vars.forEach((ms, vi) => { const col = j % 8, row = Math.floor(j / 8), x = a.x - 17.5 + col * 5, z = a.z - 10 - row * 6; j++; put(ms, x, z, 3.2, 4); label((vars.names && vars.names[vi]) || id, x, z, 1.4 + (col % 2) * .5); }); }
+  r2log('vivero: ' + k + ' árboles y ' + j + ' plantas en muestra');
 }
 let _pgM, _pgQ, _pgE, _pgV, _pgS, _pgC;
 function pgFill() {
