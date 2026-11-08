@@ -1103,7 +1103,7 @@ function openBag(first) {
   el.hidden = false; const close = () => { el.hidden = true; }; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   const tabs = el.querySelectorAll('.inv-tabs button'), body = el.querySelector('.inv-body');
   const show = t => { tabs.forEach(b => b.classList.toggle('on', b.dataset.t === t)); body.innerHTML = ''; if (t === 'eq') invEquip(body); else if (t === 'ob') invItems(body); else if (t === 'su') invSurv(body); else if (t === 'at') invAttr(body); else if (t === 'cu') invCourses(body); else invMemories(body); };
-  tabs.forEach(b => b.onclick = () => show(b.dataset.t)); show(first || 'ob');
+  tabs.forEach(b => b.onclick = () => show(b.dataset.t)); show(first || 'eq');
 }
 /* ícono dibujado de cada prenda: su forma, su color real y su detalle (rayas, vendas, bordado, metal) */
 const icoGear = it => {
@@ -4244,6 +4244,8 @@ let loading = null, builtFor = null;
 function v3fail(msg) { document.body.classList.remove('v3boot'); let box = document.getElementById('v3fail'); if (!box) { box = document.createElement('div'); box.id = 'v3fail'; box.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#14110C;color:#F3E6D6;font:600 16px Nunito,sans-serif;text-align:center;padding:24px'; document.body.appendChild(box); }
   box.innerHTML = '<div style="max-width:420px"><p style="font-size:19px;font-weight:800;margin:0 0 10px">No pudimos abrir el mundo</p><p style="margin:0 0 18px;opacity:.85">' + msg + '</p><button type="button" style="border:0;border-radius:99px;padding:12px 22px;background:#E9B44C;color:#2A1B08;font:800 15px Nunito,sans-serif;cursor:pointer">Probar de nuevo</button></div>'; box.querySelector('button').onclick = () => location.reload(); }
 async function show3d(on) {
+  // el visor cuelga directo del body: si queda dentro de una sección con transform, 'fixed' se mide contra esa sección y aparecen franjas a los costados en el celular
+  try { const rt = document.getElementById('view3d'); if (rt && rt.parentElement !== document.body) document.body.appendChild(rt); const sh = document.getElementById('v3sheet'); if (sh && sh.parentElement !== document.body) document.body.appendChild(sh); } catch (e) {}
   const root = document.getElementById('view3d'), btn = document.getElementById('viewToggle'); if (!root || !btn) return;
   setPref(on ? '3d' : 'map');
   if (!on) { document.body.classList.remove('v3boot'); root.hidden = true; btn.innerHTML = '<span>Vista 3D</span>'; document.body.classList.remove('v3on'); G().syncMap(); return; }
