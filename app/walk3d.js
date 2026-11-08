@@ -1958,6 +1958,26 @@ function vHouse(R, o) {
     else { for (let i = 0; i < 4; i++) cy(.05, .06, .9, wd, -yw / 2 + .5, .1 + i * .12, z0 + .6 + i * .05, g, 6).rotation.z = Math.PI / 2; } }
   g.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); return { g, cols, w, d };
 }
+// alturas del terreno bajo las cuatro esquinas y el centro de una casa girada
+function footH(yAt, x, z, rot, w, d) { const P = [[0, 0], [-w / 2, -d / 2], [w / 2, -d / 2], [-w / 2, d / 2], [w / 2, d / 2], [0, d / 2], [0, -d / 2], [-w / 2, 0], [w / 2, 0]].map(([a, b]) => { const q = rotXZ(a, b, rot); return yAt(x + q[0], z + q[1]); }); return { min: Math.min(...P), max: Math.max(...P) }; }
+// basamento de piedra que rellena el hueco entre una casa y la ladera
+function plinth(scene, x, z, rot, w, d, y0, y1) { const h = y1 - y0; if (h <= 0) return; const m = pbrMat('white_sandstone_bricks', Math.max(1, w / 2), Math.max(1, h / 1.2), { color: '#D8CDB8' }); const b = bx(w + .3, h, d + .3, m, 0, h / 2, 0, null); b.position.set(x, y0, z); b.rotation.y = rot; b.receiveShadow = true; b.castShadow = true; scene.add(b); }
+// planta baja maciza bajo una casa, escalera exterior por el costado y terraza delante de la puerta (la puerta está en +z local)
+function upperFloor(scene, x, z, rot, w, d, y0, lift) {
+  const sm = pbrMat('white_sandstone_bricks', 3, 1.4, { color: '#E8DCC4' }), g = new THREE.Group(); g.position.set(x, y0, z); g.rotation.y = rot;
+  bx(w + .2, lift, d + .2, sm, 0, lift / 2, 0, g); // planta baja
+  const tw = 1.7, tz = d / 2 + 1.2; bx(w + 2 * tw + .4, .3, 2.4, sm, 0, lift - .15, tz, g); // terraza
+  const sx = w / 2 + tw / 2 + .2, L = d + 2.4, n = 14; for (let i = 0; i < n; i++) { const hh = lift * (i + 1) / n, zz = -d / 2 - 1.2 + L * (i + .5) / n; bx(tw, hh, L / n + .02, sm, sx, hh / 2, zz, g); } // escalera por el costado +x
+  [[-1, 0], [1, 0]].forEach(([k]) => { for (let i = 0; i < 6; i++) bx(.18, .9, .18, sm, k * (w / 2 + tw + .1), lift + .45, tz - 1.1 + i * .44, g); }); // baranda de la terraza
+  g.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; } }); scene.add(g); try { staticMerge(g); } catch (e) {}
+  // dónde se pisa: la escalera sube de forma continua; la terraza y el piso de la casa quedan a la altura del primer piso
+  S.ramps = S.ramps || []; S.ramps.push({ box: wBox(x, z, rot, sx - tw / 2, sx + tw / 2, -d / 2 - 1.2, d / 2 + 1.2), x, z, rot, a0: -d / 2 - 1.2, a1: d / 2 + 1.2, y0: y0, y1: y0 + lift });
+  S.floors.push(Object.assign(wBox(x, z, rot, -w / 2 - tw - .2, w / 2 + tw + .2, d / 2, d / 2 + 2.4), { y: y0 + lift })); S.floors.push(Object.assign(wBox(x, z, rot, -w / 2, w / 2, -d / 2, d / 2), { y: y0 + lift }));
+  // choque con la planta baja desde afuera (menos el frente de la escalera)
+  S.cols.push(wBox(x, z, rot, -w / 2 - .1, w / 2 + .1, -d / 2 - .1, d / 2 + .1));
+}
+// altura sobre una rampa/escalera continua (0 si no hay)
+function rampH(x, z) { const L = S && S.ramps; if (!L) return -1; let h = -1; for (const r of L) { if (x < r.box.x0 || x > r.box.x1 || z < r.box.z0 || z > r.box.z1) continue; const q = rotXZ(x - r.x, z - r.z, -r.rot), t = Math.max(0, Math.min(1, (q[1] - r.a0) / (r.a1 - r.a0))); h = Math.max(h, r.y0 + (r.y1 - r.y0) * t); } return h; }
 function placeV(scene, H, x, z, rot, y) { H.g.position.set(x, y, z); H.g.rotation.y = rot; scene.add(H.g); try { staticMerge(H.g); } catch (e) {} H.cols.forEach(c => S.cols.push(wBox(x, z, rot, ...c))); }
 // reparte casas alrededor de una plaza o a lo largo de una calle; devuelve las casas puestas (para no encimar props)
 function townLayout(scene, p, yAt, HW, o) {
@@ -1966,7 +1986,8 @@ function townLayout(scene, p, yAt, HW, o) {
     if (o.street != null) { const along = (R() - .5) * 2 * rad, sdz = R() < .5 ? -1 : 1, off = plaza / 2 + 3 + R() * 2.5, c = Math.cos(o.street), s = Math.sin(o.street), lx = p.x + c * along, lz = p.z + s * along; x = lx - s * off * sdz; z = lz + c * off * sdz; face = Math.atan2(lx - x, lz - z); }
     else { const a = R() * 6.283, r = plaza + 3 + R() * (rad - plaza - 3); x = p.x + Math.cos(a) * r; z = p.z + Math.sin(a) * r; face = Math.atan2(p.x - x, p.z - z) + (R() - .5) * .5; }
     const H = vHouse(R, o.house ? o.house(R, placed.length) : {}), rr = Math.hypot(H.w, H.d + 3) / 2; if (!ok(x, z, rr)) continue;
-    const y = Math.min(yAt(x, z), yAt(x + 2, z + 2), yAt(x - 2, z - 2)) - .05; placeV(scene, H, x, z, face, y); placed.push({ x, z, rr, face }); }
+    const hs = footH(yAt, x, z, face, H.w, H.d); if (hs.max - hs.min > 2.2) continue; // ladera muy empinada: otro lugar
+    const y = hs.min - .05; placeV(scene, H, x, z, face, y); if (hs.max - hs.min > .35) plinth(scene, x, z, face, H.w, H.d, hs.min - .6, hs.max + .08); placed.push({ x, z, rr, face }); }
   return placed;
 }
 // gente del pueblo: de pie y algunos sentados en la puerta (horneados, baratos)
@@ -2056,7 +2077,13 @@ function upperScene(scene, p, yAt, poiProp, hx, HW) {
   const pv = new THREE.Mesh(new THREE.CircleGeometry(11, 40), pbrMat('monastery_stone_floor', 6, 6, { color: '#E6DCC8' })); pv.rotation.x = -Math.PI / 2; pv.position.set(p.x, y + .03, p.z); pv.receiveShadow = true; scene.add(pv);
   townLayout(scene, p, yAt, HW, { seed: 6464, n: 15, r: 27, plaza: 10, gap: 1.8, avoid: [[p.x, p.z, 7]], house: (Rr, i) => ({ upper: Rr() < .6, h: 3.2 + Rr() * .8 }) });
   for (let i = 0; i < 3; i++) { const a = (sd > 0 ? Math.PI : 0) + (i - 1) * .85, x = p.x + Math.cos(a) * 8.5, z = p.z + Math.sin(a) * 8.5; if (!blockedAt(x, z)) stall(scene, x, z, Math.atan2(p.x - x, p.z - z), yAt(x, z), R, poiProp); }
-  cityWall(scene, p.x + sd * 30, p.z, 34, Math.PI / 2, yAt);
+  { // muralla alrededor del barrio: tres lados cerrados y, hacia el camino, dos tramos con la puerta en el medio
+    let t = 8; while (t < 40 && HW && HW.dAt(p.x - sd * t, p.z) > 5) t += 1; const near = Math.max(14, t - 7), far = 32, half = 32;
+    cityWall(scene, p.x + sd * far, p.z, half * 2, Math.PI / 2, yAt);
+    cityWall(scene, p.x + sd * (far - near) / 2, p.z - half, far + near, 0, yAt); cityWall(scene, p.x + sd * (far - near) / 2, p.z + half, far + near, 0, yAt);
+    cityWall(scene, p.x - sd * near, p.z - (half / 2 + 5), half - 10, Math.PI / 2, yAt); cityWall(scene, p.x - sd * near, p.z + (half / 2 + 5), half - 10, Math.PI / 2, yAt);
+    // torres de la puerta, un poco más altas
+    const gm = pbrMat('white_sandstone_bricks', 2, 3, { color: '#F0E8D8' }); [-1, 1].forEach(k => { const gx = p.x - sd * near, gz = p.z + k * 6.5, yy = yAt(gx, gz) - .4; const tw = bx(5.5, 12, 5.5, gm, 0, 6, 0, null); tw.position.set(gx, yy, gz); tw.castShadow = tw.receiveShadow = true; scene.add(tw); S.cols.push({ x0: gx - 2.75, x1: gx + 2.75, z0: gz - 2.75, z1: gz + 2.75 }); }); }
   townFolk(scene, p, yAt, HW, 10, 14, 6565, [[p.x, p.z, 6]]);
 }
 // tramo de muralla con almenas y una torre (caliza)
@@ -2078,7 +2105,7 @@ function golgotaScene(scene, p, yAt, poiProp, hx, HW) {
     [[-6.2, 2], [-6, -3], [5.8, 4.4]].forEach(([u, v], i) => { const x = p.x - u * sd, z = p.z + v; sol.push({ x, y: yAt(x, z), z, ry: Math.atan2(p.x - x, p.z - z), s: 1, v: i }); });
     for (let i = 0; i < 4; i++) { const x = p.x - sd * (13 + i * .9), z = p.z + 7 + (i % 2) * 1.2; wom.push({ x, y: yAt(x, z), z, ry: Math.atan2(p.x - x, p.z - z), s: .95, v: i }); }
     crowdPlace(scene, sol, SL, 'M_Standing_Idle', true); crowdPlace(scene, wom, WL, 'M_Sad_Idle', true); [...sol, ...wom].forEach(q => S.cols.push({ x0: q.x - .35, x1: q.x + .35, z0: q.z - .35, z1: q.z + .35, cx: q.x, cz: q.z, r: .3 })); }
-  cityWall(scene, p.x - sd * 4, p.z - 24, 30, 0, yAt);
+  
   S.rooms.push({ x0: p.x - 14, x1: p.x + 14, z0: p.z - 14, z1: p.z + 14, trade: 'golgota', roof: [], open: true, y }); const lb = textSprite(p.name, hx); lb.scale.multiplyScalar(1.2); lb.position.set(p.x, y + 7.6, p.z); scene.add(lb);
 }
 // ---------- desierto de Judea: farallones y peñascos reales, suelo de piedra suelta, arbustos secos y una cueva ----------
@@ -2181,7 +2208,7 @@ function placeCard(info) {
 }
 // arma todo: Nazaret con sus talleres, el templo y el lago (si existe la etapa de Galilea)
 function buildTowns(scene, g, hx, HW, pois) {
-  S.cols = HCOLS; HCOLS = []; S.floors = []; S.rooms = []; FLORA.poiProps = []; const poiProp = (id, list, o) => FLORA.poiProps.push([id, list, o]); const yAt = (x, z) => HW ? HW.hAt(x, z) : 0;
+  S.cols = HCOLS; HCOLS = []; S.floors = []; S.ramps = []; S.rooms = []; FLORA.poiProps = []; const poiProp = (id, list, o) => FLORA.poiProps.push([id, list, o]); const yAt = (x, z) => HW ? HW.hAt(x, z) : 0;
   for (const p of pois) {
     if (p.k === 'taller') { // Nazaret: cuatro talleres alrededor de una plaza con pozo
       const pv = new THREE.Mesh(new THREE.CircleGeometry(15, 40), new THREE.MeshStandardMaterial({ map: townTex().pave, color: hx ? '#BFAE8E' : '#FFFFFF', roughness: 1 })); pv.rotation.x = -Math.PI / 2; pv.position.set(p.x, yAt(p.x, p.z) + .03, p.z); pv.receiveShadow = true; scene.add(pv);
@@ -2191,12 +2218,13 @@ function buildTowns(scene, g, hx, HW, pois) {
     if (p.k === 'taller') { try { nazaretMore(scene, p, yAt, poiProp, hx, HW); } catch (er) { console.warn('nazaret', er); } }
     if (p.k === 'temple') S.temple = bigTemple(scene, p.x, p.z, p.side, hx, yAt);
     if (p.k === 'temple') { try { const R = rng(3535); townLayout(scene, p, yAt, HW, { seed: 3434, n: 16, r: 44, plaza: 27, gap: 2, house: Rr => ({ upper: Rr() < .5, h: 3.2 + Rr() * .8 }) }); for (let i = 0; i < 4; i++) { const a = (p.side > 0 ? Math.PI : 0) + (i - 1.5) * .3, x = p.x + Math.cos(a) * 25, z = p.z + Math.sin(a) * 25; if (!blockedAt(x, z) && (!HW || HW.dAt(x, z) > 3)) stall(scene, x, z, Math.atan2(p.x - x, p.z - z), yAt(x, z), R, poiProp); } townFolk(scene, p, yAt, HW, 10, 30, 3636, [[p.x, p.z, 23]]); } catch (e) { console.warn('jerusalén', e); } }
-    if (p.k === 'upper') { const H = bigHouse('cena', hx); placeHouse(scene, H, p.x, p.z, p.side > 0 ? -Math.PI / 2 : Math.PI / 2, yAt(p.x, p.z) - .02); try { upperScene(scene, p, yAt, poiProp, hx, HW); } catch (e) { console.warn('jerusalén', e); } }
+    if (p.k === 'upper') { const H = bigHouse('cena', hx), rot = p.side > 0 ? -Math.PI / 2 : Math.PI / 2, y0 = yAt(p.x, p.z) - .02, LIFT = hx ? 3.1 : 0; placeHouse(scene, H, p.x, p.z, rot, y0 + LIFT);
+      if (LIFT) try { upperFloor(scene, p.x, p.z, rot, 7.4, 6.2, y0, LIFT); } catch (e) { console.warn('aposento', e); } try { upperScene(scene, p, yAt, poiProp, hx, HW); } catch (e) { console.warn('jerusalén', e); } }
     if (p.k === 'shore') shoreScene(scene, p, yAt, poiProp, hx, HW);
     if (p.k === 'golgota') golgotaScene(scene, p, yAt, poiProp, hx, HW);
     if (p.k === 'tomb') tombScene(scene, p, yAt, poiProp, !!(G().isDone && G().isDone('resurreccion-n1')), hx, HW);
     if (p.k === 'garden') gardenScene(scene, p, yAt, poiProp, hx, HW);
-    if (p.k === 'inn') { const H = bigHouse('posada', hx); placeHouse(scene, H, p.x, p.z, p.side > 0 ? -Math.PI / 2 : Math.PI / 2, yAt(p.x, p.z) - .02); FLORA.donkeySpot = { x: p.x - p.side * 6, z: p.z + 5, ry: p.side > 0 ? -1.2 : 1.2 }; }
+    if (p.k === 'inn') { const H = bigHouse('posada', hx); placeHouse(scene, H, p.x, p.z, p.side > 0 ? -Math.PI / 2 : Math.PI / 2, yAt(p.x, p.z) - .02); FLORA.donkeySpot = { x: p.x - p.side * 6, z: p.z + 5, ry: p.side > 0 ? -1.2 : 1.2 }; if (hx) try { const zq = [p.x - (p.side || 1) * 14, p.z - 11, 7]; townLayout(scene, p, yAt, HW, { seed: 2121, n: 9, r: 24, plaza: 9, gap: 2, avoid: [[p.x, p.z, 8.5], zq], house: (Rr) => ({ upper: Rr() < .3, h: 3 + Rr() * .7 }) }); const Rj = rng(2122); for (let i = 0; i < 2; i++) { const a = (p.side > 0 ? Math.PI : 0) + (i ? .7 : -.7), x = p.x + Math.cos(a) * 9, z = p.z + Math.sin(a) * 9; if (!blockedAt(x, z)) stall(scene, x, z, Math.atan2(p.x - x, p.z - z), yAt(x, z), Rj, poiProp); } townFolk(scene, p, yAt, HW, 9, 15, 2123, [[p.x, p.z, 6], zq]); } catch (e) { console.warn('jerico', e); } }
     if (p.k === 'field') fieldScene(scene, p, yAt, poiProp, hx, HW);
     if (p.k === 'roofhouse') { const H = bigHouse('techo', hx); placeHouse(scene, H, p.x, p.z, p.side > 0 ? -Math.PI / 2 : Math.PI / 2, yAt(p.x, p.z) - .02); try { capernaumScene(scene, p, yAt, poiProp, hx, HW); } catch (e) { console.warn('capernaum', e); } }
     if (p.k === 'village') { try { (/Caná/.test(p.name) ? canaScene : /Emaús/.test(p.name) ? emausScene : belenScene)(scene, p, yAt, poiProp, hx, HW); } catch (e) { console.warn('aldea', e); } }
@@ -4640,7 +4668,7 @@ function loop(now) {
     if ((m.position.x - S.av.position.x) ** 2 + (m.position.z - S.av.position.z) ** 2 < 2.6) collect(id, m);
   }
   camFollow(dt); const yaw = S.yaw + S.camYaw, a = S.av.position, ph = S.camPitch ?? .4, back = camSafeBack(a, yaw, S.camDist * Math.cos(ph)), up = (S.hx ? 1.3 : 1.02) + S.camDist * Math.sin(ph);
-  { const gnd = Math.max(S.W ? Math.max(0, S.W.hAt(a.x, a.z)) : 0, stairH(a.x, a.z), floorH(a.x, a.z)); S.gy = (S.gy ?? gnd) + (gnd - (S.gy ?? gnd)) * Math.min(1, dt * 12); if (S.jy > 0) { S.jv -= 17 * dt; S.jy = Math.max(0, S.jy + S.jv * dt); } a.y = S.gy + (S.jy || 0); }
+  { const gnd = Math.max(S.W ? Math.max(0, S.W.hAt(a.x, a.z)) : 0, stairH(a.x, a.z), floorH(a.x, a.z), rampH(a.x, a.z)); S.gy = (S.gy ?? gnd) + (gnd - (S.gy ?? gnd)) * Math.min(1, dt * 12); if (S.jy > 0) { S.jv -= 17 * dt; S.jy = Math.max(0, S.jy + S.jv * dt); } a.y = S.gy + (S.jy || 0); }
   if (S.W) { S.W.sunL.position.set(a.x + S.W.sunDir.x * 40, a.y + 11, a.z + S.W.sunDir.z * 40); S.W.sunL.target.position.copy(a); S.uGrass.value = t; S.W.sky.material.uniforms.t.value = t; }
   const cx = a.x - Math.sin(yaw) * back, cz = a.z - Math.cos(yaw) * back;
   S.camera.position.x += (cx - S.camera.position.x) * .08; S.camera.position.z += (cz - S.camera.position.z) * .08; { const cg = S.W ? S.W.hAt(S.camera.position.x, S.camera.position.z) : 0; S.camera.position.y += (Math.max(a.y + up, cg + .45) - S.camera.position.y) * .08; }
