@@ -459,11 +459,12 @@ function splitZ(scene, mesh, step) {
 }
 function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
   // campo de distancias al camino (para dejarlo plano y ubicar la vegetación)
-  const X0 = -XB - 40, X1 = XB + 40, Z0 = zMax - 50, Z1 = 50, CS = 1.5, NX = Math.ceil((X1 - X0) / CS) + 1, NZ = Math.ceil((Z1 - Z0) / CS) + 1, DF = new Float32Array(NX * NZ);
-  const pts = allPts.filter((p, i) => i % 2 === 0).concat(flatSpots), buckets = new Map(), bk = z => Math.floor(z / 6);
-  pts.forEach(p => { const k = bk(p[1]); if (!buckets.has(k)) buckets.set(k, []); buckets.get(k).push(p); });
-  for (let j = 0; j < NZ; j++) { const z = Z0 + j * CS, b0 = bk(z); for (let i = 0; i < NX; i++) { const x = X0 + i * CS; let d = 400; for (let b = b0 - 3; b <= b0 + 3; b++) { const L = buckets.get(b); if (!L) continue; for (const p of L) { const q = (p[0] - x) ** 2 + (p[1] - z) ** 2; if (q < d) d = q; } } DF[j * NX + i] = Math.min(20, Math.sqrt(d)); } }
-  const dAt = (x, z) => { const fx = Math.max(0, Math.min(NX - 1.001, (x - X0) / CS)), fz = Math.max(0, Math.min(NZ - 1.001, (z - Z0) / CS)), i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, a = DF[j * NX + i], b = DF[j * NX + i + 1], c = DF[(j + 1) * NX + i], d = DF[(j + 1) * NX + i + 1]; return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; };
+  const X0 = -XB - 40, X1 = XB + 40, Z0 = zMax - 50, Z1 = 50, CS = 1.5, NX = Math.ceil((X1 - X0) / CS) + 1, NZ = Math.ceil((Z1 - Z0) / CS) + 1, DF = new Float32Array(NX * NZ), DR = new Float32Array(NX * NZ); // DF: camino + zonas planas (aplanar, vegetación); DR: solo el camino (ubicar casas y gente)
+  const roadPts = allPts.filter((p, i) => i % 2 === 0), nRoad = roadPts.length, pts = roadPts.concat(flatSpots), buckets = new Map(), bk = z => Math.floor(z / 6);
+  pts.forEach((p, i) => { const k = bk(p[1]); if (!buckets.has(k)) buckets.set(k, []); buckets.get(k).push([p[0], p[1], i < nRoad ? 1 : 0]); });
+  for (let j = 0; j < NZ; j++) { const z = Z0 + j * CS, b0 = bk(z); for (let i = 0; i < NX; i++) { const x = X0 + i * CS; let d = 400, dr = 400; for (let b = b0 - 3; b <= b0 + 3; b++) { const L = buckets.get(b); if (!L) continue; for (const p of L) { const q = (p[0] - x) ** 2 + (p[1] - z) ** 2; if (q < d) d = q; if (p[2] && q < dr) dr = q; } } DF[j * NX + i] = Math.min(20, Math.sqrt(d)); DR[j * NX + i] = Math.min(20, Math.sqrt(dr)); } }
+  const dOf = F => (x, z) => { const fx = Math.max(0, Math.min(NX - 1.001, (x - X0) / CS)), fz = Math.max(0, Math.min(NZ - 1.001, (z - Z0) / CS)), i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, a = F[j * NX + i], b = F[j * NX + i + 1], c = F[(j + 1) * NX + i], d = F[(j + 1) * NX + i + 1]; return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; };
+  const dAt = dOf(DF), roadAt = dOf(DR);
   const h0 = (x, z) => { const d = dAt(x, z), m = sstep(2.6, 10, d), side = sstep(16 * WS, 44 * WS, Math.abs(x)); return m * (fbm(x * .07 + 3, z * .07) * 3.4 - .9 + side * (4 + fbm(x * .025, z * .025) * 14)) * (KK ? .5 : 1); };
   // cauce del Jordán: distancia al río en la misma grilla
   let RF = null; if (WATER.river) { RF = new Float32Array(NX * NZ); const rb = new Map(); WATER.river.forEach(p => { const k = bk(p[1]); if (!rb.has(k)) rb.set(k, []); rb.get(k).push(p); });
@@ -506,7 +507,7 @@ function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
       const v = .82 + fbm(x * .15, z * .15) * .26 + sstep(30, 60, h) * .12; mc.set([v, v, v], i * 3); }
     mg.setAttribute('color', new THREE.BufferAttribute(mc, 3)); mg.setAttribute('splat', new THREE.BufferAttribute(ms, 4)); mg.computeVertexNormals();
     const m = new THREE.Mesh(mg, terrain.material); m.receiveShadow = true; scene.add(m); splitZ(scene, m, 96); });
-  return { hAt, dAt, sunL, sunDir, sky, terrain, hemi, mtnH, X1 };
+  return { hAt, dAt, roadAt, sunL, sunDir, sky, terrain, hemi, mtnH, X1 };
 }
 /* plantas reales escaneadas (Poly Haven, CC0): pasto, pasto bermuda y flores amarillas, con viento */
 const FLB = new URL('./flora/', import.meta.url).href;
@@ -849,9 +850,12 @@ async function lobby() {
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
   U.note.textContent = `Se guarda el mundo completo en máxima calidad (${MB(tot)} MB). Solo la primera vez: después entrás al instante, aun sin internet.`;
   return new Promise(resolve => {
-    const run = async () => { U.go.hidden = true; const base = tot - miss.reduce((a, f) => a + f[1], 0);
+    let tries = 0; const run = async () => { U.go.hidden = true; if (U.alt) U.alt.hidden = true; const base = tot - miss.reduce((a, f) => a + f[1], 0);
       const fail = await dlFetch(c, miss, (g, t, sp, eta) => { const G2 = base + g; U.prog(G2 / tot, 'Descargando mundo en máxima calidad · ' + dlFmt(G2, tot, sp, (tot - G2) / Math.max(1, sp))); });
-      if (fail.length) { miss = fail; U.go.hidden = false; U.go.textContent = 'Reintentar'; U.note.textContent = `Faltan ${fail.length} archivos (se cortó la conexión). Tocá «Reintentar».`; U.go.onclick = () => run(); return; }
+      if (fail.length) { miss = fail; tries++; U.go.hidden = false; U.go.textContent = 'Reintentar'; U.note.textContent = `Faltan ${fail.length} archivos (se cortó la conexión). Tocá «Reintentar».`; U.go.onclick = () => run();
+        // después de dos intentos se puede entrar igual: lo que falte se pide al jugar (y se sigue bajando atrás)
+        if (tries >= 2 && !U.alt) { U.alt = document.createElement('button'); U.alt.className = 'lb-go lb-alt'; U.alt.textContent = 'Entrar igual'; U.go.after(U.alt); U.note.textContent += ' O entrá igual: el juego carga lo que falte mientras jugás.'; U.alt.onclick = () => { U.alt.hidden = U.go.hidden = true; U.note.textContent = ''; U.prog(null, 'Armando el mundo…'); LOBBY.done = true; dlFetch(c, miss, () => {}).then(f => { if (!f.length) purge(); }).catch(() => {}); resolve(U); }; }
+        return; }
       LOBBY.done = true; purge(); U.prog(1, '¡Listo! Mundo guardado ✓'); U.note.textContent = 'Todo listo para jugar sin cortes.'; U.go.hidden = false; U.go.textContent = '¡Listo! Entrar'; U.go.classList.add('ready');
       U.go.onclick = () => { U.go.hidden = true; U.note.textContent = ''; U.prog(null, 'Armando el mundo…'); resolve(U); }; };
     run();
@@ -1981,11 +1985,11 @@ function rampH(x, z) { const L = S && S.ramps; if (!L) return -1; let h = -1; fo
 function placeV(scene, H, x, z, rot, y) { H.g.position.set(x, y, z); H.g.rotation.y = rot; scene.add(H.g); try { staticMerge(H.g); } catch (e) {} H.cols.forEach(c => S.cols.push(wBox(x, z, rot, ...c))); }
 // reparte casas alrededor de una plaza o a lo largo de una calle; devuelve las casas puestas (para no encimar props)
 function townLayout(scene, p, yAt, HW, o) {
-  const R = rng(o.seed || 777), placed = [], n = o.n || 12, rad = o.r || 24, plaza = o.plaza || 7, ok = (x, z, rr) => (!HW || HW.dAt(x, z) > rr + 1.5) && !placed.some(q => Math.hypot(q.x - x, q.z - z) < q.rr + rr + (o.gap || 2.4)) && !(o.avoid || []).some(([ax, az, ar]) => Math.hypot(ax - x, az - z) < ar + rr); let fails = 0, lastErr = null;
+  const R = rng(o.seed || 777), placed = [], n = o.n || 12, rad = o.r || 24, plaza = o.plaza || 7, roadD = HW ? (HW.roadAt || HW.dAt) : null, ok = (x, z, rr) => (!roadD || roadD(x, z) > rr + 1.5) && !placed.some(q => Math.hypot(q.x - x, q.z - z) < q.rr + rr + (o.gap || 1.6)) && !(o.avoid || []).some(([ax, az, ar]) => Math.hypot(ax - x, az - z) < ar + rr); let fails = 0, lastErr = null;
   for (let t = 0; t < n * 90 && placed.length < n; t++) try { let x, z, face;
-    if (o.street != null) { const along = (R() - .5) * 2 * rad, sdz = R() < .5 ? -1 : 1, off = plaza / 2 + 3 + R() * 2.5, c = Math.cos(o.street), s = Math.sin(o.street), lx = p.x + c * along, lz = p.z + s * along; x = lx - s * off * sdz; z = lz + c * off * sdz; face = Math.atan2(lx - x, lz - z); }
-    else { const a = R() * 6.283, r = plaza + 3 + R() * (rad - plaza - 3); x = p.x + Math.cos(a) * r; z = p.z + Math.sin(a) * r; face = Math.atan2(p.x - x, p.z - z) + (R() - .5) * .5; }
-    const H = vHouse(R, o.house ? o.house(R, placed.length) : {}), rr = Math.hypot(H.w, H.d + 3) / 2; if (!ok(x, z, rr)) continue;
+    if (o.street != null) { const along = (R() - .5) * 2 * rad * (t > n * 30 ? 1.4 : 1), sdz = R() < .5 ? -1 : 1, off = plaza / 2 + 3 + R() * 2.5, c = Math.cos(o.street), s = Math.sin(o.street), lx = p.x + c * along, lz = p.z + s * along; x = lx - s * off * sdz; z = lz + c * off * sdz; face = Math.atan2(lx - x, lz - z); }
+    else { const grow = t > n * 30 ? 1.4 : 1, a = R() * 6.283, r = plaza + 3 + R() * (rad * grow - plaza - 3); x = p.x + Math.cos(a) * r; z = p.z + Math.sin(a) * r; face = Math.atan2(p.x - x, p.z - z) + (R() - .5) * .5; }
+    const H = vHouse(R, o.house ? o.house(R, placed.length) : {}), rr = Math.hypot(H.w, H.d + 1.5) / 2; if (!ok(x, z, rr)) continue;
     const hs = footH(yAt, x, z, face, H.w, H.d); if (hs.max - hs.min > 2.2) continue; // ladera muy empinada: otro lugar
     const y = hs.min - .05; placeV(scene, H, x, z, face, y); if (hs.max - hs.min > .35) plinth(scene, x, z, face, H.w, H.d, hs.min - .6, hs.max + .08); placed.push({ x, z, rr, face }); } catch (e) { fails++; lastErr = e; }
   r2log('pueblo ' + (o.seed || 777) + ': ' + placed.length + ' de ' + n + ' casas' + (fails ? ' (' + fails + ' errores: ' + (lastErr && lastErr.message) + ')' : '')); if (lastErr) console.warn('pueblo', lastErr);
@@ -1993,7 +1997,7 @@ function townLayout(scene, p, yAt, HW, o) {
 }
 // gente del pueblo: de pie y algunos sentados en la puerta (horneados, baratos)
 function townFolk(scene, p, yAt, HW, n, rad, seed, avoid) {
-  const R = rng(seed || 99), st = [], si = []; for (let t = 0; t < n * 30 && st.length + si.length < n; t++) { const a = R() * 6.283, r = 2.5 + R() * rad, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (blockedAt(x, z) || (HW && HW.dAt(x, z) < 2.2) || (avoid || []).some(([ax, az, ar]) => Math.hypot(ax - x, az - z) < ar)) continue; (R() < .25 ? si : st).push({ x, y: yAt(x, z), z, ry: R() * 6.283, s: .94 + R() * .12, v: Math.floor(R() * CROWD_LOOKS.length) }); }
+  const R = rng(seed || 99), st = [], si = []; for (let t = 0; t < n * 30 && st.length + si.length < n; t++) { const a = R() * 6.283, r = 2.5 + R() * rad, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (blockedAt(x, z) || (HW && (HW.roadAt || HW.dAt)(x, z) < 2.2) || (avoid || []).some(([ax, az, ar]) => Math.hypot(ax - x, az - z) < ar)) continue; (R() < .25 ? si : st).push({ x, y: yAt(x, z), z, ry: R() * 6.283, s: .94 + R() * .12, v: Math.floor(R() * CROWD_LOOKS.length) }); }
   crowdPlace(scene, st, CROWD_LOOKS, 'M_Standing_Idle', true); crowdPlace(scene, si, CROWD_LOOKS, 'cross', true); [...st, ...si].forEach(q => S.cols.push({ x0: q.x - .35, x1: q.x + .35, z0: q.z - .35, z1: q.z + .35, cx: q.x, cz: q.z, r: .3 }));
 }
 // puestos de mercado: cuatro palos, toldo de tela y canastas con frutas

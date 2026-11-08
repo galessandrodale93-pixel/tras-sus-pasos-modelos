@@ -510,6 +510,7 @@ body.hx .hud-attr,.hx .hud-attr{background:rgba(20,16,10,.6);border-color:rgba(2
 .lb-in>b{font:600 clamp(32px,7vw,54px)/1 "Cinzel",Georgia,serif;letter-spacing:.04em;text-shadow:0 4px 24px rgba(0,0,0,.6)}
 .v3lobby.kid .lb-in>b{font-family:"Fraunces",Georgia,serif;font-weight:800;color:#FFF}
 .lb-sub{margin:0;font:700 15px/1.4 "Nunito",sans-serif;opacity:.92}
+.lb-go.lb-alt{margin-left:10px;background:linear-gradient(180deg,#5A4A30,#3A2E1C);color:#F4E2B8;border:1px solid rgba(233,195,122,.45)}
 .lb-go{margin-top:6px;border:0;border-radius:99px;padding:14px 30px;font:900 16px "Nunito",sans-serif;background:linear-gradient(180deg,#FFE7A6,#E7AE45);color:#2A1A06;box-shadow:0 10px 30px rgba(231,174,69,.35);cursor:pointer}
 .lb-go.ready{animation:lbPulse 1.6s ease-in-out infinite}
 @keyframes lbPulse{50%{box-shadow:0 0 0 10px rgba(231,174,69,.18),0 10px 30px rgba(231,174,69,.4)}}
@@ -803,3 +804,14 @@ body[data-branch="ados"].v3on .hud-lv::after{content:"";position:absolute;left:0
 body[data-branch="ados"].v3on .hud-title b{color:#F3D58A;text-shadow:0 1px 0 #000,0 0 12px rgba(243,213,138,.35)}
 body[data-branch="ados"].v3on .hud-title .lv-t{color:#D8C9A8}
 body[data-branch="ados"].v3on .pill.score{background:linear-gradient(180deg,#2A2219,#17120D);border:1px solid rgba(233,195,122,.5);color:#F3D58A;font-family:"Cinzel",Georgia,serif;font-weight:800}
+
+/* tarjeta de capítulo: el botón «Seguir» queda siempre a la vista aunque el texto haya que desplazarlo */
+.hst-btns{position:sticky;bottom:-16px;margin:12px -20px -16px;padding:10px 20px 16px;background:linear-gradient(180deg,rgba(22,17,11,0),#16110B 40%)}
+body[data-layout="movil-h"] .hst{padding:8px max(10px,env(safe-area-inset-right,0px)) 8px max(10px,env(safe-area-inset-left,0px))}
+body[data-layout="movil-h"] .hst-in{width:min(760px,100%);padding:10px 16px 10px;font-size:12.5px;line-height:1.4;border-radius:16px}
+body[data-layout="movil-h"] .hst-in h2{font-size:19px;margin:2px 0 6px}
+body[data-layout="movil-h"] .hst-p{margin:0 0 6px}
+body[data-layout="movil-h"] .hst-say{padding:6px 10px;margin:4px 0}
+body[data-layout="movil-h"] .hst-ico{width:28px;height:28px;font-size:14px}
+body[data-layout="movil-h"] .hst-btns{margin:8px -16px -10px;padding:8px 16px 10px}
+body[data-layout="movil-h"] .hst-go{padding:8px 20px;font-size:14px}
