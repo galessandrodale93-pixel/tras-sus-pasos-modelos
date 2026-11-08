@@ -1103,7 +1103,7 @@ function openBag(first) {
   el.hidden = false; const close = () => { el.hidden = true; }; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   const tabs = el.querySelectorAll('.inv-tabs button'), body = el.querySelector('.inv-body');
   const show = t => { tabs.forEach(b => b.classList.toggle('on', b.dataset.t === t)); body.innerHTML = ''; if (t === 'eq') invEquip(body); else if (t === 'ob') invItems(body); else if (t === 'su') invSurv(body); else if (t === 'at') invAttr(body); else if (t === 'cu') invCourses(body); else invMemories(body); };
-  tabs.forEach(b => b.onclick = () => show(b.dataset.t)); show(first || 'eq');
+  tabs.forEach(b => b.onclick = () => show(b.dataset.t)); show(first || 'ob');
 }
 /* ícono dibujado de cada prenda: su forma, su color real y su detalle (rayas, vendas, bordado, metal) */
 const icoGear = it => {

@@ -22,7 +22,7 @@ body[data-branch="ados"] .v3b{border-radius:10px;letter-spacing:.06em;text-trans
 .v3pop svg,.bag-it svg{width:28px;height:28px}
 .v3pop small{display:block;font:900 11px "Nunito",sans-serif;letter-spacing:.08em;color:#FFD98A;text-transform:uppercase}
 .v3pop b{font:800 15px "Nunito",sans-serif}
-.v3sheet{position:fixed;inset:0;z-index:30;background:rgba(5,6,12,.6);display:flex;align-items:flex-end;justify-content:center}
+.v3sheet{position:fixed;inset:0;z-index:30;background:rgba(5,6,12,.6);display:flex;align-items:flex-start;justify-content:center;padding-top:max(10px,env(safe-area-inset-top,0px))}
 .bag-in{width:100%;max-width:520px;max-height:82vh;overflow-y:auto;background:#12151F;color:#EEF1F8;border-radius:24px 24px 0 0;padding:18px max(18px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px));border-top:1px solid rgba(255,255,255,.12)}
 .bag-h{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;margin-bottom:6px}
 .bag-h b{font:800 22px "Archivo","Nunito",sans-serif}
@@ -223,7 +223,7 @@ body[data-branch="ados"].v3on .hud-lv{box-shadow:0 0 14px rgba(255,210,94,.35)}
   body.v3on .v3pop{top:calc(92px + env(safe-area-inset-top,0px))}
 }
 /* mochila estilo RPG: personaje con casilleros de equipo + inventario en grilla */
-.inv{--pa:#1B2033;--pb:#121626;--ed:#3A4466;--gd:#FFD25E;--tx:#EEF1F8;--mu:#9AA3B8;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;background:linear-gradient(180deg,var(--pa),var(--pb));color:var(--tx);border-radius:22px 22px 0 0;padding:14px max(14px,env(safe-area-inset-left,0px)) calc(18px + env(safe-area-inset-bottom,0px));border:1px solid var(--ed);border-bottom:0;box-shadow:0 -10px 40px rgba(0,0,0,.5)}
+.inv{--pa:#1B2033;--pb:#121626;--ed:#3A4466;--gd:#FFD25E;--tx:#EEF1F8;--mu:#9AA3B8;width:100%;max-width:460px;max-height:calc(100vh - 20px - env(safe-area-inset-top,0px));overflow-y:auto;background:linear-gradient(180deg,var(--pa),var(--pb));color:var(--tx);border-radius:22px;padding:14px max(14px,env(safe-area-inset-left,0px)) calc(18px + env(safe-area-inset-bottom,0px));border:1px solid var(--ed);border-bottom:0;box-shadow:0 -10px 40px rgba(0,0,0,.5)}
 .inv.hx{--pa:#241B12;--pb:#140F0A;--ed:#6B5233;--gd:#E9C37A;--tx:#F3E6CC;--mu:#B7A584}
 .inv-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .inv-h b{font:800 22px "Fraunces",Georgia,serif;letter-spacing:.02em;color:var(--gd)}
