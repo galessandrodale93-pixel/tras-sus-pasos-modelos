@@ -955,7 +955,7 @@ function lvUp(n){const d=document.createElement('div');d.className='lvup';let pt
   try{W3.attrSync();}catch(e){}}
 function refreshHud(){
   const p=P(),r=curRegion(),q=regionReq(r);
-  {const T=total(p),n=lvOf(T),a=lvNeed(n),b=lvNeed(n+1),el=$('#hudLv');el.style.setProperty('--xp',n>=LV_MAX?100:Math.min(100,Math.round((T-a)/(b-a)*100)));$('#lvN').textContent=n;$('#hudName').textContent=`Nivel ${n}`;$('#lvT').textContent=LV_T[Math.min(n-1,LV_T.length-1)];el.title=`Nivel ${n}: ${T-a} de ${b-a} puntos para el próximo`;if(p.lvSeen&&n>p.lvSeen)lvUp(n);if(p.lvSeen!==n){p.lvSeen=n;save();}}
+  {const T=total(p),n=lvOf(T),a=lvNeed(n),b=lvNeed(n+1),el=$('#hudLv');{const pc=n>=LV_MAX?100:Math.min(100,Math.round((T-a)/(b-a)*100));el.style.setProperty('--xp',pc);try{const row=el.closest('.hud-row');if(row)el.style.setProperty('--xpw',Math.max(0,(row.clientWidth-8)*pc/100)+'px');}catch(e){}}$('#lvN').textContent=n;$('#hudName').textContent=`Nivel ${n}`;$('#lvT').textContent=LV_T[Math.min(n-1,LV_T.length-1)];el.title=`Nivel ${n}: ${T-a} de ${b-a} puntos para el próximo`;if(p.lvSeen&&n>p.lvSeen)lvUp(n);if(p.lvSeen!==n){p.lvSeen=n;save();}}
   try{window.W3&&W3.attrSync&&W3.attrSync();}catch(e){}
   $('#hudStage').textContent=`Etapa ${r+1} de ${REGIONS.length}`;hudPhoto();
   $('#barFill').style.width=(q.done/q.total*100)+'%';$('#count').textContent=`${q.done}/${q.total}`;

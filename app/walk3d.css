@@ -14,7 +14,7 @@ body.v3on{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .view-toggle{position:fixed;z-index:6;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));border-radius:99px;padding:11px 18px;font:800 13px "Nunito",sans-serif;color:#fff;background:rgba(10,14,26,.72);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 body.v3on .map-hint{display:none}
 /* mientras el mundo 3D está activo, el mapa viejo de abajo queda oculto del todo (antes asomaba por transparencias) */
-body.v3on #mapView,body.v3boot #mapView{visibility:hidden!important;pointer-events:none}
+body.v3on #mapView .worldbox,body.v3boot #mapView .worldbox,body.v3on #mapView .map-hint{visibility:hidden!important;pointer-events:none}
 body[data-branch="ados"] .v3b{border-radius:10px;letter-spacing:.06em;text-transform:uppercase;font-size:13.5px;background:linear-gradient(180deg,#FFE3A6,#E2AC55 60%,#B97A2E);color:#1B1206}
 .v3hint{position:fixed;z-index:4;left:50%;bottom:calc(228px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);width:max-content;max-width:calc(100vw - 32px);text-align:center;font:800 12px "Nunito",sans-serif;color:rgba(255,255,255,.9);text-shadow:0 1px 8px rgba(0,0,0,.6);background:rgba(10,14,26,.5);border-radius:99px;padding:6px 14px;opacity:0;pointer-events:none;transition:opacity .6s,transform .6s}
 .v3hint.on{opacity:1;transform:translate(-50%,0)}
@@ -775,3 +775,31 @@ body[data-layout="movil-v"] #v3sheet{align-items:flex-end;padding-top:0}
 body[data-layout="pc"] .inv{max-width:560px}
 body[data-layout="pc"] .inv-tabs{grid-template-columns:repeat(6,1fr)}
 body[data-layout="pc"] #v3sheet{align-items:center;padding-top:0}
+
+/* ---------- Hero: placa de nivel tallada en piedra (PC y celular) ---------- */
+body[data-branch="ados"].v3on .hud-in{
+  background:
+    radial-gradient(120% 90% at 20% 0%,rgba(255,255,255,.10),transparent 55%),
+    radial-gradient(90% 120% at 85% 100%,rgba(0,0,0,.35),transparent 60%),
+    repeating-linear-gradient(115deg,rgba(255,255,255,.035) 0 2px,transparent 2px 7px),
+    repeating-linear-gradient(35deg,rgba(0,0,0,.08) 0 1px,transparent 1px 5px),
+    linear-gradient(180deg,#5B5146 0%,#3F372F 45%,#2E2822 100%);
+  border:2px solid #1C1711;border-radius:10px;
+  box-shadow:0 14px 34px rgba(0,0,0,.55),inset 0 2px 0 rgba(255,236,190,.22),inset 0 -3px 0 rgba(0,0,0,.45),inset 2px 0 0 rgba(255,236,190,.08),inset -2px 0 0 rgba(0,0,0,.35);
+  padding-bottom:16px!important}
+body[data-branch="ados"].v3on .hud-in::before{content:"";position:absolute;inset:5px;border-radius:7px;border:1px solid rgba(233,195,122,.55);box-shadow:inset 0 0 0 1px rgba(0,0,0,.5),0 0 10px rgba(233,195,122,.12);pointer-events:none}
+/* remaches dorados en las esquinas */
+body[data-branch="ados"].v3on .hud-in::after{content:"";position:absolute;inset:0;pointer-events:none;background:
+  radial-gradient(circle at 9px 9px,#F3D58A 0 2.2px,#7A5A22 2.6px 3.2px,transparent 3.6px),
+  radial-gradient(circle at calc(100% - 9px) 9px,#F3D58A 0 2.2px,#7A5A22 2.6px 3.2px,transparent 3.6px),
+  radial-gradient(circle at 9px calc(100% - 9px),#F3D58A 0 2.2px,#7A5A22 2.6px 3.2px,transparent 3.6px),
+  radial-gradient(circle at calc(100% - 9px) calc(100% - 9px),#F3D58A 0 2.2px,#7A5A22 2.6px 3.2px,transparent 3.6px)}
+/* ranura tallada con el oro fundido de la experiencia hacia el próximo nivel */
+body[data-branch="ados"].v3on .hud-lv{--xp:0;position:relative}
+body[data-branch="ados"].v3on .hud-row{position:relative}
+body[data-branch="ados"].v3on .hud-row::after{content:"";position:absolute;left:4px;right:4px;bottom:-11px;height:7px;border-radius:4px;background:#17120D;box-shadow:inset 0 2px 3px rgba(0,0,0,.8),0 1px 0 rgba(255,236,190,.12);pointer-events:none}
+body[data-branch="ados"].v3on .hud-lv::after{content:"";position:absolute;left:0;bottom:-11px;height:7px;width:calc(var(--xpw,0px));border-radius:4px;pointer-events:none;
+  background:linear-gradient(90deg,#B8862A,#FFE08A 50%,#E0A83A);box-shadow:0 0 10px rgba(255,210,94,.55),inset 0 1px 0 rgba(255,255,255,.5)}
+body[data-branch="ados"].v3on .hud-title b{color:#F3D58A;text-shadow:0 1px 0 #000,0 0 12px rgba(243,213,138,.35)}
+body[data-branch="ados"].v3on .hud-title .lv-t{color:#D8C9A8}
+body[data-branch="ados"].v3on .pill.score{background:linear-gradient(180deg,#2A2219,#17120D);border:1px solid rgba(233,195,122,.5);color:#F3D58A;font-family:"Cinzel",Georgia,serif;font-weight:800}
