@@ -3669,7 +3669,7 @@ const PG = { ims: [], groups: [], cache: new Map(), cx: 1e9, cz: 1e9, acc: 0, lv
 const PG_H = .8; // altura del pasto respecto del original (1 = como viene)
 const BARE = true; // etapa de prueba: campo sin árboles, solo la cobertura del suelo
 const PG_ONLY = /^(knotweed_0[23]|ezepnik_02)$/i; // las 3 plantas elegidas por Gui para cubrir todo el piso
-const PG_CELL = 16, PG_R = [18, 24, 32, 42], PG_TRI = [7e5, 1.3e6, 2.4e6, 4e6];
+const PG_CELL = 16, PG_R = [15, 22, 32, 42], PG_TRI = [4.2e5, 1.1e6, 2.4e6, 4e6];
 const PG_S = { grass_bermuda_01: [4, 5.4], grass_medium_01: [2.8, 3.9], grass_medium_02: [3, 4.1], dandelion_01: [2.2, 3.1], celandine_01: [2.4, 3.2], flower_heliophila: [1.3, 1.9] };
 const PG_W = { grass_bermuda_01: .44, grass_medium_01: .24, grass_medium_02: .18, dandelion_01: .05, celandine_01: .05, flower_heliophila: .04 };
 const pgH = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
@@ -3683,7 +3683,7 @@ async function pgBuild() {
     groups.push({ id, w: PG_ONLY ? (/flower/i.test((vars.names || []).join()) ? .035 : 1) : (PG_W[id] ?? .05), vars, tri, fl: PG_ONLY ? false : /dandelion|celandine|heliophila/.test(id) }); }
   r2log('pasto nuevo: ' + groups.length + ' grupos'); if (!groups.length || !S) return; const wsum = groups.reduce((t, g) => t + g.w, 0); groups.forEach(g => { g.w /= wsum; });
   PG.avgTri = groups.reduce((t, g) => t + g.w * g.tri, 0) || 500; const lvMax = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), cap = Math.min(40000, Math.ceil(PG_TRI[lvMax] * 1.5 / PG.avgTri));
-  for (const g of groups) { g.ims = g.vars.map(ms => { const n = Math.ceil(cap * g.w / g.vars.length * 1.5) + 24; return ms.map(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 4, grass: 1 }), n); im.count = 0; im.frustumCulled = false; im.receiveShadow = true; im.castShadow = false; im.userData.m = mm.m; im.userData.cap = n; S.scene.add(im); PG.ims.push(im); return im; }); }); }
+  for (const g of groups) { g.ims = g.vars.map(ms => { const n = Math.ceil(cap * g.w / g.vars.length * 1.5) + 24; return ms.map(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 4, grass: 1 }), n); im.count = 0; im.frustumCulled = false; im.receiveShadow = QUAL.lv >= 2; im.castShadow = false; im.userData.m = mm.m; im.userData.cap = n; S.scene.add(im); PG.ims.push(im); return im; }); }); }
   try { pgBake(groups); } catch (e) { r2log('horneado: ' + ((e && e.message) || e)); }
   if (/[?&]vivero=1/.test(location.search)) vivero(groups).catch(e => r2log('vivero: ' + ((e && e.message) || e)));
   PG.groups = groups; PG.ready = true; PG.cx = 1e9; r2log('pasto nuevo listo: ' + PG.ims.length + ' mallas, ' + Math.round(PG.avgTri) + ' triángulos por planta');
@@ -3751,6 +3751,12 @@ async function galTrees() {
     m.list.forEach((o, i) => { E.set(0, o.rot || 0, 0); M.compose(V.set(o.x, o.y - .05, o.z), Q.setFromEuler(E), SC.setScalar(.85 + hsh(o.x, o.z) * .35)).multiply(mm.m); im.setMatrixAt(i, M); });
     im.instanceMatrix.needsUpdate = true; im.castShadow = QUAL.lv > 0; im.receiveShadow = true; im.frustumCulled = true; im.computeBoundingSphere(); S.scene.add(im); GT.ims.push(im); }); });
   r2log('árboles: ' + spots.length + ' (' + models.map(m => m.nm + ' ' + m.list.length).join(', ') + ')');
+  try { const t7 = models.find(m => m.nm === 'tree_7'); if (t7 && t7.list.length) { const bb = new THREE.Box3(); t7.ms.forEach(mm => { mm.geo.computeBoundingBox(); bb.union(mm.geo.boundingBox.clone().applyMatrix4(mm.m)); });
+      const top = bb.max.y, rad = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z) / 2, Rf = rng(4242), gran = [], lim = [];
+      t7.list.forEach((o, i) => { const u = Rf(); if (u > .28) return; const sc = .85 + hsh(o.x, o.z) * .35, L = u < .17 ? gran : lim;
+        for (let k = 0; k < 7; k++) { const an = Rf() * 6.283, rr = rad * sc * (.45 + Rf() * .4), y = o.y + top * sc * (.55 + Rf() * .28); L.push({ x: o.x + Math.cos(an) * rr, y, z: o.z + Math.sin(an) * rr, ry: Rf() * 6.283, s: 1.25, v: k }); } });
+      if (gran.length) phPlace('food_pomegranate_01', gran, { far: 1 }); if (lim.length) phPlace('lemon', lim, { far: 1 }); FLORA.fruitTrees = { top, rad };
+      r2log('frutos: ' + gran.length / 7 + ' granados y ' + lim.length / 7 + ' limoneros'); } } catch (e) { r2log('frutos: ' + e.message); }
 }
 const GT = { done: 0, ims: [], pdone: 0 }, GP_W = { palm_6: .5, palm_1: .125, palm_2: .125, palm_3: .125, palm_4: .125 };
 async function galPalms() {
@@ -3767,7 +3773,7 @@ async function galPalms() {
 let _pgM, _pgQ, _pgE, _pgV, _pgS, _pgC;
 function pgFill() {
   if (!_pgM) { _pgM = new THREE.Matrix4(); _pgQ = new THREE.Quaternion(); _pgE = new THREE.Euler(); _pgV = new THREE.Vector3(); _pgS = new THREE.Vector3(); _pgC = new THREE.Color(); }
-  const a = S.av.position, Rr = PG_R[QUAL.lv], R2 = Rr * 1.8, tri = PG_TRI[QUAL.lv] * 1.5, cnt = PG.ims.map(() => 0), idx = new Map(); PG.ims.forEach((im, k) => idx.set(im, k)); let used = 0;
+  const a = S.av.position, Rr = PG_R[QUAL.lv], R2 = Rr * (QUAL.lv <= 1 ? 1.5 : 1.8), tri = PG_TRI[QUAL.lv] * 1.5, cnt = PG.ims.map(() => 0), idx = new Map(); PG.ims.forEach((im, k) => idx.set(im, k)); let used = 0;
   const lim = Math.ceil(tri / PG.avgTri), c0x = Math.floor((a.x - R2) / PG_CELL), c1x = Math.floor((a.x + R2) / PG_CELL), c0z = Math.floor((a.z - R2) / PG_CELL), c1z = Math.floor((a.z + R2) / PG_CELL);
   const cells = []; for (let ix = c0x; ix <= c1x; ix++) for (let iz = c0z; iz <= c1z; iz++) { const dx = (ix + .5) * PG_CELL - a.x, dz = (iz + .5) * PG_CELL - a.z; cells.push([dx * dx + dz * dz, ix, iz]); } cells.sort((p, q) => p[0] - q[0]);
   for (const [, ix, iz] of cells) { if (used >= lim) break; for (const it of pgCell(ix, iz)) { const dd = Math.hypot(it.x - a.x, it.z - a.z); if (dd > R2) continue; const far = dd > Rr; if (far && it.r > .34) continue; 
@@ -3777,8 +3783,8 @@ function pgFill() {
   if (!PG.logged) { PG.logged = 1; r2log('pasto dibujado: ' + used + ' plantas'); } PG.ims.forEach((im, k) => { im.count = cnt[k]; im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; });
 }
 function pgTick(dt) {
-  if (!PG.ready || !S || !S.av) return; PG.acc -= dt; if (PG.acc > 0) return; PG.acc = .25; const a = S.av.position;
-  if (PG.lv !== QUAL.lv || (a.x - PG.cx) ** 2 + (a.z - PG.cz) ** 2 > 36) { PG.lv = QUAL.lv; PG.cx = a.x; PG.cz = a.z; pgFill(); }
+  if (!PG.ready || !S || !S.av) return; PG.acc -= dt; if (PG.acc > 0) return; PG.acc = .4; const a = S.av.position;
+  if (PG.lv !== QUAL.lv || (a.x - PG.cx) ** 2 + (a.z - PG.cz) ** 2 > (QUAL.lv <= 1 ? 64 : 36)) { PG.lv = QUAL.lv; PG.cx = a.x; PG.cz = a.z; pgFill(); }
 }
 function phTick(dt) {
   if (!S || !PH.bands.length) return; PH.uT.value = S.t || 0; PH.near -= dt; if (PH.near > 0) return; PH.near = .5;
