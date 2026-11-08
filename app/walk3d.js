@@ -692,7 +692,7 @@ const KL = {};
   camera.position.set(ax - Math.sin(S.yaw) * 6.6, 3.3, az - Math.cos(S.yaw) * 6.6);
   S.fill = new THREE.DirectionalLight(hx ? '#FFD9B0' : '#FFFFFF', hx ? .5 : .5); scene.add(S.fill); scene.add(S.fill.target);
   wireInput(); wireJoy(); if (!window.__acts) { window.__acts = 1; wireActs(); auButtons(); } resize(); addEventListener('resize', resize);
-  renderer.info.autoReset = false; qInit(); fxInit(); if (hx) svBuild(scene, HW, R); try { phWorld(scene, HW, allPts, zMax, hx, R); } catch (e) { console.warn('ph', e); } PG.ready = false; PG.ims.forEach(im => im.parent && im.parent.remove(im)); PG.ims = []; PG.cache.clear(); GT.done = 0; GT.ims.forEach(im => im.parent && im.parent.remove(im)); GT.ims = []; setTimeout(() => { pgBuild().catch(e => r2log('pasto nuevo falló: ' + ((e && e.message) || e))).then(() => galTrees()).catch(e => r2log('árboles fallaron: ' + ((e && e.message) || e))); }, 1500); try { ambWorld(scene, HW, allPts, zMax, hx); } catch (e) { console.warn('amb', e); } try { mergeHouses(scene); } catch (e) { console.warn('merge', e); } setTimeout(() => { try { if (!/[?&]nomerge/.test(location.search)) worldMerge(scene); } catch (e) { console.warn('wmerge', e); } }, 1200); setTimeout(() => { try { if (S && S.renderer.compileAsync) S.renderer.compileAsync(S.scene, S.camera); } catch (e) {} }, 300);
+  renderer.info.autoReset = false; qInit(); fxInit(); if (hx) svBuild(scene, HW, R); try { phWorld(scene, HW, allPts, zMax, hx, R); } catch (e) { console.warn('ph', e); } PG.ready = false; PG.ims.forEach(im => im.parent && im.parent.remove(im)); PG.ims = []; PG.cache.clear(); GT.done = 0; GT.pdone = 0; GT.ims.forEach(im => im.parent && im.parent.remove(im)); GT.ims = []; setTimeout(() => { pgBuild().catch(e => r2log('pasto nuevo falló: ' + ((e && e.message) || e))).then(() => galTrees()).then(() => galPalms()).catch(e => r2log('árboles fallaron: ' + ((e && e.message) || e))); }, 1500); try { ambWorld(scene, HW, allPts, zMax, hx); } catch (e) { console.warn('amb', e); } try { mergeHouses(scene); } catch (e) { console.warn('merge', e); } setTimeout(() => { try { if (!/[?&]nomerge/.test(location.search)) worldMerge(scene); } catch (e) { console.warn('wmerge', e); } }, 1200); setTimeout(() => { try { if (S && S.renderer.compileAsync) S.renderer.compileAsync(S.scene, S.camera); } catch (e) {} }, 300);
   const me = S, run = n => { if (S !== me) return; requestAnimationFrame(run); loop(n); }; requestAnimationFrame(run);
 }
 function resize() { if (!S) return; const r = S.root.getBoundingClientRect(); const w = r.width || innerWidth, h = r.height || innerHeight; S.renderer.setSize(w, h, false); S.camera.aspect = w / h; S.camera.updateProjectionMatrix(); if (S.fx) { S.fx.setPixelRatio(S.renderer.getPixelRatio()); S.fx.setSize(w, h); } }
@@ -3618,7 +3618,7 @@ function mergeGeos(list) { // une geometrías no indexadas o indexadas en una so
   const out = new THREE.BufferGeometry(); out.setAttribute('position', new THREE.BufferAttribute(P, 3)); out.setAttribute('normal', new THREE.BufferAttribute(N, 3)); return out;
 }
 function dpalmPlace(scene, list) {
-  if (!list.length || BARE) return; const M = dpalmMats(), lo = matchMedia('(pointer: coarse)').matches || QUAL.lv < 2; if (!DPALM.vars || DPALM.lo !== lo) { DPALM.vars = [11, 23, 37].map(sd => dpalmGeo(sd, lo)); DPALM.lo = lo; }
+  if (!list.length) return; if (BARE) { FLORA.palmSpots = list.slice(); return; } const M = dpalmMats(), lo = matchMedia('(pointer: coarse)').matches || QUAL.lv < 2; if (!DPALM.vars || DPALM.lo !== lo) { DPALM.vars = [11, 23, 37].map(sd => dpalmGeo(sd, lo)); DPALM.lo = lo; }
   const mT = phMat(M.trunk, { wind: 3 }), mL = phMat(M.leaf, { wind: 3 }), mD = phMat(M.date, { wind: 3 }), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
   const by = new Map(); list.forEach((it, i) => { const k = (i % 3) + ':' + Math.floor(it.z / 72); if (!by.has(k)) by.set(k, []); by.get(k).push(it); });
   by.forEach((L, key) => { const vi = +key.split(':')[0], zc = (Math.floor(L[0].z / 72) + .5) * 72, v = DPALM.vars[vi];
@@ -3668,7 +3668,7 @@ function phOne(id, parent, x, y, z, ry, s, o) {
 const PG = { ims: [], groups: [], cache: new Map(), cx: 1e9, cz: 1e9, acc: 0, lv: -1, ready: false };
 const PG_H = .8; // altura del pasto respecto del original (1 = como viene)
 const BARE = true; // etapa de prueba: campo sin árboles, solo la cobertura del suelo
-const PG_ONLY = /^(knotweed_0[23]|ezepnik_02|flower_orange_0[12])$/i; // las 3 plantas elegidas por Gui para cubrir todo el piso
+const PG_ONLY = /^(knotweed_0[23]|ezepnik_02)$/i; // las 3 plantas elegidas por Gui para cubrir todo el piso
 const PG_CELL = 16, PG_R = [18, 24, 32, 42], PG_TRI = [7e5, 1.3e6, 2.4e6, 4e6];
 const PG_S = { grass_bermuda_01: [4, 5.4], grass_medium_01: [2.8, 3.9], grass_medium_02: [3, 4.1], dandelion_01: [2.2, 3.1], celandine_01: [2.4, 3.2], flower_heliophila: [1.3, 1.9] };
 const PG_W = { grass_bermuda_01: .44, grass_medium_01: .24, grass_medium_02: .18, dandelion_01: .05, celandine_01: .05, flower_heliophila: .04 };
@@ -3752,7 +3752,18 @@ async function galTrees() {
     im.instanceMatrix.needsUpdate = true; im.castShadow = QUAL.lv > 0; im.receiveShadow = true; im.frustumCulled = true; im.computeBoundingSphere(); S.scene.add(im); GT.ims.push(im); }); });
   r2log('árboles: ' + spots.length + ' (' + models.map(m => m.nm + ' ' + m.list.length).join(', ') + ')');
 }
-const GT = { done: 0, ims: [] };
+const GT = { done: 0, ims: [], pdone: 0 }, GP_W = { palm_6: .5, palm_1: .125, palm_2: .125, palm_3: .125, palm_4: .125 };
+async function galPalms() {
+  if (!S || GT.pdone || !FLORA.palmSpots || !FLORA.palmSpots.length) return; const pm = GRP.man['palms/']; if (!pm) return; GT.pdone = 1;
+  const models = []; for (const id of Object.keys(pm.slots)) { const vars = await grpVars(id).catch(() => null); if (!vars || !S) continue; vars.forEach((ms, vi) => { const nm = ((vars.names && vars.names[vi]) || id).toLowerCase(); if (GP_W[nm] && !models.some(m => m.nm === nm)) models.push({ nm, ms, w: GP_W[nm], list: [] }); }); }
+  if (!models.length) { r2log('palmeras: no encontré palm_1..6 en el pack'); return; } const wsum = models.reduce((t, m) => t + m.w, 0), Rn = rng(515);
+  FLORA.palmSpots.forEach(o => { let pick = Rn() * wsum, m = models[models.length - 1]; for (const c of models) { pick -= c.w; if (pick <= 0) { m = c; break; } } m.list.push(o); });
+  const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
+  models.forEach(m => { if (!m.list.length) return; m.ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 3 }), m.list.length);
+    m.list.forEach((o, i) => { E.set(0, o.ry || 0, 0); M.compose(V.set(o.x, o.y - .05, o.z), Q.setFromEuler(E), SC.setScalar(.9 + hsh(o.x, o.z) * .3)).multiply(mm.m); im.setMatrixAt(i, M); });
+    im.instanceMatrix.needsUpdate = true; im.castShadow = QUAL.lv > 0; im.receiveShadow = true; im.computeBoundingSphere(); S.scene.add(im); GT.ims.push(im); }); });
+  r2log('palmeras: ' + FLORA.palmSpots.length + ' (' + models.map(m => m.nm + ' ' + m.list.length).join(', ') + ')');
+}
 let _pgM, _pgQ, _pgE, _pgV, _pgS, _pgC;
 function pgFill() {
   if (!_pgM) { _pgM = new THREE.Matrix4(); _pgQ = new THREE.Quaternion(); _pgE = new THREE.Euler(); _pgV = new THREE.Vector3(); _pgS = new THREE.Vector3(); _pgC = new THREE.Color(); }
