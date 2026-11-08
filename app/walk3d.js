@@ -3667,6 +3667,7 @@ function phOne(id, parent, x, y, z, ry, s, o) {
    por calidad, en matas con claros (ruido), dejando libres el camino, el agua, las casas y lo alto de las lomas. Viento suave. ---------- */
 const PG = { ims: [], groups: [], cache: new Map(), cx: 1e9, cz: 1e9, acc: 0, lv: -1, ready: false };
 const PG_CELL = 16, PG_R = [24, 36, 52, 70], PG_TRI = [2.5e5, 6e5, 1.4e6, 2.4e6];
+const PG_S = { grass_bermuda_01: [3.4, 4.6], grass_medium_01: [2.4, 3.4], grass_medium_02: [2.6, 3.6], dandelion_01: [2, 3], celandine_01: [2.2, 3], flower_heliophila: [1.2, 1.8] };
 const PG_W = { grass_bermuda_01: .44, grass_medium_01: .24, grass_medium_02: .18, dandelion_01: .05, celandine_01: .05, flower_heliophila: .04 };
 const pgH = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
 function pgNoise(x, z) { const ix = Math.floor(x), iz = Math.floor(z), fx = x - ix, fz = z - iz, ux = fx * fx * (3 - 2 * fx), uz = fz * fz * (3 - 2 * fz);
@@ -3697,7 +3698,7 @@ function pgCell(ix, iz) {
     // qué planta: flores donde el ruido lo marca (manchones), el resto pasto
     const G = PG.groups, fz = pgNoise(x * .045 + 90, z * .045 - 30) > .66, wantF = fz && R() < .55, pool = G.map((g, k) => k).filter(k => G[k].fl === wantF), P = pool.length ? pool : G.map((g, k) => k);
     let pick = R() * P.reduce((t, k) => t + G[k].w, 0), gi = P[P.length - 1]; for (const k of P) { pick -= G[k].w; if (pick <= 0) { gi = k; break; } }
-    const g = G[gi]; L.push({ x, y: h - .03, z, ry: R() * 6.283, s: .8 + R() * .45, gi, vi: Math.floor(R() * g.vars.length), r: R(), c: .88 + R() * .2 }); }
+    const g = G[gi], sr = PG_S[g.id] || [2.6, 3.6]; L.push({ x, y: h - .03, z, ry: R() * 6.283, s: sr[0] + R() * (sr[1] - sr[0]), gi, vi: Math.floor(R() * g.vars.length), r: R(), c: .88 + R() * .2 }); }
   PG.cache.set(key, L); if (PG.cache.size > 2600) { const it = PG.cache.keys(); for (let k = 0; k < 600; k++) PG.cache.delete(it.next().value); } return L;
 }
 let _pgM, _pgQ, _pgE, _pgV, _pgS, _pgC;
@@ -3720,7 +3721,7 @@ function phTick(dt) {
   if (!S || !PH.bands.length) return; PH.uT.value = S.t || 0; PH.near -= dt; if (PH.near > 0) return; PH.near = .5;
   const cz = S.av.position.z, see = (S.hx ? 120 : 140) * QT.see[QUAL.lv], pre = see + 50; let next = null, nd = 1e9;
   for (const B of PH.bands) { const d = Math.abs(B.zc - cz) - PH_BAND / 2, lim = B.o.far ? see * 1.6 : B.o.near ? see * .55 : see; if (B.g && B.o.shadow) { const cs = QUAL.lv >= 2 && d < [0, 0, 40, 70][QUAL.lv]; if (B.cs !== cs) { B.cs = cs; B.ims.forEach(im => { im.castShadow = cs; }); } } if (!B.built && d < (B.o.imp ? pre * 2.6 : B.o.far ? pre * 1.6 : pre) && d < nd) { nd = d; next = B; } if (B.ig) B.ig.visible = !!B.ok && d >= lim && d < lim * 2.6; if (B.g) { B.g.visible = !!B.ok && d < lim; if (B.g.visible && B.ims && B.ims.length && B.thin !== QUAL.lv + ':' + B.ims.length) { B.thin = QUAL.lv + ':' + B.ims.length; const f = [.45, .65, 1, 1][QUAL.lv]; B.ims.forEach(im => { if (im.userData.n0 == null) im.userData.n0 = im.count; const g = im.geometry, tri = (g.index ? g.index.count : g.attributes.position.count) / 3; im.count = tri > 1500 ? Math.max(1, Math.floor(im.userData.n0 * f)) : im.userData.n0; }); } } }
-  if (next && QUAL.ema < 34) { phBuild(next); PH.near = .12; } else if (next) PH.near = .3; // de a una franja por vez, para no trabar un cuadro
+  if (next && QUAL.ema < 34) { phBuild(next); PH.near = .12; } else if (next) { PH.slow = (PH.slow || 0) + 1; if (PH.slow % 4 === 0) phBuild(next); PH.near = .3; } // de a una franja por vez, para no trabar un cuadro
 }
 function phWorld(scene, W, allPts, zMax, hx, R0) { try { if (grpBase()) setTimeout(() => { anBuild().catch(e => console.warn('animales', e)); }, 4000); } catch (e) {} try { grpInit(); if (grpBase() && FLORA.olive && FLORA.olive.length) phPlace('trp_olive', FLORA.olive.map((o, i) => ({ x: o.x, y: o.y - .05, z: o.z, ry: o.rot, s: o.s, oi: i, v: i })), { shadow: true, wind: 3, far: 1, olive: 1, imp: 1 }); } catch (e) {}
   SEAS.base = null; SEAS.rain = null; SEAS.olB = null; SEAS.acc = 9;
