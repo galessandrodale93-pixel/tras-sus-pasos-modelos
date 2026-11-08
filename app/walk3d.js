@@ -555,7 +555,7 @@ function heroFlora(scene, W, allPts, zMax, R, Q) {
   // copas con borde de hojas: en el contorno (donde la superficie se ve de canto) se recorta según la textura, así la masa deja de verse como una bola lisa
   leafM.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n{float fe=abs(dot(normalize(vNormal),normalize(vViewPosition)));float lum=dot(diffuseColor.rgb,vec3(.333));if(fe<.55&&lum<mix(.62,.18,fe/.55))discard;diffuseColor.rgb*=mix(.78,1.08,smoothstep(.2,.9,fe));}'); }; leafM.customProgramCacheKey = () => 'leafEdge'; leafM.shadowSide = THREE.FrontSide; leafM.side = THREE.DoubleSide;
   // olivos: tronco torcido y copa de varias masas
-  if (BARE) olive.length = 0; FLORA.olive = olive; FLORA.rock = rock; FLORA.oT = inst(new THREE.CylinderGeometry(.12, .22, 1, 6), trunkM, olive, o => { const h = 1.5 * o.s; put(o.x, o.y + h / 2, o.z, (o.v - .5) * .3, o.rot, (o.v - .5) * .25, o.s, h, o.s); }, true);
+  FLORA.treeSpots = olive.slice(); if (BARE) olive.length = 0; FLORA.olive = olive; FLORA.rock = rock; FLORA.oT = inst(new THREE.CylinderGeometry(.12, .22, 1, 6), trunkM, olive, o => { const h = 1.5 * o.s; put(o.x, o.y + h / 2, o.z, (o.v - .5) * .3, o.rot, (o.v - .5) * .25, o.s, h, o.s); }, true);
   const blobs = []; olive.forEach(o => { for (let j = 0; j < 6; j++) { const a = j / 6 * 6.28 + o.rot, r = j ? .55 : 0; blobs.push({ o, x: Math.cos(a) * r, z: Math.sin(a) * r, y: 1.55 + (j ? -.1 + hsh(j, o.x) * .35 : .35), s: .55 + hsh(o.z, j) * .3 }); } });
   FLORA.oB = inst(new THREE.IcosahedronGeometry(1, 1), leafM, blobs, b => { const o = b.o; put(o.x + b.x * o.s, o.y + b.y * o.s, o.z + b.z * o.s, b.x, o.rot + b.z, 0, b.s * o.s * 1.15, b.s * o.s * .8, b.s * o.s * 1.15); return ['#5E7140', '#6F7E4A', '#526638', '#7A8A55'][Math.floor(hsh(b.x * 9, b.y * 7 + o.z) * 4)]; }, true);
   // los cipreses cónicos se reemplazaron por los árboles reales de Poly Haven (se ubican en phWorld)
@@ -692,7 +692,7 @@ const KL = {};
   camera.position.set(ax - Math.sin(S.yaw) * 6.6, 3.3, az - Math.cos(S.yaw) * 6.6);
   S.fill = new THREE.DirectionalLight(hx ? '#FFD9B0' : '#FFFFFF', hx ? .5 : .5); scene.add(S.fill); scene.add(S.fill.target);
   wireInput(); wireJoy(); if (!window.__acts) { window.__acts = 1; wireActs(); auButtons(); } resize(); addEventListener('resize', resize);
-  renderer.info.autoReset = false; qInit(); fxInit(); if (hx) svBuild(scene, HW, R); try { phWorld(scene, HW, allPts, zMax, hx, R); } catch (e) { console.warn('ph', e); } PG.ready = false; PG.ims.forEach(im => im.parent && im.parent.remove(im)); PG.ims = []; PG.cache.clear(); setTimeout(() => { pgBuild().catch(e => r2log('pasto nuevo falló: ' + ((e && e.message) || e))); }, 1500); try { ambWorld(scene, HW, allPts, zMax, hx); } catch (e) { console.warn('amb', e); } try { mergeHouses(scene); } catch (e) { console.warn('merge', e); } setTimeout(() => { try { if (!/[?&]nomerge/.test(location.search)) worldMerge(scene); } catch (e) { console.warn('wmerge', e); } }, 1200); setTimeout(() => { try { if (S && S.renderer.compileAsync) S.renderer.compileAsync(S.scene, S.camera); } catch (e) {} }, 300);
+  renderer.info.autoReset = false; qInit(); fxInit(); if (hx) svBuild(scene, HW, R); try { phWorld(scene, HW, allPts, zMax, hx, R); } catch (e) { console.warn('ph', e); } PG.ready = false; PG.ims.forEach(im => im.parent && im.parent.remove(im)); PG.ims = []; PG.cache.clear(); GT.done = 0; GT.ims.forEach(im => im.parent && im.parent.remove(im)); GT.ims = []; setTimeout(() => { pgBuild().catch(e => r2log('pasto nuevo falló: ' + ((e && e.message) || e))).then(() => galTrees()).catch(e => r2log('árboles fallaron: ' + ((e && e.message) || e))); }, 1500); try { ambWorld(scene, HW, allPts, zMax, hx); } catch (e) { console.warn('amb', e); } try { mergeHouses(scene); } catch (e) { console.warn('merge', e); } setTimeout(() => { try { if (!/[?&]nomerge/.test(location.search)) worldMerge(scene); } catch (e) { console.warn('wmerge', e); } }, 1200); setTimeout(() => { try { if (S && S.renderer.compileAsync) S.renderer.compileAsync(S.scene, S.camera); } catch (e) {} }, 300);
   const me = S, run = n => { if (S !== me) return; requestAnimationFrame(run); loop(n); }; requestAnimationFrame(run);
 }
 function resize() { if (!S) return; const r = S.root.getBoundingClientRect(); const w = r.width || innerWidth, h = r.height || innerHeight; S.renderer.setSize(w, h, false); S.camera.aspect = w / h; S.camera.updateProjectionMatrix(); if (S.fx) { S.fx.setPixelRatio(S.renderer.getPixelRatio()); S.fx.setSize(w, h); } }
@@ -3668,7 +3668,7 @@ function phOne(id, parent, x, y, z, ry, s, o) {
 const PG = { ims: [], groups: [], cache: new Map(), cx: 1e9, cz: 1e9, acc: 0, lv: -1, ready: false };
 const PG_H = .8; // altura del pasto respecto del original (1 = como viene)
 const BARE = true; // etapa de prueba: campo sin árboles, solo la cobertura del suelo
-const PG_ONLY = /^(knotweed_0[23]|ezepnik_02)$/i; // las 3 plantas elegidas por Gui para cubrir todo el piso
+const PG_ONLY = /^(knotweed_0[23]|ezepnik_02|flower_orange_0[12])$/i; // las 3 plantas elegidas por Gui para cubrir todo el piso
 const PG_CELL = 16, PG_R = [18, 24, 32, 42], PG_TRI = [7e5, 1.3e6, 2.4e6, 4e6];
 const PG_S = { grass_bermuda_01: [4, 5.4], grass_medium_01: [2.8, 3.9], grass_medium_02: [3, 4.1], dandelion_01: [2.2, 3.1], celandine_01: [2.4, 3.2], flower_heliophila: [1.3, 1.9] };
 const PG_W = { grass_bermuda_01: .44, grass_medium_01: .24, grass_medium_02: .18, dandelion_01: .05, celandine_01: .05, flower_heliophila: .04 };
@@ -3680,7 +3680,7 @@ async function pgBuild() {
   for (const id of Object.keys(man.slots)) { let vars = await grpVars(id, PG_ONLY || !(grpWin() || QUAL.lv >= 3) ? 'lite' : null).catch(() => null); if (!vars || !vars.length || !S) continue;
     if (PG_ONLY) { const keep = vars.map((v, i) => PG_ONLY.test((vars.names || [])[i] || '') ? i : -1).filter(i => i >= 0); if (!keep.length) continue; const nm = keep.map(i => vars.names[i]), vk = keep.map(i => vars[i]); vk.names = nm; vars = vk; r2log('cobertura: ' + nm.join(', ')); }
     const tri = vars.reduce((t, ms) => t + ms.reduce((u, mm) => u + (mm.geo.index ? mm.geo.index.count : mm.geo.attributes.position.count) / 3, 0), 0) / vars.length;
-    groups.push({ id, w: PG_ONLY ? 1 : (PG_W[id] ?? .05), vars, tri, fl: PG_ONLY ? false : /dandelion|celandine|heliophila/.test(id) }); }
+    groups.push({ id, w: PG_ONLY ? (/flower/i.test((vars.names || []).join()) ? .09 : 1) : (PG_W[id] ?? .05), vars, tri, fl: PG_ONLY ? false : /dandelion|celandine|heliophila/.test(id) }); }
   r2log('pasto nuevo: ' + groups.length + ' grupos'); if (!groups.length || !S) return; const wsum = groups.reduce((t, g) => t + g.w, 0); groups.forEach(g => { g.w /= wsum; });
   PG.avgTri = groups.reduce((t, g) => t + g.w * g.tri, 0) || 500; const lvMax = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), cap = Math.min(40000, Math.ceil(PG_TRI[lvMax] * 1.5 / PG.avgTri));
   for (const g of groups) { g.ims = g.vars.map(ms => { const n = Math.ceil(cap * g.w / g.vars.length * 1.5) + 24; return ms.map(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 4, grass: 1 }), n); im.count = 0; im.frustumCulled = false; im.receiveShadow = true; im.castShadow = false; im.userData.m = mm.m; im.userData.cap = n; S.scene.add(im); PG.ims.push(im); return im; }); }); }
@@ -3736,6 +3736,20 @@ async function vivero(groups) {
   if (gm) for (const id of Object.keys(gm.slots)) { const vars = await grpVars(id, 'lite').catch(() => null); if (!vars) continue; vars.forEach((ms, vi) => { const col = j % 8, row = Math.floor(j / 8), x = a.x - 17.5 + col * 5, z = a.z - 10 - row * 6; j++; put(ms, x, z, 3.2, 4); label((vars.names && vars.names[vi]) || id, x, z, 1.4 + (col % 2) * .5); }); }
   r2log('vivero: ' + k + ' árboles y ' + j + ' plantas en muestra');
 }
+const GT_W = { tree_7: .52, tree_10: .24 }; // el resto se reparte el 24% restante
+async function galTrees() {
+  if (!S || GT.done || !FLORA.treeSpots || !FLORA.treeSpots.length) return; const tm = GRP.man['trees/']; if (!tm) return; GT.done = 1;
+  const models = []; for (const id of Object.keys(tm.slots)) { const vars = await grpVars(id).catch(() => null); if (!vars || !S) continue; vars.forEach((ms, vi) => { const nm = (vars.names && vars.names[vi]) || id; if (!models.some(m => m.nm === nm)) models.push({ nm, ms }); }); }
+  if (!models.length) return; const rest = models.filter(m => !GT_W[m.nm]), wRest = (1 - Object.values(GT_W).reduce((t, w) => t + w, 0)) / Math.max(1, rest.length); models.forEach(m => { m.w = GT_W[m.nm] ?? wRest; m.list = []; });
+  const Rn = rng(777), spots = FLORA.treeSpots.filter(() => Rn() < .7); // Galilea: arboleda moderada
+  spots.forEach(o => { let pick = Rn(), m = models[models.length - 1]; for (const c of models) { pick -= c.w; if (pick <= 0) { m = c; break; } } m.list.push(o); });
+  const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
+  models.forEach(m => { if (!m.list.length) return; m.ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 3 }), m.list.length);
+    m.list.forEach((o, i) => { E.set(0, o.rot || 0, 0); M.compose(V.set(o.x, o.y - .05, o.z), Q.setFromEuler(E), SC.setScalar(.85 + hsh(o.x, o.z) * .35)).multiply(mm.m); im.setMatrixAt(i, M); });
+    im.instanceMatrix.needsUpdate = true; im.castShadow = QUAL.lv > 0; im.receiveShadow = true; im.frustumCulled = true; im.computeBoundingSphere(); S.scene.add(im); GT.ims.push(im); }); });
+  r2log('árboles: ' + spots.length + ' (' + models.map(m => m.nm + ' ' + m.list.length).join(', ') + ')');
+}
+const GT = { done: 0, ims: [] };
 let _pgM, _pgQ, _pgE, _pgV, _pgS, _pgC;
 function pgFill() {
   if (!_pgM) { _pgM = new THREE.Matrix4(); _pgQ = new THREE.Quaternion(); _pgE = new THREE.Euler(); _pgV = new THREE.Vector3(); _pgS = new THREE.Vector3(); _pgC = new THREE.Color(); }
