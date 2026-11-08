@@ -2827,11 +2827,11 @@ function renderSession(s){
 }
 const LANDING={kids:'homeView',ados:'adosView'};
 const onLanding=()=>['hubView','homeView','adosView'].some(v=>$('#'+v).hidden===false);
-function play(b){setBranch(b);const s=getMemberState();if(s.loading){setTimeout(()=>play(b),150);return;}if(s.loggedIn)loadProfiles();else openAuth();}
+function play(b){setBranch(b);const s=getMemberState();if(s.loading){setTimeout(()=>play(b),150);return;}if(s.loggedIn)loadProfiles();else startDemo(b);}
 function landing(b){current=null;setBranch(b);show(LANDING[b]);renderSession(getMemberState());}
 function goHome(){current=null;branch=null;delete document.body.dataset.branch;try{history.replaceState(null,'',location.pathname);}catch(e){}show('hubView');hubLearn();renderSession(getMemberState());renderFamily();renderPulse();}
 function goBack(){if(branch&&LANDING[branch])landing(branch);else goHome();}
-function startDemo(b){setBranch(b);const id='demo-'+b;let loc=null;try{loc=JSON.parse(localStorage.getItem(CACHE+':'+id)||'null');}catch(e){}current={...blank(),...(loc||{}),id,name:'Invitado',rama:b,demo:true,avatar:{g:b==='ados'?'chico':'chica',age:b==='ados'?14:9,skin:'#E6B691',hair:'#2A1B14',outfit:b==='ados'?'#2FAE7C':'#FF8A2B'}};profiles=[current];enterMap();}
+function startDemo(b){setBranch(b);try{history.replaceState(null,'',location.pathname+location.search+'#jugar-'+(b==='kids'?'kids':'hero'));}catch(e){}const id='demo-'+b;let loc=null;try{loc=JSON.parse(localStorage.getItem(CACHE+':'+id)||'null');}catch(e){}current={...blank(),...(loc||{}),id,name:'Invitado',rama:b,demo:true,avatar:{g:b==='ados'?'chico':'chica',age:b==='ados'?14:9,skin:'#E6B691',hair:'#2A1B14',outfit:b==='ados'?'#2FAE7C':'#FF8A2B'}};profiles=[current];enterMap();}
 function route(){if(!TSP_OK)return;const raw=location.hash.replace('#','');const sala=/^sala-(kids|hero)-([A-Za-z0-9]{6})$/.exec(raw);if(sala){try{sessionStorage.setItem('tsp:join',sala[2].toUpperCase());}catch(e){}history.replaceState(null,'',location.pathname+'#'+sala[1]);landing(fromHash(sala[1]));setTimeout(()=>toast('Elegí tu perfil y entrá al mapa para unirte a la sala '+sala[2].toUpperCase()+'.'),600);return;}if(raw==='jugar-kids'||raw==='jugar-hero'){startDemo(raw==='jugar-kids'?'kids':'ados');return;}const h=fromHash(raw);if(h)landing(h);else goHome();}
 addEventListener('hashchange',()=>{const h=fromHash(location.hash.replace('#',''));if(h&&branch===h&&!onLanding())return;route();});
 document.addEventListener('click',e=>{
