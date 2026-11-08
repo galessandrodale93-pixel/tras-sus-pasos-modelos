@@ -535,7 +535,7 @@ function chunkInst(scene, geo, mat, list, fn, o) {
 function floraTick(dt) {
   if (!S || !FLORA.chunks.length) return; FLORA.acc = (FLORA.acc || 0) - dt; if (FLORA.acc > 0) return; FLORA.acc = .4;
   const cz = S.av.position.z, far = QT.far[QUAL.lv], dens = QT.dens[QUAL.lv];
-  for (const im of FLORA.chunks) { const d = Math.abs(im.userData.zc - cz) - 36; const lim = im.userData.tree ? Math.max(far * 1.35 + 20, 110) : far; im.visible = d < lim; if (im.visible && !im.userData.tree) { im.count = Math.max(1, Math.floor(im.userData.n * (d > far * .55 ? dens * .6 : dens))); if (im.userData.fl) im.count = Math.floor(im.count * Math.min(1, SEAS.cur[im.userData.fl] || 0)); } }
+  for (const im of FLORA.chunks) { if (im.userData.off) { im.visible = false; continue; } const d = Math.abs(im.userData.zc - cz) - 36; const lim = im.userData.tree ? Math.max(far * 1.35 + 20, 110) : far; im.visible = d < lim; if (im.visible && !im.userData.tree) { im.count = Math.max(1, Math.floor(im.userData.n * (d > far * .55 ? dens * .6 : dens))); if (im.userData.fl) im.count = Math.floor(im.count * Math.min(1, SEAS.cur[im.userData.fl] || 0)); } }
 }
 function heroFlora(scene, W, allPts, zMax, R, Q) {
   const M4 = new THREE.Matrix4(), Q4 = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SV = new THREE.Vector3(), CL = new THREE.Color();
@@ -546,7 +546,7 @@ function heroFlora(scene, W, allPts, zMax, R, Q) {
     list.forEach((o, i) => { const c = fn(o, i); mats[i] = M4.clone(); cols[i] = c; const z = M4.elements[14], k = Math.floor(z / 72); if (!by.has(k)) by.set(k, []); by.get(k).push(i); });
     const chunks = []; by.forEach((L, k) => { const im = new THREE.InstancedMesh(geo, m, L.length); L.forEach((gi, li) => { im.setMatrixAt(li, mats[gi]); if (cols[gi]) { CL.set(cols[gi]); if (FLORA.kids) CL.offsetHSL(0, .12, .1); im.setColorAt(li, CL); } map[gi] = [im, li]; });
       im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; im.computeBoundingSphere(); im.castShadow = !!shadow; im.receiveShadow = true; im.userData.n = L.length; im.userData.zc = (k + .5) * 72; im.userData.tree = 1; scene.add(im); FLORA.chunks.push(im); chunks.push(im); });
-    return { uuid: THREE.MathUtils.generateUUID(), chunks, isChunked: true, getMatrixAt(i, M) { const r = map[i]; if (r) r[0].getMatrixAt(r[1], M); return M; }, setMatrixAt(i, M) { const r = map[i]; if (r) { r[0].setMatrixAt(r[1], M); r[0].instanceMatrix.needsUpdate = true; } }, instanceMatrix: { set needsUpdate(v) {} }, set visible(v) { chunks.forEach(c => c.visible = v); } }; };
+    return { uuid: THREE.MathUtils.generateUUID(), chunks, isChunked: true, getMatrixAt(i, M) { const r = map[i]; if (r) r[0].getMatrixAt(r[1], M); return M; }, setMatrixAt(i, M) { const r = map[i]; if (r) { r[0].setMatrixAt(r[1], M); r[0].instanceMatrix.needsUpdate = true; } }, instanceMatrix: { set needsUpdate(v) {} }, set visible(v) { chunks.forEach(c => { c.visible = v; c.userData.off = !v; }); } }; };
   const olive = [], cyp = [], bush = [], rock = [];
   for (let i = 0; i < Q.trees; i++) { const x = (R() - .5) * (XB * 2 + 50), z = 40 + R() * (zMax - 70); const d = W.dAt(x, z); if (d < 2.6 + R() * 2) continue; const y = W.hAt(x, z), r = R(), o = { x, y, z, s: .75 + R() * .6, rot: R() * 6.28, v: R() };
     if (Math.abs(x) > XB * .8 && r < .5) continue; (r < .42 ? olive : r < .62 ? cyp : r < .9 ? bush : rock).push(o); }
@@ -865,7 +865,7 @@ const QT = { dpr: [1, 1, 1.25, 1.5], sh: [1024, 1024, 2048, 2048], shEvery: [4, 
 function qDetect() { let g = ''; try { const gl = S.renderer.getContext(), e = gl.getExtension('WEBGL_debug_renderer_info'); g = e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); } catch (e) {} QUAL.gpu = g || ''; return qLevelFor(QUAL.gpu); }
 function qInit() {
   try { QUAL.mode = localStorage.getItem('tsp:q') || 'auto'; } catch (e) {} QUAL.mode = QOLD[QUAL.mode] || QUAL.mode; if (!QN[QUAL.mode]) QUAL.mode = 'auto';
-  const D = qDetect(); QUAL.max = D.max; QUAL.lv = QUAL.mode === 'auto' ? D.lv : { ultra: 3, alto: 2, medio: 1, bajo: 0 }[QUAL.mode];
+  const D = qDetect(); QUAL.max = D.max; QUAL.lv = QUAL.mode === 'auto' ? D.lv : Math.min(D.max, { ultra: 3, alto: 2, medio: 1, bajo: 0 }[QUAL.mode]);
   QUAL.dpr = 0; qApply(); try { if (localStorage.getItem('tsp:fps') === '1') qOverlay(); } catch (e) {}
 }
 function qApply() {
@@ -3476,7 +3476,7 @@ function phGet(id) {
 function phMat(m, o) {
   const k = '_ph' + (o.wind ? 'w' + o.wind : '') + (o.grass ? 'g' : '') + (PH.kids ? 'k' : ''); if (m[k]) return m[k];
   const c = m.clone(); if (PH.kids && c.color) c.color.multiplyScalar(1.12);
-  if (o.wind) { if (o.wind < 3) { c.side = THREE.DoubleSide; c.shadowSide = THREE.FrontSide; } c.onBeforeCompile = sh => { sh.uniforms.uT = PH.uT; const W = o.wind > 2 ? ['1.5', '7.', '.022', '.6'] : o.wind > 1 ? ['0.', '.8', '.06', '1.4'] : ['0.', '1.3', '.04', '1.2'];
+  if (o.wind) { if (o.wind < 3) { c.side = THREE.DoubleSide; c.shadowSide = THREE.FrontSide; } c.onBeforeCompile = sh => { sh.uniforms.uT = PH.uT; const W = o.wind > 3 ? ['0.', '1.1', '.16', '1.5'] : o.wind > 2 ? ['1.5', '7.', '.022', '.6'] : o.wind > 1 ? ['0.', '.8', '.06', '1.4'] : ['0.', '1.3', '.04', '1.2'];
     sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <project_vertex>', 'vec4 wp=vec4(transformed,1.);vec3 bp=vec3(0.);\n#ifdef USE_INSTANCING\nwp=instanceMatrix*wp;bp=instanceMatrix[3].xyz;\n#endif\nwp=modelMatrix*wp;bp=(modelMatrix*vec4(bp,1.)).xyz;\nfloat hh=wp.y-bp.y,k=clamp((hh-' + W[0] + ')/' + W[1] + ',0.,1.);k*=k;float ph=uT*' + W[3] + '+bp.x*.37+bp.z*.29;\nwp.x+=(sin(ph)*.7+sin(ph*2.3+1.)*.3)*' + W[2] + '*k*max(hh,1.)+sin(uT*3.1+wp.x*2.3+wp.z*1.9)*.012*k;wp.z+=cos(ph*.8+.6)*' + W[2] + '*.5*k*max(hh,1.);\nvec4 mvPosition=viewMatrix*wp;gl_Position=projectionMatrix*mvPosition;'); }; c.customProgramCacheKey = () => 'phw2' + o.wind; }
   if (o.grass) seasonMat(c);
   m[k] = c; return c;
@@ -3679,7 +3679,7 @@ async function pgBuild() {
     groups.push({ id, w: PG_W[id] ?? .05, vars, tri, fl: /dandelion|celandine|heliophila/.test(id) }); }
   r2log('pasto nuevo: ' + groups.length + ' grupos'); if (!groups.length || !S) return; const wsum = groups.reduce((t, g) => t + g.w, 0); groups.forEach(g => { g.w /= wsum; });
   PG.avgTri = groups.reduce((t, g) => t + g.w * g.tri, 0) || 500; const lvMax = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), cap = Math.min(26000, Math.ceil(PG_TRI[lvMax] / PG.avgTri));
-  for (const g of groups) { g.ims = g.vars.map(ms => { const n = Math.ceil(cap * g.w / g.vars.length * 1.5) + 24; return ms.map(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 1, grass: 1 }), n); im.count = 0; im.frustumCulled = false; im.receiveShadow = true; im.castShadow = false; im.userData.m = mm.m; im.userData.cap = n; S.scene.add(im); PG.ims.push(im); return im; }); }); }
+  for (const g of groups) { g.ims = g.vars.map(ms => { const n = Math.ceil(cap * g.w / g.vars.length * 1.5) + 24; return ms.map(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 4, grass: 1 }), n); im.count = 0; im.frustumCulled = false; im.receiveShadow = true; im.castShadow = false; im.userData.m = mm.m; im.userData.cap = n; S.scene.add(im); PG.ims.push(im); return im; }); }); }
   PG.groups = groups; PG.ready = true; PG.cx = 1e9; r2log('pasto nuevo listo: ' + PG.ims.length + ' mallas, ' + Math.round(PG.avgTri) + ' triángulos por planta');
   try { if (S.renderer.compileAsync) await S.renderer.compileAsync(S.scene, S.camera); } catch (e) {}
 }
