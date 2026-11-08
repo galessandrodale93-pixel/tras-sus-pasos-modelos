@@ -1869,13 +1869,25 @@ const CROWD = { cache: new Map() };
 function crowdBake(look, anim, t) {
   if (!H3.ok) return null; const key = JSON.stringify(look) + '|' + anim + '|' + (t || 0); if (CROWD.cache.has(key)) return CROWD.cache.get(key);
   const o = buildHero3(Object.assign({}, look, { anim: [anim] })), i0 = H3.npcs.indexOf(o); if (i0 >= 0) H3.npcs.splice(i0, 1);
-  const u = o.userData.h3; try { u.mixer.stopAllAction(); const a = u.act[anim] || u.act['Idle_Loop']; a.reset().play(); u.mixer.setTime(t || .6); } catch (e) {}
-  o.updateMatrixWorld(true); const parts = [], v = new THREE.Vector3(); let minY = 1e9;
+  const u = o.userData.h3, cross = anim === 'cross'; try { u.mixer.stopAllAction(); const a = u.act[cross ? 'Idle_Loop' : anim] || u.act['Idle_Loop']; a.reset().play(); u.mixer.setTime(t || .6); } catch (e) {}
+  o.updateMatrixWorld(true);
+  if (cross) try { const B = u.bones, aim = (bone, child, dirW) => { if (!bone || !child) return; o.updateMatrixWorld(true); const a0 = bone.getWorldPosition(new THREE.Vector3()), b0 = child.getWorldPosition(new THREE.Vector3()), cur = b0.sub(a0).normalize(), want = dirW.clone().normalize(), qW = new THREE.Quaternion().setFromUnitVectors(cur, want), pq = bone.parent.getWorldQuaternion(new THREE.Quaternion()); bone.quaternion.premultiply(pq.clone().invert().multiply(qW).multiply(pq)); };
+    const fw = new THREE.Vector3(0, 0, 1).applyQuaternion(o.getWorldQuaternion(new THREE.Quaternion())), side = new THREE.Vector3(1, 0, 0).applyQuaternion(o.getWorldQuaternion(new THREE.Quaternion()));
+    aim(B.thigh_l, B.calf_l, side.clone().multiplyScalar(.85).add(fw.clone().multiplyScalar(.55)).add(new THREE.Vector3(0, -.22, 0)));
+    aim(B.thigh_r, B.calf_r, side.clone().multiplyScalar(-.85).add(fw.clone().multiplyScalar(.55)).add(new THREE.Vector3(0, -.22, 0)));
+    aim(B.calf_l, B.foot_l, side.clone().multiplyScalar(-.95).add(fw.clone().multiplyScalar(.3)).add(new THREE.Vector3(0, -.1, 0)));
+    aim(B.calf_r, B.foot_r, side.clone().multiplyScalar(.95).add(fw.clone().multiplyScalar(.3)).add(new THREE.Vector3(0, -.1, 0)));
+    // brazos relajados sobre las rodillas
+    aim(B.upperarm_l, B.lowerarm_l, fw.clone().multiplyScalar(.5).add(side.clone().multiplyScalar(.25)).add(new THREE.Vector3(0, -.8, 0))); aim(B.upperarm_r, B.lowerarm_r, fw.clone().multiplyScalar(.5).add(side.clone().multiplyScalar(-.25)).add(new THREE.Vector3(0, -.8, 0)));
+    aim(B.lowerarm_l, B.hand_l, fw.clone().multiplyScalar(.9).add(side.clone().multiplyScalar(.3)).add(new THREE.Vector3(0, -.3, 0))); aim(B.lowerarm_r, B.hand_r, fw.clone().multiplyScalar(.9).add(side.clone().multiplyScalar(-.3)).add(new THREE.Vector3(0, -.3, 0)));
+    // la pelvis baja hasta casi el piso (el tronco va con ella) y el torso se inclina apenas adelante
+    if (B.pelvis) { const hipY = B.pelvis.getWorldPosition(new THREE.Vector3()).y, ps = B.pelvis.parent.getWorldScale(new THREE.Vector3()); B.pelvis.position.y -= (hipY - .36) / (ps.y || 1); }
+    if (B.spine_01) B.spine_01.rotateX(.12); o.updateMatrixWorld(true); } catch (e) { console.warn('cross', e); } const parts = [], v = new THREE.Vector3(); let minY = 1e9;
   o.traverse(m => { if (!m.isSkinnedMesh || !m.visible) return; const g0 = m.geometry, P = g0.attributes.position, pos = new Float32Array(P.count * 3);
     for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i); m.applyBoneTransform(i, v); v.applyMatrix4(m.matrixWorld); pos[i * 3] = v.x; pos[i * 3 + 1] = v.y; pos[i * 3 + 2] = v.z; if (v.y < minY) minY = v.y; }
-    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); if (g0.attributes.uv) g.setAttribute('uv', g0.attributes.uv); if (g0.index) g.setIndex(g0.index); g.computeVertexNormals(); parts.push({ g, mat: m.material }); });
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); if (g0.attributes.uv) g.setAttribute('uv', g0.attributes.uv); if (g0.attributes.color) g.setAttribute('color', g0.attributes.color); if (g0.attributes.uv1) g.setAttribute('uv1', g0.attributes.uv1); if (g0.index) g.setIndex(g0.index); g.computeVertexNormals(); parts.push({ g, mat: m.material }); });
   // la pose sentada es de silla: se baja el cuerpo hasta que la cadera toque el piso y las piernas quedan dobladas bajo el pasto, como sentado en el suelo
-  let low = minY; if (/Sit/.test(anim)) { let hip = null; o.traverse(b => { if (hip == null && b.isBone && /hip|pelvis/i.test(b.name)) hip = b.getWorldPosition(new THREE.Vector3()).y; }); if (hip != null) low = hip - .14; }
+  let low = minY; if (/Sit/.test(anim) && !cross) { let hip = null; o.traverse(b => { if (hip == null && b.isBone && /hip|pelvis/i.test(b.name)) hip = b.getWorldPosition(new THREE.Vector3()).y; }); if (hip != null) low = hip - .14; }
   parts.forEach(p => p.g.translate(0, -low, 0)); parts.forEach(p => p.g.computeBoundingSphere());
   CROWD.cache.set(key, parts); return parts;
 }
@@ -1887,19 +1899,25 @@ function crowdPlace(scene, list, looks, anim, sh) {
   return true;
 }
 const CROWD_LOOKS = [
-  { g: 'chico', age: 18, skin: '#C99A72', hair: '#2A1B14', outfit: '#8A6A4A' }, { g: 'chica', age: 18, skin: '#D6A57C', hair: '#3A2412', outfit: '#7E5A6A' },
-  { g: 'chico', age: 18, skin: '#B98A62', hair: '#9A9A9A', outfit: '#5A6A7A' }, { g: 'chica', age: 18, skin: '#C08A66', hair: '#2A1B14', outfit: '#8E7A4A' },
-  { g: 'chico', age: 18, skin: '#D2A07A', hair: '#4A2E1A', outfit: '#6A7A5A' }, { g: 'chica', age: 18, skin: '#B88560', hair: '#1E1410', outfit: '#9A6A4E' }];
+  { g: 'chico', age: 30, skin: '#C99A72', hair: '#2A1B14', outfit: '#A89078' }, { g: 'chica', age: 28, skin: '#D6A57C', hair: '#3A2412', outfit: '#7E5A6A' },
+  { g: 'chico', age: 60, skin: '#B98A62', hair: '#9A9A9A', outfit: '#6A6E78' }, { g: 'chica', age: 45, skin: '#C08A66', hair: '#2A1B14', outfit: '#8E7A4A' },
+  { g: 'chico', age: 22, skin: '#E2B690', hair: '#4A2E1A', outfit: '#8A9A6A' }, { g: 'chica', age: 19, skin: '#B88560', hair: '#1E1410', outfit: '#9A6A4E' },
+  { g: 'chico', age: 10, skin: '#D8A880', hair: '#2A1B14', outfit: '#B8A080' }, { g: 'chica', age: 9, skin: '#C9956E', hair: '#3A2412', outfit: '#A86A6A' },
+  { g: 'chico', age: 40, skin: '#8E6242', hair: '#1A1210', outfit: '#6E5A3E' }, { g: 'chica', age: 35, skin: '#A0704E', hair: '#1E1410', outfit: '#5E6A8A' },
+  { g: 'chico', age: 70, skin: '#CFA47E', hair: '#C8C8C8', outfit: '#8A8070' }, { g: 'chica', age: 65, skin: '#D9B090', hair: '#9A9A9A', outfit: '#705A5A' },
+  { g: 'chico', age: 14, skin: '#C48E68', hair: '#3A2412', outfit: '#9A8A5A' }, { g: 'chica', age: 12, skin: '#DDB08C', hair: '#4A2E1A', outfit: '#8A6A8A' }];
 // ---------- la colina de los cinco mil (Marcos 6:39-44): grupos sentados en el pasto, doce canastas con panes y peces, gente de pie ----------
 function feedingScene(scene, p, yAt, poiProp, hx, HW) {
   const y = yAt(p.x, p.z), sd = p.side, R = rng(66), W = (u, v) => [p.x + u * sd, p.z + v], cl = ['#C9B48A', '#8E2E22', '#3E5A8A', '#E8DDC6', '#66763E'];
   const toRoad = sd > 0 ? Math.PI : 0, seated = [], cols = [];
   // cinco grupos de veinte, sentados en filas mirando al centro, donde Jesús parte el pan
   for (let gi = 0; gi < 5; gi++) { const an = toRoad + .75 + gi * (6.283 - 1.5) / 4, gx = p.x + Math.cos(an) * 11.5, gz = p.z + Math.sin(an) * 11.5, face = Math.atan2(p.x - gx, p.z - gz), fx = Math.sin(face), fz = Math.cos(face), rx = Math.cos(face), rz = -Math.sin(face);
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 4.6), tm('cloth' + gi, cl[gi], { side: THREE.DoubleSide, roughness: 1 })); m.rotation.x = -Math.PI / 2; m.rotation.z = face; m.position.set(gx, yAt(gx, gz) + .04, gz); m.receiveShadow = true; scene.add(m);
-    for (let r = 0; r < 4; r++) for (let c = 0; c < 5; c++) { const ox = (c - 2) * 1.15 + (R() - .5) * .25 + (r % 2) * .4, oz = (r - 1.5) * 1.05 + (R() - .5) * .2, x = gx + rx * ox - fx * oz, z = gz + rz * ox - fz * oz; seated.push({ x, y: yAt(x, z) + .02, z, ry: face + (R() - .5) * .6, s: .92 + R() * .14, v: Math.floor(R() * 6) }); }
+    // dos o tres mantas chicas por grupo, giradas cada una a su manera
+    for (let k = 0; k < 2 + Math.floor(R() * 2); k++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(2.2 + R() * 1.4, 1.6 + R() * .9), tm('cloth' + ((gi + k) % cl.length), cl[(gi + k) % cl.length], { side: THREE.DoubleSide, roughness: 1 })); const mx = gx + (R() - .5) * 5, mz = gz + (R() - .5) * 4; m.rotation.x = -Math.PI / 2; m.rotation.z = face + (R() - .5) * 1.2; m.position.set(mx, yAt(mx, mz) + .04, mz); m.receiveShadow = true; scene.add(m); }
+    const placed = []; for (let n = 0; n < 20; n++) { let x, z, ok = false; for (let t = 0; t < 40 && !ok; t++) { const ang = R() * 6.283, rr = Math.sqrt(R()) * 3.6; x = gx + Math.cos(ang) * rr; z = gz + Math.sin(ang) * rr; ok = placed.every(q => (q[0] - x) ** 2 + (q[1] - z) ** 2 > .85); } placed.push([x, z]);
+      seated.push({ x, y: yAt(x, z) + .02, z, ry: Math.atan2(p.x - x, p.z - z) + (R() - .5) * 1.1, s: .9 + R() * .16, v: Math.floor(R() * CROWD_LOOKS.length) }); }
     cols.push([gx, gz, 3.2]); }
-  if (!crowdPlace(scene, seated, CROWD_LOOKS, H3.clips && H3.clips['Sitting_Idle_Loop'] ? 'Sitting_Idle_Loop' : 'M_Sitting_Idle', true)) r2log('cinco mil: sin personajes 3D');
+  if (!crowdPlace(scene, seated, CROWD_LOOKS, 'cross', true)) r2log('cinco mil: sin personajes 3D');
   cols.forEach(([x, z, r]) => S.cols.push({ x0: x - r, x1: x + r, z0: z - r, z1: z + r, cx: x, cz: z, r }));
   // doce canastas con lo que sobró (Marcos 6:43): panes y peces
   const bk = [], loaves = [], fish = []; for (let i = 0; i < 12; i++) { const a = toRoad + .4 + i / 12 * 6.283, r = 4.6, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r, yy = yAt(x, z); bk.push({ x, y: yy, z, ry: a, s: 2.6, v: i }); for (let k = 0; k < 4; k++) loaves.push([x + (R() - .5) * .45, yy + .3, z + (R() - .5) * .3]); for (let k = 0; k < 2; k++) fish.push([x + (R() - .5) * .4, yy + .36, z + (R() - .5) * .25, R() * 6]); S.cols.push({ x0: x - .5, x1: x + .5, z0: z - .5, z1: z + .5, cx: x, cz: z, r: .45 }); }
@@ -1953,8 +1971,8 @@ function townLayout(scene, p, yAt, HW, o) {
 }
 // gente del pueblo: de pie y algunos sentados en la puerta (horneados, baratos)
 function townFolk(scene, p, yAt, HW, n, rad, seed, avoid) {
-  const R = rng(seed || 99), st = [], si = []; for (let t = 0; t < n * 30 && st.length + si.length < n; t++) { const a = R() * 6.283, r = 2.5 + R() * rad, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (blockedAt(x, z) || (HW && HW.dAt(x, z) < 2.2) || (avoid || []).some(([ax, az, ar]) => Math.hypot(ax - x, az - z) < ar)) continue; (R() < .25 ? si : st).push({ x, y: yAt(x, z), z, ry: R() * 6.283, s: .94 + R() * .12, v: Math.floor(R() * 6) }); }
-  crowdPlace(scene, st, CROWD_LOOKS, 'M_Standing_Idle', true); crowdPlace(scene, si, CROWD_LOOKS, 'Sitting_Idle_Loop', true); [...st, ...si].forEach(q => S.cols.push({ x0: q.x - .35, x1: q.x + .35, z0: q.z - .35, z1: q.z + .35, cx: q.x, cz: q.z, r: .3 }));
+  const R = rng(seed || 99), st = [], si = []; for (let t = 0; t < n * 30 && st.length + si.length < n; t++) { const a = R() * 6.283, r = 2.5 + R() * rad, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (blockedAt(x, z) || (HW && HW.dAt(x, z) < 2.2) || (avoid || []).some(([ax, az, ar]) => Math.hypot(ax - x, az - z) < ar)) continue; (R() < .25 ? si : st).push({ x, y: yAt(x, z), z, ry: R() * 6.283, s: .94 + R() * .12, v: Math.floor(R() * CROWD_LOOKS.length) }); }
+  crowdPlace(scene, st, CROWD_LOOKS, 'M_Standing_Idle', true); crowdPlace(scene, si, CROWD_LOOKS, 'cross', true); [...st, ...si].forEach(q => S.cols.push({ x0: q.x - .35, x1: q.x + .35, z0: q.z - .35, z1: q.z + .35, cx: q.x, cz: q.z, r: .3 }));
 }
 // puestos de mercado: cuatro palos, toldo de tela y canastas con frutas
 function stall(scene, x, z, ry, y, R, poiProp) {
