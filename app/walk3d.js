@@ -838,12 +838,14 @@ function lobbyUI(kid) {
     close() { T.forEach(clearInterval); try { localStorage.setItem('tsp:howto', '1'); } catch (e) {} ov.classList.add('out'); document.body.classList.remove('v3lb'); if (mus) { const m = mus; const f = setInterval(() => { m.volume = Math.max(0, m.volume - .05); if (m.volume <= 0) { clearInterval(f); m.pause(); } }, 60); } setTimeout(() => ov.remove(), 750); } };
   return U;
 }
+// calidad que se baja en la sala: la elegida por el jugador; en automático, hasta Medio en celular y hasta Alto en compu (Ultra con 4K solo si lo eligió)
+function lobbyTier() { let manual = false; try { const m = localStorage.getItem('tsp:q'); manual = !!m && m !== 'auto'; } catch (e) {} const lv = qEarly(); if (manual) return lv; return Math.min(matchMedia('(pointer: coarse)').matches ? 1 : 2, lv); }
 // devuelve la sala abierta (para cerrarla cuando el mundo está armado) o null
 async function lobby() {
   const kid = G().branch !== 'ados'; const U = lobbyUI(kid);
   if (LOBBY.done || !('caches' in window)) { LOBBY.done = true; U.prog(null, 'Armando el mundo…'); return U; }
   let list = null, c = null, miss = [], files = [];
-  try { list = await dlList(matchMedia('(pointer: coarse)').matches ? 1 : 3); files = list.files; c = await caches.open(DLW.cache); const have = new Set((await c.keys()).map(r => r.url)); miss = files.filter(([u]) => !have.has(u)); } catch (e) { LOBBY.done = true; U.prog(null, 'Armando el mundo…'); return U; }
+  try { list = await dlList(lobbyTier()); files = list.files; c = await caches.open(DLW.cache); const have = new Set((await c.keys()).map(r => r.url)); miss = files.filter(([u]) => !have.has(u)); } catch (e) { LOBBY.done = true; U.prog(null, 'Armando el mundo…'); return U; }
   const tot = files.reduce((a, f) => a + f[1], 0) || 1, MB = n => (n / 1048576).toFixed(0);
   const purge = () => { try { const keep = new Set(files.map(f => f[0])); c.keys().then(K => K.forEach(rq => { const m = rq.url.match(DLM.rx); if (m && DLM.r2ok.test(rq.url.slice(m[0].length)) && !keep.has(rq.url)) c.delete(rq); })); } catch (e) {} };
   if (!miss.length) { LOBBY.done = true; purge(); U.prog(1, 'Mundo guardado en este aparato ✓ · Armando el mundo…'); return U; }
@@ -1896,9 +1898,20 @@ function crowdBake(look, anim, t) {
   CROWD.cache.set(key, parts); return parts;
 }
 // pone una lista de personas { x, y, z, ry, s } con la pose horneada de cada aspecto
+// plan B si no bajaron los avatares: figuras simples (túnica, cabeza y manto) con los mismos colores de piel y ropa, de pie o sentadas
+function crowdSimple(scene, list, looks, anim, sh) {
+  if (!list.length) return false; r2log('multitud simple: ' + list.length + ' figuras (sin avatares 3D)'); const seated = anim === 'cross' || /Sit/i.test(anim || ''), by = looks.map(() => []); list.forEach((p, i) => by[(p.v ?? i) % looks.length].push(p));
+  const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
+  const body = seated ? new THREE.CylinderGeometry(.34, .42, .72, 8) : new THREE.CapsuleGeometry(.2, 1.05, 3, 8), head = new THREE.SphereGeometry(.13, 8, 7), cloth = seated ? new THREE.SphereGeometry(.3, 8, 6, 0, 6.283, 0, 1.6) : new THREE.CylinderGeometry(.24, .3, .55, 8);
+  const yB = seated ? .36 : .8, yH = seated ? .86 : 1.5, yC = seated ? .55 : 1.1;
+  looks.forEach((lk, li) => { const L = by[li]; if (!L.length) return;
+    const mk = (g, col, y, sc) => { const im = new THREE.InstancedMesh(g, tm('cs' + col, col, { roughness: 1 }), L.length); L.forEach((p, i) => { E.set(0, p.ry, 0); const k = p.s || 1; M.compose(V.set(p.x, p.y + y * k, p.z), Q.setFromEuler(E), SC.setScalar(k * (sc || 1))); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.castShadow = !!sh && QUAL.lv >= 2; im.receiveShadow = true; im.computeBoundingSphere(); scene.add(im); };
+    mk(body, lk.outfit, yB); mk(head, lk.skin, yH); mk(cloth, lk.hair === '#9A9A9A' ? '#D8CFC0' : '#6E5A44', yC, seated ? 1 : .9); });
+  return true;
+}
 function crowdPlace(scene, list, looks, anim, sh) {
-  if (!H3.ok || !list.length) return false; const by = looks.map(() => []); list.forEach((p, i) => by[(p.v ?? i) % looks.length].push(p)); const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
-  looks.forEach((lk, li) => { const L = by[li]; if (!L.length) return; const parts = crowdBake(lk, anim, .4 + li * .37); if (!parts) return;
+  if (!list.length) return false; if (!H3.ok) return crowdSimple(scene, list, looks, anim, sh); const by = looks.map(() => []); list.forEach((p, i) => by[(p.v ?? i) % looks.length].push(p)); const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
+  looks.forEach((lk, li) => { const L = by[li]; if (!L.length) return; const parts = crowdBake(lk, anim, .4 + li * .37); if (!parts) { crowdSimple(scene, L, [lk], anim, sh); return; }
     parts.forEach(pt => { const im = new THREE.InstancedMesh(pt.g, pt.mat, L.length); L.forEach((p, i) => { E.set(0, p.ry, 0); M.compose(V.set(p.x, p.y, p.z), Q.setFromEuler(E), SC.setScalar(p.s || 1)); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.castShadow = !!sh && QUAL.lv >= 2; im.receiveShadow = true; im.computeBoundingSphere(); scene.add(im); }); });
   return true;
 }
