@@ -378,7 +378,7 @@ function groundMat(Q, kids) {
   m.onBeforeCompile = sh => { Object.assign(sh.uniforms, U);
     sh.vertexShader = 'attribute vec4 splat;\nvarying vec4 vSpl;\nvarying vec2 vWP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvSpl=splat;vWP=(modelMatrix*vec4(position,1.)).xz;');
     sh.fragmentShader = SEAS_GLSL + 'uniform vec3 jud;uniform sampler2D tG,tY,tD,tR,nG,nY,nD,nR;uniform float nOn,pbr,det,lo;\nvarying vec4 vSpl;\nvarying vec2 vWP;\nvec4 wS;\nvec3 tx(sampler2D t,float s){vec3 a=texture2D(t,vWP*s).rgb;if(lo>.5)return a;vec3 b=texture2D(t,vWP*s*.29+vec2(.37,.11)).rgb;return mix(a,b,.38);}\nvec3 nx(sampler2D t,float s){return texture2D(t,vWP*s).xyz*2.-1.;}\n' + sh.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\nif(nOn>.5&&lo<.5){vec3 nb=nx(nG,.22)*wS.x+nx(nY,.2)*wS.y+nx(nD,.3)*wS.z+nx(nR,.12)*wS.w;vec3 Tv=normalize((viewMatrix*vec4(1.,0.,0.,0.)).xyz),Bv=normalize((viewMatrix*vec4(0.,0.,-1.,0.)).xyz);normal=normalize(normal+(Tv*nb.x+Bv*nb.y)*.9);}').replace('#include <map_fragment>',
-      'vec3 cG=tx(tG,.42),cY=tx(tY,.2),cD=tx(tD,.3),cR=tx(tR,.12)*mix(vec3(1.),vec3(.8,.74,.64),pbr);vec4 w=vSpl*(vec4(dot(cG,vec3(.33)),dot(cY,vec3(.33)),dot(cD,vec3(.33)),dot(cR,vec3(.33)))*1.6+.4);w=pow(w,vec4(3.));w/=max(.0001,w.x+w.y+w.z+w.w);wS=w;if(det>.5){float fd=smoothstep(22.,3.,length(vViewPosition));if(fd>0.){vec3 dG=texture2D(tG,vWP*1.3).rgb,dY=texture2D(tY,vWP*1.2).rgb,dD=texture2D(tD,vWP*1.5).rgb,dR=texture2D(tR,vWP*.8).rgb;vec3 dd=dG*w.x+dY*w.y+dD*w.z+dR*w.w,bb=cG*w.x+cY*w.y+cD*w.z+cR*w.w;float k=dot(dd,vec3(.333))/max(.05,dot(bb,vec3(.333)));cG*=mix(1.,k,fd*.55);cY*=mix(1.,k,fd*.55);cD*=mix(1.,k,fd*.55);cR*=mix(1.,k,fd*.55);}}cG=seasG(cG);cY=mix(cY,seasG(cY),.55);if(jud.z>0.){float jd=smoothstep(jud.z,jud.z*.4,length(vWP-jud.xy));cG=mix(cG,vec3(dot(cG,vec3(.333)))*vec3(1.08,.93,.7)*1.95,jd*.7);cY=mix(cY,cY*vec3(1.08,1.,.86),jd*.5);}diffuseColor.rgb*=(cG*w.x+cY*w.y+cD*w.z+cR*w.w)*' + (kids ? 'vec3(1.32,1.42,1.18)' : 'vec3(1.15)') + '*mix(1.,1.02,pbr);'); };
+      'vec3 cG=tx(tG,.22),cY=tx(tY,.2),cD=tx(tD,.3),cR=tx(tR,.12)*mix(vec3(1.),vec3(.8,.74,.64),pbr);vec4 w=vSpl*(vec4(dot(cG,vec3(.33)),dot(cY,vec3(.33)),dot(cD,vec3(.33)),dot(cR,vec3(.33)))*1.6+.4);w=pow(w,vec4(3.));w/=max(.0001,w.x+w.y+w.z+w.w);wS=w;if(det>.5){float fd=smoothstep(22.,3.,length(vViewPosition));if(fd>0.){vec3 dG=texture2D(tG,vWP*1.3).rgb,dY=texture2D(tY,vWP*1.2).rgb,dD=texture2D(tD,vWP*1.5).rgb,dR=texture2D(tR,vWP*.8).rgb;vec3 dd=dG*w.x+dY*w.y+dD*w.z+dR*w.w,bb=cG*w.x+cY*w.y+cD*w.z+cR*w.w;float k=dot(dd,vec3(.333))/max(.05,dot(bb,vec3(.333)));cG*=mix(1.,k,fd*.55);cY*=mix(1.,k,fd*.55);cD*=mix(1.,k,fd*.55);cR*=mix(1.,k,fd*.55);}}cG=seasG(cG);cY=mix(cY,seasG(cY),.55);if(jud.z>0.){float jd=smoothstep(jud.z,jud.z*.4,length(vWP-jud.xy));cG=mix(cG,vec3(dot(cG,vec3(.333)))*vec3(1.08,.93,.7)*1.95,jd*.7);cY=mix(cY,cY*vec3(1.08,1.,.86),jd*.5);}diffuseColor.rgb*=(cG*w.x+cY*w.y+cD*w.z+cR*w.w)*' + (kids ? 'vec3(1.32,1.42,1.18)' : 'vec3(1.15)') + '*mix(1.,1.02,pbr);'); };
   return m;
 }
 /* ---------- agua de verdad: Mar de Galilea y río Jordán (oleaje, reflejo según el ángulo, espuma en la orilla y corriente) ---------- */
@@ -3666,15 +3666,15 @@ function phOne(id, parent, x, y, z, ry, s, o) {
 /* ---------- pasto nuevo (Grass Field Pack) en todo el terreno: se dibuja solo alrededor del jugador, con un tope de triángulos
    por calidad, en matas con claros (ruido), dejando libres el camino, el agua, las casas y lo alto de las lomas. Viento suave. ---------- */
 const PG = { ims: [], groups: [], cache: new Map(), cx: 1e9, cz: 1e9, acc: 0, lv: -1, ready: false };
-const PG_CELL = 16, PG_R = [18, 26, 36, 48], PG_TRI = [3.4e5, 8.5e5, 1.9e6, 3.6e6];
-const PG_S = { grass_bermuda_01: [1.05, 1.45], grass_medium_01: [1.5, 2], grass_medium_02: [1.5, 2], dandelion_01: [1.3, 1.7], celandine_01: [1.3, 1.7], flower_heliophila: [1, 1.3] };
-const PG_W = { grass_bermuda_01: .9, grass_medium_01: .035, grass_medium_02: .03, dandelion_01: .015, celandine_01: .012, flower_heliophila: .008 };
+const PG_CELL = 16, PG_R = [22, 32, 44, 60], PG_TRI = [3e5, 7.5e5, 1.7e6, 3.2e6];
+const PG_S = { grass_bermuda_01: [4, 5.4], grass_medium_01: [2.8, 3.9], grass_medium_02: [3, 4.1], dandelion_01: [2.2, 3.1], celandine_01: [2.4, 3.2], flower_heliophila: [1.3, 1.9] };
+const PG_W = { grass_bermuda_01: .44, grass_medium_01: .24, grass_medium_02: .18, dandelion_01: .05, celandine_01: .05, flower_heliophila: .04 };
 const pgH = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
 function pgNoise(x, z) { const ix = Math.floor(x), iz = Math.floor(z), fx = x - ix, fz = z - iz, ux = fx * fx * (3 - 2 * fx), uz = fz * fz * (3 - 2 * fz);
   const a = pgH(ix, iz), b = pgH(ix + 1, iz), c = pgH(ix, iz + 1), d = pgH(ix + 1, iz + 1); return a + (b - a) * ux + (c - a) * uz + (a - b - c + d) * ux * uz; }
 async function pgBuild() {
   if (!FLORA.paidG || PG.ready || !S) return; const man = GRP.man['grass/']; if (!man) return; const groups = [];
-  for (const id of Object.keys(man.slots)) { const vars = await grpVars(id, id === 'grass_bermuda_01' || !(grpWin() || QUAL.lv >= 3) ? 'lite' : null).catch(() => null); if (!vars || !vars.length || !S) continue;
+  for (const id of Object.keys(man.slots)) { const vars = await grpVars(id, grpWin() || QUAL.lv >= 3 ? null : 'lite').catch(() => null); if (!vars || !vars.length || !S) continue;
     const tri = vars.reduce((t, ms) => t + ms.reduce((u, mm) => u + (mm.geo.index ? mm.geo.index.count : mm.geo.attributes.position.count) / 3, 0), 0) / vars.length;
     groups.push({ id, w: PG_W[id] ?? .05, vars, tri, fl: /dandelion|celandine|heliophila/.test(id) }); }
   r2log('pasto nuevo: ' + groups.length + ' grupos'); if (!groups.length || !S) return; const wsum = groups.reduce((t, g) => t + g.w, 0); groups.forEach(g => { g.w /= wsum; });
@@ -3689,13 +3689,14 @@ function pgCell(ix, iz) {
   const x0 = ix * PG_CELL, z0 = iz * PG_CELL, cx = x0 + PG_CELL / 2, cz = z0 + PG_CELL / 2;
   if (Math.abs(cx) > XB + 60) { PG.cache.set(key, L); return L; }
   const poi = (S_poiPts || []).filter(p => Math.abs(p[0] - cx) < PG_CELL && Math.abs(p[1] - cz) < PG_CELL);
-  const lvm = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), dens = Math.min(4, PG_TRI[lvm] / PG.avgTri / (Math.PI * PG_R[lvm] * PG_R[lvm] * .75)), n = Math.round(dens * PG_CELL * PG_CELL * 1.15);
+  const dens = Math.min(1.4, PG_TRI[Math.min(3, Math.max(QUAL.max || 0, QUAL.lv))] / PG.avgTri / (Math.PI * PG_R[3] * PG_R[3] * .8)), n = Math.round(dens * PG_CELL * PG_CELL * 1.7);
   for (let i = 0; i < n; i++) { const x = x0 + R() * PG_CELL, z = z0 + R() * PG_CELL, r1 = R(), r2 = R();
+    const cl = pgNoise(x * .06, z * .06) * .75 + pgNoise(x * .21 + 40, z * .21) * .35; if (r1 > cl * 1.15 + .1) continue; // matas y claros
     const d = W.dAt(x, z); if (d < 1.5 || (d < 3.2 && r2 > (d - 1.5) / 1.7)) continue; // el camino queda libre, con borde natural
     const h = W.hAt(x, z); if (h > 9 || (h > 5.5 && r2 > (9 - h) / 3.5)) continue;
     if (waterWet(x, z, null) > .04 || blockedAt(x, z) || poi.some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < 14)) continue;
     // qué planta: flores donde el ruido lo marca (manchones), el resto pasto
-    const G = PG.groups, fz = pgNoise(x * .045 + 90, z * .045 - 30) > .74, wantF = fz && R() < .3, pool = G.map((g, k) => k).filter(k => G[k].fl === wantF), P = pool.length ? pool : G.map((g, k) => k);
+    const G = PG.groups, fz = pgNoise(x * .045 + 90, z * .045 - 30) > .66, wantF = fz && R() < .55, pool = G.map((g, k) => k).filter(k => G[k].fl === wantF), P = pool.length ? pool : G.map((g, k) => k);
     let pick = R() * P.reduce((t, k) => t + G[k].w, 0), gi = P[P.length - 1]; for (const k of P) { pick -= G[k].w; if (pick <= 0) { gi = k; break; } }
     const g = G[gi], sr = PG_S[g.id] || [2.6, 3.6]; L.push({ x, y: h - .03, z, ry: R() * 6.283, s: sr[0] + R() * (sr[1] - sr[0]), gi, vi: Math.floor(R() * g.vars.length), r: R(), c: .88 + R() * .2 }); }
   PG.cache.set(key, L); if (PG.cache.size > 2600) { const it = PG.cache.keys(); for (let k = 0; k < 600; k++) PG.cache.delete(it.next().value); } return L;
@@ -3706,7 +3707,7 @@ function pgFill() {
   const a = S.av.position, Rr = PG_R[QUAL.lv], tri = PG_TRI[QUAL.lv], cnt = PG.ims.map(() => 0), idx = new Map(); PG.ims.forEach((im, k) => idx.set(im, k)); let used = 0;
   const lim = Math.ceil(tri / PG.avgTri), c0x = Math.floor((a.x - Rr) / PG_CELL), c1x = Math.floor((a.x + Rr) / PG_CELL), c0z = Math.floor((a.z - Rr) / PG_CELL), c1z = Math.floor((a.z + Rr) / PG_CELL);
   const cells = []; for (let ix = c0x; ix <= c1x; ix++) for (let iz = c0z; iz <= c1z; iz++) { const dx = (ix + .5) * PG_CELL - a.x, dz = (iz + .5) * PG_CELL - a.z; cells.push([dx * dx + dz * dz, ix, iz]); } cells.sort((p, q) => p[0] - q[0]);
-  for (const [, ix, iz] of cells) { if (used >= lim) break; for (const it of pgCell(ix, iz)) { const dd = Math.hypot(it.x - a.x, it.z - a.z); if (dd > Rr) continue; if (dd > Rr * .7 && it.r > 1 - (dd - Rr * .7) / (Rr * .3) * .6) continue; // más ralo lejos
+  for (const [, ix, iz] of cells) { if (used >= lim) break; for (const it of pgCell(ix, iz)) { const dd = Math.hypot(it.x - a.x, it.z - a.z); if (dd > Rr) continue; if (dd > Rr * .55 && it.r > 1 - (dd - Rr * .55) / (Rr * .45) * .7) continue; // más ralo lejos
       const ims = PG.groups[it.gi].ims[it.vi]; let full = false; for (const im of ims) if (cnt[idx.get(im)] >= im.userData.cap) full = true; if (full) continue;
       _pgE.set(0, it.ry, 0); _pgQ.setFromEuler(_pgE); for (const im of ims) { const k = idx.get(im), i = cnt[k]++; _pgM.compose(_pgV.set(it.x, it.y, it.z), _pgQ, _pgS.setScalar(it.s)).multiply(im.userData.m); im.setMatrixAt(i, _pgM); im.setColorAt(i, _pgC.setRGB(it.c, it.c, it.c * .96)); }
       used++; if (used >= lim) break; } }
