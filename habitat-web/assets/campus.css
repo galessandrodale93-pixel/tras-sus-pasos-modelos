@@ -363,3 +363,24 @@ a.rg,a.rg *{text-decoration:none}
 @media (max-width:900px){.bb{grid-template-columns:1fr}.bb-side{position:sticky;bottom:0;top:auto;z-index:5;box-shadow:0 -8px 24px rgba(0,0,0,.08)}.bb-side:not(.sel){display:none}.bb-side blockquote{max-height:110px}.bb-side textarea{min-height:70px}}
 .hi-act .out.gold{background:var(--gold-2);color:var(--ink);border-color:var(--gold-2)}
 .hi-act [hidden]{display:none!important}
+/* Opinión del alumno, material de clase y buzón */
+.op-card{display:grid;gap:14px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px;margin-bottom:12px}
+.op-card .ck{display:block}.op-card h3{font:500 1.5rem/1.15 var(--serif);color:var(--ink);margin:0}
+.op-faces{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.op-faces button{display:grid;gap:4px;justify-items:center;padding:12px 4px;border:1px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;font:600 .78rem var(--sans);color:var(--ink);transition:transform .15s,border-color .15s}
+.op-faces button em{font-style:normal;font-size:2rem;line-height:1}
+.op-faces button:hover,.op-faces button.on{border-color:var(--gold);background:var(--paper);transform:translateY(-2px)}
+.op-f{display:grid;gap:10px}.op-f label{display:grid;gap:6px;font:600 .9rem var(--sans);color:var(--ink)}
+.op-f textarea{width:100%;font:inherit;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.op-btn{justify-self:start;border:0;border-radius:999px;background:var(--ink);color:var(--paper);font:700 .95rem var(--sans);padding:12px 22px;cursor:pointer}
+.op-btn:disabled{opacity:.5}
+.op-ok{display:grid;gap:6px;justify-items:center;text-align:center;padding:10px}.op-ok em{font-style:normal;font-size:2.4rem}
+.op-mats{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.op-m{display:grid;gap:8px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px}
+.op-m b{font:500 1.2rem/1.2 var(--serif);color:var(--ink)}.op-m small{color:var(--muted)}
+.op-m a{display:flex;gap:8px;align-items:center;text-decoration:none;color:var(--ink);font-weight:600;background:var(--paper);border-radius:12px;padding:10px 12px}
+.op-m a:hover{background:var(--line)}
+.op-box{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;background:var(--ink);color:var(--paper);border-radius:22px;padding:24px}
+.op-box h2{font:500 1.7rem/1.1 var(--serif);margin:0 0 6px;color:var(--paper)}.op-box p{margin:0;opacity:.85}
+.op-box .op-btn{background:var(--gold);color:var(--ink)}.op-box .op-f{grid-column:1/-1}.op-box .op-f label{color:var(--paper)}
+@media (max-width:640px){.op-box{grid-template-columns:1fr}.op-faces button{font-size:.62rem}.op-faces button em{font-size:1.6rem}}

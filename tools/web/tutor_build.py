@@ -9,10 +9,7 @@ body = '''
   <div class="tt-hi"><p class="tt-k">Panel de tutores</p><h1 id="ttHola">Hola</h1><p id="ttWho">Cargando…</p><figure class="tt-word" id="ttWord" hidden><blockquote id="ttWordT"></blockquote><figcaption><span id="ttWordR"></span><button type="button" id="ttWordN">Otra palabra</button></figcaption></figure></div>
   <div class="tt-act">
     <button class="tt-bell" type="button" id="ttBell" aria-label="Notificaciones"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.4-1.8H9.6A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.8V3a1.5 1.5 0 0 0-3 0v1.2A7 7 0 0 0 5 11v5l-2 2v1h18v-1Z" fill="currentColor"/></svg><span id="ttBellN" hidden></span></button>
-    <a class="tt-ln" href="/tutor.html" id="toTut" hidden>Panel de tutores</a>
-    <a class="tt-ln" href="/organizacion.html" id="toOrg" hidden>Organización</a>
-    <a class="tt-ln" href="/finanzas.html" id="toFin" hidden>Finanzas</a>
-    <a class="tt-ln" href="/voluntario.html" id="toVol" hidden>Mi servicio</a>
+    <span id="toTut" hidden></span><span id="toOrg" hidden></span><span id="toFin" hidden></span><span id="toVol" hidden></span>
     <a class="tt-ln" href="/campus.html">Campus</a>
   </div>
 </div></section>
@@ -102,13 +99,28 @@ html = html.replace('<body>', '<body data-solid="1" class="campus tutor">')
 html += body + B.FOOT + js + '</body>\n</html>\n'
 open(os.path.join(B.OUT, 'tutor.html'), 'w', encoding='utf-8').write(html)
 # Panel de organización: mismo motor, con calendario, clases y profes, servicio (voluntarios, Zarza, mesa, Selah) y equipo
+POCSS = """<style>
+.po-sec{display:grid;gap:12px;padding:22px;margin-bottom:16px}
+.po-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.po-card{display:grid;gap:4px;text-align:left;background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;font:inherit;color:inherit}
+.po-card:hover,.po-card:focus-visible{border-color:var(--gold);outline:none}.po-card small{color:var(--muted)}.po-card i{font-style:normal;font-size:.8rem;color:var(--gold)}.po-card.off{opacity:.55}
+.po-ops{display:grid;gap:8px;max-height:560px;overflow:auto}
+.po-op{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;background:var(--soft);border-radius:14px;padding:12px 14px}
+details.po-op{display:block}.po-op summary{display:flex;gap:12px;align-items:center;cursor:pointer;list-style:none}.po-op summary::-webkit-details-marker{display:none}details.po-op p{margin:8px 0 0}
+.po-f{font-size:1.6rem;line-height:1}.po-op p{margin:2px 0}
+.po-form{display:grid;gap:12px}.po-form textarea{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:10px}
+.pf-nav{display:flex;justify-content:space-between;gap:10px}
+</style>
+"""
 org = B.head('Organización · Habitat', 'Organización de Habitat CFM.', 'organizacion.html')
-org = org.replace('</head>', '<meta name="robots" content="noindex,nofollow">\n<link rel="stylesheet" href="/assets/campus.css">\n<link rel="stylesheet" href="/assets/tutor.css">\n</head>')
+org = org.replace('</head>', '<meta name="robots" content="noindex,nofollow">\n<link rel="stylesheet" href="/assets/campus.css">\n<link rel="stylesheet" href="/assets/tutor.css">\n' + POCSS + '</head>')
 org = org.replace('<body>', '<body data-solid="1" data-mode="org" class="campus tutor">')
 ob = body.replace('<p class="tt-k">Panel de tutores</p>', '<p class="tt-k">Panel de organización</p>')
 ob = ob.replace('<button data-t="hoy" class="on">Hoy</button><button data-t="alumnos">Alumnos</button><button data-t="lista">Pasar lista</button><button data-t="mesa">Tiempo de mesa</button>', '')
 ob = ob.replace('<button data-t="vol" hidden id="tabVol">Voluntarios</button>', '<button data-t="vol" hidden id="tabVol">Servicio</button>')
 ob = ob.replace('<section id="v-hoy" class="tt-v"></section>', '<section id="v-hoy" class="tt-v" hidden></section>')
-org += ob + B.FOOT + js + '</body>\n</html>\n'
+ob = ob.replace('<button data-t="equipo" hidden id="tabEq">Equipo</button>', '<button data-t="equipo" hidden id="tabEq">Equipo</button><button data-t="prof" id="tabProf">Profes y opiniones</button>')
+ob = ob.replace('<section id="v-equipo" class="tt-v" hidden>', '<section id="v-prof" class="tt-v" hidden></section>\n  <section id="v-equipo" class="tt-v" hidden>')
+org += ob + B.FOOT + js + '<script src="/assets/profes-org.js"></script>\n</body>\n</html>\n'
 open(os.path.join(B.OUT, 'organizacion.html'), 'w', encoding='utf-8').write(org)
 print('tutor ok')

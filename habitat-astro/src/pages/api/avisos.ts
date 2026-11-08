@@ -6,6 +6,7 @@ import type { APIRoute } from "astro";
 import { auth, httpClient } from "@wix/essentials";
 import { items } from "@wix/data";
 import { animo, esc, grupos, type Ev, type Grupo } from "../../lib/vol";
+import { avisarProfes } from "../../lib/profeAviso";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
@@ -82,7 +83,9 @@ export const GET: APIRoute = async ({ url }) => {
       if (r.ok) for (const x of gs) for (const y of x.ts) await save("VolTurnos", { _id: y._id, fecha: y.fecha, tarea: y.tarea, voluntarioId: y.voluntarioId, nota: y.nota || "", avisado: "mail:" + y.fecha });
       out.push({ vid, status: r.status, resp: r.ok ? "ok" : t.slice(0, 300) });
     }
-    return json({ ok: true, hoy, enviados: out });
+    let profes: unknown = [];
+    try { profes = await avisarProfes(hoy, dry, C.remitente || "galessandrodale.93@gmail.com"); } catch (e) { profes = String((e as Error).message || e); }
+    return json({ ok: true, hoy, enviados: out, profes });
   } catch (e) {
     console.error("avisos", e);
     return json({ error: String((e as Error).message || e) }, 500);

@@ -16,6 +16,18 @@
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="/assets/campus.css">
 <link rel="stylesheet" href="/assets/tutor.css">
+<style>
+.po-sec{display:grid;gap:12px;padding:22px;margin-bottom:16px}
+.po-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.po-card{display:grid;gap:4px;text-align:left;background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;font:inherit;color:inherit}
+.po-card:hover,.po-card:focus-visible{border-color:var(--gold);outline:none}.po-card small{color:var(--muted)}.po-card i{font-style:normal;font-size:.8rem;color:var(--gold)}.po-card.off{opacity:.55}
+.po-ops{display:grid;gap:8px;max-height:560px;overflow:auto}
+.po-op{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;background:var(--soft);border-radius:14px;padding:12px 14px}
+details.po-op{display:block}.po-op summary{display:flex;gap:12px;align-items:center;cursor:pointer;list-style:none}.po-op summary::-webkit-details-marker{display:none}details.po-op p{margin:8px 0 0}
+.po-f{font-size:1.6rem;line-height:1}.po-op p{margin:2px 0}
+.po-form{display:grid;gap:12px}.po-form textarea{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:10px}
+.pf-nav{display:flex;justify-content:space-between;gap:10px}
+</style>
 </head>
 <body data-solid="1" data-mode="org" class="campus tutor">
 <header class="top"><div class="wrap">
@@ -31,16 +43,13 @@
   <div class="tt-hi"><p class="tt-k">Panel de organización</p><h1 id="ttHola">Hola</h1><p id="ttWho">Cargando…</p><figure class="tt-word" id="ttWord" hidden><blockquote id="ttWordT"></blockquote><figcaption><span id="ttWordR"></span><button type="button" id="ttWordN">Otra palabra</button></figcaption></figure></div>
   <div class="tt-act">
     <button class="tt-bell" type="button" id="ttBell" aria-label="Notificaciones"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.4-1.8H9.6A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.8V3a1.5 1.5 0 0 0-3 0v1.2A7 7 0 0 0 5 11v5l-2 2v1h18v-1Z" fill="currentColor"/></svg><span id="ttBellN" hidden></span></button>
-    <a class="tt-ln" href="/tutor.html" id="toTut" hidden>Panel de tutores</a>
-    <a class="tt-ln" href="/organizacion.html" id="toOrg" hidden>Organización</a>
-    <a class="tt-ln" href="/finanzas.html" id="toFin" hidden>Finanzas</a>
-    <a class="tt-ln" href="/voluntario.html" id="toVol" hidden>Mi servicio</a>
+    <span id="toTut" hidden></span><span id="toOrg" hidden></span><span id="toFin" hidden></span><span id="toVol" hidden></span>
     <a class="tt-ln" href="/campus.html">Campus</a>
   </div>
 </div></section>
 <div class="tt-pop" id="ttNoti" hidden role="dialog" aria-label="Notificaciones"></div>
 <nav class="tt-tabs" id="ttTabs"><div class="wrap">
-  <button data-t="cal" hidden id="tabCal">Calendario</button><button data-t="clases" hidden id="tabCla">Clases y profes</button><button data-t="vol" hidden id="tabVol">Servicio</button><button data-t="equipo" hidden id="tabEq">Equipo</button>
+  <button data-t="cal" hidden id="tabCal">Calendario</button><button data-t="clases" hidden id="tabCla">Clases y profes</button><button data-t="vol" hidden id="tabVol">Servicio</button><button data-t="equipo" hidden id="tabEq">Equipo</button><button data-t="prof" id="tabProf">Profes y opiniones</button>
 </div></nav>
 <div class="tt-main"><div class="wrap">
   <section id="v-hoy" class="tt-v" hidden></section>
@@ -98,6 +107,7 @@
     <div class="tt-cover" id="volMonth"></div>
     <div class="tt-card tt-esp" id="volEsp"><div class="tt-bar"><div><h2 class="tt-h">Zarza, tiempo de mesa y Selah</h2><p class="tt-tip">Las fechas especiales con sus músicos, encargados y voluntarios. A cada uno le llega el aviso igual que al servicio de las clases.</p></div><button class="tt-btn" type="button" id="espAdd">Nueva fecha</button></div><div id="espList"></div></div>
   </section>
+  <section id="v-prof" class="tt-v" hidden></section>
   <section id="v-equipo" class="tt-v" hidden>
     <h2 class="tt-h">Equipo de tutores</h2>
     <p class="tt-tip">Cada persona entra con el email de su cuenta de Habitat. Todos ven todo. Además, cada uno puede tener permiso para pasar lista o marcar pagos. Los directores organizan el calendario, las clases y el equipo; quienes organizan arman el servicio de voluntarios, Zarza, el tiempo de mesa por Zoom y Selah; Finanzas es para quienes llevan cobros y gastos.</p>
@@ -128,5 +138,6 @@
 <script src="/assets/auth.js"></script>
 <script src="/assets/aliento.js"></script>
 <script src="/assets/tutor.js"></script>
+<script src="/assets/profes-org.js"></script>
 </body>
 </html>

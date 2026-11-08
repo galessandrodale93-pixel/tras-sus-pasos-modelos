@@ -59,7 +59,7 @@ def page(fn, title, body, js=''):
 # ---------- Mis cursos (datos reales) ----------
 campus = '''
 <section class="cx-hero"><div class="wrap">
-  <div class="hi rv in"><span class="kick">Campus Habitat</span><h1>Hola<em id="hiName"></em></h1><p id="hiLine">Cargando tus cursos…</p><div class="hi-act"><a class="out" href="#agenda" id="bell">Avisos<span class="bd" id="bellN" hidden></span></a><a class="out" href="/biblia.html">Biblia</a><a class="out" href="/diario.html">Mi diario</a><a class="out" href="/perfil.html">Mi perfil</a><a class="out gold" href="/tutor.html" id="lnTut" hidden>Panel de tutores</a><a class="out gold" href="/voluntario.html" id="lnVol" hidden>Mi servicio</a><button class="out" type="button" id="outBtn">Cerrar sesión</button></div></div>
+  <div class="hi rv in"><span class="kick">Campus Habitat</span><h1>Hola<em id="hiName"></em></h1><p id="hiLine">Cargando tus cursos…</p><div class="hi-act"><a class="out" href="#agenda" id="bell">Avisos<span class="bd" id="bellN" hidden></span></a><a class="out" href="/biblia.html">Biblia</a><a class="out" href="/diario.html">Mi diario</a><a class="out" href="/perfil.html">Mi perfil</a><a class="out gold" href="/tutor.html" id="lnTut" hidden>Panel de tutores</a><a class="out gold" href="/organizacion.html" id="lnOrg" hidden>Organización</a><a class="out gold" href="/finanzas.html" id="lnFin" hidden>Finanzas</a><a class="out gold" href="/profesor.html" id="lnProf" hidden>Profesores</a><a class="out gold" href="/voluntario.html" id="lnVol" hidden>Mi servicio</a><button class="out" type="button" id="outBtn">Cerrar sesión</button></div></div>
   <a class="resume rv in" id="resume" href="#" hidden>
     <div class="rimg"><img id="rImg" src="" alt=""><span class="play" aria-hidden="true">▶</span></div>
     <div class="rtx"><span class="kick">Continuar</span><b id="rStep"></b><small id="rProg"></small><div class="bar"><i id="rBar"></i></div></div>
@@ -76,6 +76,14 @@ campus = '''
   <div class="ag" id="svList"></div>
   <p class="ag-tip" id="svAn"></p>
 </div></section>
+<section class="cx-sec" id="opina" hidden><div class="wrap">
+  <div class="cx-h"><h2>¿Cómo estuvo la clase?</h2></div>
+  <div id="opList"></div>
+</div></section>
+<section class="cx-sec" id="matSec" hidden><div class="wrap">
+  <div class="cx-h"><h2>Material de tus clases</h2></div>
+  <div class="op-mats" id="matList"></div>
+</div></section>
 <section class="cx-sec" id="agenda"><div class="wrap">
   <div class="cx-h"><h2>Agenda y avisos</h2><span class="cal-act"><a id="calG" href="#" target="_blank" rel="noopener">+ Google Calendar</a><a id="calI" href="#">+ iPhone / Outlook</a></span></div>
   <div class="ag" id="agList"><p class="cx-empty">Cargando la agenda…</p></div>
@@ -85,12 +93,16 @@ campus = '''
   <div class="cx-h"><h2>Mis cursos</h2><a href="/perfil.html">Ver mi progreso →</a></div>
   <div class="cx-grid" id="mine"><p class="cx-empty">Cargando…</p></div>
 </div></section>
+<section class="cx-sec"><div class="wrap">
+  <div class="op-box" id="buzon"><div><h2>Buzón de ideas</h2><p>¿Viste algo para mejorar en Habitat o algo que te encantó? Contanos. Lo lee la dirección.</p></div><button type="button" class="op-btn" id="buzBtn">Escribir</button><form class="op-f" id="buzF" hidden><label>Lo que me gustó<textarea name="gusto" rows="3"></textarea></label><label>Algo para mejorar<textarea name="mejora" rows="3"></textarea></label><button type="submit" class="op-btn">Enviar</button></form></div>
+</div></section>
 <section class="cx-sec alt"><div class="wrap">
   <div class="cx-h"><h2>Seguí creciendo</h2><a href="/formacion.html">Toda la formación →</a></div>
   <div class="cx-more" id="more"></div>
 </div></section>
 '''
 campus_js = '''<script src="/assets/auth.js"></script>
+<script src="/assets/opina.js" defer></script>
 <script src="/assets/campus-data.js"></script>
 <script src="/assets/campus-extra.js"></script>
 <script>
@@ -100,7 +112,7 @@ if(!A.loggedIn()){location.replace('/ingresar.html');return;}
 document.getElementById('outBtn').onclick=function(){A.logout();};
 var X=window.CampusExtra;
 (async function(){try{await A.api('GET','/members/v1/members/my');var tk=JSON.parse(localStorage.getItem('habitat:mtok')).a;
- fetch('/api/rol',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();}).then(function(r){if(r.tutor)document.getElementById('lnTut').hidden=false;if(r.voluntario)document.getElementById('lnVol').hidden=false;}).catch(function(){});var r=await fetch('/api/voluntario',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();});
+ fetch('/api/rol',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();}).then(function(r){var G=function(i){return document.getElementById(i);};if(r.tutor)G('lnTut').hidden=false;if(r.org)G('lnOrg').hidden=false;if(r.finanzas)G('lnFin').hidden=false;if(r.profe)G('lnProf').hidden=false;if(r.voluntario)G('lnVol').hidden=false;}).catch(function(){});var r=await fetch('/api/voluntario',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();});
  if(!r.voluntario||!r.turnos||!r.turnos.length)return;var hoy=new Date(Date.now()-3*3600e3).toISOString().slice(0,10),man=new Date(Date.now()+21*3600e3).toISOString().slice(0,10);
  document.getElementById('servicio').hidden=false;document.getElementById('svCal').href=r.voluntario.ics.replace(/^https:/,'webcal:');
  document.getElementById('svList').innerHTML=r.turnos.map(function(t){var d=new Date(t.fecha+'T12:00:00-03:00'),hot=t.fecha===hoy||t.fecha===man;return '<div class="ag-it'+(hot?' hot':'')+'"><div class="ag-d"><b>'+d.getDate()+'</b><small>'+t.dia.slice(0,3)+'</small></div><div class="ag-t"><span class="ag-k">'+(t.fecha===hoy?'Hoy':t.fecha===man?'Mañana':'Servicio')+'</span><b>'+X.esc(t.tareas.join(' · '))+'</b><small>Llegada '+t.llegada+' h · la clase empieza '+t.clase+' h</small></div></div>';}).join('');
