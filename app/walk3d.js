@@ -555,7 +555,7 @@ function heroFlora(scene, W, allPts, zMax, R, Q) {
   // copas con borde de hojas: en el contorno (donde la superficie se ve de canto) se recorta según la textura, así la masa deja de verse como una bola lisa
   leafM.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n{float fe=abs(dot(normalize(vNormal),normalize(vViewPosition)));float lum=dot(diffuseColor.rgb,vec3(.333));if(fe<.55&&lum<mix(.62,.18,fe/.55))discard;diffuseColor.rgb*=mix(.78,1.08,smoothstep(.2,.9,fe));}'); }; leafM.customProgramCacheKey = () => 'leafEdge'; leafM.shadowSide = THREE.FrontSide; leafM.side = THREE.DoubleSide;
   // olivos: tronco torcido y copa de varias masas
-  FLORA.olive = olive; FLORA.rock = rock; FLORA.oT = inst(new THREE.CylinderGeometry(.12, .22, 1, 6), trunkM, olive, o => { const h = 1.5 * o.s; put(o.x, o.y + h / 2, o.z, (o.v - .5) * .3, o.rot, (o.v - .5) * .25, o.s, h, o.s); }, true);
+  if (BARE) olive.length = 0; FLORA.olive = olive; FLORA.rock = rock; FLORA.oT = inst(new THREE.CylinderGeometry(.12, .22, 1, 6), trunkM, olive, o => { const h = 1.5 * o.s; put(o.x, o.y + h / 2, o.z, (o.v - .5) * .3, o.rot, (o.v - .5) * .25, o.s, h, o.s); }, true);
   const blobs = []; olive.forEach(o => { for (let j = 0; j < 6; j++) { const a = j / 6 * 6.28 + o.rot, r = j ? .55 : 0; blobs.push({ o, x: Math.cos(a) * r, z: Math.sin(a) * r, y: 1.55 + (j ? -.1 + hsh(j, o.x) * .35 : .35), s: .55 + hsh(o.z, j) * .3 }); } });
   FLORA.oB = inst(new THREE.IcosahedronGeometry(1, 1), leafM, blobs, b => { const o = b.o; put(o.x + b.x * o.s, o.y + b.y * o.s, o.z + b.z * o.s, b.x, o.rot + b.z, 0, b.s * o.s * 1.15, b.s * o.s * .8, b.s * o.s * 1.15); return ['#5E7140', '#6F7E4A', '#526638', '#7A8A55'][Math.floor(hsh(b.x * 9, b.y * 7 + o.z) * 4)]; }, true);
   // los cipreses cónicos se reemplazaron por los árboles reales de Poly Haven (se ubican en phWorld)
@@ -3634,7 +3634,7 @@ function phCyl(x, z, r, oi) { if (!S || !S.cols) return; S.cols.push({ x0: x - r
 const PG_DROP = new Set(['grass_medium_01', 'grass_medium_02', 'grass_bermuda_01', 'celandine_01', 'dandelion_01', 'flower_heliophila', 'nettle_plant', 'wild_rooibos_bush', 'leipoldtia_schultzei', 'searsia_burchellii']);
 const PG_TSUB = { pine_sapling_small: 'tree_small_02', pine_sapling_medium: 'island_tree_03', quiver_tree_01: 'island_tree_01', quiver_tree_02: 'island_tree_03', jacaranda_tree: 'island_tree_01', searsia_lucida: 'tree_small_02' };
 function phPlace(id, items, o) {
-  o = o || {}; if (FLORA.paidG && PG_DROP.has(id)) return;
+  o = o || {}; if (FLORA.paidG && PG_DROP.has(id)) return; if (BARE && /tree|palm|olive|pine|jacaranda|quiver|searsia|rooibos|shrub|bush|sapling/i.test(id)) return;
   if (FLORA.paidT && PG_TSUB[id]) { id = PG_TSUB[id]; items = items.map(it => Object.assign({}, it, { s: Math.max(.8, Math.min(1.3, it.s || 1)) })); o = Object.assign({}, o); }
   if (FLORA.paidT && /^(island_tree_0[13]|tree_small_02)$/.test(id)) o = Object.assign({}, o, { shadow: true, wind: 3, far: 1, imp: 1 }); if (/^grass_/.test(id)) o.grass = 1; const by = new Map();
   items.forEach(it => { const b = Math.floor(it.z / PH_BAND); if (!by.has(b)) by.set(b, []); by.get(b).push(it); });
@@ -3666,7 +3666,9 @@ function phOne(id, parent, x, y, z, ry, s, o) {
 /* ---------- pasto nuevo (Grass Field Pack) en todo el terreno: se dibuja solo alrededor del jugador, con un tope de triángulos
    por calidad, en matas con claros (ruido), dejando libres el camino, el agua, las casas y lo alto de las lomas. Viento suave. ---------- */
 const PG = { ims: [], groups: [], cache: new Map(), cx: 1e9, cz: 1e9, acc: 0, lv: -1, ready: false };
-const PG_CELL = 16, PG_R = [22, 32, 44, 60], PG_TRI = [3e5, 7.5e5, 1.7e6, 3.2e6];
+const BARE = true; // etapa de prueba: campo sin árboles, solo la cobertura del suelo
+const PG_ONLY = /^(knotweed_0[23]|ezepnik_02)$/i; // las 3 plantas elegidas por Gui para cubrir todo el piso
+const PG_CELL = 16, PG_R = [16, 22, 30, 40], PG_TRI = [3.5e5, 9e5, 2e6, 3.6e6];
 const PG_S = { grass_bermuda_01: [4, 5.4], grass_medium_01: [2.8, 3.9], grass_medium_02: [3, 4.1], dandelion_01: [2.2, 3.1], celandine_01: [2.4, 3.2], flower_heliophila: [1.3, 1.9] };
 const PG_W = { grass_bermuda_01: .44, grass_medium_01: .24, grass_medium_02: .18, dandelion_01: .05, celandine_01: .05, flower_heliophila: .04 };
 const pgH = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
@@ -3674,9 +3676,10 @@ function pgNoise(x, z) { const ix = Math.floor(x), iz = Math.floor(z), fx = x - 
   const a = pgH(ix, iz), b = pgH(ix + 1, iz), c = pgH(ix, iz + 1), d = pgH(ix + 1, iz + 1); return a + (b - a) * ux + (c - a) * uz + (a - b - c + d) * ux * uz; }
 async function pgBuild() {
   if (!FLORA.paidG || PG.ready || !S) return; const man = GRP.man['grass/']; if (!man) return; const groups = [];
-  for (const id of Object.keys(man.slots)) { const vars = await grpVars(id, grpWin() || QUAL.lv >= 3 ? null : 'lite').catch(() => null); if (!vars || !vars.length || !S) continue;
+  for (const id of Object.keys(man.slots)) { let vars = await grpVars(id, PG_ONLY || !(grpWin() || QUAL.lv >= 3) ? 'lite' : null).catch(() => null); if (!vars || !vars.length || !S) continue;
+    if (PG_ONLY) { const keep = vars.map((v, i) => PG_ONLY.test((vars.names || [])[i] || '') ? i : -1).filter(i => i >= 0); if (!keep.length) continue; const nm = keep.map(i => vars.names[i]), vk = keep.map(i => vars[i]); vk.names = nm; vars = vk; r2log('cobertura: ' + nm.join(', ')); }
     const tri = vars.reduce((t, ms) => t + ms.reduce((u, mm) => u + (mm.geo.index ? mm.geo.index.count : mm.geo.attributes.position.count) / 3, 0), 0) / vars.length;
-    groups.push({ id, w: PG_W[id] ?? .05, vars, tri, fl: /dandelion|celandine|heliophila/.test(id) }); }
+    groups.push({ id, w: PG_ONLY ? 1 : (PG_W[id] ?? .05), vars, tri, fl: PG_ONLY ? false : /dandelion|celandine|heliophila/.test(id) }); }
   r2log('pasto nuevo: ' + groups.length + ' grupos'); if (!groups.length || !S) return; const wsum = groups.reduce((t, g) => t + g.w, 0); groups.forEach(g => { g.w /= wsum; });
   PG.avgTri = groups.reduce((t, g) => t + g.w * g.tri, 0) || 500; const lvMax = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), cap = Math.min(26000, Math.ceil(PG_TRI[lvMax] / PG.avgTri));
   for (const g of groups) { g.ims = g.vars.map(ms => { const n = Math.ceil(cap * g.w / g.vars.length * 1.5) + 24; return ms.map(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 4, grass: 1 }), n); im.count = 0; im.frustumCulled = false; im.receiveShadow = true; im.castShadow = false; im.userData.m = mm.m; im.userData.cap = n; S.scene.add(im); PG.ims.push(im); return im; }); }); }
@@ -3694,16 +3697,16 @@ function pgCell(ix, iz) {
   const x0 = ix * PG_CELL, z0 = iz * PG_CELL, cx = x0 + PG_CELL / 2, cz = z0 + PG_CELL / 2;
   if (Math.abs(cx) > XB + 60) { PG.cache.set(key, L); return L; }
   const poi = (S_poiPts || []).filter(p => Math.abs(p[0] - cx) < PG_CELL && Math.abs(p[1] - cz) < PG_CELL);
-  const dens = Math.min(1.4, PG_TRI[Math.min(3, Math.max(QUAL.max || 0, QUAL.lv))] / PG.avgTri / (Math.PI * PG_R[3] * PG_R[3] * .8)), n = Math.round(dens * PG_CELL * PG_CELL * 1.7);
+  const lvm = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), dens = Math.min(3.5, PG_TRI[lvm] / PG.avgTri / (Math.PI * PG_R[lvm] * PG_R[lvm] * .8)), n = Math.round(dens * PG_CELL * PG_CELL * 1.1);
   for (let i = 0; i < n; i++) { const x = x0 + R() * PG_CELL, z = z0 + R() * PG_CELL, r1 = R(), r2 = R();
-    const cl = pgNoise(x * .06, z * .06) * .75 + pgNoise(x * .21 + 40, z * .21) * .35; if (r1 > cl * 1.15 + .1) continue; // matas y claros
+    if (!PG_ONLY) { const cl = pgNoise(x * .06, z * .06) * .75 + pgNoise(x * .21 + 40, z * .21) * .35; if (r1 > cl * 1.15 + .1) continue; } // matas y claros
     const d = W.dAt(x, z); if (d < 1.5 || (d < 3.2 && r2 > (d - 1.5) / 1.7)) continue; // el camino queda libre, con borde natural
     const h = W.hAt(x, z); if (h > 9 || (h > 5.5 && r2 > (9 - h) / 3.5)) continue;
     if (waterWet(x, z, null) > .04 || blockedAt(x, z) || poi.some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < 14)) continue;
     // qué planta: flores donde el ruido lo marca (manchones), el resto pasto
     const G = PG.groups, fz = pgNoise(x * .045 + 90, z * .045 - 30) > .66, wantF = fz && R() < .55, pool = G.map((g, k) => k).filter(k => G[k].fl === wantF), P = pool.length ? pool : G.map((g, k) => k);
     let pick = R() * P.reduce((t, k) => t + G[k].w, 0), gi = P[P.length - 1]; for (const k of P) { pick -= G[k].w; if (pick <= 0) { gi = k; break; } }
-    const g = G[gi], sr = PG_S[g.id] || [2.6, 3.6]; L.push({ x, y: h - .03, z, ry: R() * 6.283, s: sr[0] + R() * (sr[1] - sr[0]), gi, vi: Math.floor(R() * g.vars.length), r: R(), c: .88 + R() * .2 }); }
+    const g = G[gi], sr = PG_S[g.id] || [2.6, 3.6]; L.push({ x, y: h - .04, z, ry: R() * 6.283, s: PG_ONLY ? 2.8 + R() * .8 : sr[0] + R() * (sr[1] - sr[0]), gi, vi: Math.floor(R() * g.vars.length), r: R(), c: .88 + R() * .2 }); }
   PG.cache.set(key, L); if (PG.cache.size > 2600) { const it = PG.cache.keys(); for (let k = 0; k < 600; k++) PG.cache.delete(it.next().value); } return L;
 }
 let _pgM, _pgQ, _pgE, _pgV, _pgS, _pgC;
@@ -3712,7 +3715,7 @@ function pgFill() {
   const a = S.av.position, Rr = PG_R[QUAL.lv], tri = PG_TRI[QUAL.lv], cnt = PG.ims.map(() => 0), idx = new Map(); PG.ims.forEach((im, k) => idx.set(im, k)); let used = 0;
   const lim = Math.ceil(tri / PG.avgTri), c0x = Math.floor((a.x - Rr) / PG_CELL), c1x = Math.floor((a.x + Rr) / PG_CELL), c0z = Math.floor((a.z - Rr) / PG_CELL), c1z = Math.floor((a.z + Rr) / PG_CELL);
   const cells = []; for (let ix = c0x; ix <= c1x; ix++) for (let iz = c0z; iz <= c1z; iz++) { const dx = (ix + .5) * PG_CELL - a.x, dz = (iz + .5) * PG_CELL - a.z; cells.push([dx * dx + dz * dz, ix, iz]); } cells.sort((p, q) => p[0] - q[0]);
-  for (const [, ix, iz] of cells) { if (used >= lim) break; for (const it of pgCell(ix, iz)) { const dd = Math.hypot(it.x - a.x, it.z - a.z); if (dd > Rr) continue; if (dd > Rr * .55 && it.r > 1 - (dd - Rr * .55) / (Rr * .45) * .7) continue; // más ralo lejos
+  for (const [, ix, iz] of cells) { if (used >= lim) break; for (const it of pgCell(ix, iz)) { const dd = Math.hypot(it.x - a.x, it.z - a.z); if (dd > Rr) continue; if (dd > Rr * .8 && it.r > 1 - (dd - Rr * .8) / (Rr * .2) * .5) continue; // más ralo lejos
       const ims = PG.groups[it.gi].ims[it.vi]; let full = false; for (const im of ims) if (cnt[idx.get(im)] >= im.userData.cap) full = true; if (full) continue;
       _pgE.set(0, it.ry, 0); _pgQ.setFromEuler(_pgE); for (const im of ims) { const k = idx.get(im), i = cnt[k]++; _pgM.compose(_pgV.set(it.x, it.y, it.z), _pgQ, _pgS.setScalar(it.s)).multiply(im.userData.m); im.setMatrixAt(i, _pgM); im.setColorAt(i, _pgC.setRGB(it.c, it.c, it.c * .96)); }
       used++; if (used >= lim) break; } }
@@ -4329,7 +4332,7 @@ function svBuild(scene, W) {
   trees.forEach((o, i) => { m4.compose(v.set(o.x, o.y + .7 * o.s, o.z), q.identity(), sc.set(o.s, o.s, o.s)); TR.setMatrixAt(i, m4); m4.compose(v.set(o.x, o.y + 1.85 * o.s, o.z), q.identity(), sc.set(1.05 * o.s, .8 * o.s, 1.05 * o.s)); CN.setMatrixAt(i, m4);
     o.fm = []; for (let k = 0; k < 5; k++) { const an = k / 5 * 6.28 + i, fm = new THREE.Matrix4().compose(v.set(o.x + Math.cos(an) * .85 * o.s, o.y + (1.55 + (k % 2) * .4) * o.s, o.z + Math.sin(an) * .85 * o.s), q.identity(), sc.set(1, 1, 1)); o.fm.push(fm); FR.setMatrixAt(i * 5 + k, fm); } });
   [TR, CN, FR].forEach(m => { m.castShadow = true; m.receiveShadow = true; m.instanceMatrix.needsUpdate = true; scene.add(m); });
-  if (FLORA.paidT) { TR.visible = CN.visible = false; try { phPlace('tree_small_02', trees.map((o, i) => ({ x: o.x, y: o.y - .04, z: o.z, ry: (i * 2.39) % 6.28, s: .78 * o.s, v: i })), { shadow: true, wind: 3, far: 1, imp: 1 }); } catch (e) {} }
+  if (FLORA.paidT || BARE) { TR.visible = CN.visible = false; try { if (!BARE) phPlace('tree_small_02', trees.map((o, i) => ({ x: o.x, y: o.y - .04, z: o.z, ry: (i * 2.39) % 6.28, s: .78 * o.s, v: i })), { shadow: true, wind: 3, far: 1, imp: 1 }); } catch (e) {} }
   st.fruit = { trees, FR };
   // herramientas flotando en lugares de la época (si todavía no las tenés)
   const spot = (k, dx, dz) => { const p = (S.pois || []).find(q => q.k === k); return p ? [p.x + dx * p.side, p.z + dz] : null; };
