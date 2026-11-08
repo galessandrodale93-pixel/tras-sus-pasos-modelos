@@ -3681,7 +3681,7 @@ async function pgBuild() {
     const tri = vars.reduce((t, ms) => t + ms.reduce((u, mm) => u + (mm.geo.index ? mm.geo.index.count : mm.geo.attributes.position.count) / 3, 0), 0) / vars.length;
     groups.push({ id, w: PG_ONLY ? 1 : (PG_W[id] ?? .05), vars, tri, fl: PG_ONLY ? false : /dandelion|celandine|heliophila/.test(id) }); }
   r2log('pasto nuevo: ' + groups.length + ' grupos'); if (!groups.length || !S) return; const wsum = groups.reduce((t, g) => t + g.w, 0); groups.forEach(g => { g.w /= wsum; });
-  PG.avgTri = groups.reduce((t, g) => t + g.w * g.tri, 0) || 500; const lvMax = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), cap = Math.min(26000, Math.ceil(PG_TRI[lvMax] / PG.avgTri));
+  PG.avgTri = groups.reduce((t, g) => t + g.w * g.tri, 0) || 500; const lvMax = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), cap = Math.min(40000, Math.ceil(PG_TRI[lvMax] * 1.5 / PG.avgTri));
   for (const g of groups) { g.ims = g.vars.map(ms => { const n = Math.ceil(cap * g.w / g.vars.length * 1.5) + 24; return ms.map(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 4, grass: 1 }), n); im.count = 0; im.frustumCulled = false; im.receiveShadow = true; im.castShadow = false; im.userData.m = mm.m; im.userData.cap = n; S.scene.add(im); PG.ims.push(im); return im; }); }); }
   try { pgBake(groups); } catch (e) { r2log('horneado: ' + ((e && e.message) || e)); }
   PG.groups = groups; PG.ready = true; PG.cx = 1e9; r2log('pasto nuevo listo: ' + PG.ims.length + ' mallas, ' + Math.round(PG.avgTri) + ' triángulos por planta');
@@ -3725,12 +3725,12 @@ function pgBake(groups) {
 let _pgM, _pgQ, _pgE, _pgV, _pgS, _pgC;
 function pgFill() {
   if (!_pgM) { _pgM = new THREE.Matrix4(); _pgQ = new THREE.Quaternion(); _pgE = new THREE.Euler(); _pgV = new THREE.Vector3(); _pgS = new THREE.Vector3(); _pgC = new THREE.Color(); }
-  const a = S.av.position, Rr = PG_R[QUAL.lv], tri = PG_TRI[QUAL.lv], cnt = PG.ims.map(() => 0), idx = new Map(); PG.ims.forEach((im, k) => idx.set(im, k)); let used = 0;
-  const lim = Math.ceil(tri / PG.avgTri), c0x = Math.floor((a.x - Rr) / PG_CELL), c1x = Math.floor((a.x + Rr) / PG_CELL), c0z = Math.floor((a.z - Rr) / PG_CELL), c1z = Math.floor((a.z + Rr) / PG_CELL);
+  const a = S.av.position, Rr = PG_R[QUAL.lv], R2 = Rr * 1.8, tri = PG_TRI[QUAL.lv] * 1.5, cnt = PG.ims.map(() => 0), idx = new Map(); PG.ims.forEach((im, k) => idx.set(im, k)); let used = 0;
+  const lim = Math.ceil(tri / PG.avgTri), c0x = Math.floor((a.x - R2) / PG_CELL), c1x = Math.floor((a.x + R2) / PG_CELL), c0z = Math.floor((a.z - R2) / PG_CELL), c1z = Math.floor((a.z + R2) / PG_CELL);
   const cells = []; for (let ix = c0x; ix <= c1x; ix++) for (let iz = c0z; iz <= c1z; iz++) { const dx = (ix + .5) * PG_CELL - a.x, dz = (iz + .5) * PG_CELL - a.z; cells.push([dx * dx + dz * dz, ix, iz]); } cells.sort((p, q) => p[0] - q[0]);
-  for (const [, ix, iz] of cells) { if (used >= lim) break; for (const it of pgCell(ix, iz)) { const dd = Math.hypot(it.x - a.x, it.z - a.z); if (dd > Rr) continue; 
+  for (const [, ix, iz] of cells) { if (used >= lim) break; for (const it of pgCell(ix, iz)) { const dd = Math.hypot(it.x - a.x, it.z - a.z); if (dd > R2) continue; const far = dd > Rr; if (far && it.r > .34) continue; 
       const ims = PG.groups[it.gi].ims[it.vi]; let full = false; for (const im of ims) if (cnt[idx.get(im)] >= im.userData.cap) full = true; if (full) continue;
-      _pgE.set(0, it.ry, 0); _pgQ.setFromEuler(_pgE); for (const im of ims) { const k = idx.get(im), i = cnt[k]++; const fe = Math.min(1, (Rr - dd) / (Rr * .3)); _pgM.compose(_pgV.set(it.x, it.y, it.z), _pgQ, _pgS.setScalar(it.s * (.35 + .65 * fe))).multiply(im.userData.m); im.setMatrixAt(i, _pgM); im.setColorAt(i, _pgC.setRGB(it.c, it.c, it.c * .96)); }
+      _pgE.set(0, it.ry, 0); _pgQ.setFromEuler(_pgE); for (const im of ims) { const k = idx.get(im), i = cnt[k]++; const fe = far ? Math.min(1, (R2 - dd) / (R2 * .25)) : 1; _pgM.compose(_pgV.set(it.x, it.y, it.z), _pgQ, _pgS.setScalar(it.s * (far ? 1.35 : 1) * (.3 + .7 * fe))).multiply(im.userData.m); im.setMatrixAt(i, _pgM); im.setColorAt(i, _pgC.setRGB(it.c, it.c, it.c * .96)); }
       used++; if (used >= lim) break; } }
   if (!PG.logged) { PG.logged = 1; r2log('pasto dibujado: ' + used + ' plantas'); } PG.ims.forEach((im, k) => { im.count = cnt[k]; im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; });
 }
