@@ -3385,9 +3385,9 @@ async function grpImp(sl, name) {
 }
 // devuelve las variantes igual que phGet (cada modelo es una variante); null si no corresponde o falla
 const R2LOG = []; function r2log(m) { try { R2LOG.push(m); console.warn('[R2]', m); let dbg = /[?&]r2dbg=1/.test(location.search); try { if (dbg) localStorage.setItem('tsp:r2dbg', '1'); if (/[?&]r2dbg=0/.test(location.search)) localStorage.removeItem('tsp:r2dbg'); dbg = dbg || localStorage.getItem('tsp:r2dbg') === '1'; } catch (e) {} if (dbg) { let b = document.getElementById('r2dbg'); if (!b) { b = document.createElement('pre'); b.id = 'r2dbg'; b.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:99999;max-width:92vw;max-height:45vh;overflow:auto;background:rgba(0,0,0,.82);color:#9f9;font:11px/1.35 monospace;padding:8px;border-radius:8px;white-space:pre-wrap'; document.body.appendChild(b); } b.textContent = R2LOG.slice(-40).join('\n'); } } catch (e) {} }
-async function grpVars(id) {
+async function grpVars(id, forceTier) {
   const slots = await grpInit(); if (!slots) return null; const sl = slots[id]; if (!sl) return null;
-  const L = await phLoader(), LD = sl.m.lod || {}, tier = grpWin() || QUAL.lv >= 3 ? 'full' : QUAL.lv >= 2 ? (LD.mid ? 'mid' : 'full') : 'lite', lod = LD[tier] || 'LOD0';
+  const L = await phLoader(), LD = sl.m.lod || {}, tier = forceTier || (grpWin() || QUAL.lv >= 3 ? 'full' : QUAL.lv >= 2 ? (LD.mid ? 'mid' : 'full') : 'lite'), lod = LD[tier] || 'LOD0';
   const list = (tier === 'lite' && sl.lite && sl.lite.length ? sl.lite : sl.models);
   const vars = await Promise.all(list.map(name => { const kk = (sl.mk && sl.mk[name]) || sl.k || 1, sc = new THREE.Matrix4().makeScale(kk, kk, kk); return new Promise((r, j) => L.load(GRP.base + sl.pre + 'models/' + name + '.glb', r, undefined, j)).then(async g => { g.scene.updateMatrixWorld(true); const node = g.scene.getObjectByName(lod) || g.scene.getObjectByName('LOD0') || g.scene, ms = [];
     const todo = []; node.traverse(o => { if (o.isMesh) todo.push(o); });
@@ -3666,15 +3666,15 @@ function phOne(id, parent, x, y, z, ry, s, o) {
 /* ---------- pasto nuevo (Grass Field Pack) en todo el terreno: se dibuja solo alrededor del jugador, con un tope de triángulos
    por calidad, en matas con claros (ruido), dejando libres el camino, el agua, las casas y lo alto de las lomas. Viento suave. ---------- */
 const PG = { ims: [], groups: [], cache: new Map(), cx: 1e9, cz: 1e9, acc: 0, lv: -1, ready: false };
-const PG_CELL = 16, PG_R = [24, 36, 52, 70], PG_TRI = [2.5e5, 6e5, 1.4e6, 2.4e6];
-const PG_S = { grass_bermuda_01: [3.4, 4.6], grass_medium_01: [2.4, 3.4], grass_medium_02: [2.6, 3.6], dandelion_01: [2, 3], celandine_01: [2.2, 3], flower_heliophila: [1.2, 1.8] };
+const PG_CELL = 16, PG_R = [22, 32, 44, 60], PG_TRI = [3e5, 7.5e5, 1.7e6, 3.2e6];
+const PG_S = { grass_bermuda_01: [4, 5.4], grass_medium_01: [2.8, 3.9], grass_medium_02: [3, 4.1], dandelion_01: [2.2, 3.1], celandine_01: [2.4, 3.2], flower_heliophila: [1.3, 1.9] };
 const PG_W = { grass_bermuda_01: .44, grass_medium_01: .24, grass_medium_02: .18, dandelion_01: .05, celandine_01: .05, flower_heliophila: .04 };
 const pgH = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
 function pgNoise(x, z) { const ix = Math.floor(x), iz = Math.floor(z), fx = x - ix, fz = z - iz, ux = fx * fx * (3 - 2 * fx), uz = fz * fz * (3 - 2 * fz);
   const a = pgH(ix, iz), b = pgH(ix + 1, iz), c = pgH(ix, iz + 1), d = pgH(ix + 1, iz + 1); return a + (b - a) * ux + (c - a) * uz + (a - b - c + d) * ux * uz; }
 async function pgBuild() {
   if (!FLORA.paidG || PG.ready || !S) return; const man = GRP.man['grass/']; if (!man) return; const groups = [];
-  for (const id of Object.keys(man.slots)) { const vars = await grpVars(id).catch(() => null); if (!vars || !vars.length || !S) continue;
+  for (const id of Object.keys(man.slots)) { const vars = await grpVars(id, grpWin() || QUAL.lv >= 3 ? null : 'lite').catch(() => null); if (!vars || !vars.length || !S) continue;
     const tri = vars.reduce((t, ms) => t + ms.reduce((u, mm) => u + (mm.geo.index ? mm.geo.index.count : mm.geo.attributes.position.count) / 3, 0), 0) / vars.length;
     groups.push({ id, w: PG_W[id] ?? .05, vars, tri, fl: /dandelion|celandine|heliophila/.test(id) }); }
   r2log('pasto nuevo: ' + groups.length + ' grupos'); if (!groups.length || !S) return; const wsum = groups.reduce((t, g) => t + g.w, 0); groups.forEach(g => { g.w /= wsum; });
@@ -3689,9 +3689,9 @@ function pgCell(ix, iz) {
   const x0 = ix * PG_CELL, z0 = iz * PG_CELL, cx = x0 + PG_CELL / 2, cz = z0 + PG_CELL / 2;
   if (Math.abs(cx) > XB + 60) { PG.cache.set(key, L); return L; }
   const poi = (S_poiPts || []).filter(p => Math.abs(p[0] - cx) < PG_CELL && Math.abs(p[1] - cz) < PG_CELL);
-  const dens = Math.min(1.25, PG_TRI[Math.min(3, Math.max(QUAL.max || 0, QUAL.lv))] / PG.avgTri / (Math.PI * PG_R[3] * PG_R[3] * .8)), n = Math.round(dens * PG_CELL * PG_CELL * 1.6);
+  const dens = Math.min(1.4, PG_TRI[Math.min(3, Math.max(QUAL.max || 0, QUAL.lv))] / PG.avgTri / (Math.PI * PG_R[3] * PG_R[3] * .8)), n = Math.round(dens * PG_CELL * PG_CELL * 1.7);
   for (let i = 0; i < n; i++) { const x = x0 + R() * PG_CELL, z = z0 + R() * PG_CELL, r1 = R(), r2 = R();
-    const cl = pgNoise(x * .06, z * .06) * .75 + pgNoise(x * .21 + 40, z * .21) * .35; if (r1 > cl * cl * 1.5) continue; // matas y claros
+    const cl = pgNoise(x * .06, z * .06) * .75 + pgNoise(x * .21 + 40, z * .21) * .35; if (r1 > cl * 1.15 + .1) continue; // matas y claros
     const d = W.dAt(x, z); if (d < 1.5 || (d < 3.2 && r2 > (d - 1.5) / 1.7)) continue; // el camino queda libre, con borde natural
     const h = W.hAt(x, z); if (h > 9 || (h > 5.5 && r2 > (9 - h) / 3.5)) continue;
     if (waterWet(x, z, null) > .04 || blockedAt(x, z) || poi.some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < 14)) continue;
@@ -3723,9 +3723,10 @@ function phTick(dt) {
   for (const B of PH.bands) { const d = Math.abs(B.zc - cz) - PH_BAND / 2, lim = B.o.far ? see * 1.6 : B.o.near ? see * .55 : see; if (B.g && B.o.shadow) { const cs = QUAL.lv >= 2 && d < [0, 0, 40, 70][QUAL.lv]; if (B.cs !== cs) { B.cs = cs; B.ims.forEach(im => { im.castShadow = cs; }); } } if (!B.built && d < (B.o.imp ? pre * 2.6 : B.o.far ? pre * 1.6 : pre) && d < nd) { nd = d; next = B; } if (B.ig) B.ig.visible = !!B.ok && d >= lim && d < lim * 2.6; if (B.g) { B.g.visible = !!B.ok && d < lim; if (B.g.visible && B.ims && B.ims.length && B.thin !== QUAL.lv + ':' + B.ims.length) { B.thin = QUAL.lv + ':' + B.ims.length; const f = [.45, .65, 1, 1][QUAL.lv]; B.ims.forEach(im => { if (im.userData.n0 == null) im.userData.n0 = im.count; const g = im.geometry, tri = (g.index ? g.index.count : g.attributes.position.count) / 3; im.count = tri > 1500 ? Math.max(1, Math.floor(im.userData.n0 * f)) : im.userData.n0; }); } } }
   if (next && QUAL.ema < 34) { phBuild(next); PH.near = .12; } else if (next) { PH.slow = (PH.slow || 0) + 1; if (PH.slow % 4 === 0) phBuild(next); PH.near = .3; } // de a una franja por vez, para no trabar un cuadro
 }
-function phWorld(scene, W, allPts, zMax, hx, R0) { try { if (grpBase()) setTimeout(() => { anBuild().catch(e => console.warn('animales', e)); }, 4000); } catch (e) {} try { grpInit(); if (grpBase() && FLORA.olive && FLORA.olive.length) phPlace('trp_olive', FLORA.olive.map((o, i) => ({ x: o.x, y: o.y - .05, z: o.z, ry: o.rot, s: o.s, oi: i, v: i })), { shadow: true, wind: 3, far: 1, olive: 1, imp: 1 }); } catch (e) {}
+function phWorld(scene, W, allPts, zMax, hx, R0) { try { if (grpBase()) setTimeout(() => { anBuild().catch(e => console.warn('animales', e)); }, 4000); } catch (e) {}
   SEAS.base = null; SEAS.rain = null; SEAS.olB = null; SEAS.acc = 9;
-  const R = rng(9091), coarse = matchMedia('(pointer: coarse)').matches, k = (hx ? 1 : .8) * (coarse ? .7 : 1); PH.kids = !hx; PH.bands = [];
+  const R = rng(9091), coarse = matchMedia('(pointer: coarse)').matches, k = (hx ? 1 : .8) * (coarse ? .7 : 1); PH.kids = !hx; PH.bands = []; FLORA.trp = 0; FLORA.trpP = 0;
+  try { grpInit(); if (grpBase() && FLORA.olive && FLORA.olive.length) phPlace('trp_olive', FLORA.olive.map((o, i) => ({ x: o.x, y: o.y - .05, z: o.z, ry: o.rot, s: o.s, oi: i, v: i })), { shadow: true, wind: 3, far: 1, olive: 1, imp: 1 }); } catch (e) {}
   const yAt = (x, z) => W.hAt(x, z), Z0 = zMax + 30, Z1 = 25;
   const scatter = (n, test) => { const out = []; for (let i = 0; i < n * 4 && out.length < n; i++) { const x = (R() - .5) * (XB * 2 + 60), z = Z0 + R() * (Z1 - Z0), d = W.dAt(x, z), h = yAt(x, z); if (blockedAt(x, z) || (S_poiPts || []).some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < 30)) continue; const r = test(x, z, d, h); if (r) out.push(Object.assign({ x, z, y: h - .04, ry: R() * 6.28 }, r)); } return out; };
   const nearPath = (n, r0, r1, s0, s1) => { const out = []; for (let i = 0; i < n * 3 && out.length < n; i++) { const p = allPts[Math.floor(R() * allPts.length)], a = R() * 6.28, r = r0 + Math.pow(R(), 1.3) * (r1 - r0), x = p[0] + Math.cos(a) * r, z = p[1] + Math.sin(a) * r; if (W.dAt(x, z) < r0 || yAt(x, z) > 7 || blockedAt(x, z)) continue; out.push({ x, z, y: yAt(x, z) - .03, ry: R() * 6.28, s: s0 + R() * (s1 - s0) }); } return out; };
