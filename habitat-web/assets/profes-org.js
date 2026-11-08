@@ -1,4 +1,4 @@
-/* Organización · Profes y opiniones: dar acceso a los profes, escribirles un agradecimiento y leer todo el feedback. */
+/* Organización · Profesores y opiniones: dar acceso a los profes, escribirles un agradecimiento y leer todo el feedback. */
 (function () {
   var $ = function (s, r) { return (r || document).querySelector(s); }, $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var box = $('#v-prof'); if (!box) return;

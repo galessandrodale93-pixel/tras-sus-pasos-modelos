@@ -119,7 +119,7 @@ ob = body.replace('<p class="tt-k">Panel de tutores</p>', '<p class="tt-k">Panel
 ob = ob.replace('<button data-t="hoy" class="on">Hoy</button><button data-t="alumnos">Alumnos</button><button data-t="lista">Pasar lista</button><button data-t="mesa">Tiempo de mesa</button>', '')
 ob = ob.replace('<button data-t="vol" hidden id="tabVol">Voluntarios</button>', '<button data-t="vol" hidden id="tabVol">Servicio</button>')
 ob = ob.replace('<section id="v-hoy" class="tt-v"></section>', '<section id="v-hoy" class="tt-v" hidden></section>')
-ob = ob.replace('<button data-t="equipo" hidden id="tabEq">Equipo</button>', '<button data-t="equipo" hidden id="tabEq">Equipo</button><button data-t="prof" id="tabProf">Profes y opiniones</button>')
+ob = ob.replace('<button data-t="equipo" hidden id="tabEq">Equipo</button>', '<button data-t="equipo" hidden id="tabEq">Equipo</button><button data-t="prof" id="tabProf">Profesores y opiniones</button>')
 ob = ob.replace('<section id="v-equipo" class="tt-v" hidden>', '<section id="v-prof" class="tt-v" hidden></section>\n  <section id="v-equipo" class="tt-v" hidden>')
 org += ob + B.FOOT + js + '<script src="/assets/profes-org.js"></script>\n</body>\n</html>\n'
 open(os.path.join(B.OUT, 'organizacion.html'), 'w', encoding='utf-8').write(org)
