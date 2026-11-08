@@ -369,16 +369,16 @@ const ABASE = window.ASSET_BASE !== undefined ? window.ASSET_BASE : 'https://tsp
 const TEXB = ABASE ? ABASE + 'app/tex/' : new URL('./tex/', import.meta.url).href;
 function texL(name, aniso) { const t = new THREE.TextureLoader().load(TEXB + name); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; return t; }
 function groundMat(Q, kids) {
-  const an = Q.sh > 2048 ? 12 : 8, U = { sTint: SEAS.u.sTint, sDry: SEAS.u.sDry, jud: SEAS.u.jud, tG: { value: texL('grass_v.jpg', an) }, tY: { value: texL('dry_v.jpg', an) }, tD: { value: texL('dirt.jpg', an) }, tR: { value: texL('rock.jpg', an) }, nG: { value: null }, nY: { value: null }, nD: { value: null }, nR: { value: null }, nOn: { value: 0 }, pbr: { value: 0 }, det: { value: 0 }, lo: { value: 0 } }; TEXK.tdet = U.det; TEXK.tlo = U.lo;
+  const an = Q.sh > 2048 ? 12 : 8, U = { sTint: SEAS.u.sTint, sDry: SEAS.u.sDry, jud: SEAS.u.jud, tG: { value: texL('grass_v.jpg', an) }, tY: { value: texL('dry_v.jpg', an) }, tD: { value: texL('dirt.jpg', an) }, tR: { value: texL('rock.jpg', an) }, nG: { value: null }, nY: { value: null }, nD: { value: null }, nR: { value: null }, nOn: { value: 0 }, pbr: { value: 0 }, det: { value: 0 }, lo: { value: 0 }, gS: { value: .22 } }; TEXK.tdet = U.det; TEXK.tlo = U.lo; TEXK.tU = U;
   // texturas de Poly Haven (CC0) en KTX2 según la calidad: pasto, tierra seca, tierra del camino/orilla y roca
   const IDS = { G: 'leafy_grass', Y: 'withered_grass', D: 'dirt_floor', R: 'rock_boulder_dry' }; TEXK.tids = Object.values(IDS);
-  TEXK.terrain = async res => { const all = await Promise.all(Object.entries(IDS).flatMap(([k, id]) => [texGet(id, 'diff', res).then(t => ['t' + k, t]), texGet(id, 'nor', res).then(t => ['n' + k, t])])); if (res !== TEXK.res) return; if (all.some(([, t]) => !t)) return; all.forEach(([k, t]) => { U[k].value = t; }); U.nOn.value = 1; U.pbr.value = 1; };
+  TEXK.terrain = async res => { const all = await Promise.all(Object.entries(IDS).flatMap(([k, id]) => [texGet(id, 'diff', res).then(t => ['t' + k, t]), texGet(id, 'nor', res).then(t => ['n' + k, t])])); if (res !== TEXK.res) return; if (all.some(([, t]) => !t)) return; all.forEach(([k, t]) => { if (k === 'tG' && TEXK.baked) return; U[k].value = t; }); U.nOn.value = 1; U.pbr.value = 1; };
   if (TEXK.res) TEXK.terrain(TEXK.res);
   const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .95, metalness: 0 });
   m.onBeforeCompile = sh => { Object.assign(sh.uniforms, U);
     sh.vertexShader = 'attribute vec4 splat;\nvarying vec4 vSpl;\nvarying vec2 vWP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvSpl=splat;vWP=(modelMatrix*vec4(position,1.)).xz;');
-    sh.fragmentShader = SEAS_GLSL + 'uniform vec3 jud;uniform sampler2D tG,tY,tD,tR,nG,nY,nD,nR;uniform float nOn,pbr,det,lo;\nvarying vec4 vSpl;\nvarying vec2 vWP;\nvec4 wS;\nvec3 tx(sampler2D t,float s){vec3 a=texture2D(t,vWP*s).rgb;if(lo>.5)return a;vec3 b=texture2D(t,vWP*s*.29+vec2(.37,.11)).rgb;return mix(a,b,.38);}\nvec3 nx(sampler2D t,float s){return texture2D(t,vWP*s).xyz*2.-1.;}\n' + sh.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\nif(nOn>.5&&lo<.5){vec3 nb=nx(nG,.22)*wS.x+nx(nY,.2)*wS.y+nx(nD,.3)*wS.z+nx(nR,.12)*wS.w;vec3 Tv=normalize((viewMatrix*vec4(1.,0.,0.,0.)).xyz),Bv=normalize((viewMatrix*vec4(0.,0.,-1.,0.)).xyz);normal=normalize(normal+(Tv*nb.x+Bv*nb.y)*.9);}').replace('#include <map_fragment>',
-      'vec3 cG=tx(tG,.22),cY=tx(tY,.2),cD=tx(tD,.3),cR=tx(tR,.12)*mix(vec3(1.),vec3(.8,.74,.64),pbr);vec4 w=vSpl*(vec4(dot(cG,vec3(.33)),dot(cY,vec3(.33)),dot(cD,vec3(.33)),dot(cR,vec3(.33)))*1.6+.4);w=pow(w,vec4(3.));w/=max(.0001,w.x+w.y+w.z+w.w);wS=w;if(det>.5){float fd=smoothstep(22.,3.,length(vViewPosition));if(fd>0.){vec3 dG=texture2D(tG,vWP*1.3).rgb,dY=texture2D(tY,vWP*1.2).rgb,dD=texture2D(tD,vWP*1.5).rgb,dR=texture2D(tR,vWP*.8).rgb;vec3 dd=dG*w.x+dY*w.y+dD*w.z+dR*w.w,bb=cG*w.x+cY*w.y+cD*w.z+cR*w.w;float k=dot(dd,vec3(.333))/max(.05,dot(bb,vec3(.333)));cG*=mix(1.,k,fd*.55);cY*=mix(1.,k,fd*.55);cD*=mix(1.,k,fd*.55);cR*=mix(1.,k,fd*.55);}}cG=seasG(cG);cG=mix(cG,vec3(.21,.31,.13)*(.75+.5*dot(cG,vec3(.333))),.55);cY=mix(cY,seasG(cY),.55);if(jud.z>0.){float jd=smoothstep(jud.z,jud.z*.4,length(vWP-jud.xy));cG=mix(cG,vec3(dot(cG,vec3(.333)))*vec3(1.08,.93,.7)*1.95,jd*.7);cY=mix(cY,cY*vec3(1.08,1.,.86),jd*.5);}diffuseColor.rgb*=(cG*w.x+cY*w.y+cD*w.z+cR*w.w)*' + (kids ? 'vec3(1.32,1.42,1.18)' : 'vec3(1.15)') + '*mix(1.,1.02,pbr);'); };
+    sh.fragmentShader = SEAS_GLSL + 'uniform vec3 jud;uniform sampler2D tG,tY,tD,tR,nG,nY,nD,nR;uniform float nOn,pbr,det,lo,gS;\nvarying vec4 vSpl;\nvarying vec2 vWP;\nvec4 wS;\nvec3 tx(sampler2D t,float s){vec3 a=texture2D(t,vWP*s).rgb;if(lo>.5)return a;vec3 b=texture2D(t,vWP*s*.29+vec2(.37,.11)).rgb;return mix(a,b,.38);}\nvec3 nx(sampler2D t,float s){return texture2D(t,vWP*s).xyz*2.-1.;}\n' + sh.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\nif(nOn>.5&&lo<.5){vec3 nb=nx(nG,.22)*wS.x+nx(nY,.2)*wS.y+nx(nD,.3)*wS.z+nx(nR,.12)*wS.w;vec3 Tv=normalize((viewMatrix*vec4(1.,0.,0.,0.)).xyz),Bv=normalize((viewMatrix*vec4(0.,0.,-1.,0.)).xyz);normal=normalize(normal+(Tv*nb.x+Bv*nb.y)*.9);}').replace('#include <map_fragment>',
+      'vec3 cG=tx(tG,gS),cY=tx(tY,.2),cD=tx(tD,.3),cR=tx(tR,.12)*mix(vec3(1.),vec3(.8,.74,.64),pbr);vec4 w=vSpl*(vec4(dot(cG,vec3(.33)),dot(cY,vec3(.33)),dot(cD,vec3(.33)),dot(cR,vec3(.33)))*1.6+.4);w=pow(w,vec4(3.));w/=max(.0001,w.x+w.y+w.z+w.w);wS=w;if(det>.5){float fd=smoothstep(22.,3.,length(vViewPosition));if(fd>0.){vec3 dG=texture2D(tG,vWP*1.3).rgb,dY=texture2D(tY,vWP*1.2).rgb,dD=texture2D(tD,vWP*1.5).rgb,dR=texture2D(tR,vWP*.8).rgb;vec3 dd=dG*w.x+dY*w.y+dD*w.z+dR*w.w,bb=cG*w.x+cY*w.y+cD*w.z+cR*w.w;float k=dot(dd,vec3(.333))/max(.05,dot(bb,vec3(.333)));cG*=mix(1.,k,fd*.55);cY*=mix(1.,k,fd*.55);cD*=mix(1.,k,fd*.55);cR*=mix(1.,k,fd*.55);}}cG=seasG(cG);cG=mix(cG,vec3(.21,.31,.13)*(.75+.5*dot(cG,vec3(.333))),(gS>.2?.55:.2));cY=mix(cY,seasG(cY),.55);if(jud.z>0.){float jd=smoothstep(jud.z,jud.z*.4,length(vWP-jud.xy));cG=mix(cG,vec3(dot(cG,vec3(.333)))*vec3(1.08,.93,.7)*1.95,jd*.7);cY=mix(cY,cY*vec3(1.08,1.,.86),jd*.5);}diffuseColor.rgb*=(cG*w.x+cY*w.y+cD*w.z+cR*w.w)*' + (kids ? 'vec3(1.32,1.42,1.18)' : 'vec3(1.15)') + '*mix(1.,1.02,pbr);'); };
   return m;
 }
 /* ---------- agua de verdad: Mar de Galilea y río Jordán (oleaje, reflejo según el ángulo, espuma en la orilla y corriente) ---------- */
@@ -3683,6 +3683,7 @@ async function pgBuild() {
   r2log('pasto nuevo: ' + groups.length + ' grupos'); if (!groups.length || !S) return; const wsum = groups.reduce((t, g) => t + g.w, 0); groups.forEach(g => { g.w /= wsum; });
   PG.avgTri = groups.reduce((t, g) => t + g.w * g.tri, 0) || 500; const lvMax = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), cap = Math.min(26000, Math.ceil(PG_TRI[lvMax] / PG.avgTri));
   for (const g of groups) { g.ims = g.vars.map(ms => { const n = Math.ceil(cap * g.w / g.vars.length * 1.5) + 24; return ms.map(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 4, grass: 1 }), n); im.count = 0; im.frustumCulled = false; im.receiveShadow = true; im.castShadow = false; im.userData.m = mm.m; im.userData.cap = n; S.scene.add(im); PG.ims.push(im); return im; }); }); }
+  try { pgBake(groups); } catch (e) { r2log('horneado: ' + ((e && e.message) || e)); }
   PG.groups = groups; PG.ready = true; PG.cx = 1e9; r2log('pasto nuevo listo: ' + PG.ims.length + ' mallas, ' + Math.round(PG.avgTri) + ' triángulos por planta');
   try { if (S.renderer.compileAsync) await S.renderer.compileAsync(S.scene, S.camera); } catch (e) {}
 }
@@ -3703,6 +3704,23 @@ function pgCell(ix, iz) {
     let pick = R() * P.reduce((t, k) => t + G[k].w, 0), gi = P[P.length - 1]; for (const k of P) { pick -= G[k].w; if (pick <= 0) { gi = k; break; } }
     const g = G[gi], sr = PG_S[g.id] || [2.6, 3.6]; L.push({ x, y: h - .04, z, ry: R() * 6.283, s: PG_ONLY ? 3.8 + R() * 1.1 : sr[0] + R() * (sr[1] - sr[0]), gi, vi: Math.floor(R() * g.vars.length), r: R(), c: .88 + R() * .2 }); }
   PG.cache.set(key, L); if (PG.cache.size > 2600) { const it = PG.cache.keys(); for (let k = 0; k < 600; k++) PG.cache.delete(it.next().value); } return L;
+}
+// textura del suelo horneada desde las plantas: un mosaico de 7 m visto desde arriba, que se repite sin costuras (las plantas que
+// cruzan el borde se dibujan también del otro lado). Así lo lejano se ve igual que lo cercano, sin dibujar plantas hasta el horizonte.
+function pgBake(groups) {
+  if (!S || !TEXK.tU) return; const T = 7, SZ = QUAL.lv >= 2 ? 2048 : 1024, r = S.renderer;
+  const rt = new THREE.WebGLRenderTarget(SZ, SZ, { wrapS: THREE.RepeatWrapping, wrapT: THREE.RepeatWrapping, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter, anisotropy: 8 });
+  const sc = new THREE.Scene(); sc.background = new THREE.Color('#2A3A1A');
+  const cam = new THREE.OrthographicCamera(-T / 2, T / 2, T / 2, -T / 2, .1, 40); cam.position.set(0, 20, 0); cam.lookAt(0, 0, 0); cam.updateProjectionMatrix();
+  sc.add(new THREE.HemisphereLight('#DDE6FF', '#43502A', 1.6)); const sun = new THREE.DirectionalLight('#FFF2DC', 1.4); sun.position.set(3, 10, 2); sc.add(sun);
+  const Rn = rng(2024), N = 340, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3(), all = groups.flatMap(g => g.vars), per = Math.ceil(N / all.length);
+  all.forEach(ms => { const pts = []; for (let i = 0; i < per; i++) pts.push([(Rn() - .5) * T, (Rn() - .5) * T, Rn() * 6.283, 3.8 + Rn() * 1.1]);
+    ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, mm.mat, pts.length * 9); let k = 0;
+      pts.forEach(([x, z, ry, sc0]) => { for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) { E.set(0, ry, 0); M.compose(V.set(x + dx * T, 0, z + dz * T), Q.setFromEuler(E), SC.setScalar(sc0)).multiply(mm.m); im.setMatrixAt(k++, M); } });
+      im.instanceMatrix.needsUpdate = true; sc.add(im); }); });
+  const prevT = r.getRenderTarget(), prevC = r.getClearColor(new THREE.Color()), prevA = r.getClearAlpha();
+  r.setRenderTarget(rt); r.clear(); r.render(sc, cam); r.setRenderTarget(prevT); r.setClearColor(prevC, prevA);
+  TEXK.tU.tG.value = rt.texture; TEXK.tU.gS.value = 1 / T; TEXK.baked = rt.texture; r2log('suelo horneado: ' + SZ + 'px, mosaico de ' + T + ' m');
 }
 let _pgM, _pgQ, _pgE, _pgV, _pgS, _pgC;
 function pgFill() {
