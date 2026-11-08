@@ -3393,7 +3393,7 @@ async function grpVars(id, forceTier) {
     const todo = []; node.traverse(o => { if (o.isMesh) todo.push(o); });
     for (const o of todo) { const mt = await grpMat(sl, (o.material && o.material.name) || 'field'); ms.push({ geo: o.geometry, mat: mt, m: sc.clone().multiply(o.matrixWorld) }); }
     const im = await grpImp(sl, name); if (im) ms.imp = Object.assign(im, { m: sc.clone() }); return ms; }).catch(e => { r2log(id + ' / ' + name + ': ' + ((e && (e.message || e.type)) || e)); return []; }); }));
-  const ok = vars.filter(v => v.length); r2log(id + ': ' + ok.length + ' de ' + list.length + ' modelos'); return ok.length ? ok : null;
+  const ok = vars.filter(v => v.length); ok.names = list.filter((n, i) => vars[i].length); r2log(id + ': ' + ok.length + ' de ' + list.length + ' modelos'); return ok.length ? ok : null;
 }
 // olivos del pack: se esconden los de siempre y el hacha sigue funcionando (se tala la instancia del modelo nuevo)
 function trpOlive(vars) {
@@ -3680,6 +3680,11 @@ async function pgBuild() {
   r2log('pasto nuevo: ' + groups.length + ' grupos'); if (!groups.length || !S) return; const wsum = groups.reduce((t, g) => t + g.w, 0); groups.forEach(g => { g.w /= wsum; });
   PG.avgTri = groups.reduce((t, g) => t + g.w * g.tri, 0) || 500; const lvMax = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), cap = Math.min(26000, Math.ceil(PG_TRI[lvMax] / PG.avgTri));
   for (const g of groups) { g.ims = g.vars.map(ms => { const n = Math.ceil(cap * g.w / g.vars.length * 1.5) + 24; return ms.map(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 4, grass: 1 }), n); im.count = 0; im.frustumCulled = false; im.receiveShadow = true; im.castShadow = false; im.userData.m = mm.m; im.userData.cap = n; S.scene.add(im); PG.ims.push(im); return im; }); }); }
+  // catálogo (?catalogo=1): una planta de cada modelo en fila delante del jugador, con su nombre, para elegir cuál usar
+  if (/[?&]catalogo=1/.test(location.search)) { try { const a = S.av.position, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(0, 0, 0), V = new THREE.Vector3(), SC = new THREE.Vector3(); let k = 0;
+    for (const g of groups) g.vars.forEach((ms, vi) => { const col = k % 8, row = Math.floor(k / 8), x = a.x - 10 + col * 3, z = a.z - 5 - row * 4, y = S.W.hAt(x, z); k++;
+      ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 1, grass: 1 }), 1); M.compose(V.set(x, y, z), Q.setFromEuler(E), SC.setScalar(1)).multiply(mm.m); im.setMatrixAt(0, M); im.instanceMatrix.needsUpdate = true; S.scene.add(im); });
+      const lb = textSprite((g.vars.names && g.vars.names[vi]) || (g.id + ' ' + vi), true); lb.position.set(x, y + 1.6, z); lb.scale.multiplyScalar(.7); S.scene.add(lb); }); } catch (e) { r2log('catálogo: ' + e.message); } }
   PG.groups = groups; PG.ready = true; PG.cx = 1e9; r2log('pasto nuevo listo: ' + PG.ims.length + ' mallas, ' + Math.round(PG.avgTri) + ' triángulos por planta');
   try { if (S.renderer.compileAsync) await S.renderer.compileAsync(S.scene, S.camera); } catch (e) {}
 }
