@@ -385,7 +385,7 @@ function groundMat(Q, kids) {
 const WATER = { basins: [], river: null, uT: { value: 0 }, WL: -.05, RL: -.12, nm: null, env: null, mats: [] };
 function waterPlan(pois) {
   WATER.basins = []; WATER.river = null; WATER.mats = [];
-  for (const p of pois) { if (p.k === 'lake') WATER.basins.push({ x: p.x, z: p.z, r: 30 }); if (p.k === 'shore') WATER.basins.push({ x: p.x + p.side * 7, z: p.z, r: 8.5 }); if (p.k === 'river') WATER.river = p.pts; }
+  for (const p of pois) { if (p.k === 'lake') WATER.basins.push({ x: p.x, z: p.z, r: 30 }); if (p.k === 'shore') WATER.basins.push({ x: p.x + p.side * 8, z: p.z, r: 10.5 }); if (p.k === 'river') WATER.river = p.pts; }
 }
 // mapa de normales que se repite sin costura (suma de ondas con frecuencias enteras)
 function waterNormalTex() {
@@ -689,11 +689,12 @@ const KL = {};
   S0 = S; try { attrMigrate(); } catch (e) { console.warn('migración de atributos', e); } insMigrate(); setTimeout(glowUI, 400); S.mis = buildMissions(scene, g, hx, HW); { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
   const nx = nextList()[0]; if (nx) { const N = g.NODES[nx], [bx, bz] = toV(N.x, N.y); S.yaw = Math.atan2(bx - ax, bz - az); }
   av.rotation.y = S.yaw;
-  camera.position.set(ax - Math.sin(S.yaw) * 6.6, 3.3, az - Math.cos(S.yaw) * 6.6);
+  try { const sv = posLoad(); if (sv) { av.position.set(sv.x, 0, sv.z); S.yaw = sv.yaw; av.rotation.y = sv.yaw; } } catch (e) {}
+  camera.position.set(av.position.x - Math.sin(S.yaw) * 6.6, 3.3, av.position.z - Math.cos(S.yaw) * 6.6);
   S.fill = new THREE.DirectionalLight(hx ? '#FFD9B0' : '#FFFFFF', hx ? .5 : .5); scene.add(S.fill); scene.add(S.fill.target);
   wireInput(); wireJoy(); if (!window.__acts) { window.__acts = 1; wireActs(); auButtons(); } resize(); addEventListener('resize', resize);
   renderer.info.autoReset = false; qInit(); fxInit();
-  cv.addEventListener('webglcontextlost', e => { e.preventDefault(); r2log('contexto WebGL perdido'); v3fail('El celular se quedó sin memoria gráfica. Probá de nuevo en calidad Baja.'); try { QUAL.mode = 'bajo'; localStorage.setItem('tsp:q', 'bajo'); } catch (er) {} }, { once: true }); if (hx) svBuild(scene, HW, R); try { phWorld(scene, HW, allPts, zMax, hx, R); } catch (e) { console.warn('ph', e); } PG.ready = false; PG.ims.forEach(im => im.parent && im.parent.remove(im)); PG.ims = []; PG.cache.clear(); GT.done = 0; GT.pdone = 0; GT.rdone = 0; GT.zaq = 0; GT.ims.forEach(im => im.parent && im.parent.remove(im)); GT.ims = []; setTimeout(() => { galTrees().catch(e => r2log('árboles: ' + ((e && e.message) || e))).then(() => pgBuild()).catch(e => r2log('pasto nuevo falló: ' + ((e && e.message) || e))).then(() => galPalms()).then(() => galRocks()).catch(e => r2log('árboles fallaron: ' + ((e && e.message) || e))); }, 1500); try { ambWorld(scene, HW, allPts, zMax, hx); } catch (e) { console.warn('amb', e); } try { mergeHouses(scene); } catch (e) { console.warn('merge', e); } setTimeout(() => { try { if (!/[?&]nomerge/.test(location.search)) worldMerge(scene); } catch (e) { console.warn('wmerge', e); } }, 1200); setTimeout(() => { try { if (S && S.renderer.compileAsync) S.renderer.compileAsync(S.scene, S.camera); } catch (e) {} }, 300);
+  cv.addEventListener('webglcontextlost', e => { e.preventDefault(); r2log('contexto WebGL perdido'); posSave(true); try { QUAL.mode = 'bajo'; localStorage.setItem('tsp:q', 'bajo'); } catch (er) {} let auto = true; try { const t0 = +(sessionStorage.getItem('tsp:glr') || 0); auto = Date.now() - t0 > 90000; sessionStorage.setItem('tsp:glr', String(Date.now())); } catch (er) {} v3fail(auto ? 'El celular se quedó sin memoria gráfica. Volvemos a abrir el mundo en calidad Baja, en el mismo lugar donde estabas…' : 'El celular se quedó sin memoria gráfica otra vez. Cerrá otras pestañas o apps y tocá «Probar de nuevo»: volvés al mismo lugar.'); if (auto) setTimeout(() => location.reload(), 2500); }, { once: true }); if (hx) svBuild(scene, HW, R); try { phWorld(scene, HW, allPts, zMax, hx, R); } catch (e) { console.warn('ph', e); } PG.ready = false; PG.ims.forEach(im => im.parent && im.parent.remove(im)); PG.ims = []; PG.cache.clear(); GT.done = 0; GT.pdone = 0; GT.rdone = 0; GT.zaq = 0; GT.ims.forEach(im => im.parent && im.parent.remove(im)); GT.ims = []; setTimeout(() => { galTrees().catch(e => r2log('árboles: ' + ((e && e.message) || e))).then(() => pgBuild()).catch(e => r2log('pasto nuevo falló: ' + ((e && e.message) || e))).then(() => galPalms()).then(() => galRocks()).catch(e => r2log('árboles fallaron: ' + ((e && e.message) || e))); }, 1500); try { ambWorld(scene, HW, allPts, zMax, hx); } catch (e) { console.warn('amb', e); } try { mergeHouses(scene); } catch (e) { console.warn('merge', e); } setTimeout(() => { try { if (!/[?&]nomerge/.test(location.search)) worldMerge(scene); } catch (e) { console.warn('wmerge', e); } }, 1200); setTimeout(() => { try { if (S && S.renderer.compileAsync) S.renderer.compileAsync(S.scene, S.camera); } catch (e) {} }, 300);
   const me = S, run = n => { if (S !== me) return; requestAnimationFrame(run); try { loop(n); } catch (e) { if (!run.err || run.err !== e.message) { run.err = e.message; r2log('error en el bucle: ' + e.message); console.error(e); } } }; requestAnimationFrame(run);
 }
 // tres formas de pantalla, cada una con su propio CSS: pc, movil-v (celular parado) y movil-h (celular acostado)
@@ -1385,7 +1386,7 @@ function regionZ(g, r) { let a = -Infinity, b = Infinity; for (const id in g.NOD
 function planPois(g) {
   return POIS.filter(p => p.r < g.REGIONS.length).map(p => { const [a, b] = regionZ(g, p.r), z = a + (b - a) * p.f, x = p.side * p.dx, q = { ...p, x, z, a, b, pts: [] };
     if (p.k === 'river') { for (let zz = a + 4; zz >= b - 4; zz -= 1.5) q.pts.push([x + Math.sin(zz * .04) * 9, zz]); q.flat = q.pts; }
-    else if (p.k === 'taller' || p.k === 'temple' || p.k === 'lake' || p.k === 'roofhouse' || p.k === 'feeding' || p.k === 'field' || p.k === 'inn' || p.k === 'upper' || p.k === 'garden' || p.k === 'golgota' || p.k === 'tomb' || p.k === 'shore') { const rx = p.k === 'temple' ? 21 : p.k === 'lake' ? 40 : 19, rz = p.k === 'temple' ? 23 : p.k === 'lake' ? 36 : 17, cx2 = p.k === 'lake' ? x - p.side * 4 : x; q.flat = []; for (let u = -rx; u <= rx; u += 3) for (let v = -rz; v <= rz; v += 3) q.flat.push([cx2 + u, z + v]); }
+    else if (p.k === 'taller' || p.k === 'temple' || p.k === 'lake' || p.k === 'roofhouse' || p.k === 'feeding' || p.k === 'field' || p.k === 'inn' || p.k === 'upper' || p.k === 'garden' || p.k === 'golgota' || p.k === 'tomb' || p.k === 'shore') { const big = p.k === 'garden' || p.k === 'tomb', rx = p.k === 'temple' ? 21 : p.k === 'lake' ? 40 : big ? 25 : 19, rz = p.k === 'temple' ? 23 : p.k === 'lake' ? 36 : big ? 24 : 17, cx2 = p.k === 'lake' ? x - p.side * 4 : x; q.flat = []; for (let u = -rx; u <= rx; u += 3) for (let v = -rz; v <= rz; v += 3) q.flat.push([cx2 + u, z + v]); }
     else { q.flat = [[x, z]]; for (let i = 0; i < 10; i++) { const an = i / 10 * 6.28; q.flat.push([x + Math.cos(an) * 5, z + Math.sin(an) * 5]); } }
     return q; });
 }
@@ -1679,6 +1680,189 @@ TRADE_INFO.atrio = ['El templo de Jerusalén', 'Este es el atrio del templo, rod
 TRADE_INFO.santo = ['El Lugar Santo', 'Solo los sacerdotes entraban acá. El candelabro de oro daba luz, sobre la mesa estaban los doce panes y en el altar del incienso subía el perfume, como las oraciones que suben a Dios.', 'Éxodo 25:30-31 · Salmo 141:2'];
 TRADE_INFO.velo = ['La cortina del templo', 'Detrás de esta cortina estaba el Lugar Santísimo: el sumo sacerdote entraba una sola vez al año. Cuando Jesús murió, la cortina se rasgó de arriba abajo: por él, ahora todos podemos acercarnos a Dios.', 'Hebreos 9:7 · Mateo 27:51 · Hebreos 10:19-20'];
 TRADE_INFO.lago = ['El mar de Galilea', 'Un lago grande de agua dulce rodeado de pueblos de pescadores como Capernaúm y Betsaida. Jesús caminó sobre sus aguas, calmó la tormenta y llamó ahí a sus primeros discípulos.', 'Marcos 1:16-20 · Marcos 4:35-41'];
+// ---------- piezas de los lugares bíblicos: barca de Galilea, redes, senderos de lajas y pircas ----------
+// barca de doble punta, como la del siglo I que apareció en 1986 en la orilla de Galilea: tablas a lo largo, cuadernas, regala, bancos y vela latina
+let BOATT = null;
+function boatTex() {
+  if (BOATT) return BOATT; const R = rng(612);
+  BOATT = cnvTex(256, 256, (x, w, h) => { const n = 14, ph = h / n; x.fillStyle = '#5E4128'; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < n; i++) { const y = i * ph, c = 118 + R() * 46; x.fillStyle = `rgb(${c | 0},${c * .72 | 0},${c * .47 | 0})`; x.fillRect(0, y, w, ph - 1.6);
+      for (let k = 0; k < 34; k++) { x.fillStyle = `rgba(${R() < .5 ? '40,24,10' : '235,205,160'},${.05 + R() * .12})`; x.fillRect(R() * w, y + R() * (ph - 2), 18 + R() * 70, 1); }
+      for (let k = 0; k < 3; k++) { const sx = (i * 37 + k * 91) % w; x.fillStyle = 'rgba(30,18,8,.55)'; x.fillRect(sx, y, 1.4, ph - 1.6); }
+      x.fillStyle = 'rgba(28,16,6,.7)'; x.fillRect(0, y + ph - 1.6, w, 1.6); }
+    for (let k = 0; k < 9; k++) for (let i = 0; i < n; i++) { x.fillStyle = 'rgba(25,18,12,.75)'; x.beginPath(); x.arc(k * w / 9 + 6, i * ph + ph / 2, 1.3, 0, 6.283); x.fill(); } });
+  return BOATT;
+}
+function boatGeo(L, B, D) {
+  const nu = 30, nv = 18, pos = [], uv = [], idx = [];
+  for (let i = 0; i <= nu; i++) { const u = -1 + 2 * i / nu, au = Math.abs(u), w = B / 2 * Math.max(.035, Math.pow(1 - Math.pow(au, 2.3), .75)), top = D * (1 + .5 * Math.pow(au, 3)), bot = D * .42 * Math.pow(au, 3.2);
+    for (let j = 0; j <= nv; j++) { const t = -Math.PI / 2 + Math.PI * j / nv, st = Math.sin(t), ct = Math.cos(t); pos.push(w * Math.sign(st) * Math.pow(Math.abs(st), .62), bot + (top - bot) * Math.pow(1 - ct, 1.15), u * L / 2); uv.push(i / nu * 2, j / nv); } }
+  for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) { const a = i * (nv + 1) + j, b = a + nv + 1; idx.push(a, b, a + 1, b, b + 1, a + 1); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals(); return g;
+}
+// o: { L, B, D, sail: 'up' | 'furled' | false, old: barca antigua hundida en el barro, oars, nets }
+function boatMesh(o) {
+  o = o || {}; const L = o.L || 5, B = o.B || 1.7, D = o.D || .72, grp = new THREE.Group(), tx = boatTex();
+  const hullM = new THREE.MeshStandardMaterial({ map: tx, color: o.old ? '#7E6C58' : '#FFFFFF', roughness: o.old ? 1 : .82, side: THREE.DoubleSide });
+  const hull = new THREE.Mesh(boatGeo(L, B, D), hullM); hull.castShadow = hull.receiveShadow = true; grp.add(hull);
+  const wd = tm(o.old ? 'bwo' : 'bwd', o.old ? '#4A3A2A' : '#6B4A2C'), wl = tm(o.old ? 'bwo2' : 'bwl', o.old ? '#5E4C3A' : '#A57A4E');
+  const half = u => { const au = Math.abs(u); return B / 2 * Math.max(.035, Math.pow(1 - Math.pow(au, 2.3), .75)); }, topY = u => D * (1 + .5 * Math.pow(Math.abs(u), 3)), botY = u => D * .42 * Math.pow(Math.abs(u), 3.2);
+  // regala: un listón que sigue el borde de cada lado
+  [-1, 1].forEach(sd => { const pts = []; for (let i = 0; i <= 20; i++) { const u = -.985 + 1.97 * i / 20; pts.push(new THREE.Vector3(sd * half(u), topY(u) + .02, u * L / 2)); } const m = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, .045, 5), wl); m.castShadow = true; grp.add(m); });
+  // roda y codaste: los dos extremos levantados
+  [-1, 1].forEach(sd => { const pts = [new THREE.Vector3(0, botY(sd * .97) - .02, sd * L / 2 * .97), new THREE.Vector3(0, topY(sd) * .9, sd * L / 2 * 1.005), new THREE.Vector3(0, topY(sd) + .22, sd * L / 2 * .99)]; const m = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 10, .06, 6), wd); m.castShadow = true; grp.add(m); });
+  // cuadernas por dentro
+  for (let k = -3; k <= 3; k++) { const u = k * .24, w = half(u) * .96, pts = []; for (let j = 0; j <= 10; j++) { const t = -Math.PI / 2 + Math.PI * j / 10, st = Math.sin(t); pts.push(new THREE.Vector3(w * Math.sign(st) * Math.pow(Math.abs(st), .62), botY(u) + .03 + (topY(u) - botY(u) - .02) * Math.pow(1 - Math.cos(t), 1.15), u * L / 2)); } const m = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 16, .03, 4), wd); grp.add(m); }
+  if (!o.old || o.broken === false) { bx(B * .5, .04, L * .55, wl, 0, botY(0) + .1, 0, grp); // tablado del fondo
+    [-.5, .05, .55].forEach(u => { const w = half(u) * 1.9; bx(w, .06, .26, wl, 0, topY(u) * .78, u * L / 2, grp); }); }
+  else { const w = half(.05) * 1.9, b = bx(w * .7, .06, .24, wl, -.15, topY(.05) * .55, .05 * L / 2, grp); b.rotation.z = .35; }
+  if (o.sail) { const mz = .3 * L / 2, mh = L * .95, mast = cy(.055, .075, mh, wd, 0, botY(.3) + mh / 2, mz, grp, 8);
+    const yard = new THREE.Group(); yard.position.set(0, botY(.3) + mh * .93, mz); yard.rotation.x = -.32; grp.add(yard); const yl = L * (o.sail === 'up' ? 1.05 : .8); if (o.sail !== 'up') { yard.position.y = botY(.3) + mh * .55; yard.rotation.x = -1.1; } cy(.035, .035, yl, wd, 0, 0, 0, yard, 6).rotation.x = Math.PI / 2;
+    if (o.sail === 'up') { const sg = new THREE.BufferGeometry(), A = [0, 0, yl / 2, 0, 0, -yl / 2, 0, -mh * .78, -yl * .12], N = 8, P = []; for (let i = 0; i <= N; i++) for (let j = 0; j <= N - i; j++) { const a = i / N, b = j / N, c = 1 - a - b; P.push([A[0] * a + A[3] * b + A[6] * c, A[1] * a + A[4] * b + A[7] * c, A[2] * a + A[5] * b + A[8] * c, a, b]); }
+      const pos = [], uvs = [], id = [], key = (i, j) => { let n = 0; for (let k = 0; k < i; k++) n += N - k + 1; return n + j; }; P.forEach(([x, y, z, a, b]) => { const c = 1 - a - b, bel = Math.sin(Math.PI * Math.min(1, a + b)) * Math.sin(Math.PI * c) * .55; pos.push(x + bel, y, z); uvs.push(b, c); });
+      for (let i = 0; i < N; i++) for (let j = 0; j < N - i; j++) { id.push(key(i, j), key(i + 1, j), key(i, j + 1)); if (j < N - i - 1) id.push(key(i + 1, j), key(i + 1, j + 1), key(i, j + 1)); }
+      sg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); sg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); sg.setIndex(id); sg.computeVertexNormals(); const sail = new THREE.Mesh(sg, tm('sailc', '#E9DFC8', { side: THREE.DoubleSide, roughness: 1 })); sail.castShadow = true; yard.add(sail); }
+    else { const f = cy(.12, .12, yl * .8, tm('sailc', '#E9DFC8', { side: THREE.DoubleSide, roughness: 1 }), 0, -.1, 0, yard, 8); f.rotation.x = Math.PI / 2; } }
+  if (o.oars) [-1, 1].forEach(sd => { const g = new THREE.Group(); cy(.03, .03, L * .62, wl, 0, 0, 0, g, 6).rotation.x = Math.PI / 2; bx(.03, .2, .5, wl, 0, 0, -L * .31, g); g.position.set(sd * half(-.1) * .7, topY(-.1) + .05, -.1 * L / 2); g.rotation.y = sd * .12; grp.add(g); });
+  if (o.nets) { const n = new THREE.Mesh(new THREE.SphereGeometry(.42, 12, 8), new THREE.MeshStandardMaterial({ map: netTex(), color: '#BFA982', roughness: 1, transparent: true, alphaTest: .35, side: THREE.DoubleSide })); n.scale.set(1.1, .38, 1.4); n.position.set(.1, botY(-.6) + .22, -.6 * L / 2); grp.add(n); }
+  grp.traverse(m => { if (m.isMesh) m.castShadow = true; }); grp.userData.top = topY(0); return grp;
+}
+let NETT = null;
+function netTex() { if (NETT) return NETT; NETT = cnvTex(128, 128, (x, w, h) => { x.clearRect(0, 0, w, h); x.strokeStyle = 'rgba(214,196,150,1)'; x.lineWidth = 2.2; for (let i = -h; i < w + h; i += 16) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + h, h); x.stroke(); x.beginPath(); x.moveTo(i + h, 0); x.lineTo(i, h); x.stroke(); } }, [3, 3]); return NETT; }
+// red de pesca colgada a secar entre dos palos
+function netRack(w, hgt) {
+  const g = new THREE.Group(), wd = tm('npole', '#6A4C30'); w = w || 3; hgt = hgt || 1.9;
+  [-1, 1].forEach(s => { const p = cy(.05, .06, hgt + .2, wd, s * w / 2, (hgt + .2) / 2 - .1, 0, g, 7); p.rotation.z = s * .04; }); cy(.035, .035, w + .3, wd, 0, hgt, 0, g, 6).rotation.z = Math.PI / 2;
+  const geo = new THREE.PlaneGeometry(w, hgt * .85, 10, 6), P = geo.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), sag = (1 - Math.pow(x / (w / 2), 2)) * .18 * (.5 - y / (hgt * .85)); P.setZ(i, Math.sin(x * 2.1 + y * 3) * .06 + sag); P.setY(i, y - Math.abs(Math.sin(x * 1.7)) * .05); } geo.computeVertexNormals();
+  const n = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: netTex(), color: '#C9B48A', roughness: 1, transparent: true, alphaTest: .35, side: THREE.DoubleSide })); n.position.y = hgt - hgt * .85 / 2 - .02; n.castShadow = true; g.add(n);
+  for (let i = 0; i < 6; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(.05, 6, 5), tm('cork', '#C9A46A')); f.position.set(-w / 2 + .25 + i * (w - .5) / 5, hgt - .06, .03); g.add(f); }
+  return g;
+}
+// sendero de lajas: sigue una lista de puntos [x, z], con lajas irregulares y piedritas en los bordes
+let FLAGM = null;
+function flagPath(scene, pts, yAt, o) {
+  o = o || {}; const R = rng(o.seed || 314), wdt = o.w || 1.6, step = o.step || .62, flag = [], edge = [];
+  const smooth = new THREE.CatmullRomCurve3(pts.map(([x, z]) => new THREE.Vector3(x, 0, z))), len = smooth.getLength(), n = Math.max(2, Math.floor(len / step));
+  for (let i = 0; i <= n; i++) { const t = i / n, p = smooth.getPointAt(t), d = smooth.getTangentAt(t), nx = -d.z, nz = d.x;
+    for (let k = 0; k < 2; k++) { if (R() < .12) continue; const off = (k - .5) * wdt * .52 + (R() - .5) * .18, x = p.x + nx * off, z = p.z + nz * off; flag.push({ x, z, s: .32 + R() * .14, ry: R() * 6.283 }); }
+    if (R() < (o.edge ?? .35)) { const sd = R() < .5 ? -1 : 1, off = sd * (wdt / 2 + .3 + R() * .5); edge.push({ x: p.x + nx * off, z: p.z + nz * off, s: .55 + R() * .9, ry: R() * 6.283 }); } }
+  if (!FLAGM) { FLAGM = new THREE.MeshStandardMaterial({ map: texL('kpath_stone.jpg', 4), color: '#D4CBB8', roughness: .95 }); }
+  const im = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, .09, 7), FLAGM, flag.length), M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
+  flag.forEach((f, i) => { E.set(0, f.ry, 0); M.compose(V.set(f.x, yAt(f.x, f.z) + .02, f.z), Q.setFromEuler(E), SC.set(f.s * (1 + (i % 3) * .12), 1, f.s)); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.receiveShadow = true; im.computeBoundingSphere(); scene.add(im);
+  const st = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.18, 0), tm('pstone', '#9A9082', { flatShading: true }), edge.length);
+  edge.forEach((f, i) => { E.set(f.ry, f.ry * 1.7, 0); M.compose(V.set(f.x, yAt(f.x, f.z) + .05, f.z), Q.setFromEuler(E), SC.set(f.s, f.s * .6, f.s * .85)); st.setMatrixAt(i, M); }); st.instanceMatrix.needsUpdate = true; st.castShadow = true; st.receiveShadow = true; st.computeBoundingSphere(); scene.add(st);
+  return { curve: smooth, len };
+}
+// distancia de un punto a un sendero (lista de puntos muestreados)
+function pathDist(samp, x, z) { let b = 1e9; for (const [a, c] of samp) { const d = (a - x) ** 2 + (c - z) ** 2; if (d < b) b = d; } return Math.sqrt(b); }
+// pirca: muro bajo de piedra seca en arco (de a0 a a1), con colisión por tramos
+function pirca(scene, cx, cz, r, a0, a1, yAt, o) {
+  o = o || {}; const R = rng(o.seed || 919), n = Math.ceil(Math.abs(a1 - a0) * r / .5), L = [];
+  for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n, rr = r + (R() - .5) * .25, x = cx + Math.cos(a) * rr, z = cz + Math.sin(a) * rr; for (let k = 0; k < 2; k++) L.push({ x, z, y: yAt(x, z) + .16 + k * .27, a, s: .22 + R() * .12 }); }
+  const im = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1, 0), tm('pirca', '#A89C88', { flatShading: true }), L.length), M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
+  L.forEach((p, i) => { E.set(R() * 3, -p.a, R() * 3); M.compose(V.set(p.x, p.y, p.z), Q.setFromEuler(E), SC.set(p.s * 1.25, p.s * .75, p.s)); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.castShadow = true; im.receiveShadow = true; im.computeBoundingSphere(); scene.add(im);
+  if (S && S.cols) for (let i = 0; i < n; i += 2) { const a = a0 + (a1 - a0) * (i + 1) / n, x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r; S.cols.push({ x0: x - .5, x1: x + .5, z0: z - .5, z1: z + .5, cx: x, cz: z, r: .45 }); }
+  return im;
+}
+// ---------- la tumba del huerto: tumba cavada en un farallón de caliza, con canaleta y piedra rodante, en un jardín con árboles de verdad ----------
+function tombScene(scene, p, yAt, poiProp, risen, hx, HW) {
+  const clear = (x, z) => !HW || HW.dAt(x, z) > 3;
+  const y = yAt(p.x, p.z), th = p.side > 0 ? -Math.PI / 2 : Math.PI / 2, c = Math.cos(th), s = Math.sin(th), W = (lx, lz) => [p.x + lx * c + lz * s, p.z - lx * s + lz * c], R = rng(91);
+  const g = new THREE.Group(); g.position.set(p.x, y, p.z); g.rotation.y = th; scene.add(g);
+  const rockT = texL('rock.jpg', 4); rockT.repeat.set(3.5, 2.5); const rockT2 = texL('rock.jpg', 4); rockT2.repeat.set(1, 1); const faceM = new THREE.MeshStandardMaterial({ map: rockT, color: '#FFF6E4', roughness: .95, emissive: '#3A3226', emissiveIntensity: .25 }), darkM = tm('tdark', '#15110D', { roughness: 1 }), stoneM = new THREE.MeshStandardMaterial({ map: rockT2, color: '#E8DCC4', roughness: .9 });
+  const add = (geo, m, x, yy, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, yy, z); o.castShadow = o.receiveShadow = true; g.add(o); return o; };
+  // macizo de roca detrás (relleno propio + farallón de Poly Haven) y la fachada alisada a cincel
+  [[0, 2.6, -2.6, 3.6, 1], [-3.6, 1.9, -1.8, 2.6, .8], [3.7, 2.1, -1.9, 2.7, .85], [0, 4.6, -1.6, 2.4, .6]].forEach(([a, b, z, r, k]) => { const m = add(new THREE.IcosahedronGeometry(r, 1), stoneM, a, b, z); m.scale.set(1.25, k, .9); });
+  add(new THREE.BoxGeometry(6.2, 3.9, 1.1), faceM, 0, 1.95, -.15);
+  add(new THREE.BoxGeometry(2.1, .32, .26), faceM, 0, 2.38, .5); // dintel
+  [-1, 1].forEach(sd => add(new THREE.BoxGeometry(.32, 2.2, .24), faceM, sd * .93, 1.15, .5)); // jambas
+  add(new THREE.BoxGeometry(1.25, 1.65, .5), darkM, 0, .85, .26); // la boca: un hueco bajo, había que agacharse para entrar
+  add(new THREE.BoxGeometry(5.2, .3, .9), faceM, 0, .06, .95); // umbral
+  const groove = add(new THREE.BoxGeometry(4.6, .14, .5), tm('tgro', '#6E6352'), -.6, .14, .82); groove.castShadow = false; // canaleta de la piedra
+  [-2.9, 2.9].forEach(x => add(new THREE.BoxGeometry(.34, .5, .62), faceM, x, .3, .82));
+  [[2.6, .08, 1.5], [2.1, .03, 2.02]].forEach(([w, yy, z]) => add(new THREE.BoxGeometry(w, .16, .55), faceM, 0, yy, z)); // escalones
+  const stone = add(new THREE.CylinderGeometry(1.08, 1.08, .42, 28), new THREE.MeshStandardMaterial({ map: rockT2, color: '#F4ECDA', roughness: .85, emissive: '#40382A', emissiveIntensity: .3 }), risen ? -2.05 : 0, 1.12, .82); stone.rotation.x = Math.PI / 2; if (risen) stone.rotation.y = .4;
+  { const rim = add(new THREE.TorusGeometry(1.02, .06, 6, 28), stoneM, stone.position.x, 1.12, 1.04); }
+  if (risen) { const gl = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 1.55), new THREE.MeshBasicMaterial({ color: '#FFF2C8', transparent: true, opacity: .7, blending: THREE.AdditiveBlending, depthWrite: false })); gl.position.set(0, .84, .52); g.add(gl);
+    add(new THREE.BoxGeometry(1.1, .45, .6), faceM, .1, .3, -.2); const ln = add(new THREE.BoxGeometry(.8, .07, .4), tm('lino', '#F4EEDC'), .05, .56, -.2); ln.rotation.y = .08; add(new THREE.BoxGeometry(.28, .09, .26), tm('lino2', '#FAF6EA'), .55, .58, -.12); }
+  // farallón real atrás y a los costados (modelos de Poly Haven, sin colisión propia: la pone la caja de la fachada)
+  { const [a, b] = W(0, -3.4), [c1, d1] = W(-5.4, -1.2), [e1, f1] = W(5.6, -1.4); poiProp('namaqualand_cliff_01', [{ x: a, y: y - .3, z: b, ry: th + Math.PI, s: 1.35, v: 0 }], { shadow: true, far: 1, nocol: 1 }); poiProp('rock_face_01', [{ x: c1, y: y - .2, z: d1, ry: th + 1.2, s: 1.15, v: 0 }, { x: e1, y: y - .25, z: f1, ry: th - 1.9, s: 1.25, v: 1 }], { shadow: true, far: 1, nocol: 1 }); }
+  { const q = [[-3.2, 0], [3.2, 0], [-3.2, -4], [3.2, -4]].map(([u, v]) => W(u, v)); const xs = q.map(t => t[0]), zs = q.map(t => t[1]); S.cols.push({ x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) }); }
+  { const sx = risen ? -2.05 : 0, [a, b] = W(sx, .82); S.cols.push({ x0: a - .7, x1: a + .7, z0: b - .7, z1: b + .7 }); }
+  // jardín: sendero de lajas desde el camino, pirca baja, árboles grandes, olivos, arbustos al pie de la roca y canteros de flores
+  const pts = [[0, 1.9], [.6, 5], [-1.2, 8.5], [.4, 12], [-.6, 16.5]].map(([u, v]) => W(u, v)); const fp = flagPath(scene, pts, yAt, { seed: 4141, w: 1.5 }); const samp = []; for (let i = 0; i <= 40; i++) { const q = fp.curve.getPointAt(i / 40); samp.push([q.x, q.z]); }
+  { const [cx, cz] = W(0, 5.5), aRoad = Math.atan2(W(0, 20)[1] - cz, W(0, 20)[0] - cx); pirca(scene, cx, cz, 13.5, aRoad + .3, aRoad + 6.283 - .3, yAt, { seed: 515 }); }
+  const free = (x, z, d) => clear(x, z) && pathDist(samp, x, z) > d && !(Math.abs((x - p.x) * c - (z - p.z) * s) < (((x - p.x) * s + (z - p.z) * c) < 2.5 ? 6.5 : 4.5) && ((x - p.x) * s + (z - p.z) * c) < 9 && ((x - p.x) * s + (z - p.z) * c) > -6);
+  const big = [], small = [], oli = [], bush = [], flw = [];
+  for (let t = 0; t < 400 && big.length + small.length + oli.length < 26; t++) { const u = (R() - .5) * 26, v = -2 + R() * 18, [x, z] = W(u, v); if (Math.hypot(u, v - 5.5) > 12.3 || !free(x, z, 2.6)) continue; if ([...big, ...small, ...oli].some(o => (o.x - x) ** 2 + (o.z - z) ** 2 < 14)) continue; const k = R(), it = { x, y: yAt(x, z) - .05, z, ry: R() * 6.283, v: Math.floor(R() * 4) }; if (k < .3) big.push(Object.assign(it, { s: 1.05 + R() * .35 })); else if (k < .55) small.push(Object.assign(it, { s: 1 + R() * .3 })); else oli.push(Object.assign(it, { s: .95 + R() * .3 })); }
+  for (let t = 0; t < 300 && bush.length < 16; t++) { const u = (R() - .5) * 14, v = -1.5 + R() * 3.5, [x, z] = W(u, v); if (Math.abs(u) < 3.4 && v > -1) continue; if (!free(x, z, 1.6) && Math.abs(u) < 3.4) continue; bush.push({ x, y: yAt(x, z) - .05, z, ry: R() * 6.283, s: .55 + R() * .3, v: Math.floor(R() * 4) }); }
+  for (let t = 0; t < 300 && bush.length < 26; t++) { const u = (R() - .5) * 24, v = R() * 18, [x, z] = W(u, v); if (Math.hypot(u, v - 5.5) > 12.5 || !free(x, z, 2.2)) continue; bush.push({ x, y: yAt(x, z) - .05, z, ry: R() * 6.283, s: .45 + R() * .3, v: Math.floor(R() * 4) }); }
+  for (let t = 0; t < 400 && flw.length < 70; t++) { const u = (R() - .5) * 22, v = 1 + R() * 16, [x, z] = W(u, v), dd = pathDist(samp, x, z); if (dd < 1.1 || dd > 2.6 || Math.hypot(u, v - 5.5) > 12.5) continue; flw.push({ x, y: yAt(x, z) - .02, z, ry: R() * 6.283, s: 1.4 + R() * .8, v: Math.floor(R() * 4) }); }
+  poiProp('island_tree_01', big, { shadow: true, wind: 3, far: 1, col: .45 }); poiProp('tree_small_02', small, { shadow: true, wind: 3, far: 1, col: .35 }); poiProp(grpBase() ? 'trp_olive' : 'island_tree_03', oli, { shadow: true, wind: 3, far: 1, imp: 1, col: .35 });
+  poiProp('shrub_02', bush, { shadow: true, wind: 2, nocol: 1 }); poiProp('flower_heliophila', flw.filter((f, i) => i % 2), { wind: 1, nocol: 1 }); poiProp('celandine_01', flw.filter((f, i) => !(i % 2)), { wind: 1, nocol: 1 });
+  // cosas del huerto: banco de piedra, cántaro, canasta con especias y las herramientas del hortelano
+  { const bn = new THREE.Group(); bx(1.8, .14, .5, faceM, 0, .46, 0, bn); [-.65, .65].forEach(x => bx(.3, .44, .42, faceM, x, .22, 0, bn)); const [x, z] = W(3.6, 6.5); bn.position.set(x, yAt(x, z), z); bn.rotation.y = th + .3; scene.add(bn); S.cols.push({ x0: x - 1, x1: x + 1, z0: z - 1, z1: z + 1, cx: x, cz: z, r: .8 }); }
+  { const [x1, z1] = W(-2.6, 3), [x2, z2] = W(-3.1, 3.4), [x3, z3] = W(2.4, 2.8); poiProp('ceramic_pot', [{ x: x1, y: yAt(x1, z1), z: z1, ry: R() * 6, s: 1.3 }], { shadow: true, nocol: 1 }); poiProp('jug_01', [{ x: x2, y: yAt(x2, z2), z: z2, ry: 1, s: 2.6 }], { shadow: true, nocol: 1 }); poiProp('wicker_basket_02', [{ x: x3, y: yAt(x3, z3), z: z3, ry: 2, s: 1.8, v: 0 }], { shadow: true, nocol: 1 }); }
+  { const [x, z] = W(-4.6, 7.2), rk = new THREE.Group(); const h = cy(.025, .03, 1.4, tm('tool', '#7A5A3A'), 0, .7, 0, rk, 6); h.rotation.z = .5; bx(.25, .03, .18, tm('toolm', '#6A6A6A', { metalness: .5, roughness: .5 }), -.34, .1, 0, rk); rk.position.set(x, yAt(x, z), z); scene.add(rk); }
+  [[-6.5, 1], [6.6, 1.5], [-5, 12], [5.4, 11]].forEach(([u, v], i) => { const [x, z] = W(u, v); poiProp('namaqualand_boulder_02', [{ x, y: yAt(x, z) - .2, z, ry: i * 1.7, s: .8 + i * .12 }], { shadow: true, col: .8 }); });
+  S.rooms.push({ x0: p.x - 15, x1: p.x + 15, z0: p.z - 15, z1: p.z + 15, trade: risen ? 'tumbavacia' : 'tumba', roof: [], open: true, y }); const lb = textSprite(p.name, hx); lb.scale.multiplyScalar(1.2); lb.position.set(p.x, y + 8.4, p.z); scene.add(lb);
+}
+// ---------- Getsemaní: un olivar grande y tupido, con pirca, sendero de lajas entre los olivos, el lagar de aceite y la roca donde Jesús oró ----------
+function gardenScene(scene, p, yAt, poiProp, hx, HW) {
+  const clear = (x, z) => !HW || HW.dAt(x, z) > 3;
+  const y = yAt(p.x, p.z), sd = p.side, R = rng(52), W = (u, v) => [p.x + u * sd, p.z + v]; // u: hacia afuera del camino (u < 0 mira al camino)
+  const pts = [[-26, 1], [-19, 3.5], [-12, -1.5], [-5, 2.5], [2, -2], [8, 1.5], [13, -1]].map(([u, v]) => W(u, v)); const fp = flagPath(scene, pts, yAt, { seed: 2626, w: 1.5, edge: .55 }); const samp = []; for (let i = 0; i <= 80; i++) { const q = fp.curve.getPointAt(i / 80); samp.push([q.x, q.z]); }
+  const [rx, rz] = W(16.5, -1.5); // la roca de la oración, al final del sendero
+  poiProp('rock_face_02', [{ x: rx, y: yAt(rx, rz) - .25, z: rz, ry: sd > 0 ? -1.4 : 1.7, s: .85 }], { shadow: true, far: 1, nocol: 1 }); S.cols.push({ x0: rx - 1.1, x1: rx + 1.1, z0: rz - 1, z1: rz + 1, cx: rx, cz: rz, r: 1.05 });
+  { const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 1), tm('st', '#8C8374', { flatShading: true })); rock.scale.set(1.1, .45, .9); rock.position.set(rx - sd * 1.6, yAt(rx, rz) + .15, rz + .4); rock.castShadow = rock.receiveShadow = true; scene.add(rock); }
+  // pirca alrededor, abierta hacia el camino
+  pirca(scene, p.x + sd * 1, p.z, 24, sd > 0 ? Math.PI + .2 : .2, sd > 0 ? Math.PI + 6.283 - .2 : 6.283 - .2, yAt, { seed: 2424 });
+  // olivos en hileras torcidas, a unos 3,6 m (los olivares viejos son tupidos), dejando libre el sendero y la roca
+  const ol = []; for (let gu = -21; gu <= 21; gu += 3.6) for (let gv = -21; gv <= 21; gv += 3.6) { const u = gu + (R() - .5) * 1.6, v = gv + (R() - .5) * 1.6 + (Math.round(gu / 3.6) % 2) * 1.8; if (Math.hypot(u - 1, v) > 21.5) continue; const [x, z] = W(u, v); if (!clear(x, z) || pathDist(samp, x, z) < 2.3 || Math.hypot(x - rx, z - rz) < 3.4) continue; ol.push({ x, y: yAt(x, z) - .05, z, ry: R() * 6.283, s: .85 + R() * .45, v: ol.length }); }
+  poiProp(grpBase() ? 'trp_olive' : 'island_tree_03', ol, { shadow: true, wind: 3, far: 1, imp: 1, col: .32 });
+  // troncos caídos, piedras sueltas y arbustos bajos entre los olivos
+  const bl = [], sh = []; for (let t = 0; t < 300 && bl.length < 16; t++) { const u = (R() - .5) * 40, v = (R() - .5) * 40, [x, z] = W(u, v); if (Math.hypot(u - 1, v) > 21 || pathDist(samp, x, z) < 2) continue; bl.push({ x, y: yAt(x, z) - .15, z, ry: R() * 6.283, s: .35 + R() * .45, v: t }); }
+  for (let t = 0; t < 300 && sh.length < 22; t++) { const u = (R() - .5) * 42, v = (R() - .5) * 42, [x, z] = W(u, v); if (Math.hypot(u - 1, v) > 22.5 || pathDist(samp, x, z) < 1.8 || ol.some(o => (o.x - x) ** 2 + (o.z - z) ** 2 < 2)) continue; sh.push({ x, y: yAt(x, z) - .05, z, ry: R() * 6.283, s: .4 + R() * .25, v: t }); }
+  poiProp('boulder_01', bl, { shadow: true, nocol: 1 }); poiProp('shrub_02', sh, { shadow: true, wind: 2, nocol: 1 });
+  { const [x, z] = W(-6, 9), [x2, z2] = W(6, -10); poiProp('dead_tree_trunk', [{ x, y: yAt(x, z) - .05, z, ry: .6, s: 1 }, { x: x2, y: yAt(x2, z2) - .05, z: z2, ry: 2.1, s: .9 }], { shadow: true, nocol: 1 }); }
+  // el lagar de aceite (Getsemaní quiere decir «prensa de aceite»), junto a la entrada
+  { const [x, z] = W(-17, -6), pr = matMesh('press'); pr.position.set(x, yAt(x, z), z); pr.rotation.y = R() * 6; pr.scale.setScalar(1.2); scene.add(pr); S.cols.push({ x0: x - 1.2, x1: x + 1.2, z0: z - 1.2, z1: z + 1.2, cx: x, cz: z, r: 1.15 });
+    const [x2, z2] = W(-15.6, -7.4); poiProp('ceramic_pot', [{ x: x2, y: yAt(x2, z2), z: z2, ry: 1, s: 1.2 }], { shadow: true, nocol: 1 }); const [x3, z3] = W(-18.4, -4.6); poiProp('wicker_basket_02', [{ x: x3, y: yAt(x3, z3), z: z3, ry: 2, s: 2, v: 1 }], { shadow: true, nocol: 1 }); }
+  // tres discípulos dormidos cerca de la roca (Pedro, Jacobo y Juan)
+  try { [[11, 3.2, '#6A5A44'], [12.6, 4.6, '#3E5A6A'], [10, 5.4, '#7A6A4A']].forEach(([u, v, cl], i) => { const [x, z] = W(u, v), o = buildHeroAvatar({ g: 'chico', age: 18, skin: ['#C99A72', '#B98A62', '#D6A57C'][i], hair: '#2A1B14', outfit: cl, anim: ['Sitting_Idle_Loop', 'Sitting_Idle', 'M_Kneeling_Idle'] }); o.position.set(x, yAt(x, z), z); o.rotation.y = Math.atan2(rx - x, rz - z) + Math.PI + (i - 1) * .5; scene.add(o); S.cols.push({ x0: x - .45, x1: x + .45, z0: z - .45, z1: z + .45, cx: x, cz: z, r: .4 }); }); } catch (e) { console.warn('discípulos', e); }
+  S.rooms.push({ x0: p.x - 24, x1: p.x + 24, z0: p.z - 24, z1: p.z + 24, trade: 'huerto', roof: [], open: true, y }); const lb = textSprite(p.name, hx); lb.scale.multiplyScalar(1.3); lb.position.set(p.x, y + 7, p.z); scene.add(lb);
+}
+// ---------- la orilla del lago (Juan 21): playa de arena y piedras, barcas varadas, redes secándose, canastas de pescado y el fuego con pan ----------
+function shoreScene(scene, p, yAt, poiProp, hx, HW) {
+  const y = yAt(p.x, p.z), sd = p.side, cx = p.x + sd * 8, R = rng(2121), W = (u, v) => [p.x + u * sd, p.z + v], WR = 10.5;
+  waterLake(scene, cx, p.z, WR * 1.25, hx, yAt); S.cols.push({ x0: cx - WR, x1: cx + WR, z0: p.z - WR, z1: p.z + WR, cx, cz: p.z, r: WR - 1.8 });
+  // playa: una franja de arena clara entre el pasto y el agua
+  { const sand = new THREE.Mesh(new THREE.RingGeometry(WR - 1.5, WR + 5.5, 48, 1, Math.PI * .45, Math.PI * 1.1), new THREE.MeshStandardMaterial({ map: (() => { const t = texL('dirt.jpg', 4); t.repeat.set(5, 5); return t; })(), color: '#E6D5AE', roughness: 1, transparent: true, opacity: .96, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 })); sand.rotation.x = -Math.PI / 2; sand.rotation.z = sd > 0 ? 0 : Math.PI; sand.position.set(cx, y + .035, p.z); sand.receiveShadow = true; sand.renderOrder = 1; scene.add(sand); }
+  // barcas: una flotando, dos varadas en la arena con la vela recogida
+  const bt = [];
+  { const b = boatMesh({ L: 5.2, B: 1.75, D: .74, sail: 'up', oars: 1, nets: 1 }); b.position.set(cx + sd * 1.5, WATER.WL - .3, p.z - 3); b.rotation.y = .9; scene.add(b); bt.push(b); }
+  [[-1.6, 4.8, .35, .1], [-2.2, -4.2, -.5, -.12]].forEach(([u, v, ry, rz], i) => { const [x, z] = W(u + 8 - WR + .2, v), b = boatMesh({ L: 4.8 - i * .4, B: 1.65, D: .72, sail: 'furled', oars: 1, nets: !i }); b.position.set(x, yAt(x, z) - .08, z); b.rotation.set(0, ry + (sd > 0 ? 0 : Math.PI), rz); scene.add(b); S.cols.push({ x0: x - 1.6, x1: x + 1.6, z0: z - 1.6, z1: z + 1.6, cx: x, cz: z, r: 1.5 }); });
+  S.shoreBoats = bt.map(b => ({ b, y0: b.position.y }));
+  // redes colgadas a secar y una red tendida en la arena
+  [[-5.5, 7.5, .3], [-6.5, -7, -.4]].forEach(([u, v, ry]) => { const [x, z] = W(u, v), n = netRack(3.2, 1.9); n.position.set(x, yAt(x, z), z); n.rotation.y = ry + Math.PI / 2; scene.add(n); S.cols.push({ x0: x - 1.7, x1: x + 1.7, z0: z - .5, z1: z + .5 }); });
+  { const [x, z] = W(-8.2, 2.4), m = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.8, 6, 4), new THREE.MeshStandardMaterial({ map: netTex(), color: '#BFA982', roughness: 1, transparent: true, alphaTest: .35, side: THREE.DoubleSide })); m.rotation.x = -Math.PI / 2; m.rotation.z = .4; m.position.set(x, yAt(x, z) + .05, z); scene.add(m); }
+  // el fuego de brasas con pescado y pan (Juan 21:9), con piedras alrededor y troncos para sentarse
+  const [fx, fz] = W(-6, -.5);
+  { const fire = new THREE.Group(); for (let i = 0; i < 5; i++) { const l = cy(.05, .06, .7, tm('wd', '#6A4A2E'), 0, .1, 0, fire); l.rotation.z = Math.PI / 2 - .25; l.rotation.y = i / 5 * 6.28; } const fl = new THREE.Mesh(new THREE.ConeGeometry(.2, .55, 8), tm('fire', '#FF8A3A', { emissive: '#FFB347', emissiveIntensity: 3 })); fl.position.y = .38; fire.add(fl);
+    for (let i = 0; i < 3; i++) { const f2 = new THREE.Mesh(new THREE.CapsuleGeometry(.05, .22, 4, 8), tm('fishc', '#B08A6A')); f2.rotation.z = Math.PI / 2; f2.position.set(-.3 + i * .3, .52, .35); fire.add(f2); } const br = new THREE.Mesh(new THREE.SphereGeometry(.14, 10, 8), tm('pan', '#D9A25A')); br.scale.y = .5; br.position.set(.72, .1, -.3); fire.add(br);
+    fire.position.set(fx, yAt(fx, fz), fz); scene.add(fire); S.cols.push({ x0: fx - .8, x1: fx + .8, z0: fz - .8, z1: fz + .8, cx: fx, cz: fz, r: .75 }); }
+  poiProp('stone_fire_pit', [{ x: fx, y: yAt(fx, fz) - .02, z: fz, ry: 0, s: 1.05 }], { shadow: true, nocol: 1 });
+  { const st = [[-4.6, .3, 1.4], [-7.4, .6, -1.2], [-6.3, -2, 0]].map(([u, v, ry]) => { const [x, z] = W(u, v); S.cols.push({ x0: x - .5, x1: x + .5, z0: z - .5, z1: z + .5, cx: x, cz: z, r: .45 }); return { x, y: yAt(x, z) - .1, z, ry, s: .55 }; }); poiProp('tree_stump_01', st, { shadow: true, nocol: 1 }); }
+  // canastas con la pesca (153 peces grandes, Juan 21:11), cántaros y una soga
+  { const bk = [], fish = []; [[-5.8, 2.4], [-6.4, 3.1], [-5.6, 3.3], [-3.2, -1.3]].forEach(([u, v], i) => { const [x, z] = W(u, v); bk.push({ x, y: yAt(x, z), z, ry: i * 1.3, s: 2.2, v: i }); for (let k = 0; k < 4; k++) fish.push([x + (R() - .5) * .35, yAt(x, z) + .3 + R() * .06, z + (R() - .5) * .25, R() * 6]); }); poiProp('wicker_basket_01', bk, { shadow: true, nocol: 1 });
+    const fm = new THREE.InstancedMesh(new THREE.CapsuleGeometry(.045, .2, 3, 6), tm('fishs', '#9AA6A8', { metalness: .4, roughness: .45 }), fish.length), M = new THREE.Matrix4(), Q = new THREE.Quaternion(); fish.forEach(([x, yy, z, r], i) => { Q.setFromEuler(new THREE.Euler(0, r, Math.PI / 2)); M.compose(new THREE.Vector3(x, yy, z), Q, new THREE.Vector3(1, 1, 1)); fm.setMatrixAt(i, M); }); fm.instanceMatrix.needsUpdate = true; fm.computeBoundingSphere(); scene.add(fm); }
+  { const [x, z] = W(-8.4, -3), [x2, z2] = W(-8.9, -3.6); poiProp('ceramic_pot', [{ x, y: yAt(x, z), z, ry: .4, s: 1.2 }], { shadow: true, nocol: 1 }); poiProp('jug_01', [{ x: x2, y: yAt(x2, z2), z: z2, ry: 2, s: 2 }], { shadow: true, nocol: 1 }); }
+  // piedras de la costa, juncos y algún árbol de sombra
+  { const rk = []; for (let i = 0; i < 9; i++) { const a = (sd > 0 ? Math.PI : 0) + (i / 8 - .5) * 2.4, r = WR - .6 + R() * 1.6, x = cx + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (Math.abs(z - p.z) < 3 && i % 2) continue; rk.push({ x, y: yAt(x, z) - .35, z, ry: R() * 6.283, s: .22 + R() * .2 }); } poiProp('coast_rocks_05', rk, { shadow: true, nocol: 1 }); const sr = []; for (let i = 0; i < 4; i++) { const [x, z] = W(-9 - R() * 3, (R() - .5) * 18); sr.push({ x, y: yAt(x, z) - .1, z, ry: R() * 6, s: .3 + R() * .2 }); } poiProp('sand_rocks_small_01', sr, { nocol: 1 }); }
+  { const reed = new THREE.InstancedMesh(new THREE.CylinderGeometry(.015, .022, 1, 4), tm('reed', '#6E8A44'), 140), m4 = new THREE.Matrix4(); for (let i = 0; i < 140; i++) { const a = (sd > 0 ? 0 : Math.PI) + (R() - .5) * 3.6, r = WR - .4 + R() * 1.8, x = cx + Math.cos(a) * r, z = p.z + Math.sin(a) * r; m4.makeScale(1, .7 + R() * 1, 1); m4.setPosition(x, WATER.WL + .3, z); reed.setMatrixAt(i, m4); } reed.computeBoundingSphere(); scene.add(reed); }
+  { const tr = []; [[-12, 9], [-13, -8.5], [-8, 13]].forEach(([u, v], i) => { const [x, z] = W(u, v); tr.push({ x, y: yAt(x, z) - .05, z, ry: i * 2, s: 1 + i * .12, v: i }); }); poiProp('island_tree_02', tr, { shadow: true, wind: 3, far: 1, col: .45 }); }
+  S.rooms.push({ x0: p.x - 14, x1: p.x + 14, z0: p.z - 14, z1: p.z + 14, trade: 'orilla', roof: [], open: true, y }); const lb = textSprite(p.name, hx); lb.scale.multiplyScalar(1.2); lb.position.set(p.x, y + 5, p.z); scene.add(lb);
+}
 // el lago de Galilea: agua con olas suaves, orilla, muelle, barcas y la casa del pescador
 function buildLake(scene, cx, cz, side, hx, yAt) {
   const R = 30, y0 = WATER.WL - .42;
@@ -1686,8 +1870,8 @@ function buildLake(scene, cx, cz, side, hx, yAt) {
   // muelle de tablas que entra al agua
   const dock = new THREE.Group(), dx = cx + side * (R - 3.5), len = 12; for (let i = 0; i < 24; i++) bx(.48, .1, 2.2, WOODL(), -len / 2 + i * .5, 0, 0, dock).rotation.y = (i % 3 - 1) * .02; for (let i = 0; i < 7; i++) [-1, 1].forEach(s => cy(.1, .1, 1.6, WOOD(), -len / 2 + i * 2, -.6, s * 1.05, dock, 7));
   dock.position.set(dx, y0 + .62, cz + 4); scene.add(dock); const df = { x0: dx - len / 2, x1: dx + len / 2, z0: cz + 4 - 1.1, z1: cz + 4 + 1.1, y: y0 + .67 }; S.floors.push(df);
-  const boat = (bx2, bz, ry) => { const b = new THREE.Group(); const hull = new THREE.Mesh(new THREE.CylinderGeometry(1, .6, 5, 14, 1, true, 0, Math.PI), new THREE.MeshStandardMaterial({ color: '#7A5234', roughness: .9, side: THREE.DoubleSide })); hull.rotation.set(Math.PI / 2, 0, Math.PI); hull.scale.set(1, 1, .7); b.add(hull); [-1.2, 0, 1.2].forEach(q => bx(1.7, .08, .3, WOODL(), 0, -.15, q, b)); const mast = cy(.06, .07, 4, WOOD(), 0, 1.8, -.6, b, 7); const sail = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.6), tm('sail', '#EFE6D2', { side: THREE.DoubleSide })); sail.position.set(0, 2.3, -.4); sail.rotation.y = .3; b.add(sail); [-1, 1].forEach(s => { const o = bx(.07, .05, 2.6, WOODL(), s * .9, .2, .8, b); o.rotation.x = .5; }); b.position.set(bx2, y0 + .45, bz); b.rotation.y = ry; b.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(b); return b; };
-  const boats = [boat(dx - side * 5, cz + 8, .2), boat(cx - side * 6, cz - 10, 1.4), boat(cx + side * 4, cz + 14, -.8)];
+  const boat = (bx2, bz, ry, i) => { const b = boatMesh({ L: 5.2 - i * .3, B: 1.75, D: .74, sail: i === 1 ? 'furled' : 'up', oars: 1, nets: i === 0 }); b.position.set(bx2, WATER.WL - .3, bz); b.rotation.y = ry; b.userData.y0 = WATER.WL - .3; scene.add(b); return b; };
+  const boats = [boat(dx - side * 5, cz + 8, .2, 0), boat(cx - side * 6, cz - 10, 1.4, 1), boat(cx + side * 4, cz + 14, -.8, 2)];
   // juncos en la orilla
   const reed = new THREE.InstancedMesh(new THREE.CylinderGeometry(.015, .02, 1, 4), tm('reed', '#6E8A44'), 260), m4 = new THREE.Matrix4(), rr = rng(31); for (let i = 0; i < 260; i++) { const a = rr() * 6.28, r = R - .5 + rr() * 2.5, x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r; m4.makeScale(1, .6 + rr() * .9, 1); m4.setPosition(x, y0 + .85, z); reed.setMatrixAt(i, m4); } scene.add(reed);
   // el agua no se camina: un anillo de cajas finas alrededor (dejando libre el muelle)
@@ -1705,7 +1889,8 @@ function roomTick(dt) {
   if (inR !== S.inRoom) { if (inR && !S.inRoom) S.camKeep = { d: S.camDist, p: S.camPitch }; if (!inR && S.camKeep) { S.camDist = S.camKeep.d; S.camPitch = S.camKeep.p; S.camKeep = null; } S.inRoom = inR; }
   if (inR) { S.camDist += (Math.min(S.camKeep ? S.camKeep.d : 6, 5.2) - S.camDist) * Math.min(1, dt * 3); S.camPitch += (Math.max(S.camKeep ? S.camKeep.p : .4, .95) - S.camPitch) * Math.min(1, dt * 3); }
   const here = inR || openR; if (here && here.trade && TRADE_INFO[here.trade]) { const p = G().P(); p.seen = p.seen || {}; if (!p.seen[here.trade]) { p.seen[here.trade] = 1; G().save(); placeCard(TRADE_INFO[here.trade]); } }
-  if (S.lake) { S.lake.uni.t.value += dt; S.lake.boats.forEach((b, i) => { b.position.y = S.lake.y0 + .45 + Math.sin(S.t * 1.2 + i) * .06; b.rotation.z = Math.sin(S.t * .9 + i * 2) * .04; }); }
+  if (S.lake) { S.lake.uni.t.value += dt; S.lake.boats.forEach((b, i) => { b.position.y = b.userData.y0 + Math.sin(S.t * 1.2 + i) * .06; b.rotation.z = Math.sin(S.t * .9 + i * 2) * .04; }); }
+  if (S.shoreBoats) S.shoreBoats.forEach((q, i) => { q.b.position.y = q.y0 + Math.sin(S.t * 1.1 + i) * .05; q.b.rotation.z = Math.sin(S.t * .8 + i) * .035; });
   if (S.temple && S.temple.smoke) { const sm = S.temple.smoke; sm.position.y = 1.5 + (S.t * .4 % 1.2); sm.material.opacity = .3 * (1 - (S.t * .4 % 1.2) / 1.2); sm.scale.setScalar(1 + (S.t * .4 % 1.2)); }
 }
 function placeCard(info) {
@@ -1725,29 +1910,14 @@ function buildTowns(scene, g, hx, HW, pois) {
     }
     if (p.k === 'temple') S.temple = bigTemple(scene, p.x, p.z, p.side, hx, yAt);
     if (p.k === 'upper') { const H = bigHouse('cena', hx); placeHouse(scene, H, p.x, p.z, p.side > 0 ? -Math.PI / 2 : Math.PI / 2, yAt(p.x, p.z) - .02); }
-    if (p.k === 'shore') { const y = yAt(p.x, p.z), cx = p.x + p.side * 7;
-      waterLake(scene, cx, p.z, 8.5 * 1.25, hx, yAt); S.cols.push({ x0: cx - 6.5, x1: cx + 6.5, z0: p.z - 6.5, z1: p.z + 6.5 });
-      const boat = new THREE.Group(); bx(3.2, .5, 1.1, WOOD(), 0, .25, 0, boat); bx(3.4, .12, 1.25, WOODL(), 0, .52, 0, boat); cy(.05, .05, 2.6, WOOD(), .4, 1.6, 0, boat); boat.position.set(cx - p.side * 4, WATER.WL - .1, p.z + 2); boat.rotation.y = .4; scene.add(boat);
-      const fire = new THREE.Group(); for (let i = 0; i < 5; i++) { const l = cy(.05, .06, .7, tm('wd', '#6A4A2E'), 0, .08, 0, fire); l.rotation.z = Math.PI / 2 - .25; l.rotation.y = i / 5 * 6.28; } const fl = new THREE.Mesh(new THREE.ConeGeometry(.2, .55, 8), tm('fire', '#FF8A3A', { emissive: '#FFB347', emissiveIntensity: 3 })); fl.position.y = .35; fire.add(fl);
-      for (let i = 0; i < 3; i++) { const f2 = new THREE.Mesh(new THREE.CapsuleGeometry(.05, .22, 4, 8), tm('fishc', '#B08A6A')); f2.rotation.z = Math.PI / 2; f2.position.set(-.3 + i * .3, .5, .35); fire.add(f2); } const br = new THREE.Mesh(new THREE.SphereGeometry(.14, 10, 8), tm('pan', '#D9A25A')); br.scale.y = .5; br.position.set(.7, .08, -.3); fire.add(br);
-      fire.position.set(p.x - p.side * 2, y, p.z - 1); scene.add(fire);
-      S.rooms.push({ x0: p.x - 12, x1: p.x + 12, z0: p.z - 12, z1: p.z + 12, trade: 'orilla', roof: [], open: true, y }); const lb = textSprite(p.name, hx); lb.scale.multiplyScalar(1.2); lb.position.set(p.x, y + 4.5, p.z); scene.add(lb); }
+    if (p.k === 'shore') shoreScene(scene, p, yAt, poiProp, hx, HW);
     if (p.k === 'golgota') { const y = yAt(p.x, p.z), R = rng(77), stn = tm('st', '#8C8374'), wd = tm('crw', '#5A4632');
       const mound = new THREE.Mesh(new THREE.SphereGeometry(6, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2), tm('gol', '#9A8C74')); mound.scale.y = .32; mound.position.set(p.x, y - .1, p.z); mound.receiveShadow = true; mound.castShadow = true; scene.add(mound); S.cols.push({ x0: p.x - 4.6, x1: p.x + 4.6, z0: p.z - 4.6, z1: p.z + 4.6 });
       [-2.6, 0, 2.6].forEach((dz, i) => { const cr = new THREE.Group(), hh = i === 1 ? 4.4 : 3.8; bx(.26, hh, .26, wd, 0, hh / 2, 0, cr); bx(2.1, .22, .24, wd, 0, hh - .9, 0, cr); if (i === 1) { bx(.5, .3, .05, tm('tit', '#E8DDC6'), 0, hh - .2, .16, cr); } cr.position.set(p.x, y + 1.8, p.z + dz); cr.rotation.y = Math.PI / 2; cr.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(cr); });
       for (let i = 0; i < 14; i++) { const a = R() * 6.28, r = 6.5 + R() * 6, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r, rk = new THREE.Mesh(new THREE.DodecahedronGeometry(.4 + R() * .7, 0), stn); rk.scale.y = .6; rk.position.set(x, yAt(x, z) + .15, z); rk.castShadow = true; scene.add(rk); }
       S.rooms.push({ x0: p.x - 13, x1: p.x + 13, z0: p.z - 13, z1: p.z + 13, trade: 'golgota', roof: [], open: true, y }); const lb = textSprite(p.name, hx); lb.scale.multiplyScalar(1.2); lb.position.set(p.x, y + 7.2, p.z); scene.add(lb); }
-    if (p.k === 'tomb') { const y = yAt(p.x, p.z), R = rng(91), rockM = tm('tmb', '#A69A86'), sd = -p.side;
-      const cliff = new THREE.Group(); [[0, 2.2, 0, 3.4], [-2.6, 1.6, .4, 2.6], [2.6, 1.7, .2, 2.7], [0, 3.6, -.6, 2.4]].forEach(([a, b, c2, r]) => { const m = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 1), rockM); m.position.set(a, b, c2 - 1.4); m.castShadow = true; m.receiveShadow = true; cliff.add(m); });
-      bx(5.4, 3.2, .7, rockM, 0, 1.6, 1.85, cliff); const door = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.8), tm('tdoor', '#1A1612')); door.position.set(0, .95, 2.21); cliff.add(door);
-      const risen = !!(G().isDone && G().isDone('resurreccion-n1')); const stone = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, .4, 24), tm('tst', '#B4A890')); stone.rotation.x = Math.PI / 2; stone.position.set(risen ? -2.2 : -.45, 1.15, risen ? 2.6 : 2.42); stone.castShadow = true; cliff.add(stone);
-      if (risen) { const gl = new THREE.Mesh(new THREE.PlaneGeometry(1.25, 1.75), new THREE.MeshBasicMaterial({ color: '#FFF2C8', transparent: true, opacity: .85, blending: THREE.AdditiveBlending, depthWrite: false })); gl.position.set(0, .95, 2.215); cliff.add(gl); const ln = new THREE.Mesh(new THREE.BoxGeometry(.9, .06, .35), tm('lino', '#F4EEDC')); ln.position.set(.4, .1, 2.6); cliff.add(ln); }
-      cliff.position.set(p.x, y, p.z); cliff.rotation.y = sd > 0 ? Math.PI / 2 : -Math.PI / 2; scene.add(cliff); S.cols.push({ x0: p.x - 4.2, x1: p.x + 4.2, z0: p.z - 4.2, z1: p.z + 4.2 });
-      { const sh = [[], []]; for (let i = 0; i < 18; i++) { const a = R() * 6.28, r = 6 + R() * 8, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; sh[i % 2].push({ x, y: yAt(x, z) - .05, z, ry: R() * 6.283, s: .9 + R() * .6, v: i }); } poiProp('shrub_01', sh[0], { shadow: true, wind: 2 }); poiProp('shrub_03', sh[1], { shadow: true, wind: 2 }); }
-      S.rooms.push({ x0: p.x - 13, x1: p.x + 13, z0: p.z - 13, z1: p.z + 13, trade: risen ? 'tumbavacia' : 'tumba', roof: [], open: true, y }); const lb = textSprite(p.name, hx); lb.scale.multiplyScalar(1.2); lb.position.set(p.x, y + 7, p.z); scene.add(lb); }
-    if (p.k === 'garden') { const y = yAt(p.x, p.z), R = rng(52); { const ol = []; for (let i = 0; i < 26; i++) { const a = R() * 6.28, r = 4 + R() * 12, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; ol.push({ x, y: yAt(x, z) - .05, z, ry: R() * 6.283, s: .75 + R() * .35, oi: i, v: i }); S.cols.push({ x0: x - .35, x1: x + .35, z0: z - .35, z1: z + .35 }); } poiProp('trp_olive', ol, { shadow: true, wind: 3, imp: 1 }); }
-      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), tm('st', '#8C8374')); rock.scale.set(1.3, .6, 1); rock.position.set(p.x, y + .3, p.z); rock.castShadow = true; scene.add(rock); S.cols.push({ x0: p.x - 1.2, x1: p.x + 1.2, z0: p.z - .9, z1: p.z + .9 });
-      const rr2 = { x0: p.x - 15, x1: p.x + 15, z0: p.z - 15, z1: p.z + 15, trade: 'huerto', roof: [], open: true, y }; S.rooms.push(rr2); const lb = textSprite(p.name, hx); lb.scale.multiplyScalar(1.2); lb.position.set(p.x, y + 4.5, p.z); scene.add(lb); }
+    if (p.k === 'tomb') tombScene(scene, p, yAt, poiProp, !!(G().isDone && G().isDone('resurreccion-n1')), hx, HW);
+    if (p.k === 'garden') gardenScene(scene, p, yAt, poiProp, hx, HW);
     if (p.k === 'inn') { const H = bigHouse('posada', hx); placeHouse(scene, H, p.x, p.z, p.side > 0 ? -Math.PI / 2 : Math.PI / 2, yAt(p.x, p.z) - .02); FLORA.donkeySpot = { x: p.x - p.side * 6, z: p.z + 5, ry: p.side > 0 ? -1.2 : 1.2 }; }
     if (p.k === 'field') { const y = yAt(p.x, p.z), zc = [['#C9B48A', 'camino'], ['#8C8374', 'piedras'], ['#5A6A3A', 'espinos'], ['#6B4A2C', 'fértil']];
       zc.forEach(([col], i) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(22, 5), tm('soil' + i, col)); m.rotation.x = -Math.PI / 2; m.position.set(p.x, y + .04, p.z - 8 + i * 5.4); m.receiveShadow = true; scene.add(m);
@@ -3652,7 +3822,7 @@ async function phBuild(B) {
   vars.forEach((ms, vi) => { const L = per[vi]; if (!L.length) return;
     ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, mm.mat.userData && mm.mat.userData.still ? Object.assign({}, B.o, { wind: 0 }) : B.o), L.length);
       L.forEach((it, i) => { _phE.set(it.rx || 0, it.ry || 0, it.rz || 0, 'YXZ'); _phQ.setFromEuler(_phE); _phS.set(it.s, it.sy ?? it.s, it.s); _phM.compose(_phV.set(it.x, it.y, it.z), _phQ, _phS).multiply(mm.m); im.setMatrixAt(i, _phM); if (B.o.olive && it.oi != null) { B.idx = B.idx || new Map(); const e = B.idx.get(it.oi) || []; e.push([im, i]); B.idx.set(it.oi, e); } });
-      im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.castShadow = !!B.o.shadow && QUAL.lv > 0; im.receiveShadow = true; im.userData.n = L.length; if (B.o.near) im.count = Math.floor(L.length * QT.near[QUAL.lv]); B.ims.push(im); }); const r0 = PH_RAD[B.id]; if (r0) { const c = B.o.near ? Math.floor(L.length * QT.near[QUAL.lv]) : L.length; for (let i = 0; i < c; i++) phCyl(L[i].x, L[i].z, r0 * (L[i].s || 1)); } });
+      im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.castShadow = !!B.o.shadow && QUAL.lv > 0; im.receiveShadow = true; im.userData.n = L.length; if (B.o.near) im.count = Math.floor(L.length * QT.near[QUAL.lv]); B.ims.push(im); }); const r0 = B.o.nocol ? 0 : (B.o.col ?? PH_RAD[B.id]); if (r0) { const c = B.o.near ? Math.floor(L.length * QT.near[QUAL.lv]) : L.length; for (let i = 0; i < c; i++) phCyl(L[i].x, L[i].z, r0 * (L[i].s || 1)); } });
   vars.forEach((ms, vi) => { const L = per[vi], I = ms.imp; if (!I || !L.length) return; const im = new THREE.InstancedMesh(I.geo, I.mat, L.length);
     L.forEach((it, i) => { _phE.set(0, it.ry || 0, 0, 'YXZ'); _phQ.setFromEuler(_phE); _phS.set(it.s, it.sy ?? it.s, it.s); _phM.compose(_phV.set(it.x, it.y, it.z), _phQ, _phS).multiply(I.m); im.setMatrixAt(i, _phM); if (B.o.olive && it.oi != null) { B.idx = B.idx || new Map(); const e = B.idx.get(it.oi) || []; e.push([im, i]); B.idx.set(it.oi, e); } });
     im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.receiveShadow = false; B.ig = B.ig || new THREE.Group(); B.ig.add(im); });
@@ -3757,6 +3927,7 @@ async function galTrees() {
   models.forEach(m => { if (!m.list.length) return; m.ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 3 }), m.list.length);
     m.list.forEach((o, i) => { E.set(0, o.rot || 0, 0); M.compose(V.set(o.x, o.y - .05, o.z), Q.setFromEuler(E), SC.setScalar(.85 + hsh(o.x, o.z) * .35)).multiply(mm.m); im.setMatrixAt(i, M); });
     im.instanceMatrix.needsUpdate = true; im.castShadow = QUAL.lv > 0; im.receiveShadow = true; im.frustumCulled = true; im.computeBoundingSphere(); S.scene.add(im); GT.ims.push(im); }); });
+  spots.forEach(o => phCyl(o.x, o.z, .3));
   r2log('árboles: ' + spots.length + ' (' + models.map(m => m.nm + ' ' + m.list.length).join(', ') + ')');
   try { const inn = (S.pois || []).find(q => q.k === 'inn'); if (inn && !GT.zaq) { GT.zaq = 1; let big = null, bigTop = 0; models.forEach(m => { const bb = new THREE.Box3(); m.ms.forEach(mm => { mm.geo.computeBoundingBox(); bb.union(mm.geo.boundingBox.clone().applyMatrix4(mm.m)); }); if (bb.max.y > bigTop) { bigTop = bb.max.y; big = { m, bb }; } });
       if (big) { const sc = Math.max(1.2, 9 / bigTop), x = inn.x - (inn.side || 1) * 14, z = inn.z - 11, y = S.W.hAt(x, z), M = new THREE.Matrix4(), rad = Math.max(big.bb.max.x - big.bb.min.x, big.bb.max.z - big.bb.min.z) / 2 * sc;
@@ -3764,7 +3935,7 @@ async function galTrees() {
         S.cols.push({ x0: x - .6, x1: x + .6, z0: z - .6, z1: z + .6 });
         const zq = buildHeroAvatar({ g: 'chico', age: 40, skin: '#C98B5E', hair: '#2A1B14', outfit: '#8A3A3A' }); zq.scale.setScalar(.82); const bx = x + Math.cos(.9) * rad * .38, bz = z - Math.sin(.9) * rad * .38; zq.position.set(bx, y + bigTop * sc * .5, bz); zq.rotation.y = Math.atan2(inn.x - bx, inn.z - bz); S.scene.add(zq); GT.ims.push(zq);
         const lb = textSprite('El sicomoro de Zaqueo', true); lb.scale.multiplyScalar(1.2); lb.position.set(x, y + bigTop * sc + 1.2, z); S.scene.add(lb); GT.ims.push(lb);
-        S.rooms.push({ x0: x - 9, x1: x + 9, z0: z - 9, z1: z + 9, trade: 'sicomoro', roof: [], open: true, y }); r2log('Zaqueo: ' + big.m.nm + ' x' + sc.toFixed(2) + ' en Jericó'); } } } catch (e) { r2log('Zaqueo: ' + e.message); }
+        GT.zaqPos = [x + 2.2, z + 2.2]; matZaq(); S.rooms.push({ x0: x - 9, x1: x + 9, z0: z - 9, z1: z + 9, trade: 'sicomoro', roof: [], open: true, y }); r2log('Zaqueo: ' + big.m.nm + ' x' + sc.toFixed(2) + ' en Jericó'); } } } catch (e) { r2log('Zaqueo: ' + e.message); }
   try { const t7 = models.find(m => m.nm === 'tree_7'); if (t7 && t7.list.length) { const bb = new THREE.Box3(); t7.ms.forEach(mm => { mm.geo.computeBoundingBox(); bb.union(mm.geo.boundingBox.clone().applyMatrix4(mm.m)); });
       const top = bb.max.y, rad = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z) / 2, Rf = rng(4242), FT = [];
       t7.list.forEach(o => { const u = Rf(); if (u > .28) return; const sc = .85 + hsh(o.x, o.z) * .35, kind = u < .17 ? 'fruit' : 'lemon', fm = [];
@@ -3919,7 +4090,7 @@ function phWorld(scene, W, allPts, zMax, hx, R0) { try { if (grpBase()) setTimeo
     const RP = rng(5151), nP = matchMedia('(pointer: coarse)').matches ? 9 : 18; (S.pois || []).filter(p => p.k === 'lake').forEach(p => { let tries = 0; for (let n = 0; n < nP && tries < 400; tries++) { const a = RP() * 6.283; let r = 20; while (r < 90 && W.hAt(p.x + Math.cos(a) * r, p.z + Math.sin(a) * r) < -.01) r += .5; r += 2.5 + RP() * 14; const x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r;
       if (W.dAt(x, z) < 3.2 || blockedAt(x, z) || Math.abs(W.hAt(x - 1, z) - W.hAt(x + 1, z)) > .8 || L.some(q => (q.x - x) ** 2 + (q.z - z) ** 2 < 16)) continue; L.push({ x, y: W.hAt(x, z) - .05, z, ry: RP() * 6.28, s: .85 + RP() * .35 }); n++; } });
     try { regionStone(scene); } catch (e) { console.warn('piedra', e); } try { dpalmPlace(scene, L); } catch (e) { console.warn('palmeras', e); } try { if (!FLORA.paidG) oleanders(scene, W, rng(5252)); } catch (e) { console.warn('adelfas', e); } }
-  (FLORA.olive || []).forEach((o, i) => phCyl(o.x, o.z, .3 * o.s, i)); (FLORA.bush || []).forEach(o => phCyl(o.x, o.z, .55 * o.s));
+  (FLORA.olive || []).forEach((o, i) => phCyl(o.x, o.z, .3 * o.s, i)); if (!FLORA.paidT) (FLORA.bush || []).forEach(o => phCyl(o.x, o.z, .55 * o.s)); // con los árboles del pack los arbustos viejos no se dibujan: sin esto quedaban como paredes invisibles
   const P3 = {}, put3 = (id, o) => (P3[id] = P3[id] || []).push(o);
   for (const p of towns) { ring(p, 4, 10, (x, z, y, ry) => put3(R() < .5 ? 'periwinkle_plant' : 'weed_plant_02', { x, z, y, ry, s: 1 }), 4);
     if (p.k === 'taller') ring(p, 4, 9, (x, z, y, ry) => put3(['wooden_axe_02', 'wooden_axe_03', 'wooden_hammer_01'][Math.floor(R() * 3)], { x, z, y: y + .03, ry, rz: Math.PI / 2, s: 1 }), 3);
@@ -4122,7 +4293,7 @@ function freeWalk(dt) {
   const C = S.yaw + S.camYaw, fx = Math.sin(C), fz = Math.cos(C), rx = -Math.cos(C), rz = Math.sin(C);
   let mx = fx * -jy + rx * jx, mz = fz * -jy + rz * jx; const ml = Math.hypot(mx, mz) || 1; mx /= ml; mz /= ml;
   if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint ? 1.55 : 1) * (S.boostT > 0 ? 1.3 : 1), a = S.av.position, fr = frontier(), z0 = 6;
-  const ok = (x, z) => Math.abs(x) < XB && z > fr && z < z0 && !blockedAt(x, z);
+  const ok = (x, z) => S.pocket ? pocketOk(x, z) : Math.abs(x) < XB && z > fr && z < z0 && !blockedAt(x, z);
   let nx = a.x + mx * sp, nz = a.z + mz * sp;
   if (!ok(nx, nz)) { if (nz <= fr && performance.now() - (S.wallT || 0) > 6000) { S.wallT = performance.now(); G().toast('Hasta acá llega el camino por ahora.'); } if (ok(nx, a.z)) nz = a.z; else if (ok(a.x, nz)) nx = a.x; else { nx = a.x; nz = a.z; } }
   a.x = nx; a.z = nz; S.freeMoving = true; S.quiet = true; wake(); autoEnter(); if (!S.freeMoving) return;
@@ -4189,7 +4360,7 @@ function loop(now) {
   // con un minijuego abierto el mundo 3D no se dibuja: toda la máquina queda para el minijuego
   const arc = S.arcEl || (S.arcEl = document.getElementById('arcade')); if (arc && !arc.hidden) { S.last = 0; return; }
   const raw = now - (S.last || now), t = now / 1000, dt = Math.min(.05, raw / 1000); S.last = now; S.t = t; S.renderer.info.reset(); if (raw > 0 && raw < 1500) qFrame(Math.min(raw, 250));
-  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); try { pgTick(dt); } catch (e) {} floraTick(dt); miniTick(dt); compassTick(dt); vilTick(dt); foamTick(t); dawnTick(dt); try { anTick(dt); } catch (e) {} const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
+  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); try { pgTick(dt); } catch (e) {} floraTick(dt); miniTick(dt); compassTick(dt); pocketTick(dt); posTick(dt); vilTick(dt); foamTick(t); dawnTick(dt); try { anTick(dt); } catch (e) {} const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
   for (const id in S.items) { const m = S.items[id];
     if (m.userData.gone) { m.userData.gone += dt; const k = m.userData.gone / .5; m.scale.setScalar(1 + k); m.position.y += dt * 2; m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = Math.max(0, 1 - k); } }); if (k >= 1) { S.scene.remove(m); delete S.items[id]; } continue; }
     m.rotation.y = t * 1.6; m.position.y = (m.userData.by || 0) + .85 + Math.sin(t * 2.4 + id.length) * .12;
@@ -4252,6 +4423,12 @@ function idle(dt) {
   }
 }
 
+// dónde quedó el jugador: se guarda cada pocos segundos para volver al mismo lugar si el celular recarga la página (falta de memoria, cierre de pestaña)
+function posKey() { const g = G(); return 'tsp:pos:' + (g.branch || '') + ':' + ((g.P() || {}).id || 'p'); }
+function posSave(force) { if (!S || !S.av || S.walking || S.pocket || S.inRoom) return; try { const g = G(), a = S.av.position; localStorage.setItem(posKey(), JSON.stringify({ n: g.P().pos, x: +a.x.toFixed(2), z: +a.z.toFixed(2), yaw: +S.yaw.toFixed(3), t: Date.now() })); } catch (e) {} }
+function posLoad() { try { const q = JSON.parse(localStorage.getItem(posKey()) || 'null'); if (!q || q.n !== G().P().pos || Date.now() - q.t > 3 * 864e5 || !(Math.abs(q.x) < XB) || !isFinite(q.z) || blockedAt(q.x, q.z)) return null; return q; } catch (e) { return null; } }
+function posTick(dt) { S.posT = (S.posT || 0) - dt; if (S.posT > 0) return; S.posT = 3; posSave(); }
+addEventListener('pagehide', () => posSave(true)); document.addEventListener('visibilitychange', () => { if (document.hidden) posSave(true); });
 /* ---------- entrada pública ---------- */
 let loading = null, builtFor = null;
 function v3fail(msg) { document.body.classList.remove('v3boot'); let box = document.getElementById('v3fail'); if (!box) { box = document.createElement('div'); box.id = 'v3fail'; box.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#14110C;color:#F3E6D6;font:600 16px Nunito,sans-serif;text-align:center;padding:24px'; document.body.appendChild(box); }
@@ -4450,6 +4627,7 @@ function svNear() {
   if (!svOn() || !S.sv) return null; const a = S.av.position, st = S.sv, s = svP(), d2 = (x, z) => (x - a.x) ** 2 + (z - a.z) ** 2;
   if (st.fishing) return { k: 'fishing' };
   { const v = vilNearNpc(); if (v) return { k: 'vil', v, label: vilLabel(v) }; }
+  { const x = pocketNear(); if (x) return x; if (S.pocket) return null; }
   { const e = secNear(); if (e) return { k: 'sec', e, label: secP().secrets[e.d.id] ? 'Ver el lugar secreto' : SEC.mod.ENTRY[e.d.entry][0] }; }
   { const m = matNear(); if (m) return m; }
   for (const b of (st.beggars || [])) if (d2(b.x, b.z) < 6) return { k: 'beg', b, label: 'Ayudar' };
@@ -4491,6 +4669,8 @@ function svAct() {
   if (n.k === 'fishing') { svFishTap(); return; }
   if (n.k === 'vil') { vilAct(n.v); return; }
   if (n.k === 'sec') { secOpen(n.e); return; }
+  if (n.k === 'secx') { pocketExit(); return; }
+  if (n.k === 'seci') { pocketItem(n); return; }
   if (n.k === 'mato') { matObj(n.e); return; }
   if (n.k === 'matp') { matTalk(n.e); return; }
   if (n.k === 'mateo') { matTeo(n.e); return; }
@@ -5212,13 +5392,13 @@ function matMesh(k) {
   else if (k === 'lamb') { add(new THREE.SphereGeometry(.32, 12, 10), M('#F2EEE4', 1), 0, .5, 0, [1.3, .9, .9]); add(new THREE.SphereGeometry(.14, 10, 8), M('#3A3026'), .42, .62, 0); [[-.22, -.14], [-.22, .14], [.22, -.14], [.22, .14]].forEach(([x, z]) => add(new THREE.CylinderGeometry(.035, .035, .32, 5), M('#3A3026'), x, .16, z)); }
   else if (k === 'cairn') { for (let i = 0; i < 7; i++) add(new THREE.DodecahedronGeometry(.22 - i * .02, 0), st, (Math.random() - .5) * .2, .15 + i * .2, (Math.random() - .5) * .2); }
   else if (k === 'loaves') { for (let i = 0; i < 5; i++) add(new THREE.SphereGeometry(.16, 10, 8), M('#B8A486'), Math.cos(i * 1.3) * .35, .08, Math.sin(i * 1.3) * .35, [1.1, .55, 1]); }
-  else if (k === 'boat') { const h = add(new THREE.CylinderGeometry(.9, .9, 4.2, 14, 1, true, 0, Math.PI), wd, 0, .55, 0); h.rotation.z = Math.PI / 2; h.rotation.y = Math.PI / 2; h.scale.set(1, 1, .55); h.material = h.material.clone(); h.material.side = THREE.DoubleSide; add(new THREE.BoxGeometry(.06, .06, 3.6), wd, 0, .5, 0); }
+  else if (k === 'boat') { const b = boatMesh({ L: 4.2, B: 1.5, D: .7, old: 1 }); b.position.y = -.38; b.rotation.set(.04, 0, -.1); g.add(b); const mud = add(new THREE.CircleGeometry(2.6, 24), M('#4E4030', 1), 0, .02, 0); mud.rotation.x = -Math.PI / 2; mud.scale.set(.75, 1.25, 1); mud.castShadow = false; }
   else if (k === 'nets') { [-.6, .6].forEach(x => add(new THREE.CylinderGeometry(.04, .04, 1.5, 6), wd, x, .75, 0)); const n = add(new THREE.PlaneGeometry(1.2, 1.1, 8, 8), new THREE.MeshStandardMaterial({ color: '#C9B48A', wireframe: true }), 0, .85, 0); n.material.side = THREE.DoubleSide; }
   else if (k === 'jars') { for (let i = 0; i < 6; i++) { const j = add(new THREE.CylinderGeometry(.22, .17, .75, 12), st, (i % 3 - 1) * .55, .38, (i < 3 ? -.3 : .3)); add(new THREE.TorusGeometry(.2, .03, 6, 14), st, j.position.x, .76, j.position.z).rotation.x = Math.PI / 2; } }
   else if (k === 'roof') { add(new THREE.BoxGeometry(2.2, .14, 2.2), M('#8A6A44'), 0, 2.2, 0); add(new THREE.CylinderGeometry(.42, .42, .18, 12), M('#2A1E14'), .2, 2.22, 0); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([x, z]) => add(new THREE.BoxGeometry(.18, 2.2, .18), M('#9A8A70'), x, 1.1, z)); }
   else if (k === 'baskets') { for (let i = 0; i < 12; i++) { const a = i / 12 * 6.28; add(new THREE.CylinderGeometry(.18, .13, .22, 10, 1, true), M('#A8864E'), Math.cos(a) * .9, .11, Math.sin(a) * .9); add(new THREE.SphereGeometry(.1, 8, 6), M('#C8A060'), Math.cos(a) * .9, .2, Math.sin(a) * .9, [1, .6, 1]); } }
   else if (k === 'soils') { [['#B8A486', .1], ['#8E877A', .2], ['#5E6A3A', .25], ['#5A4030', .1]].forEach(([c, h], i) => { add(new THREE.BoxGeometry(.9, h, 1.1), M(c), (i - 1.5) * .95, h / 2, 0); }); for (let i = 0; i < 6; i++) add(new THREE.ConeGeometry(.05, .35, 5), M('#7A9A3A'), 1.2 + (i % 3) * .2 - .2, .4, (i < 3 ? -.25 : .25)); }
-  else if (k === 'tree') { add(new THREE.CylinderGeometry(.22, .32, 2.6, 8), M('#6E5A44'), 0, 1.3, 0); for (let i = 0; i < 5; i++) add(new THREE.IcosahedronGeometry(.9, 1), M('#5E7A3A'), Math.cos(i * 1.3) * .8, 2.9 + (i % 2) * .4, Math.sin(i * 1.3) * .8); }
+  else if (k === 'tree') { /* el sicómoro es el árbol grande de Zaqueo (galTrees): acá solo queda el anillo para mirar */ }
   else if (k === 'table') { add(new THREE.BoxGeometry(1.6, .08, .8), wd, 0, .45, 0); [[-.7, -.3], [.7, -.3], [-.7, .3], [.7, .3]].forEach(([x, z]) => add(new THREE.BoxGeometry(.06, .45, .06), wd, x, .22, z)); add(new THREE.CylinderGeometry(.18, .18, .03, 14), M('#E8D2A0'), -.4, .5, 0); add(new THREE.CylinderGeometry(.06, .04, .16, 10), M('#B88A3A', .4), .35, .57, 0); add(new THREE.ConeGeometry(.12, .1, 8), M('#5E8A3A'), 0, .53, .2); }
   else if (k === 'press') { add(new THREE.CylinderGeometry(.9, .95, .5, 20), st, 0, .25, 0); add(new THREE.CylinderGeometry(.4, .4, .35, 16), M('#857E72'), .1, .65, 0).rotation.z = Math.PI / 2; add(new THREE.BoxGeometry(2.2, .12, .12), wd, .1, .65, 0); }
   else if (k === 'sign') { add(new THREE.BoxGeometry(.08, 1.6, .08), wd, 0, .8, 0); add(new THREE.BoxGeometry(1.1, .5, .04), M('#E8DCC0'), 0, 1.45, .05); [0, 1, 2].forEach(i => add(new THREE.BoxGeometry(.9, .03, .01), M('#3A2A1A'), 0, 1.6 - i * .14, .075)); }
@@ -5234,7 +5414,7 @@ async function matBuild(scene, W) {
   const spot = d => { const poi = (S.pois || []).find(q => q.r === d.r && q.k === d.near); if (!poi) return null; for (let t = 0; t < 220; t++) { const q = poi.k === 'river' ? poi.pts[Math.floor(R() * poi.pts.length)] : [poi.x, poi.z], a = R() * 6.283, rr = poi.k === 'lake' ? 33 + R() * 16 : (poi.k === 'river' ? 4 : 8) + R() * (t < 60 ? 12 : 26), x = q[0] + Math.cos(a) * rr, z = q[1] + Math.sin(a) * rr; if (ok(x, z)) { used.push([x, z]); return [x, z]; } } return null; };
   M.OBJS.forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, g = matMesh(d.k); g.position.set(x, Math.max(0, W.hAt(x, z)), z); g.rotation.y = R() * 6.28;
     const ring = new THREE.Mesh(new THREE.RingGeometry(.8, .9, 32), new THREE.MeshBasicMaterial({ color: '#FFE39A', transparent: true, opacity: .45, depthWrite: false, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .03; ring.visible = !pm.seen[d.id]; g.add(ring);
-    g.userData.keep = 1; scene.add(g); MAT.objs.push({ d, x, z, g, ring }); phCyl(x, z, .45); });
+    g.userData.keep = 1; scene.add(g); MAT.objs.push({ d, x, z, g, ring }); if (d.k !== 'tree') phCyl(x, z, d.k === 'boat' ? 1.1 : .45); }); matZaq();
   try { teoBuild(scene, W, R, ok, used); } catch (e) { console.warn('teofilo', e); }
   try { pergBuild(scene, W, rng(8811), used); } catch (e) { console.warn('pergaminos', e); }
   try { memBuild(scene, W, rng(8822), ok, used); } catch (e) { console.warn('versículos', e); }
@@ -5243,6 +5423,8 @@ async function matBuild(scene, W) {
   (M.ESC || []).forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, o = buildHeroAvatar(Object.assign({ anim: ['M_Standing_Idle', 'M_Idle'] }, d.look)); o.position.set(x, Math.max(0, W.hAt(x, z)), z); o.rotation.y = R() * 6.28; scene.add(o); const lb = textSprite('!', true); lb.scale.multiplyScalar(.35); lb.position.set(0, 2.25, 0); lb.visible = !(pm.esc && pm.esc[d.id] != null); o.add(lb); MAT.npcs.push({ d: { id: 'esc-' + d.id, name: d.name, sub: d.sub, esc: d }, x, z, o, lb }); });
   M.GENTE.forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, o = buildHeroAvatar(Object.assign({ anim: ['M_Standing_Idle', 'M_Idle'] }, d.look)); o.position.set(x, Math.max(0, W.hAt(x, z)), z); o.rotation.y = R() * 6.28; scene.add(o); MAT.npcs.push({ d, x, z, o }); });
 }
+// el sicómoro del material se muda al árbol grande de Zaqueo en cuanto ese árbol existe
+function matZaq() { if (!GT.zaqPos) return; const e = MAT.objs.find(o => o.d.id === 'sicomoro'); if (!e) return; e.x = GT.zaqPos[0]; e.z = GT.zaqPos[1]; e.g.position.set(e.x, Math.max(0, S.W.hAt(e.x, e.z)), e.z); }
 function matNear() { const a = S.av.position, r2 = 2.4 * 2.4; for (const e of MAT.npcs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return e.d.esc ? { k: 'mates', e, label: 'Hablar · ' + e.d.name } : e.d.teo ? { k: 'mateo', e, label: 'Hablar · Teófilo' } : { k: 'matp', e, label: 'Hablar · ' + e.d.name };
   for (const e of MAT.objs) if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r2) return { k: 'mato', e, label: 'Mirar' }; return jueNear() || memNear() || pergNear(); }
 function matObj(e) {
@@ -5429,21 +5611,60 @@ async function secBuild(scene, W) {
     if (!best) return; used.push(best); const [x, z] = best, y = Math.max(0, W.hAt(x, z)), grp = new THREE.Group();
     if (d.entry === 'rock') { const m = new THREE.Mesh(new THREE.DodecahedronGeometry(.95, 1), new THREE.MeshStandardMaterial({ color: '#8C8374', roughness: 1, flatShading: true })); m.scale.set(1.1, .8, 1); m.position.y = .55; m.castShadow = true; grp.add(m); }
     else if (d.entry === 'lid') { const m = new THREE.Mesh(new THREE.CylinderGeometry(.85, .9, .14, 18), new THREE.MeshStandardMaterial({ color: '#7E7466', roughness: 1 })); m.position.y = .06; grp.add(m); for (let k = 0; k < 5; k++) { const pb = new THREE.Mesh(new THREE.DodecahedronGeometry(.12, 0), new THREE.MeshStandardMaterial({ color: '#6E665A', roughness: 1 })); pb.position.set(Math.cos(k) * .7, .14, Math.sin(k * 1.3) * .6); grp.add(pb); } }
-    else { for (let k = 0; k < 5; k++) { const b = new THREE.Mesh(new THREE.IcosahedronGeometry(.55 + (k % 2) * .2, 1), new THREE.MeshStandardMaterial({ color: ['#55663A', '#4C5E30', '#66763E'][k % 3], roughness: 1, flatShading: true })); b.position.set(Math.cos(k * 1.26) * .6, .45, Math.sin(k * 1.26) * .6); b.scale.y = .8; grp.add(b); } }
+    else { const sh = []; for (let k = 0; k < 4; k++) { const an = k * 1.57 + R() * .6, rr = .6 + R() * .5; sh.push({ x: x + Math.cos(an) * rr, y: y - .05, z: z + Math.sin(an) * rr, ry: R() * 6.283, s: .4 + R() * .2, v: k }); }
+      if (d.id === 'cantera') phPlace('dry_branches_medium_01', sh.map(q => Object.assign({}, q, { s: 1.4 + R() * .5 })), { shadow: true, nocol: 1, force: 1 }); else phPlace('shrub_02', sh, { shadow: true, wind: 2, nocol: 1, force: 1 });
+      if (d.id === 'barca' || d.id === 'manantial') { const rd = new THREE.InstancedMesh(new THREE.CylinderGeometry(.015, .022, 1, 4), tm('reed', '#6E8A44'), 60), m4 = new THREE.Matrix4(); for (let k = 0; k < 60; k++) { const an = R() * 6.283, rr = .3 + R() * 1.3; m4.makeScale(1, 1 + R() * 1.1, 1); m4.setPosition(Math.cos(an) * rr, .55, Math.sin(an) * rr); rd.setMatrixAt(k, m4); } grp.add(rd); }
+      const hole = new THREE.Mesh(new THREE.CircleGeometry(.55, 16), new THREE.MeshBasicMaterial({ color: '#0E0B08' })); hole.rotation.x = -Math.PI / 2; hole.position.y = .03; hole.scale.y = .6; grp.add(hole); }
     grp.position.set(x, y, z); grp.userData.keep = 1; scene.add(grp); SEC.list.push({ d, x, z, g: grp, r }); });
 }
-function secNear() { if (!SEC.list.length) return null; const a = S.av.position, p = secP(); for (const e of SEC.list) { if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < 2.6 * 2.6) return e; } return null; }
+function secNear() { if (!SEC.list.length || S.pocket) return null; const a = S.av.position, p = secP(); for (const e of SEC.list) { if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < 2.6 * 2.6) return e; } return null; }
 function secOpen(e) {
   const p = secP(), d = e.d, first = !p.secrets[d.id], M = SEC.mod; if (S.secBusy) return;
   const show = () => { const n = Object.keys(p.secrets).length, el = document.getElementById('v3sheet');
     el.innerHTML = `<div class="inv hx sv-sheet vil sec"><div class="inv-h"><b>${M.ENTRY[d.entry][1]} ${esc(d.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">${first ? '¡Descubriste un lugar secreto!' : 'Lugar secreto'} · ${n} de ${M.SECRETS.length}</small><p class="vil-p">${esc(d.t)}</p>
       <h4 class="x-h">Lo que guarda (único en todo el juego)</h4>${d.items.map(([nm, ic, ds, ref]) => `<div class="sec-it"><span>${ic}</span><div><b>${esc(nm)}</b><small>${esc(ds)}</small><em>${esc(ref)}</em></div></div>`).join('')}</div>`;
     el.hidden = false; el.querySelector('.bag-x').onclick = () => { el.hidden = true; }; };
-  if (!first) { show(); return; }
+  if (!first) { pocketEnter(e); return; }
   S.secBusy = 1; svToast('⏳ ' + M.ENTRY[d.entry][0] + '…'); h3do(['M_Reaching_Out', 'PickUp_Table', 'M_Picking_Up'], 2.6, .8);
   setTimeout(() => { S.secBusy = 0; if (!S) return; const a = S.av.position; if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 > 16) { svToast('Te alejaste antes de terminar.'); return; }
-    p.secrets[d.id] = vday(); d.items.forEach(([nm, ic, ds, ref]) => { if (!p.relics.some(x => x.n === nm)) p.relics.push({ n: nm, i: ic, d: ds, ref, from: d.name }); }); axGain('sab', 3); glowAdd(6, 'secreto'); behav('secretos'); G().save(); tone3d(); show(); }, 2600);
+    p.secrets[d.id] = vday(); d.items.forEach(([nm, ic, ds, ref]) => { if (!p.relics.some(x => x.n === nm)) p.relics.push({ n: nm, i: ic, d: ds, ref, from: d.name }); }); axGain('sab', 3); glowAdd(6, 'secreto'); behav('secretos'); G().save(); pocketEnter(e); setTimeout(show, 900); }, 2600);
 }
+/* ---------- adentro del lugar secreto: un mini escenario propio (cueva, cisterna, sótano…) que se arma al entrar y se desarma al salir ---------- */
+const SEC_THEME = { pastores: ['manger', 'lamb', 'embers'], taller: ['table', 'mill'], cisterna: ['jars'], manantial: ['jars'], profetas: ['linens', 'jars', 'embers'], barca: ['boat', 'nets'], lagar: ['press', 'jars'], pozo: ['jars', 'mill'], ezequias: ['jars'], cantera: ['cairn', 'cairn'], tumba: ['linens'], rollos: ['jars', 'table'] };
+const SEC_WET = new Set(['cisterna', 'manantial', 'barca', 'ezequias', 'pozo']);
+function pocketEnter(e) {
+  if (!S || S.pocket) return; const d = e.d, a = S.av.position, cx = e.x, cz = e.z, y0 = Math.max(0, S.W ? S.W.hAt(cx, cz) : 0) + 70, R = 7.5, Rn = rng(5000 + d.id.length * 37), g = new THREE.Group(), cols = [], items = [];
+  g.position.set(cx, y0, cz); g.userData.keep = 1;
+  const rt = texL('rock.jpg', 4); rt.repeat.set(6, 3); const rockM = new THREE.MeshStandardMaterial({ map: rt, color: '#B9AA90', roughness: 1, side: THREE.BackSide, emissive: '#2A2016', emissiveIntensity: .35 });
+  const dg = new THREE.SphereGeometry(R + .6, 40, 16, 0, Math.PI * 2, 0, Math.PI / 2), P = dg.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i), k = 1 + (Math.sin(x * 1.7 + z) * Math.cos(z * 1.3 - y * 2) * .07) + (y < .5 ? 0 : (Rn() - .5) * .05); P.setXYZ(i, x * k, y * k * .62, z * k); } dg.computeVertexNormals();
+  const dome = new THREE.Mesh(dg, rockM); dome.receiveShadow = true; dome.castShadow = true; g.add(dome);
+  const ft = texL('dirt.jpg', 4); ft.repeat.set(4, 4); const floor = new THREE.Mesh(new THREE.CircleGeometry(R + .7, 40), new THREE.MeshStandardMaterial({ map: ft, color: '#A8957A', roughness: 1 })); floor.rotation.x = -Math.PI / 2; floor.position.y = .01; floor.receiveShadow = true; g.add(floor);
+  { const n = 46, im = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1, 0), new THREE.MeshStandardMaterial({ map: rt, color: '#A3957E', roughness: 1, flatShading: true }), n), M = new THREE.Matrix4(), Q = new THREE.Quaternion(); for (let i = 0; i < n; i++) { const an = i / n * 6.283 + Rn() * .1, r = R - .2 + Rn() * .5, s = .55 + Rn() * .7; Q.setFromEuler(new THREE.Euler(Rn() * 3, Rn() * 3, Rn() * 3)); M.compose(new THREE.Vector3(Math.cos(an) * r, s * .35, Math.sin(an) * r), Q, new THREE.Vector3(s, s * .8, s)); im.setMatrixAt(i, M); } im.instanceMatrix.needsUpdate = true; im.castShadow = im.receiveShadow = true; g.add(im); }
+  // luz: un candil en el centro y la claridad de la salida
+  const lamp = new THREE.PointLight('#FFB066', 26, 18, 1.6); lamp.position.set(0, 2.6, 0); g.add(lamp); const fl = new THREE.Mesh(new THREE.ConeGeometry(.06, .16, 8), new THREE.MeshBasicMaterial({ color: '#FFD08A' })); const ex = [0, R - 1.4];
+  { const st = cy(.35, .45, .7, tm('pstone', '#9A9082'), -1.2, .35, -1.4, g, 10); const lb = cy(.12, .1, .06, tm('clay', '#A85A34'), -1.2, .74, -1.4, g, 10); fl.position.set(-1.2, .86, -1.4); g.add(fl); lamp.position.set(-1.2, 1.4, -1.4); cols.push([-1.2, -1.4, .55]); }
+  { const sh = new THREE.Mesh(new THREE.CylinderGeometry(.45, 1, 2.2, 20, 1, true), new THREE.MeshBasicMaterial({ color: '#FFF1C8', transparent: true, opacity: .12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); sh.position.set(ex[0], 3.6, ex[1] + .3); g.add(sh); const ring = new THREE.Mesh(new THREE.RingGeometry(.7, .95, 32), new THREE.MeshBasicMaterial({ color: '#FFE39A', transparent: true, opacity: .6, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.set(ex[0], .03, ex[1]); g.add(ring); const l2 = new THREE.PointLight('#FFF1D0', 8, 8, 1.6); l2.position.set(ex[0], 3.5, ex[1]); g.add(l2); }
+  // agua, si es una cisterna, un manantial o una barca hundida
+  if (SEC_WET.has(d.id)) { const w = new THREE.Mesh(new THREE.CircleGeometry(2.4, 32), new THREE.MeshStandardMaterial({ color: '#2C5A66', roughness: .15, metalness: .2, transparent: true, opacity: .88 })); w.rotation.x = -Math.PI / 2; w.position.set(1.8, .05, -2.2); g.add(w); cols.push([1.8, -2.2, 2.2]); }
+  // lo que caracteriza al lugar
+  (SEC_THEME[d.id] || ['jars']).forEach((k, i) => { const an = Math.PI * (1.15 + i * .38), r = R - 2.4, x = Math.cos(an) * r, z = Math.sin(an) * r, m = matMesh(k); m.position.set(x, 0, z); m.rotation.y = -an + Math.PI / 2; if (k === 'boat') { m.scale.setScalar(1.15); m.position.set(1.8, -.15, -2.2); } g.add(m); cols.push(k === 'boat' ? [1.8, -2.2, 2] : [x, z, .8]); });
+  // los objetos únicos que guarda, cada uno en su repisa de piedra con su brillo
+  d.items.forEach((it, i) => { const an = Math.PI * (-.2 - i * .45), r = R - 2.2, x = Math.cos(an) * r, z = Math.sin(an) * r, pd = cy(.4, .5, .8, tm('pstone', '#9A9082'), x, .4, z, g, 12); const lb = textSprite(it[1], true); lb.scale.multiplyScalar(.5); lb.position.set(x, 1.45, z); g.add(lb); const gl = new THREE.PointLight('#B98AFF', 3, 3.5, 2); gl.position.set(x, 1.4, z); g.add(gl); cols.push([x, z, .55]); items.push({ x: cx + x, z: cz + z, it, lb }); });
+  g.traverse(o => { if (o.isMesh && o !== dome && o !== floor) o.castShadow = true; }); S.scene.add(g);
+  const flr = { x0: cx - R - 1, x1: cx + R + 1, z0: cz - R - 1, z1: cz + R + 1, y: y0 }; S.floors.push(flr);
+  S.pocket = { e, g, cx, cz, r: R - .9, y0, flr, items, cols: cols.map(([x, z, r]) => [cx + x, cz + z, r]), ex: [cx + ex[0], cz + ex[1]], back: [a.x, a.z, S.yaw], cam: [S.camDist, S.camPitch], fl, t: 0 };
+  a.set(cx + ex[0], y0, cz + ex[1] - .6); S.gy = y0; S.yaw = Math.PI; S.av.rotation.y = S.yaw; S.camYaw = 0; S.camDist = Math.min(S.camDist, 4.2); S.camPitch = Math.max(S.camPitch, .55);
+  svToast('🕯️ Entraste a ' + d.name + '. Mirá lo que guarda; para salir, volvé a la luz de la entrada.'); tone3d();
+}
+function pocketExit() {
+  const P = S && S.pocket; if (!P) return; S.pocket = null; if (P.g.parent) P.g.parent.remove(P.g); P.g.traverse(o => { if (o.geometry) o.geometry.dispose(); }); const i = S.floors.indexOf(P.flr); if (i >= 0) S.floors.splice(i, 1);
+  const a = S.av.position; let [x, z, yaw] = P.back; if (!(Math.hypot(x - P.cx, z - P.cz) > 2.2)) { const an = Math.atan2(x - P.cx, z - P.cz) || 0; x = P.cx + Math.sin(an) * 2.8; z = P.cz + Math.cos(an) * 2.8; }
+  a.set(x, 0, z); S.gy = Math.max(0, S.W ? S.W.hAt(x, z) : 0); a.y = S.gy; S.yaw = yaw; S.av.rotation.y = yaw; S.camDist = P.cam[0]; S.camPitch = P.cam[1];
+}
+function pocketOk(x, z) { const P = S.pocket; if (Math.hypot(x - P.cx, z - P.cz) > P.r) return false; for (const [a, b, r] of P.cols) if ((x - a) ** 2 + (z - b) ** 2 < (r + .3) ** 2) return false; return true; }
+function pocketNear() { const P = S && S.pocket; if (!P) return null; const a = S.av.position; if ((a.x - P.ex[0]) ** 2 + (a.z - P.ex[1]) ** 2 < 1.6 * 1.6) return { k: 'secx', label: 'Salir del lugar secreto' }; for (const it of P.items) if ((a.x - it.x) ** 2 + (a.z - it.z) ** 2 < 1.6 * 1.6) return { k: 'seci', it, label: 'Mirar · ' + it.it[0] }; return null; }
+function pocketTick(dt) { const P = S && S.pocket; if (!P) return; P.t += dt; P.fl.scale.y = 1 + Math.sin(P.t * 13) * .12 + Math.sin(P.t * 7.3) * .08; P.items.forEach((it, i) => { it.lb.position.y = 1.45 + Math.sin(P.t * 1.6 + i) * .06; }); if (S.walking) pocketExit(); }
+function pocketItem(n) { const [nm, ic, ds, ref] = n.it.it; vilSheet(`<div class="inv-h"><b>${ic} ${esc(nm)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">Objeto único · ${esc(S.pocket ? S.pocket.e.d.name : '')}</small><p class="vil-p">${esc(ds)}</p><small class="vil-k">📖 ${esc(ref)}</small>`); h3do(['M_Kneeling_Inspecting', 'M_Looking'], 2); }
 function secretHint() { const M = SEC.mod; if (!M || !SEC.list.length) return; const p = secP(), left = SEC.list.filter(e => !p.secrets[e.d.id]); if (!left.length) return; const e = left[Math.floor(Math.random() * left.length)], rn = G().REGIONS[e.r] ? G().REGIONS[e.r].name : '';
   svToast(`🧭 Te cuentan un secreto: en la etapa ${rn} hay ${e.d.hint}.`); behav('pistas'); }
 /* tienda */
