@@ -3683,11 +3683,6 @@ async function pgBuild() {
   r2log('pasto nuevo: ' + groups.length + ' grupos'); if (!groups.length || !S) return; const wsum = groups.reduce((t, g) => t + g.w, 0); groups.forEach(g => { g.w /= wsum; });
   PG.avgTri = groups.reduce((t, g) => t + g.w * g.tri, 0) || 500; const lvMax = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), cap = Math.min(26000, Math.ceil(PG_TRI[lvMax] / PG.avgTri));
   for (const g of groups) { g.ims = g.vars.map(ms => { const n = Math.ceil(cap * g.w / g.vars.length * 1.5) + 24; return ms.map(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 4, grass: 1 }), n); im.count = 0; im.frustumCulled = false; im.receiveShadow = true; im.castShadow = false; im.userData.m = mm.m; im.userData.cap = n; S.scene.add(im); PG.ims.push(im); return im; }); }); }
-  // catálogo (?catalogo=1): una planta de cada modelo en fila delante del jugador, con su nombre, para elegir cuál usar
-  if (/[?&]catalogo=1/.test(location.search)) { let k = 0; try { const a = S.av.position, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(0, 0, 0), V = new THREE.Vector3(), SC = new THREE.Vector3();
-    for (const g of groups) g.vars.forEach((ms, vi) => { const col = k % 6, row = Math.floor(k / 6), x = a.x - 12.5 + col * 5, z = a.z - 6 - row * 6, y = S.W.hAt(x, z); k++;
-      ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 1, grass: 1 }), 1); const sr = PG_S[g.id] || [2.6, 3.6]; M.compose(V.set(x, y, z), Q.setFromEuler(E), SC.setScalar((sr[0] + sr[1]) / 2)).multiply(mm.m); im.setMatrixAt(0, M); im.instanceMatrix.needsUpdate = true; S.scene.add(im); });
-      const lb = textSprite((g.vars.names && g.vars.names[vi]) || (g.id + ' ' + vi), true); lb.position.set(x, y + 1.1 + (col % 2) * .5, z); lb.scale.multiplyScalar(.55); S.scene.add(lb); }); } catch (e) { r2log('catálogo: ' + e.message); } r2log('catálogo: ' + k + ' plantas en fila, sin pasto de fondo'); return; }
   PG.groups = groups; PG.ready = true; PG.cx = 1e9; r2log('pasto nuevo listo: ' + PG.ims.length + ' mallas, ' + Math.round(PG.avgTri) + ' triángulos por planta');
   try { if (S.renderer.compileAsync) await S.renderer.compileAsync(S.scene, S.camera); } catch (e) {}
 }
@@ -4332,7 +4327,7 @@ function svBuild(scene, W) {
   trees.forEach((o, i) => { m4.compose(v.set(o.x, o.y + .7 * o.s, o.z), q.identity(), sc.set(o.s, o.s, o.s)); TR.setMatrixAt(i, m4); m4.compose(v.set(o.x, o.y + 1.85 * o.s, o.z), q.identity(), sc.set(1.05 * o.s, .8 * o.s, 1.05 * o.s)); CN.setMatrixAt(i, m4);
     o.fm = []; for (let k = 0; k < 5; k++) { const an = k / 5 * 6.28 + i, fm = new THREE.Matrix4().compose(v.set(o.x + Math.cos(an) * .85 * o.s, o.y + (1.55 + (k % 2) * .4) * o.s, o.z + Math.sin(an) * .85 * o.s), q.identity(), sc.set(1, 1, 1)); o.fm.push(fm); FR.setMatrixAt(i * 5 + k, fm); } });
   [TR, CN, FR].forEach(m => { m.castShadow = true; m.receiveShadow = true; m.instanceMatrix.needsUpdate = true; scene.add(m); });
-  if (FLORA.paidT || BARE) { TR.visible = CN.visible = false; try { if (!BARE) phPlace('tree_small_02', trees.map((o, i) => ({ x: o.x, y: o.y - .04, z: o.z, ry: (i * 2.39) % 6.28, s: .78 * o.s, v: i })), { shadow: true, wind: 3, far: 1, imp: 1 }); } catch (e) {} }
+  if (FLORA.paidT || BARE) { TR.visible = CN.visible = false; if (BARE) FR.visible = false; try { if (!BARE) phPlace('tree_small_02', trees.map((o, i) => ({ x: o.x, y: o.y - .04, z: o.z, ry: (i * 2.39) % 6.28, s: .78 * o.s, v: i })), { shadow: true, wind: 3, far: 1, imp: 1 }); } catch (e) {} }
   st.fruit = { trees, FR };
   // herramientas flotando en lugares de la época (si todavía no las tenés)
   const spot = (k, dx, dz) => { const p = (S.pois || []).find(q => q.k === k); return p ? [p.x + dx * p.side, p.z + dz] : null; };
