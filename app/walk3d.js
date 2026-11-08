@@ -1981,13 +1981,14 @@ function rampH(x, z) { const L = S && S.ramps; if (!L) return -1; let h = -1; fo
 function placeV(scene, H, x, z, rot, y) { H.g.position.set(x, y, z); H.g.rotation.y = rot; scene.add(H.g); try { staticMerge(H.g); } catch (e) {} H.cols.forEach(c => S.cols.push(wBox(x, z, rot, ...c))); }
 // reparte casas alrededor de una plaza o a lo largo de una calle; devuelve las casas puestas (para no encimar props)
 function townLayout(scene, p, yAt, HW, o) {
-  const R = rng(o.seed || 777), placed = [], n = o.n || 12, rad = o.r || 24, plaza = o.plaza || 7, ok = (x, z, rr) => (!HW || HW.dAt(x, z) > rr + 3) && !placed.some(q => Math.hypot(q.x - x, q.z - z) < q.rr + rr + (o.gap || 2.4)) && !(o.avoid || []).some(([ax, az, ar]) => Math.hypot(ax - x, az - z) < ar + rr);
-  for (let t = 0; t < n * 40 && placed.length < n; t++) { let x, z, face;
+  const R = rng(o.seed || 777), placed = [], n = o.n || 12, rad = o.r || 24, plaza = o.plaza || 7, ok = (x, z, rr) => (!HW || HW.dAt(x, z) > rr + 1.5) && !placed.some(q => Math.hypot(q.x - x, q.z - z) < q.rr + rr + (o.gap || 2.4)) && !(o.avoid || []).some(([ax, az, ar]) => Math.hypot(ax - x, az - z) < ar + rr); let fails = 0, lastErr = null;
+  for (let t = 0; t < n * 90 && placed.length < n; t++) try { let x, z, face;
     if (o.street != null) { const along = (R() - .5) * 2 * rad, sdz = R() < .5 ? -1 : 1, off = plaza / 2 + 3 + R() * 2.5, c = Math.cos(o.street), s = Math.sin(o.street), lx = p.x + c * along, lz = p.z + s * along; x = lx - s * off * sdz; z = lz + c * off * sdz; face = Math.atan2(lx - x, lz - z); }
     else { const a = R() * 6.283, r = plaza + 3 + R() * (rad - plaza - 3); x = p.x + Math.cos(a) * r; z = p.z + Math.sin(a) * r; face = Math.atan2(p.x - x, p.z - z) + (R() - .5) * .5; }
     const H = vHouse(R, o.house ? o.house(R, placed.length) : {}), rr = Math.hypot(H.w, H.d + 3) / 2; if (!ok(x, z, rr)) continue;
     const hs = footH(yAt, x, z, face, H.w, H.d); if (hs.max - hs.min > 2.2) continue; // ladera muy empinada: otro lugar
-    const y = hs.min - .05; placeV(scene, H, x, z, face, y); if (hs.max - hs.min > .35) plinth(scene, x, z, face, H.w, H.d, hs.min - .6, hs.max + .08); placed.push({ x, z, rr, face }); }
+    const y = hs.min - .05; placeV(scene, H, x, z, face, y); if (hs.max - hs.min > .35) plinth(scene, x, z, face, H.w, H.d, hs.min - .6, hs.max + .08); placed.push({ x, z, rr, face }); } catch (e) { fails++; lastErr = e; }
+  r2log('pueblo ' + (o.seed || 777) + ': ' + placed.length + ' de ' + n + ' casas' + (fails ? ' (' + fails + ' errores: ' + (lastErr && lastErr.message) + ')' : '')); if (lastErr) console.warn('pueblo', lastErr);
   return placed;
 }
 // gente del pueblo: de pie y algunos sentados en la puerta (horneados, baratos)
