@@ -3680,7 +3680,7 @@ async function pgBuild() {
   for (const id of Object.keys(man.slots)) { let vars = await grpVars(id, PG_ONLY || !(grpWin() || QUAL.lv >= 3) ? 'lite' : null).catch(() => null); if (!vars || !vars.length || !S) continue;
     if (PG_ONLY) { const keep = vars.map((v, i) => PG_ONLY.test((vars.names || [])[i] || '') ? i : -1).filter(i => i >= 0); if (!keep.length) continue; const nm = keep.map(i => vars.names[i]), vk = keep.map(i => vars[i]); vk.names = nm; vars = vk; r2log('cobertura: ' + nm.join(', ')); }
     const tri = vars.reduce((t, ms) => t + ms.reduce((u, mm) => u + (mm.geo.index ? mm.geo.index.count : mm.geo.attributes.position.count) / 3, 0), 0) / vars.length;
-    groups.push({ id, w: PG_ONLY ? (/flower/i.test((vars.names || []).join()) ? .09 : 1) : (PG_W[id] ?? .05), vars, tri, fl: PG_ONLY ? false : /dandelion|celandine|heliophila/.test(id) }); }
+    groups.push({ id, w: PG_ONLY ? (/flower/i.test((vars.names || []).join()) ? .035 : 1) : (PG_W[id] ?? .05), vars, tri, fl: PG_ONLY ? false : /dandelion|celandine|heliophila/.test(id) }); }
   r2log('pasto nuevo: ' + groups.length + ' grupos'); if (!groups.length || !S) return; const wsum = groups.reduce((t, g) => t + g.w, 0); groups.forEach(g => { g.w /= wsum; });
   PG.avgTri = groups.reduce((t, g) => t + g.w * g.tri, 0) || 500; const lvMax = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), cap = Math.min(40000, Math.ceil(PG_TRI[lvMax] * 1.5 / PG.avgTri));
   for (const g of groups) { g.ims = g.vars.map(ms => { const n = Math.ceil(cap * g.w / g.vars.length * 1.5) + 24; return ms.map(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 4, grass: 1 }), n); im.count = 0; im.frustumCulled = false; im.receiveShadow = true; im.castShadow = false; im.userData.m = mm.m; im.userData.cap = n; S.scene.add(im); PG.ims.push(im); return im; }); }); }
@@ -3731,10 +3731,13 @@ async function vivero(groups) {
   // árboles del pack: fila de fondo, 14 m entre uno y otro
   const tm = GRP.man['trees/']; let k = 0;
   if (tm) for (const id of Object.keys(tm.slots)) { const vars = await grpVars(id).catch(() => null); if (!vars) continue; vars.forEach((ms, vi) => { const x = a.x - 60 + k * 14, z = a.z - 40; k++; put(ms, x, z, 1, 3); label((vars.names && vars.names[vi]) || id, x, z, 9); }); }
+  // palmeras: las 8 del pack, fila más atrás, 16 m entre una y otra
+  const pm = GRP.man['palms/']; let q = 0;
+  if (pm) for (const id of Object.keys(pm.slots)) { const vars = await grpVars(id).catch(() => null); if (!vars) continue; vars.forEach((ms, vi) => { const x = a.x - 56 + q * 16, z = a.z - 62; q++; put(ms, x, z, 1, 3); label((vars.names && vars.names[vi]) || id, x, z, 13); }); }
   // plantas del pack (todas, incluidas las que no se usan en el pasto): filas de 8, 5 m entre plantas
   const gm = GRP.man['grass/']; let j = 0;
   if (gm) for (const id of Object.keys(gm.slots)) { const vars = await grpVars(id, 'lite').catch(() => null); if (!vars) continue; vars.forEach((ms, vi) => { const col = j % 8, row = Math.floor(j / 8), x = a.x - 17.5 + col * 5, z = a.z - 10 - row * 6; j++; put(ms, x, z, 3.2, 4); label((vars.names && vars.names[vi]) || id, x, z, 1.4 + (col % 2) * .5); }); }
-  r2log('vivero: ' + k + ' árboles y ' + j + ' plantas en muestra');
+  r2log('vivero: ' + k + ' árboles, ' + q + ' palmeras y ' + j + ' plantas en muestra');
 }
 const GT_W = { tree_7: .52, tree_10: .24 }; // el resto se reparte el 24% restante
 async function galTrees() {
