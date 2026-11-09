@@ -4,6 +4,7 @@ import type { APIRoute } from "astro";
 import { auth } from "@wix/essentials";
 import { items } from "@wix/data";
 import { animo, esLista, grupos, type Ev } from "../../lib/vol";
+import { delDia } from "../../lib/oracion";
 
 const q = auth.elevate(items.query);
 const e = (s: unknown) => String(s ?? "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
@@ -36,6 +37,22 @@ export const GET: APIRoute = async ({ url }) => {
     // quien toma lista: aviso durante la clase para cargar los presentes
     if (clase && g.llegada && g.tareas.some(esLista)) L.push("BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:PT1H", fold("DESCRIPTION:" + e("Cuando tomes lista, cargala en la web: habitat-cfm.org/voluntario.html#lista")), "END:VALARM");
     L.push("END:VEVENT");
+  }
+  // intercesión (días a cargo) y ayuno (días publicados por adelantado), con recordatorio
+  const dia = (f: string) => f.replace(/-/g, ""), sig = (f: string) => new Date(Date.parse(f + "T12:00:00Z") + 864e5).toISOString().slice(0, 10).replace(/-/g, "");
+  const [it, ay] = await Promise.all([q("IntTurnos").eq("responsableId", v._id).ge("fecha", desde).limit(200).find(), q("IntAyuno").eq("voluntarioId", v._id).ge("fecha", desde).limit(100).find()]);
+  for (const t of it.items as { fecha: string }[]) {
+    const d = delDia(t.fecha);
+    L.push("BEGIN:VEVENT", "UID:int-" + v._id + "-" + t.fecha + "@habitat-cfm.org", stamp, "DTSTART;VALUE=DATE:" + dia(t.fecha), "DTEND;VALUE=DATE:" + sig(t.fecha),
+      fold("SUMMARY:" + e("Intercesión por Habitat · " + d.foco)), fold("DESCRIPTION:" + e("Hoy estás a cargo de la intercesión. " + d.verso.ref + " (NTV). Devocional y oración guiada: habitat-cfm.org/intercesion.html")),
+      "BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:-PT3H", fold("DESCRIPTION:" + e("Mañana estás a cargo de la intercesión: " + d.foco)), "END:VALARM",
+      "BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:PT8H", fold("DESCRIPTION:" + e("Hoy intercedés por " + d.foco)), "END:VALARM", "END:VEVENT");
+  }
+  for (const a of ay.items as { fecha: string }[]) {
+    L.push("BEGIN:VEVENT", "UID:ayuno-" + v._id + "-" + a.fecha + "@habitat-cfm.org", stamp, "DTSTART;VALUE=DATE:" + dia(a.fecha), "DTEND;VALUE=DATE:" + sig(a.fecha),
+      fold("SUMMARY:" + e("Día de ayuno por Habitat")), fold("DESCRIPTION:" + e("Elegí el tipo de ayuno que mejor te quede. Guía: habitat-cfm.org/intercesion.html#ayuno")),
+      "BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:-P3D", fold("DESCRIPTION:" + e("En 3 días es tu día de ayuno por Habitat")), "END:VALARM",
+      "BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:-PT3H", fold("DESCRIPTION:" + e("Mañana es tu día de ayuno por Habitat")), "END:VALARM", "END:VEVENT");
   }
   L.push("END:VCALENDAR");
   return new Response(L.join("\r\n") + "\r\n", { headers: { "Content-Type": "text/calendar; charset=utf-8", "Cache-Control": "public, max-age=900" } });

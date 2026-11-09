@@ -18,7 +18,7 @@ export const GET: APIRoute = async ({ request }) => {
     const tu = t.items[0] as { _id?: string; rol?: string; org?: boolean; gastos?: boolean } | undefined;
     const editores = String(((ed.items[0] || {}) as { valor?: string }).valor || "").split(/[,\s]+/);
     const profe = (p.items as { email?: string; activo?: string }[]).some((x) => x.activo !== "no" && String(x.email || "").toLowerCase().split(/[,;\s]+/).includes(email));
-    return json({ tutor: tu ? tu.rol || "tutor" : null, org: !!tu && !!tu.org, finanzas: !!tu && !!tu.gastos, sembradores: !!tu && tu.rol === "director", edicion: !!tu && (tu.rol === "director" || editores.includes(String(tu._id))), profe, voluntario: !!v.items[0] });
+    return json({ tutor: tu ? tu.rol || "tutor" : null, org: !!tu && !!tu.org, finanzas: !!tu && !!tu.gastos, sembradores: !!tu && tu.rol === "director", edicion: !!tu && (tu.rol === "director" || editores.includes(String(tu._id))), profe, voluntario: !!v.items[0], intercesion: !!v.items[0] || (!!tu && (tu.rol === "director" || !!tu.org)) });
   } catch (e) {
     console.error("rol", e);
     return json({});

@@ -7,9 +7,10 @@ import build as B
 body = '''
 <section class="tt-top"><div class="wrap">
   <div class="tt-hi"><p class="tt-k">Mi servicio en Habitat</p><h1 id="vHola">Hola</h1><p id="vWho">Cargando…</p><figure class="tt-word" id="ttWord" hidden><blockquote id="ttWordT"></blockquote><figcaption><span id="ttWordR"></span><button type="button" id="ttWordN">Otra palabra</button></figcaption></figure></div>
-  <div class="tt-act"><span id="toTut" hidden></span><a class="tt-ln" href="/campus.html">Campus</a></div>
+  <div class="tt-act"><span id="toTut" hidden></span><a class="tt-ln" href="/intercesion.html">Intercesión y ayuno</a><a class="tt-ln" href="/campus.html">Campus</a></div>
 </div></section>
 <div class="tt-main"><div class="wrap tt-v" id="vMain">
+  <a class="tt-card" id="vOra" href="/intercesion.html" hidden style="display:block;text-decoration:none;color:inherit;border-left:4px solid var(--gold)"></a>
   <div class="vs-next tt-card" id="vNext"><p class="tt-empty">Cargando tus turnos…</p></div>
   <div class="tt-card vs-lista" id="lista" hidden></div>
   <div class="vs-row">
@@ -23,6 +24,7 @@ body = '''
 <div class="tt-toast" id="ttToast" role="status" aria-live="polite"></div>
 '''
 js = '''<script src="/assets/auth.js"></script>
+<script>(async function(){try{var A=window.HabitatAuth;if(!A||!A.loggedIn())return;await A.api('GET','/members/v1/members/my');var tk=JSON.parse(localStorage.getItem('habitat:mtok')).a;var r=await fetch('/api/oracion',{headers:{'x-habitat-auth':tk}});if(!r.ok)return;var d=await r.json(),h=new Date(),hoy=h.getFullYear()+'-'+('0'+(h.getMonth()+1)).slice(-2)+'-'+('0'+h.getDate()).slice(-2);var t=(d.turnos||[]).find(function(x){return x.responsableId===d.me.id;}),a=(d.ayuno||[]).find(function(x){return x.voluntarioId===d.me.id&&x.fecha>=hoy;});var e=function(s){return String(s||'').replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};var f=function(s){var x=new Date(s+'T12:00:00');return ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][x.getDay()]+' '+x.getDate()+'/'+(x.getMonth()+1);};var el=document.getElementById('vOra');el.innerHTML='<p class="tt-k" style="margin:0 0 4px">Intercesión y ayuno 🙏</p><p style="margin:0"><b>Hoy oramos por '+e(d.hoy.foco)+'.</b> '+(t?(t.fecha===hoy?'Hoy estás a cargo de la intercesión.':'Tu próximo turno: '+e(f(t.fecha))+'.'):'')+(a?' Tu próximo día de ayuno: '+e(f(a.fecha))+'.':'')+'</p>';el.hidden=false;}catch(x){}})();</script>
 <script src="/assets/aliento.js"></script>
 <script>
 (async function(){
