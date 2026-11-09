@@ -1,7 +1,8 @@
 // Intercesión y ayuno semanal del equipo de voluntarios.
 // Cada día tiene un foco (rotan los 9), un versículo NTV verificado en bible.com, un mini devocional
 // y una oración guiada en cuatro pasos. Un responsable por día, rotativo entre los voluntarios activos.
-// El ayuno tiene su propia rotación, publicada por adelantado: la web solo marca el día; cada uno elige el tipo.
+// El ayuno es todos los días, a cargo de una persona distinta del equipo cada día, con su propia rotación publicada
+// por adelantado: la web solo marca el día; cada uno elige el tipo.
 import { q, todos, guardar, hoyAR, mandar, marco, p } from "./sem";
 import { esc } from "./vol";
 
@@ -142,20 +143,24 @@ export async function asegurarTurnos(dias = 45) {
   return n;
 }
 
-// Publica la rotación de ayuno de 1 o 3 meses: cada voluntario activo, un día por mes, repartidos en el mes.
+// Publica la rotación de ayuno de 1 o 3 meses: todos los días ayuna alguien del equipo, rotando entre los
+// voluntarios activos (la rueda sigue de un mes al otro y arranca corrida respecto de la intercesión).
 export async function publicarAyuno(mes: string, meses: number) {
   const V = await activos(), out: string[] = [];
+  if (!V.length) return ["No hay voluntarios activos."];
+  const cfg = (await q("TutConfig").eq("_id", "ayIdx").limit(1).find()).items[0] as { valor?: string } | undefined;
+  let idx = cfg && cfg.valor ? Number(cfg.valor) : Math.floor(V.length / 2);
   for (let k = 0; k < meses; k++) {
     const [y, m] = mes.split("-").map(Number), d0 = new Date(Date.UTC(y, m - 1 + k, 1)), mm = d0.toISOString().slice(0, 7);
     const ult = new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth() + 1, 0)).getUTCDate();
-    const ya = (await q("IntAyuno").eq("mes", mm).limit(500).find()).items.length;
-    if (ya) { out.push(mm + " ya publicado"); continue; }
-    for (let i = 0; i < V.length; i++) {
-      const dia = 1 + Math.floor((i * ult) / V.length), f = mm + "-" + String(dia).padStart(2, "0");
-      await guardar("IntAyuno", { _id: f + "|" + V[i]._id, title: V[i].title || "", fecha: f, mes: mm, voluntarioId: V[i]._id, aviso: "", tipo: "" });
+    if ((await q("IntAyuno").eq("mes", mm).limit(1).find()).items.length) { out.push(mm + " ya estaba publicado"); continue; }
+    for (let dia = 1; dia <= ult; dia++) {
+      const f = mm + "-" + String(dia).padStart(2, "0"), v = V[idx % V.length]; idx++;
+      await guardar("IntAyuno", { _id: f + "|" + v._id, title: v.title || "", fecha: f, mes: mm, voluntarioId: v._id, aviso: "", tipo: "" });
     }
-    out.push(mm + ": " + V.length + " voluntarios");
+    out.push(mm + ": " + ult + " días");
   }
+  await guardar("TutConfig", { _id: "ayIdx", valor: String(idx) });
   return out;
 }
 
