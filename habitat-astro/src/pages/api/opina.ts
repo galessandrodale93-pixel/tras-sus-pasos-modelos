@@ -29,7 +29,7 @@ export const GET: APIRoute = async ({ request }) => {
     // clases de la última semana que todavía no opinó
     const pendientes = mis.filter((c) => c.fecha <= hoy && c.fecha >= masDias(hoy, -7) && !hechas.has(c._id)).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 2)
       .map((c) => ({ id: c._id, fecha: c.fecha, programa: c.programa, title: c.title, profe: c.profe }));
-    const materiales = mis.filter((c) => c.fecha >= masDias(hoy, -45) && c.fecha <= masDias(hoy, 14)).sort((a, b) => b.fecha.localeCompare(a.fecha))
+    const materiales = mis.filter((c) => (c.fecha >= masDias(hoy, -45) && c.fecha <= masDias(hoy, 14)) || mats.some((m) => m.claseId === c._id && /^video/.test(String(m.mime || "")))).sort((a, b) => b.fecha.localeCompare(a.fecha))
       .map((c) => ({ id: c._id, fecha: c.fecha, programa: c.programa, title: c.title, profe: c.profe, items: mats.filter((m) => m.claseId === c._id).map((m) => ({ title: m.title, url: m.url, mime: m.mime })) }))
       .filter((c) => c.items.length);
     return json({ ok: true, pendientes, materiales });

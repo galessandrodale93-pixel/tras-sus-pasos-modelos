@@ -32,7 +32,7 @@
     if (!R.ok) return;
     if ((R.pendientes || []).length) { var L = $('#opList'); R.pendientes.forEach(function (c) { L.appendChild(card(c)); }); $('#opina').hidden = false; }
     if ((R.materiales || []).length) {
-      $('#matList').innerHTML = R.materiales.map(function (c) { return '<div class="op-m"><b>' + esc(c.title || 'Clase') + '</b><small>' + esc(c.programa || '') + ' · ' + larga(c.fecha) + (c.profe ? ' · ' + esc(c.profe) : '') + '</small>' + c.items.map(function (m) { return '<a href="' + esc(m.url) + '" target="_blank" rel="noopener">' + ico(m.mime) + ' ' + esc(m.title) + '</a>'; }).join('') + '</div>'; }).join('');
+      $('#matList').innerHTML = R.materiales.map(function (c) { return '<div class="op-m"><b>' + esc(c.title || 'Clase') + '</b><small>' + esc(c.programa || '') + ' · ' + larga(c.fecha) + (c.profe ? ' · ' + esc(c.profe) : '') + '</small>' + c.items.map(function (m) { if (/^video/.test(m.mime || '')) return '<video src="' + esc(m.url) + '" controls playsinline preload="metadata" style="width:100%;max-height:60vh;border-radius:12px;background:#10251d;margin:6px 0"></video>'; return '<a href="' + esc(m.url) + '" target="_blank" rel="noopener">' + ico(m.mime) + ' ' + esc(m.title) + '</a>'; }).join('') + '</div>'; }).join('');
       $('#matSec').hidden = false;
     }
   })();
