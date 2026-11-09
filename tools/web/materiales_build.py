@@ -6,6 +6,7 @@ import build as B
 SRC = '/home/claude/reportes/tutoriales/'
 DST = os.path.join(B.OUT, 'materiales'); os.makedirs(DST, exist_ok=True)
 docs = [
+ ('0-como-se-usan-los-paneles.pdf', 'Cómo se usan los paneles', 'El encabezado, las pestañas, elegir tocando, las personas y los avisos: lo que todos los paneles tienen igual.'),
  ('1-la-web-y-el-campus.pdf', 'La web y el Campus', 'Cómo se entra, qué ve cada alumno y cómo se usa cada herramienta del Campus.'),
  ('3-mi-servicio-voluntarios.pdf', 'Mi servicio · voluntarios', 'Turnos, asistencia, avisos en el teléfono y el equipo del mes.'),
  ('6-intercesion-y-ayuno.pdf', 'Intercesión y ayuno', 'El turno diario de oración, el foco del día, los pedidos, la rueda del ayuno y la guía de tipos de ayuno.'),
