@@ -51,7 +51,6 @@ export const POST: APIRoute = async ({ request }) => {
       case "clasificar": {
         const tipo = s(x.tipo, 40);
         if (!TIPOS_ING.includes(tipo)) return json({ error: "Elegí el tipo." }, 400);
-        if (tipo === "Cuota de alumno (MP)" && !s(x.alumnoId)) return json({ error: "Elegí el alumno." }, 400);
         const it = await reclasificar(s(x.id, 80), tipo, s(x.alumnoId, 80), x.recordar !== false, por);
         return json({ ok: true, item: it });
       }

@@ -52,7 +52,8 @@ export async function clasificar(pg: Pago, ctx?: { pag: Pagador[]; al: Alumno[] 
   const key = clavePagador(pg), nom = nombrePagador(pg), email = String((pg.payer || {}).email || "").toLowerCase();
   const rec = pag.find((x) => x._id === key);
   if (rec) return { tipo: rec.tipo, alumnoId: rec.alumnoId || "", key };
-  if (esSuscripcion(pg)) return { tipo: "Siembra automática", alumnoId: "", key };
+  // una suscripción puede ser siembra o cuota de clases: queda por clasificar hasta que alguien la confirme
+  if (esSuscripcion(pg)) return { tipo: "Por clasificar", alumnoId: "", key };
   const a = al.find((x) => (email && String(x.email || "").toLowerCase() === email) || (nom && nrm(x.title) === nrm(nom)));
   if (a) return { tipo: "Cuota de alumno (MP)", alumnoId: a._id, key };
   if (/libro|asombro/i.test(String(pg.description || ""))) return { tipo: "Libros", alumnoId: "", key };
@@ -80,7 +81,7 @@ export async function registrarPago(pg: Pago, ctx?: { pag: Pagador[]; al: Alumno
   const py = pg.payer || {}, deOtra = propias().some((u) => (u.id && String(py.id || "") === u.id) || (u.email && String(py.email || "").toLowerCase() === u.email));
   const c = prev && prev.tipo !== "Por clasificar" ? { tipo: prev.tipo, alumnoId: prev.alumnoId || "", key: prev.pagador || clavePagador(pg) } : deOtra ? { tipo: "Transferencia entre cuentas propias", alumnoId: "", key: clavePagador(pg) } : await clasificar(pg, ctx);
   const fecha = fechaAR(pg.date_approved || pg.date_created || new Date().toISOString());
-  const it: Ingreso = { _id, title: nombrePagador(pg), email: String((pg.payer || {}).email || "").toLowerCase(), fecha, mes: fecha.slice(0, 7), monto: Number(pg.transaction_amount) || 0, neto: Number((pg.transaction_details || {}).net_received_amount) || 0, tipo: c.tipo, origen: c0 === 1 ? "Mercado Pago" : "Mercado Pago (cuenta " + c0 + ")", alumnoId: c.alumnoId, pagador: c.key, descripcion: String(pg.description || "").slice(0, 300), estado: pg.status, nota: (prev && prev.nota) || "", por: "Mercado Pago" };
+  const it: Ingreso = { _id, title: nombrePagador(pg), email: String((pg.payer || {}).email || "").toLowerCase(), fecha, mes: fecha.slice(0, 7), monto: Number(pg.transaction_amount) || 0, neto: Number((pg.transaction_details || {}).net_received_amount) || 0, tipo: c.tipo, origen: c0 === 1 ? "Mercado Pago" : "Mercado Pago (cuenta " + c0 + ")", alumnoId: c.alumnoId, pagador: c.key, descripcion: ((esSuscripcion(pg) ? "Suscripción · " : "") + String(pg.description || "")).slice(0, 300), estado: pg.status, nota: (prev && prev.nota) || "", por: "Mercado Pago" };
   await guardar("FinIngresos", it as unknown as Record<string, unknown>);
   if (!prev && SIEMBRA.includes(it.tipo) && it.email) await desdePago({ email: it.email, nombre: it.title || "", monto: it.monto, recurrente: it.tipo === "Siembra automática", fecha });
   return it;
@@ -128,8 +129,8 @@ export async function reclasificar(id: string, tipo: string, alumnoId: string, r
   await guardar("FinIngresos", nuevo as unknown as Record<string, unknown>);
   if (recordar && it.pagador && tipo !== "Por clasificar") {
     await guardar("FinPagadores", { _id: it.pagador, title: it.title || "", tipo, alumnoId: nuevo.alumnoId });
-    // los otros pagos pendientes de la misma persona se ordenan solos
-    const otros = (await todos<Ingreso>("FinIngresos")).filter((x) => x.pagador === it.pagador && x.tipo === "Por clasificar" && x._id !== id);
+    // todos los pagos de la misma persona pasan al mismo tipo
+    const otros = (await todos<Ingreso>("FinIngresos")).filter((x) => x.pagador === it.pagador && x._id !== id && x.tipo !== tipo);
     for (const o of otros) await guardar("FinIngresos", { ...o, tipo, alumnoId: nuevo.alumnoId, por } as unknown as Record<string, unknown>);
   }
   if (SIEMBRA.includes(tipo) && !SIEMBRA.includes(it.tipo) && it.email) await desdePago({ email: it.email, nombre: it.title || "", monto: it.monto, recurrente: tipo === "Siembra automática", fecha: it.fecha });

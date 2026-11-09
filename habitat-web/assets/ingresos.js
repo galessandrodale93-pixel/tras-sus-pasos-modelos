@@ -17,7 +17,7 @@
     'Siembra puntual': 'Una ofrenda o donación de una vez, por link, transferencia o QR.',
     'Libros': 'Venta de libros (Asombro u otros).',
     'Efectivo': 'Plata en mano: se carga con «Cargar efectivo u otro ingreso».',
-    'Cuota de alumno (MP)': 'Un alumno que pagó su cuota por Mercado Pago en lugar de Debi. Además registrala en Cobros con su escuela y mes.',
+    'Cuota de alumno (MP)': 'Cuotas y suscripciones a clases pagadas por Mercado Pago en lugar de Debi. Si el alumno está en la lista, elegilo; si es una cuota de un curso, registrala también en Cobros.',
     'Transferencia entre cuentas propias': 'Plata que pasa de la cuenta de Agustina (donde caen Debi y Payway) a esta cuenta. Ya está contada en Cobros, así que acá no suma.',
     'Otro': 'Un ingreso de Habitat que no entra en ningún tipo anterior. Anotá en la nota qué fue.',
     'Por clasificar': 'Todavía sin revisar.'
@@ -42,11 +42,25 @@
     var por = {}; del.forEach(function (x) { por[x.tipo] = (por[x.tipo] || 0) + (+x.monto || 0); });
     var tot = del.reduce(function (a, x) { return a + (+x.monto || 0); }, 0), cq = cuotas(MES), prop = todo.filter(function (x) { return !suma(x); }).reduce(function (a, x) { return a + (+x.monto || 0); }, 0);
     $('#iTot').innerHTML = '<div class="fn-kpi g"><b>' + plata(tot) + '</b><span>ingresos del mes (sin cuotas Debi)</span></div>' + I.tipos.filter(function (t) { return por[t]; }).map(function (t) { return '<div class="fn-kpi"><b>' + plata(por[t]) + '</b><span>' + esc(t) + '</span></div>'; }).join('') + '<div class="fn-kpi"><b>' + plata(cq) + '</b><span>cuotas registradas en Cobros (aparte)</span></div>' + (prop ? '<div class="fn-kpi"><b>' + plata(prop) + '</b><span>entre cuentas propias (no suma)</span></div>' : '');
-    // por clasificar
-    var P = I.ingresos.filter(function (x) { return x.tipo === 'Por clasificar'; }).sort(function (a, b) { return String(b.fecha).localeCompare(String(a.fecha)); });
+    // por clasificar, agrupado por persona: una decisión por persona clasifica todos sus pagos
+    var P = I.ingresos.filter(function (x) { return x.tipo === 'Por clasificar'; });
+    var G = {}; P.forEach(function (x) { var k = x.pagador || x._id; (G[k] = G[k] || { k: k, L: [], t: 0 }).L.push(x); G[k].t += +x.monto || 0; });
+    var GL = Object.keys(G).map(function (k) { var g = G[k]; g.L.sort(function (a, b) { return String(b.fecha).localeCompare(String(a.fecha)); }); return g; }).sort(function (a, b) { return b.t - a.t; });
     $('#iPend').hidden = !P.length;
-    $('#iPend').innerHTML = '<h2 class="tt-h">Por clasificar · ' + P.length + '</h2>' + P.map(function (x) { return '<div class="fn-pr" data-id="' + esc(x._id) + '"><div class="w"><b>' + esc(x.title) + ' · ' + plata(x.monto) + '</b><small>' + esc([x.fecha, x.email, x.descripcion].filter(Boolean).join(' · ')) + '</small></div><button class="tt-btn s" type="button">Clasificar</button></div>'; }).join('');
-    $$('#iPend .fn-pr').forEach(function (r) { $('button', r).onclick = function () { clasificar(I.ingresos.find(function (x) { return x._id === r.dataset.id; })); }; });
+    $('#iPend').innerHTML = '<h2 class="tt-h">Por clasificar · ' + GL.length + ' persona' + (GL.length === 1 ? '' : 's') + ' · ' + P.length + ' pagos</h2><p class="tt-tip">Ordenadas de mayor a menor. Elegí qué es cada persona y se clasifican todos sus pagos, también los que vengan.</p>' + GL.map(function (g) {
+      var x = g.L[0], desc = {}; g.L.forEach(function (y) { if (y.descripcion) desc[y.descripcion.slice(0, 40)] = 1; });
+      return '<div class="fn-pr" data-k="' + esc(g.k) + '"><div class="w"><b>' + esc(x.title) + '</b><small>' + g.L.length + ' pago' + (g.L.length === 1 ? '' : 's') + ' · ' + plata(g.t) + ' · ' + esc(g.L[g.L.length - 1].fecha) + (g.L.length > 1 ? ' a ' + esc(x.fecha) : '') + ' · ' + esc(x.origen) + '</small><small>' + esc(Object.keys(desc).slice(0, 3).join(' · ')) + '</small></div>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><select aria-label="Tipo">' + F.opts([['', 'Elegí qué es']].concat(I.tipos.filter(function (t) { return t !== 'Efectivo' && t !== 'Por clasificar'; }).map(function (t) { return [t, t]; })), '') + '</select><button class="tt-btn s" type="button">Aplicar</button></div></div>';
+    }).join('');
+    $$('#iPend .fn-pr').forEach(function (r) {
+      var g = G[r.dataset.k], sel = $('select', r);
+      $('button', r).onclick = function () {
+        if (!sel.value) { F.toast('Elegí qué es.'); return; }
+        if (sel.value === 'Cuota de alumno (MP)') { clasificar(Object.assign({}, g.L[0], { tipo: sel.value })); return; }
+        var b = this; b.disabled = true;
+        api('POST', { op: 'clasificar', id: g.L[0]._id, tipo: sel.value, alumnoId: '', recordar: true }).then(function () { g.L.forEach(function (y) { y.tipo = sel.value; }); F.toast(g.L.length + ' pago' + (g.L.length === 1 ? '' : 's') + ' clasificado' + (g.L.length === 1 ? '' : 's') + ' como ' + sel.value + '.'); render(); }).catch(function (e) { b.disabled = false; F.toast(e.message); });
+      };
+    });
     // gráfico: últimos 12 meses apilado por tipo, y las cuotas Debi en una barra aparte
     var ms = []; for (var i = 11; i >= 0; i--) ms.push(addM(MES, -i));
     var tipos = I.tipos.filter(function (t) { return NO_SUMA.indexOf(t) < 0 && I.ingresos.some(function (x) { return x.tipo === t; }); });
@@ -73,7 +87,7 @@
       '<p class="w tt-tip">Si es siembra, la persona se suma sola a la lista de Sembradores y le llega la bienvenida. Si es cuota de un alumno, registrala también en Cobros con su escuela y mes.</p>' +
       '<div class="w tt-wa"><button class="tt-btn" type="submit">Guardar</button><button class="tt-btn s" type="button" data-close>Cancelar</button></div></form>', function (m, close) {
       var f = $('form', m), sh = function () { $('[data-al]', m).hidden = f.tipo.value !== 'Cuota de alumno (MP)'; $('[data-g]', m).textContent = GUIA[f.tipo.value] || ''; }; sh(); f.tipo.onchange = sh;
-      f.onsubmit = function (e) { e.preventDefault(); api('POST', { op: 'clasificar', id: x._id, tipo: f.tipo.value, alumnoId: f.alumnoId.value, recordar: f.rec.checked }).then(function (r) { upd(r.item); if (f.rec.checked) I.ingresos.forEach(function (y) { if (y.pagador && y.pagador === x.pagador && y.tipo === 'Por clasificar') { y.tipo = r.item.tipo; y.alumnoId = r.item.alumnoId; } }); close(); F.toast('Clasificado.'); render(); }).catch(function (e) { F.toast(e.message); }); };
+      f.onsubmit = function (e) { e.preventDefault(); api('POST', { op: 'clasificar', id: x._id, tipo: f.tipo.value, alumnoId: f.alumnoId.value, recordar: f.rec.checked }).then(function (r) { upd(r.item); if (f.rec.checked) I.ingresos.forEach(function (y) { if (y.pagador && y.pagador === x.pagador) { y.tipo = r.item.tipo; y.alumnoId = r.item.alumnoId; } }); close(); F.toast('Clasificado.'); render(); }).catch(function (e) { F.toast(e.message); }); };
     });
   }
   function manual(x) {
