@@ -59,7 +59,7 @@ def page(fn, title, body, js=''):
 # ---------- Mis cursos (datos reales) ----------
 campus = '''
 <section class="cx-hero"><div class="wrap">
-  <div class="hi rv in"><span class="kick">Campus Habitat</span><h1>Hola<em id="hiName"></em></h1><p id="hiLine">Cargando tus cursos…</p><div class="hi-act"><a class="out" href="#agenda" id="bell">Avisos<span class="bd" id="bellN" hidden></span></a><a class="out" href="/biblia.html">Biblia</a><a class="out" href="/diario.html">Mi diario</a><a class="out" href="/perfil.html">Mi perfil</a><a class="out gold" href="/tutor.html" id="lnTut" hidden>Panel de tutores</a><a class="out gold" href="/organizacion.html" id="lnOrg" hidden>Organización</a><a class="out gold" href="/finanzas.html" id="lnFin" hidden>Finanzas</a><a class="out gold" href="/sembradores-panel.html" id="lnSem" hidden>Sembradores</a><a class="out gold" href="/edicion.html" id="lnEd" hidden>Edición de videos</a><a class="out gold" href="/intercesion.html" id="lnOra" hidden>Intercesión</a><a class="out gold" href="/testimonio.html" id="lnTes" hidden>Mi testimonio 🎥</a><a class="out gold" href="/profesor.html" id="lnProf" hidden>Profesores</a><a class="out gold" href="/voluntario.html" id="lnVol" hidden>Mi servicio</a><a class="out" href="/materiales.html" id="lnMat" hidden>Tutoriales</a><button class="out" type="button" id="outBtn">Cerrar sesión</button></div></div>
+  <div class="hi rv in"><span class="kick">Campus Habitat</span><h1>Hola<em id="hiName"></em></h1><p id="hiLine">Cargando tus cursos…</p><div class="hi-act"><a class="out" href="#agenda" id="bell">Avisos<span class="bd" id="bellN" hidden></span></a><a class="out" href="/biblia.html">Biblia</a><a class="out" href="/diario.html">Mi diario</a><a class="out" href="/perfil.html">Mi perfil</a><a class="out gold" href="/testimonio.html" id="lnTes" hidden>Mi testimonio 🎥</a><button class="out-txt" type="button" id="outBtn">Cerrar sesión</button></div></div>
   <a class="resume rv in" id="resume" href="#" hidden>
     <div class="rimg"><img id="rImg" src="" alt=""><span class="play" aria-hidden="true">▶</span></div>
     <div class="rtx"><span class="kick">Continuar</span><b id="rStep"></b><small id="rProg"></small><div class="bar"><i id="rBar"></i></div></div>
@@ -71,6 +71,28 @@ campus = '''
   <div class="st"><b id="sHrs">–</b><span>de formación</span></div>
   <div class="st"><b id="sFin">–</b><span>programas completos</span></div>
 </div></section>
+<section class="cx-sec eq-sec" id="equipo" hidden><div class="wrap">
+  <div class="cx-h"><h2>Mi servicio en Habitat</h2><span class="sub">Lo que te toca en el equipo</span></div>
+  <div id="eqGrupos"></div>
+</div></section>
+<style>
+.eq-sec{padding-bottom:10px}
+.eq-g+.eq-g{margin-top:26px}
+.eq-g h3{font:600 .78rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.eq-cs{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.eq-c{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:start;padding:18px;border-radius:20px;border:1px solid var(--line);background:#fff;color:inherit;text-decoration:none;transition:transform .25s cubic-bezier(.2,.8,.2,1),border-color .25s,box-shadow .25s}
+.eq-c:hover,.eq-c:focus-visible{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 10px 26px -18px rgba(16,37,29,.45)}
+.eq-c i{grid-row:span 3;font-style:normal;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:1.35rem;background:var(--paper);border:1px solid var(--line)}
+.eq-c b{font:500 1.3rem/1.15 var(--serif);color:var(--ink)}
+.eq-c small{color:var(--muted);font-size:.86rem;line-height:1.4}
+.eq-c em{font-style:normal;justify-self:start;margin-top:6px;font:600 .76rem var(--sans);padding:5px 10px;border-radius:999px;background:var(--sand);color:var(--ink)}
+.eq-c em:empty{display:none}
+.eq-c.hot{background:var(--ink);border-color:var(--ink)}
+.eq-c.hot b{color:var(--cream)}.eq-c.hot small{color:rgba(246,240,228,.72)}.eq-c.hot i{background:rgba(246,240,228,.1);border-color:rgba(246,240,228,.18)}
+.eq-c.hot em{background:var(--gold-2);color:var(--ink)}
+.out-txt{border:0;background:none;color:rgba(246,240,228,.6);font:500 .82rem var(--sans);text-decoration:underline;cursor:pointer;padding:8px 4px;align-self:center}
+.out-txt:hover{color:var(--cream)}
+</style>
 <section class="cx-sec" id="servicio" hidden><div class="wrap">
   <div class="cx-h"><h2>Mi servicio</h2><span class="cal-act"><a href="/voluntario.html">Ver todo</a><a id="svCal" href="#">+ Avisos en mi teléfono</a></span></div>
   <div class="ag" id="svList"></div>
@@ -112,8 +134,21 @@ if(!A.loggedIn()){location.replace('/ingresar.html');return;}
 document.getElementById('outBtn').onclick=function(){A.logout();};
 var X=window.CampusExtra;
 (async function(){try{await A.api('GET','/members/v1/members/my');var tk=JSON.parse(localStorage.getItem('habitat:mtok')).a;
- fetch('/api/rol',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();}).then(function(r){var G=function(i){return document.getElementById(i);};if(r.tutor)G('lnTut').hidden=false;if(r.org)G('lnOrg').hidden=false;if(r.finanzas)G('lnFin').hidden=false;if(r.sembradores)G('lnSem').hidden=false;if(r.edicion)G('lnEd').hidden=false;if(r.intercesion)G('lnOra').hidden=false;if(r.profe)G('lnProf').hidden=false;if(r.voluntario)G('lnVol').hidden=false;if(r.tutor||r.org||r.finanzas||r.sembradores||r.edicion||r.intercesion||r.profe||r.voluntario)G('lnMat').hidden=false;}).catch(function(){});fetch('/api/testimonio',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();}).then(function(t){if(t&&t.clave&&t.estado!=='Subido'){var a=document.getElementById('lnTes');a.href='/testimonio.html?k='+t.clave;a.hidden=false;}}).catch(function(){});var r=await fetch('/api/voluntario',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();});
- if(!r.voluntario||!r.turnos||!r.turnos.length)return;var hoy=new Date(Date.now()-3*3600e3).toISOString().slice(0,10),man=new Date(Date.now()+21*3600e3).toISOString().slice(0,10);
+ fetch('/api/rol?resumen=1',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();}).then(function(r){
+ var d=r.datos||{},DL=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],hoy=new Date(Date.now()-3*3600e3).toISOString().slice(0,10),man=new Date(Date.now()+21*3600e3).toISOString().slice(0,10);
+ var cuando=function(f){if(!f)return '';if(f===hoy)return 'hoy';if(f===man)return 'mañana';var x=new Date(f+'T12:00:00');return 'el '+DL[x.getDay()]+' '+x.getDate()+'/'+(x.getMonth()+1);};
+ var oraT=d.oracion?'Te toca orar y ayunar '+cuando(d.oracion):'',ed=d.edicion,edT=ed?(r.tutor==='director'?(ed.entregar?ed.entregar+' para entregar':'')+(ed.editadas?(ed.entregar?' · ':'')+ed.editadas+' para subir':''):(ed.edicion?ed.edicion+' en edición':'')+(ed.editadas?(ed.edicion?' · ':'')+ed.editadas+' para subir':'')):'';
+ var G=[
+  ['Mi servicio',[[r.voluntario,'vol','/voluntario.html','🙌🏽','Mi servicio','Tus turnos, avisos y el equipo del mes',''],[r.intercesion,'ora','/intercesion.html','🙏','Intercesión y ayuno','El foco del día, los pedidos y tu turno',oraT,d.oracion===hoy||d.oracion===man],[true,'mat','/materiales.html','📘','Tutoriales','Cómo se usa cada panel, paso a paso','']]],
+  ['Acompañar alumnos',[[r.tutor,'tut','/tutor.html','🤝','Panel de tutores','Seguimiento, lista y tiempo de mesa',''],[r.profe,'prof','/profesor.html','🎓','Profesores','Tus clases, el material y tu reflexión','']]],
+  ['Dirección',[[r.org,'org','/organizacion.html','🗓️','Organización','Calendario, clases, servicio y equipo',''],[r.finanzas,'fin','/finanzas.html','💰','Finanzas','Cobros, ingresos, salidas y Debi',d.porClasificar>0?d.porClasificar+' por clasificar':''],[r.sembradores,'sem','/sembradores-panel.html','🌱','Sembradores','Quienes siembran, testimonios e informes',d.sembradores>0?d.sembradores+' sembrador'+(d.sembradores===1?'':'es'):''],[r.edicion,'ed','/edicion.html','🎬','Edición de videos','Las clases grabadas, de la entrega al Campus',edT]]]
+ ];
+ var equipo=r.tutor||r.org||r.finanzas||r.sembradores||r.edicion||r.intercesion||r.profe||r.voluntario;if(!equipo)return;
+ var H=G.map(function(g){var cs=g[1].filter(function(c){return c[0];});if(!cs.length||(g[0]==='Mi servicio'&&cs.length===1&&!r.voluntario&&!r.intercesion))return '';return '<div class="eq-g"><h3>'+g[0]+'</h3><div class="eq-cs">'+cs.map(function(c){return '<a class="eq-c'+(c[7]?' hot':'')+'" id="eq-'+c[1]+'" href="'+c[2]+'"><i aria-hidden="true">'+c[3]+'</i><b>'+c[4]+'</b><small>'+c[5]+'</small><em>'+X.esc(c[6])+'</em></a>';}).join('')+'</div></div>';}).join('');
+ document.getElementById('eqGrupos').innerHTML=H;document.getElementById('equipo').hidden=!H;
+ window.__eqVol&&window.__eqVol();
+}).catch(function(){});fetch('/api/testimonio',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();}).then(function(t){if(t&&t.clave&&t.estado!=='Subido'){var a=document.getElementById('lnTes');a.href='/testimonio.html?k='+t.clave;a.hidden=false;}}).catch(function(){});var r=await fetch('/api/voluntario',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();});
+ if(!r.voluntario||!r.turnos||!r.turnos.length)return;var hoy=new Date(Date.now()-3*3600e3).toISOString().slice(0,10),man=new Date(Date.now()+21*3600e3).toISOString().slice(0,10);window.__eqVol=function(){var c=document.querySelector('#eq-vol em');if(!c)return;var t=r.turnos[0],x=new Date(t.fecha+'T12:00:00-03:00');c.textContent=(t.fecha===hoy?'Servís hoy':t.fecha===man?'Servís mañana':'Tu próximo turno: '+['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][x.getDay()]+' '+x.getDate()+'/'+(x.getMonth()+1));if(t.fecha===hoy||t.fecha===man)c.parentNode.classList.add('hot');};window.__eqVol();
  document.getElementById('servicio').hidden=false;document.getElementById('svCal').href=r.voluntario.ics.replace(/^https:/,'webcal:');
  document.getElementById('svList').innerHTML=r.turnos.map(function(t){var d=new Date(t.fecha+'T12:00:00-03:00'),hot=t.fecha===hoy||t.fecha===man;return '<div class="ag-it'+(hot?' hot':'')+'"><div class="ag-d"><b>'+d.getDate()+'</b><small>'+t.dia.slice(0,3)+'</small></div><div class="ag-t"><span class="ag-k">'+(t.fecha===hoy?'Hoy':t.fecha===man?'Mañana':'Servicio')+'</span><b>'+X.esc(t.tareas.join(' · '))+'</b><small>Llegada '+t.llegada+' h · la clase empieza '+t.clase+' h</small></div></div>';}).join('');
  document.getElementById('svAn').textContent=r.animo+' Sumá «Avisos en mi teléfono» y te llega el recordatorio el día que te toca (los sábados, el viernes).';
