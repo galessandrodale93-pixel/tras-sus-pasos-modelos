@@ -1,5 +1,5 @@
 // Aviso automático de Mercado Pago (webhook). En Mercado Pago → Tus integraciones → Webhooks:
-// URL https://www.habitat-cfm.org/api/mp, evento "Pagos". Si cargás MP_WEBHOOK_SECRET en el gestor de claves,
+// URL https://www.habitat-cfm.org/api/mp (y en la otra cuenta https://www.habitat-cfm.org/api/mp?c=2), evento "Pagos". Si cargás MP_WEBHOOK_SECRET en el gestor de claves,
 // además se verifica la firma. De todos modos el pago se vuelve a pedir a Mercado Pago con la clave propia.
 import type { APIRoute } from "astro";
 import { auth } from "@wix/essentials";
@@ -9,9 +9,9 @@ import { porId } from "../../lib/mp";
 const getSecret = auth.elevate(secrets.getSecretValue);
 const ok = (b: unknown = { ok: true }, status = 200) => new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json" } });
 
-async function firmaValida(request: Request, dataId: string) {
+async function firmaValida(request: Request, dataId: string, c: number) {
   let sec = "";
-  try { sec = ((await getSecret("MP_WEBHOOK_SECRET")) || {}).value || ""; } catch { /* sin secreto: no se verifica */ }
+  try { sec = ((await getSecret(c === 1 ? "MP_WEBHOOK_SECRET" : "MP_WEBHOOK_SECRET_" + c)) || {}).value || ""; } catch { /* sin secreto: no se verifica */ }
   if (!sec) return true;
   const sig = request.headers.get("x-signature") || "", rid = request.headers.get("x-request-id") || "";
   const parts = Object.fromEntries(sig.split(",").map((x) => x.trim().split("=")));
@@ -28,8 +28,9 @@ async function manejar(request: Request, url: URL) {
   const tipo = String(body.type || body.topic || url.searchParams.get("type") || url.searchParams.get("topic") || "");
   const id = String(((body.data as Record<string, unknown>) || {}).id || url.searchParams.get("data.id") || url.searchParams.get("id") || "");
   if (!/payment/.test(tipo) || !/^\d+$/.test(id)) return ok({ ignorado: true });
-  if (!(await firmaValida(request, url.searchParams.get("data.id") || id))) return ok({ error: "firma" }, 401);
-  try { const it = await porId(id); return ok({ ok: true, tipo: it && it.tipo }); }
+  const c = url.searchParams.get("c") === "2" ? 2 : 1;
+  if (!(await firmaValida(request, url.searchParams.get("data.id") || id, c))) return ok({ error: "firma" }, 401);
+  try { const it = await porId(id, c); return ok({ ok: true, tipo: it && it.tipo }); }
   catch (e) { console.error("mp", e); return ok({ error: String((e as Error).message || e) }, 500); }
 }
 
