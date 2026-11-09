@@ -1,0 +1,48 @@
+# Dispara los avisos por mail de Habitat CFM (la web está en Wix y no tiene tareas programadas propias).
+# Los endpoints sin parámetros solo mandan lo de hoy y una sola vez por turno, así que repetir no duplica mails.
+# Si algo falla (error, status distinto de 200, voluntarios sin email), el job queda en rojo y GitHub avisa por mail.
+name: Avisos Habitat CFM
+
+on:
+  schedule:
+    - cron: "12 12 * * *"   # todos los días 9:12 (Argentina): /api/avisos
+    - cron: "32 22 * * 3,4" # miércoles y jueves 19:32: /api/lista-aviso
+    - cron: "2 13 * * 6"    # sábados 10:02: /api/lista-aviso
+  workflow_dispatch:
+    inputs:
+      endpoint:
+        description: "Qué disparar"
+        type: choice
+        options: [avisos, lista-aviso]
+        default: avisos
+
+jobs:
+  disparar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Llamar al endpoint
+        env:
+          SCHED: ${{ github.event.schedule }}
+          MANUAL: ${{ inputs.endpoint }}
+        run: |
+          case "$SCHED" in
+            "12 12 * * *") EP=avisos ;;
+            "") EP="${MANUAL:-avisos}" ;;
+            *) EP=lista-aviso ;;
+          esac
+          URL="https://www.habitat-cfm.org/api/$EP"
+          echo "Llamando a $URL"
+          code=$(curl -sS --retry 2 --retry-delay 20 --max-time 120 -o resp.json -w '%{http_code}' "$URL")
+          echo "HTTP $code"
+          jq . resp.json || cat resp.json
+          [ "$code" = 200 ] || { echo "::error::$EP respondió HTTP $code"; exit 1; }
+          if jq -e '.error' resp.json >/dev/null; then echo "::error::$EP: $(jq -r .error resp.json)"; exit 1; fi
+          mal=$(jq '[.enviados[]? | select((.status? // 200) != 200 or .sinEmail == true)] | length' resp.json)
+          ok=$(jq '[.enviados[]? | select(.status == 200)] | length' resp.json)
+          echo "### $EP: $ok avisos enviados" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$mal" != 0 ]; then
+            echo "::error::$EP: $mal avisos con problemas (status distinto de 200 o voluntario sin email)"
+            jq -c '.enviados[] | select((.status? // 200) != 200 or .sinEmail == true)' resp.json
+            exit 1
+          fi
