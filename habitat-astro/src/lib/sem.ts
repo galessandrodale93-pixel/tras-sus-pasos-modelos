@@ -48,13 +48,13 @@ export async function mandar(to: string, asunto: string, html: string, remitente
   return { ok: r.ok, status: r.status, resp: r.ok ? "ok" : (await r.text()).slice(0, 300) };
 }
 
-const marco = (kick: string, titulo: string, cuerpo: string) => `<div style="font-family:Georgia,serif;max-width:560px;margin:auto;color:#10251d;background:#fbf8f2;padding:28px;border-radius:16px">
+export const marco = (kick: string, titulo: string, cuerpo: string) => `<div style="font-family:Georgia,serif;max-width:560px;margin:auto;color:#10251d;background:#fbf8f2;padding:28px;border-radius:16px">
 <p style="font:600 12px Arial;letter-spacing:.14em;color:#b8904f;text-transform:uppercase;margin:0 0 10px">${kick}</p>
 <h1 style="font-size:26px;margin:0 0 14px">${titulo}</h1>
 ${cuerpo}
 <p style="font:14px/1.6 Arial;color:#5d6b64;margin:22px 0 0">Habitat CFM · Centro de Formación Ministerial<br><a href="${WEB}/sembradores.html" style="color:#b8904f">habitat-cfm.org/sembradores</a></p>
 </div>`;
-const p = (t: string) => `<p style="font:16px/1.6 Arial;margin:0 0 12px">${t}</p>`;
+export const p = (t: string) => `<p style="font:16px/1.6 Arial;margin:0 0 12px">${t}</p>`;
 const nom = (s: Sembrador) => esc(String(s.title || "").split(/\s+/)[0] || "");
 
 const DESTINO: Record<string, string> = {

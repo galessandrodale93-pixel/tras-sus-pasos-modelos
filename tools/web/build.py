@@ -357,13 +357,17 @@ sem = phero('sand', 'Proyecto Sembradores', 'Sembrá en la extensión del Reino'
 <div class="panel rv" style="background:rgba(246,240,228,.06);border-color:rgba(246,240,228,.12)"><span class="kick">Qué recibís</span><h3>Vas a ser parte</h3>
 <ul class="ticks" style="color:rgba(246,240,228,.85)"><li>Informes trimestrales con novedades y avances</li><li>Testimonios de impacto</li><li>Reuniones anuales de visión</li><li>Regalías</li></ul></div>
 </div></section>
+<section class="sec" id="voces" hidden><div class="wrap">
+<div class="txt rv in" style="max-width:640px"><span class="kick">Voces de Habitat</span><h2>Lo que Dios hace con cada siembra</h2><p class="lead">Alumnos que hoy se están formando cuentan su historia.</p></div>
+<div id="vocesG" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px;margin-top:24px"></div>
+</div></section>
 <section class="sec" id="sumate"><div class="wrap split">
 <div class="txt rv"><span class="kick">Sumate</span><h2>Quiero sembrar</h2><p class="lead">Dejanos tus datos y te contactamos para contarte cómo sumarte.</p></div>
 <div class="panel rv"><div data-form-id="{FS}" data-thanks="¡Gracias por sumarte! Pronto te vamos a contactar."></div></div>
 </div></section>
 '''
 page('sembradores.html', 'Proyecto Sembradores · Habitat', 'Una iniciativa para sembrar en misioneros, ministerios, becas y ayuda humanitaria.', sem,
-     '<script type="module" src="/assets/form.js"></script>\n')
+     '<script type="module" src="/assets/form.js"></script>\n<script>fetch("/api/testimonio?publicos=1").then(function(r){return r.json();}).then(function(L){if(!Array.isArray(L)||!L.length)return;var e=function(t){return String(t||"").replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",\'"\':"&quot;"}[c];});};document.getElementById("vocesG").innerHTML=L.map(function(t){return \'<figure class="panel" style="margin:0;display:grid;gap:10px">\'+(t.video?\'<video src="\'+e(t.video)+\'" controls playsinline preload="metadata" style="width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:14px;background:#10251d"></video>\':"")+(t.texto?\'<blockquote style="margin:0;font-style:italic">«\'+e(t.texto)+\'»</blockquote>\':"")+\'<figcaption><b>\'+e(t.nombre)+\'</b>\'+(t.becado?" · alumno becado":"")+\'</figcaption></figure>\';}).join("");document.getElementById("voces").hidden=false;}).catch(function(){});</script>\n')
 
 # ---------- VOLUNTARIOS ----------
 vol = phero('candle', 'Voluntarios', '¡Formá parte de nuestro equipo!', 'Nos alegra que quieras ser parte del equipo de voluntarios de Habitat.') + f'''
@@ -377,7 +381,7 @@ vol = phero('candle', 'Voluntarios', '¡Formá parte de nuestro equipo!', 'Nos a
 </div></section>
 '''
 page('voluntarios.html', 'Voluntarios · Habitat', 'Sumate al equipo de voluntarios de Habitat.', vol,
-     '<script type="module" src="/assets/form.js"></script>\n')
+     '<script type="module" src="/assets/form.js"></script>\n<script>fetch("/api/testimonio?publicos=1").then(function(r){return r.json();}).then(function(L){if(!Array.isArray(L)||!L.length)return;var e=function(t){return String(t||"").replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",\'"\':"&quot;"}[c];});};document.getElementById("vocesG").innerHTML=L.map(function(t){return \'<figure class="panel" style="margin:0;display:grid;gap:10px">\'+(t.video?\'<video src="\'+e(t.video)+\'" controls playsinline preload="metadata" style="width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:14px;background:#10251d"></video>\':"")+(t.texto?\'<blockquote style="margin:0;font-style:italic">«\'+e(t.texto)+\'»</blockquote>\':"")+\'<figcaption><b>\'+e(t.nombre)+\'</b>\'+(t.becado?" · alumno becado":"")+\'</figcaption></figure>\';}).join("");document.getElementById("voces").hidden=false;}).catch(function(){});</script>\n')
 
 # ---------- UBICACION ----------
 ubi = phero('mountains', 'Ubicación', 'Vení a visitarnos') + f'''

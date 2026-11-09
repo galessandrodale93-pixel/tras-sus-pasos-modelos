@@ -86,6 +86,51 @@
     });
   }
 
+
+  /* ---------- Videos de alumnos ---------- */
+  var VC = { 'Invitado': 'y', 'Ya lo subió (revisar)': 'r', 'Necesita ayuda': 'r', 'Filmar en Habitat': 'o', 'Subido': 'g', 'Sin respuesta': '', 'Descartado': '' };
+  function renderVideos() {
+    var V = D.videos || [], c = function (e) { return V.filter(function (v) { return v.estado === e; }).length; };
+    $('#vKpi').innerHTML = '<div class="sm-kpi"><b>' + c('Invitado') + '</b><span>esperando su video</span></div><div class="sm-kpi"><b>' + c('Subido') + '</b><span>videos recibidos</span></div><div class="sm-kpi"><b>' + (c('Necesita ayuda') + c('Ya lo subió (revisar)')) + '</b><span>piden una mano</span></div><div class="sm-kpi"><b>' + c('Filmar en Habitat') + '</b><span>filman en Habitat</span></div>';
+    var orden = ['Ya lo subió (revisar)', 'Necesita ayuda', 'Filmar en Habitat', 'Subido', 'Invitado', 'Sin respuesta', 'Descartado'];
+    var L = V.slice().sort(function (a, b) { return orden.indexOf(a.estado) - orden.indexOf(b.estado) || String(b.invitado).localeCompare(String(a.invitado)); });
+    $('#vList').innerHTML = L.length ? L.map(function (v) {
+      var det = v.estado === 'Invitado' ? 'Hasta el ' + fcorta(v.limite) + ' · ' + (v.recordatorios || 0) + ' de ' + D.tope + ' recordatorios' : v.estado === 'Subido' ? 'Subido el ' + fcorta(v.subido) : 'Invitado el ' + fcorta(v.invitado);
+      return '<div class="sm-row" data-id="' + esc(v._id) + '"><div class="w"><b>' + esc(v.title) + '</b><small>' + esc(det + (v.email ? '' : ' · sin email')) + '</small></div><div class="sm-tags">' + (v.becado ? '<span class="sm-tag o">Becado</span>' : '') + '<span class="sm-tag ' + (VC[v.estado] || '') + '">' + esc(v.estado) + '</span></div></div>';
+    }).join('') : '<p class="tt-empty">Todavía no invitaste a nadie. Tocá «Proponer alumnos» para ver la lista sugerida.</p>';
+    $$('#vList .sm-row').forEach(function (r) { r.onclick = function () { videoModal(V.find(function (x) { return x._id === r.dataset.id; })); }; });
+  }
+  function videoModal(v) {
+    var link = location.origin + '/testimonio.html?k=' + v.clave;
+    modal('<form class="tt-form"><h2 class="w">' + esc(v.title) + (v.becado ? ' · becado' : '') + '</h2>' +
+      (v.video ? '<video class="w" src="' + esc(v.video) + '" controls playsinline style="max-height:50vh;border-radius:12px;background:#000"></video>' : '') +
+      '<label>Estado<select name="estado">' + opts(D.estadosVideo, v.estado) + '</select></label><label>Nota<input name="nota" value="' + esc(v.nota || '') + '"></label>' +
+      '<p class="w tt-tip">Su página personal (para subir el video por él si lo filman en Habitat): <a href="' + esc(link) + '" target="_blank" rel="noopener">abrir</a>. Volver a «Invitado» reactiva los recordatorios.</p>' +
+      '<div class="w tt-wa"><button class="tt-btn" type="submit">Guardar</button>' + (v.video ? '<button class="tt-btn s" type="button" data-t>Ver en Testimonios</button>' : '') + '<button class="tt-btn s" type="button" data-close>Cerrar</button></div></form>', function (m, close) {
+      var f = $('form', m);
+      f.onsubmit = function (e) { e.preventDefault(); send({ op: 'video', id: v._id, estado: f.estado.value, nota: f.nota.value }, 'videos').then(function () { close(); toast('Guardado.'); renderVideos(); }); };
+      var t = $('[data-t]', m); if (t) t.onclick = function () { close(); tab('testimonios'); var x = D.testimonios.find(function (y) { return y._id === 'v-' + v._id; }); if (x) testModal(x); };
+    });
+  }
+  async function proponer() {
+    var b = $('#vProp'); b.disabled = true; b.textContent = 'Calculando…';
+    try {
+      var P = (await api('GET', null, '?propuesta=1')); P = JSON.parse(P).propuesta;
+      var libres = P.filter(function (x) { return !x.ya; });
+      modal('<h2 class="w">Alumnos propuestos</h2><p class="tt-tip">Ordenados por compromiso de los últimos 4 meses: asistencia (50 %), exámenes y TP (30 %) y pagos al día (20 %). Marcamos los 8 primeros; ajustá la selección y aprobá.</p><div class="sm-prop">' +
+        P.map(function (x, i) { return '<label><input type="checkbox" value="' + esc(x.alumnoId) + '"' + (x.ya ? ' disabled' : libres.indexOf(x) < 8 ? ' checked' : '') + '><span><b>' + esc(x.title) + '</b>' + (x.becado ? ' <span class="sm-tag o">Becado</span>' : '') + (x.ya ? ' <span class="sm-tag">Ya invitado</span>' : '') + (x.email ? '' : ' <span class="sm-tag r">Sin email</span>') + '<br><small class="tt-tip">' + esc(x.carreras) + ' · asistencia ' + x.asistencia + ' % en ' + x.clases + ' clases · aprobados ' + x.aprobados + (x.debe ? ' · debe ' + x.debe + ' mes(es)' : '') + '</small></span><span class="sm-sc">' + x.puntaje + '</span></label>'; }).join('') +
+        '</div><div class="tt-wa"><button class="tt-btn" type="button" data-ok>Aprobar e invitar</button><button class="tt-btn s" type="button" data-close>Cancelar</button></div>', function (m, close) {
+        $('[data-ok]', m).onclick = function () {
+          var ids = $$('.sm-prop input:checked', m).map(function (i) { return i.value; });
+          if (!ids.length) { toast('Elegí al menos un alumno.'); return; }
+          this.disabled = true; this.textContent = 'Invitando…';
+          send({ op: 'invitar', ids: ids }).then(function (r) { var ok = r.resultado.filter(function (x) { return x.r && x.r.ok; }).length; toast('Invitamos a ' + ids.length + (ok < ids.length ? ' (' + (ids.length - ok) + ' sin mail: cargales el email en Tutores)' : '') + '.'); close(); return api('GET'); }).then(function (d) { D = d; renderVideos(); });
+        };
+      });
+    } catch (e) { toast('No se pudo armar la propuesta.'); }
+    b.disabled = false; b.textContent = 'Proponer alumnos';
+  }
+
   /* ---------- Testimonios ---------- */
   var TF = '';
   function renderTest() {
@@ -155,12 +200,13 @@
   }
 
   function cur() { var b = $('#ttTabs .on'); return b ? b.dataset.t : 'lista'; }
-  function refresh() { ({ lista: renderLista, testimonios: renderTest, informe: renderInf, mails: renderMails }[cur()] || renderLista)(); }
+  function refresh() { ({ lista: renderLista, videos: renderVideos, testimonios: renderTest, informe: renderInf, mails: renderMails }[cur()] || renderLista)(); }
   function tab(t) { var b = $('#ttTabs [data-t="' + t + '"]'); if (!b) return; $$('#ttTabs button').forEach(function (x) { x.classList.toggle('on', x === b); }); $$('.tt-v').forEach(function (v) { v.hidden = v.id !== 'v-' + t; }); try { history.replaceState(null, '', '#' + t); } catch (e) {} refresh(); }
   $$('#ttTabs button').forEach(function (b) { b.onclick = function () { tab(b.dataset.t); }; });
   $('#sQ').oninput = function () { F.q = this.value.trim(); renderLista(); };
   $('#sAdd').onclick = function () { semModal(null); };
   $('#tAdd').onclick = function () { testModal(null); };
+  $('#vProp').onclick = proponer;
   $('#sSync').onclick = function () { var b = this; b.disabled = true; send({ op: 'sync' }).then(function (r) { toast(r.nuevos ? 'Sumamos ' + r.nuevos + ' del formulario.' : 'No hay respuestas nuevas en el formulario.'); return api('GET'); }).then(function (d) { D = d; refresh(); }).finally(function () { b.disabled = false; }); };
 
   (async function init() {

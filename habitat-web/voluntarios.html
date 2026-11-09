@@ -46,5 +46,6 @@
 </div></footer>
 <script src="/assets/site.js"></script>
 <script type="module" src="/assets/form.js"></script>
+<script>fetch("/api/testimonio?publicos=1").then(function(r){return r.json();}).then(function(L){if(!Array.isArray(L)||!L.length)return;var e=function(t){return String(t||"").replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});};document.getElementById("vocesG").innerHTML=L.map(function(t){return '<figure class="panel" style="margin:0;display:grid;gap:10px">'+(t.video?'<video src="'+e(t.video)+'" controls playsinline preload="metadata" style="width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:14px;background:#10251d"></video>':"")+(t.texto?'<blockquote style="margin:0;font-style:italic">«'+e(t.texto)+'»</blockquote>':"")+'<figcaption><b>'+e(t.nombre)+'</b>'+(t.becado?" · alumno becado":"")+'</figcaption></figure>';}).join("");document.getElementById("voces").hidden=false;}).catch(function(){});</script>
 </body>
 </html>

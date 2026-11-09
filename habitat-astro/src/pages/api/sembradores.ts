@@ -10,6 +10,7 @@ import {
   htmlBienvenida, htmlTestimonio, htmlTrimestral,
   type Sembrador, type Testimonio, type Envio,
 } from "../../lib/sem";
+import { propuesta, invitar, ESTADOS, TOPE, PLAZO, type Video } from "../../lib/tes";
 
 const rem = auth.elevate(items.remove);
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
@@ -40,7 +41,8 @@ export const GET: APIRoute = async ({ request, url }) => {
     const me = await who(request);
     if (!me) return json({ error: "El panel de Sembradores es solo para la dirección." }, 403);
     const C = await cfg();
-    const [ss, ts, es] = await Promise.all([todos<Sembrador>("SemSembradores"), todos<Testimonio>("SemTestimonios"), todos<Envio>("SemEnvios")]);
+    const [ss, ts, es, vs] = await Promise.all([todos<Sembrador>("SemSembradores"), todos<Testimonio>("SemTestimonios"), todos<Envio>("SemEnvios"), todos<Video>("SemVideos")]);
+    if (url.searchParams.get("propuesta")) return json({ propuesta: await propuesta() });
     const ver = url.searchParams.get("ver");
     if (ver) {
       const sid = url.searchParams.get("s") || "";
@@ -57,7 +59,7 @@ export const GET: APIRoute = async ({ request, url }) => {
       return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
     }
     const clean = <T,>(L: T[]) => L.map((x) => { const { _createdDate, _updatedDate, _owner, ...y } = x as Record<string, unknown>; return y; });
-    return json({ me: { title: me.title }, focos: FOCOS, tipos: TIPOS, texto: C.semTexto || TEXTO_TRIMESTRAL, trimestre: trimestre(hoyAR()), sembradores: clean(ss), testimonios: clean(ts), envios: clean(es) });
+    return json({ me: { title: me.title }, focos: FOCOS, tipos: TIPOS, texto: C.semTexto || TEXTO_TRIMESTRAL, trimestre: trimestre(hoyAR()), sembradores: clean(ss), testimonios: clean(ts), envios: clean(es), videos: clean(vs), estadosVideo: ESTADOS, tope: TOPE, plazo: PLAZO });
   } catch (e) {
     console.error("sembradores GET", e);
     return json({ error: "No pudimos cargar el panel." }, 500);
@@ -140,6 +142,19 @@ export const POST: APIRoute = async ({ request }) => {
         if (!TRI.test(tri)) return json({ error: "tri" }, 400);
         const r = await enviarTrimestral(tri, por, remitente);
         return json({ ok: true, enviados: r.ok, fallas: r.fallas });
+      }
+      case "invitar": {
+        const ids = Array.isArray(x.ids) ? (x.ids as unknown[]).map((v) => s(v, 80)).filter(Boolean).slice(0, 40) : [];
+        if (!ids.length) return json({ error: "Elegí al menos un alumno." }, 400);
+        return json({ ok: true, resultado: await invitar(ids, remitente) });
+      }
+      case "video": {
+        const v = (await q("SemVideos").eq("_id", s(x.id, 80)).limit(1).find()).items[0] as Video | undefined;
+        if (!v) return json({ error: "No existe." }, 404);
+        const est = s(x.estado, 40);
+        const it = { ...v, estado: ESTADOS.includes(est) ? est : v.estado, nota: s(x.nota, 1000), proximo: est === "Invitado" ? hoyAR() : v.estado === est ? v.proximo : "" };
+        await guardar("SemVideos", it as Record<string, unknown>);
+        return json({ ok: true, item: it });
       }
       case "sync": {
         const f = await desdeFormulario();
