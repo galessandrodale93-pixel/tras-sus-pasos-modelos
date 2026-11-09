@@ -3568,6 +3568,12 @@ function tutOpen(force) {
 
 /* ---------- personajes 3D de Hero: modelos esculpidos con esqueleto y animaciones (Quaternius, CC0) ---------- */
 const H3 = { ok: false, fail: false, sex: {}, clips: null, skClone: null, npcs: [] };
+// clon de avatar que comparte UN esqueleto entre todas sus mallas (cuerpo, pelo, ojos, brazos…): 9 veces menos texturas de huesos y cálculo por personaje
+function skCloneShared(src) {
+  const A = new Map(), T = new Map(), n = src.clone(), par = (g, c) => { A.set(c, g); T.set(g, c); for (let i = 0; i < g.children.length; i++) par(g.children[i], c.children[i]); }; par(src, n);
+  const skels = new Map(); n.traverse(a => { if (!a.isSkinnedMesh) return; const r = A.get(a); let sk = skels.get(r.skeleton); if (!sk) { sk = new THREE.Skeleton(r.skeleton.bones.map(b => T.get(b) || b), r.skeleton.boneInverses.map(m => m.clone())); skels.set(r.skeleton, sk); } a.skeleton = sk; a.bindMatrix.copy(r.bindMatrix); a.bind(sk, a.bindMatrix); });
+  return n;
+}
 const H3_BASE = window.H3_BASE || new URL('../hero/', import.meta.url).href;
 async function heroLoad() {
   if (H3.ok || H3.fail) return;
@@ -3575,7 +3581,7 @@ async function heroLoad() {
     globalThis.__THREE = THREE; buildStep('personajes'); const mod = await withTO(import(H3_BASE + 'gltf.js'), 30000, 'gltf.js'), L = new mod.GLTFLoader(); const coarseM = matchMedia('(pointer: coarse)').matches;
     const ld = u => new Promise((r, j) => L.load((ABASE ? ABASE + 'hero/' : H3_BASE) + u, r, undefined, j));
     const [m, f, an] = await Promise.race([Promise.all([ld(qEarly() >= 3 && !coarseM ? 'hero_m_hd.glb' : 'hero_m.glb'), ld(qEarly() >= 3 && !coarseM ? 'hero_f_hd.glb' : 'hero_f.glb'), ld('hero_anims.glb')]), new Promise((_, j) => setTimeout(() => j(new Error('tiempo')), window.H3_TO || 45000))]);
-    H3.skClone = mod.skClone; const all = gl => { const r = new THREE.Group(); gl.scenes.forEach(x => r.add(x)); return r; }; H3.sex.m = h3Template(all(m)); H3.sex.f = h3Template(all(f));
+    H3.skClone = skCloneShared; const all = gl => { const r = new THREE.Group(); gl.scenes.forEach(x => r.add(x)); return r; }; H3.sex.m = h3Template(all(m)); H3.sex.f = h3Template(all(f));
     H3.clips = Object.fromEntries(an.animations.map(c => [c.name, c]));
     const xl = f => new Promise((r, j) => L.load(new URL('../hero/' + f, import.meta.url).href, r, undefined, j)).then(ex => ex.animations.forEach(c => { if (!H3.clips[c.name] && !/dance/i.test(c.name)) H3.clips[c.name] = c; })).catch(e2 => console.warn('hero3d extra', f, e2));
     buildStep('animaciones'); await withTO(Promise.all([xl('hero_anims2.glb'), xl('hero_anims3.glb')]), 25000, 'animaciones').catch(e => console.warn('hero3d extra', e));
