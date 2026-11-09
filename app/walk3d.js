@@ -1594,7 +1594,7 @@ function worldMerge(scene, frames) {
 function mergeHouses(scene) { const L = scene.children.filter(o => o.userData && o.userData.house); if (L.length < 2) return; const G2 = new THREE.Group(); scene.add(G2); L.forEach(h => G2.attach(h)); const n = staticMerge(G2); G2.children.filter(o => o.userData && o.userData.house && !o.children.length).forEach(o => G2.remove(o)); return n; }
 function bigHouse(trade, hx) {
   const T = townTex(), g = new THREE.Group(), w = 7.4, d = 6.2, h = 3.3, t = .34, dw = 1.9;
-  const wm = trade === 'cena' ? pbrMat('plastered_stone_wall', 2.4, 1.1, { color: '#FFFFFF' }) : pbrMat('patterned_clay_plaster', 2.4, 1.1, { color: hx ? '#F2E8DA' : '#FFFFFF' }), wmIn = new THREE.MeshStandardMaterial({ color: hx ? '#D8C6A4' : '#FFF1DA', roughness: 1 });
+  const wm = trade === 'cena' ? pbrMat('plastered_stone_wall', 6, 2.8, { color: '#FFFFFF' }) : pbrMat('patterned_clay_plaster', 6, 2.8, { color: hx ? '#EADFCB' : '#FFFFFF' }), wmIn = new THREE.MeshStandardMaterial({ color: hx ? '#D8C6A4' : '#FFF1DA', roughness: 1 });
   const wall = (W, H, D, x, y, z) => { const o = bx(W, H, D, [wm, wm, wmIn, wmIn, wm, wm], x, y, z, g); return o; };
   wall(w, h, t, 0, h / 2, -d / 2 + t / 2); wall(t, h, d, -w / 2 + t / 2, h / 2, 0); wall(t, h, d, w / 2 - t / 2, h / 2, 0);
   const sideW = (w - dw) / 2; wall(sideW, h, t, -w / 2 + sideW / 2, h / 2, d / 2 - t / 2); wall(sideW, h, t, w / 2 - sideW / 2, h / 2, d / 2 - t / 2); wall(dw, h - 2.4, t, 0, 2.4 + (h - 2.4) / 2, d / 2 - t / 2);
