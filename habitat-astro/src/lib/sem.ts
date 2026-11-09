@@ -142,10 +142,11 @@ export async function desdeFormulario() {
 
 // Para el aviso de Mercado Pago (tanda de Finanzas): suma o actualiza al sembrador que pagó.
 export async function desdePago(x: { email: string; nombre: string; monto: number; recurrente: boolean; fecha: string }) {
-  const _id = idDe(x.email.toLowerCase(), x.nombre);
-  const prev = (await q("SemSembradores").eq("_id", _id).limit(1).find()).items[0] as Sembrador | undefined;
+  const email = x.email.toLowerCase(), _id = idDe(email, x.nombre);
+  // busca primero por email (puede estar cargado a mano con otro id) y después por id
+  const prev = ((email && (await q("SemSembradores").eq("email", email).limit(1).find()).items[0]) || (await q("SemSembradores").eq("_id", _id).limit(1).find()).items[0]) as Sembrador | undefined;
   const it: Sembrador = prev
-    ? { ...prev, tipo: x.recurrente ? "Mensual" : prev.tipo === "Mensual" ? "Mensual" : "Puntual", monto: x.monto || prev.monto, activo: true, origen: prev.origen === "Manual" ? "Manual" : "Mercado Pago" }
+    ? { ...prev, tipo: x.recurrente ? "Mensual" : prev.tipo === "Mensual" ? "Mensual" : "Puntual", monto: x.monto || prev.monto, activo: prev.activo !== false, origen: prev.origen === "Manual" ? "Manual" : "Mercado Pago" }
     : { _id, title: x.nombre, email: x.email.toLowerCase(), foco: "General", tipo: x.recurrente ? "Mensual" : "Puntual", monto: x.monto, origen: "Mercado Pago", activo: true, alta: x.fecha, bienvenida: "" };
   await guardar("SemSembradores", it as Record<string, unknown>);
   return it;
