@@ -46,7 +46,7 @@ export const GET: APIRoute = async ({ request }) => {
     const fijos = (() => { try { return JSON.parse(String((cfg.find((c) => c._id === "gastosFijos") || {}).valor || "[]")); } catch { return []; } })();
     return json({
       me: { title: me.title, email: me.email },
-      alumnos: alumnos.map((a) => ({ _id: a._id, title: a.title, carreras: a.carreras, modalidad: a.modalidad, tutores: a.tutores, activo: a.activo, formaPago: a.formaPago })),
+      alumnos: alumnos.map((a) => ({ _id: a._id, title: a.title, carreras: a.carreras, modalidad: a.modalidad, tutores: a.tutores, activo: a.activo, formaPago: a.formaPago, telefono: a.telefono })),
       planes, cobros, gastos, fijos,
     });
   } catch (e) {

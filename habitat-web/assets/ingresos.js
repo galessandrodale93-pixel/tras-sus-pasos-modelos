@@ -161,6 +161,21 @@
 
   /* ---------- Debi: pagó (Debi) y llegó (banco) ---------- */
   function fl(f) { if (!f) return '—'; var d = new Date(f + 'T12:00:00'); return d.getDate() + ' de ' + MESES[d.getMonth()]; }
+  // Teléfono argentino → formato de wa.me (549 + área + número, sin 0 ni 15)
+  function waNum(t) {
+    var d = String(t || '').replace(/\D/g, ''); if (!d) return '';
+    if (d.indexOf('549') === 0) return d;
+    if (d.indexOf('54') === 0) d = d.slice(2);
+    d = d.replace(/^0/, '');
+    if (d.length === 12) { var m = d.match(/^(\d{2,4})15(\d{6,8})$/); if (m && (m[1] + m[2]).length === 10) d = m[1] + m[2]; }
+    return d.length === 10 ? '549' + d : '';
+  }
+  function waLink(x, NM) {
+    var a = (F.data().alumnos || []).find(function (y) { return y._id === x.alumnoId; }), n = a && waNum(a.telefono); if (!n) return '';
+    var nom = String(NM[x.alumnoId] || x.title || '').split(/\s+/)[0], mes = MESES[+String(x.mes || x.fecha).slice(5, 7) - 1] || '';
+    var t = 'Hola ' + nom + '! Te escribimos de Habitat 🙌🏽 El débito automático de tu cuota de ' + mes + ' por ' + plata(x.monto) + ' fue rechazado. Suele pasar cuando la tarjeta venció, se cambió o no tenía saldo ese día. ¿Lo podés revisar? Si cambiaste la tarjeta o la cuenta, avisanos y te ayudamos a actualizarla. Un abrazo';
+    return 'https://wa.me/' + n + '?text=' + encodeURIComponent(t);
+  }
   function debi() {
     if (!I) { if (!cargando) cargando = api('GET').then(function (d) { I = d; cargando = null; debi(); }).catch(function (e) { $('#dLotes').innerHTML = '<p class="tt-empty">' + esc(e.message) + '</p>'; cargando = null; }); return; }
     var L = (I.debi || []).filter(function (x) { return x.estado === 'approved'; }), NM = nombres();
@@ -172,7 +187,7 @@
     var RG = {}; R.forEach(function (x) { var k = x.cliente || x._id; if (!RG[k] || RG[k].fecha < x.fecha) RG[k] = x; });
     var rk = Object.keys(RG);
     $('#dRech').hidden = !rk.length;
-    $('#dRech').innerHTML = '<h2 class="tt-h">Débitos rechazados sin cobro posterior · ' + rk.length + '</h2><p class="tt-tip">También les aparece como alerta a los tutores de cada alumno.</p>' + rk.map(function (k) { var x = RG[k]; return '<div class="fn-pr"><div class="w"><b>' + esc(NM[x.alumnoId] || x.title) + '</b><small>' + esc(fl(x.fecha)) + ' · ' + plata(x.monto) + (x.alumnoId ? '' : ' · sin alumno asociado') + '</small></div><span class="fn-st r">Rechazado</span></div>'; }).join('');
+    $('#dRech').innerHTML = '<h2 class="tt-h">Débitos rechazados sin cobro posterior · ' + rk.length + '</h2><p class="tt-tip">También les aparece como alerta a los tutores de cada alumno.</p>' + rk.map(function (k) { var x = RG[k]; var wa = waLink(x, NM); return '<div class="fn-pr"><div class="w"><b>' + esc(NM[x.alumnoId] || x.title) + '</b><small>' + esc(fl(x.fecha)) + ' · ' + plata(x.monto) + (x.alumnoId ? '' : ' · sin alumno asociado') + (x.alumnoId && !wa ? ' · sin teléfono en Tutores' : '') + '</small></div><div style="display:flex;gap:6px;align-items:center"><span class="fn-st r">Rechazado</span>' + (wa ? '<a class="tt-btn s" href="' + esc(wa) + '" target="_blank" rel="noopener">Avisar por WhatsApp</a>' : '') + '</div></div>'; }).join('');
     $('#dKpi').innerHTML = '<div class="fn-kpi g"><b>' + plata(sum(mesC)) + '</b><span>cobrado por Debi este mes</span></div><div class="fn-kpi"><b>' + plata(sum(camino)) + '</b><span>en camino al banco</span></div><div class="fn-kpi ' + (dem.length ? 'r' : '') + '"><b>' + plata(sum(dem)) + '</b><span>demorado (pasó la fecha estimada)</span></div><div class="fn-kpi"><b>' + plata(sum(lleg)) + '</b><span>llegó al banco este mes</span></div>';
     // lotes por fecha estimada
     var G = {}; L.forEach(function (x) { var k = x.acreditacion || 'sin fecha'; (G[k] = G[k] || []).push(x); });
