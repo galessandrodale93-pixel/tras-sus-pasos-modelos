@@ -2097,7 +2097,7 @@ function canaScene(scene, p, yAt, poiProp, hx, HW) {
 // ---------- Belén: aldea en terrazas sobre la loma, con la cueva-establo y el mesón ----------
 function belenScene(scene, p, yAt, poiProp, hx, HW) {
   const sd = p.side, R = rng(1212), y = yAt(p.x, p.z);
-  const [kx, kz] = [p.x + sd * 12, p.z - 6]; poiProp('rock_face_01', [{ x: kx, y: yAt(kx, kz) - .3, z: kz, ry: sd > 0 ? -1.6 : 1.6, s: 1.5 }], { shadow: true, far: 1, nocol: 1 }); S.cols.push({ x0: kx - 3, x1: kx + 3, z0: kz - 3, z1: kz + 3, cx: kx, cz: kz, r: 2.8 });
+  const [kx, kz] = [p.x + sd * 12, p.z - 6]; poiProp('rock_face_01', [{ x: kx, y: yAt(kx, kz) - 2.6, z: kz, ry: sd > 0 ? -1.6 : 1.6, s: 1.7 }], { shadow: true, far: 1, nocol: 1 }); S.cols.push({ x0: kx - 3, x1: kx + 3, z0: kz - 3, z1: kz + 3, cx: kx, cz: kz, r: 2.8 });
   { const m = matMesh('manger'); const x = kx - sd * 3.4, z = kz + .5; m.position.set(x, yAt(x, z), z); m.rotation.y = Math.PI / 2; scene.add(m); S.cols.push({ x0: x - .8, x1: x + .8, z0: z - .8, z1: z + .8 }); const l = new THREE.PointLight('#FFC27A', 6, 8, 1.6); l.position.set(x, yAt(x, z) + 2, z); scene.add(l); }
   const placed = townLayout(scene, p, yAt, HW, { seed: 1313, n: 12, r: 21, plaza: 6, avoid: [[kx, kz, 9.5]] }); const w = well(hx); w.position.set(p.x, y, p.z); scene.add(w); S.cols.push({ x0: p.x - 1, x1: p.x + 1, z0: p.z - 1, z1: p.z + 1 });
   townFolk(scene, p, yAt, HW, 8, 12, 1414, [[p.x, p.z, 1.6], [kx, kz, 5]]);
