@@ -2271,7 +2271,7 @@ function buildTowns(scene, g, hx, HW, pois) {
     if (p.k === 'pastores') { try { pastoresScene(scene, p, yAt, poiProp, hx, HW); } catch (e) { console.warn('pastores', e); } }
     if (p.k === 'desert') { try { desertScene(scene, p, yAt, poiProp, hx, HW); } catch (e) { console.warn('desierto', e); } }
     if (p.k === 'feeding') feedingScene(scene, p, yAt, poiProp, hx, HW);
-    if (p.k === 'lake') { S.lake = buildLake(scene, p.x, p.z, p.side, hx, yAt); const H = bigHouse('pescador', hx), hx2 = p.x - p.side * 47, hz = p.z - 6; // en la orilla seca, no dentro del agua placeHouse(scene, H, hx2, hz, p.side > 0 ? Math.PI / 2 : -Math.PI / 2, yAt(hx2, hz)); if (hx) try { const q = { x: hx2, z: hz + 4 }; townLayout(scene, q, yAt, HW, { seed: 4141, n: 7, r: 20, plaza: 7, gap: 2.2, avoid: [[hx2, hz, 7.5], [p.x, p.z, 44]], house: (Rr) => ({ upper: Rr() < .25, h: 2.9 + Rr() * .5, yard: Rr() < .3 }) }); townFolk(scene, q, yAt, HW, 7, 14, 4142, [[hx2, hz, 6]]); } catch (e) { console.warn('aldea pescadores', e); } }
+    if (p.k === 'lake') { S.lake = buildLake(scene, p.x, p.z, p.side, hx, yAt); const H = bigHouse('pescador', hx), hx2 = p.x - p.side * 47, hz = p.z - 6; placeHouse(scene, H, hx2, hz, p.side > 0 ? Math.PI / 2 : -Math.PI / 2, yAt(hx2, hz)); if (hx) try { const q = { x: hx2, z: hz + 4 }; townLayout(scene, q, yAt, HW, { seed: 4141, n: 7, r: 20, plaza: 7, gap: 2.2, avoid: [[hx2, hz, 7.5], [p.x, p.z, 44]], house: (Rr) => ({ upper: Rr() < .25, h: 2.9 + Rr() * .5, yard: Rr() < .3 }) }); townFolk(scene, q, yAt, HW, 7, 14, 4142, [[hx2, hz, 6]]); } catch (e) { console.warn('aldea pescadores', e); } }
   }
 }
 /* destino marcado en el mapa: columna de luz y flecha en el piso */
