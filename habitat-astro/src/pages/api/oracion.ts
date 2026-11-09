@@ -2,7 +2,7 @@
 import type { APIRoute } from "astro";
 import { q, todos, guardar, hoyAR, mandar, marco, p } from "../../lib/sem";
 import { esc } from "../../lib/vol";
-import { FOCOS, NTV, TIPOS_AYUNO, SALUD, delDia, asegurarTurnos, publicarAyuno, pedidosDeProfes, larga, type Turno, type Ayuno } from "../../lib/oracion";
+import { FOCOS, NTV, TIPOS_AYUNO, SALUD, delDia, asegurarTurnos, publicarAyuno, syncAyuno, pedidosDeProfes, larga, type Turno, type Ayuno } from "../../lib/oracion";
 
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
 const s = (v: unknown, max = 300) => (typeof v === "string" ? v : v == null ? "" : String(v)).trim().slice(0, max);
@@ -70,6 +70,7 @@ export const POST: APIRoute = async ({ request }) => {
         if (!me.admin && t1.responsableId !== yo) return json({ error: "Solo podés cambiar tu propio turno." }, 403);
         await guardar("IntTurnos", { ...t1, responsableId: t2.responsableId, avisoNoche: "", avisoManana: "" });
         await guardar("IntTurnos", { ...t2, responsableId: t1.responsableId, avisoNoche: "", avisoManana: "" });
+        await Promise.all([syncAyuno(f1, t2.responsableId, undefined, false), syncAyuno(f2, t1.responsableId, undefined, false)]); // el ayuno sigue al turno
         const otro = (await q("VolVoluntarios").eq("_id", t2.responsableId).limit(1).find()).items[0] as Vol | undefined;
         if (otro && otro.email) await mandar(String(otro.email).split(/[,;\s]+/)[0], "Cambio de turno de intercesión", marco("Habitat · Intercesión", "Tu turno cambió", `${p(`Hola ${esc(String(otro.title || "").split(/\s+/)[0])}! ${esc(me.nombre)} intercambió su turno con vos: ahora te toca el <b>${esc(larga(f1))}</b> (antes era el ${esc(larga(f2))}).`)}${p("Si no te queda bien, entrá a la página y cambialo de nuevo.")}`), await remitente()).catch(() => null);
         return json({ ok: true });

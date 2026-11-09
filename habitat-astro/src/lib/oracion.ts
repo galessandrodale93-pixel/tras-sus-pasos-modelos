@@ -1,8 +1,10 @@
 // Intercesión y ayuno semanal del equipo de voluntarios.
 // Cada día tiene un foco (rotan los 9), un versículo NTV verificado en bible.com, un mini devocional
 // y una oración guiada en cuatro pasos. Un responsable por día, rotativo entre los voluntarios activos.
-// El ayuno es todos los días, a cargo de una persona distinta del equipo cada día, con su propia rotación publicada
-// por adelantado: la web solo marca el día; cada uno elige el tipo.
+// El ayuno va con el turno: el mismo día que a alguien le toca la intercesión, esa persona también ayuna.
+// La dirección lo publica por adelantado y cada uno elige el tipo.
+import { auth } from "@wix/essentials";
+import { items } from "@wix/data";
 import { q, todos, guardar, hoyAR, mandar, marco, p } from "./sem";
 import { esc } from "./vol";
 
@@ -143,25 +145,40 @@ export async function asegurarTurnos(dias = 45) {
   return n;
 }
 
-// Publica la rotación de ayuno de 1 o 3 meses: todos los días ayuna alguien del equipo, rotando entre los
-// voluntarios activos (la rueda sigue de un mes al otro y arranca corrida respecto de la intercesión).
+// Publica el ayuno de 1 o 3 meses: el mismo día que a alguien le toca la intercesión, esa persona también ayuna.
+// Se completan los turnos hasta el fin del último mes y el ayuno de cada día copia al responsable del turno.
 export async function publicarAyuno(mes: string, meses: number) {
-  const V = await activos(), out: string[] = [];
-  if (!V.length) return ["No hay voluntarios activos."];
-  const cfg = (await q("TutConfig").eq("_id", "ayIdx").limit(1).find()).items[0] as { valor?: string } | undefined;
-  let idx = cfg && cfg.valor ? Number(cfg.valor) : Math.floor(V.length / 2);
+  const hoy = hoyAR(), out: string[] = [];
+  const [y, m] = mes.split("-").map(Number);
+  const fin = new Date(Date.UTC(y, m - 1 + meses, 0)).toISOString().slice(0, 10);
+  const dias = Math.round((Date.parse(fin + "T12:00:00Z") - Date.parse(hoy + "T12:00:00Z")) / 864e5) + 1;
+  if (dias > 0) await asegurarTurnos(dias);
+  const T = new Map((await todos<Turno>("IntTurnos")).map((t) => [t.fecha, t]));
+  const V = new Map((await todos<Vol>("VolVoluntarios")).map((v) => [v._id, v]));
   for (let k = 0; k < meses; k++) {
-    const [y, m] = mes.split("-").map(Number), d0 = new Date(Date.UTC(y, m - 1 + k, 1)), mm = d0.toISOString().slice(0, 7);
+    const d0 = new Date(Date.UTC(y, m - 1 + k, 1)), mm = d0.toISOString().slice(0, 7);
     const ult = new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth() + 1, 0)).getUTCDate();
-    if ((await q("IntAyuno").eq("mes", mm).limit(1).find()).items.length) { out.push(mm + " ya estaba publicado"); continue; }
+    let n = 0;
     for (let dia = 1; dia <= ult; dia++) {
-      const f = mm + "-" + String(dia).padStart(2, "0"), v = V[idx % V.length]; idx++;
-      await guardar("IntAyuno", { _id: f + "|" + v._id, title: v.title || "", fecha: f, mes: mm, voluntarioId: v._id, aviso: "", tipo: "" });
+      const f = mm + "-" + String(dia).padStart(2, "0"), t = T.get(f);
+      if (f < hoy || !t) continue;
+      if (await syncAyuno(f, t.responsableId, V.get(t.responsableId))) n++;
     }
-    out.push(mm + ": " + ult + " días");
+    out.push(mm + ": " + n + " días");
   }
-  await guardar("TutConfig", { _id: "ayIdx", valor: String(idx) });
   return out;
+}
+
+// El ayuno del día `f` queda a nombre del responsable del turno (se usa al publicar y al cambiar turnos).
+export async function syncAyuno(f: string, vid: string, v?: Vol, crear = true) {
+  const prev = (await q("IntAyuno").eq("fecha", f).limit(5).find()).items as Ayuno[];
+  if (!prev.length && !crear) return false;
+  const misma = prev.find((a) => a._id === f && a.voluntarioId === vid);
+  for (const a of prev) if (a !== misma) await auth.elevate(items.remove)("IntAyuno", a._id).catch(() => null);
+  if (misma) return true;
+  const vol = v || ((await q("VolVoluntarios").eq("_id", vid).limit(1).find()).items[0] as Vol | undefined);
+  await guardar("IntAyuno", { _id: f, title: (vol && vol.title) || "", fecha: f, mes: f.slice(0, 7), voluntarioId: vid, aviso: "", tipo: "" });
+  return true;
 }
 
 /* ---------------- avisos ---------------- */
@@ -190,8 +207,9 @@ export async function oracionAviso(cuando: "noche" | "manana", hoy: string, dry:
   const out: Record<string, unknown> = {};
   if (t && !(t as Record<string, string>)[campo]) {
     const v = V[t.responsableId];
+    const ay = ((await q("IntAyuno").eq("fecha", f).limit(5).find()).items as Ayuno[]).some((a) => a.voluntarioId === t.responsableId);
     if (v && v.email && !dry) {
-      const r = await mandar(String(v.email).split(/[,;\s]+/)[0], (cuando === "noche" ? "Mañana" : "Hoy") + " estás a cargo de la intercesión: " + delDia(f).foco, htmlDia(String(v.title || "").split(/\s+/)[0], f, cuando === "noche"), remitente);
+      const r = await mandar(String(v.email).split(/[,;\s]+/)[0], (cuando === "noche" ? "Mañana" : "Hoy") + (ay ? " te toca la intercesión y el ayuno: " : " estás a cargo de la intercesión: ") + delDia(f).foco, htmlDia(String(v.title || "").split(/\s+/)[0], f, cuando === "noche"), remitente);
       if (r.ok) await guardar("IntTurnos", { ...t, [campo]: hoy });
       out.turno = { v: v.title, ok: r.ok };
     } else out.turno = { v: v && v.title, dry, sinEmail: !(v && v.email) };
