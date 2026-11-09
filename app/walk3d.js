@@ -1114,7 +1114,7 @@ function openBag(first) {
   el.hidden = false; const close = () => { el.hidden = true; }; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   const tabs = el.querySelectorAll('.inv-tabs button'), body = el.querySelector('.inv-body');
   const show = t => { tabs.forEach(b => b.classList.toggle('on', b.dataset.t === t)); body.innerHTML = ''; if (t === 'eq') invEquip(body); else if (t === 'ob') invItems(body); else if (t === 'su') invSurv(body); else if (t === 'at') invAttr(body); else if (t === 'cu') invCourses(body); else invMemories(body); };
-  tabs.forEach(b => b.onclick = () => show(b.dataset.t)); show(first || 'eq');
+  tabs.forEach(b => b.onclick = () => show(b.dataset.t)); show((typeof first === 'string' ? first : 'eq'));
 }
 /* ícono dibujado de cada prenda: su forma, su color real y su detalle (rayas, vendas, bordado, metal) */
 const icoGear = it => {
@@ -4679,7 +4679,7 @@ function wireJoy() {
   base.onpointerup = base.onpointercancel = e => { if (e.pointerId !== id) return; id = null; knob.style.transform = ''; S.joy.x = 0; S.joy.y = 0; };
   addEventListener('keydown', e => { if (!S || document.getElementById('view3d').hidden) return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', 'Shift'].includes(k)) { S.keys[k] = true; if (k !== 'Shift') e.preventDefault(); } if (k === 'x' && !e.repeat && false) doSit(); });
   addEventListener('keyup', e => { if (!S) return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; S.keys[k] = false; });
-  document.getElementById('v3bag').onclick = openBag; bagBtn();
+  document.getElementById('v3bag').onclick = () => openBag('eq'); bagBtn();
 }
 
 /* ---------- cámara, toques y bucle ---------- */
