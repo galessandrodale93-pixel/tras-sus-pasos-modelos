@@ -158,5 +158,32 @@
   }
   $('#sPrev').onclick = function () { SM = addM(SM, -1); salidas(); };
   $('#sNext').onclick = function () { SM = addM(SM, 1); salidas(); };
-  window.HabIngresos = { render: render, salidas: salidas };
+
+  /* ---------- Debi: pagó (Debi) y llegó (banco) ---------- */
+  function fl(f) { if (!f) return '—'; var d = new Date(f + 'T12:00:00'); return d.getDate() + ' de ' + MESES[d.getMonth()]; }
+  function debi() {
+    if (!I) { if (!cargando) cargando = api('GET').then(function (d) { I = d; cargando = null; debi(); }).catch(function (e) { $('#dLotes').innerHTML = '<p class="tt-empty">' + esc(e.message) + '</p>'; cargando = null; }); return; }
+    var L = (I.debi || []).filter(function (x) { return x.estado === 'approved'; }), NM = nombres();
+    $('#dOk').innerHTML = I.debiOk ? '✅ Debi conectado.' : '⚠️ Falta cargar la clave <b>DEBI_SECRET_KEY</b> en el gestor de claves de Wix.';
+    var sum = function (A) { return A.reduce(function (a, x) { return a + (+x.monto || 0); }, 0); };
+    var camino = L.filter(function (x) { return !x.llego && !(x.acreditacion && x.acreditacion < HOY); }), dem = L.filter(function (x) { return !x.llego && x.acreditacion && x.acreditacion < HOY; });
+    var mesC = L.filter(function (x) { return x.mes === MES; }), lleg = L.filter(function (x) { return x.llego && x.llego.slice(0, 7) === MES; });
+    $('#dKpi').innerHTML = '<div class="fn-kpi g"><b>' + plata(sum(mesC)) + '</b><span>cobrado por Debi este mes</span></div><div class="fn-kpi"><b>' + plata(sum(camino)) + '</b><span>en camino al banco</span></div><div class="fn-kpi ' + (dem.length ? 'r' : '') + '"><b>' + plata(sum(dem)) + '</b><span>demorado (pasó la fecha estimada)</span></div><div class="fn-kpi"><b>' + plata(sum(lleg)) + '</b><span>llegó al banco este mes</span></div>';
+    // lotes por fecha estimada
+    var G = {}; L.forEach(function (x) { var k = x.acreditacion || 'sin fecha'; (G[k] = G[k] || []).push(x); });
+    var ks = Object.keys(G).sort().reverse().slice(0, 24);
+    $('#dLotes').innerHTML = ks.length ? ks.map(function (k) {
+      var A = G[k], ok = A.every(function (x) { return x.llego; }), late = !ok && k !== 'sin fecha' && k < HOY;
+      return '<div class="fn-pr"><div class="w"><b>' + (k === 'sin fecha' ? 'Sin fecha estimada' : 'Lote del ' + fl(k)) + ' · ' + plata(sum(A)) + '</b><small>' + A.length + ' cobro' + (A.length === 1 ? '' : 's') + ' · ' + esc(A.slice(0, 6).map(function (x) { return NM[x.alumnoId] || x.title; }).join(', ')) + (A.length > 6 ? '…' : '') + '</small></div>' + (ok ? '<span class="fn-st g">Llegó el ' + esc(fl(A[0].llego)) + '</span>' : (late ? '<span class="fn-st r">Demorado</span> ' : '<span class="fn-st">En camino</span> ') + (k === 'sin fecha' ? '' : '<button class="tt-btn s" type="button" data-l="' + esc(k) + '">Llegó al banco</button>')) + '</div>';
+    }).join('') : '<p class="tt-empty">Todavía no hay cobros de Debi. Tocá «Traer cobros de Debi».</p>';
+    $$('#dLotes [data-l]').forEach(function (b) { b.onclick = function () { b.disabled = true; api('POST', { op: 'debi', accion: 'llego', lote: b.dataset.l, fecha: HOY }).then(function (r) { (I.debi || []).forEach(function (x) { if (x.acreditacion === b.dataset.l && x.estado === 'approved') x.llego = HOY; }); F.toast('Lote marcado: ' + r.cambiados + ' cobros llegaron al banco.'); debi(); }).catch(function (e) { b.disabled = false; F.toast(e.message); }); }; });
+    // sin asociar a un alumno
+    var S = {}; L.forEach(function (x) { if (!x.alumnoId) (S[x.cliente || x._id] = S[x.cliente || x._id] || []).push(x); });
+    var sk = Object.keys(S), al = (F.data().alumnos || []).slice().sort(function (a, b) { return String(a.title).localeCompare(String(b.title)); });
+    $('#dSin').hidden = !sk.length;
+    $('#dSin').innerHTML = '<h2 class="tt-h">Clientes de Debi sin alumno · ' + sk.length + '</h2><p class="tt-tip">No encontramos al alumno por nombre o email. Elegilo una vez y queda recordado; sus cuotas pasan a Cobros.</p>' + sk.map(function (k) { var A = S[k], x = A[0]; return '<div class="fn-pr" data-k="' + esc(x._id) + '"><div class="w"><b>' + esc(x.title) + '</b><small>' + esc(x.email || '') + ' · ' + A.length + ' cobro' + (A.length === 1 ? '' : 's') + ' · ' + plata(sum(A)) + '</small></div><div style="display:flex;gap:6px"><select aria-label="Alumno">' + F.opts([['', 'Elegí al alumno']].concat(al.map(function (a) { return [a._id, a.title]; })), '') + '</select><button class="tt-btn s" type="button">Asociar</button></div></div>'; }).join('');
+    $$('#dSin .fn-pr').forEach(function (r) { var sel = $('select', r); $('button', r).onclick = function () { if (!sel.value) { F.toast('Elegí al alumno.'); return; } api('POST', { op: 'debi', accion: 'asociar', id: r.dataset.k, alumnoId: sel.value }).then(function () { return api('GET'); }).then(function (d) { I = d; F.toast('Asociado.'); debi(); }).catch(function (e) { F.toast(e.message); }); }; });
+  }
+  $('#dTraer').onclick = function () { var b = this; b.disabled = true; b.textContent = 'Trayendo…'; api('POST', { op: 'debi', accion: 'traer', dias: 120 }).then(function (r) { F.toast('Revisamos ' + r.vistos + ' cobros de Debi · ' + r.nuevos + ' nuevos · ' + r.aCobros + ' cargados en Cobros.'); return api('GET'); }).then(function (d) { I = d; debi(); }).catch(function (e) { F.toast(e.message); }).finally(function () { b.disabled = false; b.textContent = 'Traer cobros de Debi'; }); };
+  window.HabIngresos = { render: render, salidas: salidas, debi: debi };
 })();

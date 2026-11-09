@@ -6,6 +6,7 @@ import { items } from "@wix/data";
 import { q, todos, guardar, hoyAR } from "../../lib/sem";
 import { TIPOS_ING, NO_SUMA, reclasificar, traer, token, type Ingreso } from "../../lib/mp";
 import { TIPOS_SAL, CATS, clasificarSalida, type Salida } from "../../lib/salidas";
+import { traerDebi, asociar, llego, claveDebi, type DebiCobro } from "../../lib/debi";
 
 const rem = auth.elevate(items.remove);
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
@@ -25,9 +26,9 @@ async function who(request: Request) {
 export const GET: APIRoute = async ({ request }) => {
   try {
     if (!(await who(request))) return json({ error: "Tu cuenta no tiene acceso a Finanzas." }, 403);
-    const [ing, pag, sal] = await Promise.all([todos<Ingreso>("FinIngresos"), todos<{ _id: string; title?: string; tipo: string }>("FinPagadores"), todos<Salida>("FinSalidas")]);
+    const [ing, pag, sal, deb] = await Promise.all([todos<Ingreso>("FinIngresos"), todos<{ _id: string; title?: string; tipo: string }>("FinPagadores"), todos<Salida>("FinSalidas"), todos<DebiCobro>("FinDebi")]);
     const clean = (L: Record<string, unknown>[]) => L.map(({ _createdDate, _updatedDate, _owner, ...x }) => x);
-    return json({ tipos: TIPOS_ING, mp: !!(await token()), noSuma: NO_SUMA, tiposSal: TIPOS_SAL, cats: CATS, salidas: clean(sal as unknown as Record<string, unknown>[]), ingresos: clean(ing as unknown as Record<string, unknown>[]), pagadores: clean(pag as unknown as Record<string, unknown>[]) });
+    return json({ tipos: TIPOS_ING, mp: !!(await token()), noSuma: NO_SUMA, tiposSal: TIPOS_SAL, cats: CATS, salidas: clean(sal as unknown as Record<string, unknown>[]), debi: clean(deb as unknown as Record<string, unknown>[]), debiOk: !!(await claveDebi()), ingresos: clean(ing as unknown as Record<string, unknown>[]), pagadores: clean(pag as unknown as Record<string, unknown>[]) });
   } catch (e) { console.error("ingresos GET", e); return json({ error: "No pudimos cargar los ingresos." }, 500); }
 };
 
@@ -60,6 +61,12 @@ export const POST: APIRoute = async ({ request }) => {
         if (!TIPOS_SAL.includes(tipo)) return json({ error: "Elegí el tipo." }, 400);
         const it = await clasificarSalida(s(x.id, 80), tipo, s(x.categoria, 40), x.recordar !== false, por);
         return json({ ok: true, item: it });
+      }
+      case "debi": {
+        if (x.accion === "traer") { const r = await traerDebi(Math.max(1, Math.min(400, Math.round(n(x.dias) || 90)))); return json(r.error ? { error: r.error } : { ok: true, ...r }, r.error ? 400 : 200); }
+        if (x.accion === "asociar") return json({ ok: true, cambiados: await asociar(s(x.id, 80), s(x.alumnoId, 80)) });
+        if (x.accion === "llego") { const lote = s(x.lote, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(lote)) return json({ error: "lote" }, 400); return json({ ok: true, cambiados: await llego(lote, s(x.fecha, 10) || hoyAR()) }); }
+        return json({ error: "accion" }, 400);
       }
       case "traer": {
         const r = await traer(Math.max(1, Math.min(365, Math.round(n(x.dias) || 60))));
