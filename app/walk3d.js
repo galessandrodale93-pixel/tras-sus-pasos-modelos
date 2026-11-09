@@ -1091,6 +1091,7 @@ function miniTick(dt) {
 }
 // PC: sugerir pantalla completa al entrar (una vez por sesión, se cierra sola a los 6 s o con la X)
 function fullHint() {
+  if (document.getElementById('v3tut') || document.querySelector('.hst, #v3sheet:not([hidden])')) { setTimeout(fullHint, 4000); return; }
   try { if (fullHint.done || !matchMedia('(pointer: fine)').matches || matchMedia('(pointer: coarse)').matches) return; const d = document; if (d.fullscreenElement || d.webkitFullscreenElement || (screen.height - innerHeight < 4 && screen.width - innerWidth < 4)) return; if (sessionStorage.getItem('tsp:fullHint')) return; sessionStorage.setItem('tsp:fullHint', '1'); } catch (e) { return; }
   fullHint.done = true; const mac = /Mac/i.test(navigator.platform || navigator.userAgent), el = document.createElement('div'); el.className = 'v3full';
   el.innerHTML = `<span>🖥️</span><p>Para vivir la experiencia completa, apretá <kbd>${mac ? 'Ctrl+Cmd+F' : 'F11'}</kbd> y jugá en pantalla completa.</p><button class="v3full-go">Pantalla completa</button><button class="v3full-x" aria-label="Cerrar">✕</button>`;
@@ -1392,7 +1393,7 @@ function regionZ(g, r) { let a = -Infinity, b = Infinity; for (const id in g.NOD
 function planPois(g) {
   return POIS.filter(p => p.r < g.REGIONS.length).map(p => { const [a, b] = regionZ(g, p.r), z = a + (b - a) * p.f, x = p.side * p.dx, q = { ...p, x, z, a, b, pts: [] };
     if (p.k === 'river') { for (let zz = a + 4; zz >= b - 4; zz -= 1.5) q.pts.push([x + Math.sin(zz * .04) * 9, zz]); q.flat = q.pts; }
-    else if (p.k === 'taller' || p.k === 'village' || p.k === 'desert' || p.k === 'pastores' || p.k === 'temple' || p.k === 'lake' || p.k === 'roofhouse' || p.k === 'feeding' || p.k === 'field' || p.k === 'inn' || p.k === 'upper' || p.k === 'garden' || p.k === 'golgota' || p.k === 'tomb' || p.k === 'shore') { const big = p.k === 'garden' || p.k === 'tomb' || p.k === 'village' || p.k === 'desert' || p.k === 'pastores', rx = p.k === 'temple' ? 21 : p.k === 'lake' ? 40 : big ? 25 : 19, rz = p.k === 'temple' ? 23 : p.k === 'lake' ? 36 : big ? 24 : 17, cx2 = p.k === 'lake' ? x - p.side * 4 : x; q.flat = []; for (let u = -rx; u <= rx; u += 3) for (let v = -rz; v <= rz; v += 3) q.flat.push([cx2 + u, z + v]); }
+    else if (p.k === 'taller' || p.k === 'village' || p.k === 'desert' || p.k === 'pastores' || p.k === 'temple' || p.k === 'lake' || p.k === 'roofhouse' || p.k === 'feeding' || p.k === 'field' || p.k === 'inn' || p.k === 'upper' || p.k === 'garden' || p.k === 'golgota' || p.k === 'tomb' || p.k === 'shore') { const big = p.k === 'garden' || p.k === 'tomb' || p.k === 'village' || p.k === 'desert' || p.k === 'pastores', rx = p.k === 'temple' ? 21 : p.k === 'lake' ? 40 : big ? 25 : 19, rz = p.k === 'temple' ? 23 : p.k === 'lake' ? 36 : big ? 24 : 17, cx2 = p.k === 'lake' ? x - p.side * 4 : x; q.flat = []; const rect = p.k === 'temple' || p.k === 'upper' || p.k === 'lake'; for (let u = -rx; u <= rx; u += 3) for (let v = -rz; v <= rz; v += 3) { if (!rect) { const an = Math.atan2(v / rz, u / rx), wob = 1 + .16 * Math.sin(an * 3 + p.z * .013) + .1 * Math.sin(an * 5 + p.x * .07); if ((u / rx) ** 2 + (v / rz) ** 2 > wob * wob) continue; } q.flat.push([cx2 + u, z + v]); } }
     else { q.flat = [[x, z]]; for (let i = 0; i < 10; i++) { const an = i / 10 * 6.28; q.flat.push([x + Math.cos(an) * 5, z + Math.sin(an) * 5]); } }
     return q; });
 }
@@ -1884,13 +1885,13 @@ function crowdBake(look, anim, t) {
       aim(B.thigh_l, B.calf_l, mix(.9, .18, -.42)); aim(B.thigh_r, B.calf_r, mix(.9, -.18, -.42)); aim(B.calf_l, B.foot_l, mix(-1, .05, -.08)); aim(B.calf_r, B.foot_r, mix(-1, -.05, -.08));
       aim(B.upperarm_l, B.lowerarm_l, mix(.25, .15, -.9)); aim(B.upperarm_r, B.lowerarm_r, mix(.25, -.15, -.9)); aim(B.lowerarm_l, B.hand_l, mix(.8, .05, -.35)); aim(B.lowerarm_r, B.hand_r, mix(.8, -.05, -.35)); }
     else if (pose === 'side') { // piernas recogidas a un costado, apoyado en una mano
-      aim(B.thigh_l, B.calf_l, mix(.3, .9, -.25)); aim(B.thigh_r, B.calf_r, mix(.55, .75, -.3)); aim(B.calf_l, B.foot_l, mix(-.85, .5, -.1)); aim(B.calf_r, B.foot_r, mix(-.8, .6, -.1));
+      aim(B.thigh_l, B.calf_l, mix(.5, .75, -.4)); aim(B.thigh_r, B.calf_r, mix(.7, .55, -.42)); aim(B.calf_l, B.foot_l, mix(-.7, .6, -.15)); aim(B.calf_r, B.foot_r, mix(-.65, .7, -.15));
       aim(B.upperarm_l, B.lowerarm_l, mix(-.1, -.6, -.8)); aim(B.lowerarm_l, B.hand_l, mix(0, -.4, -.9)); aim(B.upperarm_r, B.lowerarm_r, mix(.3, 0, -.85)); aim(B.lowerarm_r, B.hand_r, mix(.8, 0, -.3)); }
     else { aim(B.thigh_l, B.calf_l, mix(.55, .85, -.22)); aim(B.thigh_r, B.calf_r, mix(.55, -.85, -.22)); aim(B.calf_l, B.foot_l, mix(.3, -.95, -.1)); aim(B.calf_r, B.foot_r, mix(.3, .95, -.1));
       aim(B.upperarm_l, B.lowerarm_l, mix(.5, .25, -.8)); aim(B.upperarm_r, B.lowerarm_r, mix(.5, -.25, -.8)); aim(B.lowerarm_l, B.hand_l, mix(.9, .3, -.3)); aim(B.lowerarm_r, B.hand_r, mix(.9, -.3, -.3)); }
     // la pelvis baja hasta casi el piso (el tronco va con ella) y el torso se inclina apenas adelante
-    if (B.pelvis) { const hipY = B.pelvis.getWorldPosition(new THREE.Vector3()).y, ps = B.pelvis.parent.getWorldScale(new THREE.Vector3()); B.pelvis.position.y -= (hipY - (pose === 'kneel' ? .34 : pose === 'side' ? .3 : .36)) / (ps.y || 1); }
-    if (B.spine_01) { B.spine_01.rotateX(pose === 'kneel' ? .06 : .12); if (pose === 'side') B.spine_01.rotateZ(.1); } o.updateMatrixWorld(true); } catch (e) { console.warn('cross', e); } const parts = [], v = new THREE.Vector3(); let minY = 1e9;
+    if (B.pelvis) { const hipY = B.pelvis.getWorldPosition(new THREE.Vector3()).y, ps = B.pelvis.parent.getWorldScale(new THREE.Vector3()); B.pelvis.position.y -= (hipY - (pose === 'kneel' ? .34 : pose === 'side' ? .4 : .36)) / (ps.y || 1); }
+    if (B.spine_01) { B.spine_01.rotateX(pose === 'kneel' ? .06 : .12); if (pose === 'side') B.spine_01.rotateZ(.05); } o.updateMatrixWorld(true); } catch (e) { console.warn('cross', e); } const parts = [], v = new THREE.Vector3(); let minY = 1e9;
   o.traverse(m => { if (!m.isSkinnedMesh || !m.visible) return; const g0 = m.geometry, P = g0.attributes.position, pos = new Float32Array(P.count * 3);
     for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i); m.applyBoneTransform(i, v); v.applyMatrix4(m.matrixWorld); pos[i * 3] = v.x; pos[i * 3 + 1] = v.y; pos[i * 3 + 2] = v.z; if (v.y < minY) minY = v.y; }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); if (g0.attributes.uv) g.setAttribute('uv', g0.attributes.uv); if (g0.attributes.color) g.setAttribute('color', g0.attributes.color); if (g0.attributes.uv1) g.setAttribute('uv1', g0.attributes.uv1); if (g0.index) g.setIndex(g0.index); g.computeVertexNormals(); parts.push({ g, mat: m.material }); });
@@ -2030,7 +2031,7 @@ function townLayout(scene, p, yAt, HW, o) {
 // gente del pueblo: de pie y algunos sentados en la puerta (horneados, baratos)
 function townFolk(scene, p, yAt, HW, n, rad, seed, avoid) {
   const R = rng(seed || 99), st = [], si = []; for (let t = 0; t < n * 30 && st.length + si.length < n; t++) { const a = R() * 6.283, r = 2.5 + R() * rad, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (blockedAt(x, z) || waterWet(x, z, null) > .02 || (HW && (HW.roadAt || HW.dAt)(x, z) < 2.2) || (avoid || []).some(([ax, az, ar]) => Math.hypot(ax - x, az - z) < ar)) continue; (R() < .25 ? si : st).push({ x, y: yAt(x, z), z, ry: R() * 6.283, s: .94 + R() * .12, v: Math.floor(R() * CROWD_LOOKS.length) }); }
-  crowdPlace(scene, st, CROWD_LOOKS, 'M_Standing_Idle', true); crowdPlace(scene, si, CROWD_LOOKS, 'side', true); [...st, ...si].forEach(q => S.cols.push({ x0: q.x - .35, x1: q.x + .35, z0: q.z - .35, z1: q.z + .35, cx: q.x, cz: q.z, r: .3 }));
+  crowdPlace(scene, st, CROWD_LOOKS, 'M_Standing_Idle', true); crowdPlace(scene, si, CROWD_LOOKS, 'kneel', true); [...st, ...si].forEach(q => S.cols.push({ x0: q.x - .35, x1: q.x + .35, z0: q.z - .35, z1: q.z + .35, cx: q.x, cz: q.z, r: .3 }));
 }
 // puestos de mercado: cuatro palos, toldo de tela y canastas con frutas
 function stall(scene, x, z, ry, y, R, poiProp) {
@@ -2098,7 +2099,7 @@ function belenScene(scene, p, yAt, poiProp, hx, HW) {
   const sd = p.side, R = rng(1212), y = yAt(p.x, p.z);
   const [kx, kz] = [p.x + sd * 12, p.z - 6]; poiProp('rock_face_01', [{ x: kx, y: yAt(kx, kz) - .3, z: kz, ry: sd > 0 ? -1.6 : 1.6, s: 1.5 }], { shadow: true, far: 1, nocol: 1 }); S.cols.push({ x0: kx - 3, x1: kx + 3, z0: kz - 3, z1: kz + 3, cx: kx, cz: kz, r: 2.8 });
   { const m = matMesh('manger'); const x = kx - sd * 3.4, z = kz + .5; m.position.set(x, yAt(x, z), z); m.rotation.y = Math.PI / 2; scene.add(m); S.cols.push({ x0: x - .8, x1: x + .8, z0: z - .8, z1: z + .8 }); const l = new THREE.PointLight('#FFC27A', 6, 8, 1.6); l.position.set(x, yAt(x, z) + 2, z); scene.add(l); }
-  const placed = townLayout(scene, p, yAt, HW, { seed: 1313, n: 12, r: 21, plaza: 6, avoid: [[kx, kz, 6]] }); const w = well(hx); w.position.set(p.x, y, p.z); scene.add(w); S.cols.push({ x0: p.x - 1, x1: p.x + 1, z0: p.z - 1, z1: p.z + 1 });
+  const placed = townLayout(scene, p, yAt, HW, { seed: 1313, n: 12, r: 21, plaza: 6, avoid: [[kx, kz, 9.5]] }); const w = well(hx); w.position.set(p.x, y, p.z); scene.add(w); S.cols.push({ x0: p.x - 1, x1: p.x + 1, z0: p.z - 1, z1: p.z + 1 });
   townFolk(scene, p, yAt, HW, 8, 12, 1414, [[p.x, p.z, 1.6], [kx, kz, 5]]);
   const lb = textSprite(p.name, hx); lb.scale.multiplyScalar(1.3); lb.position.set(p.x, y + 7, p.z); scene.add(lb);
 }
@@ -4006,7 +4007,7 @@ function anTick(dt) {
 }
 function phGet(id) {
   if (!PH.cache[id]) PH.cache[id] = grpVars(id).catch(() => null).then(v => { if (id === 'trp_olive') { trpOlive(v); return v || []; } if (id === 'trp_palm') { if (v && v.length && !FLORA.trpP) { FLORA.trpP = 1; FLORA.chunks = FLORA.chunks.filter(im => { if (!im.userData.dpalm) return true; im.visible = false; if (im.parent) im.parent.remove(im); return false; }); } return v || []; } return v; }).then(v => v || phLoader().then(L => new Promise((r, j) => L.load(PHB + id + '.glb', r, undefined, j))).then(async g => {
-    await phAlpha(id, g.scene); g.scene.updateMatrixWorld(true); const vars = (g.scene.children.length ? g.scene.children : [g.scene]).map(c => { const ms = []; c.traverse(o => { if (o.isMesh) ms.push({ geo: o.geometry, mat: o.material, m: o.matrixWorld.clone() }); }); return ms; }).filter(v => v.length);
+    await phAlpha(id, g.scene); if (/^(rock_face|namaqualand_cliff)/.test(id)) g.scene.traverse(o => { if (o.isMesh && o.material && o.material.map && !o.material.emissiveMap) { o.material.emissiveMap = o.material.map; o.material.emissive = new THREE.Color('#8E8478'); o.material.emissiveIntensity = 1; } }); g.scene.updateMatrixWorld(true); const vars = (g.scene.children.length ? g.scene.children : [g.scene]).map(c => { const ms = []; c.traverse(o => { if (o.isMesh) ms.push({ geo: o.geometry, mat: o.material, m: o.matrixWorld.clone() }); }); return ms; }).filter(v => v.length);
     return vars;
   })).catch(e => { console.warn('ph', id, e); r2fail('ph/' + id + '.glb', e && e.message); return []; });
   return PH.cache[id];
@@ -4093,7 +4094,7 @@ function seasonTick(dt) {
   // cielo más gris y luz más baja con nubes o lluvia
   if (!SEAS.base && S.scene) { SEAS.base = { lights: [] }; S.scene.traverse(o => { if (o.isDirectionalLight || o.isHemisphereLight) SEAS.base.lights.push([o, o.intensity]); }); if (S.scene.fog) SEAS.base.fog = S.scene.fog.color.clone(); }
   const g = Math.min(1, s.gray + (SEAS.rainOn ? .35 : 0)); if (SEAS.base) { SEAS.base.lights.forEach(([o, i0]) => { o.intensity = i0 * (1 - g * (o.isDirectionalLight ? .45 : .15)); }); if (SEAS.base.fog && S.scene.fog) S.scene.fog.color.copy(SEAS.base.fog).lerp(new THREE.Color('#9AA2A8'), g * .6); }
-  const tst = document.getElementById('toast'), busy = (tst && tst.classList.contains('on')) || (typeof CINE !== 'undefined' && CINE.on) || !document.getElementById('arcade').hidden;
+  const tst = document.getElementById('toast'), busy = (tst && tst.classList.contains('on')) || (typeof CINE !== 'undefined' && CINE.on) || !document.getElementById('arcade').hidden || document.getElementById('v3tut') || document.querySelector('.v3full, .hst, #v3sheet:not([hidden])');
   if (SEAS.auto && !SEAS.told && !busy && document.getElementById('view3d') && !document.getElementById('view3d').hidden) { SEAS.told = true; let fr = '';
     try { const p = G().P(); p.story = p.story || {}; if (p.story.seas !== s.n) { p.story.seas = s.n; fr = SEAS.FRASE[s.i] || ''; G().save(); } } catch (e) {}
     const el = document.createElement('div'); el.className = 'v3seas' + (fr ? ' fr' : ''); el.innerHTML = `<b>${s.icon} ${s.name} en Galilea</b>${fr ? `<span>${fr}</span>` : ''}`; document.body.appendChild(el); setTimeout(() => el.classList.add('on'), 50); setTimeout(() => { el.classList.remove('on'); setTimeout(() => el.remove(), 900); }, fr ? 9000 : 4200); }
