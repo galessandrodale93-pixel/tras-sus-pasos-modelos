@@ -10,7 +10,7 @@ body = '''
   <div class="tt-act"><a class="tt-ln" href="/campus.html">Campus</a></div>
 </div></section>
 <nav class="tt-tabs" id="ttTabs"><div class="wrap">
-  <button data-t="cobros" class="on">Cobros</button><button data-t="registro">Registro</button><button data-t="gastos">Gastos</button><button data-t="resumen">Resumen</button>
+  <button data-t="cobros" class="on">Cobros</button><button data-t="registro">Registro</button><button data-t="ingresos">Ingresos</button><button data-t="gastos">Gastos</button><button data-t="resumen">Resumen</button>
 </div></nav>
 <div class="tt-main"><div class="wrap">
   <section id="v-cobros" class="tt-v">
@@ -23,6 +23,16 @@ body = '''
   <section id="v-registro" class="tt-v" hidden>
     <div class="tt-bar"><select id="rMes" aria-label="Mes"></select><select id="rEst" aria-label="Estado"></select><span class="tt-tip" id="rSum"></span><button class="tt-btn" type="button" id="rAdd">Registrar un cobro</button></div>
     <div class="fn-log tt-card" id="rLog"></div>
+  </section>
+  <section id="v-ingresos" class="tt-v" hidden>
+    <div class="tt-calh"><button class="tt-arrow" type="button" id="iPrev" aria-label="Mes anterior">‹</button><h2 id="iTit"></h2><button class="tt-arrow" type="button" id="iNext" aria-label="Mes siguiente">›</button></div>
+    <p class="tt-tip" id="iMp"></p>
+    <div class="fn-kpis" id="iTot"></div>
+    <div class="tt-card" id="iPend" hidden></div>
+    <div class="tt-card"><h2 class="tt-h">Ingresos por tipo, mes a mes</h2><div class="fn-leg" id="iLeg"></div><div class="fn-bars" id="iBars"></div></div>
+    <div class="tt-card fn-gl" id="iList"></div>
+    <div class="tt-wa"><button class="tt-btn" type="button" id="iAdd">Cargar efectivo u otro ingreso</button><button class="tt-btn s" type="button" id="iTraer">Traer pagos de Mercado Pago</button></div>
+    <p class="tt-tip">Los pagos de Mercado Pago entran solos y se clasifican: suscripciones como siembra automática, alumnos reconocidos por nombre o email como cuota, y quien ya clasificaste antes, igual que la vez anterior. Las cuotas que entran por Debi/Payway siguen en Cobros y se muestran aparte.</p>
   </section>
   <section id="v-gastos" class="tt-v" hidden>
     <div class="tt-calh"><button class="tt-arrow" type="button" id="gPrev" aria-label="Mes anterior">‹</button><h2 id="gTit"></h2><button class="tt-arrow" type="button" id="gNext" aria-label="Mes siguiente">›</button></div>
@@ -86,12 +96,15 @@ css = '''<style>
 .fn-bar{display:grid;grid-template-rows:1fr auto;height:100%;gap:6px;text-align:center}
 .fn-bar b{font:600 .74rem var(--sans);color:var(--muted)}.fn-bar.cur b{color:var(--ink)}
 .fn-bb{display:flex;gap:3px;align-items:flex-end;justify-content:center}
+.fn-stk{display:flex;flex-direction:column-reverse;width:46%;height:100%;justify-content:flex-start}.fn-stk i{display:block;width:100%}.fn-stk i:last-child{border-radius:6px 6px 0 0}
+.fn-pr{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}.fn-pr:first-of-type{border-top:0}.fn-pr .w{display:grid}.fn-pr small{color:var(--muted)}
 .fn-bb i{display:block;width:40%;border-radius:6px 6px 0 0;min-height:2px}.fn-bb .in{background:var(--g)}.fn-bb .out{background:var(--gold)}
 @media (max-width:760px){.fn-fx{grid-template-columns:1fr 1fr}.fn-months{grid-template-columns:repeat(4,1fr)}.fn-bars{height:160px}}
 </style>
 '''
 js = '''<script src="/assets/auth.js"></script>
 <script src="/assets/finanzas.js"></script>
+<script src="/assets/ingresos.js"></script>
 '''
 html = B.head('Finanzas · Habitat', 'Cobros y gastos de Habitat CFM.', 'finanzas.html')
 html = html.replace('</head>', '<meta name="robots" content="noindex,nofollow">\n<link rel="stylesheet" href="/assets/campus.css">\n<link rel="stylesheet" href="/assets/tutor.css">\n' + css + '</head>')

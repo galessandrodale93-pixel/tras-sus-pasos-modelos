@@ -30,6 +30,7 @@
     return j;
   }
   var D = null, NM = {};
+  window.HabFin = { data: function () { return D; }, toast: function (t) { toast(t); }, token: token, modal: function (h, o) { return modal(h, o); }, opts: function (L, v) { return opts(L, v); } };
   async function send(body, col, key) {
     try {
       var r = await api('POST', body);
@@ -207,7 +208,7 @@
   }
 
   function cur() { var b = $('#ttTabs .on'); return b ? b.dataset.t : 'cobros'; }
-  function refresh() { ({ cobros: renderCobros, registro: renderRegistro, gastos: renderGastos, resumen: renderResumen }[cur()] || renderCobros)(); }
+  function refresh() { ({ cobros: renderCobros, registro: renderRegistro, gastos: renderGastos, resumen: renderResumen, ingresos: function () { if (window.HabIngresos) window.HabIngresos.render(); } }[cur()] || renderCobros)(); }
   function tab(t) { var b = $('#ttTabs [data-t="' + t + '"]'); if (!b) return; $$('#ttTabs button').forEach(function (x) { x.classList.toggle('on', x === b); }); $$('.tt-v').forEach(function (v) { v.hidden = v.id !== 'v-' + t; }); try { history.replaceState(null, '', '#' + t); } catch (e) {} refresh(); }
   $$('#ttTabs button').forEach(function (b) { b.onclick = function () { tab(b.dataset.t); }; });
   $('#cQ').oninput = function () { F.q = this.value.trim(); renderCobros(); };
