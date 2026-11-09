@@ -1875,20 +1875,22 @@ const CROWD = { cache: new Map() };
 function crowdBake(look, anim, t) {
   if (!H3.ok) return null; const key = JSON.stringify(look) + '|' + anim + '|' + (t || 0); if (CROWD.cache.has(key)) return CROWD.cache.get(key);
   const o = buildHero3(Object.assign({}, look, { anim: [anim], tintK: look.tintK ?? .08 })), i0 = H3.npcs.indexOf(o); if (i0 >= 0) H3.npcs.splice(i0, 1);
-  const u = o.userData.h3, cross = anim === 'cross'; try { u.mixer.stopAllAction(); const a = u.act[cross ? 'Idle_Loop' : anim] || u.act['Idle_Loop']; a.reset().play(); u.mixer.setTime(t || .6); } catch (e) {}
+  const u = o.userData.h3, pose = /^(cross|kneel|side)$/.test(anim) ? anim : null, cross = !!pose; try { u.mixer.stopAllAction(); const a = u.act[cross ? 'Idle_Loop' : anim] || u.act['Idle_Loop']; a.reset().play(); u.mixer.setTime(t || .6); } catch (e) {}
   o.updateMatrixWorld(true);
   if (cross) try { const B = u.bones, aim = (bone, child, dirW) => { if (!bone || !child) return; o.updateMatrixWorld(true); const a0 = bone.getWorldPosition(new THREE.Vector3()), b0 = child.getWorldPosition(new THREE.Vector3()), cur = b0.sub(a0).normalize(), want = dirW.clone().normalize(), qW = new THREE.Quaternion().setFromUnitVectors(cur, want), pq = bone.parent.getWorldQuaternion(new THREE.Quaternion()); bone.quaternion.premultiply(pq.clone().invert().multiply(qW).multiply(pq)); };
     const fw = new THREE.Vector3(0, 0, 1).applyQuaternion(o.getWorldQuaternion(new THREE.Quaternion())), side = new THREE.Vector3(1, 0, 0).applyQuaternion(o.getWorldQuaternion(new THREE.Quaternion()));
-    aim(B.thigh_l, B.calf_l, side.clone().multiplyScalar(.85).add(fw.clone().multiplyScalar(.55)).add(new THREE.Vector3(0, -.22, 0)));
-    aim(B.thigh_r, B.calf_r, side.clone().multiplyScalar(-.85).add(fw.clone().multiplyScalar(.55)).add(new THREE.Vector3(0, -.22, 0)));
-    aim(B.calf_l, B.foot_l, side.clone().multiplyScalar(-.95).add(fw.clone().multiplyScalar(.3)).add(new THREE.Vector3(0, -.1, 0)));
-    aim(B.calf_r, B.foot_r, side.clone().multiplyScalar(.95).add(fw.clone().multiplyScalar(.3)).add(new THREE.Vector3(0, -.1, 0)));
-    // brazos relajados sobre las rodillas
-    aim(B.upperarm_l, B.lowerarm_l, fw.clone().multiplyScalar(.5).add(side.clone().multiplyScalar(.25)).add(new THREE.Vector3(0, -.8, 0))); aim(B.upperarm_r, B.lowerarm_r, fw.clone().multiplyScalar(.5).add(side.clone().multiplyScalar(-.25)).add(new THREE.Vector3(0, -.8, 0)));
-    aim(B.lowerarm_l, B.hand_l, fw.clone().multiplyScalar(.9).add(side.clone().multiplyScalar(.3)).add(new THREE.Vector3(0, -.3, 0))); aim(B.lowerarm_r, B.hand_r, fw.clone().multiplyScalar(.9).add(side.clone().multiplyScalar(-.3)).add(new THREE.Vector3(0, -.3, 0)));
+    const V3 = (a, b, c) => new THREE.Vector3(a, b, c), mix = (f, sd, y) => fw.clone().multiplyScalar(f).add(side.clone().multiplyScalar(sd)).add(V3(0, y, 0));
+    if (pose === 'kneel') { // sentado sobre los talones: rodillas adelante en el piso, pantorrillas hacia atrás, manos sobre los muslos
+      aim(B.thigh_l, B.calf_l, mix(.9, .18, -.42)); aim(B.thigh_r, B.calf_r, mix(.9, -.18, -.42)); aim(B.calf_l, B.foot_l, mix(-1, .05, -.08)); aim(B.calf_r, B.foot_r, mix(-1, -.05, -.08));
+      aim(B.upperarm_l, B.lowerarm_l, mix(.25, .15, -.9)); aim(B.upperarm_r, B.lowerarm_r, mix(.25, -.15, -.9)); aim(B.lowerarm_l, B.hand_l, mix(.8, .05, -.35)); aim(B.lowerarm_r, B.hand_r, mix(.8, -.05, -.35)); }
+    else if (pose === 'side') { // piernas recogidas a un costado, apoyado en una mano
+      aim(B.thigh_l, B.calf_l, mix(.3, .9, -.25)); aim(B.thigh_r, B.calf_r, mix(.55, .75, -.3)); aim(B.calf_l, B.foot_l, mix(-.85, .5, -.1)); aim(B.calf_r, B.foot_r, mix(-.8, .6, -.1));
+      aim(B.upperarm_l, B.lowerarm_l, mix(-.1, -.6, -.8)); aim(B.lowerarm_l, B.hand_l, mix(0, -.4, -.9)); aim(B.upperarm_r, B.lowerarm_r, mix(.3, 0, -.85)); aim(B.lowerarm_r, B.hand_r, mix(.8, 0, -.3)); }
+    else { aim(B.thigh_l, B.calf_l, mix(.55, .85, -.22)); aim(B.thigh_r, B.calf_r, mix(.55, -.85, -.22)); aim(B.calf_l, B.foot_l, mix(.3, -.95, -.1)); aim(B.calf_r, B.foot_r, mix(.3, .95, -.1));
+      aim(B.upperarm_l, B.lowerarm_l, mix(.5, .25, -.8)); aim(B.upperarm_r, B.lowerarm_r, mix(.5, -.25, -.8)); aim(B.lowerarm_l, B.hand_l, mix(.9, .3, -.3)); aim(B.lowerarm_r, B.hand_r, mix(.9, -.3, -.3)); }
     // la pelvis baja hasta casi el piso (el tronco va con ella) y el torso se inclina apenas adelante
-    if (B.pelvis) { const hipY = B.pelvis.getWorldPosition(new THREE.Vector3()).y, ps = B.pelvis.parent.getWorldScale(new THREE.Vector3()); B.pelvis.position.y -= (hipY - .36) / (ps.y || 1); }
-    if (B.spine_01) B.spine_01.rotateX(.12); o.updateMatrixWorld(true); } catch (e) { console.warn('cross', e); } const parts = [], v = new THREE.Vector3(); let minY = 1e9;
+    if (B.pelvis) { const hipY = B.pelvis.getWorldPosition(new THREE.Vector3()).y, ps = B.pelvis.parent.getWorldScale(new THREE.Vector3()); B.pelvis.position.y -= (hipY - (pose === 'kneel' ? .34 : pose === 'side' ? .3 : .36)) / (ps.y || 1); }
+    if (B.spine_01) { B.spine_01.rotateX(pose === 'kneel' ? .06 : .12); if (pose === 'side') B.spine_01.rotateZ(.1); } o.updateMatrixWorld(true); } catch (e) { console.warn('cross', e); } const parts = [], v = new THREE.Vector3(); let minY = 1e9;
   o.traverse(m => { if (!m.isSkinnedMesh || !m.visible) return; const g0 = m.geometry, P = g0.attributes.position, pos = new Float32Array(P.count * 3);
     for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i); m.applyBoneTransform(i, v); v.applyMatrix4(m.matrixWorld); pos[i * 3] = v.x; pos[i * 3 + 1] = v.y; pos[i * 3 + 2] = v.z; if (v.y < minY) minY = v.y; }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); if (g0.attributes.uv) g.setAttribute('uv', g0.attributes.uv); if (g0.attributes.color) g.setAttribute('color', g0.attributes.color); if (g0.attributes.uv1) g.setAttribute('uv1', g0.attributes.uv1); if (g0.index) g.setIndex(g0.index); g.computeVertexNormals(); parts.push({ g, mat: m.material }); });
@@ -1900,7 +1902,7 @@ function crowdBake(look, anim, t) {
 // pone una lista de personas { x, y, z, ry, s } con la pose horneada de cada aspecto
 // plan B si no bajaron los avatares: figuras simples (túnica, cabeza y manto) con los mismos colores de piel y ropa, de pie o sentadas
 function crowdSimple(scene, list, looks, anim, sh) {
-  if (!list.length) return false; r2log('multitud simple: ' + list.length + ' figuras (sin avatares 3D)'); const seated = anim === 'cross' || /Sit/i.test(anim || ''), by = looks.map(() => []); list.forEach((p, i) => by[(p.v ?? i) % looks.length].push(p));
+  if (!list.length) return false; r2log('multitud simple: ' + list.length + ' figuras (sin avatares 3D)'); const seated = /^(cross|kneel|side)$/.test(anim || '') || /Sit/i.test(anim || ''), by = looks.map(() => []); list.forEach((p, i) => by[(p.v ?? i) % looks.length].push(p));
   const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
   const body = seated ? new THREE.CylinderGeometry(.34, .42, .72, 8) : new THREE.CapsuleGeometry(.2, 1.05, 3, 8), head = new THREE.SphereGeometry(.13, 8, 7), cloth = seated ? new THREE.SphereGeometry(.3, 8, 6, 0, 6.283, 0, 1.6) : new THREE.CylinderGeometry(.24, .3, .55, 8);
   const yB = seated ? .36 : .8, yH = seated ? .86 : 1.5, yC = seated ? .55 : 1.1;
@@ -1912,8 +1914,14 @@ function crowdSimple(scene, list, looks, anim, sh) {
 function crowdPlace(scene, list, looks, anim, sh) {
   if (!list.length) return false; if (!H3.ok) return crowdSimple(scene, list, looks, anim, sh); const by = looks.map(() => []); list.forEach((p, i) => by[(p.v ?? i) % looks.length].push(p)); const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
   looks.forEach((lk, li) => { const L = by[li]; if (!L.length) return; const parts = crowdBake(lk, anim, .4 + li * .37); if (!parts) { crowdSimple(scene, L, [lk], anim, sh); return; }
-    parts.forEach(pt => { const im = new THREE.InstancedMesh(pt.g, pt.mat, L.length); L.forEach((p, i) => { E.set(0, p.ry, 0); M.compose(V.set(p.x, p.y, p.z), Q.setFromEuler(E), SC.setScalar(p.s || 1)); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.castShadow = !!sh && QUAL.lv >= 2; im.receiveShadow = true; im.computeBoundingSphere(); crowdReg(im); scene.add(im); }); });
+    parts.forEach(pt => { crowdSway(pt.mat); const im = new THREE.InstancedMesh(pt.g, pt.mat, L.length); L.forEach((p, i) => { E.set(0, p.ry, 0); M.compose(V.set(p.x, p.y, p.z), Q.setFromEuler(E), SC.setScalar(p.s || 1)); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.castShadow = !!sh && QUAL.lv >= 2; im.receiveShadow = true; im.computeBoundingSphere(); crowdReg(im); scene.add(im); }); });
   return true;
+}
+// vida leve para la gente horneada: respiración y un balanceo mínimo por shader (casi gratis), con fase distinta por persona según dónde está
+function crowdSway(mt) {
+  if (!mt || mt.userData.sway) return; mt.userData.sway = 1; const prev = mt.onBeforeCompile, prevKey = mt.customProgramCacheKey;
+  mt.onBeforeCompile = sh => { if (prev) prev(sh); sh.uniforms.wt = WATER.uT; sh.vertexShader = 'uniform float wt;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n#ifdef USE_INSTANCING\n{ float ph = instanceMatrix[3].x * .73 + instanceMatrix[3].z * 1.31; float k = clamp(transformed.y / 1.5, 0., 1.); float br = 1. + sin(wt * 1.9 + ph) * .012 * k; transformed.xz *= br; transformed.x += sin(wt * .8 + ph) * .014 * k * k; transformed.z += cos(wt * .65 + ph * 1.7) * .011 * k * k; }\n#endif'); };
+  mt.customProgramCacheKey = () => (prevKey ? prevKey.call(mt) : '') + '|sway';
 }
 // multitudes lejanas: se ocultan según la calidad (en Bajo solo se dibujan las que están a menos de 70 m); ahorra millones de triángulos por cuadro
 const CROWD_R = [70, 110, 170, 1e9];
@@ -1938,7 +1946,7 @@ function feedingScene(scene, p, yAt, poiProp, hx, HW) {
     const placed = []; for (let n = 0; n < 20; n++) { let x, z, ok = false; for (let t = 0; t < 40 && !ok; t++) { const ang = R() * 6.283, rr = Math.sqrt(R()) * 3.6; x = gx + Math.cos(ang) * rr; z = gz + Math.sin(ang) * rr; ok = placed.every(q => (q[0] - x) ** 2 + (q[1] - z) ** 2 > .85); } placed.push([x, z]);
       seated.push({ x, y: yAt(x, z) + .02, z, ry: Math.atan2(p.x - x, p.z - z) + (R() - .5) * 1.1, s: .9 + R() * .16, v: Math.floor(R() * CROWD_LOOKS.length) }); }
     cols.push([gx, gz, 3.2]); }
-  if (!crowdPlace(scene, seated, CROWD_LOOKS, 'cross', true)) r2log('cinco mil: sin personajes 3D');
+  { const kn = seated.filter((q, i) => i % 3 !== 2), sd2 = seated.filter((q, i) => i % 3 === 2); const okK = crowdPlace(scene, kn, CROWD_LOOKS, 'kneel', true), okS = crowdPlace(scene, sd2, CROWD_LOOKS, 'side', true); if (!okK && !okS) r2log('cinco mil: sin personajes 3D'); }
   cols.forEach(([x, z, r]) => S.cols.push({ x0: x - r, x1: x + r, z0: z - r, z1: z + r, cx: x, cz: z, r }));
   // doce canastas con lo que sobró (Marcos 6:43): panes y peces
   const bk = [], loaves = [], fish = []; for (let i = 0; i < 12; i++) { const a = toRoad + .4 + i / 12 * 6.283, r = 4.6, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r, yy = yAt(x, z); bk.push({ x, y: yy, z, ry: a, s: 2.6, v: i }); for (let k = 0; k < 4; k++) loaves.push([x + (R() - .5) * .45, yy + .3, z + (R() - .5) * .3]); for (let k = 0; k < 2; k++) fish.push([x + (R() - .5) * .4, yy + .36, z + (R() - .5) * .25, R() * 6]); S.cols.push({ x0: x - .5, x1: x + .5, z0: z - .5, z1: z + .5, cx: x, cz: z, r: .45 }); }
@@ -2022,7 +2030,7 @@ function townLayout(scene, p, yAt, HW, o) {
 // gente del pueblo: de pie y algunos sentados en la puerta (horneados, baratos)
 function townFolk(scene, p, yAt, HW, n, rad, seed, avoid) {
   const R = rng(seed || 99), st = [], si = []; for (let t = 0; t < n * 30 && st.length + si.length < n; t++) { const a = R() * 6.283, r = 2.5 + R() * rad, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (blockedAt(x, z) || waterWet(x, z, null) > .02 || (HW && (HW.roadAt || HW.dAt)(x, z) < 2.2) || (avoid || []).some(([ax, az, ar]) => Math.hypot(ax - x, az - z) < ar)) continue; (R() < .25 ? si : st).push({ x, y: yAt(x, z), z, ry: R() * 6.283, s: .94 + R() * .12, v: Math.floor(R() * CROWD_LOOKS.length) }); }
-  crowdPlace(scene, st, CROWD_LOOKS, 'M_Standing_Idle', true); crowdPlace(scene, si, CROWD_LOOKS, 'cross', true); [...st, ...si].forEach(q => S.cols.push({ x0: q.x - .35, x1: q.x + .35, z0: q.z - .35, z1: q.z + .35, cx: q.x, cz: q.z, r: .3 }));
+  crowdPlace(scene, st, CROWD_LOOKS, 'M_Standing_Idle', true); crowdPlace(scene, si, CROWD_LOOKS, 'side', true); [...st, ...si].forEach(q => S.cols.push({ x0: q.x - .35, x1: q.x + .35, z0: q.z - .35, z1: q.z + .35, cx: q.x, cz: q.z, r: .3 }));
 }
 // puestos de mercado: cuatro palos, toldo de tela y canastas con frutas
 function stall(scene, x, z, ry, y, R, poiProp) {
