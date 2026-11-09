@@ -5,15 +5,15 @@ name: Avisos Habitat CFM
 
 on:
   schedule:
-    - cron: "12 12 * * *"   # todos los días 9:12 (Argentina): /api/avisos
-    - cron: "32 22 * * 3,4" # miércoles y jueves 19:32: /api/lista-aviso
-    - cron: "2 13 * * 6"    # sábados 10:02: /api/lista-aviso
+    - cron: "12 12 * * *"   # todos los días 9:12 (Argentina): /api/avisos (profes y Sembradores)
+    - cron: "17 12 * * *"   # todos los días 9:17: /api/lista-aviso (a quien no cargó la lista de la clase de ayer)
+    - cron: "2 0 * * 1"     # domingos 21:02 (lunes 00:02 UTC): /api/avisos?semana=1 (resumen semanal a voluntarios)
   workflow_dispatch:
     inputs:
       endpoint:
         description: "Qué disparar"
         type: choice
-        options: [avisos, lista-aviso]
+        options: [avisos, "avisos?semana=1", lista-aviso]
         default: avisos
 
 jobs:
@@ -28,8 +28,9 @@ jobs:
         run: |
           case "$SCHED" in
             "12 12 * * *") EP=avisos ;;
-            "") EP="${MANUAL:-avisos}" ;;
-            *) EP=lista-aviso ;;
+            "17 12 * * *") EP=lista-aviso ;;
+            "2 0 * * 1") EP="avisos?semana=1" ;;
+            *) EP="${MANUAL:-avisos}" ;;
           esac
           URL="https://www.habitat-cfm.org/api/$EP"
           echo "Llamando a $URL"
