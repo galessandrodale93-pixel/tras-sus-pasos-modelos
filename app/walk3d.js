@@ -5129,7 +5129,7 @@ function svFaint() {
   // la bolsa queda donde caíste (2 min; Control propio 40+ suma 1 min). Con Amor 50+ alguien que ayudaste la cuida y no desaparece.
   const s = svP(), p = G().P(), gs = gearState(); S.down = 1; S.pose = null; S.joy.x = 0; S.joy.y = 0;
   const keep = new Set(gs.own.filter(id => GBY[id] && GBY[id].r === 'u')), prot = Math.floor(humV() / 5); gs.own.map(id => GBY[id]).filter(x => x && x.r !== 'u').sort((a, b) => 'lerc'.indexOf(a.r) - 'lerc'.indexOf(b.r)).slice(0, prot).forEach(x => keep.add(x.id));
-  const guard = S.hx && fv('amor') >= 50, spd = S.spawn ? Math.hypot(S.spawn[0] - S.av.position.x, S.spawn[1] - S.av.position.z) : 0, secs = Math.max(SV.BAG, Math.ceil(spd / 3.2) + 45) + (S.hx && fv('dom') >= 40 ? 60 : 0); // siempre alcanzable: tiempo según la distancia desde donde despierta
+  const guard = S.hx && fv('amor') >= 50, secs = SV.BAG + (S.hx && fv('dom') >= 40 ? 60 : 0);
   const bag = { x: S.av.position.x, z: S.av.position.z, left: secs, guard, inv: { ...s.inv }, tools: s.tools.slice(), own: gs.own.filter(id => !keep.has(id)), eq: Object.fromEntries(Object.entries(gs.eq).filter(([, id]) => !keep.has(id))) };
   s.inv = {}; s.tools = []; gs.own = [...keep]; gs.eq = Object.fromEntries(Object.entries(gs.eq).filter(([, id]) => keep.has(id))); s.bag = bag; s.sat = 20 * 60; s.warned = 0; G().save(); reLook && reLook();
   const mm = Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
@@ -5148,7 +5148,7 @@ function bagTimer() {
   const s = svP(), b = s && s.bag; let el = document.getElementById('v3bagt');
   if (!b || !S.sv || !S.sv.bag) { if (el) el.hidden = true; return; }
   if (!el) { el = document.createElement('div'); el.id = 'v3bagt'; el.className = 'v3bagt'; el.onclick = () => openMap(); document.body.appendChild(el); }
-  const a = S.av.position, d = Math.round(Math.hypot(b.x - a.x, b.z - a.z)); if (!b.fair) { b.fair = 1; const need = Math.ceil(d / 3.2) + 45; if (b.left < need) { b.left = need; try { G().save(); } catch (e) {} } } const L = Math.max(0, Math.ceil(b.left)), mm = Math.floor(L / 60) + ':' + String(L % 60).padStart(2, '0');
+  const a = S.av.position, d = Math.round(Math.hypot(b.x - a.x, b.z - a.z)); const L = Math.max(0, Math.ceil(b.left)), mm = Math.floor(L / 60) + ':' + String(L % 60).padStart(2, '0');
   const txt = b.guard ? `🎒 Tu bolsa está a ${d} m · la cuidan por vos` : `🎒 Si no la encontrás en ${mm} perdés todo · ${d} m`;
   if (el.textContent !== txt) el.textContent = txt; el.hidden = false; el.classList.toggle('urg', !b.guard && L <= 30);
 }
