@@ -68,11 +68,6 @@
 .out-txt{border:0;background:none;color:rgba(246,240,228,.6);font:500 .82rem var(--sans);text-decoration:underline;cursor:pointer;padding:8px 4px;align-self:center}
 .out-txt:hover{color:var(--cream)}
 </style>
-<section class="cx-sec" id="servicio" hidden><div class="wrap">
-  <div class="cx-h"><h2>Mi servicio</h2><span class="cal-act"><a href="/voluntario.html">Ver todo</a><a id="svCal" href="#">+ Avisos en mi teléfono</a></span></div>
-  <div class="ag" id="svList"></div>
-  <p class="ag-tip" id="svAn"></p>
-</div></section>
 <section class="cx-sec" id="opina" hidden><div class="wrap">
   <div class="cx-h"><h2>¿Cómo estuvo la clase?</h2></div>
   <div id="opList"></div>
@@ -153,9 +148,6 @@ var X=window.CampusExtra;
  window.__eqVol&&window.__eqVol();
 }).catch(function(){});fetch('/api/testimonio',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();}).then(function(t){if(t&&t.clave&&t.estado!=='Subido'){var a=document.getElementById('lnTes');a.href='/testimonio.html?k='+t.clave;a.hidden=false;}}).catch(function(){});var r=await fetch('/api/voluntario',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();});
  if(!r.voluntario||!r.turnos||!r.turnos.length)return;var hoy=new Date(Date.now()-3*3600e3).toISOString().slice(0,10),man=new Date(Date.now()+21*3600e3).toISOString().slice(0,10);window.__eqVol=function(){var c=document.querySelector('#eq-vol em');if(!c)return;var t=r.turnos[0],x=new Date(t.fecha+'T12:00:00-03:00');c.textContent=(t.fecha===hoy?'Servís hoy':t.fecha===man?'Servís mañana':'Tu próximo turno: '+['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][x.getDay()]+' '+x.getDate()+'/'+(x.getMonth()+1));if(t.fecha===hoy||t.fecha===man)c.parentNode.classList.add('hot');};window.__eqVol();
- document.getElementById('servicio').hidden=false;document.getElementById('svCal').href=r.voluntario.ics.replace(/^https:/,'webcal:');
- document.getElementById('svList').innerHTML=r.turnos.map(function(t){var d=new Date(t.fecha+'T12:00:00-03:00'),hot=t.fecha===hoy||t.fecha===man;return '<div class="ag-it'+(hot?' hot':'')+'"><div class="ag-d"><b>'+d.getDate()+'</b><small>'+t.dia.slice(0,3)+'</small></div><div class="ag-t"><span class="ag-k">'+(t.fecha===hoy?'Hoy':t.fecha===man?'Mañana':'Servicio')+'</span><b>'+X.esc(t.tareas.join(' · '))+'</b><small>Llegada '+t.llegada+' h · la clase empieza '+t.clase+' h</small></div></div>';}).join('');
- document.getElementById('svAn').textContent=r.animo+' Sumá «Avisos en mi teléfono» y te llega el recordatorio el día que te toca (los sábados, el viernes).';
 }catch(e){}})();
 function agenda(pids){X.agenda(pids).then(function(L){
  var now=Date.now(),up=L.filter(function(e){return (e.end||e.ini).getTime()>=now-3600e3;}),av=L.filter(function(e){return /aviso/i.test(e.tipo||'')&&e.ini.getTime()<=now;}).reverse().slice(0,4);
