@@ -403,9 +403,9 @@ function waterEnv(renderer) {
 }
 function waterMat(hx, flow) {
   const nm = waterNormalTex().clone(), cn = waterNormalTex().clone(); nm.needsUpdate = cn.needsUpdate = true; nm.repeat.set(1, 1); cn.repeat.set(1, 1);
-  const m = new THREE.MeshPhysicalMaterial({ color: hx ? '#2F6F7E' : '#3FA0D8', roughness: .12, metalness: 0, transparent: true, opacity: .93, normalMap: nm, normalScale: new THREE.Vector2(.55, .55), clearcoat: 1, clearcoatRoughness: .05, clearcoatNormalMap: cn, clearcoatNormalScale: new THREE.Vector2(.35, .35), envMap: S ? waterEnv(S.renderer) : null, envMapIntensity: hx ? .8 : 1, depthWrite: false });
+  const m = new THREE.MeshPhysicalMaterial({ color: hx ? '#27565F' : '#3FA0D8', roughness: hx ? .2 : .12, metalness: 0, transparent: true, opacity: .93, normalMap: nm, normalScale: new THREE.Vector2(hx ? .85 : .55, hx ? .85 : .55), clearcoat: 1, clearcoatRoughness: .05, clearcoatNormalMap: cn, clearcoatNormalScale: new THREE.Vector2(.35, .35), envMap: S ? waterEnv(S.renderer) : null, envMapIntensity: hx ? .8 : 1, depthWrite: false });
   m.userData = { nm, cn, flow, env: m.envMap };
-  m.onBeforeCompile = sh => { sh.uniforms.wt = WATER.uT; sh.uniforms.shal = { value: new THREE.Color(hx ? '#6FA8A0' : '#8FD8E8') };
+  m.onBeforeCompile = sh => { sh.uniforms.wt = WATER.uT; sh.uniforms.shal = { value: new THREE.Color(hx ? '#7A9E8C' : '#8FD8E8') };
     sh.vertexShader = 'attribute float shore;varying float vSh;uniform float wt;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvSh=shore;vec4 wp0=modelMatrix*vec4(position,1.);transformed.y+=(sin(wp0.x*.35+wt*1.3)*.05+sin(wp0.z*.29-wt*1.05)*.045)*smoothstep(0.,.25,shore);');
     sh.fragmentShader = 'varying float vSh;uniform float wt;uniform vec3 shal;\n' + sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\ndiffuseColor.rgb=mix(shal,diffuseColor.rgb,smoothstep(.0,.35,vSh));float fo=smoothstep(.09,.0,vSh)*(.55+.45*sin(vSh*140.-wt*2.6));diffuseColor.rgb=mix(diffuseColor.rgb,vec3(1.),clamp(fo,0.,1.)*.75);diffuseColor.a=mix(.55,diffuseColor.a,smoothstep(0.,.12,vSh));'); };
   WATER.mats.push(m); return m;
@@ -1957,12 +1957,19 @@ function feedingScene(scene, p, yAt, poiProp, hx, HW) {
 // (la piedra cambia sola por región: basalto negro en Galilea del lago, caliza clara en Jerusalén; ver regionStone)
 function vHouse(R, o) {
   o = o || {}; const g = new THREE.Group(), w = o.w || 5 + R() * 3, d = o.d || 4.2 + R() * 2.4, h = o.h || 2.9 + R() * .7, q = v => Math.max(.5, Math.round(v * 2) / 2);
-  const wm = pbrMat('patterned_clay_plaster', q(w / 3), q(h / 3), { color: '#F2E8DA' }), wm2 = pbrMat('patterned_clay_plaster', q(d / 3), q(h / 3), { color: '#F2E8DA' }), dk = tm('vhdk', '#241A12', { roughness: 1 }), wd = tm('vhwd', '#5E4128'), roofM = tm('vhrf', '#B59B74', { roughness: 1 });
+  // revoque con mosaico fino (1,2 m) y tono distinto por casa: cal, arena, barro claro
+  const tone = o.tone || ['#F2E8DA', '#E8D9BF', '#DCCBA8', '#E4D6B8', '#CDB58F', '#EADFCB'][Math.floor(R() * 6)];
+  const wm = pbrMat('patterned_clay_plaster', q(w / 1.2), q(h / 1.2), { color: tone }), wm2 = pbrMat('patterned_clay_plaster', q(d / 1.2), q(h / 1.2), { color: tone }), dk = tm('vhdk', '#241A12', { roughness: 1 }), wd = tm('vhwd', '#5E4128'), roofM = tm('vhrf', '#B59B74', { roughness: 1 });
   const add = (W, H, D, m, x, y, z) => bx(W, H, D, m, x, y, z, g);
   add(w, h, d, [wm2, wm2, roofM, wm, wm, wm], 0, h / 2, 0); add(w + .5, .8, d + .5, tm('vhfnd', '#9A8A70'), 0, -.32, 0);
   [[w + .1, .4, .18, 0, h + .2, d / 2 - .04], [w + .1, .4, .18, 0, h + .2, -d / 2 + .04], [.18, .4, d - .2, w / 2 - .04, h + .2, 0], [.18, .4, d - .2, -w / 2 + .04, h + .2, 0]].forEach(([a, b, c, x, y, z]) => add(a, b, c, [wm2, wm2, roofM, roofM, wm, wm], x, y, z));
   const nb = Math.round(w / .75); for (let i = 0; i < nb; i++) add(.13, .13, .45, wd, -w / 2 + .4 + i * (w - .8) / Math.max(1, nb - 1), h - .25, d / 2 + .12);
   const dx = (R() - .5) * (w - 2.4); add(1.05, 2.05, .12, dk, dx, 1.02, d / 2 + .01); add(1.4, .16, .3, wd, dx, 2.12, d / 2 + .06); add(1.3, .1, .4, tm('vhst', '#8E8270'), dx, .05, d / 2 + .3);
+  [-1, 1].forEach(k => add(.12, 2.05, .2, wd, dx + k * .58, 1.02, d / 2 + .04)); // jambas de madera
+  if (R() < .5) add(1.0, 1.9, .06, tm('vhdoor', '#6E4A2A', { roughness: 1 }), dx, .98, d / 2 + .05); // puerta cerrada de tablas
+  // ventanas chicas en los laterales y atrás (las casas se ven desde todos lados)
+  [[w / 2 + .01, (R() - .5) * (d - 1.6)], [-w / 2 - .01, (R() - .5) * (d - 1.6)]].forEach(([x, z]) => { add(.1, .42, .5, dk, x, 1.95, z); add(.2, .08, .7, wd, x, 2.2, z); });
+  if (R() < .7) { const bz = (R() - .5) * (w - 1.6); add(.5, .42, .1, dk, bz, 1.95, -d / 2 - .01); add(.7, .08, .2, wd, bz, 2.2, -d / 2 - .05); }
   const nw = w > 6 ? 2 : 1; for (let i = 0; i < nw; i++) { const x = nw === 1 ? (dx > 0 ? -w / 4 : w / 4) : (i ? 1 : -1) * w / 3; if (Math.abs(x - dx) < 1.1) continue; add(.55, .45, .1, dk, x, 1.9, d / 2 + .01); add(.75, .08, .2, wd, x, 2.16, d / 2 + .05); }
   if (R() < .5) add(.1, .4, .45, dk, w / 2 + .01, 2, (R() - .5) * (d - 1.2));
   // escalera exterior a la terraza
