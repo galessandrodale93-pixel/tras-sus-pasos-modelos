@@ -43,7 +43,7 @@ function regionStone(scene) {
   const reg = (x, z) => { if ((cap && Math.hypot(x - cap.x, z - cap.z) < 75) || (lake && Math.hypot(x - lake.x, z - lake.z) < 115)) return 'bas'; if (jer && Math.hypot(x - jer.x, z - jer.z) < 120) return 'lim'; return null; };
   const V = new THREE.Vector3(), swap = new Map();
   scene.traverse(o => { if (!o.isMesh || !o.material) return; const ms = [].concat(o.material); if (!ms.some(m => orig.has(m))) return; o.getWorldPosition(V); const r = reg(V.x, V.z); if (!r) return;
-    const nm = ms.map(m => { if (!orig.has(m)) return m; const [rx, ry] = orig.get(m), key = r + rx + 'x' + ry; if (!swap.has(key)) swap.set(key, r === 'bas' ? pbrMat('japanese_stone_wall', rx * 1.15, ry * 1.15, { color: '#8E8A86' }) : pbrMat('white_sandstone_bricks', rx, ry, { color: '#FFFFFF' })); return swap.get(key); });
+    const nm = ms.map(m => { if (!orig.has(m)) return m; const [rx, ry] = orig.get(m), key = r + rx + 'x' + ry; if (!swap.has(key)) swap.set(key, r === 'bas' ? pbrMat('japanese_stone_wall', rx * 1.15, ry * 1.15, { color: '#C2BBAE' }) : pbrMat('white_sandstone_bricks', rx, ry, { color: '#FFFFFF' })); return swap.get(key); });
     o.material = Array.isArray(o.material) ? nm : nm[0]; });
 }
 function mat(color, opts) { return new THREE.MeshStandardMaterial(Object.assign({ color, roughness: .85, metalness: 0 }, opts || {})); }
