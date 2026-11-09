@@ -20,7 +20,7 @@ rm -f habitat-build.zip
 (cd /home/claude/habitat-astro && zip -qr /home/claude/tras-sus-pasos-modelos/habitat-build.zip .wix dist)
 rm -rf habitat-web && cp -r /home/claude/habitat-site/out habitat-web
 cp /home/claude/habitat-site/*.py tools/web/ && cp /home/claude/habitat-site/src/* tools/web/src/ && cp /home/claude/habitat-site/tools/deploy_prep.sh tools/web/
-mkdir -p habitat-astro/src/pages/api && cp /home/claude/habitat-astro/src/pages/api/*.ts habitat-astro/src/pages/api/ && mkdir -p habitat-astro/src/lib && cp /home/claude/habitat-astro/src/lib/*.ts habitat-astro/src/lib/ && cp /home/claude/habitat-astro/package.json habitat-astro/
+mkdir -p habitat-astro/src/pages/api && cp /home/claude/habitat-astro/src/pages/api/*.ts habitat-astro/src/pages/api/ && mkdir -p habitat-astro/src/lib && cp /home/claude/habitat-astro/src/lib/*.ts habitat-astro/src/lib/ && cp /home/claude/habitat-astro/package.json /home/claude/habitat-astro/package-lock.json habitat-astro/
 git add habitat-build.zip habitat-web tools/web habitat-astro >/dev/null && git commit -qm "${1:-Web: actualización}
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

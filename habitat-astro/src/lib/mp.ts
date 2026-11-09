@@ -2,11 +2,13 @@
 // nunca está en el código. Cada pago aprobado se guarda en FinIngresos y se clasifica:
 // siembra automática (suscripción), cuota de un alumno (por nombre o email), alguien recordado, libros, o "Por clasificar".
 import { auth } from "@wix/essentials";
+import { items } from "@wix/data";
 import { secrets } from "@wix/secrets";
 import { q, todos, guardar, hoyAR, desdePago, mandar, marco, p, slug } from "./sem";
 import { esc } from "./vol";
 
 const getSecret = auth.elevate(secrets.getSecretValue);
+const rem = auth.elevate(items.remove);
 export const TIPOS_ING = ["Siembra automática", "Siembra puntual", "Libros", "Efectivo", "Cuota de alumno (MP)", "Otro", "Por clasificar"];
 const SIEMBRA = ["Siembra automática", "Siembra puntual"];
 
@@ -54,8 +56,16 @@ export async function clasificar(pg: Pago, ctx?: { pag: Pagador[]; al: Alumno[] 
 }
 
 // Guarda (o actualiza) un pago de MP. Si ya estaba clasificado a mano, respeta esa clasificación.
-export async function registrarPago(pg: Pago, ctx?: { pag: Pagador[]; al: Alumno[] }) {
-  if (!pg || !pg.id || pg.status !== "approved") return null;
+// Solo cuenta lo que COBRA la cuenta de Habitat (collector = la cuenta). Lo que la cuenta paga se ignora
+// y, si se había colado, se borra.
+let YO = "";
+async function yo(tk: string) { if (!YO) YO = String((await mp("/users/me", tk)).id || ""); return YO; }
+const cobrado = (pg: Pago, me: string) => !!me && String(pg.collector_id || (pg.collector && pg.collector.id) || "") === me;
+
+export async function registrarPago(pg: Pago, ctx?: { pag: Pagador[]; al: Alumno[]; me?: string }) {
+  if (!pg || !pg.id) return null;
+  if (ctx && ctx.me !== undefined && !cobrado(pg, ctx.me)) { await rem("FinIngresos", "mp-" + pg.id).catch(() => null); return null; }
+  if (pg.status !== "approved") return null;
   if (Number(pg.transaction_amount) <= 0) return null;
   const _id = "mp-" + pg.id;
   const prev = (await q("FinIngresos").eq("_id", _id).limit(1).find()).items[0] as Ingreso | undefined;
@@ -70,23 +80,23 @@ export async function registrarPago(pg: Pago, ctx?: { pag: Pagador[]; al: Alumno
 export async function porId(id: string) {
   const tk = await token();
   if (!tk) throw new Error("Falta MP_ACCESS_TOKEN en el gestor de claves.");
-  return registrarPago(await mp("/v1/payments/" + encodeURIComponent(id), tk));
+  return registrarPago(await mp("/v1/payments/" + encodeURIComponent(id), tk), { pag: await todos<Pagador>("FinPagadores"), al: await todos<Alumno>("TutAlumnos"), me: await yo(tk) });
 }
 
 // Trae los pagos de los últimos días (red de seguridad por si un aviso no llegó, y carga inicial).
 export async function traer(dias: number) {
   const tk = await token();
   if (!tk) return { error: "Falta MP_ACCESS_TOKEN en el gestor de claves de Wix." };
-  const ctx = { pag: await todos<Pagador>("FinPagadores"), al: await todos<Alumno>("TutAlumnos") };
+  const ctx = { pag: await todos<Pagador>("FinPagadores"), al: await todos<Alumno>("TutAlumnos"), me: await yo(tk) };
   let offset = 0, nuevos = 0, vistos = 0;
   for (let i = 0; i < 10; i++) {
     const r = await mp(`/v1/payments/search?sort=date_created&criteria=desc&range=date_created&begin_date=NOW-${Math.min(dias, 365)}DAYS&end_date=NOW&status=approved&limit=100&offset=${offset}`, tk);
     const L = (r.results || []) as Pago[];
-    for (const pg of L) { vistos++; const ya = (await q("FinIngresos").eq("_id", "mp-" + pg.id).limit(1).find()).items.length; await registrarPago(pg, ctx); if (!ya) nuevos++; }
+    for (const pg of L) { vistos++; const ya = (await q("FinIngresos").eq("_id", "mp-" + pg.id).limit(1).find()).items.length; const it = await registrarPago(pg, ctx); if (it && !ya) nuevos++; }
     offset += L.length;
     if (L.length < 100 || offset >= ((r.paging || {}).total || 0)) break;
   }
-  return { vistos, nuevos };
+  return { vistos, nuevos, cuenta: ctx.me };
 }
 
 // Clasificación a mano desde Finanzas; con "recordar", los próximos pagos de esa persona se clasifican solos.
