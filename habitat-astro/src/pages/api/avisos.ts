@@ -7,6 +7,7 @@ import { auth, httpClient } from "@wix/essentials";
 import { items } from "@wix/data";
 import { animo, esc, grupos, type Ev, type Grupo } from "../../lib/vol";
 import { avisarProfes } from "../../lib/profeAviso";
+import { sembradoresDiario } from "../../lib/sem";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
@@ -85,7 +86,9 @@ export const GET: APIRoute = async ({ url }) => {
     }
     let profes: unknown = [];
     try { profes = await avisarProfes(hoy, dry, C.remitente || "galessandrodale.93@gmail.com"); } catch (e) { profes = String((e as Error).message || e); }
-    return json({ ok: true, hoy, enviados: out, profes });
+    let sembradores: unknown = {};
+    try { sembradores = await sembradoresDiario(hoy, dry, C.remitente || "galessandrodale.93@gmail.com"); } catch (e) { sembradores = String((e as Error).message || e); }
+    return json({ ok: true, hoy, enviados: out, profes, sembradores });
   } catch (e) {
     console.error("avisos", e);
     return json({ error: String((e as Error).message || e) }, 500);

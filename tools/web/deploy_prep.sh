@@ -24,5 +24,5 @@ mkdir -p habitat-astro/src/pages/api && cp /home/claude/habitat-astro/src/pages/
 git add habitat-build.zip habitat-web tools/web habitat-astro >/dev/null && git commit -qm "${1:-Web: actualización}
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01X8mVJQmvv7kVNXb6bWyxs2" && git push -q
+Claude-Session: https://claude.ai/code/session_01X8mVJRbGFk2pXR1ozN1AgT" && git push -q
 echo "SIZE $(wc -c < habitat-build.zip) COMMIT $(git rev-parse HEAD)"

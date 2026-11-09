@@ -17,7 +17,7 @@ export const GET: APIRoute = async ({ request }) => {
     const [t, v, p] = await Promise.all([q("TutTutores").eq("email", email).limit(1).find(), q("VolVoluntarios").contains("email", email).limit(1).find(), q("Profes").contains("email", email).limit(5).find()]);
     const tu = t.items[0] as { rol?: string; org?: boolean; gastos?: boolean } | undefined;
     const profe = (p.items as { email?: string; activo?: string }[]).some((x) => x.activo !== "no" && String(x.email || "").toLowerCase().split(/[,;\s]+/).includes(email));
-    return json({ tutor: tu ? tu.rol || "tutor" : null, org: !!tu && !!tu.org, finanzas: !!tu && !!tu.gastos, profe, voluntario: !!v.items[0] });
+    return json({ tutor: tu ? tu.rol || "tutor" : null, org: !!tu && !!tu.org, finanzas: !!tu && !!tu.gastos, sembradores: !!tu && tu.rol === "director", profe, voluntario: !!v.items[0] });
   } catch (e) {
     console.error("rol", e);
     return json({});
