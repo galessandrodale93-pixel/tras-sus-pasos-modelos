@@ -1560,7 +1560,7 @@ function worldMerge(scene, frames) {
   const walk = (v, d) => { if (!v || typeof v !== 'object' || seen.has(v) || d > 6) return; seen.add(v); if (v.isObject3D) { if (v !== scene) refs.add(v); return; }
     if (Array.isArray(v)) { if (v.length > 4000) return; for (const x of v) walk(x, d + 1); return; } const pr = Object.getPrototypeOf(v); if (pr !== Object.prototype && pr !== null) return; for (const k in v) if (!SK[k]) walk(v[k], d + 1); };
   walk(S, 0); refs.add(S.av);
-  const bad = o => { for (let p = o; p && p !== scene; p = p.parent) if (refs.has(p) || (p.userData && (p.userData.dyn || p.userData.keep || p.userData.h3 || p.userData.hero || p.userData.crowd)) || p.isSkinnedMesh || p.isLight && p !== o) return true; return false; };
+  const bad = o => { for (let p = o; p && p !== scene; p = p.parent) if ((refs.has(p) && !(p !== o && p.userData && p.userData.cont)) || (p.userData && (p.userData.dyn || p.userData.keep || p.userData.h3 || p.userData.hero || p.userData.crowd)) || p.isSkinnedMesh || p.isLight && p !== o) return true; return false; };
   const SG = new Map(), tu = t => t ? t.uuid : '', hx = c => c ? c.getHex() : '';
   const msig = m => { let k = SG.get(m); if (k) return k; k = [m.type, hx(m.color), hx(m.emissive), m.emissiveIntensity, m.roughness, m.metalness, tu(m.map), tu(m.normalMap), tu(m.roughnessMap), tu(m.metalnessMap), tu(m.aoMap), tu(m.emissiveMap), tu(m.envMap), tu(m.alphaMap), m.alphaTest, m.side, m.flatShading, m.vertexColors, m.envMapIntensity, m.opacity, m.fog, m.wireframe, m.depthWrite, m.depthTest, m.polygonOffset, m.normalScale ? m.normalScale.x + ',' + m.normalScale.y : '', m.clearcoat, m.sheen, m.transmission, m.toneMapped, m.colorWrite, m.dithering].join('|'); SG.set(m, k); return k; };
   const cand = []; scene.updateMatrixWorld(true);
@@ -1617,7 +1617,7 @@ function bigHouse(trade, hx) {
   const info = TRADE_INFO[trade]; if (info) { const lb = textSprite(info[0], hx); lb.position.set(0, h + 1.4, d / 2 + .3); lb.scale.multiplyScalar(1.05); g.add(lb); }
   const cols = [[-w / 2, w / 2, -d / 2, -d / 2 + t], [-w / 2, -w / 2 + t, -d / 2, d / 2], [w / 2 - t, w / 2, -d / 2, d / 2], [-w / 2, -dw / 2, d / 2 - t, d / 2], [dw / 2, w / 2, d / 2 - t, d / 2]];
   const solid = { cena: [[-2.4, 2.4, -1.05, .25], [2.5, 3.2, 1.4, 2.1]], posada: [[-3.7 + .34, -3.7 + 2.3, -3.1 + .5, -3.1 + 3.9], [3.7 - 2.4, 3.7 - .8, -3.1 + .9, -3.1 + 1.9]], techo: [], carpintero: [[-w / 2 + 1, -w / 2 + 3.4, -d / 2 + 1.1, -d / 2 + 2.1], [w / 2 - 3.1, w / 2 - .5, -d / 2 + .8, -d / 2 + 1.5]], alfarero: [[-w / 2 + 1.4, -w / 2 + 2.6, -d / 2 + 1.4, -d / 2 + 2.6], [w / 2 - 3.1, w / 2 - .5, -d / 2 + .2, -d / 2 + .7], [w / 2 - 2.2, w / 2 - .4, d / 2 - 2.4, d / 2 - .6]], panadero: [[-w / 2 + .6, -w / 2 + 2.6, -d / 2 + .6, -d / 2 + 2.6], [w / 2 - 2.9, w / 2 - .7, -d / 2 + 1.1, -d / 2 + 1.9]], tejedora: [[-w / 2 + .6, -w / 2 + 3, -d / 2 + .7, -d / 2 + 1.1]], pescador: [] }[trade] || [];
-  return { g, cols: cols.concat(solid), roof, room: [-w / 2 + t, w / 2 - t, -d / 2 + t, d / 2 - t], trade, w, d };
+  g.userData.cont = 1; return { g, cols: cols.concat(solid), roof, room: [-w / 2 + t, w / 2 - t, -d / 2 + t, d / 2 - t], trade, w, d };
 }
 // coloca una casa en el mundo: rot en múltiplos de 90° para que las cajas de choque sigan alineadas
 function placeHouse(scene, H, x, z, rot, y) {
@@ -1681,7 +1681,7 @@ function bigTemple0(scene, x, z, side, hx, yAt) {
   const room = wBox(x, z, rot, sx - sw / 2 + .3, sx + sw / 2 - .3, sz + veilZ, sz + sd / 2); room.roof = roofS; room.trade = 'santo'; room.y = y0 + P; S.rooms.push(room);
   const court = wBox(x, z, rot, -W / 2 + 1, W / 2 - 1, -D / 2 + 1, D / 2 - 1); court.trade = 'atrio'; court.roof = []; court.y = y0 + P; court.open = true; S.rooms.push(court);
   const veilBox = wBox(x, z, rot, sx - sw / 2, sx + sw / 2, sz + veilZ - 1.2, sz + veilZ + 1.4); veilBox.trade = 'velo'; veilBox.roof = []; veilBox.open = true; S.rooms.push(veilBox);
-  return { g, smoke: sm, y0 };
+  g.userData.cont = 1; return { g, smoke: sm, y0 };
 }
 TRADE_INFO.atrio = ['El templo de Jerusalén', 'Este es el atrio del templo, rodeado de pórticos. Acá Jesús, con doce años, se quedó escuchando y haciendo preguntas a los maestros. Años después enseñó en el Pórtico de Salomón.', 'Lucas 2:46 · Juan 10:23'];
 TRADE_INFO.santo = ['El Lugar Santo', 'Solo los sacerdotes entraban acá. El candelabro de oro daba luz, sobre la mesa estaban los doce panes y en el altar del incienso subía el perfume, como las oraciones que suben a Dios.', 'Éxodo 25:30-31 · Salmo 141:2'];
