@@ -1918,7 +1918,7 @@ function crowdPlace(scene, list, looks, anim, sh) {
 // multitudes lejanas: se ocultan según la calidad (en Bajo solo se dibujan las que están a menos de 70 m); ahorra millones de triángulos por cuadro
 const CROWD_R = [70, 110, 170, 1e9];
 function crowdReg(im) { im.userData.crowd = 1; if (S) (S.crowdIms || (S.crowdIms = [])).push(im); }
-function crowdTick() { if (!S || !S.crowdIms) return; const a = S.av.position, R0 = CROWD_R[QUAL.lv]; for (const im of S.crowdIms) { if (!im.parent) continue; const bs = im.geometry.boundingSphere; if (!bs) continue; const vis = Math.hypot(bs.center.x - a.x, bs.center.z - a.z) - bs.radius < R0; if (im.visible !== vis) im.visible = vis; } }
+function crowdTick() { if (!S || !S.crowdIms) return; const a = S.av.position, R0 = CROWD_R[QUAL.lv]; for (const im of S.crowdIms) { if (!im.parent) continue; if (!im.boundingSphere) im.computeBoundingSphere(); const bs = im.boundingSphere; if (!bs) continue; const vis = Math.hypot(bs.center.x - a.x, bs.center.z - a.z) - bs.radius < R0; if (im.visible !== vis) im.visible = vis; } }
 const CROWD_LOOKS = [
   { g: 'chico', age: 30, skin: '#C99A72', hair: '#2A1B14', outfit: '#A89078' }, { g: 'chica', age: 28, skin: '#D6A57C', hair: '#3A2412', outfit: '#7E5A6A' },
   { g: 'chico', age: 60, skin: '#B98A62', hair: '#9A9A9A', outfit: '#6A6E78' }, { g: 'chica', age: 45, skin: '#C08A66', hair: '#2A1B14', outfit: '#8E7A4A' },
