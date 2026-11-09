@@ -33,6 +33,23 @@ async function all(col: string) {
   return out.map(({ _createdDate, _updatedDate, _owner, ...x }) => x);
 }
 
+// Débitos de Debi rechazados en los últimos 45 días, sin un cobro aprobado posterior (para que el tutor acompañe).
+async function debiRechazos() {
+  try {
+    const L = (await all("FinDebi")) as { alumnoId?: string; estado?: string; fecha?: string; monto?: number }[];
+    const lim = new Date(Date.now() - 45 * 864e5).toISOString().slice(0, 10), out: Record<string, { fecha: string; monto: number; veces: number }> = {};
+    for (const d of L) {
+      if (!d.alumnoId || d.estado !== "rejected" || String(d.fecha) < lim) continue;
+      const luego = L.some((x) => x.alumnoId === d.alumnoId && x.estado === "approved" && String(x.fecha) >= String(d.fecha));
+      if (luego) continue;
+      const o = out[d.alumnoId] || { fecha: "", monto: 0, veces: 0 };
+      o.veces++; if (String(d.fecha) > o.fecha) { o.fecha = String(d.fecha); o.monto = Number(d.monto) || 0; }
+      out[d.alumnoId] = o;
+    }
+    return out;
+  } catch { return {}; }
+}
+
 async function who(request: Request): Promise<Tutor | null> {
   const token = request.headers.get("x-habitat-auth") || request.headers.get("authorization");
   if (!token) return null;
@@ -66,6 +83,7 @@ export const GET: APIRoute = async ({ request }) => {
       me, fin, eventos_servicio: vevent, alumnos, asistencia, pagos, evaluaciones, grupo, seguimientos, mesa, tally,
       tutores: tutores.map(({ email, ...t }) => (dir ? { email, ...t } : t)),
       voluntarios: voluntarios.map(({ clave, ...v }) => (dir ? { clave, ...v } : v)),
+      debiRech: await debiRechazos(),
       turnos, clases, plan, eventos: (ev as Record<string, unknown>[]).map(({ _createdDate, _updatedDate, _owner, ...x }) => x),
     });
   } catch (e) {

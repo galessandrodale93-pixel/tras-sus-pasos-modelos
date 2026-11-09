@@ -85,6 +85,7 @@
       else if (ab >= 2) why.push(['y', 'Faltó ' + ab + ' de las últimas ' + L.length]);
       if (L.filter(function (x) { return x.tarde; }).length >= 2) why.push(['y', 'Llega tarde']);
     }
+    var dr = (D.debiRech || {})[a._id]; if (dr) why.push(['r', 'Debi rechazó su débito' + (dr.veces > 1 ? ' (' + dr.veces + ' veces)' : '')]);
     progs(a).forEach(function (p) { var d = IX.med[p] - nEv(a, p); if (d >= 2) why.push(['r', 'Atrasado en exámenes de ' + p]); else if (d === 1) why.push(['y', 'Le falta un examen de ' + p]); });
     var nn = IX.nota[a._id] || {}; Object.keys(nn).forEach(function (k) { if (nn[k].ok === false) why.push(['y', 'Recupera ' + k.split('|')[1]]); });
     var g = IX.gr[a._id] || {}, w0 = iso(monday(TODAY)), w1 = iso(addD(monday(TODAY), -7)), w2 = iso(addD(monday(TODAY), -14));
@@ -103,6 +104,8 @@
     var mine = activos().filter(function (a) { return !async_(a) && (!F.par || a.tutores === F.par); });
     var marc = D.asistencia.filter(function (x) { return x.fecha === lc && mine.some(function (a) { return a._id === x.alumnoId; }); }).length;
     if (pc.length) T.push('<button class="tt-task hot" data-go="contactar"><b>' + pc.length + '</b><h3>' + (pc.length === 1 ? 'persona para acompañar' : 'personas para acompañar') + '</h3><div class="tt-faces">' + pc.slice(0, 7).map(function (x) { return av(x.a.title, x.s.lvl, 'sm'); }).join('') + '</div><p>Están en rojo o amarillo y nadie les escribió en estas dos semanas. Un mensaje a tiempo hace la diferencia.</p></button>');
+    var rech = mine.filter(function (a) { return (D.debiRech || {})[a._id]; });
+    if (rech.length) T.push('<button class="tt-task hot" data-go="contactar"><b>' + rech.length + '</b><h3>' + (rech.length === 1 ? 'débito rechazado' : 'débitos rechazados') + ' en Debi</h3><div class="tt-faces">' + rech.slice(0, 7).map(function (a) { return av(a.title, 'r', 'sm'); }).join('') + '</div><p>La tarjeta o cuenta no tuvo fondos, venció o se dio de baja. Un mensaje con cariño ayuda a que lo actualicen.</p></button>');
     if (marc < mine.length) T.push('<button class="tt-task" data-go="lista"><b>' + marc + '/' + mine.length + '</b><h3>Lista del ' + flarga(lc) + '</h3><p>' + (marc ? 'Faltan marcar ' + (mine.length - marc) + ' alumnos.' : 'Todavía no se pasó lista de esa clase.') + '</p></button>');
     var exm = (D.eventos || []).filter(function (e) { var f = iso(evDate(e)); return e.mesa && f <= iso(TODAY) && f >= iso(addD(TODAY, -10)) && !(D.mesa || []).some(function (m) { return m.fecha === f; }); });
     if (exm.length) T.push('<button class="tt-task" data-go="mesa"><b>🍽️</b><h3>Tiempo de mesa del ' + fcorta(iso(evDate(exm[0]))) + '</h3><p>Contá quiénes estuvieron, de qué se habló y qué notaste.</p></button>');

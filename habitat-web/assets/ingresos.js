@@ -168,6 +168,11 @@
     var sum = function (A) { return A.reduce(function (a, x) { return a + (+x.monto || 0); }, 0); };
     var camino = L.filter(function (x) { return !x.llego && !(x.acreditacion && x.acreditacion < HOY); }), dem = L.filter(function (x) { return !x.llego && x.acreditacion && x.acreditacion < HOY; });
     var mesC = L.filter(function (x) { return x.mes === MES; }), lleg = L.filter(function (x) { return x.llego && x.llego.slice(0, 7) === MES; });
+    var R = (I.debi || []).filter(function (x) { return x.estado === 'rejected' && x.fecha >= addM(MES, -2) + '-01' && !(I.debi || []).some(function (y) { return y.cliente === x.cliente && y.estado === 'approved' && y.fecha >= x.fecha; }); });
+    var RG = {}; R.forEach(function (x) { var k = x.cliente || x._id; if (!RG[k] || RG[k].fecha < x.fecha) RG[k] = x; });
+    var rk = Object.keys(RG);
+    $('#dRech').hidden = !rk.length;
+    $('#dRech').innerHTML = '<h2 class="tt-h">Débitos rechazados sin cobro posterior · ' + rk.length + '</h2><p class="tt-tip">También les aparece como alerta a los tutores de cada alumno.</p>' + rk.map(function (k) { var x = RG[k]; return '<div class="fn-pr"><div class="w"><b>' + esc(NM[x.alumnoId] || x.title) + '</b><small>' + esc(fl(x.fecha)) + ' · ' + plata(x.monto) + (x.alumnoId ? '' : ' · sin alumno asociado') + '</small></div><span class="fn-st r">Rechazado</span></div>'; }).join('');
     $('#dKpi').innerHTML = '<div class="fn-kpi g"><b>' + plata(sum(mesC)) + '</b><span>cobrado por Debi este mes</span></div><div class="fn-kpi"><b>' + plata(sum(camino)) + '</b><span>en camino al banco</span></div><div class="fn-kpi ' + (dem.length ? 'r' : '') + '"><b>' + plata(sum(dem)) + '</b><span>demorado (pasó la fecha estimada)</span></div><div class="fn-kpi"><b>' + plata(sum(lleg)) + '</b><span>llegó al banco este mes</span></div>';
     // lotes por fecha estimada
     var G = {}; L.forEach(function (x) { var k = x.acreditacion || 'sin fecha'; (G[k] = G[k] || []).push(x); });

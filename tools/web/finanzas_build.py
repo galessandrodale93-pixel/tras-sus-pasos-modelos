@@ -47,6 +47,7 @@ body = '''
     <p class="tt-tip" id="dOk"></p>
     <div class="fn-kpis" id="dKpi"></div>
     <div class="tt-card" id="dSin" hidden></div>
+    <div class="tt-card" id="dRech" hidden></div>
     <div class="tt-card"><h2 class="tt-h">Lotes de Payway</h2><p class="tt-tip">Cada lote es lo que Payway tiene que depositar en el banco de Agustina en una fecha. Cuando llega, tocá «Llegó al banco». Si pasa la fecha y no está marcado, queda demorado y les avisamos por mail.</p><div class="fn-gl" id="dLotes" style="padding:0"></div></div>
     <div class="tt-wa"><button class="tt-btn s" type="button" id="dTraer">Traer cobros de Debi</button></div>
     <p class="tt-tip">El alumno queda al día el día que Debi aprueba el débito: el cobro entra solo en Cobros (si el alumno tiene una sola escuela y no estaba cargado a mano). La plata se cuenta como llegada recién cuando marcás el lote.</p>
