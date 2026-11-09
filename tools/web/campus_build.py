@@ -59,7 +59,7 @@ def page(fn, title, body, js=''):
 # ---------- Mis cursos (datos reales) ----------
 campus = '''
 <section class="cx-hero"><div class="wrap">
-  <div class="hi rv in"><span class="kick">Campus Habitat</span><h1>Hola<em id="hiName"></em></h1><p id="hiLine">Cargando tus cursos…</p><div class="hi-act"><a class="out" href="#agenda" id="bell">Avisos<span class="bd" id="bellN" hidden></span></a><a class="out" href="/biblia.html">Biblia</a><a class="out" href="/diario.html">Mi diario</a><a class="out" href="/perfil.html">Mi perfil</a><button class="out gold eq-btn" type="button" id="lnGes" hidden aria-expanded="false" aria-controls="equipo">Gestión Habitat<span class="bd" id="gesN" hidden></span></button><a class="out gold" href="/testimonio.html" id="lnTes" hidden>Mi testimonio 🎥</a><button class="out-txt" type="button" id="outBtn">Cerrar sesión</button></div></div>
+  <div class="hi rv in"><span class="kick">Campus Habitat</span><h1>Hola<em id="hiName"></em></h1><p id="hiLine">Cargando tus cursos…</p><div class="hi-act"><a class="out" href="#agenda" id="bell">Avisos<span class="bd" id="bellN" hidden></span></a><a class="out" href="/biblia.html">Biblia</a><a class="out" href="/diario.html">Mi diario</a><a class="out" href="/perfil.html">Mi perfil</a><button class="out gold eq-btn" type="button" id="lnGes" hidden aria-expanded="false" aria-controls="equipo">Gestión Habitat<span class="bd" id="gesN" hidden></span></button><a class="out gold" href="/testimonio.html" id="lnTes" hidden>Mi testimonio 🎥</a><button class="out-txt" type="button" id="outBtn">Cerrar sesión</button></div><div class="ges" id="equipo" hidden><nav class="ges-g" id="eqTabs" role="tablist"></nav><div id="eqGrupos"></div></div></div>
   <a class="resume rv in" id="resume" href="#" hidden>
     <div class="rimg"><img id="rImg" src="" alt=""><span class="play" aria-hidden="true">▶</span></div>
     <div class="rtx"><span class="kick">Continuar</span><b id="rStep"></b><small id="rProg"></small><div class="bar"><i id="rBar"></i></div></div>
@@ -71,13 +71,19 @@ campus = '''
   <div class="st"><b id="sHrs">–</b><span>de formación</span></div>
   <div class="st"><b id="sFin">–</b><span>programas completos</span></div>
 </div></section>
-<section class="cx-sec eq-sec" id="equipo" hidden><div class="wrap">
-  <div class="cx-h"><h2>Gestión Habitat</h2><span class="sub">Lo que te toca en el equipo</span></div>
-  <nav class="eq-tabs" id="eqTabs" role="tablist"></nav>
-  <div id="eqGrupos"></div>
-</div></section>
+
 <style>
-.eq-sec{padding-bottom:10px;animation:eqIn .35s cubic-bezier(.2,.8,.2,1)}
+.ges{margin-top:18px;padding:16px;border-radius:22px;background:rgba(246,240,228,.06);border:1px solid rgba(217,184,120,.28);animation:eqIn .3s cubic-bezier(.2,.8,.2,1);max-width:720px}
+.ges-g{display:flex;gap:8px;flex-wrap:wrap}
+.ges-g button{border:1px solid rgba(217,184,120,.55);background:none;color:var(--cream);padding:10px 16px;border-radius:999px;font:600 .78rem var(--sans);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;display:inline-flex;gap:8px;align-items:center;transition:background .2s,color .2s}
+.ges-g button:hover{background:rgba(217,184,120,.15)}
+.ges-g button.on{background:var(--gold-2);color:var(--ink);border-color:var(--gold-2)}
+.ges-g button i{font-style:normal;min-width:18px;height:18px;border-radius:99px;background:#b7442f;color:#fff;font:700 .66rem/18px var(--sans);text-align:center;letter-spacing:0;padding:0 5px}
+.ges .eq-cs{margin-top:14px;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.ges .eq-c{background:rgba(246,240,228,.96);padding:14px;border-radius:16px;animation:eqIn .25s cubic-bezier(.2,.8,.2,1)}
+.ges .eq-c b{font-size:1.12rem}.ges .eq-c i{width:38px;height:38px;font-size:1.1rem;border-radius:12px}
+.ges .eq-c.hot{background:var(--gold-2);border-color:var(--gold-2)}.ges .eq-c.hot b,.ges .eq-c.hot small{color:var(--ink)}.ges .eq-c.hot em{background:var(--ink);color:var(--cream)}
+.ges .eq-g:not([data-on]){display:none}
 @keyframes eqIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 .eq-tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:-6px 0 22px}
 .eq-tabs:empty{display:none}
@@ -156,17 +162,17 @@ var X=window.CampusExtra;
  var G=[['sv','Mi servicio',SV],['ac','Acompañar alumnos',AC],['di','Dirección',DI]].filter(function(g){return g[2].length;});
  var card=function(c){return '<a class="eq-c'+(c[6]?' hot':'')+'" id="eq-'+c[0]+'" href="'+c[1]+'"><i aria-hidden="true">'+c[2]+'</i><b>'+c[3]+'</b><small>'+c[4]+'</small><em>'+X.esc(c[5])+'</em></a>';};
  var nG=function(g){return g[2].filter(function(c){return c[6];}).length;};
- document.getElementById('eqTabs').innerHTML=G.length>1?G.map(function(g){var n=nG(g);return '<button type="button" role="tab" data-g="'+g[0]+'">'+g[1]+(n?'<i>'+n+'</i>':'')+'</button>';}).join(''):'';
+ document.getElementById('eqTabs').innerHTML=G.map(function(g){var n=nG(g);return '<button type="button" role="tab" data-g="'+g[0]+'">'+g[1]+(n?'<i>'+n+'</i>':'')+'</button>';}).join('');
  document.getElementById('eqGrupos').innerHTML=G.map(function(g){return '<div class="eq-g" data-g="'+g[0]+'" role="tabpanel"><div class="eq-cs">'+g[2].map(card).join('')+'</div></div>';}).join('');
  var ls=function(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}};
- var tab=function(id){if(!G.some(function(g){return g[0]===id;}))id=G[0][0];document.querySelectorAll('#eqTabs button').forEach(function(b){b.classList.toggle('on',b.dataset.g===id);b.setAttribute('aria-selected',b.dataset.g===id);});document.querySelectorAll('#eqGrupos .eq-g').forEach(function(p){p.hidden=p.dataset.g!==id;});ls('cx:eqTab',id);};
+ var tab=function(id){if(!G.some(function(g){return g[0]===id;}))id=G[0][0];if(document.querySelector('#eqTabs button.on[data-g="'+id+'"]')&&G.length>1){document.querySelectorAll('#eqTabs button').forEach(function(b){b.classList.remove('on');});document.querySelectorAll('#eqGrupos .eq-g').forEach(function(p){p.removeAttribute('data-on');});return;}document.querySelectorAll('#eqTabs button').forEach(function(b){b.classList.toggle('on',b.dataset.g===id);b.setAttribute('aria-selected',b.dataset.g===id);});document.querySelectorAll('#eqGrupos .eq-g').forEach(function(p){if(p.dataset.g===id)p.setAttribute('data-on','');else p.removeAttribute('data-on');});ls('cx:eqTab',id);};
  document.querySelectorAll('#eqTabs button').forEach(function(b){b.onclick=function(){tab(b.dataset.g);};});
- var hotG=G.filter(nG)[0];tab(ls('cx:eqTab')||(hotG?hotG[0]:G[0][0]));
+ if(G.length===1)tab(G[0][0]);
  var sec=document.getElementById('equipo'),btn=document.getElementById('lnGes'),tot=G.reduce(function(a,g){return a+nG(g);},0);
  btn.hidden=false;if(tot){var bn=document.getElementById('gesN');bn.textContent=tot;bn.hidden=false;}
- var abrir=function(o,sc){sec.hidden=!o;btn.setAttribute('aria-expanded',o);ls('cx:eqOpen',o?'1':'0');if(o&&sc)sec.scrollIntoView({behavior:'smooth',block:'start'});};
- btn.onclick=function(){abrir(sec.hidden,true);};
- abrir(location.hash==='#gestion'||ls('cx:eqOpen')==='1',location.hash==='#gestion');
+ var abrir=function(o){sec.hidden=!o;btn.setAttribute('aria-expanded',o);btn.classList.toggle('on',o);};
+ btn.onclick=function(){abrir(sec.hidden);};
+ abrir(location.hash==='#gestion');
  window.__eqVol&&window.__eqVol();
 }).catch(function(){});fetch('/api/testimonio',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();}).then(function(t){if(t&&t.clave&&t.estado!=='Subido'){var a=document.getElementById('lnTes');a.href='/testimonio.html?k='+t.clave;a.hidden=false;}}).catch(function(){});var r=await fetch('/api/voluntario',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();});
  if(!r.voluntario||!r.turnos||!r.turnos.length)return;var hoy=new Date(Date.now()-3*3600e3).toISOString().slice(0,10),man=new Date(Date.now()+21*3600e3).toISOString().slice(0,10);window.__eqVol=function(){var c=document.querySelector('#eq-vol em');if(!c)return;var t=r.turnos[0],x=new Date(t.fecha+'T12:00:00-03:00');c.textContent=(t.fecha===hoy?'Servís hoy':t.fecha===man?'Servís mañana':'Tu próximo turno: '+['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][x.getDay()]+' '+x.getDate()+'/'+(x.getMonth()+1));if(t.fecha===hoy||t.fecha===man)c.parentNode.classList.add('hot');};window.__eqVol();
