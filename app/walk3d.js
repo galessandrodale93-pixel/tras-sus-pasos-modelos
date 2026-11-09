@@ -4309,12 +4309,12 @@ async function galPalms() {
 let _pgM, _pgQ, _pgE, _pgV, _pgS, _pgC;
 function pgFill() {
   if (!_pgM) { _pgM = new THREE.Matrix4(); _pgQ = new THREE.Quaternion(); _pgE = new THREE.Euler(); _pgV = new THREE.Vector3(); _pgS = new THREE.Vector3(); _pgC = new THREE.Color(); }
-  const a = S.av.position, Rr = PG_R[QUAL.lv], R2 = Rr * (QUAL.lv <= 1 ? 1.5 : 1.8), tri = PG_TRI[QUAL.lv] * 1.5, cnt = PG.ims.map(() => 0), idx = new Map(); PG.ims.forEach((im, k) => idx.set(im, k)); let used = 0;
+  const a = S.av.position, Rr = PG_R[QUAL.lv], R2 = Rr * 1.8, tri = PG_TRI[QUAL.lv] * 1.5, cnt = PG.ims.map(() => 0), idx = new Map(); PG.ims.forEach((im, k) => idx.set(im, k)); let used = 0;
   const lim = Math.ceil(tri / PG.avgTri), c0x = Math.floor((a.x - R2) / PG_CELL), c1x = Math.floor((a.x + R2) / PG_CELL), c0z = Math.floor((a.z - R2) / PG_CELL), c1z = Math.floor((a.z + R2) / PG_CELL);
   const cells = []; for (let ix = c0x; ix <= c1x; ix++) for (let iz = c0z; iz <= c1z; iz++) { const dx = (ix + .5) * PG_CELL - a.x, dz = (iz + .5) * PG_CELL - a.z; cells.push([dx * dx + dz * dz, ix, iz]); } cells.sort((p, q) => p[0] - q[0]);
-  for (const [, ix, iz] of cells) { if (used >= lim) break; for (const it of pgCell(ix, iz)) { const dd = Math.hypot(it.x - a.x, it.z - a.z); if (dd > R2) continue; const far = dd > Rr; if (far && it.r > .34) continue; 
+  for (const [, ix, iz] of cells) { if (used >= lim) break; for (const it of pgCell(ix, iz)) { const dd = Math.hypot(it.x - a.x, it.z - a.z); if (dd > R2) continue; const far = dd > Rr; if (far && it.r > .34) continue; if (!far && used >= lim * .72) continue; 
       const ims = PG.groups[it.gi].ims[it.vi]; let full = false; for (const im of ims) if (cnt[idx.get(im)] >= im.userData.cap) full = true; if (full) continue;
-      _pgE.set(0, it.ry, 0); _pgQ.setFromEuler(_pgE); for (const im of ims) { const k = idx.get(im), i = cnt[k]++; const fe = far ? Math.min(1, (R2 - dd) / (R2 * .25)) : 1; _pgM.compose(_pgV.set(it.x, it.y, it.z), _pgQ, _pgS.set(1, PG_H, 1).multiplyScalar(it.s * (far ? 1.35 : 1) * (.3 + .7 * fe))).multiply(im.userData.m); im.setMatrixAt(i, _pgM); im.setColorAt(i, _pgC.setRGB(it.c * (1.04 + it.dry * .5), it.c * (.97 + it.dry * .2), it.c * (.78 - it.dry * .35))); }
+      _pgE.set(0, it.ry, 0); _pgQ.setFromEuler(_pgE); for (const im of ims) { const k = idx.get(im), i = cnt[k]++; const fe = far ? Math.min(1, (R2 - dd) / (R2 - Rr)) : 1; _pgM.compose(_pgV.set(it.x, it.y, it.z), _pgQ, _pgS.set(1, PG_H, 1).multiplyScalar(it.s * (far ? 1.35 : 1) * (.3 + .7 * fe))).multiply(im.userData.m); im.setMatrixAt(i, _pgM); im.setColorAt(i, _pgC.setRGB(it.c * (1.04 + it.dry * .5), it.c * (.97 + it.dry * .2), it.c * (.78 - it.dry * .35))); }
       used++; if (used >= lim) break; } }
   if (!PG.logged) { PG.logged = 1; r2log('pasto dibujado: ' + used + ' plantas'); } PG.ims.forEach((im, k) => { im.count = cnt[k]; im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; });
 }
