@@ -301,3 +301,5 @@ body.tutor{background:var(--paper)}
 .hb-pills .tt-pill{font-size:.82rem;padding:8px 13px}
 .tt-form .hb-pills .tt-pill{background:var(--paper)}
 .tt-form .hb-pills .tt-pill.on{background:var(--ink)}
+.tt-form .hb-pills{gap:6px;align-content:flex-start}
+.tt-form .hb-pills .tt-pill{padding:6px 11px;font-size:.78rem}
