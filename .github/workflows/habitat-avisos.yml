@@ -8,12 +8,13 @@ on:
     - cron: "12 12 * * *"   # todos los días 9:12 (Argentina): /api/avisos (profes y Sembradores)
     - cron: "17 12 * * *"   # todos los días 9:17: /api/lista-aviso (a quien no cargó la lista de la clase de ayer)
     - cron: "2 0 * * 1"     # domingos 21:02 (lunes 00:02 UTC): /api/avisos?semana=1 (resumen semanal a voluntarios)
+    - cron: "7 0 * * *"     # todas las noches 21:07: /api/oracion-aviso?cuando=noche (responsable de la intercesión de mañana)
   workflow_dispatch:
     inputs:
       endpoint:
         description: "Qué disparar"
         type: choice
-        options: [avisos, "avisos?semana=1", lista-aviso]
+        options: [avisos, "avisos?semana=1", lista-aviso, "oracion-aviso?cuando=noche"]
         default: avisos
 
 jobs:
@@ -30,6 +31,7 @@ jobs:
             "12 12 * * *") EP=avisos ;;
             "17 12 * * *") EP=lista-aviso ;;
             "2 0 * * 1") EP="avisos?semana=1" ;;
+            "7 0 * * *") EP="oracion-aviso?cuando=noche" ;;
             *) EP="${MANUAL:-avisos}" ;;
           esac
           URL="https://www.habitat-cfm.org/api/$EP"
