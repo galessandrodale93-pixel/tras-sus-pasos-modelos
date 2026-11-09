@@ -5218,7 +5218,7 @@ function invSurv(body) {
   if (st) st.onclick = () => { if (!nearHome()) { svToast('Tenés que estar en tu casa para usar el cofre.'); return; } Object.entries(s.inv).forEach(([k, n]) => { s.chest[k] = (s.chest[k] || 0) + n; }); s.inv = {}; G().save(); invSurv(body); };
   if (tk) tk.onclick = () => { if (!nearHome()) { svToast('Tenés que estar en tu casa para usar el cofre.'); return; } Object.entries(s.chest).forEach(([k, n]) => svAdd(k, n)); s.chest = {}; G().save(); invSurv(body); };
 }
-function perksHtml(k) { const f = FRUITS.find(x => x[0] === k) || (k === 'sab' ? SABI : null); if (!f) return ''; const t = ft(k); return `<span class="sv-perk">${t ? `✓ ${esc(f[3][t - 1])}` : ''}${t < 5 ? `${t ? ' · ' : ''}Con ${(t + 1) * 10}: ${esc(f[3][t])}` : ''}</span>`; }
+function perksHtml(k) { const f = FRUITS.find(x => x[0] === k) || (k === 'sab' ? SABI : null); if (!f) return ''; const t = ft(k); return `<span class="sv-perk">${t ? `✓ ${esc(f[3][t - 1])}` : ''}${t < 5 ? `${t ? ' · ' : ''}Con ${(t + 1) * 20}: ${esc(f[3][t])}` : ''}</span>`; }
 function invAttr(body) {
   const AP = invAttr.pend || (invAttr.pend = {}), a0 = atP(), pt = Object.keys(AP).reduce((x, k) => x + atCostTo(a0[k] || 0, (a0[k] || 0) + AP[k]), 0);
   const a = atP(), free = ptsFree() - pt, lv = Math.min(LV_MAX, lvlNow()), h = a.hum || 0;
