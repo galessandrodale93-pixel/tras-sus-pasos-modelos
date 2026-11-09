@@ -83,15 +83,36 @@ export async function llego(lote: string, fecha: string) {
   return L.length;
 }
 
+// Mail al alumno apenas Debi rechaza un débito (solo rechazos de los últimos 3 días, una vez cada uno).
+const MESL = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+export async function avisarRechazos(hoy: string, dry: boolean, remitente: string) {
+  const lim = DIA(hoy, -3), out: unknown[] = [];
+  const L = (await todos<DebiCobro>("FinDebi")).filter((d) => d.estado === "rejected" && d.fecha >= lim && !d.avisado);
+  if (!L.length) return out;
+  const al = await todos<Alumno>("TutAlumnos");
+  for (const d of L) {
+    const a = al.find((x) => x._id === d.alumnoId), to = (a && a.email) || d.email;
+    const nom = esc(String((a && a.title) || d.title || "").split(/\s+/)[0]);
+    if (!to) { out.push({ d: d._id, sinEmail: true }); continue; }
+    if (dry) { out.push({ d: d._id, to }); continue; }
+    const mes = MESL[+d.mes.slice(5, 7) - 1] || "";
+    const r = await mandar(to, "No pudimos debitar tu cuota de " + mes + " en Habitat", marco("Habitat · Tu cuota", "Hubo un problema con el débito", `${p(`Hola ${nom}! Te escribimos porque el débito automático de tu cuota de <b>${esc(mes)}</b> por <b>$ ${Number(d.monto).toLocaleString("es-AR")}</b> fue rechazado.`)}${p("Suele pasar cuando la tarjeta venció, se cambió o no tenía saldo ese día. Revisalo con tu banco y, si cambiaste la tarjeta o la cuenta, respondé este mail y te ayudamos a actualizarla para que el débito vuelva a funcionar.")}${p("Gracias por ser parte de Habitat. Cualquier cosa, estamos para acompañarte 🙌🏽")}`), remitente);
+    if (r.ok) await guardar("FinDebi", { ...d, avisado: hoy } as unknown as Record<string, unknown>);
+    out.push({ d: d._id, ok: r.ok });
+  }
+  return out;
+}
+
 export async function debiDiario(hoy: string, dry: boolean, remitente: string) {
   const r = dry ? { dry: true } : await traerDebi(20).catch((e) => ({ error: String((e as Error).message || e) }));
+  const rechazos = await avisarRechazos(hoy, dry, remitente).catch((e) => String((e as Error).message || e));
   const dem = (await todos<DebiCobro>("FinDebi")).filter((d) => demorado(d, hoy) && !d.avisado);
-  if (!dem.length || dry) return { debi: r, demorados: dem.length };
+  if (!dem.length || dry) return { debi: r, rechazos, demorados: dem.length };
   const lotes: Record<string, DebiCobro[]> = {};
   dem.forEach((d) => (lotes[d.acreditacion as string] = lotes[d.acreditacion as string] || []).push(d));
   const fin = ((await q("TutTutores").eq("gastos", true).limit(20).find()).items as { email?: string }[]).filter((t) => t.email);
   const cuerpo = Object.entries(lotes).map(([f, L]) => `<p style="font:700 16px Arial;margin:14px 0 4px">Lote del ${esc(f)} · $ ${L.reduce((a, x) => a + x.monto, 0).toLocaleString("es-AR")} · ${L.length} cobros</p><p style="font:14px/1.6 Arial;color:#5d6b64;margin:0">${L.map((x) => esc(x.title)).join(", ")}</p>`).join("");
   for (const t of fin) await mandar(t.email as string, "Finanzas: hay cobros de Debi demorados en llegar al banco", marco("Habitat · Finanzas", "Plata en camino que no llegó", `${p("Estos lotes de Debi pasaron la fecha estimada de acreditación y todavía no están marcados como llegados al banco de Agustina. Si ya llegaron, marcalos en Finanzas; si no, conviene reclamar a Payway.")}${cuerpo}<p style="margin:18px 0"><a href="https://www.habitat-cfm.org/finanzas.html#debi" style="background:#10251d;color:#fbf8f2;font:700 15px Arial;padding:12px 20px;border-radius:999px;text-decoration:none">Abrir Debi en Finanzas</a></p>`), remitente);
   for (const d of dem) await guardar("FinDebi", { ...d, avisado: hoy } as unknown as Record<string, unknown>);
-  return { debi: r, demorados: dem.length, avisados: fin.length };
+  return { debi: r, rechazos, demorados: dem.length, avisados: fin.length };
 }
