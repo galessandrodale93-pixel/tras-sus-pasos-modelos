@@ -3579,7 +3579,7 @@ const H3 = { ok: false, fail: false, sex: {}, clips: null, skClone: null, npcs: 
 // clon de avatar que comparte UN esqueleto entre todas sus mallas (cuerpo, pelo, ojos, brazos…): 9 veces menos texturas de huesos y cálculo por personaje
 function skCloneShared(src) {
   const A = new Map(), T = new Map(), n = src.clone(), par = (g, c) => { A.set(c, g); T.set(g, c); for (let i = 0; i < g.children.length; i++) par(g.children[i], c.children[i]); }; par(src, n);
-  const skels = new Map(); n.traverse(a => { if (!a.isSkinnedMesh) return; const r = A.get(a); let sk = skels.get(r.skeleton); if (!sk) { sk = new THREE.Skeleton(r.skeleton.bones.map(b => T.get(b) || b), r.skeleton.boneInverses.map(m => m.clone())); skels.set(r.skeleton, sk); } a.skeleton = sk; a.bindMatrix.copy(r.bindMatrix); a.bind(sk, a.bindMatrix); });
+  const skels = new Map(); n.traverse(a => { if (!a.isSkinnedMesh) return; const r = A.get(a), key = r.skeleton.bones.map(b => b.uuid).join('|'); let sk = skels.get(key); if (!sk) { sk = new THREE.Skeleton(r.skeleton.bones.map(b => T.get(b) || b), r.skeleton.boneInverses.map(m => m.clone())); skels.set(key, sk); } a.skeleton = sk; a.bindMatrix.copy(r.bindMatrix); a.bind(sk, a.bindMatrix); });
   return n;
 }
 const H3_BASE = window.H3_BASE || new URL('../hero/', import.meta.url).href;
