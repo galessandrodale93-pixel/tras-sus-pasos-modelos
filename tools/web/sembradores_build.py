@@ -67,6 +67,8 @@ css = '''<style>
 </style>
 '''
 js = '''<script src="/assets/auth.js"></script>
+<script src="/assets/aliento.js"></script>
+<script src="/assets/panel-ui.js"></script>
 <script src="/assets/sembradores.js"></script>
 '''
 html = B.head('Sembradores · Habitat', 'Panel de Proyecto Sembradores.', 'sembradores-panel.html')

@@ -278,3 +278,26 @@ body.tutor{background:var(--paper)}
 .tt-espc{display:grid;gap:8px;border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--paper)}
 .tt-esph{display:flex;gap:10px;align-items:center}.tt-esph em{font-style:normal;font-size:1.6rem}.tt-esph div{flex:1;display:grid}.tt-esph h3{font-family:var(--serif);font-size:1.25rem}.tt-esph small{color:var(--muted);font-size:.8rem}.tt-esph small::first-letter{text-transform:uppercase}
 .tt-espc textarea{width:100%;min-height:70px;font:inherit;padding:8px;border:1px solid var(--line);border-radius:10px;margin-top:4px}
+/* ---- campos comunes de todos los paneles (mismo estilo que los formularios del panel) ---- */
+:where(main) :where(select,input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],input[type=month],input[type=search],input:not([type]),textarea){font:500 .92rem var(--sans);color:var(--ink);padding:9px 12px;border:1px solid var(--line);border-radius:12px;background-color:var(--card,#fff);min-width:0;max-width:100%;transition:border-color .2s,box-shadow .2s}
+:where(main) select{-webkit-appearance:none;appearance:none;padding-right:34px;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23a07a3f' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+:where(main) :where(select,input,textarea):hover{border-color:var(--gold-2,#c9a46a)}
+:where(main) :where(select,input,textarea):focus{outline:none;border-color:var(--gold,#b0874a);box-shadow:0 0 0 3px rgba(176,135,74,.15)}
+:where(main) textarea{width:100%;min-height:84px;resize:vertical;line-height:1.5}
+:where(main) input[type=checkbox],:where(main) input[type=radio]{accent-color:var(--ink);width:18px;height:18px;vertical-align:-3px;cursor:pointer}
+:where(main) label:has(>input[type=checkbox]){display:inline-flex;gap:8px;align-items:center;cursor:pointer}
+/* filas con elección por pastillas (clasificar ingresos y salidas) */
+.tutor .fn-pr:has(.fn-pick){grid-template-columns:1fr;padding:16px 0}
+.fn-pick .tt-lbl{margin:0 0 8px}
+.fn-pick .tt-pill{font-size:.8rem;padding:7px 12px}
+.fn-pick .tt-pill:hover,.or-row .tt-pill:hover{border-color:var(--gold)}
+/* guías desplegables con el mismo estilo de títulos */
+.tutor main details>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;font:500 1.35rem var(--serif);color:var(--ink)}
+.tutor main details>summary::-webkit-details-marker{display:none}
+.tutor main details>summary::after{content:"";flex:none;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23a07a3f' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center;transition:transform .25s}
+.tutor main details[open]>summary::after{transform:rotate(180deg)}
+.tutor main details[open]>summary{margin-bottom:12px}
+.hb-pills{margin-top:6px}
+.hb-pills .tt-pill{font-size:.82rem;padding:8px 13px}
+.tt-form .hb-pills .tt-pill{background:var(--paper)}
+.tt-form .hb-pills .tt-pill.on{background:var(--ink)}

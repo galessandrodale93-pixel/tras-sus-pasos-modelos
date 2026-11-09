@@ -41,6 +41,8 @@ css = '''<style>
 </style>
 '''
 js = '''<script src="/assets/auth.js"></script>
+<script src="/assets/aliento.js"></script>
+<script src="/assets/panel-ui.js"></script>
 <script src="/assets/edicion.js"></script>
 '''
 html = B.head('Edición de videos · Habitat', 'Edición de las clases grabadas de Habitat CFM.', 'edicion.html')

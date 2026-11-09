@@ -51,11 +51,12 @@
     $('#iPend').innerHTML = '<h2 class="tt-h">Por clasificar · ' + GL.length + ' persona' + (GL.length === 1 ? '' : 's') + ' · ' + P.length + ' pagos</h2><p class="tt-tip">Ordenadas de mayor a menor. Elegí qué es cada persona y se clasifican todos sus pagos, también los que vengan.</p>' + GL.map(function (g) {
       var x = g.L[0], desc = {}; g.L.forEach(function (y) { if (y.descripcion) desc[y.descripcion.slice(0, 40)] = 1; });
       return '<div class="fn-pr" data-k="' + esc(g.k) + '"><div class="w"><b>' + esc(x.title) + '</b><small>' + g.L.length + ' pago' + (g.L.length === 1 ? '' : 's') + ' · ' + plata(g.t) + ' · ' + esc(g.L[g.L.length - 1].fecha) + (g.L.length > 1 ? ' a ' + esc(x.fecha) : '') + ' · ' + esc(x.origen) + '</small><small>' + esc(Object.keys(desc).slice(0, 3).join(' · ')) + '</small></div>' +
-        '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><select aria-label="Tipo">' + F.opts([['', 'Elegí qué es']].concat(I.tipos.filter(function (t) { return t !== 'Efectivo' && t !== 'Por clasificar'; }).map(function (t) { return [t, t]; })), '') + '</select><button class="tt-btn s" type="button">Aplicar</button></div></div>';
+        '<div class="fn-pick"><p class="tt-lbl">¿Qué es?</p><div class="tt-pills">' + I.tipos.filter(function (t) { return t !== 'Efectivo' && t !== 'Por clasificar'; }).map(function (t) { return '<button type="button" class="tt-pill" data-v="' + esc(t) + '">' + esc(t) + '</button>'; }).join('') + '</div><select aria-label="Tipo" hidden>' + F.opts([['', 'Elegí qué es']].concat(I.tipos.filter(function (t) { return t !== 'Efectivo' && t !== 'Por clasificar'; }).map(function (t) { return [t, t]; })), '') + '</select><button class="tt-btn s" type="button" hidden>Aplicar</button></div></div>';
     }).join('');
     $$('#iPend .fn-pr').forEach(function (r) {
+      $$('.tt-pill', r).forEach(function (b) { b.onclick = function () { $$('.tt-pill', r).forEach(function (x) { x.classList.toggle('on', x === b); }); $('select', r).value = b.dataset.v; $('button.tt-btn', r).click(); }; });
       var g = G[r.dataset.k], sel = $('select', r);
-      $('button', r).onclick = function () {
+      $('button.tt-btn', r).onclick = function () {
         if (!sel.value) { F.toast('Elegí qué es.'); return; }
         if (sel.value === 'Cuota de alumno (MP)') { clasificar(Object.assign({}, g.L[0], { tipo: sel.value })); return; }
         var b = this; b.disabled = true;
@@ -133,12 +134,14 @@
     $('#sPend').hidden = !P.length;
     $('#sPend').innerHTML = '<h2 class="tt-h">Salidas por clasificar · ' + GL.length + ' destino' + (GL.length === 1 ? '' : 's') + ' · ' + P.length + ' pagos</h2><p class="tt-tip">Elegí qué fue cada destino: se clasifican todos sus pagos y los próximos.</p>' + GL.map(function (g) {
       var x = g.L[0];
-      return '<div class="fn-pr" data-k="' + esc(g.k) + '"><div class="w"><b>' + esc(x.title) + '</b><small>' + g.L.length + ' pago' + (g.L.length === 1 ? '' : 's') + ' · ' + plata(g.t) + ' · ' + esc(x.origen) + '</small></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><select data-t aria-label="Tipo">' + F.opts([['', 'Elegí qué fue']].concat(I.tiposSal.filter(function (t) { return t !== 'Por clasificar'; }).map(function (t) { return [t, t]; })), '') + '</select><select data-c aria-label="Categoría" hidden>' + F.opts(I.cats, 'Otros') + '</select><button class="tt-btn s" type="button">Aplicar</button></div></div>';
+      return '<div class="fn-pr" data-k="' + esc(g.k) + '"><div class="w"><b>' + esc(x.title) + '</b><small>' + g.L.length + ' pago' + (g.L.length === 1 ? '' : 's') + ' · ' + plata(g.t) + ' · ' + esc(x.origen) + '</small></div><div class="fn-pick"><p class="tt-lbl">¿Qué fue?</p><div class="tt-pills" data-pt>' + I.tiposSal.filter(function (t) { return t !== 'Por clasificar'; }).map(function (t) { return '<button type="button" class="tt-pill" data-v="' + esc(t) + '">' + esc(t) + '</button>'; }).join('') + '</div><div data-pc hidden><p class="tt-lbl" style="margin-top:10px">¿De qué categoría?</p><div class="tt-pills">' + I.cats.map(function (c) { return '<button type="button" class="tt-pill" data-cv="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div></div><div data-h data-nopill hidden><select data-t aria-label="Tipo">' + F.opts([['', 'Elegí qué fue']].concat(I.tiposSal.filter(function (t) { return t !== 'Por clasificar'; }).map(function (t) { return [t, t]; })), '') + '</select><select data-c aria-label="Categoría" hidden>' + F.opts(I.cats, 'Otros') + '</select><button class="tt-btn s" type="button">Aplicar</button></div></div></div>';
     }).join('');
     $$('#sPend .fn-pr').forEach(function (r) {
       var g = G[r.dataset.k], st = $('[data-t]', r), sc = $('[data-c]', r);
       st.onchange = function () { sc.hidden = st.value !== 'Gasto de Habitat'; };
-      $('button', r).onclick = function () {
+      $$('[data-pt] .tt-pill', r).forEach(function (b) { b.onclick = function () { $$('[data-pt] .tt-pill', r).forEach(function (x) { x.classList.toggle('on', x === b); }); st.value = b.dataset.v; st.onchange(); var hab = b.dataset.v === 'Gasto de Habitat'; $('[data-pc]', r).hidden = !hab; if (!hab) $('[data-h] button', r).click(); }; });
+      $$('[data-cv]', r).forEach(function (b) { b.onclick = function () { $$('[data-cv]', r).forEach(function (x) { x.classList.toggle('on', x === b); }); sc.value = b.dataset.cv; $('[data-h] button', r).click(); }; });
+      $('[data-h] button', r).onclick = function () {
         if (!st.value) { F.toast('Elegí qué fue.'); return; }
         var b = this; b.disabled = true;
         api('POST', { op: 'salida', id: g.L[0]._id, tipo: st.value, categoria: sc.value, recordar: true }).then(function () { g.L.forEach(function (y) { y.tipo = st.value; y.categoria = sc.value; }); F.toast(g.L.length + ' pago' + (g.L.length === 1 ? '' : 's') + ' como ' + st.value + (st.value === 'Gasto de Habitat' ? ' (ya están en Gastos)' : '') + '.'); salidas(); }).catch(function (e) { b.disabled = false; F.toast(e.message); });

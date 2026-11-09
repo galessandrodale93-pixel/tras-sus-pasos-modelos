@@ -28,6 +28,16 @@
 .or-list{display:grid;padding:4px 14px}
 .or-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
 .or-row:first-child{border-top:0}.or-row .w{display:grid;min-width:0}.or-row small{color:var(--muted);font-size:.8rem}
+.or-row.or-p{grid-template-columns:auto 1fr auto;padding:12px 10px;border-radius:14px}
+.or-row.or-p .tt-av{margin:0}
+.or-row b{font-weight:600}
+.or-con{grid-column:1/-1;padding:4px 0 6px}
+.or-con .tt-pill .tt-av{margin:0 2px 0 -6px}
+.or-row.or-d{grid-template-columns:1fr;gap:10px;padding:14px 12px;border-radius:14px}
+.or-pub{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:flex-end}
+.or-pub .tt-lbl{margin:0 0 8px}
+.tt-av.xs{width:22px;height:22px;font-size:.6rem;box-shadow:none}
+.or-tag.g{background:var(--gb,#e6f0e9);color:var(--g,#3c7a55)}
 .or-row.mio{background:linear-gradient(90deg,rgba(184,144,79,.10),transparent)}
 .or-tag{font:600 .74rem var(--sans);padding:3px 9px;border-radius:999px;background:var(--soft);color:var(--muted);white-space:nowrap}
 .or-tag.g{background:var(--gb);color:var(--g)}.or-tag.o{background:#f3ead8;color:#8a6a2f}
@@ -84,6 +94,8 @@
 </div></footer>
 <script src="/assets/site.js"></script>
 <script src="/assets/auth.js"></script>
+<script src="/assets/aliento.js"></script>
+<script src="/assets/panel-ui.js"></script>
 <script src="/assets/intercesion.js"></script>
 </body>
 </html>
