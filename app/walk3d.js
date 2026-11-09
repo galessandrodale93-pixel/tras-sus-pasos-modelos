@@ -1874,7 +1874,7 @@ function shoreScene(scene, p, yAt, poiProp, hx, HW) {
 const CROWD = { cache: new Map() };
 function crowdBake(look, anim, t) {
   if (!H3.ok) return null; const key = JSON.stringify(look) + '|' + anim + '|' + (t || 0); if (CROWD.cache.has(key)) return CROWD.cache.get(key);
-  const o = buildHero3(Object.assign({}, look, { anim: [anim] })), i0 = H3.npcs.indexOf(o); if (i0 >= 0) H3.npcs.splice(i0, 1);
+  const o = buildHero3(Object.assign({}, look, { anim: [anim], tintK: look.tintK ?? .08 })), i0 = H3.npcs.indexOf(o); if (i0 >= 0) H3.npcs.splice(i0, 1);
   const u = o.userData.h3, cross = anim === 'cross'; try { u.mixer.stopAllAction(); const a = u.act[cross ? 'Idle_Loop' : anim] || u.act['Idle_Loop']; a.reset().play(); u.mixer.setTime(t || .6); } catch (e) {}
   o.updateMatrixWorld(true);
   if (cross) try { const B = u.bones, aim = (bone, child, dirW) => { if (!bone || !child) return; o.updateMatrixWorld(true); const a0 = bone.getWorldPosition(new THREE.Vector3()), b0 = child.getWorldPosition(new THREE.Vector3()), cur = b0.sub(a0).normalize(), want = dirW.clone().normalize(), qW = new THREE.Quaternion().setFromUnitVectors(cur, want), pq = bone.parent.getWorldQuaternion(new THREE.Quaternion()); bone.quaternion.premultiply(pq.clone().invert().multiply(qW).multiply(pq)); };
@@ -1920,13 +1920,13 @@ const CROWD_R = [70, 110, 170, 1e9];
 function crowdReg(im) { im.userData.crowd = 1; if (S) (S.crowdIms || (S.crowdIms = [])).push(im); }
 function crowdTick() { if (!S || !S.crowdIms) return; const a = S.av.position, R0 = CROWD_R[QUAL.lv]; for (const im of S.crowdIms) { if (!im.parent) continue; if (!im.boundingSphere) im.computeBoundingSphere(); const bs = im.boundingSphere; if (!bs) continue; const vis = Math.hypot(bs.center.x - a.x, bs.center.z - a.z) - bs.radius < R0; if (im.visible !== vis) im.visible = vis; } }
 const CROWD_LOOKS = [
-  { g: 'chico', age: 30, skin: '#C99A72', hair: '#2A1B14', outfit: '#A89078' }, { g: 'chica', age: 28, skin: '#D6A57C', hair: '#3A2412', outfit: '#7E5A6A' },
-  { g: 'chico', age: 60, skin: '#B98A62', hair: '#9A9A9A', outfit: '#6A6E78' }, { g: 'chica', age: 45, skin: '#C08A66', hair: '#2A1B14', outfit: '#8E7A4A' },
+  { g: 'chico', age: 30, skin: '#C99A72', hair: '#2A1B14', outfit: '#8E2E22' }, { g: 'chica', age: 28, skin: '#D6A57C', hair: '#3A2412', outfit: '#7E5A6A' },
+  { g: 'chico', age: 60, skin: '#B98A62', hair: '#9A9A9A', outfit: '#3E5A8A' }, { g: 'chica', age: 45, skin: '#C08A66', hair: '#2A1B14', outfit: '#8E7A4A' },
   { g: 'chico', age: 22, skin: '#E2B690', hair: '#4A2E1A', outfit: '#8A9A6A' }, { g: 'chica', age: 19, skin: '#B88560', hair: '#1E1410', outfit: '#9A6A4E' },
-  { g: 'chico', age: 10, skin: '#D8A880', hair: '#2A1B14', outfit: '#B8A080' }, { g: 'chica', age: 9, skin: '#C9956E', hair: '#3A2412', outfit: '#A86A6A' },
+  { g: 'chico', age: 10, skin: '#D8A880', hair: '#2A1B14', outfit: '#C9A46A' }, { g: 'chica', age: 9, skin: '#C9956E', hair: '#3A2412', outfit: '#A86A6A' },
   { g: 'chico', age: 40, skin: '#8E6242', hair: '#1A1210', outfit: '#6E5A3E' }, { g: 'chica', age: 35, skin: '#A0704E', hair: '#1E1410', outfit: '#5E6A8A' },
-  { g: 'chico', age: 70, skin: '#CFA47E', hair: '#C8C8C8', outfit: '#8A8070' }, { g: 'chica', age: 65, skin: '#D9B090', hair: '#9A9A9A', outfit: '#705A5A' },
-  { g: 'chico', age: 14, skin: '#C48E68', hair: '#3A2412', outfit: '#9A8A5A' }, { g: 'chica', age: 12, skin: '#DDB08C', hair: '#4A2E1A', outfit: '#8A6A8A' }];
+  { g: 'chico', age: 70, skin: '#CFA47E', hair: '#C8C8C8', outfit: '#5A3A6A' }, { g: 'chica', age: 65, skin: '#D9B090', hair: '#9A9A9A', outfit: '#705A5A' },
+  { g: 'chico', age: 14, skin: '#C48E68', hair: '#3A2412', outfit: '#6A7A3A' }, { g: 'chica', age: 12, skin: '#DDB08C', hair: '#4A2E1A', outfit: '#8A6A8A' }];
 // ---------- la colina de los cinco mil (Marcos 6:39-44): grupos sentados en el pasto, doce canastas con panes y peces, gente de pie ----------
 function feedingScene(scene, p, yAt, poiProp, hx, HW) {
   const y = yAt(p.x, p.z), sd = p.side, R = rng(66), W = (u, v) => [p.x + u * sd, p.z + v], cl = ['#C9B48A', '#8E2E22', '#3E5A8A', '#E8DDC6', '#66763E'];
