@@ -4867,7 +4867,8 @@ const ATTRH = BODY.concat(FRUITS.map(([k, n, d]) => [k, n, d]), [[SABI[0], SABI[
 const attrList = () => (S && S.hx) || (G().branch === 'ados') ? ATTRH : ATTRK;
 const ATTR = new Proxy([], { get: (o, k) => { const L = attrList(), v = L[k]; return typeof v === 'function' ? v.bind(L) : v; } });
 // valor del fruto (0–50) y escalón (0–5)
-const fv = k => Math.min(50, (atP()[k] || 0) + axLv(k)), ft = k => Math.floor(fv(k) / 10);
+// atributos de 0 a 100: fv valor total (puntos + práctica), atr escala 0..10 para efectos, ft escalón 0..5 (uno cada 20)
+const fv = k => Math.min(100, (atP()[k] || 0) + axLv(k)), ft = k => Math.min(5, Math.floor(fv(k) / 20));
 const RECIPES = [
   { id: 'plank', name: 'Tablones', out: { plank: 1 }, need: { wood: 2 }, tool: 'axe', desc: 'Cortá la madera en tablones para construir.' },
   { id: 'block', name: 'Bloques de piedra', out: { block: 1 }, need: { stone: 2 }, tool: 'pick', desc: 'Tallá la piedra en bloques.' },
@@ -4882,8 +4883,8 @@ const RECIPES = [
 ];
 function svOn() { return !!(S && S.hx); }
 function svP() { const p = G().P(); p.surv = p.surv || {}; const s = p.surv; if (s.sat == null) s.sat = SV.FULL; s.play = s.play || 0; s.inv = s.inv || {}; s.tools = s.tools || []; s.furn = s.furn || []; s.chest = s.chest || {}; return s; }
-function atP() { const p = G().P(); p.attr = p.attr || {}; ATTR.forEach(([k]) => { p.attr[k] = p.attr[k] || 0; }); return p.attr; }
-function atr(k) { return Math.min(50, (atP()[k] || 0) + axLv(k)) / 5; }
+function atP() { const p = G().P(); p.attr = p.attr || {}; ATTR.forEach(([k]) => { p.attr[k] = p.attr[k] || 0; }); if (!p.attr.v2 && typeof atMigrate === 'function') try { atMigrate(p.attr); } catch (e) {} return p.attr; }
+function atr(k) { return fv(k) / 10; }
 /* ---------- experiencia por atributo: lo que hacés seguido te sale mejor (pescar → Paciencia, talar y picar → Fuerza, correr y saltar → Agilidad…) ---------- */
 const AXN = new Proxy({}, { get: (o, k) => { const x = attrList().find(q => q[0] === k); return x ? x[1] : undefined; } });
 const axNeed = l => 30 + l * 22; // cada nivel pide un poco más
@@ -4921,7 +4922,11 @@ function axVerse(dt) {
 }
 function agiMul() { return 1 + atr('agi') * .06; }
 function lvlNow() { const g = G(); return g.level ? g.level() : 1; }
-const ATTR_PER_LV = 10, ATTR_MAX = 50, LV_MAX = 75;
+const ATTR_PER_LV = 3, ATTR_MAX = 100, LV_MAX = 75;
+// cada punto cuesta más cuanto más alto está el atributo: del 1 al 30 vale 1, del 31 al 60 vale 2, del 61 al 100 vale 3 (especializarse es posible, pero es una decisión de años)
+const atCost = v => v < 30 ? 1 : v < 60 ? 2 : 3, atCostTo = (v0, v1) => { let c = 0; for (let v = v0; v < v1; v++) c += atCost(v); return c; };
+// partidas viejas (tope 50, 10 por nivel): los valores se duplican para que el avatar siga sintiéndose igual y lo gastado se recalcula al costo nuevo
+function atMigrate(a) { if (a.v2) return; a.v2 = 1; let spent = 0; ATTR.forEach(([k]) => { a[k] = Math.min(ATTR_MAX, (a[k] || 0) * 2); spent += atCostTo(0, a[k]); }); a.spent = Math.min(spent, Math.max(0, (Math.min(LV_MAX, lvlNow()) - 1) * ATTR_PER_LV)); try { G().save(); } catch (e) {} }
 // botón de atributos en la barra de nivel, con globito de puntos sin repartir
 function attrSync() {
   try { const row = document.querySelector('#mapView .hud-row'); if (!row) return; let b = document.getElementById('hudAttr'); const kid = G().branch !== 'ados';
@@ -5215,22 +5220,22 @@ function invSurv(body) {
 }
 function perksHtml(k) { const f = FRUITS.find(x => x[0] === k) || (k === 'sab' ? SABI : null); if (!f) return ''; const t = ft(k); return `<span class="sv-perk">${t ? `✓ ${esc(f[3][t - 1])}` : ''}${t < 5 ? `${t ? ' · ' : ''}Con ${(t + 1) * 10}: ${esc(f[3][t])}` : ''}</span>`; }
 function invAttr(body) {
-  const AP = invAttr.pend || (invAttr.pend = {}), pt = Object.values(AP).reduce((x, y) => x + y, 0);
+  const AP = invAttr.pend || (invAttr.pend = {}), a0 = atP(), pt = Object.keys(AP).reduce((x, k) => x + atCostTo(a0[k] || 0, (a0[k] || 0) + AP[k]), 0);
   const a = atP(), free = ptsFree() - pt, lv = Math.min(LV_MAX, lvlNow()), h = a.hum || 0;
   let glowH = ''; if (S && S.hx) { const g = glowState(), gl = glowLv(g.pts), ga = 12 * gl * gl, gb = 12 * (gl + 1) * (gl + 1), pc = gl >= GLW.lvMax ? 100 : Math.round((g.pts - ga) / (gb - ga) * 100); glowH = `<div class="sv-glow"><b>✦ Resplandor ${gl}</b><small>Crece con misiones de servicio, compartir con quien lo necesita, respuestas correctas y versículos.</small><span class="sv-axbar"><i style="width:${pc}%"></i></span></div>`; }
-  body.innerHTML = `<div class="sv-inv">${glowH}<p class="sv-tip">Nivel ${lv} de ${LV_MAX}. Cada vez que subís de nivel ganás <b>${ATTR_PER_LV} puntos</b> para repartir como quieras (máximo ${ATTR_MAX} por atributo). Cada 5 puntos se nota un escalón más.</p><div class="sv-free">Puntos para repartir: <b>${free}</b></div>${pt ? `<div class="sv-conf"><p>Vas a sumar ${ATTR.filter(([k]) => AP[k]).map(([k, n]) => `<b>${n} +${AP[k]}</b>`).join(', ')}. <em>Una vez confirmados, los puntos quedan fijos y no se pueden cambiar.</em></p><div><button class="sv-undo">Deshacer</button><button class="sv-ok">${invAttr.ask ? 'Sí, confirmar' : 'Confirmar'}</button></div></div>` : ''}
-    <div class="sv-bulk"><span>Sumar de a</span>${[1, 5, 10].map(n => `<button data-n="${n}" class="${(S.bulk || 1) === n ? 'on' : ''}">${n}</button>`).join('')}</div>
-    ${(S.hx ? [['__h', 'Cuerpo']].concat(BODY, [['__h', 'Frutos del Espíritu · Gálatas 5:22-23']], FRUITS.map(x => [x[0], x[1], x[2]]), [['__h', 'Sabiduría'], [SABI[0], SABI[1], SABI[2]]]) : ATTRK).map(([k, n, d]) => k === '__h' ? `<h4 class="sv-sec">${n}</h4>` : `<div class="sv-attr"><div><b>${n} <em>${a[k] + axLv(k)}</em>${AP[k] ? `<span class="sv-pend">+${AP[k]}</span>` : ''}${axLv(k) ? `<span class="sv-axlv">(+${axLv(k)} por práctica)</span>` : ''}</b><small>${d}</small>${S.hx ? perksHtml(k) : ''}<span class="sv-axbar" title="Experiencia de ${n}"><i style="width:${Math.min(100, ((axP().xp[k] || 0) / axNeed(axLv(k))) * 100).toFixed(0)}%"></i></span><span class="sv-pips">${Array.from({ length: 10 }, (_, i) => `<i class="${i < Math.floor(a[k] / 5) ? 'on' : ''}"></i>`).join('')}</span></div><button data-k="${k}" ${free > 0 && a[k] + (AP[k] || 0) < ATTR_MAX ? '' : 'disabled'} aria-label="Subir ${n}">+</button></div>`).join('')}
+  body.innerHTML = `<div class="sv-inv">${glowH}<p class="sv-tip">Nivel ${lv} de ${LV_MAX}. Cada vez que subís de nivel ganás <b>${ATTR_PER_LV} puntos</b> para repartir como quieras, hasta ${ATTR_MAX} por atributo. Cada 20 puntos se nota un escalón más. Cuanto más alto está un atributo, más cuesta subirlo: del 1 al 30 cada punto vale 1, del 31 al 60 vale 2 y del 61 al 100 vale 3.</p><div class="sv-free">Puntos para repartir: <b>${free}</b></div>${pt ? `<div class="sv-conf"><p>Vas a sumar ${ATTR.filter(([k]) => AP[k]).map(([k, n]) => `<b>${n} +${AP[k]}</b>`).join(', ')}. <em>Una vez confirmados, los puntos quedan fijos y no se pueden cambiar.</em></p><div><button class="sv-undo">Deshacer</button><button class="sv-ok">${invAttr.ask ? 'Sí, confirmar' : 'Confirmar'}</button></div></div>` : ''}
+    <div class="sv-bulk"><span>Sumar de a</span>${[1, 3, 5].map(n => `<button data-n="${n}" class="${(S.bulk || 1) === n ? 'on' : ''}">${n}</button>`).join('')}</div>
+    ${(S.hx ? [['__h', 'Cuerpo']].concat(BODY, [['__h', 'Frutos del Espíritu · Gálatas 5:22-23']], FRUITS.map(x => [x[0], x[1], x[2]]), [['__h', 'Sabiduría'], [SABI[0], SABI[1], SABI[2]]]) : ATTRK).map(([k, n, d]) => k === '__h' ? `<h4 class="sv-sec">${n}</h4>` : `<div class="sv-attr"><div><b>${n} <em>${a[k] + axLv(k)}</em>${AP[k] ? `<span class="sv-pend">+${AP[k]}</span>` : ''}${axLv(k) ? `<span class="sv-axlv">(+${axLv(k)} por práctica)</span>` : ''}</b><small>${d}</small>${S.hx ? perksHtml(k) : ''}<span class="sv-axbar" title="Experiencia de ${n}"><i style="width:${Math.min(100, ((axP().xp[k] || 0) / axNeed(axLv(k))) * 100).toFixed(0)}%"></i></span><span class="sv-pips">${Array.from({ length: 10 }, (_, i) => `<i class="${i < Math.floor(fv(k) / 10) ? 'on' : ''}"></i>`).join('')}</span>${fv(k) < ATTR_MAX ? `<small class="sv-next">Próximo escalón en ${(ft(k) + 1) * 20 - fv(k)} punto${(ft(k) + 1) * 20 - fv(k) === 1 ? '' : 's'}${a[k] >= 30 ? ` · cada punto vale ${atCost(a[k])}` : ''}</small>` : `<small class="sv-next">Al máximo</small>`}</div><button data-k="${k}" ${free > 0 && a[k] + (AP[k] || 0) < ATTR_MAX ? '' : 'disabled'} aria-label="Subir ${n}">+</button></div>`).join('')}
     <div class="sv-attr sv-hum"><div><b>Humildad <em>${h}</em></b><small>Es la única que no se compra con puntos: crece solo cuando le das puntos tuyos a otros en una sala con amigos. Jesús enseñó que el que se humilla será enaltecido (Lucas 14:11).</small></div></div>
     <ul class="sv-perks">${HUM_PERKS.map(([n, t, d]) => `<li class="${h >= n ? 'on' : ''}"><b>${n} · ${t}</b><small>${d}</small></li>`).join('')}</ul>
     <div class="sv-attr sv-hum"><div><b>Servicio <em>${a.serv || 0}</em></b><small>También es único: crece solo haciendo obras para los demás, como ayudar a los mendigos del camino o cumplir misiones.</small></div></div>
     <ul class="sv-perks">${SERV_PERKS.map(([n, t, d]) => `<li class="${(a.serv || 0) >= n ? 'on' : ''}"><b>${n} · ${t}</b><small>${d}</small></li>`).join('')}</ul></div>`;
   body.querySelectorAll('[data-n]').forEach(b => b.onclick = () => { S.bulk = +b.dataset.n; invAttr(body); });
   // el + solo reserva: los puntos se fijan para siempre recién al confirmar
-  body.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k, n = Math.min(S.bulk || 1, free, ATTR_MAX - a[k] - (AP[k] || 0)); if (n <= 0) return; AP[k] = (AP[k] || 0) + n; invAttr.ask = false; invAttr(body); });
+  body.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k; let n = Math.min(S.bulk || 1, ATTR_MAX - a[k] - (AP[k] || 0)); while (n > 0 && atCostTo(a[k] + (AP[k] || 0), a[k] + (AP[k] || 0) + n) > free) n--; if (n <= 0) return; AP[k] = (AP[k] || 0) + n; invAttr.ask = false; invAttr(body); });
   const un = body.querySelector('.sv-undo'), ok = body.querySelector('.sv-ok');
   if (un) un.onclick = () => { invAttr.pend = {}; invAttr.ask = false; invAttr(body); };
-  if (ok) ok.onclick = () => { if (!invAttr.ask) { invAttr.ask = true; invAttr(body); return; } const real = ptsFree(); let used = 0; ATTR.forEach(([k]) => { const n = Math.max(0, Math.min(AP[k] || 0, real - used, ATTR_MAX - a[k])); if (n) { a[k] += n; used += n; } }); a.spent = (a.spent || 0) + used; invAttr.pend = {}; invAttr.ask = false; G().save(); invAttr(body); attrSync(); try { G().toast('✅ Puntos confirmados. Quedan guardados para siempre.'); } catch (e) {} };
+  if (ok) ok.onclick = () => { if (!invAttr.ask) { invAttr.ask = true; invAttr(body); return; } const real = ptsFree(); let used = 0; ATTR.forEach(([k]) => { let n = Math.max(0, Math.min(AP[k] || 0, ATTR_MAX - a[k])); while (n > 0 && atCostTo(a[k], a[k] + n) > real - used) n--; if (n) { used += atCostTo(a[k], a[k] + n); a[k] += n; } }); a.spent = (a.spent || 0) + used; invAttr.pend = {}; invAttr.ask = false; G().save(); invAttr(body); attrSync(); try { G().toast('✅ Puntos confirmados. Quedan guardados para siempre.'); } catch (e) {} };
 }
 
 
@@ -5297,7 +5302,7 @@ function xGift() {
     el.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k; if (a[k] <= 0) return; a[k]--; a.hum = (a.hum || 0) + 1; a.hN++; a.hTo = (a.hTo || []).concat(to); G().save(); xSend({ k: 'gift', to, attr: k }); el.hidden = true; humCheck(); G().toast('Le diste 1 de ' + ATTR.find(x => x[0] === k)[1] + ' a ' + pName(to) + '. Tu humildad creció a ' + a.hum + '.'); });
   });
 }
-function xGiftIn(m) { if (!svOn()) return; const a = atP(), k = m.attr; if (!ATTR.some(x => x[0] === k)) return; a[k] = Math.min(50, (a[k] || 0) + 1); G().save(); misPop('Un regalo de ' + pName(m.id), '+1 de ' + ATTR.find(x => x[0] === k)[1]); }
+function xGiftIn(m) { if (!svOn()) return; const a = atP(), k = m.attr; if (!ATTR.some(x => x[0] === k)) return; a[k] = Math.min(ATTR_MAX, (a[k] || 0) + 1); G().save(); misPop('Un regalo de ' + pName(m.id), '+1 de ' + ATTR.find(x => x[0] === k)[1]); }
 const HUM_PERKS = [
   [1, 'Pan compartido', 'Cuando comés, los que están cerca tuyo en la sala también recuperan 5 minutos de alimento.'],
   [5, 'Lo que no se pierde', 'Por cada 5 de humildad, un objeto más que nunca se pierde si te quedás sin fuerzas.'],
