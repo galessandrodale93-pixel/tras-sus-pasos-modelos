@@ -2101,10 +2101,12 @@ function capernaumScene(scene, p, yAt, poiProp, hx, HW) {
 function upperScene(scene, p, yAt, poiProp, hx, HW) {
   const R = rng(6363), y = yAt(p.x, p.z), sd = p.side;
   const pv = new THREE.Mesh(new THREE.CircleGeometry(11, 40), pbrMat('monastery_stone_floor', 6, 6, { color: '#E6DCC8' })); pv.rotation.x = -Math.PI / 2; pv.position.set(p.x, y + .03, p.z); pv.receiveShadow = true; scene.add(pv);
-  townLayout(scene, p, yAt, HW, { seed: 6464, n: 15, r: 27, plaza: 10, gap: 1.8, avoid: [[p.x, p.z, 7]], house: (Rr, i) => ({ upper: Rr() < .6, h: 3.2 + Rr() * .8 }) });
+  // la puerta de la muralla (hacia el camino) y el pasillo hasta la plaza quedan libres de casas
+  let tN = 8; while (tN < 40 && HW && HW.dAt(p.x - sd * tN, p.z) > 5) tN += 1; const nearW = Math.max(14, tN - 7), gateX = p.x - sd * nearW;
+  townLayout(scene, p, yAt, HW, { seed: 6464, n: 15, r: 27, plaza: 10, gap: 1.8, avoid: [[p.x, p.z, 7], [gateX, p.z, 8], [p.x - sd * nearW * .5, p.z, 5.5], [gateX - sd * 6, p.z, 6], [gateX, p.z - 16, 6], [gateX, p.z + 16, 6], [gateX, p.z - 27, 6], [gateX, p.z + 27, 6]], house: (Rr, i) => ({ upper: Rr() < .6, h: 3.2 + Rr() * .8 }) });
   for (let i = 0; i < 3; i++) { const a = (sd > 0 ? Math.PI : 0) + (i - 1) * .85, x = p.x + Math.cos(a) * 8.5, z = p.z + Math.sin(a) * 8.5; if (!blockedAt(x, z)) stall(scene, x, z, Math.atan2(p.x - x, p.z - z), yAt(x, z), R, poiProp); }
   { // muralla alrededor del barrio: tres lados cerrados y, hacia el camino, dos tramos con la puerta en el medio
-    let t = 8; while (t < 40 && HW && HW.dAt(p.x - sd * t, p.z) > 5) t += 1; const near = Math.max(14, t - 7), far = 32, half = 32;
+    const near = nearW, far = 32, half = 32;
     cityWall(scene, p.x + sd * far, p.z, half * 2, Math.PI / 2, yAt);
     cityWall(scene, p.x + sd * (far - near) / 2, p.z - half, far + near, 0, yAt); cityWall(scene, p.x + sd * (far - near) / 2, p.z + half, far + near, 0, yAt);
     cityWall(scene, p.x - sd * near, p.z - (half / 2 + 5), half - 10, Math.PI / 2, yAt); cityWall(scene, p.x - sd * near, p.z + (half / 2 + 5), half - 10, Math.PI / 2, yAt);
