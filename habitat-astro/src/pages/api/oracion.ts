@@ -2,7 +2,7 @@
 import type { APIRoute } from "astro";
 import { q, todos, guardar, hoyAR, mandar, marco, p } from "../../lib/sem";
 import { esc } from "../../lib/vol";
-import { FOCOS, NTV, TIPOS_AYUNO, SALUD, delDia, asegurarTurnos, publicarAyuno, syncAyuno, pedidosDeProfes, larga, type Turno, type Ayuno } from "../../lib/oracion";
+import { FOCOS, NTV, TIPOS_AYUNO, SALUD, delDia, asegurarTurnos, publicarAyuno, syncAyuno, pedidosDeProfes, INICIO, larga, type Turno, type Ayuno } from "../../lib/oracion";
 
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
 const s = (v: unknown, max = 300) => (typeof v === "string" ? v : v == null ? "" : String(v)).trim().slice(0, max);
@@ -38,7 +38,7 @@ export const GET: APIRoute = async ({ request }) => {
     const v = me.vol;
     return json({
       me: { nombre: me.nombre, id: v ? v._id : "", admin: me.admin, ics: v && v.clave ? "https://www.habitat-cfm.org/api/voluntario.ics?v=" + v._id + "&k=" + v.clave : "" },
-      hoy: delDia(hoy), manana: delDia(DIA(hoy, 1)), focos: FOCOS.map((f) => f.titulo), ntv: NTV,
+      hoy: delDia(hoy < INICIO ? INICIO : hoy), manana: delDia(DIA(hoy < INICIO ? INICIO : hoy, 1)), inicio: hoy < INICIO ? INICIO : "", focos: FOCOS.map((f) => f.titulo), ntv: NTV,
       turnos, ayuno, pedidos, tiposAyuno: TIPOS_AYUNO, salud: SALUD,
       voluntarios: vols.filter((x) => x.activo !== false).map((x) => ({ id: x._id, nombre: x.title || "" })),
     });

@@ -105,7 +105,7 @@ export const FOCOS: Foco[] = [
 ];
 export const NTV = "Nueva Traducción Viviente (NTV), © Tyndale House Foundation, 2010.";
 
-const INICIO = "2026-11-09"; // día 0 de la rotación de focos
+export const INICIO = "2026-11-16"; // arranque: día 0 de la rotación de focos y primer turno de intercesión y ayuno
 const diaN = (f: string) => Math.round((Date.parse(f + "T12:00:00Z") - Date.parse(INICIO + "T12:00:00Z")) / 864e5);
 export function delDia(f: string) {
   const n = diaN(f), i = ((n % 9) + 9) % 9, foco = FOCOS[i], v = foco.versos[((Math.floor(n / 9) % 3) + 3) % 3];
@@ -136,7 +136,7 @@ export async function asegurarTurnos(dias = 45) {
   let idx = Number((cfg && cfg.valor) || 0), n = 0;
   for (let i = 0; i < dias; i++) {
     const f = DIA(hoy, i);
-    if (ya.has(f)) continue;
+    if (f < INICIO || ya.has(f)) continue;
     const v = V[idx % V.length]; idx++;
     await guardar("IntTurnos", { _id: f, title: f, fecha: f, responsableId: v._id, sumados: "[]", avisoNoche: "", avisoManana: "", nota: "" });
     n++;

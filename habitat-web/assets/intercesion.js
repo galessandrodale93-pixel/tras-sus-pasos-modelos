@@ -21,6 +21,7 @@
   function renderHoy() {
     var d = D.hoy, t = D.turnos.find(function (x) { return x.fecha === HOY; }) || {}, o = d.oracion;
     var yo = t.responsableId === D.me.id, sumado = (t.sumados || []).indexOf(D.me.nombre) >= 0;
+    if (D.inicio) { $('#oHoy').innerHTML = '<p class="or-foco">Arrancamos el ' + esc(larga(D.inicio)) + ' · ' + esc(d.foco) + '</p><p class="tt-tip">🙏 La intercesión y el ayuno empiezan el ' + esc(larga(D.inicio)) + '. Mirá en «Turnos» qué día te toca. Este es el foco del primer día:</p><blockquote class="or-v">«' + esc(d.verso.texto) + '»<cite>' + esc(d.verso.ref) + ' (NTV)</cite></blockquote><p>' + esc(d.devocional) + '</p><p class="or-ntv">Texto bíblico: ' + esc(D.ntv) + '</p>'; return; }
     $('#oHoy').innerHTML = '<p class="or-foco">' + esc(larga(HOY)) + ' · ' + esc(d.foco) + '</p>' +
       '<p class="tt-tip">' + (yo ? '🙏 Hoy estás a cargo de la intercesión.' : t.responsable ? 'Hoy está a cargo <b>' + esc(t.responsable) + '</b>' + ((t.sumados || []).length ? ' · se suman: ' + esc(t.sumados.join(', ')) : '') + '.' : '') + '</p>' +
       '<blockquote class="or-v">«' + esc(d.verso.texto) + '»<cite>' + esc(d.verso.ref) + ' (NTV)</cite></blockquote>' +
