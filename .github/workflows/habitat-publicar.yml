@@ -1,0 +1,41 @@
+# Publica la web de Habitat CFM (habitat-astro) en Wix, sin necesitar una computadora.
+# Requiere el secreto WIX_API_KEY (Settings → Secrets and variables → Actions) con una API key de Wix.
+# Se dispara a mano desde la pestaña Actions ("Publicar web Habitat" → Run workflow).
+name: Publicar web Habitat
+
+on:
+  workflow_dispatch:
+    inputs:
+      comentario:
+        description: "Comentario de la versión (no lo ven los usuarios)"
+        default: "Publicado desde GitHub Actions"
+
+concurrency: habitat-publicar
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: habitat-astro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Instalar dependencias
+        run: npm install --no-audit --no-fund
+      - name: Iniciar sesión en Wix
+        env:
+          WIX_API_KEY: ${{ secrets.WIX_API_KEY }}
+        run: |
+          [ -n "$WIX_API_KEY" ] || { echo "::error::Falta el secreto WIX_API_KEY"; exit 1; }
+          npx wix login --api-key "$WIX_API_KEY"
+      - name: Compilar
+        run: npm run build
+      - name: Publicar
+        env:
+          COMENTARIO: ${{ inputs.comentario }}
+          CI: "true"
+        run: npx wix release --comment "$COMENTARIO" < /dev/null
