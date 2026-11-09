@@ -1905,16 +1905,20 @@ function crowdSimple(scene, list, looks, anim, sh) {
   const body = seated ? new THREE.CylinderGeometry(.34, .42, .72, 8) : new THREE.CapsuleGeometry(.2, 1.05, 3, 8), head = new THREE.SphereGeometry(.13, 8, 7), cloth = seated ? new THREE.SphereGeometry(.3, 8, 6, 0, 6.283, 0, 1.6) : new THREE.CylinderGeometry(.24, .3, .55, 8);
   const yB = seated ? .36 : .8, yH = seated ? .86 : 1.5, yC = seated ? .55 : 1.1;
   looks.forEach((lk, li) => { const L = by[li]; if (!L.length) return;
-    const mk = (g, col, y, sc) => { const im = new THREE.InstancedMesh(g, tm('cs' + col, col, { roughness: 1 }), L.length); L.forEach((p, i) => { E.set(0, p.ry, 0); const k = p.s || 1; M.compose(V.set(p.x, p.y + y * k, p.z), Q.setFromEuler(E), SC.setScalar(k * (sc || 1))); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.castShadow = !!sh && QUAL.lv >= 2; im.receiveShadow = true; im.computeBoundingSphere(); scene.add(im); };
+    const mk = (g, col, y, sc) => { const im = new THREE.InstancedMesh(g, tm('cs' + col, col, { roughness: 1 }), L.length); L.forEach((p, i) => { E.set(0, p.ry, 0); const k = p.s || 1; M.compose(V.set(p.x, p.y + y * k, p.z), Q.setFromEuler(E), SC.setScalar(k * (sc || 1))); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.castShadow = !!sh && QUAL.lv >= 2; im.receiveShadow = true; im.computeBoundingSphere(); crowdReg(im); scene.add(im); };
     mk(body, lk.outfit, yB); mk(head, lk.skin, yH); mk(cloth, lk.hair === '#9A9A9A' ? '#D8CFC0' : '#6E5A44', yC, seated ? 1 : .9); });
   return true;
 }
 function crowdPlace(scene, list, looks, anim, sh) {
   if (!list.length) return false; if (!H3.ok) return crowdSimple(scene, list, looks, anim, sh); const by = looks.map(() => []); list.forEach((p, i) => by[(p.v ?? i) % looks.length].push(p)); const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
   looks.forEach((lk, li) => { const L = by[li]; if (!L.length) return; const parts = crowdBake(lk, anim, .4 + li * .37); if (!parts) { crowdSimple(scene, L, [lk], anim, sh); return; }
-    parts.forEach(pt => { const im = new THREE.InstancedMesh(pt.g, pt.mat, L.length); L.forEach((p, i) => { E.set(0, p.ry, 0); M.compose(V.set(p.x, p.y, p.z), Q.setFromEuler(E), SC.setScalar(p.s || 1)); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.castShadow = !!sh && QUAL.lv >= 2; im.receiveShadow = true; im.computeBoundingSphere(); scene.add(im); }); });
+    parts.forEach(pt => { const im = new THREE.InstancedMesh(pt.g, pt.mat, L.length); L.forEach((p, i) => { E.set(0, p.ry, 0); M.compose(V.set(p.x, p.y, p.z), Q.setFromEuler(E), SC.setScalar(p.s || 1)); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.castShadow = !!sh && QUAL.lv >= 2; im.receiveShadow = true; im.computeBoundingSphere(); crowdReg(im); scene.add(im); }); });
   return true;
 }
+// multitudes lejanas: se ocultan según la calidad (en Bajo solo se dibujan las que están a menos de 70 m); ahorra millones de triángulos por cuadro
+const CROWD_R = [70, 110, 170, 1e9];
+function crowdReg(im) { im.userData.crowd = 1; if (S) (S.crowdIms || (S.crowdIms = [])).push(im); }
+function crowdTick() { if (!S || !S.crowdIms) return; const a = S.av.position, R0 = CROWD_R[QUAL.lv]; for (const im of S.crowdIms) { if (!im.parent) continue; const bs = im.geometry.boundingSphere; if (!bs) continue; const vis = Math.hypot(bs.center.x - a.x, bs.center.z - a.z) - bs.radius < R0; if (im.visible !== vis) im.visible = vis; } }
 const CROWD_LOOKS = [
   { g: 'chico', age: 30, skin: '#C99A72', hair: '#2A1B14', outfit: '#A89078' }, { g: 'chica', age: 28, skin: '#D6A57C', hair: '#3A2412', outfit: '#7E5A6A' },
   { g: 'chico', age: 60, skin: '#B98A62', hair: '#9A9A9A', outfit: '#6A6E78' }, { g: 'chica', age: 45, skin: '#C08A66', hair: '#2A1B14', outfit: '#8E7A4A' },
@@ -4278,7 +4282,7 @@ async function galTrees() {
         for (let k = 0; k < 7; k++) { const an = Rf() * 6.283, rr = rad * sc * (.45 + Rf() * .4), y = o.y + top * sc * (.55 + Rf() * .28); fm.push(new THREE.Matrix4().compose(new THREE.Vector3(o.x + Math.cos(an) * rr, y, o.z + Math.sin(an) * rr), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Rf() * 6.283, 0)), new THREE.Vector3(1.25, 1.25, 1.25))); }
         FT.push({ x: o.x, z: o.z, y: o.y, s: sc, n: 7, n0: 7, t: 0, fm, kind, ims: [], base: 0 }); });
       for (const kind of ['fruit', 'lemon']) { const L = FT.filter(f => f.kind === kind); if (!L.length) continue; const vars = await phGet(kind === 'fruit' ? 'food_pomegranate_01' : 'lemon'); const ms = (vars && vars[0]) || []; if (!ms.length) continue;
-        ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, mm.mat, L.length * 7); im.userData.m = mm.m; L.forEach((f, i) => { f.base = i * 7; f.ims.push(im); f.fm.forEach((m, k) => im.setMatrixAt(i * 7 + k, m.clone().multiply(mm.m))); }); im.instanceMatrix.needsUpdate = true; im.castShadow = QUAL.lv > 1; im.computeBoundingSphere(); S.scene.add(im); GT.ims.push(im); }); }
+        ms.forEach(mm => { let geo = mm.geo; if (QUAL.lv < 3 && geo.index && geo.index.count > 6000) { if (!geo.boundingSphere) geo.computeBoundingSphere(); const bs = geo.boundingSphere, lo = new THREE.SphereGeometry(bs.radius * .92, 10, 8); lo.translate(bs.center.x, bs.center.y, bs.center.z); geo = lo; } const im = new THREE.InstancedMesh(geo, mm.mat, L.length * 7); im.userData.m = mm.m; L.forEach((f, i) => { f.base = i * 7; f.ims.push(im); f.fm.forEach((m, k) => im.setMatrixAt(i * 7 + k, m.clone().multiply(mm.m))); }); im.instanceMatrix.needsUpdate = true; im.castShadow = QUAL.lv > 1; im.computeBoundingSphere(); S.scene.add(im); GT.ims.push(im); }); }
       if (S.sv) S.sv.fruit.trees = FT.filter(f => f.ims.length); FLORA.fruitTrees = FT;
       r2log('frutales: ' + FT.filter(f => f.kind === 'fruit').length + ' granados y ' + FT.filter(f => f.kind === 'lemon').length + ' limoneros'); } } catch (e) { r2log('frutos: ' + e.message); }
 }
@@ -4714,7 +4718,7 @@ function loop(now) {
   cineTick(dt); if (window.__camFix) { const f = window.__camFix; S.camera.position.set(...f.p); S.camera.lookAt(...f.l); }
   fxWatch(now); if (S.W) { const u = S.W.sky.material.uniforms; u.inv.value = S.fx ? 1 : 0; u.ex.value = S.renderer.toneMappingExposure; }
   const p5 = PF ? performance.now() : 0; if (S.fx) S.fx.render(dt); else S.renderer.render(S.scene, S.camera); const p6 = PF ? performance.now() : 0; QUAL.lastCalls = S.renderer.info.render.calls; QUAL.lastTris = S.renderer.info.render.triangles;
-  idle(dt); misTick(t); voiceTick(dt); wpTick(t); mpTick(t, dt); dayTick(dt); seasonTick(dt); gearDropTick(dt, t); doorTick(t); h3npcTick(dt); roomTick(dt); survTick(dt, t); prayTogetherTick(dt); axVerse(dt);
+  idle(dt); misTick(t); voiceTick(dt); wpTick(t); mpTick(t, dt); dayTick(dt); seasonTick(dt); gearDropTick(dt, t); doorTick(t); h3npcTick(dt); crowdTick(); roomTick(dt); survTick(dt, t); prayTogetherTick(dt); axVerse(dt);
   if (PF) { const p7 = performance.now(); PROF.add({ mov: p1 - p0, zonas: p2 - p1, agua_fuego: p3 - p2, avatar: p4 - p3, escena: p5 - p4, render: p6 - p5, npc_misiones: p7 - p6 }); }
 }
 
