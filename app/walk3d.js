@@ -2009,7 +2009,7 @@ function rampH(x, z) { const L = S && S.ramps; if (!L) return -1; let h = -1; fo
 function placeV(scene, H, x, z, rot, y) { H.g.position.set(x, y, z); H.g.rotation.y = rot; scene.add(H.g); try { staticMerge(H.g); } catch (e) {} H.cols.forEach(c => S.cols.push(wBox(x, z, rot, ...c))); }
 // reparte casas alrededor de una plaza o a lo largo de una calle; devuelve las casas puestas (para no encimar props)
 function townLayout(scene, p, yAt, HW, o) {
-  const R = rng(o.seed || 777), placed = [], n = o.n || 12, rad = o.r || 24, plaza = o.plaza || 7, roadD = HW ? (HW.roadAt || HW.dAt) : null, ok = (x, z, rr) => (!roadD || roadD(x, z) > rr + 1.5) && !placed.some(q => Math.hypot(q.x - x, q.z - z) < q.rr + rr + (o.gap || 1.6)) && !(o.avoid || []).some(([ax, az, ar]) => Math.hypot(ax - x, az - z) < ar + rr); let fails = 0, lastErr = null;
+  const R = rng(o.seed || 777), placed = [], n = o.n || 12, rad = o.r || 24, plaza = o.plaza || 7, roadD = HW ? (HW.roadAt || HW.dAt) : null, ok = (x, z, rr) => (!roadD || roadD(x, z) > rr + 1.5) && waterWet(x, z, null) < .02 && !placed.some(q => Math.hypot(q.x - x, q.z - z) < q.rr + rr + (o.gap || 1.6)) && !(o.avoid || []).some(([ax, az, ar]) => Math.hypot(ax - x, az - z) < ar + rr); let fails = 0, lastErr = null;
   for (let t = 0; t < n * 90 && placed.length < n; t++) try { let x, z, face;
     if (o.street != null) { const along = (R() - .5) * 2 * rad * (t > n * 30 ? 1.4 : 1), sdz = R() < .5 ? -1 : 1, off = plaza / 2 + 3 + R() * 2.5, c = Math.cos(o.street), s = Math.sin(o.street), lx = p.x + c * along, lz = p.z + s * along; x = lx - s * off * sdz; z = lz + c * off * sdz; face = Math.atan2(lx - x, lz - z); }
     else { const grow = t > n * 30 ? 1.4 : 1, a = R() * 6.283, r = plaza + 3 + R() * (rad * grow - plaza - 3); x = p.x + Math.cos(a) * r; z = p.z + Math.sin(a) * r; face = Math.atan2(p.x - x, p.z - z) + (R() - .5) * .5; }
@@ -2021,7 +2021,7 @@ function townLayout(scene, p, yAt, HW, o) {
 }
 // gente del pueblo: de pie y algunos sentados en la puerta (horneados, baratos)
 function townFolk(scene, p, yAt, HW, n, rad, seed, avoid) {
-  const R = rng(seed || 99), st = [], si = []; for (let t = 0; t < n * 30 && st.length + si.length < n; t++) { const a = R() * 6.283, r = 2.5 + R() * rad, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (blockedAt(x, z) || (HW && (HW.roadAt || HW.dAt)(x, z) < 2.2) || (avoid || []).some(([ax, az, ar]) => Math.hypot(ax - x, az - z) < ar)) continue; (R() < .25 ? si : st).push({ x, y: yAt(x, z), z, ry: R() * 6.283, s: .94 + R() * .12, v: Math.floor(R() * CROWD_LOOKS.length) }); }
+  const R = rng(seed || 99), st = [], si = []; for (let t = 0; t < n * 30 && st.length + si.length < n; t++) { const a = R() * 6.283, r = 2.5 + R() * rad, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (blockedAt(x, z) || waterWet(x, z, null) > .02 || (HW && (HW.roadAt || HW.dAt)(x, z) < 2.2) || (avoid || []).some(([ax, az, ar]) => Math.hypot(ax - x, az - z) < ar)) continue; (R() < .25 ? si : st).push({ x, y: yAt(x, z), z, ry: R() * 6.283, s: .94 + R() * .12, v: Math.floor(R() * CROWD_LOOKS.length) }); }
   crowdPlace(scene, st, CROWD_LOOKS, 'M_Standing_Idle', true); crowdPlace(scene, si, CROWD_LOOKS, 'cross', true); [...st, ...si].forEach(q => S.cols.push({ x0: q.x - .35, x1: q.x + .35, z0: q.z - .35, z1: q.z + .35, cx: q.x, cz: q.z, r: .3 }));
 }
 // puestos de mercado: cuatro palos, toldo de tela y canastas con frutas
@@ -2271,7 +2271,7 @@ function buildTowns(scene, g, hx, HW, pois) {
     if (p.k === 'pastores') { try { pastoresScene(scene, p, yAt, poiProp, hx, HW); } catch (e) { console.warn('pastores', e); } }
     if (p.k === 'desert') { try { desertScene(scene, p, yAt, poiProp, hx, HW); } catch (e) { console.warn('desierto', e); } }
     if (p.k === 'feeding') feedingScene(scene, p, yAt, poiProp, hx, HW);
-    if (p.k === 'lake') { S.lake = buildLake(scene, p.x, p.z, p.side, hx, yAt); const H = bigHouse('pescador', hx), hx2 = p.x - p.side * 36, hz = p.z - 6; placeHouse(scene, H, hx2, hz, p.side > 0 ? Math.PI / 2 : -Math.PI / 2, yAt(hx2, hz)); if (hx) try { const q = { x: hx2, z: hz + 4 }; townLayout(scene, q, yAt, HW, { seed: 4141, n: 7, r: 20, plaza: 7, gap: 2.2, avoid: [[hx2, hz, 7.5], [p.x, p.z, 44]], house: (Rr) => ({ upper: Rr() < .25, h: 2.9 + Rr() * .5, yard: Rr() < .3 }) }); townFolk(scene, q, yAt, HW, 7, 14, 4142, [[hx2, hz, 6]]); } catch (e) { console.warn('aldea pescadores', e); } }
+    if (p.k === 'lake') { S.lake = buildLake(scene, p.x, p.z, p.side, hx, yAt); const H = bigHouse('pescador', hx), hx2 = p.x - p.side * 47, hz = p.z - 6; // en la orilla seca, no dentro del agua placeHouse(scene, H, hx2, hz, p.side > 0 ? Math.PI / 2 : -Math.PI / 2, yAt(hx2, hz)); if (hx) try { const q = { x: hx2, z: hz + 4 }; townLayout(scene, q, yAt, HW, { seed: 4141, n: 7, r: 20, plaza: 7, gap: 2.2, avoid: [[hx2, hz, 7.5], [p.x, p.z, 44]], house: (Rr) => ({ upper: Rr() < .25, h: 2.9 + Rr() * .5, yard: Rr() < .3 }) }); townFolk(scene, q, yAt, HW, 7, 14, 4142, [[hx2, hz, 6]]); } catch (e) { console.warn('aldea pescadores', e); } }
   }
 }
 /* destino marcado en el mapa: columna de luz y flecha en el piso */
