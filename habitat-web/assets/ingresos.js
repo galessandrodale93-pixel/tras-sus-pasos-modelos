@@ -8,9 +8,9 @@
   var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'], MC = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
   var T = new Date(), HOY = T.getFullYear() + '-' + ('0' + (T.getMonth() + 1)).slice(-2) + '-' + ('0' + T.getDate()).slice(-2), MES = HOY.slice(0, 7);
   function addM(m, n) { var y = +m.slice(0, 4), k = +m.slice(5, 7) - 1 + n; y += Math.floor(k / 12); k = ((k % 12) + 12) % 12; return y + '-' + ('0' + (k + 1)).slice(-2); }
-  var COL = { 'Siembra automática': '#2f6b4f', 'Siembra puntual': '#6fa585', 'Libros': '#b8904f', 'Efectivo': '#8a6a2f', 'Cuota de alumno (MP)': '#3e6690', 'Otro': '#9aa3a0', 'Transferencia entre cuentas propias': '#d9d2c3', 'Por clasificar': '#c96a5a', 'Cuotas (Debi/Payway)': '#cfd8d3' };
+  var COL = { 'Siembra automática': '#2f6b4f', 'Siembra puntual': '#6fa585', 'Libros': '#b8904f', 'Efectivo': '#8a6a2f', 'Cuota de alumno (MP)': '#3e6690', 'Otro': '#9aa3a0', 'Transferencia entre cuentas propias': '#d9d2c3', 'Aporte de la familia': '#a07cc5', 'Por clasificar': '#c96a5a', 'Cuotas (Debi/Payway)': '#cfd8d3' };
   var I = null, cargando = null;
-  var NO_SUMA = ['Transferencia entre cuentas propias'];
+  var NO_SUMA = ['Transferencia entre cuentas propias', 'Aporte de la familia'];
   function suma(x) { return NO_SUMA.indexOf(x.tipo) < 0; }
   var GUIA = {
     'Siembra automática': 'Un sembrador que aporta todos los meses con suscripción de Mercado Pago.',
@@ -19,6 +19,7 @@
     'Efectivo': 'Plata en mano: se carga con «Cargar efectivo u otro ingreso».',
     'Cuota de alumno (MP)': 'Cuotas y suscripciones a clases pagadas por Mercado Pago en lugar de Debi. Si el alumno está en la lista, elegilo; si es una cuota de un curso, registrala también en Cobros.',
     'Transferencia entre cuentas propias': 'Plata que pasa de la cuenta de Agustina (donde caen Debi y Payway) a esta cuenta. Ya está contada en Cobros, así que acá no suma.',
+    'Aporte de la familia': 'Lo que la familia siembra para cubrir lo que falta (por ejemplo, el alquiler en efectivo). Se muestra aparte, en el balance del mes.',
     'Otro': 'Un ingreso de Habitat que no entra en ningún tipo anterior. Anotá en la nota qué fue.',
     'Por clasificar': 'Todavía sin revisar.'
   };
@@ -105,7 +106,57 @@
   $('#iPrev').onclick = function () { MES = addM(MES, -1); render(); };
   $('#iNext').onclick = function () { MES = addM(MES, 1); render(); };
   $('#iAdd').onclick = function () { manual(null); };
-  $('#iTraer').onclick = function () { var b = this; b.disabled = true; b.textContent = 'Trayendo…'; api('POST', { op: 'traer', dias: 90 }).then(function (r) { F.toast('Revisamos ' + r.vistos + ' pagos de los últimos 90 días · ' + r.nuevos + ' nuevos.'); return api('GET'); }).then(function (d) { I = d; render(); }).catch(function (e) { F.toast(e.message); }).finally(function () { b.disabled = false; b.textContent = 'Traer pagos de Mercado Pago'; }); };
+  $('#iTraer').onclick = function () { var b = this; b.disabled = true; b.textContent = 'Trayendo…'; api('POST', { op: 'traer', dias: 90 }).then(function (r) { F.toast('Revisamos ' + r.vistos + ' movimientos de los últimos 90 días · ' + r.nuevos + ' ingresos nuevos · ' + (r.salidas || 0) + ' salidas.'); return api('GET'); }).then(function (d) { I = d; render(); }).catch(function (e) { F.toast(e.message); }).finally(function () { b.disabled = false; b.textContent = 'Traer pagos de Mercado Pago'; }); };
   var gd = document.getElementById('iGuia'); if (gd) gd.innerHTML = Object.keys(GUIA).filter(function (k) { return k !== 'Por clasificar'; }).map(function (k) { return '<p style="margin:6px 0"><b>' + esc(k) + '.</b> ' + esc(GUIA[k]) + '</p>'; }).join('') + '<p style="margin:10px 0 0"><b>Lo que sale de la cuenta</b> no aparece acá: si se pagó algo de Habitat, se carga en Gastos; si fue un gasto personal, queda afuera del panel.</p>';
-  window.HabIngresos = { render: render };
+
+  /* ---------- Salidas y balance ---------- */
+  var SM = MES;
+  function gastosMes(m) {
+    var d = F.data(), g = (d.gastos || []).filter(function (x) { return x.mes === m && (x.moneda || 'ARS') === 'ARS'; });
+    var tot = g.reduce(function (a, x) { return a + (+x.monto || 0); }, 0), con = {}; g.forEach(function (x) { con[String(x.concepto || '').toLowerCase()] = 1; });
+    (d.fijos || []).forEach(function (f) { if ((f.moneda || 'ARS') === 'ARS' && !con[String(f.concepto || '').toLowerCase()]) tot += +f.monto || 0; });
+    return tot;
+  }
+  function salidas() {
+    if (!I) { if (!cargando) cargando = api('GET').then(function (d) { I = d; cargando = null; salidas(); }).catch(function (e) { $('#sList').innerHTML = '<p class="tt-empty">' + esc(e.message) + '</p>'; cargando = null; }); return; }
+    var S = I.salidas || [];
+    $('#sTit').textContent = MESES[+SM.slice(5, 7) - 1] + ' ' + SM.slice(0, 4);
+    var ing = I.ingresos.filter(function (x) { return x.mes === SM && suma(x); }).reduce(function (a, x) { return a + (+x.monto || 0); }, 0) + cuotas(SM);
+    var fam = I.ingresos.filter(function (x) { return x.mes === SM && x.tipo === 'Aporte de la familia'; }).reduce(function (a, x) { return a + (+x.monto || 0); }, 0);
+    var gas = gastosMes(SM), dif = ing - gas;
+    $('#sBal').innerHTML = '<div class="fn-kpi g"><b>' + plata(ing) + '</b><span>entró para Habitat (cuotas, siembras, libros)</span></div><div class="fn-kpi"><b>' + plata(gas) + '</b><span>gastos de Habitat (incluye fijos)</span></div><div class="fn-kpi ' + (dif < 0 ? 'r' : 'g') + '"><b>' + plata(dif) + '</b><span>' + (dif < 0 ? 'faltó para cubrir los gastos' : 'sobró este mes') + '</span></div><div class="fn-kpi"><b>' + plata(fam) + '</b><span>aporte de la familia registrado</span></div>';
+    $('#sBalT').textContent = dif < 0 ? (fam >= -dif ? 'Lo que faltó lo cubrió el aporte de la familia.' : 'Faltan ' + plata(-dif - fam) + ' por explicar: si lo pusieron ustedes, cargalo en Ingresos como «Aporte de la familia».') : '';
+    // por clasificar, agrupado por destino
+    var P = S.filter(function (x) { return x.tipo === 'Por clasificar'; });
+    var G = {}; P.forEach(function (x) { var k = x.destino || x._id; (G[k] = G[k] || { k: k, L: [], t: 0 }).L.push(x); G[k].t += +x.monto || 0; });
+    var GL = Object.keys(G).map(function (k) { return G[k]; }).sort(function (a, b) { return b.t - a.t; });
+    $('#sPend').hidden = !P.length;
+    $('#sPend').innerHTML = '<h2 class="tt-h">Salidas por clasificar · ' + GL.length + ' destino' + (GL.length === 1 ? '' : 's') + ' · ' + P.length + ' pagos</h2><p class="tt-tip">Elegí qué fue cada destino: se clasifican todos sus pagos y los próximos.</p>' + GL.map(function (g) {
+      var x = g.L[0];
+      return '<div class="fn-pr" data-k="' + esc(g.k) + '"><div class="w"><b>' + esc(x.title) + '</b><small>' + g.L.length + ' pago' + (g.L.length === 1 ? '' : 's') + ' · ' + plata(g.t) + ' · ' + esc(x.origen) + '</small></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><select data-t aria-label="Tipo">' + F.opts([['', 'Elegí qué fue']].concat(I.tiposSal.filter(function (t) { return t !== 'Por clasificar'; }).map(function (t) { return [t, t]; })), '') + '</select><select data-c aria-label="Categoría" hidden>' + F.opts(I.cats, 'Otros') + '</select><button class="tt-btn s" type="button">Aplicar</button></div></div>';
+    }).join('');
+    $$('#sPend .fn-pr').forEach(function (r) {
+      var g = G[r.dataset.k], st = $('[data-t]', r), sc = $('[data-c]', r);
+      st.onchange = function () { sc.hidden = st.value !== 'Gasto de Habitat'; };
+      $('button', r).onclick = function () {
+        if (!st.value) { F.toast('Elegí qué fue.'); return; }
+        var b = this; b.disabled = true;
+        api('POST', { op: 'salida', id: g.L[0]._id, tipo: st.value, categoria: sc.value, recordar: true }).then(function () { g.L.forEach(function (y) { y.tipo = st.value; y.categoria = sc.value; }); F.toast(g.L.length + ' pago' + (g.L.length === 1 ? '' : 's') + ' como ' + st.value + (st.value === 'Gasto de Habitat' ? ' (ya están en Gastos)' : '') + '.'); salidas(); }).catch(function (e) { b.disabled = false; F.toast(e.message); });
+      };
+    });
+    var del = S.filter(function (x) { return x.mes === SM; }), por = {};
+    del.forEach(function (x) { por[x.tipo] = (por[x.tipo] || 0) + (+x.monto || 0); });
+    $('#sTot').innerHTML = I.tiposSal.filter(function (t) { return por[t]; }).map(function (t) { return '<div class="fn-kpi' + (t === 'Personal' ? '' : t === 'Gasto de Habitat' ? ' r' : '') + '"><b>' + plata(por[t]) + '</b><span>salidas · ' + esc(t) + '</span></div>'; }).join('');
+    $('#sList').innerHTML = del.length ? del.sort(function (a, b) { return String(b.fecha).localeCompare(String(a.fecha)); }).map(function (x) { return '<div class="fn-g"><span style="width:10px;height:10px;border-radius:50%;background:' + ({ 'Gasto de Habitat': '#c96a5a', 'Personal': '#a07cc5', 'Entre cuentas propias': '#d9d2c3' }[x.tipo] || '#999') + '"></span><div class="w" data-id="' + esc(x._id) + '"><b>' + esc(x.title) + '</b><small>' + esc([x.fecha, x.tipo, x.tipo === 'Gasto de Habitat' ? x.categoria : '', x.origen].filter(Boolean).join(' · ')) + '</small></div><b>' + plata(x.monto) + '</b></div>'; }).join('') : '<p class="tt-empty">Sin salidas de Mercado Pago en este mes.</p>';
+    $$('#sList .w').forEach(function (w) { w.onclick = function () { var x = S.find(function (y) { return y._id === w.dataset.id; }); salModal(x); }; });
+  }
+  function salModal(x) {
+    F.modal('<form class="tt-form"><h2 class="w">' + esc(x.title) + ' · ' + plata(x.monto) + '</h2><p class="w tt-tip">' + esc([x.fecha, x.origen].join(' · ')) + '</p><label>Qué fue<select name="tipo">' + F.opts(I.tiposSal, x.tipo) + '</select></label><label>Categoría (si es de Habitat)<select name="cat">' + F.opts(I.cats, x.categoria || 'Otros') + '</select></label><label class="w" style="display:flex;flex-direction:row;gap:8px;align-items:center"><input type="checkbox" name="rec" checked style="width:auto"> Aplicar a todos los pagos a este destino y recordar</label><div class="w tt-wa"><button class="tt-btn" type="submit">Guardar</button><button class="tt-btn s" type="button" data-close>Cancelar</button></div></form>', function (m, close) {
+      var f = $('form', m);
+      f.onsubmit = function (e) { e.preventDefault(); api('POST', { op: 'salida', id: x._id, tipo: f.tipo.value, categoria: f.cat.value, recordar: f.rec.checked }).then(function () { (I.salidas || []).forEach(function (y) { if (y._id === x._id || (f.rec.checked && y.destino && y.destino === x.destino)) { y.tipo = f.tipo.value; y.categoria = f.cat.value; } }); close(); F.toast('Guardado.'); salidas(); }).catch(function (e) { F.toast(e.message); }); };
+    });
+  }
+  $('#sPrev').onclick = function () { SM = addM(SM, -1); salidas(); };
+  $('#sNext').onclick = function () { SM = addM(SM, 1); salidas(); };
+  window.HabIngresos = { render: render, salidas: salidas };
 })();

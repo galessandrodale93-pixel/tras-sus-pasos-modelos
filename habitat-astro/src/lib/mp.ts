@@ -6,10 +6,11 @@ import { items } from "@wix/data";
 import { secrets } from "@wix/secrets";
 import { q, todos, guardar, hoyAR, desdePago, mandar, marco, p, slug } from "./sem";
 import { esc } from "./vol";
+import { registrarSalida } from "./salidas";
 
 const getSecret = auth.elevate(secrets.getSecretValue);
 const rem = auth.elevate(items.remove);
-export const TIPOS_ING = ["Siembra automática", "Siembra puntual", "Libros", "Efectivo", "Cuota de alumno (MP)", "Transferencia entre cuentas propias", "Otro", "Por clasificar"];
+export const TIPOS_ING = ["Siembra automática", "Siembra puntual", "Libros", "Efectivo", "Cuota de alumno (MP)", "Transferencia entre cuentas propias", "Aporte de la familia", "Otro", "Por clasificar"];
 // No son ingresos nuevos: se ven en la lista pero no suman en los totales ni en el gráfico.
 export const NO_SUMA = ["Transferencia entre cuentas propias"];
 const SIEMBRA = ["Siembra automática", "Siembra puntual"];
@@ -100,25 +101,26 @@ export async function traer(dias: number) {
   for (const c of CUENTAS) { const t = await token(c); if (t) { tks[c] = t; await yo(t, c); } }
   if (!tks[1]) return { error: "Falta MP_ACCESS_TOKEN en el gestor de claves de Wix." };
   const pag = await todos<Pagador>("FinPagadores"), al = await todos<Alumno>("TutAlumnos");
-  let vistos = 0, nuevos = 0;
+  let vistos = 0, nuevos = 0, salidas = 0;
   const cuentas: Record<string, unknown> = {};
   for (const c of Object.keys(tks).map(Number)) {
     const r = await traerCuenta(dias, tks[c], { pag, al, me: YO[c].id, c });
-    vistos += r.vistos; nuevos += r.nuevos; cuentas[c] = r;
+    vistos += r.vistos; nuevos += r.nuevos; salidas += r.salidas; cuentas[c] = r;
   }
-  return { vistos, nuevos, cuentas };
+  return { vistos, nuevos, salidas, cuentas };
 }
 
 async function traerCuenta(dias: number, tk: string, ctx: { pag: Pagador[]; al: Alumno[]; me: string; c: number }) {
-  let offset = 0, nuevos = 0, vistos = 0;
+  let offset = 0, nuevos = 0, vistos = 0, salidas = 0;
   for (let i = 0; i < 10; i++) {
     const r = await mp(`/v1/payments/search?sort=date_created&criteria=desc&range=date_created&begin_date=NOW-${Math.min(dias, 365)}DAYS&end_date=NOW&status=approved&limit=100&offset=${offset}`, tk);
     const L = (r.results || []) as Pago[];
-    for (const pg of L) { vistos++; const ya = (await q("FinIngresos").eq("_id", pref(ctx.c) + pg.id).limit(1).find()).items.length; const it = await registrarPago(pg, ctx); if (it && !ya) nuevos++; }
+    for (const pg of L) { vistos++; const ya = (await q("FinIngresos").eq("_id", pref(ctx.c) + pg.id).limit(1).find()).items.length; const it = await registrarPago(pg, ctx); if (it && !ya) nuevos++;
+      else if (!it && !cobrado(pg, ctx.me)) { await registrarSalida(pg, ctx.c, propias(), ctx.pag); salidas++; } }
     offset += L.length;
     if (L.length < 100 || offset >= ((r.paging || {}).total || 0)) break;
   }
-  return { vistos, nuevos };
+  return { vistos, nuevos, salidas };
 }
 
 // Clasificación a mano desde Finanzas; con "recordar", los próximos pagos de esa persona se clasifican solos.

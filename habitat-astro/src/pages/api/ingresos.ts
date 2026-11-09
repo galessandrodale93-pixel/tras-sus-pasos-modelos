@@ -4,7 +4,8 @@ import type { APIRoute } from "astro";
 import { auth } from "@wix/essentials";
 import { items } from "@wix/data";
 import { q, todos, guardar, hoyAR } from "../../lib/sem";
-import { TIPOS_ING, reclasificar, traer, token, type Ingreso } from "../../lib/mp";
+import { TIPOS_ING, NO_SUMA, reclasificar, traer, token, type Ingreso } from "../../lib/mp";
+import { TIPOS_SAL, CATS, clasificarSalida, type Salida } from "../../lib/salidas";
 
 const rem = auth.elevate(items.remove);
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
@@ -24,9 +25,9 @@ async function who(request: Request) {
 export const GET: APIRoute = async ({ request }) => {
   try {
     if (!(await who(request))) return json({ error: "Tu cuenta no tiene acceso a Finanzas." }, 403);
-    const [ing, pag] = await Promise.all([todos<Ingreso>("FinIngresos"), todos<{ _id: string; title?: string; tipo: string }>("FinPagadores")]);
+    const [ing, pag, sal] = await Promise.all([todos<Ingreso>("FinIngresos"), todos<{ _id: string; title?: string; tipo: string }>("FinPagadores"), todos<Salida>("FinSalidas")]);
     const clean = (L: Record<string, unknown>[]) => L.map(({ _createdDate, _updatedDate, _owner, ...x }) => x);
-    return json({ tipos: TIPOS_ING, mp: !!(await token()), ingresos: clean(ing as unknown as Record<string, unknown>[]), pagadores: clean(pag as unknown as Record<string, unknown>[]) });
+    return json({ tipos: TIPOS_ING, mp: !!(await token()), noSuma: NO_SUMA, tiposSal: TIPOS_SAL, cats: CATS, salidas: clean(sal as unknown as Record<string, unknown>[]), ingresos: clean(ing as unknown as Record<string, unknown>[]), pagadores: clean(pag as unknown as Record<string, unknown>[]) });
   } catch (e) { console.error("ingresos GET", e); return json({ error: "No pudimos cargar los ingresos." }, 500); }
 };
 
@@ -52,6 +53,12 @@ export const POST: APIRoute = async ({ request }) => {
         const tipo = s(x.tipo, 40);
         if (!TIPOS_ING.includes(tipo)) return json({ error: "Elegí el tipo." }, 400);
         const it = await reclasificar(s(x.id, 80), tipo, s(x.alumnoId, 80), x.recordar !== false, por);
+        return json({ ok: true, item: it });
+      }
+      case "salida": {
+        const tipo = s(x.tipo, 40);
+        if (!TIPOS_SAL.includes(tipo)) return json({ error: "Elegí el tipo." }, 400);
+        const it = await clasificarSalida(s(x.id, 80), tipo, s(x.categoria, 40), x.recordar !== false, por);
         return json({ ok: true, item: it });
       }
       case "traer": {
