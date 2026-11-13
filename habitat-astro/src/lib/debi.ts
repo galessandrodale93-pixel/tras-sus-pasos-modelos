@@ -83,21 +83,36 @@ export async function llego(lote: string, fecha: string) {
   return L.length;
 }
 
-// Mail al alumno apenas Debi rechaza un débito (solo rechazos de los últimos 3 días, una vez cada uno).
+// Mail al alumno apenas Debi rechaza un débito (rechazos de los últimos 3 días). Debi reintenta el débito,
+// así que se avisa una sola vez por persona y por mes, y no se avisa si ese mes ya terminó cobrándose.
 const MESL = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+export const ALIAS = "habitatcfm";
+export function htmlRechazo(nom: string, mes: string, monto: number) {
+  return marco("Habitat · Tu cuota", "No pudimos hacer el cobro de tu cuota", `${p(`Hola ${nom}! Te escribimos porque no pudimos cobrar el débito automático de tu cuota de <b>${esc(mes)}</b> por <b>$ ${Number(monto).toLocaleString("es-AR")}</b>.`)}${p("Suele pasar cuando la cuenta o la tarjeta no tenía saldo ese día, venció o se cambió. Para ponerte al día tenés dos opciones:")}<ul style="font:16px/1.7 Arial;margin:0 0 12px"><li><b>Cargar dinero en la cuenta</b> de donde se debita la cuota, así el próximo intento de débito se puede hacer.</li><li><b>Transferir</b> el monto al alias <b>${ALIAS}</b> y respondernos este mail con el comprobante, así no te lo volvemos a debitar.</li></ul>${p("Si cambiaste la tarjeta o la cuenta, respondé este mail y te ayudamos a actualizarla para que el débito vuelva a funcionar.")}${p("Gracias por ser parte de Habitat. Cualquier cosa, estamos para acompañarte 🙌🏽")}`);
+}
 export async function avisarRechazos(hoy: string, dry: boolean, remitente: string) {
   const lim = DIA(hoy, -3), out: unknown[] = [];
-  const L = (await todos<DebiCobro>("FinDebi")).filter((d) => d.estado === "rejected" && d.fecha >= lim && !d.avisado);
+  const todosD = await todos<DebiCobro>("FinDebi");
+  const L = todosD.filter((d) => d.estado === "rejected" && d.fecha >= lim && !d.avisado);
   if (!L.length) return out;
+  const clave = (d: DebiCobro) => (d.cliente || d.email || d._id) + "|" + d.mes;
+  const cobrado = new Set(todosD.filter((d) => d.estado === "approved").map(clave));
+  const yaAvisado = new Set(todosD.filter((d) => d.estado === "rejected" && d.avisado).map(clave));
   const al = await todos<Alumno>("TutAlumnos");
   for (const d of L) {
+    const k = clave(d);
+    if (cobrado.has(k) || yaAvisado.has(k)) {
+      if (!dry) await guardar("FinDebi", { ...d, avisado: hoy } as unknown as Record<string, unknown>);
+      out.push({ d: d._id, omitido: cobrado.has(k) ? "ya cobrado" : "ya avisado este mes" });
+      continue;
+    }
     const a = al.find((x) => x._id === d.alumnoId), to = (a && a.email) || d.email;
     const nom = esc(String((a && a.title) || d.title || "").split(/\s+/)[0]);
     if (!to) { out.push({ d: d._id, sinEmail: true }); continue; }
-    if (dry) { out.push({ d: d._id, to }); continue; }
+    if (dry) { out.push({ d: d._id, to }); yaAvisado.add(k); continue; }
     const mes = MESL[+d.mes.slice(5, 7) - 1] || "";
-    const r = await mandar(to, "No pudimos debitar tu cuota de " + mes + " en Habitat", marco("Habitat · Tu cuota", "Hubo un problema con el débito", `${p(`Hola ${nom}! Te escribimos porque el débito automático de tu cuota de <b>${esc(mes)}</b> por <b>$ ${Number(d.monto).toLocaleString("es-AR")}</b> fue rechazado.`)}${p("Suele pasar cuando la tarjeta venció, se cambió o no tenía saldo ese día. Revisalo con tu banco y, si cambiaste la tarjeta o la cuenta, respondé este mail y te ayudamos a actualizarla para que el débito vuelva a funcionar.")}${p("Gracias por ser parte de Habitat. Cualquier cosa, estamos para acompañarte 🙌🏽")}`), remitente);
-    if (r.ok) await guardar("FinDebi", { ...d, avisado: hoy } as unknown as Record<string, unknown>);
+    const r = await mandar(to, "No pudimos cobrar tu cuota de " + mes + " en Habitat", htmlRechazo(nom, mes, d.monto), remitente);
+    if (r.ok) { await guardar("FinDebi", { ...d, avisado: hoy } as unknown as Record<string, unknown>); yaAvisado.add(k); }
     out.push({ d: d._id, ok: r.ok });
   }
   return out;
