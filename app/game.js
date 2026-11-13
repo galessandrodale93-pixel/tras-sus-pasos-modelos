@@ -2831,7 +2831,7 @@ function renderSession(s){
 const LANDING={kids:'homeView',ados:'adosView'};
 const onLanding=()=>['hubView','homeView','adosView'].some(v=>$('#'+v).hidden===false);
 function play(b){setBranch(b);const s=getMemberState();if(s.loading){setTimeout(()=>play(b),150);return;}if(s.loggedIn)loadProfiles();else startDemo(b);}
-function landing(b){current=null;setBranch(b);show(LANDING[b]);renderSession(getMemberState());}
+function landing(b){current=null;setBranch(b);show(LANDING[b]);renderSession(getMemberState());try{if(sessionStorage.getItem('kh-login')){sessionStorage.removeItem('kh-login');setTimeout(()=>{if(!getMemberState().loggedIn)openAuth();},250);}}catch(e){}}
 function goHome(){current=null;branch=null;delete document.body.dataset.branch;try{history.replaceState(null,'',location.pathname);}catch(e){}show('hubView');hubLearn();renderSession(getMemberState());renderFamily();renderPulse();}
 function goBack(){if(branch&&LANDING[branch])landing(branch);else goHome();}
 function startDemo(b){setBranch(b);try{history.replaceState(null,'',location.pathname+location.search+'#jugar-'+(b==='kids'?'kids':'hero'));}catch(e){}const id='demo-'+b;let loc=null;try{loc=JSON.parse(localStorage.getItem(CACHE+':'+id)||'null');}catch(e){}current={...blank(),...(loc||{}),id,name:'Invitado',rama:b,demo:true,avatar:{g:b==='ados'?'chico':'chica',age:b==='ados'?14:9,skin:'#E6B691',hair:'#2A1B14',outfit:b==='ados'?'#2FAE7C':'#FF8A2B'}};profiles=[current];enterMap();}
@@ -3075,7 +3075,7 @@ function khShow(kind){if(document.querySelector('.khp'))return;const p=current;i
   document.body.appendChild(d);const close=()=>{d.remove();khPill();};
   d.querySelector('.kh-x').onclick=close;d.querySelector('.kh-later').onclick=close;
   const wire=()=>{const b=d.querySelector('.kh-go:not(.kh-adult):not(.kh-login)');if(b)b.onclick=()=>khPay(b);};wire();
-  const lg=d.querySelector('.kh-login');if(lg)lg.onclick=()=>{close();try{openAuth();}catch(e){}};
+  const lg=d.querySelector('.kh-login');if(lg)lg.onclick=()=>{close();try{sessionStorage.setItem('kh-login','1');}catch(e){}location.hash=HASH[branch]||'hero';};
   const ad=d.querySelector('.kh-adult');if(ad)ad.onclick=()=>{const a=3+Math.floor(Math.random()*7),b=4+Math.floor(Math.random()*6),box=d.querySelector('.kh-act');
     box.innerHTML=`<div class="kh-gate"><p>Pregunta para grandes: ¿cuánto es <b>${a} × ${b}</b>?</p><input type="number" inputmode="numeric" class="kh-ans" aria-label="Respuesta"><button class="kh-ok">Continuar</button><p class="kh-err" hidden>Esa no es. Pedile a una persona grande que te ayude.</p></div>`;
     const ok=()=>{if(+box.querySelector('.kh-ans').value===a*b){box.innerHTML=pay;wire();}else box.querySelector('.kh-err').hidden=false;};box.querySelector('.kh-ok').onclick=ok;box.querySelector('.kh-ans').onkeydown=e=>{if(e.key==='Enter')ok();};box.querySelector('.kh-ans').focus();};}
