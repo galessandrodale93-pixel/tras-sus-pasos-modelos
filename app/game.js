@@ -3054,7 +3054,7 @@ async function khCheck(force){const u=khUid();if(!u){KH.activo=false;return fals
   if(KH.activo)khCredit();return KH.activo;}
 function khCredit(){const p=current;if(!p||!p.kh)return;const w=Math.max(0,totalRaw(p)-(p.kh.cap||0));p.kh=null;save();try{refreshHud();refreshMap();}catch(e){}khPill();if(w>0)toast('¡Pase activado! Se acreditaron '+w+' puntos que tenías en espera.');else toast('¡Pase activado! Ya podés seguir tu camino.');}
 const khMaxR=p=>{let m=curRegion();(p.visited||[]).forEach(id=>{const n=NODES[id];if(n&&n.r!=null&&n.r>m)m=n.r;});return m;};
-const khBusy=()=>!!(ar||!$('#stop').hidden||document.querySelector('.exam')||document.querySelector('.khp'));
+const khBusy=()=>!!(document.querySelector('.v3lobby')||(window.W3&&W3.S&&!W3.S())||ar||!$('#stop').hidden||document.querySelector('.exam')||document.querySelector('.khp'));
 function khEval(){const p=current;if(!p||KH.activo===true)return;const ex=p.exams||{},due=(p.playMs||0)>=KH_FREE||!!(ex[KH_STAGE]&&ex[KH_STAGE].passed);if(p.kh&&p.kh.cap!=null&&!due){p.kh=null;save();khPill();try{refreshHud();}catch(e){}return;}if(p.kh&&p.kh.cap!=null){khPill();if(KH.want&&!khBusy()){const k=KH.want;KH.want=null;khShow(k);}return;}
   if(!due)return;
   if(KH.activo==null&&!p.demo){khCheck().then(a=>{if(!a)khEval();});return;}
@@ -3063,11 +3063,11 @@ function khBlocks(n){const p=current;return !!(n&&n.r!=null&&khLocked(p)&&n.r>p.
 function khPill(){let el=document.getElementById('khPill');const on=!!current&&khLocked()&&!onLanding();if(!on){if(el)el.remove();return;}
   if(!el){el=document.createElement('button');el.id='khPill';el.className='kh-pill';el.onclick=()=>khShow('pill');document.body.appendChild(el);}
   const w=khWaiting();el.innerHTML=`<b>Modo recorrido</b><span>${w>0?w+' puntos esperando':'Activá el pase para seguir creciendo'}</span>`;}
-function khShow(kind){if(document.querySelector('.khp'))return;const p=current;if(!p)return;const kid=branch!=='ados',w=khWaiting(p),ri=p.kh?p.kh.maxR:curRegion(),R=REGIONS[Math.min(ri,REGIONS.length-1)],nx=REGIONS[ri+1];
-  const lv=lvOf(total(p)),hrs=Math.max(1,Math.round((p.playMs||0)/36e5));
+function khShow(kind){if(document.querySelector('.khp'))return;const p=current;if(!p)return;KH.shown=true;const kid=branch!=='ados',w=khWaiting(p),ri=p.kh?p.kh.maxR:curRegion(),R=REGIONS[Math.min(ri,REGIONS.length-1)],nx=REGIONS[ri+1];
+  const lv=lvOf(total(p)),hrs=Math.floor((p.playMs||0)/36e5),hTxt=hrs>=1?` · ${hrs} ${hrs===1?'hora':'horas'} de camino`:'';
   const d=document.createElement('div');d.className='khp'+(kid?' kid':' hx');
   const head=kind==='etapa'?(kid?`¡${esc(nx?nx.name:'La próxima etapa')} te espera!`:`${esc(nx?nx.name:'La próxima etapa')} está cerrada`):(kid?`¡Qué lindo camino hiciste, ${esc(p.name)}!`:`Llegaste hasta ${esc(R?R.name:'acá')}`);
-  const body=kid?`Llegaste al nivel ${lv}. Con el Pase Kids & Hero seguís la aventura: todas las etapas, nuevos niveles y los próximos cursos.`:`Nivel ${lv} · ${hrs} ${hrs===1?'hora':'horas'} de camino. Con el Pase Kids & Hero seguís: todas las etapas, subir de nivel, tus atributos y los próximos cursos.`;
+  const body=kid?`Llegaste al nivel ${lv}. Con el Pase Kids & Hero seguís la aventura: todas las etapas, nuevos niveles y los próximos cursos.`:`Nivel ${lv}${hTxt}. Con el Pase Kids & Hero seguís: todas las etapas, subir de nivel, tus atributos y los próximos cursos.`;
   const wait=w>0?`<p class="kh-wait">⭐ Tenés <b>${w}</b> puntos esperando. Se acreditan enteros al activar el pase.</p>`:'';
   const pay=`<div class="kh-price"><b>${KH_PRICE}</b><span>por mes · toda la familia</span></div><button class="kh-go">Pagar</button>`;
   const login=!khUid()||p.demo?`<p class="kh-note">Para activar el pase hace falta entrar con una cuenta.</p><button class="kh-go kh-login">Ingresar</button>`:'';
