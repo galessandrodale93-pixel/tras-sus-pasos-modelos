@@ -3038,7 +3038,9 @@ tspTitle();
    Después, "modo recorrido": se puede seguir recorriendo lo ya jugado, pero la experiencia, los niveles, los atributos y los denarios
    quedan congelados; lo que se gana queda "en espera" y se acredita entero al activar el pase. Las etapas nuevas quedan cerradas.
    En Hero el botón Pagar va directo; en Kids queda detrás de una pregunta para grandes. El pase es de la cuenta (toda la familia). ===== */
-const KH_API='https://www.habitat-cfm.org/api/kh-pase',KH_FREE=4*36e5,KH_STAGE='parabolas',KH_PRICE='$12.000';
+/* para probar: ?khprueba=1 en el link de tester hace que el límite sea de 1 minuto en esa sesión */
+const KH_TEST=(()=>{try{const q=new URLSearchParams(location.search).get('khprueba');if(q==='1')sessionStorage.setItem('khprueba','1');if(q==='0')sessionStorage.removeItem('khprueba');return sessionStorage.getItem('khprueba')==='1';}catch(e){return false;}})();
+const KH_API='https://www.habitat-cfm.org/api/kh-pase',KH_FREE=KH_TEST?6e4:4*36e5,KH_STAGE='parabolas',KH_PRICE='$12.000';
 var KH={activo:null,t:0,busy:false,shown:false,want:null};
 const khMember=()=>{try{const s=getMemberState();return s&&s.loggedIn?(s.member||{}):null;}catch(e){return null;}};
 const khUid=()=>{const m=khMember();return m?String(m._id||m.id||m.memberId||''):'';};
