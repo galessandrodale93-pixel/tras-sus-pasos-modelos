@@ -34,15 +34,15 @@ h = h.replace('<p>Entrenamiento bíblico jugando, para niños y adolescentes de 
 assert 'data-go="kids"' in h and 'data-go="hero"' in h
 
 CURSOS = [
-    ('Curso 1 · Muy pronto', True, 'Tras sus pasos', 'La vida de Jesús, de Belén a la tumba vacía.', '/assets/kh/tras.jpg',
+    ('Curso 1 · Muy pronto', True, 'Tras sus pasos', 'La vida de Jesús, de Belén a la tumba vacía.', '/assets/kh/tras-v2.jpg',
      ['Nacimiento', 'Infancia', 'Bautismo', 'Galilea', 'Milagros', 'Parábolas', 'Jerusalén', 'La cruz', 'Resurrección']),
-    ('Curso 2 · Próximamente', False, 'Hechos', 'El Espíritu llega y la iglesia nace y sale a las naciones.', '/assets/kh/hechos.jpg',
+    ('Curso 2 · Próximamente', False, 'Hechos', 'El Espíritu llega y la iglesia nace y sale a las naciones.', '/assets/kh/hechos-v2.jpg',
      ['Pentecostés', 'La iglesia en Jerusalén', 'Esteban', 'Felipe y el etíope', 'Saulo en el camino', 'Pedro y Cornelio', 'Los viajes de Pablo', 'Pablo en Roma']),
-    ('Curso 3 · Próximamente', False, 'Maranata', '¡Cristo viene! Apocalipsis contado para niños y adolescentes.', '/assets/kh/maranata.jpg',
+    ('Curso 3 · Próximamente', False, 'Maranata', '¡Cristo viene! Apocalipsis contado para niños y adolescentes.', '/assets/kh/maranata-v2.jpg',
      ['Jesús vuelve', 'Las siete iglesias', 'El trono de Dios', 'El Cordero y el rollo', 'Los sellos', 'El pueblo de Dios cuidado', 'La Nueva Jerusalén', 'Cielo nuevo y tierra nueva']),
-    ('Curso 4 · En preparación', False, 'En el principio', 'Génesis: la creación y las familias que caminaron con Dios.', '/assets/kh/principio.jpg',
+    ('Curso 4 · En preparación', False, 'En el principio', 'Génesis: la creación y las familias que caminaron con Dios.', '/assets/kh/principio-v2.jpg',
      ['La creación', 'Adán y Eva', 'Noé', 'Babel', 'Abraham', 'Isaac', 'Jacob', 'José']),
-    ('Curso 5 · En preparación', False, 'Héroes de la fe', 'Hombres y mujeres que confiaron en Dios cuando todo parecía imposible.', '/assets/kh/heroes.jpg',
+    ('Curso 5 · En preparación', False, 'Héroes de la fe', 'Hombres y mujeres que confiaron en Dios cuando todo parecía imposible.', '/assets/kh/heroes-v2.jpg',
      ['Moisés', 'El mar Rojo', 'Josué y Jericó', 'Débora', 'Gedeón', 'Samuel', 'David y Goliat', 'Daniel']),
 ]
 def _card(st, on, t, d, img, hitos):
@@ -69,8 +69,8 @@ def _media(k, img):
     if v:
         return f'<video autoplay muted loop playsinline preload="metadata" poster="{img if img.startswith('/') else img + '/v1/fill/w_960,h_540,al_c,q_82/p.jpg'}" src="{v}"></video>'
     return f'<img loading="lazy" src="{img if img.startswith('/') else img + '/v1/fill/w_960,h_540,al_c,q_82/w.jpg'}" alt="">'
-KIDS_MEDIA = _media('kids', '/assets/kh/g-kids.jpg')
-HERO_MEDIA = _media('hero', '/assets/kh/g-hero.jpg')
+KIDS_MEDIA = _media('kids', '/assets/kh/g-kids-v2.jpg')
+HERO_MEDIA = _media('hero', '/assets/kh/g-hero-v2.jpg')
 gal = f'''
   <section class="hbx-gal"><div class="wrap">
     <span class="why-k">Un vistazo</span>
@@ -281,7 +281,7 @@ page = f'''<!doctype html>
 <title>Kids &amp; Hero · Habitat</title>
 <meta name="description" content="Kids &amp; Hero: entrenamiento bíblico jugando para niños y adolescentes de 6 a 18 años. Primer curso: Tras sus pasos. Muy pronto.">
 <meta property="og:title" content="Kids &amp; Hero · Habitat">
-<meta property="og:image" content="https://habitat-cfm.org/assets/kh/og.jpg">
+<meta property="og:image" content="https://habitat-cfm.org/assets/kh/og-v2.jpg">
 <meta name="theme-color" content="#090b1c">
 <link rel="icon" type="image/png" href="https://static.wixstatic.com/media/43ca3b_2d985f94c5e04a82b1434561cce4cc35~mv2.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
