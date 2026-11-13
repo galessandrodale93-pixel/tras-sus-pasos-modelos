@@ -228,7 +228,7 @@ home = f'''<section class="hero"><div class="bg" style="background-image:url('{i
 </div></section>
 
 <section class="sec"><div class="wrap">
-<div class="kht rv"><img loading="lazy" src="{im('g_h0', 1600)}" alt="El mundo de Tras sus pasos">
+<div class="kht rv"><img loading="lazy" src="/assets/kh/home.jpg" alt="El mundo de Tras sus pasos">
 <div class="in"><span class="kick" style="color:#f2d58a">Nuevo espacio de Habitat</span><h2>Kids &amp; Hero</h2>
 <p>Formación bíblica para niños y adolescentes, con cursos que se juegan: Kids, de 6 a 11 años, y Hero, de 12 a 18. El primer curso es <b>Tras sus pasos</b>, la vida de Jesús de Belén a la tumba vacía. Después vienen Hechos y muchos más.</p>
 <div><a class="btn btn-gold" href="/kids-hero.html">Conocé Kids &amp; Hero</a></div></div></div>

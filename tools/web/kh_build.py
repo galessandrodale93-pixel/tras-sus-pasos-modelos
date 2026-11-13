@@ -34,20 +34,20 @@ h = h.replace('<p>Entrenamiento bíblico jugando, para niños y adolescentes de 
 assert 'data-go="kids"' in h and 'data-go="hero"' in h
 
 CURSOS = [
-    ('Curso 1 · Muy pronto', True, 'Tras sus pasos', 'La vida de Jesús, de Belén a la tumba vacía.', SH['h1'],
+    ('Curso 1 · Muy pronto', True, 'Tras sus pasos', 'La vida de Jesús, de Belén a la tumba vacía.', '/assets/kh/tras.jpg',
      ['Nacimiento', 'Infancia', 'Bautismo', 'Galilea', 'Milagros', 'Parábolas', 'Jerusalén', 'La cruz', 'Resurrección']),
-    ('Curso 2 · Próximamente', False, 'Hechos', 'El Espíritu llega y la iglesia nace y sale a las naciones.', PH['g_hechos'],
+    ('Curso 2 · Próximamente', False, 'Hechos', 'El Espíritu llega y la iglesia nace y sale a las naciones.', '/assets/kh/hechos.jpg',
      ['Pentecostés', 'La iglesia en Jerusalén', 'Esteban', 'Felipe y el etíope', 'Saulo en el camino', 'Pedro y Cornelio', 'Los viajes de Pablo', 'Pablo en Roma']),
-    ('Curso 3 · Próximamente', False, 'Maranata', '¡Cristo viene! Apocalipsis contado para niños y adolescentes.', PH['g_maranata'],
+    ('Curso 3 · Próximamente', False, 'Maranata', '¡Cristo viene! Apocalipsis contado para niños y adolescentes.', '/assets/kh/maranata.jpg',
      ['Jesús vuelve', 'Las siete iglesias', 'El trono de Dios', 'El Cordero y el rollo', 'Los sellos', 'El pueblo de Dios cuidado', 'La Nueva Jerusalén', 'Cielo nuevo y tierra nueva']),
-    ('Curso 4 · En preparación', False, 'En el principio', 'Génesis: la creación y las familias que caminaron con Dios.', PH['k1'],
+    ('Curso 4 · En preparación', False, 'En el principio', 'Génesis: la creación y las familias que caminaron con Dios.', '/assets/kh/principio.jpg',
      ['La creación', 'Adán y Eva', 'Noé', 'Babel', 'Abraham', 'Isaac', 'Jacob', 'José']),
-    ('Curso 5 · En preparación', False, 'Héroes de la fe', 'Hombres y mujeres que confiaron en Dios cuando todo parecía imposible.', PH['h0'],
+    ('Curso 5 · En preparación', False, 'Héroes de la fe', 'Hombres y mujeres que confiaron en Dios cuando todo parecía imposible.', '/assets/kh/heroes.jpg',
      ['Moisés', 'El mar Rojo', 'Josué y Jericó', 'Débora', 'Gedeón', 'Samuel', 'David y Goliat', 'Daniel']),
 ]
 def _card(st, on, t, d, img, hitos):
     chips = ''.join(f'<li><b>{i + 1}</b><span>{x}</span></li>' for i, x in enumerate(hitos))
-    return (f'<article class="{"on open" if on else ""}" tabindex="0" role="button" aria-expanded="{"true" if on else "false"}"><div class="im" style="background-image:url(\'{img}/v1/fill/w_900,h_520,al_c,q_82/c.jpg\')"><span class="st{"" if on else " off"}">{st}</span></div>'
+    return (f'<article class="{"on open" if on else ""}" tabindex="0" role="button" aria-expanded="{"true" if on else "false"}"><div class="im" style="background-image:url(\'{img if img.startswith('/') else img + '/v1/fill/w_900,h_520,al_c,q_82/c.jpg'}\')"><span class="st{"" if on else " off"}">{st}</span></div>'
             f'<div class="bd"><div class="hd"><b>{t}</b><span class="tg" aria-hidden="true">+</span></div><p class="dsk">{d}</p><div class="more"><div class="in"><p>{d}</p><ol class="hbx-road">{chips}</ol></div></div></div></article>')
 cursos = f"""
   <section class="hbx-courses"><div class="wrap">
@@ -67,10 +67,10 @@ VIDS = {}  # 'kids'/'hero': URL de video mp4 (si existe)
 def _media(k, img):
     v = VIDS.get(k)
     if v:
-        return f'<video autoplay muted loop playsinline preload="metadata" poster="{img}/v1/fill/w_960,h_540,al_c,q_82/p.jpg" src="{v}"></video>'
-    return f'<img loading="lazy" src="{img}/v1/fill/w_960,h_540,al_c,q_82/w.jpg" alt="">'
-KIDS_MEDIA = _media('kids', PH['k1'])
-HERO_MEDIA = _media('hero', PH['h0'])
+        return f'<video autoplay muted loop playsinline preload="metadata" poster="{img if img.startswith('/') else img + '/v1/fill/w_960,h_540,al_c,q_82/p.jpg'}" src="{v}"></video>'
+    return f'<img loading="lazy" src="{img if img.startswith('/') else img + '/v1/fill/w_960,h_540,al_c,q_82/w.jpg'}" alt="">'
+KIDS_MEDIA = _media('kids', '/assets/kh/g-kids.jpg')
+HERO_MEDIA = _media('hero', '/assets/kh/g-hero.jpg')
 gal = f'''
   <section class="hbx-gal"><div class="wrap">
     <span class="why-k">Un vistazo</span>
@@ -281,7 +281,7 @@ page = f'''<!doctype html>
 <title>Kids &amp; Hero · Habitat</title>
 <meta name="description" content="Kids &amp; Hero: entrenamiento bíblico jugando para niños y adolescentes de 6 a 18 años. Primer curso: Tras sus pasos. Muy pronto.">
 <meta property="og:title" content="Kids &amp; Hero · Habitat">
-<meta property="og:image" content="{SH['h1']}/v1/fill/w_1200,h_630,al_c,q_82/og.jpg">
+<meta property="og:image" content="https://habitat-cfm.org/assets/kh/og.jpg">
 <meta name="theme-color" content="#090b1c">
 <link rel="icon" type="image/png" href="https://static.wixstatic.com/media/43ca3b_2d985f94c5e04a82b1434561cce4cc35~mv2.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
