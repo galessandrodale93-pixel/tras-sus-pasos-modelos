@@ -4,7 +4,7 @@ import type { APIRoute } from "astro";
 import { auth, httpClient } from "@wix/essentials";
 import { items } from "@wix/data";
 import { esClase, esDe, emailDe, hoyAR, json, organiza, profeDe, q, s, todos, type Clase, type Profe } from "../../lib/profe";
-import { animo, progsDe } from "../../lib/vol";
+import { animo, esc, progsDe } from "../../lib/vol";
 
 const save = auth.elevate(items.save);
 const rem = auth.elevate(items.remove);
@@ -12,6 +12,25 @@ const fetchAuth = auth.elevate(httpClient.fetchWithAuth);
 const clean = <T extends Record<string, unknown>>(x: T) => { const { _createdDate, _updatedDate, _owner, ...r } = x; return r; };
 type Mat = { _id: string; title?: string; claseId: string; profeId?: string; url?: string; mime?: string; fecha?: string };
 type Op = { _id: string; tipo?: string; claseId?: string; fecha?: string; programa?: string; email?: string; nombre?: string; animo?: string; gusto?: string; mejora?: string; _createdDate?: unknown };
+
+async function bienvenidaProfe(p: Profe) {
+  const C = Object.fromEntries(((await q("TutConfig").limit(50).find()).items as { _id: string; valor?: string }[]).map((c) => [c._id, c.valor || ""]));
+  const email = String(p.email || "").split(/[,;\s]+/)[0];
+  const nom = esc(String(p.title || "").split(/\s+/)[0]);
+  const P = (t: string) => `<p style="font:16px/1.6 Arial;margin:0 0 12px">${t}</p>`;
+  const html = `<div style="font-family:Georgia,serif;max-width:560px;margin:auto;color:#10251d;background:#fbf8f2;padding:28px;border-radius:16px">
+<p style="font:600 12px Arial;letter-spacing:.14em;color:#b8904f;text-transform:uppercase;margin:0 0 10px">Habitat · Profesores</p>
+<h1 style="font-size:26px;margin:0 0 14px">Te damos la bienvenida al Campus de Habitat 🎓</h1>
+${P(`Hola ${nom}! Ya tenés tu lugar como profe en el Campus de Habitat. Ahí vas a ver tus próximas clases, vas a poder subir el material para los alumnos y dejar tu reflexión después de cada clase.`)}
+${P(`<b>Cómo entrar:</b> en <a href="https://www.habitat-cfm.org/ingresar.html" style="color:#b8904f">habitat-cfm.org/ingresar</a> tocá «Entrar con Google» con <b>${esc(email)}</b>. Si preferís usar contraseña, poné ese mismo mail y tocá «¿Olvidaste tu contraseña?» para crear una. Es importante que sea este mail: así el Campus te reconoce como profe y te lleva directo a tu panel.`)}
+<p style="margin:18px 0"><a href="https://www.habitat-cfm.org/profesor.html" style="background:#10251d;color:#fbf8f2;font:700 15px Arial;padding:12px 20px;border-radius:999px;text-decoration:none">Abrir mi panel de profe</a></p>
+${P("Una semana antes de cada clase te va a llegar un recordatorio por mail.")}
+<p style="font:italic 17px/1.6 Georgia;border-left:3px solid #b8904f;padding-left:14px;margin:20px 0">Gracias por sembrar la Palabra en esta generación.</p>
+</div>`;
+  const body = { emailTransmission: { emailSubject: "Bienvenido al Campus de Habitat 🎓", emailHtmlContent: html, senderName: "Habitat CFM", senderEmailAddress: C.remitente || "galessandrodale.93@gmail.com", toRecipients: [{ emailAddress: email }], type: "TRANSACTIONAL" }, idempotencyKey: crypto.randomUUID() };
+  const r = await fetchAuth("https://www.wixapis.com/email-transmissions/v1/email-transmissions/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  return { ok: r.ok, status: r.status };
+}
 
 export const GET: APIRoute = async ({ request, url }) => {
   try {
@@ -86,7 +105,10 @@ export const POST: APIRoute = async ({ request }) => {
       if (!it.title) return json({ error: "Falta el nombre tal como figura en las clases." }, 400);
       if (id) it._id = id;
       const r = await save("Profes", it);
-      return json({ ok: true, item: r });
+      // profe nuevo (o que recién tiene email): le llega la bienvenida al Campus con cómo entrar a su panel
+      let bienvenida: unknown = null;
+      if (it.email && it.activo !== "no" && (!cur || !cur.email)) bienvenida = await bienvenidaProfe(it as unknown as Profe).catch((e) => String((e as Error).message || e));
+      return json({ ok: true, item: r, bienvenida });
     }
     const p = await profeDe(me.email);
     if (!p) return json({ error: "Tu cuenta no figura como profe de Habitat." }, 403);

@@ -141,6 +141,7 @@ document.getElementById('outBtn').onclick=function(){A.logout();};
 var X=window.CampusExtra;
 (async function(){try{await A.api('GET','/members/v1/members/my');var tk=JSON.parse(localStorage.getItem('habitat:mtok')).a;
  fetch('/api/rol?resumen=1',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();}).then(function(r){
+ if(r.profe&&!r.alumno&&!r.tutor&&!r.voluntario&&!r.org){location.replace('/profesor.html');return;}
  var d=r.datos||{},DL=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],hoy=new Date(Date.now()-3*3600e3).toISOString().slice(0,10),man=new Date(Date.now()+21*3600e3).toISOString().slice(0,10);
  var cuando=function(f){if(!f)return '';if(f===hoy)return 'hoy';if(f===man)return 'mañana';var x=new Date(f+'T12:00:00');return 'el '+DL[x.getDay()]+' '+x.getDate()+'/'+(x.getMonth()+1);};
  var oraT=d.oracion?'Te toca orar y ayunar '+cuando(d.oracion):'',ed=d.edicion,edT=ed?(r.tutor==='director'?(ed.entregar?ed.entregar+' para entregar':'')+(ed.editadas?(ed.entregar?' · ':'')+ed.editadas+' para subir':''):(ed.edicion?ed.edicion+' en edición':'')+(ed.editadas?(ed.edicion?' · ':'')+ed.editadas+' para subir':'')):'';
