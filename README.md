@@ -21,3 +21,7 @@ La música de fondo está en la rama `musica` y se importó al Media Manager de 
 ## Publicar la web de Habitat
 
 El sitio del dominio habitat-cfm.org es el de Wix "Habitat" (metaSiteId `1a595c6b-303a-4413-b8cb-9146149fad06`). El build (`habitat-build.zip`) se sube ahí con UploadHeadlessWebsiteFiles (prepare + PUT + release). El `siteId` de `habitat-astro/wix.config.json` es otro sitio y no es el del dominio.
+
+## Capturas del juego para la web
+
+Las de `app/lobby` y `promo` son viejas. Para sacar nuevas: abrir el juego en el Chrome de Gui con el link de tester, esperar 1–2 min a que cargue, ocultar la interfaz dejando visibles solo `#c3d` y `#fx`, y ubicar al personaje con `W3.tp(x, z)` (los lugares salen de `W3.pois()`). La cámara se controla con `W3.S().yaw / camDist / camPitch`. Al terminar, devolver al personaje a donde estaba.
