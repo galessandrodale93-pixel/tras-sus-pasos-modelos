@@ -582,7 +582,7 @@ function heroFlora(scene, W, allPts, zMax, R, Q) {
 
 // pasos del armado del mundo: se registran y se muestran en la sala de espera, así nunca queda colgado en silencio
 const BSTEP = { u: null, log: [] };
-function buildStep(n) { BSTEP.log.push([n, Math.round(performance.now())]); try { console.log('[armado]', n); } catch (e) {} try { if (BSTEP.u) BSTEP.u.prog(null, 'Armando el mundo… · ' + n); } catch (e) {} window.__armado = BSTEP.log; }
+function buildStep(n) { BSTEP.log.push([n, Math.round(performance.now())]); try { console.log('[armado]', n); } catch (e) {} try { if (BSTEP.u) BSTEP.u.prog(null, 'Armando el mundo… · ' + n); } catch (e) {} window.__armado = BSTEP.log; try { localStorage.setItem('tsp:armado', JSON.stringify(BSTEP.log.map(([a, t]) => [a, t - BSTEP.log[0][1]]))); } catch (e) {} }
 const withTO = (p, ms, n) => Promise.race([p, new Promise((_, j) => setTimeout(() => j(new Error('tiempo: ' + n)), ms))]);
 function buildFail(U, e) {
   console.warn('armado', e); const ov = U && U.ov; if (!ov) return; const box = document.createElement('div'); box.className = 'lb-fail';
@@ -623,7 +623,7 @@ const KL = {};
   let HW = null, uGrass = null;
   const pois = planPois(g), doors = planDoors(g), poiPts = pois.flatMap(q => q.flat).concat(doors.flatMap(q => q.flat)); waterPlan(pois); MAPT.tiles.clear();
   buildStep('vegetación'); { let ok = null; try { ok = await withTO(grpInit(), 9000, 'r2'); } catch (e) {} FLORA.paidG = !!(ok && GRP.man['grass/']); FLORA.paidT = !!(ok && GRP.man['trees/']); }
-  { const flat = g.VIGN.map(([r, x, y]) => toV(x, g.TOP + r * g.RH + y)).concat(poiPts); FLORA.kids = !hx; FLORA.chunks = []; HW = heroWorld(scene, g, allPts, flat, zMax, QL, hx ? null : KL); uGrass = heroFlora(scene, HW, allPts, zMax, R, hx ? QL : Object.assign({}, QL, { grass: QL.grass * .8, trees: QL.trees * .8 })); if (!FLORA.paidG) realFlora(scene, HW, allPts, QL, uGrass); if (!hx) { ground.visible = false; KL.sun.position.set(-14, 26, 12); } }
+  buildStep('mundo y flora'); { const flat = g.VIGN.map(([r, x, y]) => toV(x, g.TOP + r * g.RH + y)).concat(poiPts); FLORA.kids = !hx; FLORA.chunks = []; HW = heroWorld(scene, g, allPts, flat, zMax, QL, hx ? null : KL); uGrass = heroFlora(scene, HW, allPts, zMax, R, hx ? QL : Object.assign({}, QL, { grass: QL.grass * .8, trees: QL.trees * .8 })); if (!FLORA.paidG) realFlora(scene, HW, allPts, QL, uGrass); if (!hx) { ground.visible = false; KL.sun.position.set(-14, 26, 12); } }
   const spots = { tree: [], bush: [], rock: [] };
   for (let i = 0; i < (HW ? 0 : 1500); i++) {
     const x = (R() - .5) * (XB * 2 + 40), z = R() * zMax - 6; if (near(x, z, 2.2)) continue;
@@ -649,6 +649,7 @@ const KL = {};
   inst(new THREE.IcosahedronGeometry(1, 0), mat(hx ? '#1F3420' : '#6DB862'), bl, ({ o, dx, dz, r }) => put(o.x + dx * o.s, .2 * o.s, o.z + dz * o.s, 0, o.rot, 0, r * o.s));
   inst(new THREE.DodecahedronGeometry(1, 0), mat(hx ? '#4A4438' : '#C9B79A'), spots.rock, o => put(o.x, .12, o.z, o.rot, o.rot * 2, o.v, (.25 + o.h * .35) * o.s));
   if (hx) for (let i = 0; i < 60; i++) { const x = (R() - .5) * 30 * WS, z = R() * zMax; if (near(x, z, 2.4)) continue; pillar(R); } // columnas sueltas quitadas (se consume el azar igual para no mover el resto del mundo)
+  buildStep('casas del mapa');
   // escenas del mapa (casas, palmeras)
   const addV = o => { if (HW) { o.position.y = HW.hAt(o.position.x, o.position.z) - .05; o.traverse(m => { m.castShadow = m.receiveShadow = true; }); } scene.add(o); };
   g.VIGN.forEach(([r, x, y, k]) => { const [vx, vz] = toV(x, g.TOP + r * g.RH + y); if (k === 'house' || k === 'stable' || k === 'temple') { for (let i = 0; i < 3; i++) { const h = house(R, hx), hx0 = vx + (i - 1) * 7.2, hz0 = vz + (R() - .5) * 3, ry = (R() - .5) * .6; if (HW && HW.dAt(hx0, hz0) < 5.5) continue; h.position.set(hx0, 0, hz0); h.rotation.y = ry; addV(h); HCOLS.push(wBox(hx0, hz0, ry, ...h.userData.box)); } } if (k === 'palms' || k === 'tree') { for (let i = 0; i < 3; i++) { const q = R(), x = vx + (R() - .5) * 3, z = vz + (R() - .5) * 2, s = .8 + q * .35, id = ['tree_small_02', 'island_tree_03', 'tree_small_02'][i]; if (HW) (DPALM.spots = DPALM.spots || []).push({ x, y: HW.hAt(x, z) - .05, z, ry: q * 40, s: s * (i === 1 ? 1.12 : 1) }); void id; } } if (k === 'riv') { const w = new THREE.Mesh(new THREE.PlaneGeometry(9, 3.2), mat(hx ? '#3B6266' : '#7FC4F0', { roughness: hx ? .08 : .2, metalness: hx ? .35 : .1 })); w.rotation.x = -Math.PI / 2; w.position.set(vx, .02, vz); scene.add(w); } });
@@ -666,6 +667,7 @@ const KL = {};
     let dx = p1[0] - p0[0], dz = p1[1] - p0[1]; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l; const side = RR() < .5 ? -1 : 1, off = (2.6 + RR() * 1.8) * 2.2;
     const mesh = itemMesh(it.k); mesh.position.set(p0[0] - dz * off * side, .85, p0[1] + dx * off * side); mesh.userData.by = HW ? HW.hAt(mesh.position.x, mesh.position.z) : 0; mesh.position.y += mesh.userData.by; scene.add(mesh); items[it.id] = mesh;
   });
+  buildStep('paradas');
   // paradas
   const markers = {};
   Object.values(g.NODES).forEach(n => {
@@ -685,8 +687,8 @@ const KL = {};
   const n0 = g.NODES[g.P().pos], [ax, az] = toV(n0.x, n0.y); av.position.set(ax, 0, az);
   S = { renderer, scene, camera, hx, av, markers, edgePts, allPts, items, joy: { x: 0, y: 0 }, keys: {}, flies, ground, yaw: Math.PI, camYaw: 0, camDist: 2.4, camPitch: .4, walking: false, moving: false, t: 0, root, cv, sig: '', onStop: g.P().pos, W: HW, uGrass, KL, zEnd: zMax };
   // orientar al personaje hacia la próxima parada
-  buildPois(scene, pois, hx, HW, rng(77), ribbon); S.pois = pois; buildTowns(scene, g, hx, HW, pois); ambReset(); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; setTimeout(() => tutOpen(), 1500); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); }, 0);
-  try { scatterNodes(g, HW); if (S.npos[g.P().pos]) { const q = S.npos[g.P().pos]; av.position.set(q[0], 0, q[1]); } } catch (e) { console.warn('hitos', e); } S.spawn = [av.position.x, av.position.z];
+  buildStep('lugares'); buildPois(scene, pois, hx, HW, rng(77), ribbon); buildStep('pueblos'); S.pois = pois; buildTowns(scene, g, hx, HW, pois); buildStep('puertas y misiones'); ambReset(); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; setTimeout(() => tutOpen(), 1500); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); }, 0);
+  buildStep('hitos'); try { scatterNodes(g, HW); if (S.npos[g.P().pos]) { const q = S.npos[g.P().pos]; av.position.set(q[0], 0, q[1]); } } catch (e) { console.warn('hitos', e); } S.spawn = [av.position.x, av.position.z];
   S0 = S; try { attrMigrate(); } catch (e) { console.warn('migración de atributos', e); } insMigrate(); setTimeout(glowUI, 400); S.mis = buildMissions(scene, g, hx, HW); { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
   const nx = nextList()[0]; if (nx) { const N = g.NODES[nx], [bx, bz] = toV(N.x, N.y); S.yaw = Math.atan2(bx - ax, bz - az); }
   av.rotation.y = S.yaw;
@@ -694,9 +696,9 @@ const KL = {};
   camera.position.set(av.position.x - Math.sin(S.yaw) * 6.6, 3.3, av.position.z - Math.cos(S.yaw) * 6.6);
   S.fill = new THREE.DirectionalLight(hx ? '#FFD9B0' : '#FFFFFF', hx ? .5 : .5); scene.add(S.fill); scene.add(S.fill.target);
   wireInput(); wireJoy(); if (!window.__acts) { window.__acts = 1; wireActs(); auButtons(); } resize(); addEventListener('resize', resize);
-  renderer.info.autoReset = false; qInit(); fxInit();
+  buildStep('efectos'); renderer.info.autoReset = false; qInit(); fxInit(); buildStep('primer cuadro');
   cv.addEventListener('webglcontextlost', e => { e.preventDefault(); r2log('contexto WebGL perdido'); posSave(true); try { QUAL.mode = 'bajo'; localStorage.setItem('tsp:q', 'bajo'); } catch (er) {} let auto = true; try { const t0 = +(sessionStorage.getItem('tsp:glr') || 0); auto = Date.now() - t0 > 90000; sessionStorage.setItem('tsp:glr', String(Date.now())); } catch (er) {} v3fail(auto ? 'El celular se quedó sin memoria gráfica. Volvemos a abrir el mundo en calidad Baja, en el mismo lugar donde estabas…' : 'El celular se quedó sin memoria gráfica otra vez. Cerrá otras pestañas o apps y tocá «Probar de nuevo»: volvés al mismo lugar.'); if (auto) setTimeout(() => location.reload(), 2500); }, { once: true }); if (hx) svBuild(scene, HW, R); try { phWorld(scene, HW, allPts, zMax, hx, R); } catch (e) { console.warn('ph', e); } PG.ready = false; PG.ims.forEach(im => im.parent && im.parent.remove(im)); PG.ims = []; PG.cache.clear(); GT.done = 0; GT.pdone = 0; GT.rdone = 0; GT.zaq = 0; GT.ims.forEach(im => im.parent && im.parent.remove(im)); GT.ims = []; setTimeout(() => { galTrees().catch(e => r2log('árboles: ' + ((e && e.message) || e))).then(() => pgBuild()).catch(e => r2log('pasto nuevo falló: ' + ((e && e.message) || e))).then(() => galPalms()).then(() => galRocks()).catch(e => r2log('árboles fallaron: ' + ((e && e.message) || e))); }, 1500); try { ambWorld(scene, HW, allPts, zMax, hx); } catch (e) { console.warn('amb', e); } try { mergeHouses(scene); } catch (e) { console.warn('merge', e); } [1200, 9000, 25000].forEach(ms => setTimeout(() => { try { if (!/[?&]nomerge/.test(location.search) && S && S.scene === scene) worldMerge(scene); } catch (e) { console.warn('wmerge', e); } }, ms)); setTimeout(() => { try { if (S && S.renderer.compileAsync) S.renderer.compileAsync(S.scene, S.camera); } catch (e) {} }, 300);
-  const me = S, run = n => { if (S !== me) return; requestAnimationFrame(run); try { loop(n); } catch (e) { if (!run.err || run.err !== e.message) { run.err = e.message; r2log('error en el bucle: ' + e.message); console.error(e); } } }; requestAnimationFrame(run);
+  const me = S, run = n => { if (S !== me) return; requestAnimationFrame(run); try { loop(n); if (!run.k) { run.k = 1; buildStep('cuadro dibujado'); } } catch (e) { if (!run.err || run.err !== e.message) { run.err = e.message; r2log('error en el bucle: ' + e.message); console.error(e); } } }; requestAnimationFrame(run);
 }
 // tres formas de pantalla, cada una con su propio CSS: pc, movil-v (celular parado) y movil-h (celular acostado)
 function layoutClass() { const coarse = matchMedia('(pointer: coarse)').matches, w = innerWidth, h = innerHeight, lay = !coarse && w >= 900 ? 'pc' : (w > h ? 'movil-h' : 'movil-v'); try { if (document.body && document.body.dataset && document.body.dataset.layout !== lay) document.body.dataset.layout = lay; } catch (e) {} return lay; }
