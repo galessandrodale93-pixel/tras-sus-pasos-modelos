@@ -802,6 +802,11 @@ function qLevelFor(g) {
   if (/SwiftShader|llvmpipe|Software/i.test(g)) return { lv: 0, max: 1 };
   if (/Intel.*HD Graphics( [2-5]\d{3})?$|Intel.*HD Graphics [2-5]\d{3}|Intel.*Iris(?!.*Xe)|GeForce GT ?[67]\d\dM|Radeon R9 M2\d\d|Radeon HD [5-8]\d{3}M/i.test(g)) return { lv: /HD Graphics( [2-5]\d{3})?$/i.test(g) ? 0 : 1, max: 2 }; // compus de 2012 a 2016 (como una Mac de 2014)
   if (coarse) return { lv: 1, max: 1 }; // celulares y tablets: Medio como máximo (memoria de WebGL limitada, sobre todo en iPhone)
+  // compus modestas: poca RAM, pocos núcleos o video integrado en el procesador (Vega/Radeon Graphics de Ryzen, Intel UHD)
+  const cores = navigator.hardwareConcurrency || 4, igpu = /Vega \d+ Graphics|Radeon\(TM\) Graphics|Radeon Graphics|Radeon\(TM\) (Vega|R[457])|Intel.*UHD/i.test(g) && !discrete;
+  if (mem <= 4 || cores <= 4) return { lv: 0, max: 1 };
+  if (mem <= 8) return { lv: igpu ? 0 : 1, max: igpu ? 1 : 2 };
+  if (igpu) return { lv: 1, max: 3 };
   if (discrete) return { lv: 3, max: 3 };
   if (good) return { lv: 2, max: 3 };
   return { lv: 1, max: 3 };
