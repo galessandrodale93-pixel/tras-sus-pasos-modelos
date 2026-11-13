@@ -3060,7 +3060,7 @@ function khEval(){const p=current;if(!p||KH.activo===true)return;const ex=p.exam
   if(KH.activo==null&&!p.demo){khCheck().then(a=>{if(!a)khEval();});return;}
   p.kh={cap:totalRaw(p),maxR:khMaxR(p),at:Date.now()};save();try{refreshHud();}catch(e){}khPill();KH.want='lock';if(!khBusy()){KH.want=null;khShow('lock');}}
 function khBlocks(n){const p=current;return !!(n&&n.r!=null&&khLocked(p)&&n.r>p.kh.maxR);}
-function khPill(){let el=document.getElementById('khPill');const on=!!current&&khLocked()&&!onLanding();if(!on){if(el)el.remove();return;}
+function khPill(){let el=document.getElementById('khPill');const on=!!current&&khLocked()&&!onLanding()&&!document.querySelector('.v3lobby');if(!on){if(el)el.remove();return;}
   if(!el){el=document.createElement('button');el.id='khPill';el.className='kh-pill';el.onclick=()=>khShow('pill');document.body.appendChild(el);}
   const w=khWaiting();el.innerHTML=`<b>Modo recorrido</b><span>${w>0?w+' puntos esperando':'Activá el pase para seguir creciendo'}</span>`;}
 function khShow(kind){if(document.querySelector('.khp'))return;const p=current;if(!p)return;KH.shown=true;const kid=branch!=='ados',w=khWaiting(p),ri=p.kh?p.kh.maxR:curRegion(),R=REGIONS[Math.min(ri,REGIONS.length-1)],nx=REGIONS[ri+1];
