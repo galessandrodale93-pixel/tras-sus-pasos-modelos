@@ -90,8 +90,8 @@ gal = f'''
         <div class="hbx-media">{HERO_MEDIA}</div>
         <p>Un mundo abierto para explorar: oficios, misiones, virtudes y salas para jugar con amigos.</p>
         <div class="hbx-ph">
-          <figure><img loading="lazy" src="{SH['quien']}/v1/fit/w_420,h_840,q_85/q.jpg" alt="¿Quién soy?"><figcaption>¿Quién soy? · con amigos</figcaption></figure>
-          <figure><img loading="lazy" src="{SH['cadena']}/v1/fit/w_420,h_840,q_85/c.jpg" alt="Versículo en cadena"><figcaption>Versículo en cadena</figcaption></figure>
+          <figure><img loading="lazy" src="/assets/kh/quien-v3.jpg" alt="¿Quién soy?"><figcaption>¿Quién soy? · con amigos</figcaption></figure>
+          <figure><img loading="lazy" src="/assets/kh/cadena-v3.jpg" alt="Versículo en cadena"><figcaption>Versículo en cadena</figcaption></figure>
         </div>
       </div>
     </div>
