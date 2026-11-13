@@ -306,7 +306,7 @@ const OUTFITS=['#5B8DEF','#EF6F61','#2FAE7C','#F2B33D','#9B7BE8'];
 const CACHE='tsp-cache-v4';
 let branch=null,profiles=[],current=null,saveT=null;
 const P=()=>current;
-const blank=()=>({done:{},visited:['start'],pos:'start',regions:{},medals:[],maps:[],verses:[],games:{},trivia:0,streak:0,best:0,rankId:null,items:{},gear:{own:[],eq:{}},missions:{},mact:null,exams:{},want:{},lvSeen:0,photo:'',surv:null,attr:null,bonus:0,ins:null,glow:null,story:null,vil:null,behav:null,dones:null,rep:null,secrets:null,relics:null,seen:null,fidDay:null,fidRun:null,fidWeek:null,prayDay:null,badges:null,playMs:0,lastBag:null,mat:null,vida:null});
+const blank=()=>({done:{},visited:['start'],pos:'start',regions:{},medals:[],maps:[],verses:[],games:{},trivia:0,streak:0,best:0,rankId:null,items:{},gear:{own:[],eq:{}},missions:{},mact:null,exams:{},want:{},lvSeen:0,photo:'',surv:null,attr:null,bonus:0,ins:null,glow:null,story:null,vil:null,behav:null,dones:null,rep:null,secrets:null,relics:null,seen:null,fidDay:null,fidRun:null,fidWeek:null,prayDay:null,badges:null,playMs:0,kh:null,lastBag:null,mat:null,vida:null});
 const KEYS=Object.keys(blank());
 function serialize(p){const o={};KEYS.forEach(k=>o[k]=p[k]);return JSON.stringify(o);}
 function save(){
@@ -344,7 +344,8 @@ const mult=s=>s>=5?2:s>=3?1.5:1;
 const fmt=n=>Math.round(n).toLocaleString('es-AR');
 const ageFactor=a=>.7+(Math.min(18,Math.max(6,a||12))-6)/12*.42;
 const gamesTotal=p=>Object.values(p.games).reduce((a,b)=>a+b,0);
-const total=p=>p.trivia+gamesTotal(p)+Object.keys(p.items||{}).length*25+Object.keys(p.missions||{}).length*50+Object.values(p.exams||{}).reduce((s,e)=>s+(e.pts||0),0)+(p.bonus||0);
+const totalRaw=p=>p.trivia+gamesTotal(p)+Object.keys(p.items||{}).length*25+Object.keys(p.missions||{}).length*50+Object.values(p.exams||{}).reduce((s,e)=>s+(e.pts||0),0)+(p.bonus||0);
+const total=p=>{const t=totalRaw(p),c=khCap(p);return c==null?t:Math.min(t,c);};
 function shade(hex,amt){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const t=amt<0?0:255,k=Math.abs(amt);r=Math.round(r+(t-r)*k);g=Math.round(g+(t-g)*k);b=Math.round(b+(t-b)*k);return '#'+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);}
 const STAR=on=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z" fill="${on?'#F2B33D':'#DCE6F7'}" stroke="${on?'#FFE39A':'#C9D6EC'}" stroke-width="1"/></svg>`;
 const coin=(m,size=52)=>`<svg class="coin" width="${size}" height="${size}" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" fill="${m.c}"/><circle cx="26" cy="26" r="19" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2"/><path d="${m.g}" fill="${m.f?'#22407F':'none'}" stroke="#22407F" stroke-width="${m.w||0}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -1002,6 +1003,7 @@ async function tapNode(id){
 }
 function arrive(id){
   const n=NODES[id],p=P();
+  if(khBlocks(n)){khShow('etapa');return;}
   if(n.kind==='ch'){setTimeout(()=>openStop(n),160);return;}
   if(!p.visited.includes(id)){p.visited.push(id);save();}
   if(n.kind==='gate'&&!REGIONS[n.r+1]){const m=p.missions||{},rd=['leer23','leer1'].filter(k=>m[k]).length,ph=['fotopastores','fotofelipe'].filter(k=>m[k]).length;if(rd<2||ph<2){const f=[];if(rd<2)f.push(`${2-rd} ${2-rd>1?'lecturas':'lectura'} en voz alta`);if(ph<2)f.push(`${2-ph} ${2-ph>1?'testimonios':'testimonio'}`);toast('Para terminar el recorrido te falta: '+f.join(' y ')+'. Buscá en el mapa a los personajes con «!».');refreshMap();return;}}
@@ -1019,6 +1021,7 @@ function flowButtons(n){
 }
 function wireFlow(n){$('#play').onclick=()=>startArcade(n,()=>afterGame(n));const b=$('#back');if(b)b.onclick=closeStop;}
 function openStop(n){
+  if(khBlocks(n)){khShow('etapa');return;}
   active=n;locked=false;const p=P();
   const el=$('#stop');el.hidden=false;document.body.style.overflow='hidden';
   el.innerHTML=`<div class="sheet-in"><div class="video" id="video"></div><div class="sheet-body"><span class="kicker">Etapa ${n.r+1} · ${esc(n.place)}</span><h2>${esc(n.title)}</h2><p class="story">${esc(n.text.replace('{name}',p.name))}</p><div id="flow">${gameCard(n)}${flowButtons(n)}</div></div></div>`;
@@ -2778,7 +2781,7 @@ function hstPump(){if(HST.busy||!HST.q.length||!hstFree())return;const [k,r]=HST
 setInterval(()=>{try{if(branch!=='ados'||!current)return;const p=P(),r=curRegion(),R=REGIONS[r];if(R&&!hstP().open[R.id]&&!HST.q.some(x=>x[0]==='open'&&x[1]===r))HST.q.push(['open',r]);hstPump();}catch(e){}},2500);
 let playT=Date.now();setInterval(()=>{const n=Date.now(),d=n-playT;playT=n;if(!current||document.hidden||d>60000)return;current.playMs=(current.playMs||0)+d;},15000);
 setInterval(()=>{try{if(branch==='ados'||!current||!window.W3||!W3.dawnScene||!W3.cineOk2)return;const R=REGIONS[curRegion()],st=hstP();if(R&&R.id==='resurreccion'&&!st.dawn&&W3.cineOk2()){st.dawn=1;save();W3.dawnScene();}}catch(e){}},3000);
-function finishRegion(r){if(branch!=='ados'&&REGIONS[r]&&REGIONS[r].id==='cruz'&&window.W3&&W3.crossScene){const st=hstP();if(!st.kcross){st.kcross=1;save();setTimeout(()=>W3.crossScene(true),1200);}}
+function finishRegion(r){setTimeout(()=>{try{khEval();}catch(e){}},4000);if(branch!=='ados'&&REGIONS[r]&&REGIONS[r].id==='cruz'&&window.W3&&W3.crossScene){const st=hstP();if(!st.kcross){st.kcross=1;save();setTimeout(()=>W3.crossScene(true),1200);}}
   const p=P(),R=REGIONS[r].id,ids=ORDER.map(k=>`${R}-${k}`).filter(isDone),okN=ids.filter(id=>p.done[id]).length,acc=ids.length?okN/ids.length:0;
   Object.assign(p.regions[R],{complete:true,stars:acc>=.9?3:acc>=.7?2:1,correct:okN,answered:ids.length});
   if(ids.length&&okN===ids.length)award('perfecto');
@@ -3031,8 +3034,66 @@ const go=()=>{try{const d=document,el=d.documentElement;if(d.fullscreenElement||
 const once=e=>{const t=e.target&&e.target.closest&&e.target.closest('button,a,[role=button],.pick,.card');if(!t)return;removeEventListener('pointerup',once,true);go();};addEventListener('pointerup',once,true);}catch(e){}})();
 function tspTitle(){try{if(document.title!=='Kids & Hero')document.title='Kids & Hero';}catch(e){}}
 tspTitle();
-window.GAME={playMat:(def,done)=>{if(ar)return false;startArcade({id:'mat-'+def.type,game:def},done||null);return true;},hstTest:r=>HST.q.push(['close',r]),hstScroll:()=>hstScroll(false),hstHas:()=>branch==='ados'&&hstP().scroll.length>0,stageLine,lobbyLines,vo:(t,v,o)=>vo(t,v,o),voState:()=>({log:VO.log.slice(-12),on:VO.on,src:VO.el&&VO.el.src,paused:VO.el?VO.el.paused:null,cur:VO.cur&&VO.cur.t,q:VO.q.length}),voStop:()=>voStop(),voOn:()=>VO.on,NODES,EDGES,ADJ,REGIONS,VIGN,TOP,RH,WIDTH,get branch(){return branch},level:()=>lvOf(total(P())),EXAMS,P,reachable,visited,isDone,bfs,arrive,save,toast,refreshHud,syncMap(){refreshMap();const n=NODES[P().pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));}};
+/* ===== Pase Kids & Hero: gratis hasta 4 horas de juego o hasta terminar la etapa 6 (Parábolas), lo que llegue primero.
+   Después, "modo recorrido": se puede seguir recorriendo lo ya jugado, pero la experiencia, los niveles, los atributos y los denarios
+   quedan congelados; lo que se gana queda "en espera" y se acredita entero al activar el pase. Las etapas nuevas quedan cerradas.
+   En Hero el botón Pagar va directo; en Kids queda detrás de una pregunta para grandes. El pase es de la cuenta (toda la familia). ===== */
+const KH_API='https://www.habitat-cfm.org/api/kh-pase',KH_FREE=4*36e5,KH_STAGE='parabolas',KH_PRICE='$12.000';
+var KH={activo:null,t:0,busy:false,shown:false,want:null};
+const khMember=()=>{try{const s=getMemberState();return s&&s.loggedIn?(s.member||{}):null;}catch(e){return null;}};
+const khUid=()=>{const m=khMember();return m?String(m._id||m.id||m.memberId||''):'';};
+const khMail=()=>{const m=khMember();return m?String(m.loginEmail||m.email||((m.contact||{}).emails||[])[0]||''):'';};
+function khCap(p){return p&&p.kh&&p.kh.cap!=null&&!(KH&&KH.activo===true)?p.kh.cap:null;}
+function khLocked(p){p=p||current;return !!(p&&khCap(p)!=null);}
+function khWaiting(p){p=p||current;const c=khCap(p);return c==null?0:Math.max(0,totalRaw(p)-c);}
+async function khCheck(force){const u=khUid();if(!u){KH.activo=false;return false;}
+  if(!force){try{const c=JSON.parse(localStorage.getItem('kh-act:'+u)||'null');if(c&&Date.now()-c.t<12*36e5){KH.activo=c.a;if(c.a)khCredit();return c.a;}}catch(e){}}
+  try{const r=await fetch(KH_API+'?u='+encodeURIComponent(u),{cache:'no-store'});const j=await r.json();KH.activo=!!j.activo;try{localStorage.setItem('kh-act:'+u,JSON.stringify({a:KH.activo,t:Date.now()}));}catch(e){}}catch(e){if(KH.activo==null)KH.activo=false;}
+  if(KH.activo)khCredit();return KH.activo;}
+function khCredit(){const p=current;if(!p||!p.kh)return;const w=Math.max(0,totalRaw(p)-(p.kh.cap||0));p.kh=null;save();try{refreshHud();refreshMap();}catch(e){}khPill();if(w>0)toast('¡Pase activado! Se acreditaron '+w+' puntos que tenías en espera.');else toast('¡Pase activado! Ya podés seguir tu camino.');}
+const khMaxR=p=>{let m=curRegion();(p.visited||[]).forEach(id=>{const n=NODES[id];if(n&&n.r!=null&&n.r>m)m=n.r;});return m;};
+const khBusy=()=>!!(ar||!$('#stop').hidden||document.querySelector('.exam')||document.querySelector('.khp'));
+function khEval(){const p=current;if(!p||KH.activo===true)return;if(p.kh&&p.kh.cap!=null){khPill();if(KH.want&&!khBusy()){const k=KH.want;KH.want=null;khShow(k);}return;}
+  const ex=p.exams||{};if((p.playMs||0)<KH_FREE&&!(ex[KH_STAGE]&&ex[KH_STAGE].passed))return;
+  if(KH.activo==null&&!p.demo){khCheck().then(a=>{if(!a)khEval();});return;}
+  p.kh={cap:totalRaw(p),maxR:khMaxR(p),at:Date.now()};save();try{refreshHud();}catch(e){}khPill();KH.want='lock';if(!khBusy()){KH.want=null;khShow('lock');}}
+function khBlocks(n){const p=current;return !!(n&&n.r!=null&&khLocked(p)&&n.r>p.kh.maxR);}
+function khPill(){let el=document.getElementById('khPill');const on=!!current&&khLocked()&&!onLanding();if(!on){if(el)el.remove();return;}
+  if(!el){el=document.createElement('button');el.id='khPill';el.className='kh-pill';el.onclick=()=>khShow('pill');document.body.appendChild(el);}
+  const w=khWaiting();el.innerHTML=`<b>Modo recorrido</b><span>${w>0?w+' puntos esperando':'Activá el pase para seguir creciendo'}</span>`;}
+function khShow(kind){if(document.querySelector('.khp'))return;const p=current;if(!p)return;const kid=branch!=='ados',w=khWaiting(p),ri=p.kh?p.kh.maxR:curRegion(),R=REGIONS[Math.min(ri,REGIONS.length-1)],nx=REGIONS[ri+1];
+  const lv=lvOf(total(p)),hrs=Math.max(1,Math.round((p.playMs||0)/36e5));
+  const d=document.createElement('div');d.className='khp'+(kid?' kid':' hx');
+  const head=kind==='etapa'?(kid?`¡${esc(nx?nx.name:'La próxima etapa')} te espera!`:`${esc(nx?nx.name:'La próxima etapa')} está cerrada`):(kid?`¡Qué lindo camino hiciste, ${esc(p.name)}!`:`Llegaste hasta ${esc(R?R.name:'acá')}`);
+  const body=kid?`Llegaste al nivel ${lv}. Con el Pase Kids & Hero seguís la aventura: todas las etapas, nuevos niveles y los próximos cursos.`:`Nivel ${lv} · ${hrs} ${hrs===1?'hora':'horas'} de camino. Con el Pase Kids & Hero seguís: todas las etapas, subir de nivel, tus atributos y los próximos cursos.`;
+  const wait=w>0?`<p class="kh-wait">⭐ Tenés <b>${w}</b> puntos esperando. Se acreditan enteros al activar el pase.</p>`:'';
+  const pay=`<div class="kh-price"><b>${KH_PRICE}</b><span>por mes · toda la familia</span></div><button class="kh-go">Pagar</button>`;
+  const login=!khUid()||p.demo?`<p class="kh-note">Para activar el pase hace falta entrar con una cuenta.</p><button class="kh-go kh-login">Ingresar</button>`:'';
+  d.innerHTML=`<div class="kh-in"><button class="kh-x" aria-label="Cerrar">✕</button><small>Pase Kids &amp; Hero</small><h3>${head}</h3><p>${body}</p>${wait}<div class="kh-act">${login||(kid?`<button class="kh-go kh-adult">🔒 Para grandes</button>`:pay)}</div><button class="kh-later">Seguir en modo recorrido</button><p class="kh-note">En modo recorrido podés seguir caminando y repetir lo que ya jugaste. Los puntos quedan en espera y no subís de nivel.</p></div>`;
+  document.body.appendChild(d);const close=()=>{d.remove();khPill();};
+  d.querySelector('.kh-x').onclick=close;d.querySelector('.kh-later').onclick=close;
+  const wire=()=>{const b=d.querySelector('.kh-go:not(.kh-adult):not(.kh-login)');if(b)b.onclick=()=>khPay(b);};wire();
+  const lg=d.querySelector('.kh-login');if(lg)lg.onclick=()=>{close();try{openAuth();}catch(e){}};
+  const ad=d.querySelector('.kh-adult');if(ad)ad.onclick=()=>{const a=3+Math.floor(Math.random()*7),b=4+Math.floor(Math.random()*6),box=d.querySelector('.kh-act');
+    box.innerHTML=`<div class="kh-gate"><p>Pregunta para grandes: ¿cuánto es <b>${a} × ${b}</b>?</p><input type="number" inputmode="numeric" class="kh-ans" aria-label="Respuesta"><button class="kh-ok">Continuar</button><p class="kh-err" hidden>Esa no es. Pedile a una persona grande que te ayude.</p></div>`;
+    const ok=()=>{if(+box.querySelector('.kh-ans').value===a*b){box.innerHTML=pay;wire();}else box.querySelector('.kh-err').hidden=false;};box.querySelector('.kh-ok').onclick=ok;box.querySelector('.kh-ans').onkeydown=e=>{if(e.key==='Enter')ok();};box.querySelector('.kh-ans').focus();};}
+async function khPay(btn){if(KH.busy)return;KH.busy=true;btn.disabled=true;btn.textContent='Abriendo Mercado Pago…';
+  try{const r=await fetch(KH_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accion:'iniciar'})});const j=await r.json();if(!j.url)throw new Error(j.error||'sin url');
+    try{sessionStorage.setItem('kh-pend',JSON.stringify({u:khUid(),e:khMail(),rama:branch,t:Date.now()}));}catch(e){}location.href=j.url;}
+  catch(e){console.warn(e);btn.disabled=false;btn.textContent='Pagar';toast('No pudimos abrir Mercado Pago. Probá de nuevo en un rato.');}finally{KH.busy=false;}}
+/* vuelta del checkout de Mercado Pago (?kh=vuelta&preapproval_id=…) */
+(async function khReturn(){let sp;try{sp=new URLSearchParams(location.search);}catch(e){return;}if(sp.get('kh')!=='vuelta')return;const pid=sp.get('preapproval_id')||'';
+  try{const u=new URL(location.href);['kh','preapproval_id','status','external_reference'].forEach(k=>u.searchParams.delete(k));history.replaceState(null,'',u.pathname+u.search+u.hash);}catch(e){}
+  for(let i=0;i<60&&getMemberState().loading;i++)await new Promise(r=>setTimeout(r,250));
+  const uid=khUid();if(!pid||!uid)return;
+  try{const r=await fetch(KH_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accion:'vincular',u:uid,e:khMail(),pid,rama:branch||''})});const j=await r.json();
+    try{localStorage.removeItem('kh-act:'+uid);}catch(e){}
+    if(j.activo){KH.activo=true;try{localStorage.setItem('kh-act:'+uid,JSON.stringify({a:true,t:Date.now()}));}catch(e){}if(current)khCredit();else setTimeout(()=>toast('¡Pase Kids & Hero activado! Gracias por sumarte.'),1500);}
+    else setTimeout(()=>toast('Recibimos tu suscripción. En cuanto Mercado Pago la confirme se activa el pase.'),1500);}catch(e){console.warn(e);}})();
+setInterval(()=>{try{khEval();}catch(e){}},15000);
+window.GAME={khLocked:()=>khLocked(),khPill,playMat:(def,done)=>{if(ar)return false;startArcade({id:'mat-'+def.type,game:def},done||null);return true;},hstTest:r=>HST.q.push(['close',r]),hstScroll:()=>hstScroll(false),hstHas:()=>branch==='ados'&&hstP().scroll.length>0,stageLine,lobbyLines,vo:(t,v,o)=>vo(t,v,o),voState:()=>({log:VO.log.slice(-12),on:VO.on,src:VO.el&&VO.el.src,paused:VO.el?VO.el.paused:null,cur:VO.cur&&VO.cur.t,q:VO.q.length}),voStop:()=>voStop(),voOn:()=>VO.on,NODES,EDGES,ADJ,REGIONS,VIGN,TOP,RH,WIDTH,get branch(){return branch},level:()=>lvOf(total(P())),EXAMS,P,reachable,visited,isDone,bfs,arrive,save,toast,refreshHud,syncMap(){refreshMap();const n=NODES[P().pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));}};
 function enterMap(){
+  khCheck().then(()=>{try{khEval();if(khLocked()&&!KH.shown){KH.shown=true;KH.want='lock';khEval();}}catch(e){}});
   if(worldFor!==branch)buildWorld();
   const p=P();
   $('#hudAv').innerHTML=headBox(p.avatar);$('#avBody').innerHTML=`<g class="idle">${avatarSVG(p.avatar)}</g>`;

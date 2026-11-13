@@ -10,7 +10,7 @@ import { registrarSalida } from "./salidas";
 
 const getSecret = auth.elevate(secrets.getSecretValue);
 const rem = auth.elevate(items.remove);
-export const TIPOS_ING = ["Siembra automática", "Siembra puntual", "Libros", "Efectivo", "Cuota de alumno (MP)", "Transferencia entre cuentas propias", "Aporte de la familia", "Otro", "Por clasificar"];
+export const TIPOS_ING = ["Siembra automática", "Siembra puntual", "Kids & Hero", "Libros", "Efectivo", "Cuota de alumno (MP)", "Transferencia entre cuentas propias", "Aporte de la familia", "Otro", "Por clasificar"];
 // No son ingresos nuevos: se ven en la lista pero no suman en los totales ni en el gráfico.
 export const NO_SUMA = ["Transferencia entre cuentas propias"];
 const SIEMBRA = ["Siembra automática", "Siembra puntual"];
@@ -53,6 +53,8 @@ export async function clasificar(pg: Pago, ctx?: { pag: Pagador[]; al: Alumno[] 
   const key = clavePagador(pg), nom = nombrePagador(pg), email = String((pg.payer || {}).email || "").toLowerCase();
   const rec = pag.find((x) => x._id === key);
   if (rec) return { tipo: rec.tipo, alumnoId: rec.alumnoId || "", key };
+  // el Pase Kids & Hero se reconoce por su descripción (el motivo del plan de MP)
+  if (/kids\s*&\s*hero/i.test(String(pg.description || "") + " " + String(pg.reason || ""))) return { tipo: "Kids & Hero", alumnoId: "", key };
   // una suscripción puede ser siembra o cuota de clases: queda por clasificar hasta que alguien la confirme
   if (esSuscripcion(pg)) return { tipo: "Por clasificar", alumnoId: "", key };
   const a = al.find((x) => (email && String(x.email || "").toLowerCase() === email) || (nom && nrm(x.title) === nrm(nom)));

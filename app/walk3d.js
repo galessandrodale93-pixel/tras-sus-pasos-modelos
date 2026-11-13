@@ -2825,10 +2825,10 @@ async function shareMedia(v, d) {
   const file = new File([v.blob], `${d.title} - ${name}.${ext}`, { type: v.blob.type || (ext === 'jpg' ? 'image/jpeg' : 'audio/webm') });
   const text = v.kind === 'audio' ? `¡Hola! Te comparto mi lectura en voz alta de ${d.ref}, de la misión «${d.title}» de Tras Sus Pasos.` : `¡Hola! Te comparto mi testimonio de la misión «${d.title}» (${d.ref}) de Tras Sus Pasos: le conté a un compañero quién es Jesús.`;
   try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: d.title, text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
-  const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); G().toast('Se descargó el archivo. Adjuntalo en un mail para tus papás.');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); G().toast(S && S.hx ? 'Se descargó el archivo. Ya lo podés compartir.' : 'Se descargó el archivo. Adjuntalo en un mail para tus papás.');
 }
 function shareAsk(el, v, d) {
-  el.innerHTML = `<div class="bag-in mis-in cap"><div class="bag-h"><b>¡Guardado!</b><span>${esc(d.title)} · ${esc(d.ref)}</span><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="mis-ask">¿Se lo mandás a tus papás? Elegí Mail (o WhatsApp) y enviáselo.</p><div class="mis-btns"><button class="mis-yes sh-go">✉️ Enviar a mis papás</button><button class="mis-no sh-no">Más tarde</button></div><p class="cap-note">También lo podés enviar después desde la Mochila.</p></div>`;
+  el.innerHTML = `<div class="bag-in mis-in cap"><div class="bag-h"><b>¡Guardado!</b><span>${esc(d.title)} · ${esc(d.ref)}</span><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="mis-ask">${S && S.hx ? '¿Lo querés compartir? Elegí Mail o WhatsApp.' : '¿Se lo mandás a tus papás? Elegí Mail (o WhatsApp) y enviáselo.'}</p><div class="mis-btns"><button class="mis-yes sh-go">${S && S.hx ? '✉️ Compartir' : '✉️ Enviar a mis papás'}</button><button class="mis-no sh-no">Más tarde</button></div><p class="cap-note">También lo podés enviar después desde la Mochila.</p></div>`;
   el.hidden = false; const close = () => { el.hidden = true; }; el.querySelector('.bag-x').onclick = close; el.querySelector('.sh-no').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   el.querySelector('.sh-go').onclick = async () => { await shareMedia(v, d); close(); };
 }
@@ -3548,7 +3548,7 @@ function doorSheet(d) {
   const el = document.getElementById('v3sheet'); if (!el || sheetUp()) return; S.joy.x = 0; S.joy.y = 0; S.keys = {}; const p = G().P(), want = (p.want || {})[d.id];
   el.innerHTML = `<div class="bag-in mis-in door-in" style="--dc:${d.c}"><div class="bag-h"><b>${esc(d.name)}</b><span>${esc(d.sub)}</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
     <p class="mis-ask">${esc(d.txt)}</p>
-    <p class="door-lock">🔒 Para entrar a este curso hay que inscribirse. Pedile a un adulto que te anote en Habitat.</p>
+    <p class="door-lock">🔒 Para entrar a este curso hay que inscribirse. ${S && S.hx ? 'Inscribite en Habitat.' : 'Pedile a un adulto que te anote en Habitat.'}</p>
     <div class="mis-btns"><button class="mis-yes d-want">${want ? '✓ Ya avisaste que te interesa' : 'Quiero inscribirme'}</button><button class="mis-no d-no">Seguir explorando</button></div>
     <p class="cap-note">Todo lo que ganes acá (puntos y nivel) también te acompaña en ese curso.</p></div>`;
   el.hidden = false; const close = () => { el.hidden = true; }; el.querySelector('.bag-x').onclick = close; el.querySelector('.d-no').onclick = close; el.onclick = e => { if (e.target === el) close(); };
@@ -4917,7 +4917,7 @@ function attrMigrate() {
   if (dirty) G().save();
 }
 function axGain(k, n) {
-  if (!AXN[k] || !S) return; const a = axP(); a.xp[k] = (a.xp[k] || 0) + n; let up = false;
+  if (!AXN[k] || !S) return; if (G() && G().khLocked && G().khLocked()) return; /* modo recorrido: los atributos no crecen */ const a = axP(); a.xp[k] = (a.xp[k] || 0) + n; let up = false;
   while (a.xp[k] >= axNeed(a.xl[k] || 0) && (a.xl[k] || 0) < 30) { a.xp[k] -= axNeed(a.xl[k] || 0); a.xl[k] = (a.xl[k] || 0) + 1; up = true; }
   axFloat(up ? `+1 ${AXN[k]}` : `+${n} exp. ${AXN[k]}`, up); if (up) { G().toast(`💪 Tu ${AXN[k]} subió a ${(a[k] || 0) + a.xl[k]} de tanto practicar.`); G().save(); }
   else { AXS.dirty = (AXS.dirty || 0) + 1; if (AXS.dirty > 6) { AXS.dirty = 0; G().save(); } }
@@ -4955,7 +4955,7 @@ async function attrOpen() { try { if (document.getElementById('view3d').hidden) 
 function ptsFree() { const a = atP(); return Math.max(0, (Math.min(LV_MAX, lvlNow()) - 1) * ATTR_PER_LV - (a.spent || 0)); }
 function humHalo() { const g = new THREE.Group(), r = new THREE.Mesh(new THREE.TorusGeometry(.32, .025, 8, 32), new THREE.MeshBasicMaterial({ color: '#FFD25E', transparent: true, opacity: .85, blending: THREE.AdditiveBlending, depthWrite: false })); r.rotation.x = Math.PI / 2; r.position.y = 2.15; g.add(r); g.name = 'humHalo'; return g; }
 function svXP(n) { const p = G().P(); p.bonus = (p.bonus || 0) + Math.round(n * (S && S.hx ? 1 + [0, .05, .05, .1, .1, .15][ft('ale')] + atr('sab') * .2 : 1 + atr('sab') * .2)); }
-function svAdd(k, n) { const s = svP(); s.inv[k] = Math.max(0, (s.inv[k] || 0) + n); }
+function svAdd(k, n) { if (k === 'money' && n > 0 && G() && G().khLocked && G().khLocked()) return; const s = svP(); s.inv[k] = Math.max(0, (s.inv[k] || 0) + n); }
 function svHas(need) { const s = svP(); return Object.entries(need).every(([k, n]) => (s.inv[k] || 0) >= n); }
 function svPay(need) { Object.entries(need).forEach(([k, n]) => svAdd(k, -n)); }
 function svTool(t) { return svP().tools.includes(t); }
