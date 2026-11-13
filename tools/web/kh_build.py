@@ -36,13 +36,13 @@ assert 'data-go="kids"' in h and 'data-go="hero"' in h
 CURSOS = [
     ('Curso 1 · Muy pronto', True, 'Tras sus pasos', 'La vida de Jesús, de Belén a la tumba vacía.', '/assets/kh/tras-v3.jpg',
      ['Nacimiento', 'Infancia', 'Bautismo', 'Galilea', 'Milagros', 'Parábolas', 'Jerusalén', 'La cruz', 'Resurrección']),
-    ('Curso 2 · Próximamente', False, 'Hechos', 'El Espíritu llega y la iglesia nace y sale a las naciones.', '/assets/kh/hechos-v3.jpg',
+    ('Curso 2 · Próximamente', False, 'Hechos', 'El Espíritu llega y la iglesia nace y sale a las naciones.', W + '43ca3b_8c82b0930ca5473a91f27b1d7f2fa31a~mv2.jpg',
      ['Pentecostés', 'La iglesia en Jerusalén', 'Esteban', 'Felipe y el etíope', 'Saulo en el camino', 'Pedro y Cornelio', 'Los viajes de Pablo', 'Pablo en Roma']),
-    ('Curso 3 · Próximamente', False, 'Maranata', '¡Cristo viene! Apocalipsis contado para niños y adolescentes.', '/assets/kh/maranata-v3.jpg',
+    ('Curso 3 · Próximamente', False, 'Maranata', '¡Cristo viene! Apocalipsis contado para niños y adolescentes.', W + '43ca3b_bab4ba24d11a487bb4e73cacb4d25857~mv2.jpg',
      ['Jesús vuelve', 'Las siete iglesias', 'El trono de Dios', 'El Cordero y el rollo', 'Los sellos', 'El pueblo de Dios cuidado', 'La Nueva Jerusalén', 'Cielo nuevo y tierra nueva']),
-    ('Curso 4 · En preparación', False, 'En el principio', 'Génesis: la creación y las familias que caminaron con Dios.', '/assets/kh/principio-v3.jpg',
+    ('Curso 4 · En preparación', False, 'En el principio', 'Génesis: la creación y las familias que caminaron con Dios.', W + '43ca3b_e30197b7af2c4b9d8f24e6f87dc0c1ea~mv2.jpg',
      ['La creación', 'Adán y Eva', 'Noé', 'Babel', 'Abraham', 'Isaac', 'Jacob', 'José']),
-    ('Curso 5 · En preparación', False, 'Héroes de la fe', 'Hombres y mujeres que confiaron en Dios cuando todo parecía imposible.', '/assets/kh/heroes-v3.jpg',
+    ('Curso 5 · En preparación', False, 'Héroes de la fe', 'Hombres y mujeres que confiaron en Dios cuando todo parecía imposible.', W + '43ca3b_a07237f8d1784d8f9e30b9216b415457~mv2.jpg',
      ['Moisés', 'El mar Rojo', 'Josué y Jericó', 'Débora', 'Gedeón', 'Samuel', 'David y Goliat', 'Daniel']),
 ]
 def _card(st, on, t, d, img, hitos):
