@@ -17,3 +17,7 @@ Desde noviembre de 2026 la lógica del juego vive acá y el sitio de Wix solo la
 
 Para publicar una versión nueva: subir los cambios a `main`, copiar el hash del commit y reemplazarlo en esa línea del `index.html` del sitio.
 La música de fondo está en la rama `musica` y se importó al Media Manager de Wix.
+
+## Publicar la web de Habitat
+
+El sitio del dominio habitat-cfm.org es el de Wix "Habitat" (metaSiteId `1a595c6b-303a-4413-b8cb-9146149fad06`). El build (`habitat-build.zip`) se sube ahí con UploadHeadlessWebsiteFiles (prepare + PUT + release). El `siteId` de `habitat-astro/wix.config.json` es otro sitio y no es el del dominio.
