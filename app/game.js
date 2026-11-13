@@ -3054,7 +3054,7 @@ async function khCheck(force){const u=khUid();if(!u){KH.activo=false;return fals
   if(KH.activo)khCredit();return KH.activo;}
 function khCredit(){const p=current;if(!p||!p.kh)return;const w=Math.max(0,totalRaw(p)-(p.kh.cap||0));p.kh=null;save();try{refreshHud();refreshMap();}catch(e){}khPill();if(w>0)toast('¡Pase activado! Se acreditaron '+w+' puntos que tenías en espera.');else toast('¡Pase activado! Ya podés seguir tu camino.');}
 const khMaxR=p=>{let m=curRegion();(p.visited||[]).forEach(id=>{const n=NODES[id];if(n&&n.r!=null&&n.r>m)m=n.r;});return m;};
-const khBusy=()=>!!(document.querySelector('.v3lobby')||(window.W3&&W3.S&&!W3.S())||ar||!$('#stop').hidden||document.querySelector('.exam')||document.querySelector('.khp'));
+const khBusy=()=>!!(document.querySelector('.v3lobby')||!(window.W3&&W3.S&&W3.S())||ar||!$('#stop').hidden||document.querySelector('.exam')||document.querySelector('.khp'));
 function khEval(){const p=current;if(!p||KH.activo===true)return;const ex=p.exams||{},due=(p.playMs||0)>=KH_FREE||!!(ex[KH_STAGE]&&ex[KH_STAGE].passed);if(p.kh&&p.kh.cap!=null&&!due){p.kh=null;save();khPill();try{refreshHud();}catch(e){}return;}if(p.kh&&p.kh.cap!=null){khPill();if(KH.want&&!khBusy()){const k=KH.want;KH.want=null;khShow(k);}return;}
   if(!due)return;
   if(KH.activo==null&&!p.demo){khCheck().then(a=>{if(!a)khEval();});return;}
