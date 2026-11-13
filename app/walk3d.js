@@ -48,6 +48,13 @@ function regionStone(scene) {
 }
 function mat(color, opts) { return new THREE.MeshStandardMaterial(Object.assign({ color, roughness: .85, metalness: 0 }, opts || {})); }
 // letreros de Hero: letras de arena (Cinzel 800) con degradé cálido, contorno oscuro, sombra, brillo y grano sutil
+// grano dorado: una sola textura de ruido armada una vez (antes eran miles de puntos por letrero y trababa las compus modestas)
+let _gN = null;
+function goldNoise() {
+  if (_gN) return _gN; const W = 256, H = 128, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d'), d = x.createImageData(W, H); let sd = 7; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < W * H / 6; i++) { const v = rnd(), p = ((Math.floor(rnd() * H) * W) + Math.floor(rnd() * W)) * 4; if (v < .5) { d.data[p] = 60; d.data[p + 1] = 40; d.data[p + 2] = 10; d.data[p + 3] = 56; } else { d.data[p] = 255; d.data[p + 1] = 245; d.data[p + 2] = 215; d.data[p + 3] = 51; } }
+  x.putImageData(d, 0, 0); return (_gN = c);
+}
 function goldPaint(x, txt, cx, cy, f) {
   x.font = `800 ${f}px Cinzel, Fraunces, Georgia, serif`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round';
   x.save(); x.shadowColor = 'rgba(0,0,0,.8)'; x.shadowBlur = f * .22; x.shadowOffsetY = f * .08; x.lineWidth = f * .2; x.strokeStyle = '#1f170a'; x.strokeText(txt, cx, cy); x.restore();
@@ -59,7 +66,7 @@ function goldPaint(x, txt, cx, cy, f) {
   y.font = x.font; y.textAlign = 'center'; y.textBaseline = 'middle'; y.fillStyle = '#fff'; y.fillText(txt, w / 2, h / 2); y.globalCompositeOperation = 'source-in';
   const s = y.createLinearGradient(0, 0, w, h); s.addColorStop(0, 'rgba(255,248,220,0)'); s.addColorStop(.42, 'rgba(255,248,220,0)'); s.addColorStop(.5, 'rgba(255,248,220,.35)'); s.addColorStop(.58, 'rgba(255,248,220,0)'); s.addColorStop(1, 'rgba(255,248,220,0)'); y.fillStyle = s; y.fillRect(0, 0, w, h);
   x.drawImage(o, cx - w / 2, cy - h / 2);
-  { const q = document.createElement('canvas'); q.width = w; q.height = h; const z = q.getContext('2d'); z.font = x.font; z.textAlign = 'center'; z.textBaseline = 'middle'; z.fillStyle = '#fff'; z.fillText(txt, w / 2, h / 2); z.globalCompositeOperation = 'source-in'; let sd = 7; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647; for (let i = 0; i < w * h / 6; i++) { const v = rnd(); z.fillStyle = v < .5 ? 'rgba(60,40,10,.22)' : 'rgba(255,245,215,.2)'; z.fillRect(rnd() * w, rnd() * h, 1.2, 1.2); } x.drawImage(q, cx - w / 2, cy - h / 2); }
+  { const q = document.createElement('canvas'); q.width = w; q.height = h; const z = q.getContext('2d'); z.font = x.font; z.textAlign = 'center'; z.textBaseline = 'middle'; z.fillStyle = '#fff'; z.fillText(txt, w / 2, h / 2); z.globalCompositeOperation = 'source-in'; z.fillStyle = z.createPattern(goldNoise(), 'repeat'); z.fillRect(0, 0, w, h); x.drawImage(q, cx - w / 2, cy - h / 2); }
   x.save(); x.beginPath(); x.rect(0, cy - f, x.canvas.width, f * .62); x.clip(); x.lineWidth = f * .025; x.strokeStyle = 'rgba(255,240,190,.6)'; x.strokeText(txt, cx, cy - f * .02); x.restore();
 }
 function goldSprite(txt) {
