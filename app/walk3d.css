@@ -836,7 +836,7 @@ body[data-layout="pc"] #arcade .ar-in{max-width:720px}
 .sv-next{display:block;margin-top:3px;font-size:11.5px;opacity:.8}
 
 /* ===== Pase Kids & Hero: ventana de pago y marca de modo recorrido ===== */
-.khp{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(5,6,12,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.khp{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(5,6,12,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 .khp .kh-in{position:relative;width:min(100%,390px);max-height:calc(100dvh - 36px);overflow:auto;border-radius:22px;padding:26px 22px 18px;text-align:center;color:#F6EEDD;background:linear-gradient(180deg,#2A2015,#14100B);border:1px solid rgba(233,195,122,.45);box-shadow:0 24px 60px rgba(0,0,0,.55)}
 .khp.kid .kh-in{color:#fff;background:linear-gradient(180deg,#4C5FB8,#22327E);border-color:rgba(255,226,180,.55)}
 .khp small{display:block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.75;margin-bottom:6px}
@@ -856,7 +856,7 @@ body[data-layout="pc"] #arcade .ar-in{max-width:720px}
 .khp .kh-ans{width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.25);color:#fff;font-size:20px;text-align:center;margin-bottom:10px}
 .khp .kh-ok{width:100%;padding:12px;border:0;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;background:#fff;color:#22327E}
 .khp .kh-err{color:#FFB4B4;margin-top:8px}
-.kh-pill{position:fixed;z-index:8000;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 16px;border-radius:999px;border:1px solid rgba(233,195,122,.55);background:rgba(20,16,11,.82);color:#F6EEDD;font-size:12px;line-height:1.2;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.kh-pill{position:fixed;z-index:2147482000;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 16px;border-radius:999px;border:1px solid rgba(233,195,122,.55);background:rgba(20,16,11,.82);color:#F6EEDD;font-size:12px;line-height:1.2;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .kh-pill b{color:#E9C37A;font-size:12.5px}
 body[data-branch="kids"] .kh-pill{background:rgba(34,50,126,.85);border-color:rgba(255,226,180,.6)}
 body[data-branch="kids"] .kh-pill b{color:#FFD25E}
