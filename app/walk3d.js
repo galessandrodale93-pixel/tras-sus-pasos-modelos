@@ -1881,7 +1881,9 @@ function gardenScene(scene, p, yAt, poiProp, hx, HW) {
   { const [x, z] = W(-17, -6), pr = matMesh('press'); pr.position.set(x, yAt(x, z), z); pr.rotation.y = R() * 6; pr.scale.setScalar(1.2); scene.add(pr); S.cols.push({ x0: x - 1.2, x1: x + 1.2, z0: z - 1.2, z1: z + 1.2, cx: x, cz: z, r: 1.15 });
     const [x2, z2] = W(-15.6, -7.4); poiProp('ceramic_pot', [{ x: x2, y: yAt(x2, z2), z: z2, ry: 1, s: 1.2 }], { shadow: true, nocol: 1 }); const [x3, z3] = W(-18.4, -4.6); poiProp('wicker_basket_02', [{ x: x3, y: yAt(x3, z3), z: z3, ry: 2, s: 2, v: 1 }], { shadow: true, nocol: 1 }); }
   // tres discípulos dormidos cerca de la roca (Pedro, Jacobo y Juan)
-  try { [[11, 3.2, '#6A5A44'], [12.6, 4.6, '#3E5A6A'], [10, 5.4, '#7A6A4A']].forEach(([u, v, cl], i) => { const [x, z] = W(u, v), o = buildHeroAvatar({ g: 'chico', age: 18, skin: ['#C99A72', '#B98A62', '#D6A57C'][i], hair: '#2A1B14', outfit: cl, anim: ['Sitting_Idle_Loop', 'Sitting_Idle', 'M_Kneeling_Idle'] }); o.position.set(x, yAt(x, z), z); o.rotation.y = Math.atan2(rx - x, rz - z) + Math.PI + (i - 1) * .5; scene.add(o); S.cols.push({ x0: x - .45, x1: x + .45, z0: z - .45, z1: z + .45, cx: x, cz: z, r: .4 }); }); } catch (e) { console.warn('discípulos', e); }
+  const dis = [];
+  try { [[11, 3.2, '#6A5A44'], [12.6, 4.6, '#3E5A6A'], [10, 5.4, '#7A6A4A']].forEach(([u, v, cl], i) => { const [x, z] = W(u, v), o = buildHeroAvatar({ g: 'chico', age: 18, skin: ['#C99A72', '#B98A62', '#D6A57C'][i], hair: '#2A1B14', outfit: cl, anim: [['M_Laying_Sleeping', 'Sitting_Idle_Loop'], ['M_Sleeping_Idle', 'Sitting_Idle'], ['M_Laying_Sleeping', 'M_Kneeling_Idle']][i] }); o.userData.stay = 1; o.position.set(x, yAt(x, z), z); o.rotation.y = Math.atan2(rx - x, rz - z) + Math.PI + (i - 1) * .5; scene.add(o); dis.push(o); S.cols.push({ x0: x - .45, x1: x + .45, z0: z - .45, z1: z + .45, cx: x, cz: z, r: .4 }); }); } catch (e) { console.warn('discípulos', e); }
+  try { gardenLife(scene, p, yAt, W, rx, rz, dis, hx); } catch (e) { console.warn('getsemaní', e); }
   S.rooms.push({ x0: p.x - 24, x1: p.x + 24, z0: p.z - 24, z1: p.z + 24, trade: 'huerto', roof: [], open: true, y }); const lb = textSprite(p.name, hx); lb.scale.multiplyScalar(1.3); lb.position.set(p.x, y + 7, p.z); scene.add(lb);
 }
 // ---------- la orilla del lago (Juan 21): playa de arena y piedras, barcas varadas, redes secándose, canastas de pescado y el fuego con pan ----------
@@ -2256,7 +2258,8 @@ function desertScene(scene, p, yAt, poiProp, hx, HW) {
 }
 /* lugares para tocar: en Hero con la acción, en Kids se abren solos al acercarse */
 function loreNear(r) { if (!S || !S.lore) return null; const a = S.av.position; let best = null, bd = r * r; for (const l of S.lore) { const d = (l.x - a.x) ** 2 + (l.z - a.z) ** 2; if (d < (l.r || r) ** 2 && d < bd + 4) { bd = d; best = l; } } return best; }
-function loreDo(l) { placeCard(l.info); l.t = 0; l.on = 1; }
+function loreDo(l) { placeCard(l.info); l.t = 0; l.on = 1; if (l.go) try { l.go(); } catch (e) {} }
+function loreTick(dt) { const a = S.av.position; for (const l of S.lore) { if (l.on) { l.t += dt; if (l.t > (l.dur || 3)) l.on = 0; } if (!S.hx && !l.seen && (l.x - a.x) ** 2 + (l.z - a.z) ** 2 < (l.r || 2.6) ** 2) { l.seen = 1; loreDo(l); } } }
 function desertLife(scene, p, yAt, sd, rf, hx) {
   const D = S.desert = { t: 0, bees: [], stones: [], hawk: null, dust: null, beam: null }, gold = new THREE.Color('#FFC86A');
   /* piedras redondas como panes, en el centro */
@@ -2265,7 +2268,7 @@ function desertLife(scene, p, yAt, sd, rf, hx) {
     D.stones = sm; S.lore.push({ x: cx, z: cz, r: 2.6, label: 'Mirar las piedras', fx: 'stones', info: ['Piedras como panes', 'Después de cuarenta días de ayuno, el tentador le dijo a Jesús que convirtiera estas piedras en pan. Jesús le respondió con la Escritura: el hombre vive de toda palabra que sale de la boca de Dios.', 'Mateo 4:3-4'] }); }
   /* la cueva del ayuno */
   { const x = rf.x + sd * 3.4, z = rf.z - 1.2; S.lore.push({ x, z, r: 2.8, label: 'Entrar a la cueva', info: ['La cueva del ayuno', 'El Espíritu llevó a Jesús al desierto. Ahí ayunó cuarenta días y cuarenta noches, y al final tuvo hambre.', 'Mateo 4:1-2'] });
-    const L = new THREE.PointLight('#FFB45A', .9, 5, 2); L.position.set(x, yAt(x, z) + .5, z); scene.add(L); const lamp = new THREE.Mesh(new THREE.SphereGeometry(.07, 8, 6), new THREE.MeshBasicMaterial({ color: '#FFD08A' })); lamp.position.copy(L.position); scene.add(lamp); D.lamp = L; }
+    const L = glowSpr('#FFB45A', 2.2, .7); L.position.set(x, yAt(x, z) + .5, z); scene.add(L); const lamp = new THREE.Mesh(new THREE.SphereGeometry(.07, 8, 6), new THREE.MeshBasicMaterial({ color: '#FFD08A' })); lamp.position.copy(L.position); scene.add(lamp); D.lamp = L; }
   /* panal entre las rocas, con abejas */
   { const x = rf.x - sd * 1.2, z = rf.z - 3.9, y = yAt(x, z) + 1.3, hv = new THREE.Mesh(new THREE.CylinderGeometry(.32, .26, .5, 6), new THREE.MeshStandardMaterial({ color: '#D9962E', roughness: .45, emissive: '#5A3200', emissiveIntensity: .35 })); hv.position.set(x, y, z); hv.rotation.z = .3; scene.add(hv);
     const bm = new THREE.MeshBasicMaterial({ color: '#2A2010' }); for (let i = 0; i < 9; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(.035, 6, 4), bm); scene.add(b); D.bees.push({ b, c: hv.position, ph: i * .7, r: .4 + (i % 3) * .2 }); }
@@ -2282,14 +2285,32 @@ function desertLife(scene, p, yAt, sd, rf, hx) {
   { const n = 320, pos = new Float32Array(n * 3), seed = new Float32Array(n); for (let i = 0; i < n; i++) seed[i] = Math.random(); const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     const m = new THREE.Points(g, new THREE.PointsMaterial({ color: '#D9BF8E', size: hx ? .07 : .1, map: dotTex(), alphaTest: .02, transparent: true, opacity: .55, depthWrite: false })); m.frustumCulled = false; scene.add(m); D.dust = { m, seed, n, p, sd, yAt }; }
 }
+function glowSpr(c, sc, op) { const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex(), color: c, transparent: true, opacity: op == null ? .8 : op, depthWrite: false, blending: THREE.AdditiveBlending })); m.scale.setScalar(sc); return m; } /* brillo sin luces reales: no le suma costo a cada material */
 function dotTex() { if (dotTex.t) return dotTex.t; const c = document.createElement('canvas'); c.width = c.height = 32; const x = c.getContext('2d'), g = x.createRadialGradient(16, 16, 0, 16, 16, 16); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.5, 'rgba(255,255,255,.5)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 32, 32); dotTex.t = new THREE.CanvasTexture(c); return dotTex.t; }
+/* Getsemaní de noche: luna, luciérnagas, la luz del ángel sobre la roca, los discípulos que se despiertan y las antorchas que llegan */
+function gardenLife(scene, p, yAt, W, rx, rz, dis, hx) {
+  const G2 = S.garden = { t: 0, p, dis, flies: null, beam: null, moon: null, torches: [], press: null };
+  { const m = new THREE.Mesh(new THREE.CircleGeometry(4.2, 32), new THREE.MeshBasicMaterial({ color: '#F4F1E2', fog: false })); const g = new THREE.Mesh(new THREE.CircleGeometry(9, 32), new THREE.MeshBasicMaterial({ color: '#C9D6FF', transparent: true, opacity: .18, fog: false, depthWrite: false })); m.add(g); g.position.z = -.1; m.position.set(p.x + p.side * 40, yAt(p.x, p.z) + 46, p.z - 70); m.lookAt(p.x, yAt(p.x, p.z) + 2, p.z); scene.add(m); G2.moon = m; }
+  { const n = 70, pos = new Float32Array(n * 3), ph = new Float32Array(n); for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, r = 3 + Math.random() * 18; pos[i * 3] = p.x + Math.cos(a) * r; pos[i * 3 + 2] = p.z + Math.sin(a) * r; pos[i * 3 + 1] = yAt(pos[i * 3], pos[i * 3 + 2]) + .5 + Math.random() * 2; ph[i] = Math.random() * 20; }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); const m = new THREE.Points(g, new THREE.PointsMaterial({ color: '#F6E27A', size: hx ? .16 : .22, map: dotTex(), transparent: true, opacity: .9, depthWrite: false, blending: THREE.AdditiveBlending })); m.frustumCulled = false; scene.add(m); G2.flies = { m, base: pos.slice(), ph, n }; }
+  { const y = yAt(rx, rz), bm = new THREE.Mesh(new THREE.CylinderGeometry(.9, 2.4, 30, 18, 1, true), new THREE.MeshBasicMaterial({ color: '#FFF1C8', transparent: true, opacity: .07, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); bm.position.set(rx, y + 15, rz); scene.add(bm); G2.beam = bm;
+    S.lore.push({ x: rx - p.side * 1.6, z: rz + .4, r: 2.8, label: 'Orar en la roca', dur: 6, go: () => { if (S.hx) h3do(['M_Praying', 'M_Kneeling_Idle'], 5); }, info: ['La roca de la oración', 'Jesús se arrodilló y oró: «Padre, si quieres, pasa de mí esta copa; pero que se haga tu voluntad». Entonces se le apareció un ángel del cielo que lo fortalecía.', 'Lucas 22:41-43'] }); }
+  if (dis.length) { const c = dis[0].position; S.lore.push({ x: c.x, z: c.z, r: 2.6, label: 'Despertar a los discípulos', dur: 5, go: () => dis.forEach((o, i) => setTimeout(() => h3npcPlay(o, ['M_Yawn', 'M_Sit_To_Stand', 'M_Looking_Around'], 3.2), i * 400)), info: ['Velen y oren', 'Jesús volvió y encontró a Pedro, Jacobo y Juan dormidos. Les dijo: «¿No pudieron velar conmigo ni una hora? Velen y oren para no caer en tentación».', 'Mateo 26:40-41'] }); }
+  { const [x, z] = W(-17, -6); S.lore.push({ x, z, r: 2.8, label: 'Mirar el lagar', fx: 'press', info: ['La prensa de aceite', 'Getsemaní quiere decir «prensa de aceite». Acá se prensaban las aceitunas del olivar, y acá Jesús pasó su noche de mayor angustia.', 'Marcos 14:32'] }); }
+  { const [ex, ez] = W(-30, 2); for (let i = 0; i < 5; i++) { const x = ex - p.side * (i % 2) * 1.4, z = ez + (i - 2) * 1.3, y = yAt(x, z), L = glowSpr('#FF9A3C', 2.6, .75), f = new THREE.Mesh(new THREE.SphereGeometry(.13, 8, 6), new THREE.MeshBasicMaterial({ color: '#FFC46A' })); L.position.set(x, y + 1.9, z); f.position.copy(L.position); scene.add(L, f); G2.torches.push({ L, f, x0: x, z0: z, y, ph: i * 1.3 }); }
+    S.lore.push({ x: ex, z: ez, r: 4, label: 'Mirar las antorchas', info: ['Llegan con antorchas', 'Judas llegó con una tropa de soldados y guardias, con antorchas, lámparas y armas. Jesús salió a su encuentro y les dijo: «Yo soy».', 'Juan 18:3-5'] }); }
+}
+function gardenTick(dt) { const G2 = S.garden, a = S.av.position; if (Math.abs(a.z - G2.p.z) > 110) return; G2.t += dt; const t = G2.t;
+  if (G2.flies) { const f = G2.flies, P = f.m.geometry.attributes.position; for (let i = 0; i < f.n; i++) { const k = t * .4 + f.ph[i]; P.setXYZ(i, f.base[i * 3] + Math.sin(k) * .9, f.base[i * 3 + 1] + Math.sin(k * 1.7) * .35, f.base[i * 3 + 2] + Math.cos(k * .8) * .9); } P.needsUpdate = true; f.m.material.opacity = .6 + Math.sin(t * 2.3) * .3; }
+  if (G2.beam) { const on = S.lore.some(l => l.label === 'Orar en la roca' && l.on); G2.beam.material.opacity += ((on ? .5 : .07 + Math.sin(t * .9) * .03) - G2.beam.material.opacity) * Math.min(1, dt * 2); }
+  G2.torches.forEach((q, i) => { const s = Math.sin(t * .25 + q.ph); q.f.position.x = q.x0 + Math.sin(t * .3 + i) * .5; q.f.position.z = q.z0 + s * .6; q.f.position.y = q.y + 1.9 + Math.sin(t * 2.2 + i) * .05; q.L.position.copy(q.f.position); q.L.material.opacity = .65 + Math.sin(t * 13 + i) * .12 + Math.sin(t * 29 + i * 2) * .07; });
+}
 function desertTick(dt) { const D = S.desert, a = S.av.position; D.t += dt; const t = D.t;
   if (Math.abs(a.z - (D.dust ? D.dust.p.z : a.z)) > 90) return;
   if (D.stones) { const on = S.lore.find(l => l.fx === 'stones' && l.on); D.stones.emissiveIntensity = on ? Math.max(0, .55 * Math.sin(Math.min(1, on.t / 2.5) * Math.PI)) : 0; }
-  for (const l of S.lore) { if (l.on) { l.t += dt; if (l.t > 3) l.on = 0; } if (!S.hx && !l.seen && (l.x - a.x) ** 2 + (l.z - a.z) ** 2 < (l.r || 2.6) ** 2) { l.seen = 1; loreDo(l); } }
   const fast = S.lore.some(l => l.fx === 'bees' && l.on) ? 2.4 : 1; D.bees.forEach((q, i) => { const k = t * 3.2 * fast + q.ph; q.b.position.set(q.c.x + Math.cos(k) * q.r * fast, q.c.y + Math.sin(k * 1.7) * .25, q.c.z + Math.sin(k) * q.r * fast); });
   if (D.beam) { const on = S.lore.some(l => l.fx === 'beam' && l.on); D.beam.material.opacity += ((on ? .42 : .14 + Math.sin(t * 1.3) * .04) - D.beam.material.opacity) * Math.min(1, dt * 3); D.beam.rotation.y += dt * .2; }
-  if (D.lamp) D.lamp.intensity = .8 + Math.sin(t * 9) * .12 + Math.sin(t * 23) * .06;
+  if (D.lamp) D.lamp.material.opacity = .6 + Math.sin(t * 9) * .1 + Math.sin(t * 23) * .05;
   if (D.hawk) { const h = D.hawk, an = t * .22, r = 16; h.g.position.set(h.cx + Math.cos(an) * r, h.y + Math.sin(t * .5) * 1.2, h.cz + Math.sin(an) * r); h.g.rotation.set(0, -an, .35); const fl = (t % 7) < 1.4 ? Math.sin(t * 14) * .5 : .08; h.wl.rotation.z = fl; h.wr.rotation.z = -fl; }
   if (D.dust) { const q = D.dust, P = q.m.geometry.attributes.position, cx = q.p.x - q.sd * (Math.sin(t * .05) * 10 - 6), cz = q.p.z + Math.sin(t * .083) * 11, y0 = q.yAt(cx, cz);
     for (let i = 0; i < q.n; i++) { const s0 = q.seed[i], hh = ((s0 * 7 + t * .35) % 1), rr = (.15 + hh * hh * 1.6) * (.75 + s0 * .5), an = s0 * 40 + t * (6 - hh * 3); P.setXYZ(i, cx + Math.cos(an) * rr, y0 + hh * 4.5, cz + Math.sin(an) * rr); } P.needsUpdate = true; q.m.material.opacity = .35 + Math.sin(t * .4) * .15; } }
@@ -2384,7 +2405,7 @@ function roomTick(dt) {
   if (inR !== S.inRoom) { if (inR && !S.inRoom) S.camKeep = { d: S.camDist, p: S.camPitch }; if (!inR && S.camKeep) { S.camDist = S.camKeep.d; S.camPitch = S.camKeep.p; S.camKeep = null; } S.inRoom = inR; }
   if (inR) { S.camDist += (Math.min(S.camKeep ? S.camKeep.d : 6, 5.2) - S.camDist) * Math.min(1, dt * 3); S.camPitch += (Math.max(S.camKeep ? S.camKeep.p : .4, .95) - S.camPitch) * Math.min(1, dt * 3); }
   const here = inR || openR; if (here && here.trade && TRADE_INFO[here.trade]) { const p = G().P(); p.seen = p.seen || {}; if (!p.seen[here.trade]) { p.seen[here.trade] = 1; G().save(); placeCard(TRADE_INFO[here.trade]); } }
-  if (S.desert) desertTick(dt);
+  if (S.lore && S.lore.length) loreTick(dt); if (S.desert) desertTick(dt); if (S.garden) gardenTick(dt);
   if (S.lake) { S.lake.uni.t.value += dt; S.lake.boats.forEach((b, i) => { b.position.y = b.userData.y0 + Math.sin(S.t * 1.2 + i) * .06; b.rotation.z = Math.sin(S.t * .9 + i * 2) * .04; }); (S.lake.fishers || []).forEach(f => { f.t -= dt; const n = f.net;
     if (f.k < 0 && f.t <= 0) { h3npcPlay(f.o, ['M_Throw', 'M_Picking_Up'], 2.2); f.k = 0; const wp = new THREE.Vector3(); f.o.getWorldPosition(wp); const q = f.o.getWorldQuaternion(new THREE.Quaternion()), fw = new THREE.Vector3(0, 0, 1).applyQuaternion(q); n.position.set(wp.x + fw.x * 3.2, WATER.WL + .03, wp.z + fw.z * 3.2); n.visible = true; }
     if (f.k >= 0) { f.k += dt; const e = f.k < .7 ? 0 : Math.min(1, (f.k - .7) / .6); n.scale.setScalar(.2 + e * 2.2); n.material.opacity = f.k < 5 ? Math.min(.85, e) : Math.max(0, .85 - (f.k - 5) * .6); n.position.y = WATER.WL + .03 - Math.max(0, f.k - 3) * .05; if (f.k > 6.5) { n.visible = false; f.k = -1; f.t = 9 + Math.random() * 8; h3npcPlay(f.o, ['M_Picking_Up', 'M_Lifting_Object'], 2); } } }); }
@@ -4023,7 +4044,7 @@ function talkLayer(o, u, dt, tgt) {
 }
 /* gente que camina: la mayoría de los personajes pasea alrededor de su lugar, se frena si el jugador se acerca
    y vuelve a su postura; los que están arrodillados, sentados, trabajando o con algo en las manos se quedan quietos */
-const W_STILL = /Kneel|Crouch|Sit|Sad|Lying|Pray|Pick|Box|Holding|Death|Reach|Lift|Throw|Drink|Yawn/i;
+const W_STILL = /Kneel|Crouch|Sit|Sad|Lying|Laying|Sleep|Pray|Pick|Box|Holding|Death|Reach|Lift|Throw|Drink|Yawn/i;
 function wanderReg(o) { for (const L of [VIL.npcs, MAT.npcs]) for (const v of L || []) if (v && v.o === o) return v; return null; }
 function wanderTick(dt) {
   if (!S || !H3.npcs.length || CINE.on) return; const a = S.av.position, W = S.W;
