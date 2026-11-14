@@ -1004,29 +1004,65 @@ async function go(id) {
   if (S.npos && S.npos[id]) await walkLine(S.npos[id][0], S.npos[id][1]);
   S.walking = false; S.onStop = id; p.pos = id; g.save(); S.sig = ''; g.arrive(id); refresh();
 }
-function walkLine(x1, z1) {
+/* ---------- dónde se pisa: el piso depende de a qué altura venís ----------
+   Rampas, escalones y terrazas solo se pisan si están a un paso de altura (STEP) de donde estás; si pasás por debajo de una
+   terraza seguís en el suelo, y si te bajás por el costado de una escalera caés con gravedad (no aparecés de golpe abajo). */
+const STEP = .6;
+function groundAt(x, z, cur) {
+  const t = S.W ? Math.max(0, S.W.hAt(x, z)) : 0; let g = t; const c = cur == null ? 1e9 : cur;
+  for (const h of [stairH(x, z), floorH(x, z), rampH(x, z)]) if (h > g && h <= c + STEP) g = h;
+  return g;
+}
+// escalones y rampas son macizos: desde abajo no se atraviesan (las terrazas sí tienen hueco debajo)
+function solidAbove(x, z, cur) { const c = cur == null ? 0 : cur; return stairH(x, z) > c + STEP || rampH(x, z) > c + STEP; }
+
+/* ---------- caminar solo sin atravesar nada: busca un camino libre alrededor de casas, muros y escaleras ---------- */
+let WF_COLS = null; // mientras se busca un camino, solo los obstáculos de esa zona (hay más de mil en el mundo)
+function walkFree(x, z, cur) { return !blockedAt(x, z, WF_COLS) && !solidAbove(x, z, cur) && Math.abs(x) < XB; }
+function colsNear(x0, z0, x1, z1, m) { const a = Math.min(x0, x1) - m, b = Math.max(x0, x1) + m, c = Math.min(z0, z1) - m, d = Math.max(z0, z1) + m; return (S.cols || []).filter(q => q.x1 > a && q.x0 < b && q.z1 > c && q.z0 < d); }
+function findPath(x0, z0, x1, z1) { WF_COLS = colsNear(x0, z0, x1, z1, 18); try { return findPath0(x0, z0, x1, z1); } finally { WF_COLS = null; } }
+function findPath0(x0, z0, x1, z1) {
+  const cur = S.gy || 0, seg = (ax, az, bx, bz) => { const L = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.ceil(L / .3)); for (let i = 1; i <= n; i++) if (!walkFree(ax + (bx - ax) * i / n, az + (bz - az) * i / n, cur)) return false; return true; };
+  if (seg(x0, z0, x1, z1)) return [[x0, z0], [x1, z1]];
+  const C = .7, M = 16, minX = Math.min(x0, x1) - M, minZ = Math.min(z0, z1) - M, nx = Math.min(320, Math.ceil((Math.max(x0, x1) + M - minX) / C)), nz = Math.min(320, Math.ceil((Math.max(z0, z1) + M - minZ) / C));
+  const cx = i => minX + (i + .5) * C, cz = j => minZ + (j + .5) * C, id = (i, j) => j * nx + i, N = nx * nz, free = new Int8Array(N).fill(-1);
+  const isFree = (i, j) => { const k = id(i, j); if (free[k] < 0) free[k] = walkFree(cx(i), cz(j), cur) ? 1 : 0; return free[k] === 1; };
+  const cl = v => Math.max(0, v), si = Math.min(nx - 1, cl(Math.floor((x0 - minX) / C))), sj = Math.min(nz - 1, cl(Math.floor((z0 - minZ) / C)));
+  let gi = Math.min(nx - 1, cl(Math.floor((x1 - minX) / C))), gj = Math.min(nz - 1, cl(Math.floor((z1 - minZ) / C)));
+  if (!isFree(gi, gj)) { let best = null; for (let r = 1; r < 8 && !best; r++) for (let di = -r; di <= r; di++) for (let dj = -r; dj <= r; dj++) { const a = gi + di, b = gj + dj; if (a >= 0 && b >= 0 && a < nx && b < nz && isFree(a, b) && !best) best = [a, b]; } if (!best) return null; [gi, gj] = best; }
+  const g = new Float32Array(N).fill(1e9), from = new Int32Array(N).fill(-1), shut = new Uint8Array(N), heap = [], hh = (i, j) => Math.hypot(i - gi, j - gj);
+  const push = (f, k) => { heap.push([f, k]); let n = heap.length - 1; while (n > 0) { const p = (n - 1) >> 1; if (heap[p][0] <= heap[n][0]) break; [heap[p], heap[n]] = [heap[n], heap[p]]; n = p; } };
+  const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let n = 0; for (;;) { const l = 2 * n + 1, r = l + 1; let m = n; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === n) break; [heap[m], heap[n]] = [heap[n], heap[m]]; n = m; } } return top; };
+  const s0 = id(si, sj), goal = id(gi, gj); g[s0] = 0; push(hh(si, sj), s0); let it = 0, found = false;
+  while (heap.length && it++ < 60000) { const [, k] = pop(); if (shut[k]) continue; shut[k] = 1; if (k === goal) { found = true; break; } const i = k % nx, j = (k / nx) | 0;
+    for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) { if (!di && !dj) continue; const a = i + di, b = j + dj; if (a < 0 || b < 0 || a >= nx || b >= nz) continue; const q = id(a, b); if (shut[q] || !isFree(a, b)) continue; if (di && dj && (!isFree(i + di, j) || !isFree(i, j + dj))) continue;
+      const ng = g[k] + (di && dj ? 1.414 : 1); if (ng < g[q]) { g[q] = ng; from[q] = k; push(ng + hh(a, b), q); } } }
+  if (!found) return null;
+  const raw = []; for (let k = goal; k >= 0 && k !== s0; k = from[k]) raw.push([cx(k % nx), cz((k / nx) | 0)]); raw.reverse(); raw.unshift([x0, z0]); const end = raw[raw.length - 1]; if (seg(end[0], end[1], x1, z1)) raw.push([x1, z1]);
+  const out = [raw[0]]; let i = 0; while (i < raw.length - 1) { let j = raw.length - 1; while (j > i + 1 && !seg(raw[i][0], raw[i][1], raw[j][0], raw[j][1])) j--; out.push(raw[j]); i = j; }
+  return out;
+}
+function walkPoly(pts) {
   return new Promise(res => {
-    const x0 = S.av.position.x, z0 = S.av.position.z, len = Math.hypot(x1 - x0, z1 - z0), dur = len / 5 * 1000, t0 = performance.now(); S.moving = true;
-    const ty = Math.atan2(x1 - x0, z1 - z0);
-    const step = now => { const k = Math.min(1, (now - t0) / dur); S.av.position.set(x0 + (x1 - x0) * k, 0, z0 + (z1 - z0) * k); let d = ty - S.yaw; while (d > Math.PI) d -= 6.283; while (d < -Math.PI) d += 6.283; S.yaw += d * .2; S.av.rotation.y = S.yaw; if (k < 1) requestAnimationFrame(step); else { S.moving = false; res(); } };
+    if (!pts || pts.length < 2) { res(); return; } let len = 0; for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    if (len < .01) { res(); return; } const dur = len / 5 * 1000, t0 = performance.now(), cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])); S.moving = true;
+    const step = now => { const k = Math.min(1, (now - t0) / dur), dd = k * len; let i = 0; while (i < pts.length - 2 && cum[i + 1] < dd) i++; const L = cum[i + 1] - cum[i] || 1, u = Math.min(1, (dd - cum[i]) / L);
+      const x = pts[i][0] + (pts[i + 1][0] - pts[i][0]) * u, z = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * u, ty = Math.atan2(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]);
+      let d = ty - S.yaw; while (d > Math.PI) d -= 6.283; while (d < -Math.PI) d += 6.283; S.yaw += d * .2; S.av.position.set(x, 0, z); S.av.rotation.y = S.yaw;
+      if (k < 1) requestAnimationFrame(step); else { S.moving = false; res(); } };
     requestAnimationFrame(step);
   });
 }
+function walkLine(x1, z1) { const x0 = S.av.position.x, z0 = S.av.position.z; let pts = null; try { pts = findPath(x0, z0, x1, z1); } catch (e) { } return walkPoly(pts || [[x0, z0], [x1, z1]]); }
 function walkEdge(a, b) {
-  return new Promise(res => {
-    let pts = S.edgePts[a + '>' + b]; if (!pts) pts = (S.edgePts[b + '>' + a] || []).slice().reverse(); if (pts.length < 2) { res(); return; }
-    let len = 0; for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
-    const speed = 5, dur = len / speed * 1000, t0 = performance.now(); S.moving = true;
-    const step = now => {
-      const k = Math.max(0, Math.min(1, (now - t0) / dur)), f = k * (pts.length - 1), i = Math.min(pts.length - 2, Math.floor(f)), u = f - i;
-      const x = pts[i][0] + (pts[i + 1][0] - pts[i][0]) * u, z = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * u;
-      const ty = Math.atan2(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]);
-      let d = ty - S.yaw; while (d > Math.PI) d -= 6.283; while (d < -Math.PI) d += 6.283; S.yaw += d * .2;
-      S.av.position.set(x, 0, z); S.av.rotation.y = S.yaw;
-      if (k < 1) requestAnimationFrame(step); else { S.moving = false; res(); }
-    };
-    requestAnimationFrame(step);
-  });
+  let pts = S.edgePts[a + '>' + b]; if (!pts) pts = (S.edgePts[b + '>' + a] || []).slice().reverse(); if (!pts || pts.length < 2) return Promise.resolve();
+  // si algún tramo del camino choca con algo (una casa, un árbol, una piedra), se rodea
+  const cur = S.gy || 0, clear = (p, q) => { const L = Math.hypot(q[0] - p[0], q[1] - p[1]), n = Math.max(1, Math.ceil(L / .3)); for (let i = 1; i <= n; i++) if (!walkFree(p[0] + (q[0] - p[0]) * i / n, p[1] + (q[1] - p[1]) * i / n, cur)) return false; return true; };
+  const out = [[S.av.position.x, S.av.position.z]];
+  for (let i = 0; i < pts.length; i++) { const p = out[out.length - 1], q = pts[i]; if (clear(p, q)) { out.push(q); continue; }
+    if (!walkFree(q[0], q[1], cur) && i < pts.length - 1) continue; // punto tapado: se saltea y se rodea hasta el siguiente
+    let r = null; try { r = findPath(p[0], p[1], q[0], q[1]); } catch (e) { } if (r) out.push(...r.slice(1)); else out.push(q); }
+  return walkPoly(out);
 }
 
 /* ---------- mochila ---------- */
@@ -1529,7 +1565,7 @@ function buildPois(scene, pois, hx, HW, R, ribbon) {
 // cajas de choque (paredes) y pisos elevados (plataforma del templo, muelle); se llenan al armar el mundo
 function rotXZ(lx, lz, r) { const c = Math.cos(r), s = Math.sin(r); return [lx * c + lz * s, -lx * s + lz * c]; }
 function wBox(x, z, r, lx0, lx1, lz0, lz1) { const P = [[lx0, lz0], [lx1, lz0], [lx0, lz1], [lx1, lz1]].map(([a, b]) => rotXZ(a, b, r)); return { x0: x + Math.min(...P.map(p => p[0])), x1: x + Math.max(...P.map(p => p[0])), z0: z + Math.min(...P.map(p => p[1])), z1: z + Math.max(...P.map(p => p[1])) }; }
-function blockedAt(x, z) { const L = S && S.cols; if (!L) return false; if (WATER.canyon && S.W && canyonAt(x, z) > .45 && S.W.roadAt(x, z) > 6) return true; if (WATER.quarry && quarryAt(x, z) > .4) return true; const r = S.hx ? .34 : .28; for (const b of L) if (x > b.x0 - r && x < b.x1 + r && z > b.z0 - r && z < b.z1 + r) { if (b.oi != null && S.sv && S.sv.felled && S.sv.felled.has(b.oi)) continue; if (b.r == null || (x - b.cx) ** 2 + (z - b.cz) ** 2 < (b.r + r) ** 2) return true; } return false; }
+function blockedAt(x, z, only) { const L = only || (S && S.cols); if (!L) return false; if (WATER.canyon && S.W && canyonAt(x, z) > .45 && S.W.roadAt(x, z) > 6) return true; if (WATER.quarry && quarryAt(x, z) > .4) return true; const r = S.hx ? .34 : .28; for (const b of L) if (x > b.x0 - r && x < b.x1 + r && z > b.z0 - r && z < b.z1 + r) { if (b.oi != null && S.sv && S.sv.felled && S.sv.felled.has(b.oi)) continue; if (b.r == null || (x - b.cx) ** 2 + (z - b.cz) ** 2 < (b.r + r) ** 2) return true; } return false; }
 function floorH(x, z) { const L = S && S.floors; if (!L) return -1; let h = -1; for (const f of L) if (x > f.x0 && x < f.x1 && z > f.z0 && z < f.z1 && f.y > h) h = f.y; return h; }
 function cnvTex(w, h, fn, rep) { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]); } return t; }
 let TT = null; // texturas compartidas
@@ -5131,7 +5167,7 @@ function freeWalk(dt) {
   const C = S.yaw + S.camYaw, fx = Math.sin(C), fz = Math.cos(C), rx = -Math.cos(C), rz = Math.sin(C);
   let mx = fx * -jy + rx * jx, mz = fz * -jy + rz * jx; const ml = Math.hypot(mx, mz) || 1; mx /= ml; mz /= ml;
   if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint ? 1.55 : 1) * (S.boostT > 0 ? 1.3 : 1), a = S.av.position, fr = frontier(), z0 = 6;
-  const ok = (x, z) => S.pocket ? pocketOk(x, z) : Math.abs(x) < XB && z > fr && z < z0 && !blockedAt(x, z);
+  const ok = (x, z) => S.pocket ? pocketOk(x, z) : Math.abs(x) < XB && z > fr && z < z0 && !blockedAt(x, z) && !solidAbove(x, z, S.gy);
   let nx = a.x + mx * sp, nz = a.z + mz * sp;
   if (!ok(nx, nz)) { if (nz <= fr && performance.now() - (S.wallT || 0) > 6000) { S.wallT = performance.now(); G().toast('Hasta acá llega el camino por ahora.'); } if (ok(nx, a.z)) nz = a.z; else if (ok(a.x, nz)) nx = a.x; else { nx = a.x; nz = a.z; } }
   a.x = nx; a.z = nz; S.freeMoving = true; S.quiet = true; wake(); autoEnter(); if (!S.freeMoving) return;
@@ -5205,7 +5241,7 @@ function loop(now) {
     if ((m.position.x - S.av.position.x) ** 2 + (m.position.z - S.av.position.z) ** 2 < 2.6) collect(id, m);
   }
   camFollow(dt); const yaw = S.yaw + S.camYaw, a = S.av.position, ph = S.camPitch ?? .4, back = camSafeBack(a, yaw, S.camDist * Math.cos(ph)), up = (S.hx ? 1.3 : 1.02) + S.camDist * Math.sin(ph);
-  { const gnd = Math.max(S.W ? Math.max(0, S.W.hAt(a.x, a.z)) : 0, stairH(a.x, a.z), floorH(a.x, a.z), rampH(a.x, a.z)); S.gy = (S.gy ?? gnd) + (gnd - (S.gy ?? gnd)) * Math.min(1, dt * 12); if (S.jy > 0) { S.jv -= 17 * dt; S.jy = Math.max(0, S.jy + S.jv * dt); } a.y = S.gy + (S.jy || 0); }
+  { const gnd = groundAt(a.x, a.z, S.gy); if (S.gy != null && gnd < S.gy - .35) { S.fallV = (S.fallV || 0) + 22 * dt; S.gy = Math.max(gnd, S.gy - S.fallV * dt); } else { S.fallV = 0; S.gy = (S.gy ?? gnd) + (gnd - (S.gy ?? gnd)) * Math.min(1, dt * 12); } if (S.jy > 0) { S.jv -= 17 * dt; S.jy = Math.max(0, S.jy + S.jv * dt); } a.y = S.gy + (S.jy || 0); }
   if (S.W) { S.W.sunL.position.set(a.x + S.W.sunDir.x * 40, a.y + 11, a.z + S.W.sunDir.z * 40); S.W.sunL.target.position.copy(a); S.uGrass.value = t; S.W.sky.material.uniforms.t.value = t; }
   const cx = a.x - Math.sin(yaw) * back, cz = a.z - Math.cos(yaw) * back;
   S.camera.position.x += (cx - S.camera.position.x) * .08; S.camera.position.z += (cz - S.camera.position.z) * .08; { const cg = S.W ? S.W.hAt(S.camera.position.x, S.camera.position.z) : 0; S.camera.position.y += (Math.max(a.y + up, cg + .45) - S.camera.position.y) * .08; }
@@ -6580,7 +6616,7 @@ function svGive(bg) {
 
 addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 'e') axHold(false); });
 addEventListener('touchstart', () => document.body.classList.add('v3touch'), { once: true, passive: true });
-window.W3 = { merge: f => worldMerge(S.scene, f || 2), scene: () => S && S.scene, S: () => S, pois: () => S && S.pois.map(p => ({ k: p.k, id: p.id, x: Math.round(p.x), z: Math.round(p.z) })), tp: (x, z) => { S.av.position.set(x, S.W ? S.W.hAt(x, z) : 0, z); S.sig = ""; S.quiet = false; }, state: () => S, sceneStats: () => { const by = {}; try { S.scene.traverse(o => { if (!o.isMesh && !o.isSprite && !o.isPoints && !o.isLine) return; let lab = ''; for (let p = o; p && p !== S.scene; p = p.parent) { const k = Object.keys(p.userData || {}).filter(k => typeof p.userData[k] !== 'object').slice(0, 2).join(','); if (k) { lab = k; break; } if (p.name) { lab = p.name; break; } } const key = (o.isInstancedMesh ? 'inst:' : o.isSprite ? 'sprite:' : o.isSkinnedMesh ? 'skin:' : 'mesh:') + (o.material && (o.material.name || o.material.type) || '?') + ' [' + lab + ']'; by[key] = (by[key] || 0) + 1; }); } catch (e) {} return Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 40); }, renderInfo: () => { try { const i = S.renderer.info; return { calls: i.render.calls, tris: i.render.triangles, tex: i.memory.textures, geo: i.memory.geometries, ms: QUAL.ema, lv: QUAL.lv, gpu: QUAL.gpu }; } catch (e) { return null; } }, dbgHero: () => ({ VIL, SEC, MAT, AU, SND, MIX, GRP, PH, AN, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineOk2, cineBusy, crossScene, dawnScene, dawnBuild, diaryOpen, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
+window.W3 = { path: (x, z) => findPath(S.av.position.x, S.av.position.z, x, z), walk: (x, z) => walkLine(x, z), ground: (x, z) => groundAt(x, z, S.gy), merge: f => worldMerge(S.scene, f || 2), scene: () => S && S.scene, S: () => S, pois: () => S && S.pois.map(p => ({ k: p.k, id: p.id, x: Math.round(p.x), z: Math.round(p.z) })), tp: (x, z) => { S.av.position.set(x, S.W ? S.W.hAt(x, z) : 0, z); S.sig = ""; S.quiet = false; }, state: () => S, sceneStats: () => { const by = {}; try { S.scene.traverse(o => { if (!o.isMesh && !o.isSprite && !o.isPoints && !o.isLine) return; let lab = ''; for (let p = o; p && p !== S.scene; p = p.parent) { const k = Object.keys(p.userData || {}).filter(k => typeof p.userData[k] !== 'object').slice(0, 2).join(','); if (k) { lab = k; break; } if (p.name) { lab = p.name; break; } } const key = (o.isInstancedMesh ? 'inst:' : o.isSprite ? 'sprite:' : o.isSkinnedMesh ? 'skin:' : 'mesh:') + (o.material && (o.material.name || o.material.type) || '?') + ' [' + lab + ']'; by[key] = (by[key] || 0) + 1; }); } catch (e) {} return Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 40); }, renderInfo: () => { try { const i = S.renderer.info; return { calls: i.render.calls, tris: i.render.triangles, tex: i.memory.textures, geo: i.memory.geometries, ms: QUAL.ema, lv: QUAL.lv, gpu: QUAL.gpu }; } catch (e) { return null; } }, dbgHero: () => ({ VIL, SEC, MAT, AU, SND, MIX, GRP, PH, AN, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineOk2, cineBusy, crossScene, dawnScene, dawnBuild, diaryOpen, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
 
 /* En el celular se juega solo apaisado: si está en vertical, un cartel pide girarlo (en Android, al pasar a pantalla completa, además se traba en horizontal). */
 (() => {
