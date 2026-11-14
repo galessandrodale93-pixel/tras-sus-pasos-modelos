@@ -20,6 +20,8 @@ La música de fondo está en la rama `musica` y se importó al Media Manager de 
 
 ## Publicar la web de Habitat
 
+**Siempre con el workflow «Publicar web Habitat» de GitHub Actions desde `main`** (`gh workflow run habitat-publicar.yml --ref main`): arma la web completa (habitat-web, módulos js/wix y variables de Wix). Un build armado a mano desde una copia local vieja borra lo que otras sesiones publicaron.
+
 El sitio del dominio habitat-cfm.org es el de Wix "Habitat" (metaSiteId `1a595c6b-303a-4413-b8cb-9146149fad06`). El build (`habitat-build.zip`) se sube ahí con UploadHeadlessWebsiteFiles (prepare + PUT + release). `habitat-astro/wix.config.json` apunta a ese sitio (appId `2f3ac74c-c10a-465d-b015-521a2e267af8`); para compilar hace falta `WIX_CLIENT_ID` con ese mismo appId.
 
 ## Capturas del juego para la web
