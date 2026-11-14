@@ -3049,8 +3049,10 @@ function khCap(p){return p&&p.kh&&p.kh.cap!=null&&!(KH&&KH.activo===true)?p.kh.c
 function khLocked(p){p=p||current;return !!(p&&khCap(p)!=null);}
 function khWaiting(p){p=p||current;const c=khCap(p);return c==null?0:Math.max(0,totalRaw(p)-c);}
 async function khCheck(force){const u=khUid();if(!u){KH.activo=false;return false;}
+  /* tocó Pagar hace menos de 3 días y todavía no se activó: siempre se pregunta (por si pagó y cerró la pestaña sin volver) */
+  try{const pg=+localStorage.getItem('kh-pago:'+u)||0;if(pg&&Date.now()-pg<3*864e5)force=true;}catch(e){}
   if(!force){try{const c=JSON.parse(localStorage.getItem('kh-act:'+u)||'null');if(c&&Date.now()-c.t<12*36e5){KH.activo=c.a;if(c.a)khCredit();return c.a;}}catch(e){}}
-  try{const r=await fetch(KH_API+'?u='+encodeURIComponent(u),{cache:'no-store'});const j=await r.json();KH.activo=!!j.activo;try{localStorage.setItem('kh-act:'+u,JSON.stringify({a:KH.activo,t:Date.now()}));}catch(e){}}catch(e){if(KH.activo==null)KH.activo=false;}
+  try{const r=await fetch(KH_API+'?u='+encodeURIComponent(u),{cache:'no-store'});const j=await r.json();KH.activo=!!j.activo;if(KH.activo){try{localStorage.removeItem('kh-pago:'+u);}catch(e){}}try{localStorage.setItem('kh-act:'+u,JSON.stringify({a:KH.activo,t:Date.now()}));}catch(e){}}catch(e){if(KH.activo==null)KH.activo=false;}
   if(KH.activo)khCredit();return KH.activo;}
 function khCredit(){const p=current;if(!p||!p.kh)return;const w=Math.max(0,totalRaw(p)-(p.kh.cap||0));p.kh=null;save();try{refreshHud();refreshMap();}catch(e){}khPill();if(w>0)toast('¡Pase activado! Se acreditaron '+w+' puntos que tenías en espera.');else toast('¡Pase activado! Ya podés seguir tu camino.');}
 const khMaxR=p=>{let m=curRegion();(p.visited||[]).forEach(id=>{const n=NODES[id];if(n&&n.r!=null&&n.r>m)m=n.r;});return m;};
@@ -3080,8 +3082,8 @@ function khShow(kind){if(document.querySelector('.khp'))return;const p=current;i
     box.innerHTML=`<div class="kh-gate"><p>Pregunta para grandes: ¿cuánto es <b>${a} × ${b}</b>?</p><input type="number" inputmode="numeric" class="kh-ans" aria-label="Respuesta"><button class="kh-ok">Continuar</button><p class="kh-err" hidden>Esa no es. Pedile a una persona grande que te ayude.</p></div>`;
     const ok=()=>{if(+box.querySelector('.kh-ans').value===a*b){box.innerHTML=pay;wire();}else box.querySelector('.kh-err').hidden=false;};box.querySelector('.kh-ok').onclick=ok;box.querySelector('.kh-ans').onkeydown=e=>{if(e.key==='Enter')ok();};box.querySelector('.kh-ans').focus();};}
 async function khPay(btn){if(KH.busy)return;KH.busy=true;btn.disabled=true;btn.textContent='Abriendo Mercado Pago…';
-  try{const r=await fetch(KH_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accion:'iniciar'})});const j=await r.json();if(!j.url)throw new Error(j.error||'sin url');
-    try{sessionStorage.setItem('kh-pend',JSON.stringify({u:khUid(),e:khMail(),rama:branch,t:Date.now()}));}catch(e){}location.href=j.url;}
+  try{const r=await fetch(KH_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accion:'iniciar',u:khUid(),prueba:!!KH_TEST})});const j=await r.json();if(!j.url)throw new Error(j.error||'sin url');
+    try{localStorage.setItem('kh-pago:'+khUid(),String(Date.now()));localStorage.removeItem('kh-act:'+khUid());}catch(e){}try{sessionStorage.setItem('kh-pend',JSON.stringify({u:khUid(),e:khMail(),rama:branch,t:Date.now()}));}catch(e){}location.href=j.url;}
   catch(e){console.warn(e);btn.disabled=false;btn.textContent='Pagar';toast('No pudimos abrir Mercado Pago. Probá de nuevo en un rato.');}finally{KH.busy=false;}}
 /* vuelta del checkout de Mercado Pago (?kh=vuelta&preapproval_id=…) */
 (async function khReturn(){let sp;try{sp=new URLSearchParams(location.search);}catch(e){return;}if(sp.get('kh')!=='vuelta')return;const pid=sp.get('preapproval_id')||'';
@@ -3093,6 +3095,8 @@ async function khPay(btn){if(KH.busy)return;KH.busy=true;btn.disabled=true;btn.t
     if(j.activo){KH.activo=true;try{localStorage.setItem('kh-act:'+uid,JSON.stringify({a:true,t:Date.now()}));}catch(e){}if(current)khCredit();else setTimeout(()=>toast('¡Pase Kids & Hero activado! Gracias por sumarte.'),1500);}
     else setTimeout(()=>toast('Recibimos tu suscripción. En cuanto Mercado Pago la confirme se activa el pase.'),1500);}catch(e){console.warn(e);}})();
 setInterval(()=>{try{khEval();}catch(e){}},15000);
+/* volvió a la pestaña del juego después de pagar en otra: se pregunta de nuevo */
+document.addEventListener('visibilitychange',()=>{if(document.hidden||KH.activo)return;const u=khUid();if(!u)return;let pg=0;try{pg=+localStorage.getItem('kh-pago:'+u)||0;}catch(e){}if(pg&&Date.now()-pg<3*864e5)khCheck(true).then(a=>{if(a){const had=current&&current.kh;khCredit();if(!had)toast('¡Pase Kids & Hero activado! Gracias por sumarte.');try{khEval();}catch(e){}}});});
 window.GAME={khLocked:()=>khLocked(),khPill,playMat:(def,done)=>{if(ar)return false;startArcade({id:'mat-'+def.type,game:def},done||null);return true;},hstTest:r=>HST.q.push(['close',r]),hstScroll:()=>hstScroll(false),hstHas:()=>branch==='ados'&&hstP().scroll.length>0,stageLine,lobbyLines,vo:(t,v,o)=>vo(t,v,o),voState:()=>({log:VO.log.slice(-12),on:VO.on,src:VO.el&&VO.el.src,paused:VO.el?VO.el.paused:null,cur:VO.cur&&VO.cur.t,q:VO.q.length}),voStop:()=>voStop(),voOn:()=>VO.on,NODES,EDGES,ADJ,REGIONS,VIGN,TOP,RH,WIDTH,get branch(){return branch},level:()=>lvOf(total(P())),EXAMS,P,reachable,visited,isDone,bfs,arrive,save,toast,refreshHud,syncMap(){refreshMap();const n=NODES[P().pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));}};
 function enterMap(){
   khCheck().then(()=>{try{khEval();if(khLocked()&&!KH.shown){KH.shown=true;KH.want='lock';khEval();}}catch(e){}});
