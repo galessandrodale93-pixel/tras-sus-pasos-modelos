@@ -4933,6 +4933,7 @@ function pgCell(ix, iz) {
     if (!PG_ONLY) { const cl = pgNoise(x * .06, z * .06) * .75 + pgNoise(x * .21 + 40, z * .21) * .35; if (r1 > cl * 1.15 + .1) continue; } // matas y claros
     let lawn = 0, d = W.dNz ? Math.min(W.dNz(x, z), W.roadAt(x, z) + .9) : W.dAt(x, z); if (d < 3.2 && S.lawns) for (const L of S.lawns) if ((x - L.x) ** 2 + (z - L.z) ** 2 < L.r * L.r && pathDist(L.samp, x, z) > 1.3 && !(L.no && (x - L.no[0]) ** 2 + (z - L.no[1]) ** 2 < L.no[2] * L.no[2])) { d = 9; lawn = 1; break; } /* jardines con pasto de verdad */ if (d < 1.5 || (d < 3.2 && r2 > (d - 1.5) / 1.7)) continue; // el camino queda libre, con borde natural
     const h = W.hAt(x, z); if (h > 9 || (h > 5.5 && r2 > (9 - h) / 3.5)) continue;
+    if (desertK(x, z) > .25) continue; // en el desierto de Judea y en el monte no crece pasto
     if (waterWet(x, z, null) > .04 || blockedAt(x, z) || (!lawn && poi.some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < 14))) continue;
     // qué planta: flores donde el ruido lo marca (manchones), el resto pasto
     const G = PG.groups, fz = pgNoise(x * .045 + 90, z * .045 - 30) > .66, wantF = fz && R() < .55, pool = G.map((g, k) => k).filter(k => G[k].fl === wantF), P = pool.length ? pool : G.map((g, k) => k);
