@@ -928,5 +928,5 @@ body[data-branch="kids"] .kh-pill b{color:#FFD25E}
 @media (max-width:760px){.lb2 .lb-in{left:16px;right:16px;bottom:16px;width:auto;gap:10px}.lb2 .lb-cap{right:auto;left:16px;top:max(16px,env(safe-area-inset-top,0px));bottom:auto;justify-items:start;text-align:left}.lb2 .lb-cap i{background:linear-gradient(90deg,#E9C98A,transparent)}.lb2 .lb-shade{background:linear-gradient(0deg,rgba(6,4,2,.92) 0%,rgba(6,4,2,.55) 45%,rgba(6,4,2,.1) 75%),linear-gradient(180deg,rgba(0,0,0,.6),transparent 22%)}.lb2.kid .lb-shade{background:linear-gradient(0deg,rgba(14,30,80,.9) 0%,rgba(14,30,80,.45) 48%,rgba(14,30,80,0) 78%)}}
 @media (max-height:560px){.lb2 .lb-in{bottom:12px;gap:6px}.lb2 .lb-in .lb-hero img{max-height:13vh}.lb2.kid .lb-kidlogo{font-size:52px}.lb2 .lb-vs p{font-size:14px}.lb2 .lb-cards{display:none}.lb2 .lb-cap{display:none}}
 @media (prefers-reduced-motion:reduce){.lb2 .lb-im.on{transform:none}.lb2 .lb-go::before{animation:none}}
-/* Hero: el logo (con «Tras sus pasos» y la etapa) más arriba; versículo, camino y botón quedan donde estaban */
-@media (min-height:561px){.lb2:not(.kid) .lb-head{margin-bottom:clamp(18px,8vh,72px)}}
+/* Hero: solo la palabra HERO sube (con transform, así nada más se mueve) */
+.lb2:not(.kid) .lb-in .lb-hero{transform:translateY(-36px)}
