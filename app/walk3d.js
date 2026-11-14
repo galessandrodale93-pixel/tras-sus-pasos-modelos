@@ -3132,7 +3132,8 @@ const mixC = (a, b, k) => { if (!_c1) { _c1 = new THREE.Color(); _c2 = new THREE
 function dayNow() { const n = Date.now(), i = Math.floor(n / DAYP) % 2, f = n % DAYP, k = f < DAYX ? f / DAYX : 1; return { i, prev: (i + 1) % 2, k: k * k * (3 - 2 * k) }; }
 /* la noche de Getsemaní: en Hero, al entrar al huerto cae la noche (luna, estrellas, luz azulada) y al salir vuelve el día */
 const NIGHT = { top: '#060A1C', mid: '#141C3C', hor: '#2C3260', sunC: '#C8D4FF', dir: [.32, .5, -.8], sunL: '#8EA4E6', sI: .75, hs: '#4A5C9C', hg: '#15141C', hI: .42, fog: '#161C36', fd: .011, st: 1, ex: .92 };
-function nightTarget() { if (!S.hx || !S.pois) return 0; const a = S.av.position; for (const p of S.pois) if (p.k === 'garden') { const d = Math.hypot(a.x - p.x, a.z - p.z); return 1 - sstep(28, 44, d); } return 0; }
+function nightTarget() { if (!S.pois) return 0; const a = S.av.position; for (const p of S.pois) if (p.k === 'garden') { const d = Math.hypot(a.x - p.x, a.z - p.z); return (1 - sstep(28, 44, d)) * (S.hx ? 1 : .62); } return 0; } /* en Kids, un anochecer suave: azul lavanda, sin oscuridad */
+const NIGHTK = { top: '#3A4A8E', bot: '#B39AC8', sun: '#C9D2FF', sI: .8, hs: '#AFB8EE', hg: '#6A5A6A', hI: .75, fog: '#7E7AA8' };
 function dayTick(dt) {
   if (!S) return; { const now = performance.now(), rd = Math.min(.25, (now - (S.nkT || now)) / 1000); S.nkT = now; const t = nightTarget(); S.nk = (S.nk || 0) + (t - (S.nk || 0)) * Math.min(1, rd * 1.1); if (S.nk < .003 && !t) S.nk = 0; if (S.nk > .997 && t === 1) S.nk = 1; }
   S.dayAcc = (S.dayAcc || 9) + dt; if (S.dayAcc < (S.nk || S.nkA ? .05 : .5)) return; S.dayAcc = 0;
@@ -3161,6 +3162,9 @@ function dayTick(dt) {
     L.sun.color.copy(mixC(A.sun, B.sun, k)); L.sun.intensity = A.sI + (B.sI - A.sI) * k;
     if (L.hemi) { L.hemi.color.copy(mixC(A.hs, B.hs, k)); L.hemi.groundColor.copy(mixC(A.hg, B.hg, k)); L.hemi.intensity = A.hI + (B.hI - A.hI) * k; }
     if (S.scene.fog) S.scene.fog.color.copy(mixC(A.fog, B.fog, k));
+    const nk = S.nk || 0; if (S.W && S.W.sky) { const u = S.W.sky.material.uniforms; u.kb.value = 1.12 * (1 - nk * .55); u.stars.value = nk; }
+    if (nk > 0) { const N = NIGHTK, c = new THREE.Color(), t2 = '#' + mixC(top, N.top, nk).getHexString(), b2 = '#' + mixC(bot, N.bot, nk).getHexString(), g2 = x.createLinearGradient(0, 0, 0, 256); g2.addColorStop(0, t2); g2.addColorStop(.62, b2); g2.addColorStop(1, b2); x.fillStyle = g2; x.fillRect(0, 0, 4, 256); L.tex.needsUpdate = true;
+      L.sun.color.lerp(c.set(N.sun), nk); L.sun.intensity += (N.sI - L.sun.intensity) * nk; if (L.hemi) { L.hemi.color.lerp(c.set(N.hs), nk); L.hemi.groundColor.lerp(c.set(N.hg), nk); L.hemi.intensity += (N.hI - L.hemi.intensity) * nk; } if (S.scene.fog) S.scene.fog.color.lerp(c.set(N.fog), nk); }
     if (S.W && S.W.sky) { S.W.sky.material.uniforms.gnd.value.copy(S.scene.fog.color); if (S.scene.environment && L.hemi) L.hemi.intensity *= .6; }
   }
 }
