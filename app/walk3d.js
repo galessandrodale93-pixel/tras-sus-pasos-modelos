@@ -4869,7 +4869,7 @@ export async function avatarPreview(host, getLook) {
   r.setPixelRatio(Math.min(low ? 1 : 2, devicePixelRatio || 1)); r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.2;
   const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#FFF4E2', '#6E5E4E', 2.9)); const dl = new THREE.DirectionalLight('#FFFFFF', 2.2); dl.position.set(1.5, 3, 2.5); sc.add(dl); const rim = new THREE.DirectionalLight('#FFD9A0', 1.2); rim.position.set(-2, 2, -2); sc.add(rim);
   const cam = new THREE.PerspectiveCamera(28, 1, .05, 30), clk = new THREE.Clock(); let av = null, key = '', alive = true, yaw = .35, spin = 1, drag = null, h = 1.7;
-  const fit = () => { h = 1.75 * av.scale.y; cam.position.set(0, h * .58, h * 2.05); cam.lookAt(0, h * .52, 0); };
+  const fit = () => { h = 1.75 * av.scale.y * (av.userData.h3.headS ? 1.12 : 1); cam.position.set(0, h * .58, h * 2.05); cam.lookAt(0, h * .52, 0); };
   const set = () => { const look = Object.assign({}, getLook(), { gear: {}, ins: [], glow: 0 }); delete look.face; const k = JSON.stringify(look); if (k === key) return; key = k; if (av) sc.remove(av); av = buildHero3(look); const u = av.userData.h3; if (u.lamp) u.lamp.visible = false; av.rotation.y = yaw; sc.add(av); fit(); };
   cv.addEventListener('pointerdown', e => { drag = e.clientX; spin = 0; cv.setPointerCapture(e.pointerId); });
   cv.addEventListener('pointermove', e => { if (drag == null) return; yaw += (e.clientX - drag) * .012; drag = e.clientX; });
