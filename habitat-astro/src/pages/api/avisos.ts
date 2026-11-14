@@ -1,5 +1,5 @@
 // Avisos por mail a los voluntarios. Lo llama un disparador programado:
-// · Todos los días (sin parámetros): avisos a profes y Sembradores. A los voluntarios ya no se les manda nada a diario.
+// · Todos los días (sin parámetros): avisos a profes, Sembradores y músicos de la Zarza (3 días antes y el mismo día). A los voluntarios ya no se les manda nada a diario.
 // · Domingo a la noche (?semana=1): a cada voluntario, un solo mail con todo lo que le toca de lunes a domingo,
 //   incluidas las fechas especiales (Zarza, tiempo de mesa por Zoom y Selah con sus versículos).
 // GET /api/avisos[?semana=1]  ·  prueba: ?k=<TutConfig.cronKey>&dry=1[&fecha=YYYY-MM-DD][&semana=1]
@@ -14,6 +14,7 @@ import { finanzasDiario } from "../../lib/mp";
 import { debiDiario } from "../../lib/debi";
 import { edicionDiario } from "../../lib/edicion";
 import { oracionAviso } from "../../lib/oracion";
+import { zarzaDiario } from "../../lib/zarza";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
@@ -118,7 +119,9 @@ export const GET: APIRoute = async ({ url }) => {
     try { edicion = await edicionDiario(hoy, dry, remitente); } catch (e) { edicion = String((e as Error).message || e); }
     let intercesion: unknown = {};
     try { intercesion = await oracionAviso("manana", hoy, dry, remitente); } catch (e) { intercesion = String((e as Error).message || e); }
-    return json({ ok: true, hoy, enviados: [], profes, sembradores, videos, finanzas, debi, edicion, intercesion });
+    let zarza: unknown = {};
+    try { zarza = await zarzaDiario(hoy, dry, remitente); } catch (e) { zarza = String((e as Error).message || e); }
+    return json({ ok: true, hoy, enviados: [], profes, sembradores, videos, finanzas, debi, edicion, intercesion, zarza });
   } catch (e) {
     console.error("avisos", e);
     return json({ error: String((e as Error).message || e) }, 500);

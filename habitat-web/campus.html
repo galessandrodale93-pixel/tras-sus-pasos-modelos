@@ -150,6 +150,7 @@ var X=window.CampusExtra;
  C(SV,r.voluntario,'vol','/voluntario.html','🙌🏽','Mi servicio','Tus turnos, avisos y el equipo del mes','');
  C(SV,r.intercesion,'ora','/intercesion.html','🙏','Intercesión y ayuno','El foco del día, los pedidos y tu turno',oraT,d.oracion===hoy||d.oracion===man);
  C(dir?DI:SV,r.org,'org','/organizacion.html','🗓️','Organización','Calendario, clases, servicio y equipo','');
+ C(dir?DI:SV,dir||r.org,'zar','/musicos-panel.html','🎶','Músicos de la Zarza','Repertorio, tonos y quién ensayó','');
  C(dir?DI:SV,r.finanzas,'fin','/finanzas.html','💰','Finanzas','Cobros, ingresos, salidas y Debi',d.porClasificar>0?d.porClasificar+' por clasificar':'');
  C(DI,r.sembradores,'sem','/sembradores-panel.html','🌱','Sembradores','Quienes siembran, testimonios e informes',d.sembradores>0?d.sembradores+' sembrador'+(d.sembradores===1?'':'es'):'');
  C(dir?DI:SV,r.edicion,'ed','/edicion.html','🎬','Edición de videos','Las clases grabadas, de la entrega al Campus',edT);
