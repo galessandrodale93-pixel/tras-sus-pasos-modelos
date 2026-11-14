@@ -4877,11 +4877,11 @@ export async function avatarPreview(host, getLook) {
   const loop = () => {
     if (!alive) return; if (!cv.isConnected || host.closest('[hidden]')) { stop(); return; } requestAnimationFrame(loop);
     const w = host.clientWidth, hh = host.clientHeight; if (w && hh && (cv.width !== Math.round(w * r.getPixelRatio()) || cv.height !== Math.round(hh * r.getPixelRatio()))) { r.setSize(w, hh, false); cam.aspect = w / hh; cam.updateProjectionMatrix(); }
-    const dt = Math.min(.05, clk.getDelta()); yaw += dt * .45 * spin; if (av) { av.rotation.y = yaw; av.userData.h3.mixer.update(dt); } r.render(sc, cam);
+    const dt = Math.min(.05, clk.getDelta()); yaw += dt * .45 * spin; if (av) { const u = av.userData.h3; av.rotation.y = yaw; u.mixer.update(dt); if (u.headS && u.bones.Head) u.bones.Head.scale.setScalar(u.headS); if (u.kidP) kidApply(u); } r.render(sc, cam);
   };
   const stop = () => { alive = false; try { r.dispose(); } catch (e) {} cv.remove(); };
   // foto de la cara (cuadrada, chica) para el perfil y el HUD
-  const face = () => { try { if (!av) return ''; const b = av.userData.h3.bones.Head, p = new THREE.Vector3(); av.rotation.y = 0; av.updateMatrixWorld(true); b.getWorldPosition(p); const c2 = new THREE.PerspectiveCamera(24, 1, .02, 10); c2.position.set(p.x, p.y + .1 * av.scale.y, p.z + .9 * av.scale.y); c2.lookAt(p.x, p.y + .09 * av.scale.y, p.z); const sz = r.getSize(new THREE.Vector2()), pr = r.getPixelRatio(); r.setPixelRatio(1); r.setSize(96, 96, false); r.render(sc, c2); const u = cv.toDataURL('image/webp', .82); r.setPixelRatio(pr); r.setSize(sz.x, sz.y, false); av.rotation.y = yaw; return u.length < 14000 ? u : ''; } catch (e) { return ''; } };
+  const face = () => { try { if (!av) return ''; const b = av.userData.h3.bones.Head, p = new THREE.Vector3(), hs = av.userData.h3.headS || 1; av.rotation.y = 0; av.updateMatrixWorld(true); b.getWorldPosition(p); const c2 = new THREE.PerspectiveCamera(24, 1, .02, 10); c2.position.set(p.x, p.y + .1 * av.scale.y * hs, p.z + .9 * av.scale.y * hs); c2.lookAt(p.x, p.y + .09 * av.scale.y * hs, p.z); const sz = r.getSize(new THREE.Vector2()), pr = r.getPixelRatio(); r.setPixelRatio(1); r.setSize(96, 96, false); r.render(sc, c2); const u = cv.toDataURL('image/webp', .82); r.setPixelRatio(pr); r.setSize(sz.x, sz.y, false); av.rotation.y = yaw; return u.length < 14000 ? u : ''; } catch (e) { return ''; } };
   set(); loop();
   return { update: set, face, stop };
 }
