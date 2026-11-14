@@ -16,6 +16,7 @@ import { edicionDiario } from "../../lib/edicion";
 import { oracionAviso } from "../../lib/oracion";
 import { zarzaDiario } from "../../lib/zarza";
 import { especialesSemana, materialDiario } from "../../lib/material";
+import { cobranzaDiario } from "../../lib/cobranza";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
@@ -126,7 +127,9 @@ export const GET: APIRoute = async ({ url }) => {
     try { zarza = await zarzaDiario(hoy, dry, remitente); } catch (e) { zarza = String((e as Error).message || e); }
     let material: unknown = {};
     try { material = await materialDiario(hoy, dry, remitente); } catch (e) { material = String((e as Error).message || e); }
-    return json({ ok: true, hoy, enviados: [], profes, sembradores, videos, finanzas, debi, edicion, intercesion, zarza, material });
+    let cobranza: unknown = {};
+    try { cobranza = await cobranzaDiario(hoy, dry, remitente); } catch (e) { cobranza = String((e as Error).message || e); }
+    return json({ ok: true, hoy, enviados: [], profes, sembradores, videos, finanzas, debi, edicion, intercesion, zarza, material, cobranza });
   } catch (e) {
     console.error("avisos", e);
     return json({ error: String((e as Error).message || e) }, 500);
