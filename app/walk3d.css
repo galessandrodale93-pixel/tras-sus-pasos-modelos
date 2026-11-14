@@ -979,3 +979,13 @@ body[data-branch="kids"] .kh-pill b{color:#FFD25E}
 .v3more .mo-grid button:hover{background:rgba(233,195,122,.14)}.v3more .mo-grid button.off{opacity:.55}
 .v3more .mo-ic{font-size:22px;line-height:1;display:grid;place-items:center;min-height:26px}.v3more .mo-ic svg{width:22px;height:22px}
 @media (max-height:520px){.v3more .mo-grid{grid-template-columns:repeat(auto-fill,minmax(78px,1fr))}.v3more .mo-grid button{padding:7px 4px}}
+/* celular en vertical: se pide girarlo (solo dentro del juego) */
+.v3rot{display:none}
+@media (pointer:coarse) and (orientation:portrait) and (max-width:700px){
+  body.v3on .v3rot{display:grid;position:fixed;inset:0;z-index:9999;place-items:center;text-align:center;padding:24px;background:radial-gradient(circle at 50% 40%,#2A1E10,#0C0905);color:#FFE7A6;font-family:"Nunito",sans-serif}
+  body.v3on .v3rot div{display:grid;justify-items:center;gap:10px}
+  body.v3on .v3rot svg{animation:v3rot 2.2s ease-in-out infinite}
+  body.v3on .v3rot b{font:600 24px "Cinzel",Georgia,serif}
+  body.v3on .v3rot span{font-weight:700;font-size:15px;color:#F3E6CC;max-width:260px}
+}
+@keyframes v3rot{0%,25%{transform:rotate(0)}55%,85%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
