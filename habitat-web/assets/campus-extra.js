@@ -26,7 +26,7 @@
       var mine = {}; (pids || []).forEach(function (p) { mine[p] = 1; });
       var L = rows(r).filter(function (e) { return !e.programId || mine[e.programId]; });
       // sus clases (por carrera) y la Zarza y el Selah
-      try { var x = await fetch('/api/agenda?c=' + encodeURIComponent((carreras || []).join(','))).then(function (y) { return y.json(); }); L = L.concat(x.eventos || []); } catch (e) {}
+      try { var tk = ''; try { await A.api('GET', '/members/v1/members/my'); tk = JSON.parse(localStorage.getItem('habitat:mtok')).a; } catch (e) {} var x = await fetch('/api/agenda?c=' + encodeURIComponent((carreras || []).join(',')), { headers: tk ? { 'x-habitat-auth': tk } : {} }).then(function (y) { return y.json(); }); L = L.concat(x.eventos || []); } catch (e) {}
       return L.map(function (e) { e.ini = d(e.inicio); e.end = d(e.fin); return e; }).filter(function (e) { return e.ini; }).sort(function (a, b) { return a.ini - b.ini; });
     },
     unseen: function (list) { var t = +(lsGet('campus:seen') || 0); return list.filter(function (e) { return /aviso/i.test(e.tipo || '') && e.ini && e.ini.getTime() > t; }).length; },
