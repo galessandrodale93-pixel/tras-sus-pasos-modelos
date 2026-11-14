@@ -929,4 +929,4 @@ body[data-branch="kids"] .kh-pill b{color:#FFD25E}
 @media (max-height:560px){.lb2 .lb-in{bottom:12px;gap:6px}.lb2 .lb-in .lb-hero img{max-height:13vh}.lb2.kid .lb-kidlogo{font-size:52px}.lb2 .lb-vs p{font-size:14px}.lb2 .lb-cards{display:none}.lb2 .lb-cap{display:none}}
 @media (prefers-reduced-motion:reduce){.lb2 .lb-im.on{transform:none}.lb2 .lb-go::before{animation:none}}
 /* Hero: solo la palabra HERO sube (con transform, así nada más se mueve) */
-.lb2:not(.kid) .lb-in .lb-hero{transform:translateY(-36px)}
+@media (min-height:561px){.lb2:not(.kid) .lb-in{overflow:visible}.lb2:not(.kid) .lb-in .lb-hero{transform:translateY(-36px)}}
