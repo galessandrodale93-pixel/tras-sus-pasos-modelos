@@ -1318,9 +1318,9 @@ const icoGear = it => {
 };
 function invEquip(body) {
   const st = gearState(), slotPos = { hat: 'a', shirt: 'b', pants: 'c', gloves: 'd', boots: 'e' };
-  body.innerHTML = `<div class="inv-doll"><div class="inv-pv"><canvas></canvas><span class="inv-rot">↻ arrastrá para girar</span></div>
+  body.innerHTML = `<div class="inv-left"><div class="inv-doll"><div class="inv-pv"><canvas></canvas><span class="inv-rot">↻ arrastrá para girar</span></div>
       ${SLOTS.map(([s, n]) => `<button class="inv-slot s-${slotPos[s]}" data-s="${s}" aria-label="${n}"></button>`).join('')}</div>
-    <div class="inv-info"></div>
+    <div class="inv-info"></div></div>
     <div class="inv-cap"><b>Inventario</b></div>
     <div class="inv-grid"></div>`;
   const pv = invPreview(body.querySelector('canvas')); let sel = null;

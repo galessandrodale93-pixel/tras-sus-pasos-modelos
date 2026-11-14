@@ -1094,11 +1094,10 @@ body:not([data-branch="ados"]) .cr-rank{color:#AFC3EE}
 #v3sheet .inv-act{background:linear-gradient(180deg,#FFF1B0,#F2B23E 55%,#C77A16)!important;box-shadow:0 4px 0 #6B4510,0 0 18px rgba(242,197,90,.4)!important;letter-spacing:.04em}
 /* pantallas anchas (PC y celular acostado): el personaje a la izquierda y el inventario a la derecha */
 @media (min-width:700px){
-  #v3sheet .inv-body[data-t="eq"]{display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,1.1fr);grid-template-areas:"doll cap" "doll grid" "info grid";grid-template-rows:auto 1fr auto;column-gap:16px;align-items:start}
-  #v3sheet .inv-body[data-t="eq"] .inv-doll{grid-area:doll}
-  #v3sheet .inv-body[data-t="eq"] .inv-info{grid-area:info}
+  #v3sheet .inv-body[data-t="eq"]{display:grid;grid-template-columns:minmax(280px,1fr) minmax(300px,1.1fr);grid-template-areas:"left cap" "left grid";grid-template-rows:auto 1fr;column-gap:18px;align-items:start}
+  #v3sheet .inv-body[data-t="eq"] .inv-left{grid-area:left;position:sticky;top:0}
   #v3sheet .inv-body[data-t="eq"] .inv-cap{grid-area:cap;margin-top:0!important}
-  #v3sheet .inv-body[data-t="eq"] .inv-grid{grid-area:grid}
+  #v3sheet .inv-body[data-t="eq"] .inv-grid{grid-area:grid;grid-template-columns:repeat(5,minmax(0,1fr))!important}
 }
 @media (max-height:520px){
   #v3sheet .inv{padding:10px 12px 12px!important}
