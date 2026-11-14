@@ -2279,9 +2279,10 @@ function desertLife(scene, p, yAt, sd, rf, hx) {
   { const g = new THREE.Group(), wm = new THREE.MeshStandardMaterial({ color: '#3A2C22', side: THREE.DoubleSide, roughness: 1 }), body = new THREE.Mesh(new THREE.ConeGeometry(.12, .7, 6), wm); body.rotation.x = Math.PI / 2; g.add(body);
     const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, .15, 0, 0, -.2, .95, .05, -.1], 3)); wg.computeVertexNormals(); const wl = new THREE.Mesh(wg, wm), wr = wl.clone(); wr.scale.x = -1; g.add(wl, wr); g.scale.setScalar(1.6); scene.add(g); D.hawk = { g, wl, wr, cx: p.x - sd * 6, cz: p.z, y: yAt(p.x, p.z) + 17 }; }
   /* remolino de arena que cruza el valle */
-  { const n = 140, pos = new Float32Array(n * 3), seed = new Float32Array(n); for (let i = 0; i < n; i++) seed[i] = Math.random(); const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const m = new THREE.Points(g, new THREE.PointsMaterial({ color: '#D9BF8E', size: hx ? .14 : .2, transparent: true, opacity: .55, depthWrite: false })); m.frustumCulled = false; scene.add(m); D.dust = { m, seed, n, p, sd, yAt }; }
+  { const n = 320, pos = new Float32Array(n * 3), seed = new Float32Array(n); for (let i = 0; i < n; i++) seed[i] = Math.random(); const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const m = new THREE.Points(g, new THREE.PointsMaterial({ color: '#D9BF8E', size: hx ? .07 : .1, map: dotTex(), alphaTest: .02, transparent: true, opacity: .55, depthWrite: false })); m.frustumCulled = false; scene.add(m); D.dust = { m, seed, n, p, sd, yAt }; }
 }
+function dotTex() { if (dotTex.t) return dotTex.t; const c = document.createElement('canvas'); c.width = c.height = 32; const x = c.getContext('2d'), g = x.createRadialGradient(16, 16, 0, 16, 16, 16); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.5, 'rgba(255,255,255,.5)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 32, 32); dotTex.t = new THREE.CanvasTexture(c); return dotTex.t; }
 function desertTick(dt) { const D = S.desert, a = S.av.position; D.t += dt; const t = D.t;
   if (Math.abs(a.z - (D.dust ? D.dust.p.z : a.z)) > 90) return;
   if (D.stones) { const on = S.lore.find(l => l.fx === 'stones' && l.on); D.stones.emissiveIntensity = on ? Math.max(0, .55 * Math.sin(Math.min(1, on.t / 2.5) * Math.PI)) : 0; }
@@ -2291,7 +2292,7 @@ function desertTick(dt) { const D = S.desert, a = S.av.position; D.t += dt; cons
   if (D.lamp) D.lamp.intensity = .8 + Math.sin(t * 9) * .12 + Math.sin(t * 23) * .06;
   if (D.hawk) { const h = D.hawk, an = t * .22, r = 16; h.g.position.set(h.cx + Math.cos(an) * r, h.y + Math.sin(t * .5) * 1.2, h.cz + Math.sin(an) * r); h.g.rotation.set(0, -an, .35); const fl = (t % 7) < 1.4 ? Math.sin(t * 14) * .5 : .08; h.wl.rotation.z = fl; h.wr.rotation.z = -fl; }
   if (D.dust) { const q = D.dust, P = q.m.geometry.attributes.position, cx = q.p.x - q.sd * (Math.sin(t * .05) * 10 - 6), cz = q.p.z + Math.sin(t * .083) * 11, y0 = q.yAt(cx, cz);
-    for (let i = 0; i < q.n; i++) { const s0 = q.seed[i], hh = ((s0 * 7 + t * .35) % 1), rr = .3 + hh * 2.1, an = s0 * 40 + t * (5 - hh * 2.5); P.setXYZ(i, cx + Math.cos(an) * rr, y0 + hh * 6, cz + Math.sin(an) * rr); } P.needsUpdate = true; q.m.material.opacity = .35 + Math.sin(t * .4) * .15; } }
+    for (let i = 0; i < q.n; i++) { const s0 = q.seed[i], hh = ((s0 * 7 + t * .35) % 1), rr = (.15 + hh * hh * 1.6) * (.75 + s0 * .5), an = s0 * 40 + t * (6 - hh * 3); P.setXYZ(i, cx + Math.cos(an) * rr, y0 + hh * 4.5, cz + Math.sin(an) * rr); } P.needsUpdate = true; q.m.material.opacity = .35 + Math.sin(t * .4) * .15; } }
 // ---------- campos de los pastores: corral de piedra con ovejas, la cueva-establo con pesebre, la carpa de pelo de cabra, el fuego y los pastores ----------
 function goatTent(w, d) {
   const g = new THREE.Group(), cl = tm('goat', '#3A2E26', { side: THREE.DoubleSide, roughness: 1 }), geo = new THREE.PlaneGeometry(w, d, 8, 4), P = geo.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i); P.setZ(i, 1.9 - Math.pow(Math.abs(y) / (d / 2), 1.6) * 1.2 - Math.abs(Math.sin(x * 1.2)) * .12); } geo.computeVertexNormals();
