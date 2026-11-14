@@ -442,6 +442,8 @@ function trailNear(x, z) {
 }
 // la ladera de la bajada: superficie empinada y pareja (con ondulaciones) que va del pico al llano
 function descAt(x, z) { const D = TRL.desc; if (!D) return null; const dx = x - D.x, dz = z - D.z, al = dx * D.sx + dz * D.sz, lat = Math.abs(dx * D.sz - dz * D.sx); if (al < -2 || al > D.len + 12) return null; const wid = 3.5 + Math.max(0, al) * .33; return { d: Math.max(0, al), lat, wid, h: D.y - Math.max(0, al) * D.slope + (vnoise(x * .12 + 3, z * .12) - .5) * 1.4 * sstep(4, 12, al) }; }
+// la ladera de la bajada es de una sola mano: se puede bajar (y moverse de costado), pero no volver a subir por ahí
+function descUp(x0, z0, x1, z1) { const D = TRL.desc; if (!D) return false; const q1 = descAt(x1, z1); if (!q1 || q1.d < 3 || q1.d > D.len - 8 || q1.lat > q1.wid + 9) return false; const t = trailNear(x1, z1); if (t && t.d < 3) return false; const q0 = descAt(x0, z0); return !!q0 && q1.d < q0.d - .001; }
 function trailBlend(x, z, h) {
   const B = TRL.bb; if (!B || x < B.x0 || x > B.x1 || z < B.z0 || z > B.z1) return h; let hh = h;
   for (const e of TRL.ends) { const dx = x - e.x, dz = z - e.z, dd = Math.hypot(dx, dz); if (dd > 42) continue;
@@ -5418,7 +5420,8 @@ function freeWalk(dt) {
   const C = S.yaw + S.camYaw, fx = Math.sin(C), fz = Math.cos(C), rx = -Math.cos(C), rz = Math.sin(C);
   let mx = fx * -jy + rx * jx, mz = fz * -jy + rz * jx; const ml = Math.hypot(mx, mz) || 1; mx /= ml; mz /= ml;
   if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint ? 1.55 : 1) * (S.boostT > 0 ? 1.3 : 1), a = S.av.position, fr = frontier(), z0 = 6;
-  const ok = (x, z) => S.pocket ? pocketOk(x, z) : (Math.abs(x) < XB || inTrail(x, z)) && z > fr && z < z0 && !blockedAt(x, z) && !solidAbove(x, z, S.gy) && !edgeDrop(x, z, S.gy);
+  const curG = groundAt(a.x, a.z, S.gy); // el suelo donde estás parado (no la altura suavizada de la cámara)
+  const ok = (x, z) => S.pocket ? pocketOk(x, z) : (Math.abs(x) < XB || inTrail(x, z)) && z > fr && z < z0 && !blockedAt(x, z) && !solidAbove(x, z, S.gy) && !edgeDrop(x, z, curG) && !descUp(a.x, a.z, x, z);
   let nx = a.x + mx * sp, nz = a.z + mz * sp;
   if (!ok(nx, nz)) { if (nz <= fr && performance.now() - (S.wallT || 0) > 6000) { S.wallT = performance.now(); G().toast('Hasta acá llega el camino por ahora.'); } if (ok(nx, a.z)) nz = a.z; else if (ok(a.x, nz)) nx = a.x; else { nx = a.x; nz = a.z; } }
   a.x = nx; a.z = nz; S.freeMoving = true; S.quiet = true; wake(); autoEnter(); if (!S.freeMoving) return;
@@ -5492,7 +5495,7 @@ function loop(now) {
     if ((m.position.x - S.av.position.x) ** 2 + (m.position.z - S.av.position.z) ** 2 < 2.6) collect(id, m);
   }
   camFollow(dt); const yaw = S.yaw + S.camYaw, a = S.av.position, ph = S.camPitch ?? .4, back = camSafeBack(a, yaw, S.camDist * Math.cos(ph)), up = (S.hx ? 1.3 : 1.02) + S.camDist * Math.sin(ph);
-  { const gnd = groundAt(a.x, a.z, S.gy); if (S.gy != null && gnd < S.gy - .35) { S.fallV = (S.fallV || 0) + 22 * dt; S.gy = Math.max(gnd, S.gy - S.fallV * dt); } else { S.fallV = 0; S.gy = (S.gy ?? gnd) + (gnd - (S.gy ?? gnd)) * Math.min(1, dt * 12); } if (S.jy > 0) { S.jv -= 17 * dt; S.jy = Math.max(0, S.jy + S.jv * dt); } a.y = S.gy + (S.jy || 0); }
+  { const gnd = groundAt(a.x, a.z, S.gy); if (S.gy != null && gnd < S.gy - 1.1) { S.fallV = (S.fallV || 0) + 22 * dt; S.gy = Math.max(gnd, S.gy - S.fallV * dt); } else { S.fallV = 0; S.gy = (S.gy ?? gnd) + (gnd - (S.gy ?? gnd)) * Math.min(1, dt * 12); } if (S.jy > 0) { S.jv -= 17 * dt; S.jy = Math.max(0, S.jy + S.jv * dt); } a.y = S.gy + (S.jy || 0); }
   if (S.W) { S.W.sunL.position.set(a.x + S.W.sunDir.x * 40, a.y + 11, a.z + S.W.sunDir.z * 40); S.W.sunL.target.position.copy(a); S.uGrass.value = t; S.W.sky.material.uniforms.t.value = t; }
   const cx = a.x - Math.sin(yaw) * back, cz = a.z - Math.cos(yaw) * back;
   S.camera.position.x += (cx - S.camera.position.x) * .08; S.camera.position.z += (cz - S.camera.position.z) * .08;
