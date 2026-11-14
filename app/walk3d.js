@@ -410,9 +410,9 @@ function waterEnv(renderer) {
 }
 function waterMat(hx, flow) {
   const nm = waterNormalTex().clone(), cn = waterNormalTex().clone(); nm.needsUpdate = cn.needsUpdate = true; nm.repeat.set(1, 1); cn.repeat.set(1, 1);
-  const m = new THREE.MeshPhysicalMaterial({ color: hx ? '#27565F' : '#3FA0D8', roughness: hx ? .2 : .12, metalness: 0, transparent: true, opacity: .93, normalMap: nm, normalScale: new THREE.Vector2(hx ? .85 : .55, hx ? .85 : .55), clearcoat: 1, clearcoatRoughness: .05, clearcoatNormalMap: cn, clearcoatNormalScale: new THREE.Vector2(.35, .35), envMap: S ? waterEnv(S.renderer) : null, envMapIntensity: hx ? .8 : 1, depthWrite: false });
+  const m = new THREE.MeshPhysicalMaterial({ color: hx ? '#27565F' : '#2E8C98', roughness: hx ? .2 : .12, metalness: 0, transparent: true, opacity: .93, normalMap: nm, normalScale: new THREE.Vector2(hx ? .85 : .55, hx ? .85 : .55), clearcoat: 1, clearcoatRoughness: .05, clearcoatNormalMap: cn, clearcoatNormalScale: new THREE.Vector2(.35, .35), envMap: S ? waterEnv(S.renderer) : null, envMapIntensity: hx ? .8 : 1, depthWrite: false });
   m.userData = { nm, cn, flow, env: m.envMap };
-  m.onBeforeCompile = sh => { sh.uniforms.wt = WATER.uT; sh.uniforms.shal = { value: new THREE.Color(hx ? '#7A9E8C' : '#8FD8E8') };
+  m.onBeforeCompile = sh => { sh.uniforms.wt = WATER.uT; sh.uniforms.shal = { value: new THREE.Color(hx ? '#7A9E8C' : '#86C9C2') };
     sh.vertexShader = 'attribute float shore;varying float vSh;uniform float wt;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvSh=shore;vec4 wp0=modelMatrix*vec4(position,1.);transformed.y+=(sin(wp0.x*.35+wt*1.3)*.05+sin(wp0.z*.29-wt*1.05)*.045)*smoothstep(0.,.25,shore);');
     sh.fragmentShader = 'varying float vSh;uniform float wt;uniform vec3 shal;\n' + sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\ndiffuseColor.rgb=mix(shal,diffuseColor.rgb,smoothstep(.0,.35,vSh));float fo=smoothstep(.09,.0,vSh)*(.55+.45*sin(vSh*140.-wt*2.6));diffuseColor.rgb=mix(diffuseColor.rgb,vec3(1.),clamp(fo,0.,1.)*.75);diffuseColor.a=mix(.55,diffuseColor.a,smoothstep(0.,.12,vSh));'); };
   WATER.mats.push(m); return m;
