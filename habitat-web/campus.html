@@ -175,7 +175,7 @@ var X=window.CampusExtra;
 }).catch(function(){});fetch('/api/testimonio',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();}).then(function(t){if(t&&t.clave&&t.estado!=='Subido'){var a=document.getElementById('lnTes');a.href='/testimonio.html?k='+t.clave;a.hidden=false;}}).catch(function(){});var r=await fetch('/api/voluntario',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();});
  if(!r.voluntario||!r.turnos||!r.turnos.length)return;var hoy=new Date(Date.now()-3*3600e3).toISOString().slice(0,10),man=new Date(Date.now()+21*3600e3).toISOString().slice(0,10);window.__eqVol=function(){var c=document.querySelector('#eq-vol small');if(!c)return;var t=r.turnos[0],x=new Date(t.fecha+'T12:00:00-03:00');c.textContent=(t.fecha===hoy?'Servís hoy':t.fecha===man?'Servís mañana':'Tu próximo turno: '+['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][x.getDay()]+' '+x.getDate()+'/'+(x.getMonth()+1));if(t.fecha===hoy||t.fecha===man)c.classList.add('hot');};window.__eqVol();
 }catch(e){}})();
-function agenda(pids){X.agenda(pids).then(function(L){
+function agenda(pids,car){X.agenda(pids,car).then(function(L){
  var now=Date.now(),up=L.filter(function(e){return (e.end||e.ini).getTime()>=now-3600e3;}),av=L.filter(function(e){return /aviso/i.test(e.tipo||'')&&e.ini.getTime()<=now;}).reverse().slice(0,4);
  var n=X.unseen(L);var bn=document.getElementById('bellN');if(n){bn.textContent=n;bn.hidden=false;}
  document.getElementById('bell').addEventListener('click',function(){X.markSeen();bn.hidden=true;});
@@ -200,7 +200,7 @@ try{
    rows.push({part:parts[i],prog:progs[i],done:done,tot:tot,pct:tot?Math.min(100,Math.round(done*100/tot)):0,last:parts[i].lastActivityDate||parts[i].createdDate||''});
  }
  rows.sort(function(a,b){return (b.last||'').localeCompare(a.last||'');});
- agenda(rows.map(function(r){return r.prog.id;}));
+ agenda(rows.map(function(r){return r.prog.id;}),rows.map(function(r){return (r.prog.description&&r.prog.description.title)||r.prog.title||'';}));
  var totalDone=rows.reduce(function(a,r){return a+r.done;},0);
  document.getElementById('sCur').textContent=rows.filter(function(r){return r.pct<100;}).length;
  document.getElementById('sDone').textContent=totalDone;
