@@ -1050,16 +1050,37 @@ function hudSwap(on) {
 // ---------- HUD mínimo: abanico de íconos (se despliega hacia arriba y se repliega solo a los 4 s) y minimapa ----------
 const FAN = { el: null, open: false, t: 0 };
 function fanFire(b) { if (!b) return; if (b.onpointerdown) b.onpointerdown({ preventDefault() {}, stopPropagation() {}, pointerType: 'mouse', button: 0, target: b, currentTarget: b }); else b.click(); }
-function fanItems() {
+// cada opción: [ícono, nombre, acción, clave, grupo]. En el abanico van solo las 4 principales; el resto, en «Más opciones».
+const FAN_GR = { acc: 'Acciones', pj: 'Tu personaje', son: 'Sonido', ayu: 'Ayuda y ajustes' };
+const FAN_ACT = { jump: 'acc', pray: 'acc', wave: 'acc', glow: 'acc', music: 'son', voice: 'son', mix: 'son', help: 'ayu', vida: 'ayu' };
+function fanAll() {
   const L = [], money = (() => { const m = document.querySelector('#v3surv .sv-money'); return m ? (m.textContent.match(/\d+/) || ['0'])[0] : null; })();
-  L.push(['💪', 'Atributos', () => openBag('at')]);
-  if (S && S.sv) { L.push(['🍽️', 'Comer (C)', () => svEat()]); L.push(['🔨', 'Fabricar (B)', () => svCraft()]); if (money != null) L.push([`<span class="fan-coin"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#F5C443" stroke="#8A5A12" stroke-width="1.6"/><circle cx="12" cy="12" r="7" fill="none" stroke="#B9801E" stroke-width="1.2"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="900" font-family="Georgia,serif" fill="#7A4E0E">D</text></svg><em>${money}</em></span>`, `${money} denarios (monedas)`, () => openBag()]); }
-  const acts = document.getElementById('v3acts'); if (acts) acts.querySelectorAll('button[data-a]').forEach(b => { if (b.dataset.a === 'room') return; L.push([b.innerHTML, b.title || b.getAttribute('aria-label') || b.dataset.a, () => fanFire(b)]); });
-  try { if (G().hstHas && G().hstHas()) L.push(['📜', 'Rollo de Isaías', () => G().hstScroll()]); } catch (e) {}
-  L.push(['⭐', 'Mi progreso', () => { const h = document.getElementById('hudLv'); if (h) h.click(); }]);
-  L.push(['☰', 'Menú y ajustes', () => { const m = document.getElementById('menuBtn'); if (m) m.click(); }]);
+  L.push(['💪', 'Atributos', () => openBag('at'), 'attr', 'pj']);
+  if (S && S.sv) { L.push(['🍽️', 'Comer (C)', () => svEat(), 'eat', 'pj']); L.push(['🔨', 'Fabricar (B)', () => svCraft(), 'craft', 'pj']); if (money != null) L.push([`<span class="fan-coin"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#F5C443" stroke="#8A5A12" stroke-width="1.6"/><circle cx="12" cy="12" r="7" fill="none" stroke="#B9801E" stroke-width="1.2"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="900" font-family="Georgia,serif" fill="#7A4E0E">D</text></svg><em>${money}</em></span>`, `${money} denarios (monedas)`, () => openBag(), 'coin', 'pj']); }
+  const acts = document.getElementById('v3acts'); if (acts) acts.querySelectorAll('button[data-a]').forEach(b => { if (b.dataset.a === 'room') return; L.push([b.innerHTML, b.title || b.getAttribute('aria-label') || b.dataset.a, () => fanFire(b), b.dataset.a, FAN_ACT[b.dataset.a] || 'acc', b.classList.contains('off')]); });
+  try { if (G().hstHas && G().hstHas()) L.push(['📜', 'Rollo de Isaías', () => G().hstScroll(), 'scroll', 'pj']); } catch (e) {}
+  L.push(['⭐', 'Mi progreso', () => { const h = document.getElementById('hudLv'); if (h) h.click(); }, 'prog', 'ayu']);
+  L.push(['☰', 'Menú y ajustes', () => { const m = document.getElementById('menuBtn'); if (m) m.click(); }, 'menu', 'ayu']);
   return L;
 }
+function fanItems() {
+  const all = fanAll(), pri = (S && S.sv) ? ['eat', 'craft', 'pray', 'prog'] : ['pray', 'wave', 'jump', 'prog'], main = [];
+  pri.forEach(k => { const f = all.find(x => x[3] === k); if (f) main.push(f); });
+  all.forEach(f => { if (main.length < 4 && !main.includes(f)) main.push(f); });
+  main.push(['<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="5" cy="12" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="19" cy="12" r="2.2" fill="currentColor"/></svg>', 'Más opciones', () => moreOpen(), 'more', '']);
+  return main;
+}
+function moreOpen() {
+  fanSet(false); let el = document.getElementById('v3more'); if (!el) { el = document.createElement('div'); el.id = 'v3more'; el.className = 'v3more'; document.body.appendChild(el); el.onclick = e => { if (e.target === el) moreClose(); }; }
+  const all = fanAll(); let h = '<div class="mo-box" role="dialog" aria-label="Más opciones"><div class="mo-hd"><b>Más opciones</b><button class="mo-x" aria-label="Cerrar">✕</button></div>';
+  Object.keys(FAN_GR).forEach(g => { const it = all.map((f, i) => [f, i]).filter(([f]) => f[4] === g); if (!it.length) return;
+    h += `<div class="mo-gr"><small>${FAN_GR[g]}</small><div class="mo-grid">${it.map(([f, i]) => `<button data-i="${i}" class="${f[5] ? 'off' : ''}"><span class="mo-ic">${f[0]}</span><span class="mo-tx">${esc(String(f[1]).replace(/<[^>]+>/g, ''))}</span></button>`).join('')}</div></div>`; });
+  el.innerHTML = h + '</div>'; el.hidden = false; requestAnimationFrame(() => el.classList.add('on'));
+  el.querySelector('.mo-x').onclick = moreClose;
+  el.querySelectorAll('.mo-grid button').forEach(b => b.onclick = e => { e.stopPropagation(); const f = all[+b.dataset.i]; const keep = FAN_ACT[f[3]] === 'son'; if (!keep) moreClose(); try { f[2](); } catch (er) {} if (keep) setTimeout(() => { const o = document.getElementById('v3more'); if (o && !o.hidden) moreOpen(); }, 120); });
+}
+addEventListener('keydown', e => { if (e.key === 'Escape') { const o = document.getElementById('v3more'); if (o && !o.hidden) moreClose(); } });
+function moreClose() { const el = document.getElementById('v3more'); if (!el) return; el.classList.remove('on'); setTimeout(() => { el.hidden = true; }, 200); }
 function fanArm() { clearTimeout(FAN.t); if (FAN.open) FAN.t = setTimeout(() => fanSet(false), 4000); }
 function fanSet(open) {
   const el = FAN.el; if (!el) return; FAN.open = open; el.classList.toggle('open', open); el.querySelector('.fan-tg').setAttribute('aria-expanded', open ? 'true' : 'false');
@@ -1099,14 +1120,30 @@ const HUDL = { t: 0 };
 function hudLay() {
   const h = document.querySelector('body.v3on .hud-in'), B = document.body.style; if (!h) return; const r = h.getBoundingClientRect(); if (!r.width || !r.height) return;
   const hb = Math.round(r.bottom + 8); if (B.getPropertyValue('--hudB') !== hb + 'px') B.setProperty('--hudB', hb + 'px');
-  const c = COMP.el; if (!c || c.hidden) return; const w = c.offsetWidth || 190, L = (innerWidth - w) / 2, R = L + w;
-  const sv = document.querySelector('body.v3on .v3surv') || document.getElementById('v3mmbox'), sr = sv && sv.offsetParent !== null ? sv.getBoundingClientRect() : null;
-  const hit = q => q && L < q.right + 8 && R > q.left - 8; let top = '';
-  if (hit(r)) top = Math.round(Math.max(r.bottom, hit(sr) ? sr.bottom : 0) + 8) + 'px';
-  if (B.getPropertyValue('--compT') !== top) { if (top) B.setProperty('--compT', top); else B.removeProperty('--compT'); }
+  try { topStack(r); } catch (e) { }
+}
+/* carteles de arriba sin pisarse: cada uno que esté a la vista (rumbo, sala, misión, estación, aldea, avisos) se apila debajo
+   del anterior y nunca encima del panel del jugador ni de la caja de supervivencia. Vale para PC y celular, vertical o apaisado. */
+const TOPQ = ['.v3comp', '#v3room', '.v3topics', '.v3mis', '.v3seas', '#v3vil', '#toast'];
+function topVis(e) { if (!e || e.hidden) return false; const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden') return false; return +cs.opacity > .04 || e.classList.contains('on') || e.classList.contains('show'); }
+function topStack(hr) {
+  let sp = document.getElementById('v3sat'); if (!sp) { sp = document.createElement('div'); sp.id = 'v3sat'; sp.style.cssText = 'position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;height:env(safe-area-inset-top,0px)'; document.body.appendChild(sp); }
+  const safe = sp.offsetHeight || 0, base = 10 + safe, obs = [];
+  if (hr) obs.push({ l: hr.left, r: hr.right, t: hr.top, b: hr.bottom });
+  document.querySelectorAll('body.v3on .hud, body.v3on .v3surv, body.v3on .v3mapbtn, body.v3on .v3baghud').forEach(sv => { if (sv.offsetParent === null && getComputedStyle(sv).position !== 'fixed') return; const q = sv.getBoundingClientRect(); if (q.width && q.height && q.top < innerHeight * .5) obs.push({ l: q.left, r: q.right, t: q.top, b: q.bottom }); });
+  const seen = new Set();
+  TOPQ.forEach(sel => document.querySelectorAll(sel).forEach(e => {
+    if (seen.has(e)) return; seen.add(e);
+    if (!topVis(e)) { if (e.dataset.tsY) { e.style.removeProperty('top'); delete e.dataset.tsY; } return; }
+    const q = e.getBoundingClientRect(), h = e.offsetHeight || q.height, l = q.left, rr = q.right; if (!q.width) return;
+    let y = base, moved = true, n = 0;
+    while (moved && n++ < 12) { moved = false; for (const o of obs) if (l < o.r + 6 && rr > o.l - 6 && y < o.b + 6 && y + h > o.t - 6) { y = o.b + 6; moved = true; } }
+    y = Math.round(y); if (e.dataset.tsY !== String(y)) { e.style.setProperty('top', y + 'px', 'important'); e.dataset.tsY = y; }
+    obs.push({ l, r: rr, t: y, b: y + h });
+  }));
 }
 function compassTick(dt) {
-  HUDL.t = (HUDL.t || 0) - dt; if (HUDL.t <= 0) { HUDL.t = .25; try { hudLay(); } catch (e) {} }
+  HUDL.t = (HUDL.t || 0) - dt; if (HUDL.t <= 0) { HUDL.t = .1; try { hudLay(); } catch (e) {} }
   if (!S || !S.hx) return; COMP.t -= dt; if (COMP.t > 0) return; COMP.t = .2;
   if (!COMP.el) { COMP.el = document.createElement('div'); COMP.el.className = 'v3comp'; COMP.el.innerHTML = '<i><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3l6 15-6-3.5L6 18Z" fill="currentColor"/></svg></i><span></span>'; COMP.el.onclick = () => openMap(); document.body.appendChild(COMP.el); }
   const a = S.av.position, bg = S.sv && S.sv.bag; if (bg && !S.walking && !sheetUp()) { const dx = bg.x - a.x, dz = bg.z - a.z, d = Math.hypot(dx, dz), C = S.yaw + S.camYaw, th = Math.atan2(dx * -Math.cos(C) + dz * Math.sin(C), dx * Math.sin(C) + dz * Math.cos(C)); COMP.el.hidden = d < 2; COMP.el.firstChild.style.transform = `rotate(${th}rad)`; COMP.el.lastChild.textContent = `Tu bolsa · ${Math.round(d)} m`; return; }

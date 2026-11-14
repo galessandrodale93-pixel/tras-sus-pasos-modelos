@@ -965,3 +965,17 @@ body[data-branch="kids"] .kh-pill b{color:#FFD25E}
 .lb2.kid .lb-foam canvas.on{opacity:1}
 @media (max-height:560px){.lb2.kid .lb-foam canvas{height:72px}}
 .lb2.kid .lb-foam canvas{height:clamp(110px,22vh,190px)}
+/* «Más opciones»: todas las acciones en una ventana ordenada por grupos, con nombre debajo de cada ícono */
+.v3more{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px));background:rgba(6,5,3,.55);opacity:0;transition:opacity .2s}
+.v3more[hidden]{display:none}.v3more.on{opacity:1}
+.v3more .mo-box{width:min(520px,100%);max-height:100%;overflow:auto;border-radius:20px;background:rgba(20,15,10,.95);border:1px solid rgba(233,195,122,.45);box-shadow:0 18px 50px rgba(0,0,0,.5);padding:14px 16px 16px;color:#FFF4DC;font-family:"Nunito",sans-serif;transform:translateY(10px) scale(.98);transition:transform .22s}
+.v3more.on .mo-box{transform:none}
+.v3more .mo-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.v3more .mo-hd b{font:600 19px "Cinzel",Georgia,serif;color:#FFE7A6}
+.v3more .mo-x{width:36px;height:36px;border-radius:50%;border:1px solid rgba(233,195,122,.4);background:transparent;color:#FFF4DC;font-size:16px;cursor:pointer}
+.v3more .mo-gr{margin-top:10px}.v3more .mo-gr small{display:block;font:800 11px "Nunito",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#E9C37A;margin:0 0 6px 2px}
+.v3more .mo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.v3more .mo-grid button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px;border-radius:14px;border:1px solid rgba(233,195,122,.3);background:rgba(255,255,255,.05);color:#FFF4DC;cursor:pointer;font:700 12px/1.2 "Nunito",sans-serif;text-align:center}
+.v3more .mo-grid button:hover{background:rgba(233,195,122,.14)}.v3more .mo-grid button.off{opacity:.55}
+.v3more .mo-ic{font-size:22px;line-height:1;display:grid;place-items:center;min-height:26px}.v3more .mo-ic svg{width:22px;height:22px}
+@media (max-height:520px){.v3more .mo-grid{grid-template-columns:repeat(auto-fill,minmax(78px,1fr))}.v3more .mo-grid button{padding:7px 4px}}
