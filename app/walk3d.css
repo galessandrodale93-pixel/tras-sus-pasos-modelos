@@ -1097,7 +1097,7 @@ body:not([data-branch="ados"]) .cr-rank{color:#AFC3EE}
   #v3sheet .inv-body[data-t="eq"]{display:grid;grid-template-columns:minmax(280px,1fr) minmax(300px,1.1fr);grid-template-areas:"left cap" "left grid";grid-template-rows:auto 1fr;column-gap:18px;align-items:start}
   #v3sheet .inv-body[data-t="eq"] .inv-left{grid-area:left;position:sticky;top:0}
   #v3sheet .inv-body[data-t="eq"] .inv-cap{grid-area:cap;margin-top:0!important}
-  #v3sheet .inv-body[data-t="eq"] .inv-grid{grid-area:grid;grid-template-columns:repeat(5,minmax(0,1fr))!important}
+  #v3sheet .inv-body[data-t="eq"] .inv-grid{grid-area:grid;grid-template-columns:repeat(4,minmax(0,92px))!important;justify-content:center}
 }
 @media (max-height:520px){
   #v3sheet .inv{padding:10px 12px 12px!important}
