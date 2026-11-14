@@ -1074,12 +1074,13 @@ function moreOpen() {
   fanSet(false); let el = document.getElementById('v3more'); if (!el) { el = document.createElement('div'); el.id = 'v3more'; el.className = 'v3more'; document.body.appendChild(el); el.onclick = e => { if (e.target === el) moreClose(); }; }
   const all = fanAll(); let h = '<div class="mo-box" role="dialog" aria-label="Más opciones"><div class="mo-hd"><b>Más opciones</b><button class="mo-x" aria-label="Cerrar">✕</button></div>';
   Object.keys(FAN_GR).forEach(g => { const it = all.map((f, i) => [f, i]).filter(([f]) => f[4] === g); if (!it.length) return;
-    h += `<div class="mo-gr"><small>${FAN_GR[g]}</small><div class="mo-grid">${it.map(([f, i]) => `<button data-i="${i}" class="${f[5] ? 'off' : ''}"><span class="mo-ic">${f[0]}</span><span class="mo-tx">${esc(String(f[1]).replace(/<[^>]+>/g, ''))}</span></button>`).join('')}</div></div>`; });
+    h += `<div class="mo-gr"><small>${FAN_GR[g]}</small><div class="mo-grid">${it.map(([f, i]) => `<button data-i="${i}" class="${f[5] ? 'off' : ''}"><span class="mo-ic">${String(f[0]).replace(/<em>[^<]*<\/em>/, '')}</span><span class="mo-tx">${esc(moLabel(f[1]))}</span></button>`).join('')}</div></div>`; });
   el.innerHTML = h + '</div>'; el.hidden = false; requestAnimationFrame(() => el.classList.add('on'));
   el.querySelector('.mo-x').onclick = moreClose;
   el.querySelectorAll('.mo-grid button').forEach(b => b.onclick = e => { e.stopPropagation(); const f = all[+b.dataset.i]; const keep = FAN_ACT[f[3]] === 'son'; if (!keep) moreClose(); try { f[2](); } catch (er) {} if (keep) setTimeout(() => { const o = document.getElementById('v3more'); if (o && !o.hidden) moreOpen(); }, 120); });
 }
 addEventListener('keydown', e => { if (e.key === 'Escape') { const o = document.getElementById('v3more'); if (o && !o.hidden) moreClose(); } });
+const moLabel = t => { t = String(t).replace(/<[^>]+>/g, ''); return matchMedia('(pointer:coarse)').matches ? t.replace(/\s*\([^)]*\)/g, '') : t; };
 function moreClose() { const el = document.getElementById('v3more'); if (!el) return; el.classList.remove('on'); setTimeout(() => { el.hidden = true; }, 200); }
 function fanArm() { clearTimeout(FAN.t); if (FAN.open) FAN.t = setTimeout(() => fanSet(false), 4000); }
 function fanSet(open) {
