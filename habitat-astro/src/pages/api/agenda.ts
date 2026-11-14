@@ -20,7 +20,7 @@ export async function agendaAlumno(carreras: string[], dias = 60) {
     q("VolEventos").ge("fecha", mas(hoy, -1)).le("fecha", hasta).limit(100).find().then((r) => r.items as Esp[]),
   ]);
   const clases = cl.filter((c) => !/receso/i.test(c.tipo || "") && (!carreras.length || progsDe(c.programa).some((p) => carreras.includes(p))))
-    .map((c) => { const h = horario(c.fecha).clase; return { _id: "cl-" + c._id, tipo: /examen/i.test(c.tipo || "") ? "Examen" : "Clase", curso: c.programa || "", title: c.title || "Clase", descripcion: c.profe ? "Con " + c.profe : "", inicio: iso(c.fecha, h), fin: iso(c.fecha, h, 150), lugar: "Habitat CFM" }; });
+    .map((c) => { const h = horario(c.fecha).clase; return { _id: "cl-" + c._id, tipo: /examen/i.test(c.tipo || "") ? "Examen" : "Clase", curso: c.programa || "", title: c.title || "Clase", descripcion: "", inicio: iso(c.fecha, h), fin: iso(c.fecha, h, 150), lugar: "Habitat CFM" }; });
   const esp = ev.filter((e) => e.tipo === "zarza" || e.tipo === "selah")
     .map((e) => { const h = /^\d{2}:\d{2}$/.test(e.hora || "") ? (e.hora as string) : "19:30"; return { _id: "esp-" + e._id, tipo: e.tipo === "zarza" ? "Zarza" : "Selah", curso: "", title: e.title || (e.tipo === "zarza" ? "Zarza" : "Selah"), descripcion: e.tipo === "zarza" ? "Noche de adoración. ¡Vení y traé a alguien!" : "Un tiempo para orar y meditar en la Palabra.", inicio: iso(e.fecha, h), fin: iso(e.fecha, h, 150), lugar: e.lugar || "Habitat CFM", link: e.link || "", destacado: true }; });
   return [...clases, ...esp].sort((a, b) => a.inicio.localeCompare(b.inicio));
