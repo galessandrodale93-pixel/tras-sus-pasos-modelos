@@ -85,18 +85,30 @@
     var cs = D.cobros.filter(function (c) { return c.alumnoId === id; }).sort(function (x, y) { return x.fecha < y.fecha ? 1 : -1; });
     $('#drBody').innerHTML = '<h2 id="drName">' + esc(a.title) + '</h2><p class="tt-tip">' + esc([a.carreras, a.modalidad, a.tutores ? 'Tutores: ' + a.tutores : ''].filter(Boolean).join(' · ')) + '</p>' +
       ps.map(function (p) { var meses = []; for (var i = 3; i <= 12; i++) meses.push(mk(i)); var r = resumenPlan(p); return '<div class="tt-card fn-plan"><div class="fn-ph"><h3>' + esc(p.escuela) + '</h3><span class="fn-st ' + (r.deb.length ? 'r' : r.est === 'Al día' ? 'g' : '') + '">' + esc(r.est) + '</span><button class="tt-btn s" data-plan="' + esc(p.escuela) + '">Editar plan</button></div><div class="fn-months">' + meses.map(function (m) { var e = estado(p, m); return '<span class="fn-c ' + e.k + '"><small>' + MC[+m.slice(5, 7) - 1] + '</small>' + esc(e.t || '·') + '</span>'; }).join('') + '</div><p class="tt-tip">' + esc(p.formaPago || 'Forma de pago sin cargar') + ' · empezó en ' + MESES[(p.inicio || 3) - 1] + (p.especial ? ' · ' + esc(p.especial) + (p.desde ? ' (' + MESES[p.desde - 1] + ' a ' + MESES[(p.hasta || 12) - 1] + ')' : '') : '') + (p.nota ? '<br>' + esc(p.nota) : '') + '</p></div>'; }).join('') +
-      '<div class="tt-wa"><button class="tt-btn" id="drCobro">Registrar un cobro</button>' + (ps.length < 3 ? '<button class="tt-btn s" id="drPlan">Sumar escuela</button>' : '') + '</div>' +
+      '<div class="tt-wa"><button class="tt-btn" id="drCobro">Registrar un cobro</button>' + (ps.length < 3 ? '<button class="tt-btn s" id="drPlan">Sumar escuela</button>' : '') + (a.activo === false ? '<span class="fn-st">Dado de baja</span>' : '<button class="tt-btn s" id="drBaja" style="margin-left:auto;color:var(--r)">Dar de baja</button>') + '</div>' +
       '<h3 class="tt-lbl" style="margin-top:18px">Cobros</h3><div class="fn-log">' + (cs.map(rowCobro).join('') || '<p class="tt-tip">Todavía no tiene cobros cargados.</p>') + '</div>';
     $('#ttDrawer').hidden = false;
     $$('#drBody [data-plan]').forEach(function (b) { b.onclick = function () { planModal(id, b.dataset.plan); }; });
     if ($('#drPlan')) $('#drPlan').onclick = function () { planModal(id, ''); };
     $('#drCobro').onclick = function () { cobroModal({ alumnoId: id, escuela: ps.length === 1 ? ps[0].escuela : '' }); };
+    if ($('#drBaja')) $('#drBaja').onclick = function () { bajaModal(a); };
     bindLog($('#drBody'), function () { ficha(id); });
   }
   function rowCobro(c) { return '<div class="fn-row ' + (c.estado === 'Rechazado' ? 'no' : '') + '" data-c="' + esc(c._id) + '"><span class="d">' + esc(c.fecha ? fcorta(c.fecha) : '') + '</span><span class="w"><b>' + esc(NM[c.alumnoId] || c.title) + '</b><small>' + esc(c.escuela) + ' · cuenta para ' + esc(c.mes ? MESES[+c.mes.slice(5, 7) - 1] : '—') + ' · ' + esc(c.medio || '') + (c.compartido ? ' · compartido con ' + esc(c.compartido) : '') + (c.estado && c.estado !== 'Aprobado' ? ' · ' + esc(c.estado) + (c.respuesta ? ': ' + esc(c.respuesta) : '') : '') + (c.nota ? ' · ' + esc(c.nota) : '') + '</small></span><span class="p">' + plata(c.monto) + '</span></div>'; }
   function bindLog(box, after) { $$('[data-c]', box).forEach(function (r) { r.onclick = function () { var c = D.cobros.filter(function (x) { return x._id === r.dataset.c; })[0]; if (c) cobroModal(c, after); }; }); }
   $$('#ttDrawer [data-x]').forEach(function (b) { b.onclick = function () { $('#ttDrawer').hidden = true; refresh(); }; });
 
+  function bajaModal(a) {
+    var mm = MESES.map(function (m, i) { return [i + 1, m]; }).slice(2);
+    modal('<form class="tt-form"><h2 class="w">Dar de baja a ' + esc(a.title) + '</h2><label>Desde<select name="desde">' + opts(mm, TODAY.getMonth() + 1) + '</select></label><label class="w">Motivo (opcional)<input name="motivo" placeholder="Ej.: dejó la carrera"></label><p class="tt-tip w">Desde ese mes deja de figurar como deudor, sale de las listas y no le llegan más avisos de cobro. A quienes llevan Finanzas les llega un mail para cancelar su débito en Debi.</p><div class="w tt-wa"><button class="tt-btn" type="submit" style="background:var(--r)">Dar de baja</button><button class="tt-btn s" type="button" data-close>Cancelar</button></div></form>', function (m, close) {
+      var f = $('form', m);
+      f.onsubmit = function (e) { e.preventDefault(); var b = $('[type=submit]', f); b.disabled = true; b.textContent = 'Guardando…';
+        api('POST', { op: 'baja', alumnoId: a._id, desde: f.desde.value, motivo: f.motivo.value }).then(function (r) {
+          (r.planes || []).forEach(function (p) { var at = D.planes.findIndex(function (x) { return x._id === p._id; }); if (at >= 0) D.planes[at] = p; else D.planes.push(p); });
+          a.activo = false; close(); ficha(a._id); toast('Listo, quedó dado de baja.' + (r.avisados ? ' Avisamos para cortar el débito en Debi.' : ''));
+        }).catch(function (x) { b.disabled = false; b.textContent = 'Dar de baja'; toast(x.message || 'No se guardó.'); }); };
+    });
+  }
   function planModal(id, escuela) {
     var p = D.planes.filter(function (x) { return x.alumnoId === id && x.escuela === escuela; })[0] || { alumnoId: id, escuela: escuela, inicio: TODAY.getMonth() + 1 };
     var mm = [['', '—']].concat(MESES.map(function (m, i) { return [i + 1, m]; }).slice(2));
