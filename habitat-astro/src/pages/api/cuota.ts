@@ -5,6 +5,7 @@ import { auth } from "@wix/essentials";
 import { items } from "@wix/data";
 import { emailDe } from "../../lib/profe";
 import { estadoMes, type Plan, type Cobro } from "../../lib/fin";
+import { activa, VENCE } from "../../lib/cobranza";
 
 const q = auth.elevate(items.query);
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json", "Cache-Control": "private, no-store" } });
@@ -20,6 +21,7 @@ export const GET: APIRoute = async ({ request }) => {
       q("FinCobros").eq("alumnoId", al._id).limit(500).find().then((r) => r.items as unknown as Cobro[]),
       q("FinDebi").eq("alumnoId", al._id).limit(200).find().then((r) => r.items as unknown as { fecha: string; mes: string; estado: string; monto: number }[]),
     ]);
+    const transf = await activa().catch(() => false);
     const hoy = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10), hoyMes = hoy.slice(0, 7), y = hoy.slice(0, 4);
     const escuelas = planes.map((p) => {
       const meses: { mes: string; estado: string }[] = [];
@@ -29,10 +31,10 @@ export const GET: APIRoute = async ({ request }) => {
         const e = estadoMes(p, cobros, mes, hoyMes);
         if (e !== "nada") meses.push({ mes, estado: e });
       }
-      return { escuela: p.escuela, formaPago: p.formaPago || "", debito: /d[eé]bito/i.test(p.formaPago || ""), meses, debe: meses.filter((x) => x.estado === "debe").length };
+      return { escuela: p.escuela, formaPago: transf ? "Transferencia al alias habitatcfm" : p.formaPago || "", debito: !transf && /d[eé]bito/i.test(p.formaPago || ""), meses, debe: meses.filter((x) => x.estado === "debe").length };
     });
     const ult = debi.sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
-    return json({ ok: true, alumno: true, nombre: al.title, escuelas, ultimoDebito: ult ? { fecha: ult.fecha, mes: ult.mes, estado: ult.estado === "approved" ? "aprobado" : ult.estado === "rejected" ? "rechazado" : "pendiente", monto: ult.monto } : null, alias: "habitatcfm" });
+    return json({ ok: true, alumno: true, nombre: al.title, escuelas, ultimoDebito: ult ? { fecha: ult.fecha, mes: ult.mes, estado: ult.estado === "approved" ? "aprobado" : ult.estado === "rejected" ? "rechazado" : "pendiente", monto: ult.monto } : null, alias: "habitatcfm", transferencia: transf, vence: VENCE });
   } catch (e) {
     console.error("cuota", e);
     return json({ ok: false }, 500);

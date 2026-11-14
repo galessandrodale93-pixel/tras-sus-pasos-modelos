@@ -7,6 +7,7 @@ import { secrets } from "@wix/secrets";
 import { q, todos, guardar, hoyAR, desdePago, mandar, marco, p, slug } from "./sem";
 import { esc } from "./vol";
 import { registrarSalida } from "./salidas";
+import { estadoMes, type Plan, type Cobro } from "./fin";
 
 const getSecret = auth.elevate(secrets.getSecretValue);
 const rem = auth.elevate(items.remove);
@@ -86,6 +87,7 @@ export async function registrarPago(pg: Pago, ctx?: { pag: Pagador[]; al: Alumno
   const fecha = fechaAR(pg.date_approved || pg.date_created || new Date().toISOString());
   const it: Ingreso = { _id, title: nombrePagador(pg), email: String((pg.payer || {}).email || "").toLowerCase(), fecha, mes: fecha.slice(0, 7), monto: Number(pg.transaction_amount) || 0, neto: Number((pg.transaction_details || {}).net_received_amount) || 0, tipo: c.tipo, origen: c0 === 1 ? "Mercado Pago" : "Mercado Pago (cuenta " + c0 + ")", alumnoId: c.alumnoId, pagador: c.key, descripcion: ((esSuscripcion(pg) ? "Suscripción · " : "") + String(pg.description || "")).slice(0, 300), estado: pg.status, nota: (prev && prev.nota) || "", por: "Mercado Pago" };
   await guardar("FinIngresos", it as unknown as Record<string, unknown>);
+  await cuotaDesdeIngreso(it).catch((e) => console.error("cuota mp", e));
   if (!prev && SIEMBRA.includes(it.tipo) && it.email) await desdePago({ email: it.email, nombre: it.title || "", monto: it.monto, recurrente: it.tipo === "Siembra automática", fecha });
   return it;
 }
@@ -125,6 +127,22 @@ async function traerCuenta(dias: number, tk: string, ctx: { pag: Pagador[]; al: 
   return { vistos, nuevos, salidas };
 }
 
+// Un pago de Mercado Pago clasificado como cuota de un alumno cuenta como cobro en Finanzas (y el alumno lo ve en «Mi cuota»).
+// Se aplica al mes impago más viejo; si está todo pago, al mes del pago. Con varias escuelas lo asigna Finanzas a mano.
+export async function cuotaDesdeIngreso(it: Ingreso) {
+  if (it.tipo !== "Cuota de alumno (MP)" || !it.alumnoId) return "";
+  const _id = "mp-" + it._id;
+  if ((await q("FinCobros").eq("_id", _id).limit(1).find()).items.length) return _id;
+  const ps = (await q("FinPlanes").eq("alumnoId", it.alumnoId).limit(5).find()).items as unknown as Plan[];
+  if (ps.length !== 1) return "";
+  const cobros = (await q("FinCobros").eq("alumnoId", it.alumnoId).limit(500).find()).items as unknown as Cobro[];
+  const hoyMes = it.fecha.slice(0, 7);
+  let mes = hoyMes;
+  for (let m = 1; m <= 12; m++) { const mm = hoyMes.slice(0, 4) + "-" + String(m).padStart(2, "0"); if (mm > hoyMes) break; const e = estadoMes(ps[0], cobros, mm, hoyMes); if (e === "debe" || e === "pendiente") { mes = mm; break; } }
+  await guardar("FinCobros", { _id, title: it.title || "", alumnoId: it.alumnoId, escuela: ps[0].escuela, compartido: "", fecha: it.fecha, mes, montoTotal: it.monto, monto: it.monto, estado: "Aprobado", medio: "Transferencia", concepto: "Cuota", respuesta: "Mercado Pago", nota: "Cargado solo desde Mercado Pago", por: "Mercado Pago" });
+  return _id;
+}
+
 // Clasificación a mano desde Finanzas; con "recordar", los próximos pagos de esa persona se clasifican solos.
 export async function reclasificar(id: string, tipo: string, alumnoId: string, recordar: boolean, por: string) {
   const it = (await q("FinIngresos").eq("_id", id).limit(1).find()).items[0] as Ingreso | undefined;
@@ -137,6 +155,7 @@ export async function reclasificar(id: string, tipo: string, alumnoId: string, r
     const otros = (await todos<Ingreso>("FinIngresos")).filter((x) => x.pagador === it.pagador && x._id !== id && x.tipo !== tipo);
     for (const o of otros) await guardar("FinIngresos", { ...o, tipo, alumnoId: nuevo.alumnoId, por } as unknown as Record<string, unknown>);
   }
+  if (nuevo.tipo === "Cuota de alumno (MP)") await cuotaDesdeIngreso(nuevo as Ingreso).catch(() => "");
   if (SIEMBRA.includes(tipo) && !SIEMBRA.includes(it.tipo) && it.email) await desdePago({ email: it.email, nombre: it.title || "", monto: it.monto, recurrente: tipo === "Siembra automática", fecha: it.fecha });
   return nuevo;
 }
