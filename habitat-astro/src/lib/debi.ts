@@ -11,7 +11,7 @@ import { esc } from "./vol";
 
 const getSecret = auth.elevate(secrets.getSecretValue);
 export type DebiCobro = { _id: string; title?: string; email?: string; cliente?: string; alumnoId?: string; fecha: string; mes: string; monto: number; estado: string; acreditacion?: string; llego?: string; cobroId?: string; avisado?: string; descripcion?: string };
-type Alumno = { _id: string; title?: string; email?: string };
+type Alumno = { _id: string; title?: string; email?: string; activo?: boolean };
 const nrm = (t: unknown) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
 const DIA = (d: string, n: number) => new Date(Date.parse(d + "T12:00:00Z") + n * 864e5).toISOString().slice(0, 10);
 
@@ -107,6 +107,7 @@ export async function avisarRechazos(hoy: string, dry: boolean, remitente: strin
       continue;
     }
     const a = al.find((x) => x._id === d.alumnoId), to = (a && a.email) || d.email;
+    if (a && a.activo === false) { if (!dry) await guardar("FinDebi", { ...d, avisado: hoy } as unknown as Record<string, unknown>); out.push({ d: d._id, omitido: "dado de baja" }); continue; }
     const nom = esc(String((a && a.title) || d.title || "").split(/\s+/)[0]);
     if (!to) { out.push({ d: d._id, sinEmail: true }); continue; }
     if (dry) { out.push({ d: d._id, to }); yaAvisado.add(k); continue; }

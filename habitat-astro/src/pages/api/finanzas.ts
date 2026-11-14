@@ -3,6 +3,7 @@
 import type { APIRoute } from "astro";
 import { auth } from "@wix/essentials";
 import { items } from "@wix/data";
+import { mandar, marco, p as P } from "../../lib/sem";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
@@ -92,6 +93,39 @@ export const POST: APIRoute = async ({ request }) => {
         if (!concepto) return json({ error: "Poné el concepto." }, 400);
         const it = { _id, title: concepto, concepto, categoria: s(x.categoria, 60) || "Otros", mes: m, monto: n(x.monto), moneda: s(x.moneda, 3) === "USD" ? "USD" : "ARS", fijo: b(x.fijo), pagado: b(x.pagado), nota: s(x.nota, 500), por };
         await save("FinGastos", it); return json({ ok: true, item: it });
+      }
+      case "baja": {
+        // Baja de un alumno desde Finanzas (solo el equipo): planes en «Baja» desde ese mes, alumno inactivo
+        // (sale de listas y de los avisos de cobro) y mail a quienes llevan Finanzas para cortar el débito en Debi.
+        const alu = s(x.alumnoId, 80), desde = Math.round(n(x.desde)), motivo = s(x.motivo, 300);
+        if (!ID.test(alu)) return json({ error: "Elegí el alumno." }, 400);
+        if (!(desde >= 1 && desde <= 12)) return json({ error: "Elegí desde qué mes." }, 400);
+        const a = (await q("TutAlumnos").eq("_id", alu).limit(1).find()).items[0] as Record<string, unknown> | undefined;
+        if (!a) return json({ error: "No encontramos al alumno." }, 404);
+        const MS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+        const hoy = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+        const linea = "Baja desde " + MS[desde - 1] + " (" + hoy + ", " + por + ")" + (motivo ? ": " + motivo : "");
+        const ps = (await q("FinPlanes").eq("alumnoId", alu).limit(10).find()).items as Record<string, unknown>[];
+        const planes: Record<string, unknown>[] = [];
+        for (const p0 of ps) {
+          const { _createdDate, _updatedDate, _owner, ...p } = p0;
+          const it = { ...p, especial: "Baja", desde, hasta: 12, nota: [s(p.nota, 700), linea].filter(Boolean).join("\n") };
+          await save("FinPlanes", it); planes.push(it);
+        }
+        { const { _createdDate, _updatedDate, _owner, ...al } = a; await save("TutAlumnos", { ...al, activo: false }); }
+        // débitos de Debi de este alumno (directos o por el cliente recordado)
+        const [deb, rec] = await Promise.all([all("FinDebi"), all("FinPagadores")]);
+        const clientes = new Set<string>([...deb.filter((d) => d.alumnoId === alu).map((d) => String(d.cliente || "")), ...rec.filter((r) => r.alumnoId === alu && String(r._id).startsWith("debi|")).map((r) => String(r._id).slice(5))].filter(Boolean));
+        const nombres = [...new Set(deb.filter((d) => clientes.has(String(d.cliente))).map((d) => String(d.title || "")))].filter(Boolean);
+        const fin = ((await q("TutTutores").eq("gastos", true).limit(20).find()).items as { email?: string }[]).filter((t) => t.email);
+        const C = Object.fromEntries(((await q("TutConfig").limit(50).find()).items as { _id: string; valor?: string }[]).map((c) => [c._id, c.valor || ""]));
+        const e = (t: unknown) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" } as Record<string, string>)[c]);
+        const debiTxt = clientes.size
+          ? P(`En Debi figura como <b>${e(nombres.join(" / ") || a.title)}</b> (cliente ${e([...clientes].join(", "))}). <b>Hay que cancelar su débito automático en Debi</b> para que no le sigan cobrando.`)
+          : P("No encontramos un débito de Debi asociado a este alumno en la web. Si paga por Debi, buscalo por nombre en Debi y cancelá su débito automático.");
+        let avisados = 0;
+        for (const t of fin) { const r = await mandar(t.email as string, "Baja: cortar el débito de " + String(a.title || alu), marco("Habitat · Finanzas", "Un alumno se dio de baja", `${P(`<b>${e(a.title)}</b> quedó dado de baja desde <b>${MS[desde - 1]}</b>${motivo ? " (" + e(motivo) + ")" : ""}. Lo cargó ${e(por)}.`)}${debiTxt}${P("En la web ya no figura como deudor desde ese mes y no le llegan más avisos de cobro.")}`), C.remitente || "galessandrodale.93@gmail.com"); if (r.ok) avisados++; }
+        return json({ ok: true, planes, alumno: { _id: alu, activo: false }, debi: [...clientes], avisados });
       }
       case "fijos": {
         const L = Array.isArray(x.fijos) ? (x.fijos as Record<string, unknown>[]).slice(0, 80).map((f) => ({ concepto: s(f.concepto, 120), monto: n(f.monto), moneda: s(f.moneda, 3) === "USD" ? "USD" : "ARS", categoria: s(f.categoria, 60) || "Otros" })).filter((f) => f.concepto) : [];
