@@ -2535,7 +2535,6 @@ function judeaTrails(scene, p, yAt, poiProp, hx) {
   // la cima del monte: arriba de todo, sin nada que tape, se ve la ciudad entera
   { const e = TRL.ends.find(q => q.k === 'cima'); if (e) { const y = yAt(e.x, e.z), city = (S.pois || []).find(q => q.k === 'temple') || { x: 0, z: e.z }; J.cima = { x: e.x, z: e.z };
     const tr = []; for (let k = 0; k < 6; k++) { const an = k / 6 * 6.283 + .5, x = e.x + Math.sin(an) * (e.r + 1.5), z = e.z + Math.cos(an) * (e.r + 1.5); tr.push({ x, y: yAt(x, z) - .4, z, ry: R() * 6.283, s: .9 + R() * .6, v: k }); } poiProp('namaqualand_boulder_03', tr, { shadow: true, nocol: 1 });
-    poiProp('dead_tree_trunk_02', [{ x: e.x + 2.5, y: y - .1, z: e.z - 2, ry: 1.2, s: 1.1 }], { shadow: true, nocol: 1 });
     S.lore.push({ x: e.x, z: e.z, r: 3.2, label: 'Mirar la ciudad', fx: 'ciudad', dur: 8, go: () => sello('cima-monte', 'La cima del monte'), info: ['Montes alrededor de Jerusalén', 'Desde la cima se ve toda la ciudad. «Como Jerusalén tiene montes alrededor de ella, así el Señor está alrededor de su pueblo, desde ahora y para siempre». Jesús, al ver la ciudad, lloró por ella.', 'Salmo 125:2 · Lucas 19:41'] });
     const lb = textSprite('La cima', hx); lb.position.set(e.x, y + 4.5, e.z); scene.add(lb);
     const ray = glowSpr('#FFE4A0', 40, .18); ray.position.set(city.x, yAt(city.x, city.z) + 18, city.z); scene.add(ray); J.cityGlow = ray; } }
