@@ -957,3 +957,5 @@ body[data-branch="kids"] .kh-pill b{color:#FFD25E}
 .lb2.kid .lb-cap b,.lb2.kid .lb-cap span{text-shadow:none}
 .lb2.kid .kd-spark b{width:22px;height:22px}
 .lb2.kid .kd-clouds .c3{top:48%}
+.lb2.kid .kd-clouds .c1{top:2%}.lb2.kid .kd-clouds .c3{top:12%}
+@media (min-width:761px){.lb2.kid .kd-clouds{left:38%}}
