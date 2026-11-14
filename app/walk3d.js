@@ -408,7 +408,8 @@ function trailPlan(p) {
   TRL.defs = [
     { id: 'tronco', lift: 0, pts: [P(36, -6.4), P(45, -7.2), P(54, -6)] },
     { id: 'cueva', lift: 7, pts: [P(54, -6), P(58, -20), P(66, -38), P(74, -55), P(68, -74), P(76, -92), P(70, -112), P(78, -132), P(75, -150), P(76, -158)] },
-    { id: 'cumbre', lift: 12, pts: [P(54, -6), P(60, 8), P(68, 24), P(76, 40), P(68, 56), P(76, 72), P(70, 90), P(78, 106), P(78, 113)] }];
+    { id: 'cumbre', lift: 12, pts: [P(54, -6), P(60, 8), P(68, 24), P(76, 40), P(68, 56), P(76, 72), P(70, 90), P(78, 106), P(78, 113)] },
+    { id: 'cima', lift: 26, from: 'cumbre', pts: [P(78, 113), P(60, 121), P(50, 131), P(62, 142), P(80, 150), P(78, 162), P(58, 170), P(50, 182), P(64, 192), P(80, 200), P(72, 212), P(56, 220), P(60, 232)] }];
   TRL.p = p; TRL.sd = sd;
 }
 const TRLC = 8, trlKey = (i, j) => i * 100003 + j;
@@ -418,12 +419,13 @@ function trailBuild(h0r) {
     const c = new THREE.CatmullRomCurve3(d.pts.map(([x, z]) => new THREE.Vector3(x, 0, z))), L = c.getLength(), n = Math.max(2, Math.ceil(L)), pts = [];
     for (let i = 0; i <= n; i++) { const q = c.getPointAt(i / n); pts.push([q.x, q.z]); }
     const raw = pts.map(([x, z]) => h0r(x, z)), sm = raw.map((_, i) => { let a = 0, k = 0; for (let j = Math.max(0, i - 9); j <= Math.min(n, i + 9); j++) { a += raw[j]; k++; } return a / k; });
-    let y = d.id === 'tronco' ? sm[0] : (yJoin ?? sm[0]); const L2 = [];
-    for (let i = 0; i <= n; i++) { const tgt = sm[i] + Math.pow(i / n, 1.4) * d.lift; y = Math.max(y, Math.min(y + .19, tgt)); const s0 = { x: pts[i][0], z: pts[i][1], y, f: d.id === 'tronco' ? 0 : i / n, id: d.id }; L2.push(s0); TRL.S.push(s0);
+    let y = d.id === 'tronco' ? sm[0] : d.from && TRL.lines[d.from] ? TRL.lines[d.from][TRL.lines[d.from].length - 1].y : (yJoin ?? sm[0]); const L2 = [];
+    for (let i = 0; i <= n; i++) { const tgt = sm[i] + Math.pow(i / n, 1.4) * d.lift; y = Math.max(y, Math.min(y + .19, tgt)); const s0 = { x: pts[i][0], z: pts[i][1], y, f: d.id === 'tronco' ? 0 : d.id === 'cima' ? .7 + .3 * i / n : i / n, id: d.id }; L2.push(s0); TRL.S.push(s0);
       x0 = Math.min(x0, s0.x); x1 = Math.max(x1, s0.x); z0 = Math.min(z0, s0.z); z1 = Math.max(z1, s0.z); }
     if (d.id === 'tronco') yJoin = y; TRL.lines[d.id] = L2;
-    if (d.id !== 'tronco') { const e = L2[n], b = L2[n - 4], dx = e.x - b.x, dz = e.z - b.z, l = Math.hypot(dx, dz) || 1; const k = d.id === 'cumbre' ? 'cumbre' : 'cueva', ux = dx / l, uz = dz / l;
-      TRL.ends.push(k === 'cueva' ? { k, x: e.x + ux * 3, z: e.z + uz * 3, y: e.y, dx: ux, dz: uz, r: 4.2 } : { k, x: e.x, z: e.z, y: e.y, dx: ux, dz: uz, r: 7 }); }
+    if (d.id !== 'tronco') { const e = L2[n], b = L2[n - 4], dx = e.x - b.x, dz = e.z - b.z, l = Math.hypot(dx, dz) || 1; const k = d.id, ux = dx / l, uz = dz / l;
+      if (k === 'cueva') { TRL.ends.push({ k, x: e.x + ux * 3, z: e.z + uz * 3, y: e.y, dx: ux, dz: uz, r: 4.2 }); TRL.ends.push({ k: 'plaza', x: e.x - ux * 3, z: e.z - uz * 3, y: e.y, dx: ux, dz: uz, r: 7 }); } // explanada delante de la cueva
+      else TRL.ends.push({ k, x: e.x, z: e.z, y: e.y, dx: ux, dz: uz, r: k === 'cima' ? 8 : 7 }); }
   }
   TRL.S.forEach(q => { const k = trlKey(Math.floor(q.x / TRLC), Math.floor(q.z / TRLC)); if (!TRL.B.has(k)) TRL.B.set(k, []); TRL.B.get(k).push(q); });
   TRL.bb = { x0: x0 - 34, x1: x1 + 34, z0: z0 - 34, z1: z1 + 34 };
@@ -436,8 +438,8 @@ function trailNear(x, z) {
 function trailBlend(x, z, h) {
   const B = TRL.bb; if (!B || x < B.x0 || x > B.x1 || z < B.z0 || z > B.z1) return h; let hh = h;
   for (const e of TRL.ends) { const dx = x - e.x, dz = z - e.z, dd = Math.hypot(dx, dz); if (dd > 42) continue;
-    if (e.k === 'cumbre') hh = Math.max(hh, e.y - Math.max(0, dd - e.r) * .8); // la cumbre domina: el cerro baja desde la explanada
-    else { const fw = dx * e.dx + dz * e.dz - 1.5; hh = Math.max(hh, e.y + 12 * (1 - sstep(5, 26, dd)) * sstep(-1, 9, fw)); } } // cerro detrás de la cueva (pendiente suave, sin paredes estiradas)
+    if (e.k === 'cumbre' || e.k === 'cima') hh = Math.max(hh, e.y - Math.max(0, dd - e.r) * (e.k === 'cima' ? .7 : .8)); // la cumbre domina: el cerro baja desde la explanada
+    else if (e.k === 'cueva') { const fw = dx * e.dx + dz * e.dz - 1.5; hh = Math.max(hh, e.y + 12 * (1 - sstep(5, 26, dd)) * sstep(-1, 9, fw)); } } // cerro detrás de la cueva (pendiente suave, sin paredes estiradas)
   const t = trailNear(x, z); if (t) { const w = 1 - sstep(2.4, 7.8, t.d); hh += (t.y - hh) * w; }
   for (const e of TRL.ends) { const dd = Math.hypot(x - e.x, z - e.z); if (dd > e.r + 4) continue; let w = 1 - sstep(e.r, e.r + 3.5, dd); if (e.k === 'cueva') { const fw = (x - e.x) * e.dx + (z - e.z) * e.dz; w *= 1 - sstep(1, 4.5, fw); } hh += (e.y - hh) * w; }
   return hh;
@@ -2516,20 +2518,27 @@ function judeaTrails(scene, p, yAt, poiProp, hx) {
     const lb = textSprite('Cueva de David', hx); lb.scale.multiplyScalar(.9); lb.position.set(e.x - e.dx * 5.5, y + 5.4, e.z - e.dz * 5.5); scene.add(lb); } }
   /* ===== sendero de la cumbre ===== */
   { const o = lore('cumbre', .2, 2.6, { label: 'Leer la piedra', fx: 'voz', info: ['Una voz en el desierto', 'Juan el Bautista predicaba en este desierto: «Voz del que clama en el desierto: preparen el camino del Señor, enderecen sus sendas».', 'Isaías 40:3 · Mateo 3:3'] });
-    const stn = new THREE.Mesh(new THREE.DodecahedronGeometry(.5, 0), tm('menhir', '#B8A27E', { flatShading: true, roughness: 1 })); stn.scale.set(.8, 1.6, .5); stn.position.set(o.x, o.y + .7, o.z); stn.rotation.set(0, Math.atan2(o.q.tx, o.q.tz), .05); stn.castShadow = true; scene.add(stn); S.cols.push({ x0: o.x - .4, x1: o.x + .4, z0: o.z - .4, z1: o.z + .4, cx: o.x, cz: o.z, r: .35 });
-    const tx = textSprite('Preparen el camino del Señor', hx); tx.scale.multiplyScalar(.38); tx.position.set(o.x, o.y + 1.85, o.z); scene.add(tx); J.voz = tx; }
+    poiProp('namaqualand_boulder_03', [{ x: o.x, y: o.y - .35, z: o.z, ry: Math.atan2(o.q.tx, o.q.tz), s: 1.15, v: 1 }], { shadow: true, col: .6 });
+    const tx = textSprite('Preparen el camino del Señor', hx); tx.scale.multiplyScalar(.38); tx.position.set(o.x, o.y + 2.1, o.z); scene.add(tx); J.voz = tx; }
   { const o = lore('cumbre', .45, 2.6, { label: 'Mirar el pozo', fx: 'gota', info: ['Sed de Dios', 'David escribió en el desierto de Judá: «Oh Dios, tú eres mi Dios; de madrugada te buscaré. Mi alma tiene sed de ti, en tierra seca y árida donde no hay aguas».', 'Salmo 63:1'] });
-    pirca(scene, o.x, o.z, 1.1, 0, 6.283, yAt, { seed: 63 }); S.cols.push({ x0: o.x - 1.3, x1: o.x + 1.3, z0: o.z - 1.3, z1: o.z + 1.3, cx: o.x, cz: o.z, r: 1.25 });
+    { const rr = []; for (let k = 0; k < 9; k++) { const an = k / 9 * 6.283, x = o.x + Math.cos(an) * 1.15, z = o.z + Math.sin(an) * 1.15; rr.push({ x, y: yAt(x, z) - .12, z, ry: an * 3, s: .55 + R() * .25, v: k }); } poiProp('sand_rocks_small_01', rr, { shadow: true, nocol: 1 }); } S.cols.push({ x0: o.x - 1.3, x1: o.x + 1.3, z0: o.z - 1.3, z1: o.z + 1.3, cx: o.x, cz: o.z, r: 1.25 });
     const dr2 = glowSpr('#9FD4FF', .9, .9); dr2.position.set(o.x, o.y + 1.4, o.z); scene.add(dr2); J.drop = { s: dr2, y: o.y + 1.4 }; S.lore[S.lore.length - 1].r = 3.4; }
   { const o = lore('cumbre', .7, 2.4, { label: 'Buscar la oveja', fx: 'oveja', info: ['La que se perdió', 'Jesús contó que un pastor deja las noventa y nueve en el desierto y va a buscar a la que se perdió, hasta encontrarla. Y cuando la encuentra, la carga feliz sobre los hombros.', 'Lucas 15:4-5'] });
     const [x, z] = side(o.q, 5.5), y = yAt(x, z), g = misMesh({ k: 'sheep' }); g.position.set(x, y, z); g.rotation.y = R() * 6.28; scene.add(g); const gl = glowSpr('#FFF0C0', 2.4, .5); gl.position.set(x, y + .7, z); scene.add(gl); J.sheep = { g, gl, y }; }
   // la cumbre: explanada con piedras paradas y, a lo lejos, la visión de los reinos
   { const e = TRL.ends.find(q => q.k === 'cumbre'); if (e) { const y = yAt(e.x, e.z), sm = tm('menhir', '#B8A27E', { flatShading: true, roughness: 1 });
-    for (let k = 0; k < 7; k++) { const an = k / 7 * 6.283 + .3, x = e.x + Math.sin(an) * (e.r - .8), z = e.z + Math.cos(an) * (e.r - .8), hgt = 1.2 + R() * 1.4, m = new THREE.Mesh(new THREE.DodecahedronGeometry(.5, 0), sm); m.scale.set(.75, hgt, .6); m.position.set(x, yAt(x, z) + hgt * .42, z); m.rotation.set((R() - .5) * .1, R() * 3, (R() - .5) * .1); m.castShadow = true; scene.add(m); S.cols.push({ x0: x - .35, x1: x + .35, z0: z - .35, z1: z + .35, cx: x, cz: z, r: .32 }); }
+    { const ways = [L.cumbre[L.cumbre.length - 12], L.cima ? L.cima[10] : null].filter(Boolean).map(q => Math.atan2(q.x - e.x, q.z - e.z)), bo = []; for (let k = 0; k < 9; k++) { const an = k / 9 * 6.283 + .3; if (ways.some(w => Math.abs(((an - w + Math.PI) % 6.283 + 6.283) % 6.283 - Math.PI) < .55)) continue; const x = e.x + Math.sin(an) * (e.r - .6), z = e.z + Math.cos(an) * (e.r - .6), s2 = .8 + R() * .5; bo.push({ x, y: yAt(x, z) - .35 * s2, z, ry: R() * 6.283, s: s2, v: k }); } poiProp('namaqualand_boulder_04', bo, { shadow: true, col: .5 }); }
     const vg = new THREE.Group(), out = TRL.sd, vx = e.x + out * 70, vz = e.z + 10; for (let k = 0; k < 26; k++) { const gl = glowSpr(k % 3 ? '#FFD27A' : '#FFF2C8', 2 + R() * 4, .35); gl.position.set(vx + (R() - .5) * 60, y + 4 + R() * 10, vz + (R() - .5) * 90); vg.add(gl); }
     const big = glowSpr('#FFCB6A', 70, .25); big.position.set(vx, y + 14, vz); vg.add(big); scene.add(vg); J.vision = { g: vg, big };
     S.lore.push({ x: e.x, z: e.z, r: 3, label: 'Mirar desde la cumbre', fx: 'reinos', dur: 8, go: () => sello('cumbre-reinos', 'La cumbre del monte'), info: ['Todos los reinos del mundo', 'El diablo llevó a Jesús a un monte muy alto y le mostró todos los reinos del mundo y su gloria: «Todo esto te daré si te postras y me adoras». Jesús le respondió: «Al Señor tu Dios adorarás, y solo a él servirás».', 'Mateo 4:8-10'] });
     const lb = textSprite('La cumbre', hx); lb.position.set(e.x, y + 4.5, e.z); scene.add(lb); } }
+  // la cima del monte: arriba de todo, sin nada que tape, se ve la ciudad entera
+  { const e = TRL.ends.find(q => q.k === 'cima'); if (e) { const y = yAt(e.x, e.z), city = (S.pois || []).find(q => q.k === 'temple') || { x: 0, z: e.z }; J.cima = { x: e.x, z: e.z };
+    const tr = []; for (let k = 0; k < 6; k++) { const an = k / 6 * 6.283 + .5, x = e.x + Math.sin(an) * (e.r + 1.5), z = e.z + Math.cos(an) * (e.r + 1.5); tr.push({ x, y: yAt(x, z) - .4, z, ry: R() * 6.283, s: .9 + R() * .6, v: k }); } poiProp('namaqualand_boulder_03', tr, { shadow: true, nocol: 1 });
+    poiProp('dead_tree_trunk_02', [{ x: e.x + 2.5, y: y - .1, z: e.z - 2, ry: 1.2, s: 1.1 }], { shadow: true, nocol: 1 });
+    S.lore.push({ x: e.x, z: e.z, r: 3.2, label: 'Mirar la ciudad', fx: 'ciudad', dur: 8, go: () => sello('cima-monte', 'La cima del monte'), info: ['Montes alrededor de Jerusalén', 'Desde la cima se ve toda la ciudad. «Como Jerusalén tiene montes alrededor de ella, así el Señor está alrededor de su pueblo, desde ahora y para siempre». Jesús, al ver la ciudad, lloró por ella.', 'Salmo 125:2 · Lucas 19:41'] });
+    const lb = textSprite('La cima', hx); lb.position.set(e.x, y + 4.5, e.z); scene.add(lb);
+    const ray = glowSpr('#FFE4A0', 40, .18); ray.position.set(city.x, yAt(city.x, city.z) + 18, city.z); scene.add(ray); J.cityGlow = ray; } }
 }
 function judeaTick(dt, t) {
   const J = S.judea; if (!J) return; const on = fx => S.lore.some(l => l.fx === fx && l.on);
@@ -2537,6 +2546,7 @@ function judeaTick(dt, t) {
   if (J.drop) { J.drop.s.position.y = J.drop.y + Math.sin(t * 2) * .12; J.drop.s.material.opacity = on('gota') ? 1 : .55 + Math.sin(t * 3) * .2; }
   if (J.flower) J.flower.material.opacity = on('flor') ? .95 : .4 + Math.sin(t * 1.7) * .15;
   if (J.sheep) J.sheep.gl.material.opacity = on('oveja') ? .9 : .35 + Math.sin(t * 2.2) * .15;
+  if (J.cima) { const a = S.av.position, d = Math.hypot(a.x - J.cima.x, a.z - J.cima.z), k = 1 - sstep(10, 45, d); S.fogMul = 1 - k * .75; if (S.scene.fog && S.scene.fog.isFog) S.scene.fog.far = Math.max(S.scene.fog.far, 170 + k * 230); if (J.cityGlow) J.cityGlow.material.opacity = .08 + k * (on('ciudad') ? .4 : .2); }
   J.lamps.forEach((l, i) => { l.material.opacity = .6 + Math.sin(t * 9 + i) * .1 + Math.sin(t * 23 + i * 2) * .05; });
   if (J.vision) { const k = on('reinos') ? 1 : 0; J.vision.big.material.opacity += ((k ? .55 : .2 + Math.sin(t * .5) * .05) - J.vision.big.material.opacity) * Math.min(1, dt * 2); J.vision.g.children.forEach((c, i) => { if (c !== J.vision.big) c.material.opacity = (k ? .7 : .3) + Math.sin(t * 1.3 + i) * .1; }); }
 }
@@ -3612,6 +3622,7 @@ function dayTick(dt) {
       S.W.hemi.color.lerp(c.set(N.hs), nk); S.W.hemi.groundColor.lerp(c.set(N.hg), nk); S.W.hemi.intensity += (N.hI - S.W.hemi.intensity) * nk;
       S.scene.fog.color.lerp(c.set(N.fog), nk); S.scene.fog.density += (N.fd - S.scene.fog.density) * nk; u.gnd.value.copy(S.scene.fog.color); S.renderer.toneMappingExposure += (N.ex - S.renderer.toneMappingExposure) * nk;
       if (S.scene.environment && nk > .5) S.scene.environment = null; }
+    if (S.fogMul != null && S.fogMul < 1) S.scene.fog.density *= S.fogMul;
   } else if (S.KL && S.KL.cv) {
     const A = DAYK[d.prev], B = DAYK[d.i], k = d.k, L = S.KL, x = L.cv.getContext('2d'), gr = x.createLinearGradient(0, 0, 0, 256), top = '#' + mixC(A.top, B.top, k).getHexString(), bot = '#' + mixC(A.bot, B.bot, k).getHexString();
     gr.addColorStop(0, top); gr.addColorStop(.62, bot); gr.addColorStop(1, bot); x.fillStyle = gr; x.fillRect(0, 0, 4, 256); L.tex.needsUpdate = true;
@@ -5426,8 +5437,10 @@ function loop(now) {
   { const gnd = groundAt(a.x, a.z, S.gy); if (S.gy != null && gnd < S.gy - .35) { S.fallV = (S.fallV || 0) + 22 * dt; S.gy = Math.max(gnd, S.gy - S.fallV * dt); } else { S.fallV = 0; S.gy = (S.gy ?? gnd) + (gnd - (S.gy ?? gnd)) * Math.min(1, dt * 12); } if (S.jy > 0) { S.jv -= 17 * dt; S.jy = Math.max(0, S.jy + S.jv * dt); } a.y = S.gy + (S.jy || 0); }
   if (S.W) { S.W.sunL.position.set(a.x + S.W.sunDir.x * 40, a.y + 11, a.z + S.W.sunDir.z * 40); S.W.sunL.target.position.copy(a); S.uGrass.value = t; S.W.sky.material.uniforms.t.value = t; }
   const cx = a.x - Math.sin(yaw) * back, cz = a.z - Math.cos(yaw) * back;
-  S.camera.position.x += (cx - S.camera.position.x) * .08; S.camera.position.z += (cz - S.camera.position.z) * .08; { const cg = S.W ? S.W.hAt(S.camera.position.x, S.camera.position.z) : 0; S.camera.position.y += (Math.max(a.y + up, cg + .45) - S.camera.position.y) * .08; }
-  { const la = Math.min(4.5, 1.2 + S.camDist * .5) * Math.max(.15, 1 - Math.max(0, ph - .4) * 1.2); S.camL = [a.x + Math.sin(yaw) * la, a.y + (S.hx ? 1.2 : .92) + Math.max(0, .3 - ph) * 4, a.z + Math.cos(yaw) * la]; S.camI = [cx, Math.max(a.y + up, (S.W ? S.W.hAt(cx, cz) : 0) + .45), cz]; S.camera.lookAt(S.camL[0], S.camL[1], S.camL[2]); } if (S.W) S.W.sky.position.copy(S.camera.position);
+  S.camera.position.x += (cx - S.camera.position.x) * .08; S.camera.position.z += (cz - S.camera.position.z) * .08;
+  /* la cámara sigue la altura del personaje suavizada (subidas y bajadas sin sacudones) y no se mete en el suelo de atrás */
+  S.cy = S.cy == null || Math.abs(S.cy - a.y) > 6 ? a.y : S.cy + (a.y - S.cy) * Math.min(1, dt * 3.2); { const cg0 = S.W ? S.W.hAt(S.camera.position.x, S.camera.position.z) : 0; S.cgS = S.cgS == null || Math.abs(S.cgS - cg0) > 8 ? cg0 : S.cgS + (cg0 - S.cgS) * Math.min(1, dt * 2.5); S.camera.position.y += (Math.max(S.cy + up, S.cgS + .7, cg0 + .35) - S.camera.position.y) * Math.min(1, dt * 3.5); }
+  { const la = Math.min(4.5, 1.2 + S.camDist * .5) * Math.max(.15, 1 - Math.max(0, ph - .4) * 1.2); S.camL = [a.x + Math.sin(yaw) * la, S.cy + (S.hx ? 1.2 : .92) + Math.max(0, .3 - ph) * 4, a.z + Math.cos(yaw) * la]; S.camI = [cx, Math.max(S.cy + up, (S.W ? S.W.hAt(cx, cz) : 0) + .45), cz]; S.camera.lookAt(S.camL[0], S.camL[1], S.camL[2]); } if (S.W) S.W.sky.position.copy(S.camera.position);
   S.fill.position.copy(S.camera.position); S.fill.target.position.copy(a);
   { let i = 0; for (const id in S.markers) { const m = S.markers[id], o = m.userData.orb; i++; const d2 = (m.position.x - a.x) ** 2 + (m.position.z - a.z) ** 2, vis = d2 < [4900, 8100, 14400, 22500][QUAL.lv]; if (m.visible !== vis) m.visible = vis; if (d2 > 6400) continue; o.rotation.y = t * 1.4 + i; o.position.y = (o.geometry.type === 'TorusGeometry' ? .2 : 1.05 + Math.sin(t * 2 + i) * .08); } }
   if (S.flies) { S.flies.visible = false; S.flies.material.opacity = .6 + Math.sin(t * 3) * .3; S.flies.rotation.y = Math.sin(t * .05) * .02; }
