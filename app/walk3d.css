@@ -953,3 +953,7 @@ body[data-branch="kids"] .kh-pill b{color:#FFD25E}
 .lb2.kid .lb-cap{padding:10px 16px;border-radius:18px;background:rgba(255,255,255,.9);box-shadow:0 10px 26px rgba(0,0,0,.2)}.lb2.kid .lb-cap b{color:#22407F}.lb2.kid .lb-cap span{color:#E58A1F}.lb2.kid .lb-cap i{display:none}
 @media (prefers-reduced-motion:reduce){.lb2.kid .kd-rays,.lb2.kid .kd-clouds i,.lb2.kid .kd-spark b{animation:none}}
 @media (max-height:560px){.lb2.kid .lb-kidlogo{font-size:56px}.lb2.kid .kd-clouds{display:none}}
+.lb2.kid .kd-rays{opacity:.1}
+.lb2.kid .lb-cap b,.lb2.kid .lb-cap span{text-shadow:none}
+.lb2.kid .kd-spark b{width:22px;height:22px}
+.lb2.kid .kd-clouds .c3{top:48%}
