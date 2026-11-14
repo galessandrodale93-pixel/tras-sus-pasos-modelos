@@ -32,7 +32,7 @@
     <div class="rtx"><span class="kick">Continuar</span><b id="rStep"></b><small id="rProg"></small><div class="bar"><i id="rBar"></i></div></div>
   </a>
 </div></section>
-<div class="wrap" id="deudaBox" hidden><a href="#cuotaSec" style="display:flex;gap:14px;align-items:center;margin:18px 0 0;padding:16px 18px;border-radius:18px;background:#fbeceb;border:2px solid #c0392b;color:#7a1f16;text-decoration:none"><span style="font-size:1.8rem;line-height:1">⚠️</span><span><b style="display:block;font-size:1.05rem" id="deudaT"></b><span style="font-size:.95rem" id="deudaD"></span></span></a></div>
+<div class="wrap" id="deudaBox" hidden><div class="cu-alert"><span class="cu-ai">⚠️</span><div class="cu-at"><b id="deudaT"></b><span id="deudaD"></span></div><div class="cu-aa"><button type="button" class="cu-b cu-cp" data-copy>📋 Copiar alias</button><button type="button" class="cu-b cu-up" data-subir>📎 Ya pagué</button></div></div></div>
 <section class="cx-stats"><div class="wrap">
   <div class="st"><b id="sCur">–</b><span>cursos en curso</span></div>
   <div class="st"><b id="sDone">–</b><span>clases vistas</span></div>
@@ -103,20 +103,47 @@
   <div class="op-mats" id="matList"></div>
 </div></section>
 <section class="cx-sec" id="cuotaSec" hidden><div class="wrap">
-  <div class="cx-h"><h2>Mi cuota</h2></div>
+  <div class="cx-h"><h2>Mi cuota</h2><span class="sub" id="cuotaSub"></span></div>
   <div id="cuotaBox"></div>
 </div></section>
 <style>
-.cu-e{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:12px}
+.cu-alert{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:18px 0 0;padding:16px 18px;border-radius:20px;background:#fbeceb;border:2px solid #c0392b;color:#7a1f16;animation:cuIn .5s ease}
+@keyframes cuIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.cu-ai{font-size:1.8rem;line-height:1}.cu-at{flex:1;min-width:200px}.cu-at>b{display:block;font-size:1.05rem}.cu-at span{font-size:.95rem}
+.cu-aa{display:flex;gap:8px;flex-wrap:wrap}
+.cu-b{border:0;border-radius:99px;padding:10px 16px;font:600 .92rem var(--sans);cursor:pointer;transition:transform .15s,background .2s}
+.cu-b:active{transform:scale(.96)}.cu-cp{background:#fff;color:#7a1f16;border:1px solid #e5b9b3}.cu-up{background:#c0392b;color:#fff}
+.cu-pay{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--ink);color:var(--cream);border-radius:20px;padding:18px 20px;margin-bottom:14px}
+.cu-pay .al{font:500 1.6rem var(--serif);letter-spacing:.02em}.cu-pay small{display:block;color:var(--gold-2);font:600 .72rem var(--sans);letter-spacing:.12em;text-transform:uppercase}
+.cu-pay .tx{flex:1;min-width:180px}.cu-pay p{margin:4px 0 0;font-size:.9rem;opacity:.85}
+.cu-pay .cu-b{background:var(--gold-2);color:var(--ink)}.cu-pay .cu-b.s{background:transparent;color:var(--cream);border:1px solid rgba(255,255,255,.35)}
+.cu-e{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px}
 .cu-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.cu-h b{font:500 1.3rem var(--serif)}.cu-fp{font-size:.9rem;padding:6px 12px;border-radius:99px;background:var(--paper);border:1px solid var(--line)}
-.cu-m{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px}
-.cu-c{text-align:center;padding:8px 4px;border-radius:12px;font-size:.78rem;border:1px solid var(--line);background:#fff}
-.cu-c small{display:block;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.cu-c.pago,.cu-c.especial,.cu-c.becado{background:#eef5f0;border-color:#b9d8c4}
-.cu-c.debe{background:#fbeceb;border-color:#e5b9b3}.cu-c.pendiente{background:#fff6e3;border-color:#ecd39c}
-.cu-tip{margin:12px 0 0;font-size:.92rem;color:var(--muted)}.cu-tip b{color:var(--ink)}
+.cu-h b{font:500 1.35rem var(--serif)}.cu-st{font-size:.85rem;font-weight:600;padding:6px 12px;border-radius:99px}
+.cu-st.ok{background:#eef5f0;color:#2f7a4f}.cu-st.no{background:#fbeceb;color:#a5332a}
+.cu-m{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:6px}
+.cu-c{text-align:center;padding:9px 4px;border-radius:14px;font-size:.78rem;border:1px solid var(--line);background:#fff;transition:transform .15s}
+.cu-c small{display:block;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px}
+.cu-c i{font-style:normal;font-size:1rem;display:block}
+.cu-c.pago,.cu-c.especial,.cu-c.becado{background:#eef5f0;border-color:#b9d8c4;color:#2f7a4f}
+.cu-c.debe{background:#fbeceb;border-color:#e5b9b3;color:#a5332a}.cu-c.pendiente{background:#fff6e3;border-color:#ecd39c;color:#8a6410}
+.cu-c.revision{background:#eef2fb;border-color:#b9c7e5;color:#2d4f8f}
+.cu-tip{margin:12px 0 0;font-size:.92rem;color:var(--muted)}
+.cu-leg{display:flex;gap:12px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:10px 0 0}.cu-leg span:before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.cu-mod{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:16px;background:rgba(16,37,29,.5)}
+.cu-card{background:var(--cream,#fbf8f2);border-radius:22px;padding:22px;max-width:440px;width:100%;max-height:90vh;overflow:auto}
+.cu-card h3{font:500 1.5rem var(--serif);margin:0 0 6px}.cu-card p{margin:0 0 12px;color:var(--muted);font-size:.92rem}
+.cu-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.cu-chip{border:1px solid var(--line);background:#fff;border-radius:99px;padding:8px 12px;font:600 .85rem var(--sans);cursor:pointer}
+.cu-chip.on{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.cu-drop{display:grid;justify-items:center;gap:4px;padding:22px;border:2px dashed var(--gold-2);border-radius:16px;background:#fff;cursor:pointer;text-align:center;margin:0 0 12px}
+.cu-drop b{font-size:.95rem}.cu-drop small{color:var(--muted)}
+.cu-in{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);font:inherit;margin:0 0 12px;background:#fff}
+.cu-row{display:flex;gap:8px;justify-content:flex-end}
+.cu-toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(140px);background:var(--ink);color:var(--cream);padding:12px 20px;border-radius:999px;font:600 .9rem var(--sans);transition:transform .35s;z-index:99;visibility:hidden}
+.cu-toast.on{transform:translateX(-50%);visibility:visible}
 </style>
+<div class="cu-toast" id="cuToast"></div>
 <section class="cx-sec" id="agenda"><div class="wrap">
   <div class="cx-h"><h2>Agenda y avisos</h2><span class="cal-act"><a id="calG" href="#" target="_blank" rel="noopener">+ Google Calendar</a><a id="calI" href="#">+ iPhone / Outlook</a></span></div>
   <div class="ag" id="agList"><p class="cx-empty">Cargando la agenda…</p></div>
@@ -191,18 +218,34 @@ var X=window.CampusExtra;
 }).catch(function(){});fetch('/api/testimonio',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();}).then(function(t){if(t&&t.clave&&t.estado!=='Subido'){var a=document.getElementById('lnTes');a.href='/testimonio.html?k='+t.clave;a.hidden=false;}}).catch(function(){});var r=await fetch('/api/voluntario',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();});
  if(!r.voluntario||!r.turnos||!r.turnos.length)return;var hoy=new Date(Date.now()-3*3600e3).toISOString().slice(0,10),man=new Date(Date.now()+21*3600e3).toISOString().slice(0,10);window.__eqVol=function(){var c=document.querySelector('#eq-vol small');if(!c)return;var t=r.turnos[0],x=new Date(t.fecha+'T12:00:00-03:00');c.textContent=(t.fecha===hoy?'Servís hoy':t.fecha===man?'Servís mañana':'Tu próximo turno: '+['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][x.getDay()]+' '+x.getDate()+'/'+(x.getMonth()+1));if(t.fecha===hoy||t.fecha===man)c.classList.add('hot');};window.__eqVol();
 }catch(e){}})();
-function cuota(){(async function(){try{var A=window.HabitatAuth;await A.api('GET','/members/v1/members/my');var tk=JSON.parse(localStorage.getItem('habitat:mtok')).a;var r=await fetch('/api/cuota',{headers:{'x-habitat-auth':tk}}).then(function(x){return x.json();});
- if(!r.ok||!r.alumno||!(r.escuelas||[]).length)return;
- var MC=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],T={pago:'✓ Pagado',especial:'✓ Cubierto',becado:'Becado',debe:'Pendiente',pendiente:'En curso',baja:'Baja',futuro:'—'};
- var dsc=function(e){return e.debito?'Débito automático':(e.formaPago||'Pago manual');};
- var h=r.escuelas.map(function(e){return '<div class="cu-e"><div class="cu-h"><b>'+esc(e.escuela)+'</b><span class="cu-fp">'+(e.debito?'🔁 ':'💳 ')+esc(dsc(e))+'</span></div><div class="cu-m">'+e.meses.map(function(m){return '<div class="cu-c '+m.estado+'"><small>'+MC[+m.mes.slice(5,7)-1]+'</small>'+(T[m.estado]||m.estado)+'</div>';}).join('')+'</div>'+
-  (e.debe?'<p class="cu-tip">Tenés <b>'+e.debe+(e.debe===1?' mes pendiente':' meses pendientes')+'</b>. Podés transferir al alias <b>'+esc(r.alias)+'</b> y mandarnos el comprobante'+(e.debito?', o cargar saldo en la cuenta del débito para el próximo intento':'')+'.</p>':'<p class="cu-tip">¡Estás al día! Gracias 🙌🏽</p>')+'</div>';}).join('');
- if(r.transferencia)h='<p class="cu-tip" style="margin:0 0 12px">Pagás por <b>transferencia al alias '+esc(r.alias)+'</b>, hasta el <b>'+r.vence+' de cada mes</b>. Después de transferir, mandanos el comprobante respondiendo el mail de recordatorio.</p>'+h;
- var u=r.ultimoDebito;if(u&&!r.transferencia&&r.escuelas.some(function(e){return e.debito;})){var d=new Date(u.fecha+'T12:00:00');h+='<p class="cu-tip">Último débito: '+d.getDate()+'/'+(d.getMonth()+1)+' por $ '+Number(u.monto).toLocaleString('es-AR')+' · '+(u.estado==='aprobado'?'<b style="color:#2f7a4f">aprobado</b>':u.estado==='rechazado'?'<b style="color:#8a3b2f">rechazado</b>':'pendiente')+'.</p>';}
- h+='<p class="cu-tip">Si ves algo que no coincide con lo que pagaste, escribinos y lo revisamos.</p>';
- var dia=new Date(Date.now()-3*3600e3).getUTCDate(),venc=r.vence||10,nDeb=0;r.escuelas.forEach(function(e){e.meses.forEach(function(m){if(m.estado==='debe'||(m.estado==='pendiente'&&dia>venc))nDeb++;});});
- if(nDeb){document.getElementById('deudaT').textContent='No registramos el pago de '+(nDeb===1?'1 cuota':nDeb+' cuotas');document.getElementById('deudaD').innerHTML='Transferí al alias <b>'+esc(r.alias)+'</b> y mandanos el comprobante. Tocá acá para ver el detalle.';document.getElementById('deudaBox').hidden=false;}
- document.getElementById('cuotaBox').innerHTML=h;document.getElementById('cuotaSec').hidden=false;}catch(e){}})();}
+function cuota(){var tk='',R=null,MC=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],ML=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+ var T={pago:['✓','Pagado'],especial:['✓','Cubierto'],becado:['🎓','Becado'],debe:['!','Pendiente'],pendiente:['…','Este mes'],revision:['⏳','En revisión'],baja:['—','Baja']};
+ function toast(t){var e=document.getElementById('cuToast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(function(){e.classList.remove('on');},2600);}
+ function copiar(){var a=(R&&R.alias)||'habitatcfm';(navigator.clipboard?navigator.clipboard.writeText(a):Promise.reject()).then(function(){toast('Alias copiado: '+a+' 📋');}).catch(function(){prompt('Copiá el alias:',a);});}
+ function impagos(){var L=[];(R.escuelas||[]).forEach(function(e){e.meses.forEach(function(m){if(m.estado==='debe'||m.estado==='pendiente')L.push({k:e.escuela+'|'+m.mes,t:(R.escuelas.length>1?e.escuela+' · ':'')+ML[+m.mes.slice(5,7)-1]});});});return L;}
+ function subir(){var L=impagos();if(!L.length){toast('No tenés meses pendientes 🙌🏽');return;}var sel={};L.forEach(function(x){sel[x.k]=1;});
+  var m=document.createElement('div');m.className='cu-mod';m.innerHTML='<div class="cu-card"><h3>Subí tu comprobante</h3><p>Elegí qué meses pagaste y subí la foto o el PDF de la transferencia. Lo revisamos y se marca como pagado.</p><div class="cu-chips">'+L.map(function(x){return '<button type="button" class="cu-chip on" data-k="'+esc(x.k)+'">'+esc(x.t)+'</button>';}).join('')+'</div><input class="cu-in" id="cuMonto" inputmode="numeric" placeholder="Monto transferido (opcional)"><label class="cu-drop"><input type="file" id="cuF" accept="image/*,application/pdf" hidden><span style="font-size:1.6rem">📎</span><b id="cuFn">Elegí el comprobante</b><small>Foto o PDF</small></label><div class="cu-row"><button type="button" class="cu-b cu-cp" data-x>Cancelar</button><button type="button" class="cu-b cu-up" id="cuGo">Enviar</button></div></div>';
+  document.body.appendChild(m);var cl=function(){m.remove();};m.onclick=function(e){if(e.target===m||e.target.closest('[data-x]'))cl();};
+  m.querySelectorAll('.cu-chip').forEach(function(c){c.onclick=function(){c.classList.toggle('on');if(c.classList.contains('on'))sel[c.dataset.k]=1;else delete sel[c.dataset.k];};});
+  var f=m.querySelector('#cuF');f.onchange=function(){if(f.files[0])m.querySelector('#cuFn').textContent=f.files[0].name;};
+  m.querySelector('#cuGo').onclick=async function(){var b=this,fl=f.files[0],ks=Object.keys(sel);if(!ks.length){toast('Elegí al menos un mes');return;}if(!fl){toast('Elegí el comprobante');return;}if(fl.size>15e6){toast('El archivo es muy pesado (máx. 15 MB)');return;}
+   b.disabled=true;b.textContent='Enviando…';
+   try{var mime=fl.type||'application/octet-stream',u=await api('POST',{op:'subir',nombre:fl.name,mime:mime});var up=await fetch(u.uploadUrl+(u.uploadUrl.indexOf('?')>=0?'&':'?')+'filename='+encodeURIComponent(fl.name),{method:'PUT',headers:{'Content-Type':mime},body:fl});var j=await up.json(),url=j.file&&j.file.url;if(!url)throw new Error('No se pudo subir el archivo');
+    await api('POST',{op:'comprobante',url:url,meses:ks,monto:m.querySelector('#cuMonto').value});cl();toast('¡Gracias! Recibimos tu comprobante 🙌🏽');cargar();}
+   catch(e){toast(e.message||'No se pudo enviar');b.disabled=false;b.textContent='Enviar';}};}
+ async function api(met,body){var r=await fetch('/api/cuota',{method:met,headers:{'content-type':'application/json','x-habitat-auth':tk},body:body?JSON.stringify(body):undefined});var j={};try{j=await r.json();}catch(e){}if(!r.ok)throw new Error(j.error||'No se pudo guardar');return j;}
+ function pintar(){var r=R,dia=+r.hoy.slice(8,10),venc=r.vence||10,nDeb=0,nRev=0;
+  r.escuelas.forEach(function(e){e.meses.forEach(function(m){if(m.estado==='debe'||(m.estado==='pendiente'&&dia>venc))nDeb++;if(m.estado==='revision')nRev++;});});
+  var h=(r.transferencia?'<div class="cu-pay"><div class="tx"><small>Cómo pagar</small><span class="al">'+esc(r.alias)+'</span><p>Transferí desde tu banco o Mercado Pago, hasta el '+venc+' de cada mes.</p></div><button type="button" class="cu-b" data-copy>📋 Copiar alias</button><button type="button" class="cu-b s" data-subir>📎 Subir comprobante</button></div>':'');
+  h+=r.escuelas.map(function(e){var mal=e.meses.filter(function(m){return m.estado==='debe'||(m.estado==='pendiente'&&dia>venc);}).length;
+   return '<div class="cu-e"><div class="cu-h"><b>'+esc(e.escuela)+'</b><span class="cu-st '+(mal?'no':'ok')+'">'+(mal?mal+(mal===1?' mes pendiente':' meses pendientes'):'✓ Al día')+'</span></div><div class="cu-m">'+e.meses.map(function(m){var t=T[m.estado]||['·',m.estado];return '<div class="cu-c '+m.estado+'" title="'+ML[+m.mes.slice(5,7)-1]+': '+t[1]+'"><small>'+MC[+m.mes.slice(5,7)-1]+'</small><i>'+t[0]+'</i>'+t[1]+'</div>';}).join('')+'</div></div>';}).join('');
+  h+='<div class="cu-leg"><span style="--c:#b9d8c4">Pagado</span><span style="--c:#b9c7e5">En revisión</span><span style="--c:#ecd39c">Mes en curso</span><span style="--c:#e5b9b3">Pendiente</span></div><p class="cu-tip">¿Ves algo que no coincide? Escribinos y lo revisamos.</p>';
+  document.getElementById('cuotaSub').textContent=nDeb?'':(nRev?'Tu comprobante está en revisión':'¡Gracias por estar al día! 🙌🏽');
+  document.getElementById('cuotaBox').innerHTML=h;document.getElementById('cuotaSec').hidden=false;
+  var box=document.getElementById('deudaBox');if(nDeb){document.getElementById('deudaT').textContent='No registramos el pago de '+(nDeb===1?'1 cuota':nDeb+' cuotas');document.getElementById('deudaD').innerHTML='Transferí al alias <b>'+esc(r.alias)+'</b> y subí el comprobante acá mismo.';box.hidden=false;}else box.hidden=true;
+  document.querySelectorAll('[data-copy]').forEach(function(b){b.onclick=copiar;});document.querySelectorAll('[data-subir]').forEach(function(b){b.onclick=subir;});}
+ async function cargar(){try{R=await api('GET');if(!R.ok||!R.alumno||!(R.escuelas||[]).length)return;pintar();}catch(e){}}
+ (async function(){try{var A=window.HabitatAuth;await A.api('GET','/members/v1/members/my');tk=JSON.parse(localStorage.getItem('habitat:mtok')).a;cargar();}catch(e){}})();}
 cuota();
 function agenda(pids,car){X.agenda(pids,car).then(function(L){
  var now=Date.now(),up=L.filter(function(e){return (e.end||e.ini).getTime()>=now-3600e3;}),av=L.filter(function(e){return /aviso/i.test(e.tipo||'')&&e.ini.getTime()<=now;}).reverse().slice(0,4);
