@@ -1223,11 +1223,14 @@ function topStack() {
     let w = e.offsetWidth, h = e.offsetHeight, y = fromTop ? 10 + sT : H - 10 - sB - h;
     for (let n = 0; n < 24; n++) {
       const all = obs.concat(placed), hit = hits(cx - w / 2, cx + w / 2, y, y + h, all); if (!hit.length) break;
+      const hitObs = hits(cx - w / 2, cx + w / 2, y, y + h, obs); // solo se angosta/corre de costado por los controles; contra otro cartel, se baja
+      if (!hitObs.length) { if (fromTop) y = Math.max(...hit.map(o => o.b)) + G6; else y = Math.min(...hit.map(o => o.t)) - G6 - h; if (cx !== W / 2 || mw !== W - 24) { cx = W / 2; mw = W - 24; e.style.setProperty('max-width', mw + 'px', 'important'); w = e.offsetWidth; h = e.offsetHeight; } if (y < sT || y + h > H) break; continue; }
       // ¿entra angostándolo en el hueco entre lo que choca a los costados?
       const band = hits(0, W, y, y + h, obs); let L = 12, R = W - 12; band.forEach(o => { const oc = (o.l + o.r) / 2; if (oc < W / 2) L = Math.max(L, o.r + G6 * 2); else R = Math.min(R, o.l - G6 * 2); });
       if (R - L >= 170 && (R - L) < mw - 1) { mw = R - L; cx = (L + R) / 2; e.style.setProperty('max-width', mw + 'px', 'important'); w = e.offsetWidth; h = e.offsetHeight; if (!fromTop) y = Math.min(y, H - 10 - sB - h); continue; }
       // si no, se corre: hacia abajo los de arriba, hacia arriba los de abajo
       if (fromTop) y = Math.max(...hit.map(o => o.b)) + G6; else y = Math.min(...hit.map(o => o.t)) - G6 - h;
+      if (cx !== W / 2 || mw !== W - 24) { cx = W / 2; mw = W - 24; e.style.setProperty('max-width', mw + 'px', 'important'); w = e.offsetWidth; h = e.offsetHeight; }
       if (y < sT || y + h > H) break;
     }
     y = Math.round(y); const lx = Math.round(left ? cx - w / 2 : cx), key = y + ',' + lx + ',' + Math.round(mw);
