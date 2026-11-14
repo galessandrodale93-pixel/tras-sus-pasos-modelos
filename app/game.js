@@ -299,8 +299,9 @@ const MEDALS=[
  {id:'memoria',name:'Memoria de oro',desc:'Completá los tres versículos.',c:'#F3C79A',g:'M16 15h20v22H16z M20 21h12 M20 26h12 M20 31h8',w:2.6},
  {id:'peregrino',name:'Peregrino',desc:'Llegá al final de todas las etapas.',c:'#E8E0F8',g:'M18 38c2-6 4-8 8-8s6 2 8 8 M26 27a5 5 0 1 0 0-10 5 5 0 0 0 0 10',w:2.6}
 ];
-const SKINS=['#F7D7BE','#E6B691','#C08559','#7E4E30'];
-const HAIRS=['#2A1B14','#5B3521','#A8743A','#E7C680'];
+const SKINS=['#F7D7BE','#EEC7A3','#E6B691','#D19A6E','#C08559','#9C6640','#7E4E30','#5A3620'];
+const HAIRS=['#14100E','#2A1B14','#5B3521','#7A3B1E','#A8743A','#E7C680','#8E8780','#D8D4CE'];
+const EYES=['#5A3A22','#8A5A2E','#3F6E3A','#4E7FA8','#6E7A86','#2B2320'];
 const OUTFITS=['#5B8DEF','#EF6F61','#2FAE7C','#F2B33D','#9B7BE8'];
 
 const CACHE='tsp-cache-v4';
@@ -376,7 +377,8 @@ function avatarSVG(a){
    <path d="M-2.8 ${hy+5.4} Q0 ${hy+7.8} 2.8 ${hy+5.4}" stroke="#1A2B57" stroke-width="1.4" fill="none" stroke-linecap="round"/>
   </g></g>`;
 }
-const headBox=a=>{const {leg,bh,hr}=body(a),hy=-(leg+bh)-hr+2.5;return `<g transform="translate(0,${-62-hy})">${avatarSVG(a)}</g>`;};
+/* si el personaje tiene foto de la cara (sacada del modelo 3D al crearlo), se usa esa; si no, el dibujo de siempre */
+const headBox=a=>{if(a&&typeof a.face==='string'&&a.face.startsWith('data:image/')){const u='f'+(uid++);return `<defs><clipPath id="${u}"><circle cx="0" cy="-62" r="21"/></clipPath></defs><circle cx="0" cy="-62" r="21.5" fill="#E9DDC4"/><image href="${a.face}" x="-22" y="-84" width="44" height="44" clip-path="url(#${u})" preserveAspectRatio="xMidYMid slice"/>`;}const {leg,bh,hr}=body(a),hy=-(leg+bh)-hr+2.5;return `<g transform="translate(0,${-62-hy})">${avatarSVG(a)}</g>`;};
 
 const T=(x,y,s,inner)=>`<g transform="translate(${x},${y}) scale(${s})">${inner}</g>`;
 const SKY={dawn:['#9DBDF2','#FFD4C2'],day:['#86C1F4','#EAF5FF'],dusk:['#8C8FDB','#FFC59C'],night:['#1E2C66','#5468B4'],desert:['#F3BC7E','#FFE8C2'],gold:['#A7CFF7','#FFE4AE'],temple:['#F7E6C6','#FFF7E8']};
@@ -2969,22 +2971,48 @@ let draft=null,editing=false;
 const ageNote=a=>a<13?'Personaje niño · juegos más tranquilos':a<16?'Personaje adolescente · juegos a velocidad media':'Personaje adolescente grande · juegos más rápidos';
 function openCreate(edit){
   editing=edit;const p=edit&&P(),R=BR[branch];
-  draft=p?{...p.avatar}:{g:'chica',age:R.def,skin:SKINS[1],hair:HAIRS[0],outfit:OUTFITS[0]};
+  draft=p?{...p.avatar}:{g:'chica',age:R.def,skin:SKINS[2],hair:HAIRS[1],outfit:OUTFITS[0]};
+  draft={hs:'a',beard:'0',eye:EYES[0],ht:'n',bd:'n',...draft};delete draft.face;creatorFields();
   draft.age=Math.min(R.max,Math.max(R.min,draft.age));
   const ag=$('#cAge');ag.min=R.min;ag.max=R.max;ag.value=draft.age;
   $('#cName').value=p?p.name:'';$('#cName').disabled=!!p;$('#cName').placeholder='Apodo para el juego';
   $('#createTitle').textContent=p?'Editar personaje':'Creá tu personaje';$('#cGo').textContent=p?'Guardar cambios':'Empezar el camino';$('#cErr').hidden=true;$('#cGo').disabled=false;
-  document.querySelectorAll('.swatches').forEach(s=>{const k=s.dataset.k,arr={skin:SKINS,hair:HAIRS,outfit:OUTFITS}[k];s.innerHTML=arr.map((c,i)=>`<button class="sw" style="background:${c}" data-v="${c}" aria-label="Color ${i+1}"></button>`).join('');});
-  paintCreate();show('createView');
+  document.querySelectorAll('.swatches').forEach(s=>{const k=s.dataset.k,arr={skin:SKINS,hair:HAIRS,outfit:OUTFITS,eye:EYES}[k];s.innerHTML=arr.map((c,i)=>`<button class="sw" style="background:${c}" data-v="${c}" aria-label="Color ${i+1}"></button>`).join('');});
+  paintCreate();show('createView');pv3Start();
+}
+/* opciones extra del personaje (se agregan a la pantalla de creación una sola vez) y la ropa queda para lo que se gana jugando */
+function creatorFields(){
+  const c=document.querySelector('#createView .creator');if(!c||c.dataset.more)return;c.dataset.more='1';
+  const of=c.querySelector('.swatches[data-k="outfit"]');if(of&&of.closest('.field'))of.closest('.field').hidden=true;
+  const hairF=c.querySelector('.swatches[data-k="hair"]').closest('.field');
+  const seg3=(k,opts)=>`<div class="seg" data-k="${k}" style="grid-template-columns:repeat(${opts.length},1fr)">${opts.map(([v,t])=>`<button data-v="${v}">${t}</button>`).join('')}</div>`;
+  hairF.insertAdjacentHTML('afterend',`<div class="field" id="fHs"><span>Peinado</span>${seg3('hs',[['a',''],['b','']])}</div>
+<div class="field" id="fBeard"><span>Barba</span>${seg3('beard',[['0','Sin barba'],['1','Con barba']])}</div>
+<div class="field"><span>Ojos</span><div class="swatches" data-k="eye"></div></div>
+<div class="field"><span>Altura</span>${seg3('ht',[['b','Más bajo'],['n','Normal'],['a','Más alto']])}</div>
+<div class="field"><span>Contextura</span>${seg3('bd',[['d','Delgado'],['n','Normal'],['r','Robusto']])}</div>`);
+  const pv=c.querySelector('.preview');if(pv&&!pv.querySelector('.pv3')){pv.insertAdjacentHTML('beforeend','<div class="pv3" aria-hidden="true"></div><small class="pv3-tip" hidden>Arrastrá para girarlo</small>');}
+  const st=document.createElement('style');st.textContent='#createView .preview{position:relative;min-height:260px}#createView .pv3{position:absolute;inset:0}#createView .pv3 canvas{width:100%;height:100%;display:block;cursor:grab;touch-action:pan-y}#createView .preview.on3d svg{visibility:hidden}#createView .pv3-tip{position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:12px;opacity:.6}';document.head.appendChild(st);
+}
+let PV=null;
+async function pv3Start(){
+  const pv=document.querySelector('#createView .preview'),host=pv&&pv.querySelector('.pv3');if(!host)return;
+  if(PV){PV.stop();PV=null;}pv.classList.remove('on3d');
+  try{const m=await import(new URL('./walk3d.js',import.meta.url).href);const r=await m.avatarPreview(host,()=>draft);if(!r)return;if($('#createView').hidden){r.stop();return;}PV=r;pv.classList.add('on3d');const tip=pv.querySelector('.pv3-tip');if(tip)tip.hidden=false;}catch(e){console.warn('vista previa 3D',e);}
 }
 function paintCreate(){
   document.querySelectorAll('.seg,.swatches').forEach(g=>g.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(draft[g.dataset.k]===b.dataset.v))));
   $('#cAgeOut').textContent=draft.age+' años';$('#cAgeNote').textContent=ageNote(draft.age);
   $('#preview').innerHTML=`<g class="idle">${avatarSVG(draft)}</g>`;
+  const hs=document.querySelectorAll('#fHs button');if(hs.length===2){const L=draft.g==='chica'?['Pelo largo','Rodete']:['Raya al costado','Corto'];hs[0].textContent=L[0];hs[1].textContent=L[1];}
+  const fb=$('#fBeard');if(fb){const ok=draft.g!=='chica'&&branch==='ados'&&draft.age>=15;fb.hidden=!ok;if(!ok)draft.beard='0';}
+  if(PV)PV.update();
 }
-document.querySelectorAll('.seg,.swatches').forEach(g=>g.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;draft[g.dataset.k]=b.dataset.v;paintCreate();}));
+/* un solo escuchador para todas las opciones de la creación (también las que se agregan después) */
+document.addEventListener('click',e=>{const b=e.target.closest('#createView .seg button,#createView .swatches button');if(!b||!draft)return;const g=b.parentElement;draft[g.dataset.k]=b.dataset.v;paintCreate();});
 $('#cAge').addEventListener('input',e=>{draft.age=+e.target.value;paintCreate();});
 $('#cGo').onclick=async()=>{
+  try{const f=PV&&PV.face();if(f)draft.face=f;}catch(e){}
   if(editing){P().avatar={...draft};save();enterMap();return;}
   const name=$('#cName').value.trim();
   if(!name){$('#cErr').textContent='Escribí un apodo para empezar.';$('#cErr').hidden=false;$('#cName').focus();return;}

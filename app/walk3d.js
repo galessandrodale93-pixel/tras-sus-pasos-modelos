@@ -3077,7 +3077,7 @@ const GEAR = [
 ];
 const GBY = Object.fromEntries(GEAR.map(x => [x.id, x]));
 function gearState() { const p = G().P(); p.gear = p.gear || { own: [], eq: {} }; p.gear.own = p.gear.own || []; p.gear.eq = p.gear.eq || {}; return p.gear; }
-function lookOf(p) { const gs = p.gear || {}, eq = {}; for (const k in (gs.eq || {})) if (GBY[gs.eq[k]]) eq[k] = gs.eq[k]; return Object.assign({}, p.avatar || {}, { gear: eq, ins: Object.keys((p.ins && typeof p.ins === 'object') ? p.ins : {}).filter(k => CBY[k]), glow: glowLv((p.glow && p.glow.pts) || 0), don: (() => { const I = (p.ins && typeof p.ins === 'object') ? p.ins : {}; for (const k in I) if (I[k] && I[k].don) return I[k].don; return null; })() }); }
+function lookOf(p) { const gs = p.gear || {}, eq = {}; for (const k in (gs.eq || {})) if (GBY[gs.eq[k]]) eq[k] = gs.eq[k]; return Object.assign({}, p.avatar || {}, { gear: eq, face: undefined, ins: Object.keys((p.ins && typeof p.ins === 'object') ? p.ins : {}).filter(k => CBY[k]), glow: glowLv((p.glow && p.glow.pts) || 0), don: (() => { const I = (p.ins && typeof p.ins === 'object') ? p.ins : {}; for (const k in I) if (I[k] && I[k].don) return I[k].don; return null; })() }); }
 function gearOn(av) { const o = {}, e = (av && av.gear) || {}; SLOTS.forEach(([s]) => { if (GBY[e[s]]) o[s] = GBY[e[s]]; }); return o; }
 function gearRoll() {
   const st = gearState(), left = GEAR.filter(x => !st.own.includes(x.id) && x.r !== 'u'); if (!left.length) return null;
@@ -3669,6 +3669,19 @@ function kidApply(u) {
   if (k.last !== undefined && B.pelvis.position.y === k.last) B.pelvis.position.y += k.drop; // el clip no movió la pelvis: no acumular
   B.pelvis.position.y -= k.drop; k.last = B.pelvis.position.y;
 }
+/* color de ojos: se repinta solo el iris (círculo del centro de la textura del ojo), el blanco y el pupila quedan igual */
+const EYE_TX = new Map();
+function eyeTint(mat, c) {
+  const src = mat.map, im = src && src.image; if (!im || !im.width || !/^#[0-9a-f]{6}$/i.test(c)) return;
+  const key = src.uuid + c; let t = EYE_TX.get(key);
+  if (!t) {
+    const w = im.width, h = im.height, cv = document.createElement('canvas'); cv.width = w; cv.height = h; const x = cv.getContext('2d'); x.drawImage(im, 0, 0);
+    const d = x.getImageData(0, 0, w, h), p = d.data, n = parseInt(c.slice(1), 16), cr = n >> 16 & 255, cg = n >> 8 & 255, cb = n & 255;
+    for (let y = 0; y < h; y++) for (let i = 0; i < w; i++) { const dx = i / w - .5, dy = y / h - .5; if (dx * dx + dy * dy > .0225) continue; const k = (y * w + i) * 4, l = .3 * p[k] + .59 * p[k + 1] + .11 * p[k + 2]; if (l > 170 || l < 28) continue; const f = Math.min(1.7, l / 90); p[k] = Math.min(255, cr * f); p[k + 1] = Math.min(255, cg * f); p[k + 2] = Math.min(255, cb * f); }
+    x.putImageData(d, 0, 0); t = new THREE.CanvasTexture(cv); t.flipY = src.flipY; t.colorSpace = src.colorSpace; t.wrapS = src.wrapS; t.wrapT = src.wrapT; t.channel = src.channel; EYE_TX.set(key, t);
+  }
+  mat.map = t; mat.needsUpdate = true;
+}
 function buildHero3(av) {
   const sx = av.g === 'chica' ? 'f' : 'm', tpl = H3.sex[sx], o = H3.skClone(tpl.T), D = gearOn(av), npc = !('gear' in av), hx = (it) => it && H3_GEAR[it.id];
   const pick = { body: (hx(D.shirt) || {}).p || 'Peasant', legs: (hx(D.pants) || {}).p || 'Peasant', feet: (hx(D.boots) || {}).p || 'Peasant' };
@@ -3689,14 +3702,15 @@ function buildHero3(av) {
     else if (want('legs')) { keep = n.includes(pick.legs); part = 'legs'; }
     else if (want('feet')) { keep = n.includes(pick.feet); part = 'feet'; }
     else if (/^Hair_/.test(n) || /Hair/.test(mn) && !/Eyebrow/i.test(n)) {
-      const def = sx === 'm' ? 'Hair_SimpleParted' : 'Hair_Long', isBeard = /Beard/.test(n);
-      keep = isBeard ? (sx === 'm' && npc && gray) : (n.startsWith(def) && !hood && !(hatProc && hatProc.t !== 'straw'));
+      const def = sx === 'm' ? (av.hs === 'b' ? 'Hair_Buzzed' : 'Hair_SimpleParted') : (av.hs === 'b' ? 'Hair_Buns' : 'Hair_Long'), isBeard = /Beard/.test(n);
+      keep = isBeard ? (sx === 'm' && (npc ? gray : (av.beard === '1' && !kid))) : (n.startsWith(def) && !hood && !(hatProc && hatProc.t !== 'straw'));
     }
     if (!keep) { drop.push(m); return; }
     if (/Regular|Superhero/i.test(mn)) recolor(m, skinC);
     else if (/Hair/i.test(mn)) recolor(m, hairC);
     else if (part === 'arms' && tint.body) recolor(m, tint.body, Object.assign({ cloth: 1 }, hx(D.shirt)));
     else if (part && tint[part]) recolor(m, tint[part], Object.assign({ cloth: 1 }, hx({ body: D.shirt, legs: D.pants, feet: D.boots, bracer: D.gloves, hood: D.hat }[part])));
+    if (n === 'Eyes' && av.eye) { m.material = m.material.clone(); try { eyeTint(m.material, av.eye); } catch (e) {} }
     m.castShadow = true; m.receiveShadow = true;
   });
   drop.forEach(m => m.parent.remove(m));
@@ -3706,6 +3720,7 @@ function buildHero3(av) {
   const lamp = new THREE.Group(), lb = new THREE.Mesh(new THREE.CylinderGeometry(.045, .055, .12, 8), new THREE.MeshStandardMaterial({ color: '#B8862E', roughness: .4, metalness: .6 })); lamp.add(lb);
   const gl = new THREE.Mesh(new THREE.SphereGeometry(.034, 10, 8), new THREE.MeshBasicMaterial({ color: '#FFD27A' })); lamp.add(gl); const pl = new THREE.PointLight('#FFB45A', 5, 7, 1.6); lamp.add(pl); lamp.visible = !npc; o.add(lamp);
   const age = Math.max(12, Math.min(18, av.age || 16)); o.scale.setScalar(npc ? 1 : kid ? .66 + Math.max(0, Math.min(5, (av.age || 8) - 6)) * .018 : .9 + (age - 12) / 6 * .1);
+  if (!npc) { const H = { b: .95, a: 1.05 }[av.ht] || 1, W = { d: .93, r: 1.08 }[av.bd] || 1; o.scale.set(o.scale.x * W, o.scale.y * H, o.scale.z * W); } // altura y contextura elegidas al crear el personaje
   if (!npc || av.ins) insBelt(o, bones, av.ins || []);
   if (av.glow) glowApply(o, av.glow);
   const mixer = new THREE.AnimationMixer(o), act = new Proxy({}, { get: (c, k) => c[k] || (typeof k === 'string' && H3.clips[k] ? (c[k] = mixer.clipAction(H3.clips[k])) : undefined) });
@@ -4844,6 +4859,31 @@ async function show3d(on) {
     let ok = false; try { await withTO(build(), 120000, 'armado'); ok = true; } catch (e) { builtFor = null; buildFail(LBU, e); if (!LBU) v3fail('Probá de nuevo. Si sigue pasando, elegí la calidad Baja en el menú.'); return; } finally { BSTEP.u = null; if (LBU && ok) LBU.close(); } if (ok) setTimeout(r2summary, 6000); }
   else { const n = g.NODES[g.P().pos], [x, z] = (S.npos && S.npos[n.id]) || toV(n.x, n.y); S.av.position.set(x, 0, z); S.sig = ''; S.onStop = g.P().pos; S.quiet = false; }
   resize(); refresh(); bagBtn(); try { fanInit(); miniInit(); bagHud(); } catch (e) { console.warn('hud', e); } setTimeout(fullHint, 1500); setTimeout(iosHint, 1800); setTimeout(fidDaily, 5000); document.body.classList.remove('v3boot');
+}
+/* vista previa del personaje en la pantalla de creación: el mismo modelo 3D del juego, girando, y una foto de la cara para los íconos */
+export async function avatarPreview(host, getLook) {
+  if (!THREE) { if (!loading) loading = import(THREE_URL); THREE = await loading; }
+  await heroLoad(); if (!H3.ok) return null;
+  const cv = document.createElement('canvas'); cv.className = 'av3d'; host.appendChild(cv);
+  const low = qEarly() <= 0, r = new THREE.WebGLRenderer({ canvas: cv, antialias: !low, alpha: true, preserveDrawingBuffer: true });
+  r.setPixelRatio(Math.min(low ? 1 : 2, devicePixelRatio || 1)); r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.05;
+  const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#FFF4E2', '#5E4E3E', 2.3)); const dl = new THREE.DirectionalLight('#FFFFFF', 2.2); dl.position.set(1.5, 3, 2.5); sc.add(dl); const rim = new THREE.DirectionalLight('#FFD9A0', 1.2); rim.position.set(-2, 2, -2); sc.add(rim);
+  const cam = new THREE.PerspectiveCamera(28, 1, .05, 30), clk = new THREE.Clock(); let av = null, key = '', alive = true, yaw = .35, spin = 1, drag = null, h = 1.7;
+  const fit = () => { h = 1.75 * av.scale.y; cam.position.set(0, h * .56, h * 2.55); cam.lookAt(0, h * .5, 0); };
+  const set = () => { const look = Object.assign({}, getLook(), { gear: {}, ins: [], glow: 0 }); delete look.face; const k = JSON.stringify(look); if (k === key) return; key = k; if (av) sc.remove(av); av = buildHero3(look); const u = av.userData.h3; if (u.lamp) u.lamp.visible = false; av.rotation.y = yaw; sc.add(av); fit(); };
+  cv.addEventListener('pointerdown', e => { drag = e.clientX; spin = 0; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', e => { if (drag == null) return; yaw += (e.clientX - drag) * .012; drag = e.clientX; });
+  cv.addEventListener('pointerup', () => { drag = null; setTimeout(() => { if (drag == null) spin = 1; }, 2500); });
+  const loop = () => {
+    if (!alive) return; if (!cv.isConnected || host.closest('[hidden]')) { stop(); return; } requestAnimationFrame(loop);
+    const w = host.clientWidth, hh = host.clientHeight; if (w && hh && (cv.width !== Math.round(w * r.getPixelRatio()) || cv.height !== Math.round(hh * r.getPixelRatio()))) { r.setSize(w, hh, false); cam.aspect = w / hh; cam.updateProjectionMatrix(); }
+    const dt = Math.min(.05, clk.getDelta()); yaw += dt * .45 * spin; if (av) { av.rotation.y = yaw; av.userData.h3.mixer.update(dt); } r.render(sc, cam);
+  };
+  const stop = () => { alive = false; try { r.dispose(); } catch (e) {} cv.remove(); };
+  // foto de la cara (cuadrada, chica) para el perfil y el HUD
+  const face = () => { try { if (!av) return ''; const b = av.userData.h3.bones.Head, p = new THREE.Vector3(); av.rotation.y = 0; av.updateMatrixWorld(true); b.getWorldPosition(p); const c2 = new THREE.PerspectiveCamera(24, 1, .02, 10); c2.position.set(p.x, p.y + .03 * av.scale.y, p.z + .62 * av.scale.y); c2.lookAt(p.x, p.y + .02 * av.scale.y, p.z); const sz = r.getSize(new THREE.Vector2()), pr = r.getPixelRatio(); r.setPixelRatio(1); r.setSize(96, 96, false); r.render(sc, c2); const u = cv.toDataURL('image/webp', .82); r.setPixelRatio(pr); r.setSize(sz.x, sz.y, false); av.rotation.y = yaw; return u.length < 14000 ? u : ''; } catch (e) { return ''; } };
+  set(); loop();
+  return { update: set, face, stop };
 }
 export function enter() {
   const btn = document.getElementById('viewToggle'); if (!btn) return;
