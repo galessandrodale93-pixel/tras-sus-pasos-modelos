@@ -2,7 +2,7 @@
 // Solo entran los miembros cuyo email está en la colección TutTutores.
 // Roles: "director" (todo), "tutor" (todo menos pagos y equipo), "pagos" (además marca pagos).
 import type { APIRoute } from "astro";
-import { auth } from "@wix/essentials";
+import { auth, httpClient } from "@wix/essentials";
 import { items } from "@wix/data";
 import { pagosTutor } from "../../lib/fin";
 
@@ -10,6 +10,7 @@ const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
 const ins = auth.elevate(items.insert);
 const rem = auth.elevate(items.remove);
+const fetchAuth = auth.elevate(httpClient.fetchWithAuth);
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -84,6 +85,7 @@ export const GET: APIRoute = async ({ request }) => {
       tutores: tutores.map(({ email, ...t }) => (dir ? { email, ...t } : t)),
       voluntarios: voluntarios.map(({ clave, ...v }) => (dir ? { clave, ...v } : v)),
       debiRech: await debiRechazos(),
+      materiales: dir || me.org ? (await all("ProfMaterial")).map((m) => ({ _id: m._id, claseId: m.claseId, title: m.title, url: m.url, mime: m.mime, para: m.para || "alumnos", avisado: m.avisado || "" })) : [],
       turnos, clases, plan, eventos: (ev as Record<string, unknown>[]).map(({ _createdDate, _updatedDate, _owner, ...x }) => x),
     });
   } catch (e) {
@@ -218,6 +220,25 @@ export const POST: APIRoute = async ({ request }) => {
         if (fin && !isNaN(+fin)) it.fin = fin;
         if (x.id) { it._id = s(x.id, 120); await save("CampusEventos", it); return json({ ok: true, item: it }); }
         return json({ ok: true, item: await ins("CampusEventos", it) });
+      }
+      // material de una clase, cargado por la dirección: para los alumnos (Campus + mail) o solo para el equipo (proyectar)
+      case "matSubir": {
+        if (me.rol !== "director" && !me.org) return json({ error: "Solo la dirección sube material." }, 403);
+        const r = await fetchAuth("https://www.wixapis.com/site-media/v1/files/generate-upload-url", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mimeType: s(x.mime, 120) || "application/octet-stream", fileName: s(x.nombre, 160) || "material" }) });
+        const j = await r.json();
+        if (!r.ok || !j.uploadUrl) return json({ error: "No pudimos preparar la subida." }, 500);
+        return json({ ok: true, uploadUrl: j.uploadUrl });
+      }
+      case "material": {
+        if (me.rol !== "director" && !me.org) return json({ error: "Solo la dirección sube material." }, 403);
+        if (x.borrar) { await rem("ProfMaterial", s(x.id, 80)); return json({ ok: true }); }
+        const cid = s(x.claseId, 80), u = s(x.url, 600);
+        const cl = (await q("TutClases").eq("_id", cid).limit(1).find()).items[0] as { fecha?: string } | undefined;
+        if (!cl) return json({ error: "No encontramos la clase." }, 404);
+        if (!/^https:\/\//.test(u)) return json({ error: "No se subió el archivo." }, 400);
+        const it = { _id: crypto.randomUUID(), title: s(x.nombre, 160) || "Material", claseId: cid, profeId: "direccion", url: u, mime: s(x.mime, 120), fecha: cl.fecha || "", para: s(x.para, 10) === "equipo" ? "equipo" : "alumnos", por: me.title || "" };
+        await save("ProfMaterial", it);
+        return json({ ok: true, item: it });
       }
       case "clase": {
         if (me.rol !== "director") return json({ error: "Solo la dirección edita el calendario de clases." }, 403);
