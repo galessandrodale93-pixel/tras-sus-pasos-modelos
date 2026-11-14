@@ -861,6 +861,8 @@ function lobbyUI(kid) {
     close() { T.forEach(clearInterval); try { localStorage.setItem('tsp:howto', '1'); } catch (e) {} ov.classList.add('out'); document.body.classList.remove('v3lb'); if (mus) { const m = mus; const f = setInterval(() => { m.volume = Math.max(0, m.volume - .05); if (m.volume <= 0) { clearInterval(f); m.pause(); } }, 60); } setTimeout(() => ov.remove(), 750); } };
   return U;
 }
+// para revisar el diseño de la sala sin esperar una carga (desde la consola)
+export function lobbyPreview(kid) { const U = lobbyUI(!!kid); U.prog(.62, 'Descargando mundo en máxima calidad · 62%'); U.go.hidden = false; U.go.textContent = kid ? '¡A jugar!' : 'Entrar al mundo'; U.go.classList.add('ready'); U.go.onclick = () => U.close(); return U; }
 // calidad que se baja en la sala: la elegida por el jugador; en automático, hasta Medio en celular y hasta Alto en compu (Ultra con 4K solo si lo eligió)
 function lobbyTier() { let manual = false; try { const m = localStorage.getItem('tsp:q'); manual = !!m && m !== 'auto'; } catch (e) {} const lv = qEarly(); if (manual) return lv; return Math.min(matchMedia('(pointer: coarse)').matches ? 1 : 2, lv); }
 // devuelve la sala abierta (para cerrarla cuando el mundo está armado) o null
