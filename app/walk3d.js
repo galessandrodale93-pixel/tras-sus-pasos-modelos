@@ -597,7 +597,7 @@ function buildFail(U, e) {
   (ov.querySelector('.lb-in') || ov).appendChild(box); box.querySelector('button').onclick = () => { try { localStorage.setItem('tsp:q', 'bajo'); } catch (er) {} location.reload(); };
 }
 async function build() {
-  H3.npcs = []; await heroLoad(); buildStep('terreno y casas');
+  H3.npcs = []; CROWD.ppl = []; CROWD.live = []; await heroLoad(); buildStep('terreno y casas');
   const g = G(), hx = g.branch === 'ados', root = document.getElementById('view3d'), _c = root.classList.toggle('hx', hx), cv = document.getElementById('c3d');
   const renderer = _r0 = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(1.75, devicePixelRatio || 1)); renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -1909,7 +1909,7 @@ function shoreScene(scene, p, yAt, poiProp, hx, HW) {
 }
 // ---------- multitudes: un personaje real se posa una vez (sentado, de pie…) y se "hornea" en geometría fija; después se repite con instancias ----------
 // así cien personas cuestan como un puñado de objetos, sin esqueletos ni animación por cada una (importante en el celular)
-const CROWD = { cache: new Map() };
+const CROWD = { cache: new Map(), ppl: [], live: [], t: 0 };
 function crowdBake(look, anim, t) {
   if (!H3.ok) return null; const key = JSON.stringify(look) + '|' + anim + '|' + (t || 0); if (CROWD.cache.has(key)) return CROWD.cache.get(key);
   const o = buildHero3(Object.assign({}, look, { anim: [anim], tintK: look.tintK ?? .08 })), i0 = H3.npcs.indexOf(o); if (i0 >= 0) H3.npcs.splice(i0, 1);
@@ -1952,7 +1952,9 @@ function crowdSimple(scene, list, looks, anim, sh) {
 function crowdPlace(scene, list, looks, anim, sh) {
   if (!list.length) return false; if (!H3.ok) return crowdSimple(scene, list, looks, anim, sh); const by = looks.map(() => []); list.forEach((p, i) => by[(p.v ?? i) % looks.length].push(p)); const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
   looks.forEach((lk, li) => { const L = by[li]; if (!L.length) return; const parts = crowdBake(lk, anim, .4 + li * .37); if (!parts) { crowdSimple(scene, L, [lk], anim, sh); return; }
-    parts.forEach(pt => { crowdSway(pt.mat); const im = new THREE.InstancedMesh(pt.g, pt.mat, L.length); L.forEach((p, i) => { E.set(0, p.ry, 0); M.compose(V.set(p.x, p.y, p.z), Q.setFromEuler(E), SC.setScalar(p.s || 1)); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.castShadow = !!sh && QUAL.lv >= 2; im.receiveShadow = true; im.computeBoundingSphere(); crowdReg(im); scene.add(im); }); });
+    const ims = []; parts.forEach(pt => { crowdSway(pt.mat); const im = new THREE.InstancedMesh(pt.g, pt.mat, L.length); L.forEach((p, i) => { E.set(0, p.ry, 0); M.compose(V.set(p.x, p.y, p.z), Q.setFromEuler(E), SC.setScalar(p.s || 1)); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.castShadow = !!sh && QUAL.lv >= 2; im.receiveShadow = true; im.computeBoundingSphere(); crowdReg(im); scene.add(im); ims.push(im); });
+    // la gente de pie puede cobrar vida cuando el jugador se acerca (ver crowdLiveTick); sentados y arrodillados quedan horneados
+    if (!/^(cross|kneel|side)$/.test(anim) && !/Sit|Kneel|Crouch/i.test(anim)) L.forEach((p, i) => CROWD.ppl.push({ p, look: lk, anim, ims, i, sh: !!sh, o: null })); });
   return true;
 }
 // vida leve para la gente horneada: respiración y un balanceo mínimo por shader (casi gratis), con fase distinta por persona según dónde está
@@ -1964,6 +1966,20 @@ function crowdSway(mt) {
 // multitudes lejanas: se ocultan según la calidad (en Bajo solo se dibujan las que están a menos de 70 m); ahorra millones de triángulos por cuadro
 const CROWD_R = [70, 110, 170, 1e9];
 function crowdReg(im) { im.userData.crowd = 1; if (S) (S.crowdIms || (S.crowdIms = [])).push(im); }
+/* gente con vida: los más cercanos de cada multitud se cambian por personajes animados de verdad (miran, se mueven, caminan un poco);
+   al alejarse vuelven a ser la figura horneada en su lugar. Pocos a la vez según la calidad, y de a uno por cuadro para no trabar */
+const CROWD_LIVE = [8, 14, 22, 30], CROWD_LR = 24, CROWD_IDLES = ['M_Standing_Idle', 'M_Idle', 'M_Looking', 'M_Looking_Around', 'M_Thinking', 'Idle_Loop'];
+function crowdHide(c, on) { const M = new THREE.Matrix4(); for (const im of c.ims) { if (on) { if (!c.m) c.m = []; const m = new THREE.Matrix4(); im.getMatrixAt(c.i, m); c.m.push(m); im.setMatrixAt(c.i, M.makeScale(0, 0, 0)); } else if (c.m) { im.setMatrixAt(c.i, c.m[c.ims.indexOf(im)]); } im.instanceMatrix.needsUpdate = true; } if (!on) c.m = null; }
+function crowdLiveTick(dt) {
+  if (!S || !H3.ok || !CROWD.ppl.length || CINE.on) return; if ((CROWD.t -= dt) > 0) return; CROWD.t = .4; const a = S.av.position, N = CROWD_LIVE[QUAL.lv] || 10, R2 = CROWD_LR * CROWD_LR;
+  const near = []; for (const c of CROWD.ppl) { if (!c.ims[0] || !c.ims[0].parent || !c.ims[0].visible) continue; const d = (c.p.x - a.x) ** 2 + (c.p.z - a.z) ** 2; c.d = d; if (d < R2) near.push(c); }
+  near.sort((x, y) => x.d - y.d); const want = new Set(near.slice(0, N));
+  // soltar los que ya no corresponden (lejos o desplazados por otros más cerca)
+  CROWD.live = CROWD.live.filter(c => { if (want.has(c) && c.d < (CROWD_LR + 4) ** 2) return true; if (c.o) { S.scene.remove(c.o); const k = H3.npcs.indexOf(c.o); if (k >= 0) H3.npcs.splice(k, 1); c.o = null; } if (c.col) { S.cols.push(c.col); c.col = null; } crowdHide(c, false); return false; });
+  // sumar uno por vez
+  for (const c of want) { if (c.o) continue; try { const look = Object.assign({}, c.look, { anim: CROWD_IDLES, tintK: c.look.tintK ?? .08 }), o = buildHero3(look), p = c.p; o.position.set(p.x, p.y, p.z); o.rotation.y = p.ry; if (p.s) o.scale.multiplyScalar(p.s); o.traverse(m => { if (m.isMesh) m.castShadow = c.sh && QUAL.lv >= 2; }); S.scene.add(o); c.o = o;
+      const k = S.cols.findIndex(b => b.cx === p.x && b.cz === p.z); if (k >= 0) c.col = S.cols.splice(k, 1)[0]; crowdHide(c, true); CROWD.live.push(c); CROWD.t = .12; } catch (e) { console.warn('gente viva', e); CROWD.ppl.splice(CROWD.ppl.indexOf(c), 1); } break; }
+}
 function crowdTick() { if (!S || !S.crowdIms) return; const a = S.av.position, R0 = CROWD_R[QUAL.lv]; for (const im of S.crowdIms) { if (!im.parent) continue; if (!im.boundingSphere) im.computeBoundingSphere(); const bs = im.boundingSphere; if (!bs) continue; const vis = Math.hypot(bs.center.x - a.x, bs.center.z - a.z) - bs.radius < R0; if (im.visible !== vis) im.visible = vis; } }
 const CROWD_LOOKS = [
   { g: 'chico', age: 30, skin: '#C99A72', hair: '#2A1B14', outfit: '#8E2E22' }, { g: 'chica', age: 28, skin: '#D6A57C', hair: '#3A2412', outfit: '#7E5A6A' },
@@ -4845,7 +4861,7 @@ function loop(now) {
   cineTick(dt); if (window.__camFix) { const f = window.__camFix; S.camera.position.set(...f.p); S.camera.lookAt(...f.l); }
   fxWatch(now); if (S.W) { const u = S.W.sky.material.uniforms; u.inv.value = S.fx ? 1 : 0; u.ex.value = S.renderer.toneMappingExposure; }
   const p5 = PF ? performance.now() : 0; if (S.fx) S.fx.render(dt); else S.renderer.render(S.scene, S.camera); const p6 = PF ? performance.now() : 0; QUAL.lastCalls = S.renderer.info.render.calls; QUAL.lastTris = S.renderer.info.render.triangles;
-  idle(dt); misTick(t); voiceTick(dt); wpTick(t); mpTick(t, dt); dayTick(dt); seasonTick(dt); gearDropTick(dt, t); doorTick(t); try { wanderTick(dt); } catch (e) {} h3npcTick(dt); crowdTick(); roomTick(dt); survTick(dt, t); prayTogetherTick(dt); axVerse(dt);
+  idle(dt); misTick(t); voiceTick(dt); wpTick(t); mpTick(t, dt); dayTick(dt); seasonTick(dt); gearDropTick(dt, t); doorTick(t); try { wanderTick(dt); } catch (e) {} h3npcTick(dt); try { crowdLiveTick(dt); } catch (e) {} crowdTick(); roomTick(dt); survTick(dt, t); prayTogetherTick(dt); axVerse(dt);
   if (PF) { const p7 = performance.now(); PROF.add({ mov: p1 - p0, zonas: p2 - p1, agua_fuego: p3 - p2, avatar: p4 - p3, escena: p5 - p4, render: p6 - p5, npc_misiones: p7 - p6 }); }
 }
 
