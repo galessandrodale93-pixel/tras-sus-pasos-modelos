@@ -32,6 +32,18 @@ jobs:
         run: |
           [ -n "$WIX_API_KEY" ] || { echo "::error::Falta el secreto WIX_API_KEY"; exit 1; }
           npx wix login --api-key "$WIX_API_KEY"
+      - name: Traer variables de Wix
+        env:
+          CI: "true"
+        run: npx wix env pull < /dev/null
+      - name: Armar las páginas (habitat-web + módulos de Wix)
+        run: |
+          rm -rf public && cp -r ../habitat-web public
+          # los módulos js/wix del cliente de Wix no están en habitat-web: salen del último build guardado
+          unzip -q -o ../habitat-build.zip 'dist/client/js/*' -d /tmp/hb && cp -r /tmp/hb/dist/client/js public/js
+          V=$(date +%Y%m%d%H%M%S)
+          for f in public/*.html; do sed -i -E "s#((src|href)=\"/assets/[^\"?]+\.(js|css))\"#\1?v=$V\"#g" "$f"; done
+          test -f public/campus.html && test -f public/js/wix/client.js
       - name: Compilar
         run: npm run build
       - name: Publicar
