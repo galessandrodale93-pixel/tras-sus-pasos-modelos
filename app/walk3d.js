@@ -2322,7 +2322,6 @@ function tombLife(scene, p, yAt, W, th, risen, hx, stone) {
   const sold = a => buildHeroAvatar({ g: 'chico', age: 30, skin: '#B98A62', hair: '#2A1B14', outfit: '#7A2A22', anim: a });
   const wom = (a, i) => buildHeroAvatar({ g: 'chica', age: 30 + i * 8, skin: ['#C99A72', '#D6A57C', '#B98A62'][i], hair: ['#2A1B14', '#4A2E1C', '#1E1410'][i], outfit: ['#5A4A6A', '#7A5A44', '#4A5A6A'][i], anim: a });
   if (!risen) {
-    put(sold(['Sword_Idle', 'Idle_Loop']), -2.6, 3.2); put(sold(['Sword_Idle', 'Idle_Loop']), 2.7, 3.4);
     put(wom(['M_Sad_Idle', 'Sitting_Idle_Loop'], 0), -3.2, 9.5); put(wom(['Sitting_Idle_Loop', 'M_Sad_Idle'], 1), -1.8, 10.2);
     { const sl = new THREE.Mesh(new THREE.CylinderGeometry(.13, .13, .05, 16), new THREE.MeshStandardMaterial({ color: '#8E1E16', roughness: .5 })), [x, z] = W(0, 1.3); sl.rotation.x = Math.PI / 2; sl.rotation.z = th; sl.position.set(x, yAt(x, z) + 1.15, z); scene.add(sl); const rp = new THREE.Mesh(new THREE.CylinderGeometry(.02, .02, 2.6, 5), tm('rope', '#C9B48A')); rp.rotation.z = Math.PI / 2; rp.rotation.y = th; rp.position.copy(sl.position); scene.add(rp); }
     { const [x, z] = W(.9, 2.4); S.lore.push({ x, z, r: 2.2, label: 'Intentar mover la piedra', dur: 4, go: () => { if (S.hx) h3do(['Push_Loop', 'M_Pushing'], 3); T.push = 3; }, info: ['¿Quién nos moverá la piedra?', 'La piedra era muy grande. Las mujeres se preguntaban en el camino: «¿Quién nos va a quitar la piedra de la entrada del sepulcro?».', 'Marcos 16:3-4'] }); }
@@ -2334,9 +2333,7 @@ function tombLife(scene, p, yAt, W, th, risen, hx, stone) {
       const gl = glowSpr('#FFF6DA', 4.2, .55); gl.position.set(x, yAt(x, z) + 1.2, z); scene.add(gl); T.glow = gl;
       const bm = new THREE.Mesh(new THREE.CylinderGeometry(.8, 2.2, 34, 18, 1, true), new THREE.MeshBasicMaterial({ color: '#FFF4D2', transparent: true, opacity: .12, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); bm.position.set(x, yAt(x, z) + 17, z); scene.add(bm); T.beam = bm;
       S.lore.push({ x, z: z, r: 3, label: 'Mirar al ángel', dur: 6, info: ['¡No está aquí!', 'Un ángel del Señor removió la piedra; su aspecto era como un relámpago. Les dijo a las mujeres: «No tengan miedo. No está aquí, porque ha resucitado, como dijo. Vengan, vean el lugar donde estaba».', 'Mateo 28:2-6'] }); }
-    { if (hx) { const a = put(sold(['M_Laying_Breathless', 'M_Laying_Sleeping', 'Death01']), -3.4, 3.6, W(-6, 3)), b = put(sold(['M_Laying_Breathless', 'M_Laying_Sleeping', 'Death01']), 3.1, 4.4, W(6, 6)); T.lying = [a, b]; }
-      else { const a = put(sold(['M_Crying', 'M_Sad_Idle']), -3.9, 1.6, W(-1, 6)), b = put(sold(['M_Crying', 'M_Sad_Idle']), 3.9, 1.8, W(1, 6)); T.shake = [a, b]; }
-      [[-2.3, 4.6, .4], [2.2, 5.6, -.6], [-4.4, 2.4, 1.2], [4.5, 2.6, -1.1]].forEach(([u, v, r], i) => { const [x, z] = W(u, v), g2 = romanGear(i % 2); g2.position.set(x, yAt(x, z), z); g2.rotation.y = th + r; scene.add(g2); }); const [x, z] = W(0, 4); S.lore.push({ x, z, r: 3.2, label: 'Mirar a los guardias', info: ['Como muertos', 'Los guardias temblaron de miedo ante el ángel y quedaron como muertos.', 'Mateo 28:4'] }); }
+    { }
     put(wom(['M_Kneeling_Idle', 'Fixing_Kneeling'], 0), -1.4, 6.2); put(wom(['M_Thankful', 'M_Praying'], 1), .2, 6.9); put(wom(['M_Crying', 'M_Sad_Idle'], 2), 1.6, 6.4);
     try { tombRace(scene, p, yAt, W, th, T); } catch (e) { console.warn('carrera', e); }
     { const [x, z] = W(0, 6.5); S.lore.push({ x, z, r: 2.6, label: 'Hablar con las mujeres', info: ['Muy de mañana', 'El primer día de la semana, al salir el sol, María Magdalena, María y Salomé fueron a la tumba con perfumes. Se preguntaban quién les iba a mover la piedra, y la encontraron ya corrida.', 'Marcos 16:1-4'] }); }
