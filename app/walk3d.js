@@ -2550,7 +2550,7 @@ function judeaTick(dt, t) {
   if (J.drop) { J.drop.s.position.y = J.drop.y + Math.sin(t * 2) * .12; J.drop.s.material.opacity = on('gota') ? 1 : .55 + Math.sin(t * 3) * .2; }
   if (J.flower) J.flower.material.opacity = on('flor') ? .95 : .4 + Math.sin(t * 1.7) * .15;
   if (J.sheep) J.sheep.gl.material.opacity = on('oveja') ? .9 : .35 + Math.sin(t * 2.2) * .15;
-  if (J.cima) { const a = S.av.position, d = Math.hypot(a.x - J.cima.x, a.z - J.cima.z), k = 1 - sstep(10, 45, d); S.fogMul = 1 - k * .75; if (S.scene.fog && S.scene.fog.isFog) { if (J.far0 == null) J.far0 = S.scene.fog.far; S.scene.fog.far = J.far0 + k * 230; } if (J.cityGlow) J.cityGlow.material.opacity = .08 + k * (on('ciudad') ? .4 : .2); }
+  if (J.cima) { const a = S.av.position, d = Math.hypot(a.x - J.cima.x, a.z - J.cima.z), k = 1 - sstep(10, 45, d); S.fogMul = 1 - k * .93; if (S.scene.fog && S.scene.fog.isFog) { if (J.far0 == null) J.far0 = S.scene.fog.far; S.scene.fog.far = J.far0 + k * 230; } if (J.cityGlow) J.cityGlow.material.opacity = .08 + k * (on('ciudad') ? .4 : .2); }
   J.lamps.forEach((l, i) => { l.material.opacity = .6 + Math.sin(t * 9 + i) * .1 + Math.sin(t * 23 + i * 2) * .05; });
   if (J.vision) { const k = on('reinos') ? 1 : 0; J.vision.big.material.opacity += ((k ? .55 : .2 + Math.sin(t * .5) * .05) - J.vision.big.material.opacity) * Math.min(1, dt * 2); J.vision.g.children.forEach((c, i) => { if (c !== J.vision.big) c.material.opacity = (k ? .7 : .3) + Math.sin(t * 1.3 + i) * .1; }); }
 }
