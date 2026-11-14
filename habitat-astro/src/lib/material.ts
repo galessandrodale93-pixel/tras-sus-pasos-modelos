@@ -68,3 +68,26 @@ export async function paraProyectar(hoy: string) {
     .map((c) => ({ fecha: c.fecha, programa: c.programa || "", title: c.title || "", items: mats.filter((m) => m.claseId === c._id && m.para === "equipo").map((m) => ({ title: m.title, url: m.url, mime: m.mime })) }))
     .filter((c) => c.items.length).sort((a, b) => a.fecha.localeCompare(b.fecha));
 }
+
+// Domingo: a los alumnos, invitación a la Zarza y al Selah de la semana que empieza (lunes a domingo).
+type Esp = { _id: string; tipo: string; fecha: string; title?: string; hora?: string; lugar?: string; link?: string; nota?: string; avisoAlumnos?: string };
+export async function especialesSemana(lun: string, dry: boolean, remitente: string) {
+  const fin = mas(lun, 6);
+  const evs = ((await q("VolEventos").ge("fecha", lun).le("fecha", fin).limit(50).find()).items as Esp[]).filter((e) => (e.tipo === "zarza" || e.tipo === "selah") && !e.avisoAlumnos).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  if (!evs.length) return { especiales: "nada" };
+  const al = (await todos<Alumno>("TutAlumnos")).filter((a) => a.activo !== false);
+  const em = await emails(al);
+  const dest = al.filter((a) => em[a._id]);
+  if (dry) return { eventos: evs.map((e) => e._id), alumnos: dest.length };
+  const QUE: Record<string, [string, string]> = { zarza: ["🔥", "Una noche de adoración para encontrarnos con Su presencia. ¡Vení y traé a alguien!"], selah: ["📖", "Un tiempo para detenernos, orar y meditar en la Palabra juntos."] };
+  const bloque = (e: Esp) => `<div style="border-top:1px solid #e6dccb;padding:14px 0 4px"><p style="font:700 18px Arial;margin:0 0 4px">${QUE[e.tipo][0]} ${esc(e.title || (e.tipo === "zarza" ? "Zarza" : "Selah"))}</p><p style="font:16px/1.6 Arial;margin:0 0 6px"><b>${esc(larga(e.fecha))}</b>${e.hora ? " a las <b>" + esc(e.hora) + "</b>" : e.tipo === "zarza" ? " a las <b>19:30</b>" : ""}${e.lugar ? " · " + esc(e.lugar) : ""}</p><p style="font:16px/1.6 Arial;margin:0 0 6px">${QUE[e.tipo][1]}</p>${e.link ? `<p style="font:15px/1.6 Arial;margin:0 0 6px"><a href="${esc(e.link)}" style="color:#b8904f">${esc(e.link)}</a></p>` : ""}</div>`;
+  const titulo = evs.map((e) => (e.tipo === "zarza" ? "Zarza" : "Selah")).filter((x, i, L) => L.indexOf(x) === i).join(" y ");
+  let ok = 0;
+  for (const a of dest) {
+    const html = marco("Habitat · Esta semana", "Esta semana: " + titulo + " 🙌🏽", `${p(`Hola ${esc(String(a.title || "").split(/\s+/)[0])}! Te invitamos a lo que viene esta semana en Habitat:`)}${evs.map(bloque).join("")}${p("¡Te esperamos!")}`, `<a href="https://www.habitat-cfm.org/campus.html" style="color:#b8904f">habitat-cfm.org/campus</a>`);
+    const r = await mandar(em[a._id], "Esta semana en Habitat: " + titulo, html, remitente, "Habitat CFM");
+    if (r.ok) ok++;
+  }
+  for (const e of evs) { const { _createdDate, _updatedDate, _owner, ...rest } = e as Esp & Record<string, unknown>; await save("VolEventos", { ...rest, avisoAlumnos: lun }); }
+  return { eventos: evs.map((e) => e._id), enviados: ok, de: dest.length };
+}
