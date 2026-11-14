@@ -2518,9 +2518,12 @@ function judeaTrails(scene, p, yAt, poiProp, hx) {
     S.lore.push({ x: e.x, z: e.z, r: 2.6, label: 'Mirar la cueva', dur: 6, go: () => sello('cueva-david', 'La cueva de David'), info: ['La cueva de David', 'Escapando del rey Saúl, David se escondió en las cuevas de este desierto. Ahí, en la oscuridad, compuso canciones a Dios: «Ten misericordia de mí, oh Dios… en la sombra de tus alas me refugiaré».', '1 Samuel 24:3 · Salmo 57:1'] });
     const lb = textSprite('Cueva de David', hx); lb.scale.multiplyScalar(.9); lb.position.set(e.x - e.dx * 5.5, y + 5.4, e.z - e.dz * 5.5); scene.add(lb); } }
   /* ===== sendero de la cumbre ===== */
-  { const o = lore('cumbre', .2, 2.6, { label: 'Leer la piedra', fx: 'voz', info: ['Una voz en el desierto', 'Juan el Bautista predicaba en este desierto: «Voz del que clama en el desierto: preparen el camino del Señor, enderecen sus sendas».', 'Isaías 40:3 · Mateo 3:3'] });
-    { const g = verseStone(); g.position.set(o.x, o.y, o.z); g.rotation.y = Math.atan2(-o.q.nx, -o.q.nz); scene.add(g); S.cols.push({ x0: o.x - .5, x1: o.x + .5, z0: o.z - .5, z1: o.z + .5, cx: o.x, cz: o.z, r: .45 }); }
-    const tx = textSprite('Preparen el camino del Señor', hx); tx.scale.multiplyScalar(.38); tx.position.set(o.x, o.y + 2.3, o.z); scene.add(tx); J.voz = tx; }
+  { const o = lore('cumbre', .2, 2.6, { label: 'Leer el estandarte', fx: 'voz', info: ['Una voz en el desierto', 'Juan el Bautista predicaba en este desierto: «Voz del que clama en el desierto: preparen el camino del Señor, enderecen sus sendas».', 'Isaías 40:3 · Mateo 3:3'] });
+    { /* estandarte con el anuncio, que flamea en un poste de madera junto al sendero */ const g = new THREE.Group(), wd = tm('signwood', '#6E4E2E'), pole = new THREE.Mesh(new THREE.CylinderGeometry(.06, .08, 3.4, 8), wd); pole.position.y = 1.7; pole.castShadow = true; g.add(pole);
+      const tip = new THREE.Mesh(new THREE.SphereGeometry(.09, 10, 8), ambM('bronze', '#B8853A', { metalness: .85, roughness: .32 })); tip.position.y = 3.45; g.add(tip);
+      const tex = cnvTex(256, 512, (x, w, h) => { x.fillStyle = '#E9DCC0'; x.fillRect(0, 0, w, h); x.strokeStyle = '#8A2E1E'; x.lineWidth = 10; x.strokeRect(14, 14, w - 28, h - 28); x.fillStyle = '#8A2E1E'; x.font = 'bold 40px Georgia, serif'; x.textAlign = 'center'; ['Preparen', 'el camino', 'del', 'Señor'].forEach((t, i) => x.fillText(t, w / 2, 130 + i * 70)); x.font = 'italic 26px Georgia, serif'; x.fillStyle = '#5A3A22'; x.fillText('Isaías 40:3', w / 2, 430); });
+      ambBanner(g, 0, 3.15, .02, .9, 1.7, '#FFFFFF', { map: tex }); g.position.set(o.x, o.y, o.z); g.rotation.y = Math.atan2(-o.q.nx, -o.q.nz); scene.add(g); S.cols.push({ x0: o.x - .3, x1: o.x + .3, z0: o.z - .3, z1: o.z + .3, cx: o.x, cz: o.z, r: .25 }); }
+  }
   { const o = lore('cumbre', .45, 2.6, { label: 'Mirar el pozo', fx: 'gota', info: ['Sed de Dios', 'David escribió en el desierto de Judá: «Oh Dios, tú eres mi Dios; de madrugada te buscaré. Mi alma tiene sed de ti, en tierra seca y árida donde no hay aguas».', 'Salmo 63:1'] });
     { const rr = []; for (let k = 0; k < 9; k++) { const an = k / 9 * 6.283, x = o.x + Math.cos(an) * 1.15, z = o.z + Math.sin(an) * 1.15; rr.push({ x, y: yAt(x, z) - .12, z, ry: an * 3, s: .55 + R() * .25, v: k }); } poiProp('sand_rocks_small_01', rr, { shadow: true, nocol: 1 }); } S.cols.push({ x0: o.x - 1.3, x1: o.x + 1.3, z0: o.z - 1.3, z1: o.z + 1.3, cx: o.x, cz: o.z, r: 1.25 });
     const dr2 = glowSpr('#9FD4FF', .9, .9); dr2.position.set(o.x, o.y + 1.4, o.z); scene.add(dr2); J.drop = { s: dr2, y: o.y + 1.4 }; S.lore[S.lore.length - 1].r = 3.4; }
@@ -2540,10 +2543,6 @@ function judeaTrails(scene, p, yAt, poiProp, hx) {
     const lb = textSprite('La cima', hx); lb.position.set(e.x, y + 4.5, e.z); scene.add(lb);
     const ray = glowSpr('#FFE4A0', 40, .18); ray.position.set(city.x, yAt(city.x, city.z) + 18, city.z); scene.add(ray); J.cityGlow = ray; } }
 }
-// la piedra grabada de siempre (la misma de los versículos de memoria): losa con arco arriba y renglones tallados
-function verseStone() { const g = new THREE.Group(), st = new THREE.MeshStandardMaterial({ color: '#B8B0A0', roughness: .95 });
-  const sl = new THREE.Mesh(new THREE.BoxGeometry(.9, 1.4, .22), st); sl.position.y = .7; sl.castShadow = true; g.add(sl); const top = new THREE.Mesh(new THREE.CylinderGeometry(.45, .45, .22, 16, 1, false, 0, Math.PI), st); top.rotation.z = Math.PI / 2; top.rotation.y = Math.PI / 2; top.position.y = 1.4; g.add(top);
-  for (let i = 0; i < 5; i++) { const ln = new THREE.Mesh(new THREE.BoxGeometry(.6 - (i % 2) * .12, .03, .01), new THREE.MeshStandardMaterial({ color: '#5A5246' })); ln.position.set(0, 1.25 - i * .14, .115); g.add(ln); } return g; }
 function judeaTick(dt, t) {
   const J = S.judea; if (!J) return; const on = fx => S.lore.some(l => l.fx === fx && l.on);
   J.ibex.forEach(q => { const hop = on('ibex') ? Math.max(0, Math.sin(t * 5 + q.ph)) * .5 : 0; q.g.position.y = q.y + hop; q.g.rotation.y += Math.sin(t * .4 + q.ph) * dt * .2; });
