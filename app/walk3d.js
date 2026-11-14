@@ -1199,7 +1199,7 @@ function hudLay() {
   try { crestSync(); } catch (e) { }
   try { kidDay(); } catch (e) { }
   const h = document.querySelector('body.v3on #v3crest') || document.querySelector('body.v3on .hud-in'), B = document.body.style; if (!h) return; const r = h.getBoundingClientRect(); if (!r.width || !r.height) return;
-  const hb = Math.round(r.bottom + (h.id === 'v3crest' ? 18 : 8)); // el escudo del nivel sobresale debajo del emblema if (B.getPropertyValue('--hudB') !== hb + 'px') B.setProperty('--hudB', hb + 'px');
+  const hb = Math.round(r.bottom + (h.id === 'v3crest' ? 18 : 8)); /* el escudo del nivel sobresale debajo del emblema */ if (B.getPropertyValue('--hudB') !== hb + 'px') B.setProperty('--hudB', hb + 'px');
   try { topStack(); } catch (e) { }
 }
 /* Ningún cartel pisa a otro ni a los controles. Los de arriba (rumbo, sala, misión, estación, aldea, avisos…) se apilan de arriba hacia abajo
