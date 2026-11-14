@@ -2535,10 +2535,7 @@ function judeaTrails(scene, p, yAt, poiProp, hx) {
     const lb = textSprite('Cueva de David', hx); lb.scale.multiplyScalar(.9); lb.position.set(e.x - e.dx * 5.5, y + 5.4, e.z - e.dz * 5.5); scene.add(lb); } }
   /* ===== sendero de la cumbre ===== */
   { const o = lore('cumbre', .2, 2.6, { label: 'Leer el estandarte', fx: 'voz', info: ['Una voz en el desierto', 'Juan el Bautista predicaba en este desierto: «Voz del que clama en el desierto: preparen el camino del Señor, enderecen sus sendas».', 'Isaías 40:3 · Mateo 3:3'] });
-    { /* estandarte con el anuncio, que flamea en un poste de madera junto al sendero */ const g = new THREE.Group(), wd = tm('signwood', '#6E4E2E'), pole = new THREE.Mesh(new THREE.CylinderGeometry(.06, .08, 3.4, 8), wd); pole.position.y = 1.7; pole.castShadow = true; g.add(pole);
-      const tip = new THREE.Mesh(new THREE.SphereGeometry(.09, 10, 8), ambM('bronze', '#B8853A', { metalness: .85, roughness: .32 })); tip.position.y = 3.45; g.add(tip);
-      const tex = cnvTex(256, 512, (x, w, h) => { x.fillStyle = '#E9DCC0'; x.fillRect(0, 0, w, h); x.strokeStyle = '#8A2E1E'; x.lineWidth = 10; x.strokeRect(14, 14, w - 28, h - 28); x.fillStyle = '#8A2E1E'; x.font = 'bold 40px Georgia, serif'; x.textAlign = 'center'; ['Preparen', 'el camino', 'del', 'Señor'].forEach((t, i) => x.fillText(t, w / 2, 130 + i * 70)); x.font = 'italic 26px Georgia, serif'; x.fillStyle = '#5A3A22'; x.fillText('Isaías 40:3', w / 2, 430); });
-      ambBanner(g, 0, 3.15, .02, .9, 1.7, '#FFFFFF', { map: tex }); g.position.set(o.x, o.y, o.z); g.rotation.y = Math.atan2(-o.q.nx, -o.q.nz); scene.add(g); S.cols.push({ x0: o.x - .3, x1: o.x + .3, z0: o.z - .3, z1: o.z + .3, cx: o.x, cz: o.z, r: .25 }); }
+    { const g = judeaBanner(['Preparen', 'el camino', 'del', 'Señor'], 'Isaías 40:3'); g.position.set(o.x, o.y, o.z); g.rotation.y = Math.atan2(-o.q.nx, -o.q.nz); scene.add(g); S.cols.push({ x0: o.x - .3, x1: o.x + .3, z0: o.z - .3, z1: o.z + .3, cx: o.x, cz: o.z, r: .25 }); }
   }
   { const o = lore('cumbre', .45, 2.6, { label: 'Mirar el pozo', fx: 'gota', info: ['Sed de Dios', 'David escribió en el desierto de Judá: «Oh Dios, tú eres mi Dios; de madrugada te buscaré. Mi alma tiene sed de ti, en tierra seca y árida donde no hay aguas».', 'Salmo 63:1'] });
     { const rr = []; for (let k = 0; k < 9; k++) { const an = k / 9 * 6.283, x = o.x + Math.cos(an) * 1.15, z = o.z + Math.sin(an) * 1.15; rr.push({ x, y: yAt(x, z) - .12, z, ry: an * 3, s: .55 + R() * .25, v: k }); } poiProp('sand_rocks_small_01', rr, { shadow: true, nocol: 1 }); } S.cols.push({ x0: o.x - 1.3, x1: o.x + 1.3, z0: o.z - 1.3, z1: o.z + 1.3, cx: o.x, cz: o.z, r: 1.25 });
@@ -2554,17 +2551,38 @@ function judeaTrails(scene, p, yAt, poiProp, hx) {
     const lb = textSprite('La cumbre', hx); lb.position.set(e.x, y + 4.5, e.z); scene.add(lb); } }
   // la cima del monte: arriba de todo, sin nada que tape, se ve la ciudad entera
   { const e = TRL.ends.find(q => q.k === 'cima'); if (e) { const y = yAt(e.x, e.z), city = (S.pois || []).find(q => q.k === 'temple') || { x: 0, z: e.z }; J.cima = { x: e.x, z: e.z };
-    /* la cima queda despejada: sin peñascos que tapen la vista ni la cámara */
+    /* la cima queda despejada hacia la ciudad; detrás, un estandarte, un nido de águila y el águila que planea alrededor del pico */
+    const look = Math.atan2(city.x - e.x, city.z - e.z), bx = e.x - Math.sin(look) * 2.2, bz = e.z - Math.cos(look) * 2.2;
+    { const g = judeaBanner(['Alzaré', 'mis ojos', 'a los montes'], 'Salmo 121:1'); g.position.set(bx, yAt(bx, bz) - .05, bz); g.rotation.y = look; scene.add(g); S.cols.push({ x0: bx - .3, x1: bx + .3, z0: bz - .3, z1: bz + .3, cx: bx, cz: bz, r: .25 }); }
+    { const nx = e.x - Math.sin(look + 1.1) * 2.6, nz = e.z - Math.cos(look + 1.1) * 2.6, ny = yAt(nx, nz), nest = new THREE.Group(), tw = tm('nest', '#6B4F2E', { roughness: 1 });
+      for (let k = 0; k < 3; k++) { const t2 = new THREE.Mesh(new THREE.TorusGeometry(.42 - k * .06, .07, 6, 14), tw); t2.rotation.x = Math.PI / 2; t2.position.y = .06 + k * .07; t2.rotation.z = k; nest.add(t2); }
+      for (let k = 0; k < 2; k++) { const egg = new THREE.Mesh(new THREE.SphereGeometry(.09, 10, 8), tm('egg', '#E9E1CF')); egg.scale.y = 1.25; egg.position.set(-.07 + k * .14, .12, .02 * k); nest.add(egg); }
+      nest.position.set(nx, ny, nz); scene.add(nest);
+      S.lore.push({ x: nx, z: nz, r: 2.4, label: 'Mirar el nido', fx: 'aguila', dur: 6, info: ['Alas como las águilas', 'En lo alto de los montes anidan las águilas. «Los que esperan en el Señor tendrán nuevas fuerzas; levantarán alas como las águilas; correrán, y no se cansarán; caminarán, y no se fatigarán».', 'Isaías 40:31'] }); }
+    { const g = new THREE.Group(), wm = new THREE.MeshStandardMaterial({ color: '#4A3626', side: THREE.DoubleSide, roughness: 1 }), body = new THREE.Mesh(new THREE.ConeGeometry(.16, .9, 6), wm); body.rotation.x = Math.PI / 2; g.add(body); const hd = new THREE.Mesh(new THREE.SphereGeometry(.1, 8, 6), tm('eaglehead', '#EDE6D8')); hd.position.z = .5; g.add(hd);
+      const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, .2, 0, 0, -.25, 1.5, .08, -.12], 3)); wg.computeVertexNormals(); const wl = new THREE.Mesh(wg, wm), wr = wl.clone(); wr.scale.x = -1; g.add(wl, wr); g.scale.setScalar(1.7); scene.add(g); J.eagle = { g, wl, wr, cx: e.x, cz: e.z, y: y + 9 }; }
     S.lore.push({ x: e.x, z: e.z, r: 3.2, label: 'Mirar la ciudad', fx: 'ciudad', dur: 8, go: () => sello('cima-monte', 'La cima del monte'), info: ['Montes alrededor de Jerusalén', 'Desde la cima se ve toda la ciudad. «Como Jerusalén tiene montes alrededor de ella, así el Señor está alrededor de su pueblo, desde ahora y para siempre». Jesús, al ver la ciudad, lloró por ella.', 'Salmo 125:2 · Lucas 19:41'] });
     const lb = textSprite('La cima', hx); lb.position.set(e.x, y + 4.5, e.z); scene.add(lb);
     const ray = glowSpr('#FFE4A0', 40, .18); ray.position.set(city.x, yAt(city.x, city.z) + 18, city.z); scene.add(ray); J.cityGlow = ray; } }
 }
+// estandarte de tela clara con borde rojo que flamea en un poste de madera (texto en renglones y la cita abajo)
+function judeaBanner(lines, ref) { const g = new THREE.Group(), wd = tm('signwood', '#6E4E2E'), pole = new THREE.Mesh(new THREE.CylinderGeometry(.06, .08, 3.4, 8), wd); pole.position.y = 1.7; pole.castShadow = true; g.add(pole);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(.09, 10, 8), ambM('bronze', '#B8853A', { metalness: .85, roughness: .32 })); tip.position.y = 3.45; g.add(tip);
+  const tex = cnvTex(256, 512, (x, w, h) => { x.fillStyle = '#E9DCC0'; x.fillRect(0, 0, w, h); x.strokeStyle = '#8A2E1E'; x.lineWidth = 10; x.strokeRect(14, 14, w - 28, h - 28); x.fillStyle = '#8A2E1E'; const fs = lines.length > 4 ? 34 : 40; x.font = 'bold ' + fs + 'px Georgia, serif'; x.textAlign = 'center'; const y0 = 250 - (lines.length - 1) * (fs + 26) / 2; lines.forEach((t, i) => x.fillText(t, w / 2, y0 + i * (fs + 26))); x.font = 'italic 26px Georgia, serif'; x.fillStyle = '#5A3A22'; x.fillText(ref, w / 2, 440); });
+  ambBanner(g, 0, 3.15, .02, .9, 1.7, '#FFFFFF', { map: tex }); return g; }
+// los adornos de las lomas que quedaron colgando sobre las laderas nuevas del monte se acomodan al suelo (o se sacan si la pendiente es muy fuerte)
+function judeaClean() { const B = TRL.bb; if (!B || !S.W) return; const M = new THREE.Matrix4(), P = new THREE.Vector3(), Q = new THREE.Quaternion(), SC = new THREE.Vector3(), mine = S.judea && S.judea.own;
+  S.scene.traverse(o => { if (!o.isInstancedMesh || (mine && mine.has(o))) return; let ch = false;
+    for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, M); M.decompose(P, Q, SC); if (P.x < B.x0 || P.x > B.x1 || P.z < B.z0 || P.z > B.z1 || (P.x - TRL.p.x) * TRL.sd < 26 || TRL.ends.some(q => q.k === 'cueva' && Math.hypot(P.x - q.x, P.z - q.z) < q.r + 9)) continue; const h = S.W.hAt(P.x, P.z), sl = Math.hypot(S.W.hAt(P.x + 1.5, P.z) - S.W.hAt(P.x - 1.5, P.z), S.W.hAt(P.x, P.z + 1.5) - S.W.hAt(P.x, P.z - 1.5)) / 3;
+      if (sl > .55 || Math.abs(P.y - h) > 3) { SC.setScalar(0); M.compose(P, Q, SC); o.setMatrixAt(i, M); ch = true; } else if (Math.abs(P.y - h) > .6) { P.y = h - .3; M.compose(P, Q, SC); o.setMatrixAt(i, M); ch = true; } }
+    if (ch) { o.instanceMatrix.needsUpdate = true; o.computeBoundingSphere && o.computeBoundingSphere(); } }); }
 function judeaTick(dt, t) {
-  const J = S.judea; if (!J) return; const on = fx => S.lore.some(l => l.fx === fx && l.on);
+  const J = S.judea; if (!J) return; J.t += dt; if (!J.cleaned && J.t > 2.5) { J.cleaned = 1; try { judeaClean(); } catch (e) { } } const on = fx => S.lore.some(l => l.fx === fx && l.on);
   J.ibex.forEach(q => { const hop = on('ibex') ? Math.max(0, Math.sin(t * 5 + q.ph)) * .5 : 0; q.g.position.y = q.y + hop; q.g.rotation.y += Math.sin(t * .4 + q.ph) * dt * .2; });
   if (J.drop) { J.drop.s.position.y = J.drop.y + Math.sin(t * 2) * .12; J.drop.s.material.opacity = on('gota') ? 1 : .55 + Math.sin(t * 3) * .2; }
   if (J.flower) J.flower.material.opacity = on('flor') ? .95 : .4 + Math.sin(t * 1.7) * .15;
   if (J.sheep) J.sheep.gl.material.opacity = on('oveja') ? .9 : .35 + Math.sin(t * 2.2) * .15;
+  if (J.eagle) { const E = J.eagle, k2 = on('aguila') ? 1.8 : 1, an = t * .28 * k2, r = 14 - (k2 - 1) * 5; E.g.position.set(E.cx + Math.cos(an) * r, E.y + Math.sin(t * .6) * 1.5 - (k2 - 1) * 3, E.cz + Math.sin(an) * r); E.g.rotation.set(0, -an, .35); const fl = (t % 6) < 1.2 || k2 > 1 ? Math.sin(t * 12) * .5 : .08; E.wl.rotation.z = fl; E.wr.rotation.z = -fl; }
   if (J.cima) { const a = S.av.position, d = Math.hypot(a.x - J.cima.x, a.z - J.cima.z), k = 1 - sstep(10, 45, d); S.fogMul = 1 - k * .93; if (S.scene.fog && S.scene.fog.isFogExp2) { if (k < .01 || J.fd0 == null) J.fd0 = S.scene.fog.density; else S.scene.fog.density = J.fd0 * S.fogMul; } if (S.scene.fog && S.scene.fog.isFog) { if (J.far0 == null) J.far0 = S.scene.fog.far; S.scene.fog.far = J.far0 + k * 450; } if (J.cityGlow) J.cityGlow.material.opacity = .08 + k * (on('ciudad') ? .4 : .2); }
   J.lamps.forEach((l, i) => { l.material.opacity = .6 + Math.sin(t * 9 + i) * .1 + Math.sin(t * 23 + i * 2) * .05; });
   if (J.vision) { const k = on('reinos') ? 1 : 0; J.vision.big.material.opacity += ((k ? .55 : .2 + Math.sin(t * .5) * .05) - J.vision.big.material.opacity) * Math.min(1, dt * 2); J.vision.g.children.forEach((c, i) => { if (c !== J.vision.big) c.material.opacity = (k ? .7 : .3) + Math.sin(t * 1.3 + i) * .1; }); }
