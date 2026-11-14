@@ -930,3 +930,26 @@ body[data-branch="kids"] .kh-pill b{color:#FFD25E}
 @media (prefers-reduced-motion:reduce){.lb2 .lb-im.on{transform:none}.lb2 .lb-go::before{animation:none}}
 /* Hero: solo la palabra HERO sube (con transform, así nada más se mueve) */
 @media (min-height:561px){.lb2 .lb-in{overflow:visible}.lb2:not(.kid) .lb-in .lb-hero{transform:translateY(-36px)}} /* sin recorte, así las sombras de los botones quedan redondas */
+/* Kids: letras de nube, rayos de sol, nubes que pasan y destellos */
+.lb2.kid .lb-kidlogo{position:relative;display:grid;margin:0 0 4px -6px;transform:rotate(-4deg);transform-origin:left bottom;text-shadow:none;color:inherit;font:800 clamp(78px,10vw,124px)/.92 "Baloo 2","Nunito",sans-serif;letter-spacing:.01em}
+.lb2.kid .lb-kidlogo span{grid-area:1/1;padding:0 .08em}
+.lb2.kid .kc-back{color:#fff;filter:url(#kcloud) drop-shadow(0 8px 0 #BFD9FF) drop-shadow(0 16px 26px rgba(20,50,130,.45))}
+.lb2.kid .kc-front{background:linear-gradient(180deg,#FFFFFF 0%,#F2F8FF 45%,#CFE4FF 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 rgba(120,170,240,.55))}
+.lb2.kid .lb-title{position:relative;display:inline-block;margin-left:2px;padding:6px 18px 7px;border-radius:12px;background:linear-gradient(180deg,#FFD54A,#FFB21E);color:#6A3A00;font:800 20px "Baloo 2","Nunito",sans-serif;box-shadow:0 4px 0 #E58A1F,0 10px 20px rgba(0,0,0,.25);transform:rotate(-2deg)}
+.lb2.kid .kd-rays{position:absolute;left:-30vmax;top:-30vmax;width:90vmax;height:90vmax;pointer-events:none;opacity:.22;background:repeating-conic-gradient(from 0deg,rgba(255,240,180,.9) 0deg 7deg,transparent 7deg 20deg);-webkit-mask:radial-gradient(circle,#000 0 25%,transparent 62%);mask:radial-gradient(circle,#000 0 25%,transparent 62%);animation:kdSpin 60s linear infinite}
+@keyframes kdSpin{to{transform:rotate(360deg)}}
+.lb2.kid .kd-clouds{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.lb2.kid .kd-clouds i{position:absolute;width:220px;height:70px;border-radius:70px;background:#fff;opacity:.85;filter:drop-shadow(0 8px 12px rgba(40,80,160,.25));animation:kdCloud linear infinite}
+.lb2.kid .kd-clouds i::before,.lb2.kid .kd-clouds i::after{content:"";position:absolute;background:#fff;border-radius:50%}
+.lb2.kid .kd-clouds i::before{width:100px;height:100px;left:34px;top:-48px}.lb2.kid .kd-clouds i::after{width:76px;height:76px;left:112px;top:-32px}
+.lb2.kid .kd-clouds .c0{top:6%;animation-duration:70s;animation-delay:-10s;transform:scale(.9)}
+.lb2.kid .kd-clouds .c1{top:22%;animation-duration:95s;animation-delay:-60s;transform:scale(.6);opacity:.7}
+.lb2.kid .kd-clouds .c2{top:3%;animation-duration:120s;animation-delay:-95s;transform:scale(1.15)}
+.lb2.kid .kd-clouds .c3{top:34%;animation-duration:85s;animation-delay:-30s;transform:scale(.5);opacity:.6}
+@keyframes kdCloud{from{left:-260px}to{left:105%}}
+.lb2.kid .kd-spark{position:absolute;inset:0;pointer-events:none}
+.lb2.kid .kd-spark b{position:absolute;width:14px;height:14px;background:radial-gradient(circle,#fff 0 18%,rgba(255,240,170,.9) 28%,transparent 60%);clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%);animation:kdTw 3s ease-in-out infinite;opacity:0}
+@keyframes kdTw{50%{opacity:1;transform:scale(1.4) rotate(45deg)}}
+.lb2.kid .lb-cap{padding:10px 16px;border-radius:18px;background:rgba(255,255,255,.9);box-shadow:0 10px 26px rgba(0,0,0,.2)}.lb2.kid .lb-cap b{color:#22407F}.lb2.kid .lb-cap span{color:#E58A1F}.lb2.kid .lb-cap i{display:none}
+@media (prefers-reduced-motion:reduce){.lb2.kid .kd-rays,.lb2.kid .kd-clouds i,.lb2.kid .kd-spark b{animation:none}}
+@media (max-height:560px){.lb2.kid .lb-kidlogo{font-size:56px}.lb2.kid .kd-clouds{display:none}}
