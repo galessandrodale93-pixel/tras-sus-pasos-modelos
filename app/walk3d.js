@@ -3782,6 +3782,8 @@ function buildHero3(av) {
   if (av.glow) glowApply(o, av.glow);
   const mixer = new THREE.AnimationMixer(o), act = new Proxy({}, { get: (c, k) => c[k] || (typeof k === 'string' && H3.clips[k] ? (c[k] = mixer.clipAction(H3.clips[k])) : undefined) });
   const idleK = h3idleFor(av, npc); act[idleK].play(); mixer.update(Math.random() * 3);
+  // arrodillados y en cuclillas: se baja el cuerpo hasta que la parte más baja toque el piso (si no, quedan flotando)
+  if (npc && /Kneel|Crouch/i.test(idleK)) { try { o.updateMatrixWorld(true); const v = new THREE.Vector3(); let mn = 1e9; o.traverse(m => { if (!m.isSkinnedMesh || !m.visible) return; m.skeleton.bones.forEach(b => b.updateMatrixWorld(true)); const P = m.geometry.attributes.position; for (let q = 0; q < P.count; q += 11) { v.fromBufferAttribute(P, q); m.applyBoneTransform(q, v); v.applyMatrix4(m.matrixWorld); if (v.y < mn) mn = v.y; } }); if (mn < 1e8 && Math.abs(mn) > .02) { const k = o.scale.y || 1; o.children.forEach(c => { if (!c.isLight && c !== lamp) c.position.y -= mn / k; }); } } catch (e) {} }
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(.36, 24), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: .3, depthWrite: false })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .02; o.add(shadow);
   o.userData = { hero: true, h3: { mixer, act, cur: idleK, idleK, bones, lamp, npc, headS: kid ? (npc ? 1.05 : 1.22) : 0, tagK: kid && !npc ? .74 : 1, kidP: kid && !npc ? kidProp(o, bones) : null } };
   if (npc) H3.npcs.push(o);
@@ -3967,7 +3969,10 @@ function wanderTick(dt) {
     const u = o.userData.h3; if (!u || !o.parent || o.parent !== S.scene || !o.visible) continue;
     let w = o.userData.wd;
     if (w === undefined) { w = o.userData.wd = (o.userData.stay || W_STILL.test(u.idleK || '') || !H3.clips.Walk_Loop || Math.random() > .75) ? null : { hx: o.position.x, hz: o.position.z, st: 0, t: 1 + Math.random() * 6, reg: null }; }
-    if (!w) continue;
+    if (!w) { if (u.baseQ) continue; const dq = (o.position.x - a.x) ** 2 + (o.position.z - a.z) ** 2; if (dq > 900) continue; // los que no caminan igual se mueven: miran alrededor, asienten y gesticulan
+      if ((o.userData.fid = (o.userData.fid ?? Math.random() * 6) - dt) > 0 || (u.talkT > -.4 && u.talkAge != null) || u.backT > 0) continue;
+      o.userData.fid = 5 + Math.random() * 8; const an = o.rotation.y + (Math.random() - .5) * 2.4, hy = o.position.y + 1.4 * (o.scale.y || 1);
+      u.talkTo = dq < 9 ? null : new THREE.Vector3(o.position.x + Math.sin(an) * 3, hy + (Math.random() - .5) * .6, o.position.z + Math.cos(an) * 3); u.talkT = 2 + Math.random() * 2.5; u.talkAge = 0; u.talkPh = u.talkPh ?? Math.random() * 6.28; u.gestT = .5 + Math.random() * 1.5; u.gest = null; u.nodT = .6 + Math.random() * 1.5; continue; }
     const dx0 = o.position.x - a.x, dz0 = o.position.z - a.z, dp = dx0 * dx0 + dz0 * dz0; if (dp > 1600) continue;
     const busy = (u.backT > 0) || (u.talkT > -.4 && u.talkAge != null), near = dp < 4.5;
     const toIdle = () => { const ia = u.act[u.idleK], cur = u.act[u.cur]; ia.reset(); ia.setLoop(THREE.LoopRepeat); ia.play(); if (cur && cur !== ia) ia.crossFadeFrom(cur, .35, false); u.cur = u.idleK; w.st = 0; w.t = 4 + Math.random() * 8; };
