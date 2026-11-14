@@ -998,7 +998,7 @@ body.v3on .hud *{pointer-events:none!important}
 @keyframes crSheen{0%,70%{background-position:130% 0}100%{background-position:-60% 0}}
 body:not(.v3on) .v3crest,body:has(#v3sheet:not([hidden])) .v3crest,body.v3lb .v3crest,body.v3talk .v3crest{display:none}
 body:not([data-branch="ados"]) .v3crest{--cb1:rgba(26,38,74,.93);--cb2:rgba(14,20,44,.93);border-color:rgba(255,210,94,.7)}
-.v3crest button{appearance:none;-webkit-appearance:none;border:0;margin:0;padding:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:where(.v3crest) :where(button){appearance:none;-webkit-appearance:none;border:0;margin:0;padding:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 .cr-med{position:relative;width:62px;height:62px;flex:none;display:grid!important;place-items:center;border-radius:50%}
 .cr-ring{position:absolute;inset:-4px;width:calc(100% + 8px);height:calc(100% + 8px);transform:rotate(-90deg);overflow:visible}
 .cr-ring .trk{fill:none;stroke:rgba(0,0,0,.55);stroke-width:7}
