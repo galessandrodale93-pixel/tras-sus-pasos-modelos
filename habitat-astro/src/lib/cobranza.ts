@@ -15,7 +15,7 @@ const save = auth.elevate(items.save);
 export const ALIAS = "habitatcfm";
 export const VENCE = 10;
 const MS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-type Alumno = { _id: string; title?: string; email?: string; activo?: boolean };
+type Alumno = { _id: string; title?: string; email?: string; activo?: boolean; cuota?: number; cuotaCon?: string };
 
 async function todos<T>(col: string): Promise<T[]> {
   const out: T[] = [];
@@ -35,6 +35,7 @@ const PASO: Record<number, { tipo: string; asunto: (m: string) => string; titulo
   11: { tipo: "vencido", asunto: (m) => "Te falta el pago de la cuota de " + m, titulo: "Te falta el pago de este mes", cuerpo: (n, m, d) => `${p(`Hola ${n}! Todavía no registramos el pago de tu cuota de <b>${m}</b>, que vencía el ${VENCE}. Pasado el vencimiento la cuota puede tener un recargo, así que te pedimos ponerte al día lo antes posible.`)}${d}${p("Si estás pasando por una dificultad, respondé este mail y lo hablamos: queremos acompañarte.")}` },
   15: { tipo: "ultimo", asunto: (m) => "Último aviso: cuota de " + m + " pendiente", titulo: "Seguimos esperando tu pago", cuerpo: (n, m, d) => `${p(`Hola ${n}! Tu cuota de <b>${m}</b> sigue pendiente. Pasado el vencimiento puede tener un recargo. Por favor, ponete al día esta semana o escribinos si necesitás coordinar algo.`)}${d}` },
 };
+const comoPagarDe = (a: Alumno) => comoPagar.replace("al alias", (Number(a.cuota) ? `<b>$ ${Number(a.cuota).toLocaleString("es-AR")}</b>${a.cuotaCon ? " (compartida con " + esc(String(a.cuotaCon).split(/\s+/)[0]) + ")" : ""} al alias` : "al alias"));
 const comoPagar = `<div style="background:#fff;border:1px solid #e6dccb;border-radius:14px;padding:14px 16px;margin:6px 0 14px"><p style="font:700 15px Arial;margin:0 0 6px">Cómo pagar</p><p style="font:16px/1.6 Arial;margin:0">Transferí desde tu banco o Mercado Pago al alias <b>${ALIAS}</b> y respondé este mail con el comprobante.</p></div>`;
 
 export async function cobranzaDiario(hoy: string, dry: boolean, remitente: string) {
@@ -53,7 +54,7 @@ export async function cobranzaDiario(hoy: string, dry: boolean, remitente: strin
     if (dry) { ok++; continue; }
     const deuda = imp.length > 1 ? `${p("Lo que figura pendiente:")}<ul style="font:16px/1.7 Arial;margin:0 0 12px">${imp.map((x) => "<li>" + esc(x) + "</li>").join("")}</ul>` : "";
     const nom = esc(String(a.title || "").split(/\s+/)[0]);
-    const html = marco("Habitat · Tu cuota", paso.titulo, `${paso.cuerpo(nom, mesTxt, deuda)}${comoPagar}<p style="margin:18px 0"><a href="https://www.habitat-cfm.org/campus.html#cuotaSec" style="background:#10251d;color:#fbf8f2;font:700 15px Arial;padding:12px 20px;border-radius:999px;text-decoration:none">Ver mi cuota en el Campus</a></p>`, `<a href="https://www.habitat-cfm.org/campus.html" style="color:#b8904f">habitat-cfm.org/campus</a>`);
+    const html = marco("Habitat · Tu cuota", paso.titulo, `${paso.cuerpo(nom, mesTxt, deuda)}${comoPagarDe(a)}<p style="margin:18px 0"><a href="https://www.habitat-cfm.org/campus.html#cuotaSec" style="background:#10251d;color:#fbf8f2;font:700 15px Arial;padding:12px 20px;border-radius:999px;text-decoration:none">Ver mi cuota en el Campus</a></p>`, `<a href="https://www.habitat-cfm.org/campus.html" style="color:#b8904f">habitat-cfm.org/campus</a>`);
     const r = await mandar(a.email, paso.asunto(mesTxt), html, remitente, "Habitat CFM");
     if (r.ok) { ok++; await save("FinAvisos", { _id: hoyMes + "|" + paso.tipo + "|" + a._id, mes: hoyMes, tipo: paso.tipo, alumnoId: a._id, fecha: hoy }); }
   }
