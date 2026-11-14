@@ -506,7 +506,8 @@ function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
   const terrain = new THREE.Mesh(geo, groundMat(Q, !!KK)); terrain.receiveShadow = true; scene.add(terrain); splitZ(scene, terrain, 64);
   // montañas: el mismo terreno sigue y se levanta en cordones continuos (sin piedras sueltas), con roca según la pendiente
   const MW = 140, mtnH = (x, z) => { const ax = Math.abs(x), u = Math.max(0, (ax - X1) / MW), e = hAt(Math.sign(x) * X1, z), r = 1 - Math.abs(vnoise(x * .018 + 11, z * .014) * 2 - 1), n = fbm(x * .011 + 5, z * .009), rr = 1 - Math.abs(vnoise(x * .05 - 3, z * .045) * 2 - 1);
-    return e + sstep(0, .55, u) * (10 + n * 34 + r * r * 30 + rr * 6) * (KK ? .55 : 1) - sstep(.85, 1, u) * 4; };
+    let fj = 0; for (const b of WATER.basins) { if (!b.sea || Math.sign(b.x) !== Math.sign(x)) continue; const w = b.r * .8 * (1 - sstep(.15, .7, u)) + 4, dz = Math.abs(z - b.z + Math.sin(u * 7) * 9); fj = Math.max(fj, 1 - sstep(w * .55, w, dz)); } /* el mar entra entre los cerros como un caudal */
+    return e + sstep(0, .55, u) * (10 + n * 34 + r * r * 30 + rr * 6) * (KK ? .55 : 1) * (1 - fj) - sstep(.85, 1, u) * 4 * (1 - fj); };
   [-1, 1].forEach(sd => { const mg = new THREE.PlaneGeometry(MW, L, Math.round(MW / 3.5), Math.round(L / 3.5)); mg.rotateX(-Math.PI / 2); mg.translate(sd * (X1 + MW / 2), 0, (Z0 + Z1) / 2);
     const mp = mg.attributes.position, mc = new Float32Array(mp.count * 3), ms = new Float32Array(mp.count * 4);
     for (let i = 0; i < mp.count; i++) { const x = mp.getX(i), z = mp.getZ(i), xx = Math.abs(x - sd * X1) < .01 ? sd * X1 : x, h = Math.abs(x - sd * X1) < .01 ? hAt(sd * X1, z) : mtnH(xx, z); mp.setY(i, h);
@@ -2301,9 +2302,9 @@ function nazaretMore(scene, p, yAt, poiProp, hx, HW) {
   townFolk(scene, p, yAt, HW, 9, 13, 1919, [[p.x, p.z, 1.8]]);
 }
 // el lago de Galilea: agua con olas suaves, orilla, muelle, barcas y la casa del pescador
-function buildLake(scene, cx, cz, side, hx, yAt) {
+function buildLake(scene, cx, cz, side, hx, yAt, HWm) {
   const R = 30, y0 = WATER.WL - .42;
-  const uni = { t: { value: 0 } }; waterLake(scene, cx, cz, R * 1.2, hx, yAt); waterLake(scene, cx + side * 78, cz - 8, 92, hx, yAt);
+  const uni = { t: { value: 0 } }; waterLake(scene, cx, cz, R * 1.2, hx, yAt); waterLake(scene, cx + side * 78, cz - 8, 96, hx, (x, z) => HWm && HWm.mtnH && Math.abs(x) > HWm.X1 ? HWm.mtnH(x, z) : yAt(x, z));
   // muelle de tablas que entra al agua
   const dock = new THREE.Group(), dx = cx + side * (R - 3.5), len = 12; for (let i = 0; i < 24; i++) bx(.48, .1, 2.2, WOODL(), -len / 2 + i * .5, 0, 0, dock).rotation.y = (i % 3 - 1) * .02; for (let i = 0; i < 7; i++) [-1, 1].forEach(s => cy(.1, .1, 1.6, WOOD(), -len / 2 + i * 2, -.6, s * 1.05, dock, 7));
   dock.position.set(dx, y0 + .62, cz + 4); scene.add(dock); const df = { x0: dx - len / 2, x1: dx + len / 2, z0: cz + 4 - 1.1, z1: cz + 4 + 1.1, y: y0 + .67 }; S.floors.push(df);
@@ -2374,7 +2375,7 @@ function buildTowns(scene, g, hx, HW, pois) {
     if (p.k === 'pastores') { try { pastoresScene(scene, p, yAt, poiProp, hx, HW); } catch (e) { console.warn('pastores', e); } }
     if (p.k === 'desert') { try { desertScene(scene, p, yAt, poiProp, hx, HW); } catch (e) { console.warn('desierto', e); } }
     if (p.k === 'feeding') feedingScene(scene, p, yAt, poiProp, hx, HW);
-    if (p.k === 'lake') { S.lake = buildLake(scene, p.x, p.z, p.side, hx, yAt); const H = bigHouse('pescador', hx), hx2 = p.x - p.side * 47, hz = p.z - 6; placeHouse(scene, H, hx2, hz, p.side > 0 ? Math.PI / 2 : -Math.PI / 2, yAt(hx2, hz)); if (hx) try { const q = { x: hx2, z: hz + 4 }; townLayout(scene, q, yAt, HW, { seed: 4141, n: 7, r: 20, plaza: 7, gap: 2.2, avoid: [[hx2, hz, 7.5], [p.x, p.z, 44]], house: (Rr) => ({ upper: Rr() < .25, h: 2.9 + Rr() * .5, yard: Rr() < .3 }) }); townFolk(scene, q, yAt, HW, 7, 14, 4142, [[hx2, hz, 6]]); } catch (e) { console.warn('aldea pescadores', e); } }
+    if (p.k === 'lake') { S.lake = buildLake(scene, p.x, p.z, p.side, hx, yAt, HW); const H = bigHouse('pescador', hx), hx2 = p.x - p.side * 47, hz = p.z - 6; placeHouse(scene, H, hx2, hz, p.side > 0 ? Math.PI / 2 : -Math.PI / 2, yAt(hx2, hz)); if (hx) try { const q = { x: hx2, z: hz + 4 }; townLayout(scene, q, yAt, HW, { seed: 4141, n: 7, r: 20, plaza: 7, gap: 2.2, avoid: [[hx2, hz, 7.5], [p.x, p.z, 44]], house: (Rr) => ({ upper: Rr() < .25, h: 2.9 + Rr() * .5, yard: Rr() < .3 }) }); townFolk(scene, q, yAt, HW, 7, 14, 4142, [[hx2, hz, 6]]); } catch (e) { console.warn('aldea pescadores', e); } }
   }
 }
 /* destino marcado en el mapa: columna de luz y flecha en el piso */
