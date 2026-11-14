@@ -1857,6 +1857,7 @@ function tombScene(scene, p, yAt, poiProp, risen, hx, HW) {
   { const [x1, z1] = W(-2.6, 3), [x2, z2] = W(-3.1, 3.4), [x3, z3] = W(2.4, 2.8); poiProp('ceramic_pot', [{ x: x1, y: yAt(x1, z1), z: z1, ry: R() * 6, s: 1.3 }], { shadow: true, nocol: 1 }); poiProp('jug_01', [{ x: x2, y: yAt(x2, z2), z: z2, ry: 1, s: 2.6 }], { shadow: true, nocol: 1 }); poiProp('wicker_basket_02', [{ x: x3, y: yAt(x3, z3), z: z3, ry: 2, s: 1.8, v: 0 }], { shadow: true, nocol: 1 }); }
   { const [x, z] = W(-4.6, 7.2), rk = new THREE.Group(); const h = cy(.025, .03, 1.4, tm('tool', '#7A5A3A'), 0, .7, 0, rk, 6); h.rotation.z = .5; bx(.25, .03, .18, tm('toolm', '#6A6A6A', { metalness: .5, roughness: .5 }), -.34, .1, 0, rk); rk.position.set(x, yAt(x, z), z); scene.add(rk); }
   [[-6.5, 1], [6.6, 1.5], [-5, 12], [5.4, 11]].forEach(([u, v], i) => { const [x, z] = W(u, v); poiProp('namaqualand_boulder_02', [{ x, y: yAt(x, z) - .2, z, ry: i * 1.7, s: .8 + i * .12 }], { shadow: true, col: .8 }); });
+  try { tombLife(scene, p, yAt, W, th, risen, hx, stone); } catch (e) { console.warn('tumba', e); }
   S.rooms.push({ x0: p.x - 15, x1: p.x + 15, z0: p.z - 15, z1: p.z + 15, trade: risen ? 'tumbavacia' : 'tumba', roof: [], open: true, y }); const lb = textSprite(p.name, hx); lb.scale.multiplyScalar(1.2); lb.position.set(p.x, y + 8.4, p.z); scene.add(lb);
 }
 // ---------- Getsemaní: un olivar grande y tupido, con pirca, sendero de lajas entre los olivos, el lagar de aceite y la roca donde Jesús oró ----------
@@ -2300,6 +2301,28 @@ function gardenLife(scene, p, yAt, W, rx, rz, dis, hx) {
   { const [ex, ez] = W(-30, 2); for (let i = 0; i < 5; i++) { const x = ex - p.side * (i % 2) * 1.4, z = ez + (i - 2) * 1.3, y = yAt(x, z), L = glowSpr('#FF9A3C', 2.6, .75), f = new THREE.Mesh(new THREE.SphereGeometry(.13, 8, 6), new THREE.MeshBasicMaterial({ color: '#FFC46A' })); L.position.set(x, y + 1.9, z); f.position.copy(L.position); scene.add(L, f); G2.torches.push({ L, f, x0: x, z0: z, y, ph: i * 1.3 }); }
     S.lore.push({ x: ex, z: ez, r: 4, label: 'Mirar las antorchas', info: ['Llegan con antorchas', 'Judas llegó con una tropa de soldados y guardias, con antorchas, lámparas y armas. Jesús salió a su encuentro y les dijo: «Yo soy».', 'Juan 18:3-5'] }); }
 }
+/* la tumba: antes, las mujeres sentadas mirando y la guardia; después, el ángel sobre la piedra, los guardias caídos y las mujeres que llegan con perfumes */
+function tombLife(scene, p, yAt, W, th, risen, hx, stone) {
+  const T = S.tomb = { t: 0, p, risen, glow: null, beam: null }, put = (o, u, v, face) => { const [x, z] = W(u, v); o.position.set(x, yAt(x, z), z); const [fx, fz] = face || W(0, 0); o.rotation.y = Math.atan2(fx - x, fz - z); o.userData.stay = 1; scene.add(o); S.cols.push({ x0: x - .4, x1: x + .4, z0: z - .4, z1: z + .4, cx: x, cz: z, r: .38 }); return o; };
+  const sold = a => buildHeroAvatar({ g: 'chico', age: 30, skin: '#B98A62', hair: '#2A1B14', outfit: '#7A2A22', anim: a });
+  const wom = (a, i) => buildHeroAvatar({ g: 'chica', age: 30 + i * 8, skin: ['#C99A72', '#D6A57C', '#B98A62'][i], hair: ['#2A1B14', '#4A2E1C', '#1E1410'][i], outfit: ['#5A4A6A', '#7A5A44', '#4A5A6A'][i], anim: a });
+  if (!risen) {
+    put(sold(['Sword_Idle', 'Idle_Loop']), -2.6, 3.2); put(sold(['Sword_Idle', 'Idle_Loop']), 2.7, 3.4);
+    put(wom(['M_Sad_Idle', 'Sitting_Idle_Loop'], 0), -3.2, 9.5); put(wom(['Sitting_Idle_Loop', 'M_Sad_Idle'], 1), -1.8, 10.2);
+    const [lx, lz] = W(0, 2.2); S.lore.push({ x: lx, z: lz, r: 2.8, label: 'Mirar la piedra', info: ['La tumba sellada', 'José de Arimatea puso el cuerpo de Jesús en su tumba nueva, cavada en la roca, e hizo rodar una gran piedra a la entrada. Pilato mandó sellarla y poner una guardia.', 'Mateo 27:59-66'] });
+    { const [x, z] = W(-2.5, 9.8); S.lore.push({ x, z, r: 2.6, label: 'Acompañar a las mujeres', info: ['Las que se quedaron', 'María Magdalena y la otra María se quedaron sentadas frente al sepulcro, mirando dónde lo habían puesto.', 'Mateo 27:61'] }); }
+  } else {
+    { const sx = stone.position.x; const ag = buildHeroAvatar({ g: 'chico', age: 26, skin: '#F2DCC4', hair: '#E8D8B0', outfit: '#FAF6EA', anim: ['Sitting_Idle_Loop', 'Idle_Loop'] }); const [x, z] = W(sx, 1.3); ag.position.set(x, yAt(x, z) + 1.55, z); ag.rotation.y = th; ag.userData.stay = 1; scene.add(ag);
+      const gl = glowSpr('#FFF6DA', 4.2, .55); gl.position.set(x, yAt(x, z) + 2.4, z); scene.add(gl); T.glow = gl;
+      const bm = new THREE.Mesh(new THREE.CylinderGeometry(.8, 2.2, 34, 18, 1, true), new THREE.MeshBasicMaterial({ color: '#FFF4D2', transparent: true, opacity: .12, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); bm.position.set(x, yAt(x, z) + 17, z); scene.add(bm); T.beam = bm;
+      S.lore.push({ x, z: z, r: 3, label: 'Mirar al ángel', dur: 6, info: ['¡No está aquí!', 'Un ángel del Señor removió la piedra y se sentó sobre ella; su aspecto era como un relámpago. Les dijo a las mujeres: «No tengan miedo. No está aquí, porque ha resucitado, como dijo».', 'Mateo 28:2-6'] }); }
+    { const a = put(sold(['M_Laying_Breathless', 'Death01']), -3.4, 3.6, W(-6, 3)), b = put(sold(['M_Laying_Breathless', 'Death01']), 3.1, 4.4, W(6, 6)); const [x, z] = W(0, 4); S.lore.push({ x, z, r: 3.2, label: 'Mirar a los guardias', info: ['Como muertos', 'Los guardias temblaron de miedo ante el ángel y quedaron como muertos.', 'Mateo 28:4'] }); }
+    put(wom(['M_Kneeling_Idle', 'Fixing_Kneeling'], 0), -1.4, 6.2); put(wom(['M_Thankful', 'M_Praying'], 1), .2, 6.9); put(wom(['M_Crying', 'M_Sad_Idle'], 2), 1.6, 6.4);
+    { const [x, z] = W(0, 6.5); S.lore.push({ x, z, r: 2.6, label: 'Hablar con las mujeres', info: ['Muy de mañana', 'El primer día de la semana, al salir el sol, María Magdalena, María y Salomé fueron a la tumba con perfumes. Se preguntaban quién les iba a mover la piedra, y la encontraron ya corrida.', 'Marcos 16:1-4'] }); }
+    { const [x, z] = W(0, .9); S.lore.push({ x, z, r: 2.2, label: 'Mirar adentro', info: ['Los lienzos', 'Pedro entró a la tumba y vio los lienzos puestos allí, y el sudario que había estado sobre la cabeza de Jesús, enrollado aparte.', 'Juan 20:6-7'] }); }
+  }
+}
+function tombTick(dt) { const T = S.tomb; T.t += dt; if (T.glow) T.glow.material.opacity = .45 + Math.sin(T.t * 1.4) * .12; if (T.beam) { const on = S.lore.some(l => l.label === 'Mirar al ángel' && l.on); T.beam.material.opacity += ((on ? .4 : .1 + Math.sin(T.t * .8) * .03) - T.beam.material.opacity) * Math.min(1, dt * 2); } }
 function gardenTick(dt) { const G2 = S.garden, a = S.av.position; if (Math.abs(a.z - G2.p.z) > 110) return; G2.t += dt; const t = G2.t;
   if (G2.flies) { const f = G2.flies, P = f.m.geometry.attributes.position; for (let i = 0; i < f.n; i++) { const k = t * .4 + f.ph[i]; P.setXYZ(i, f.base[i * 3] + Math.sin(k) * .9, f.base[i * 3 + 1] + Math.sin(k * 1.7) * .35, f.base[i * 3 + 2] + Math.cos(k * .8) * .9); } P.needsUpdate = true; f.m.material.opacity = .6 + Math.sin(t * 2.3) * .3; }
   if (G2.beam) { const on = S.lore.some(l => l.label === 'Orar en la roca' && l.on); G2.beam.material.opacity += ((on ? .5 : .07 + Math.sin(t * .9) * .03) - G2.beam.material.opacity) * Math.min(1, dt * 2); }
@@ -2405,7 +2428,7 @@ function roomTick(dt) {
   if (inR !== S.inRoom) { if (inR && !S.inRoom) S.camKeep = { d: S.camDist, p: S.camPitch }; if (!inR && S.camKeep) { S.camDist = S.camKeep.d; S.camPitch = S.camKeep.p; S.camKeep = null; } S.inRoom = inR; }
   if (inR) { S.camDist += (Math.min(S.camKeep ? S.camKeep.d : 6, 5.2) - S.camDist) * Math.min(1, dt * 3); S.camPitch += (Math.max(S.camKeep ? S.camKeep.p : .4, .95) - S.camPitch) * Math.min(1, dt * 3); }
   const here = inR || openR; if (here && here.trade && TRADE_INFO[here.trade]) { const p = G().P(); p.seen = p.seen || {}; if (!p.seen[here.trade]) { p.seen[here.trade] = 1; G().save(); placeCard(TRADE_INFO[here.trade]); } }
-  if (S.lore && S.lore.length) loreTick(dt); if (S.desert) desertTick(dt); if (S.garden) gardenTick(dt);
+  if (S.lore && S.lore.length) loreTick(dt); if (S.desert) desertTick(dt); if (S.garden) gardenTick(dt); if (S.tomb) tombTick(dt);
   if (S.lake) { S.lake.uni.t.value += dt; S.lake.boats.forEach((b, i) => { b.position.y = b.userData.y0 + Math.sin(S.t * 1.2 + i) * .06; b.rotation.z = Math.sin(S.t * .9 + i * 2) * .04; }); (S.lake.fishers || []).forEach(f => { f.t -= dt; const n = f.net;
     if (f.k < 0 && f.t <= 0) { h3npcPlay(f.o, ['M_Throw', 'M_Picking_Up'], 2.2); f.k = 0; const wp = new THREE.Vector3(); f.o.getWorldPosition(wp); const q = f.o.getWorldQuaternion(new THREE.Quaternion()), fw = new THREE.Vector3(0, 0, 1).applyQuaternion(q); n.position.set(wp.x + fw.x * 3.2, WATER.WL + .03, wp.z + fw.z * 3.2); n.visible = true; }
     if (f.k >= 0) { f.k += dt; const e = f.k < .7 ? 0 : Math.min(1, (f.k - .7) / .6); n.scale.setScalar(.2 + e * 2.2); n.material.opacity = f.k < 5 ? Math.min(.85, e) : Math.max(0, .85 - (f.k - 5) * .6); n.position.y = WATER.WL + .03 - Math.max(0, f.k - 3) * .05; if (f.k > 6.5) { n.visible = false; f.k = -1; f.t = 9 + Math.random() * 8; h3npcPlay(f.o, ['M_Picking_Up', 'M_Lifting_Object'], 2); } } }); }
@@ -2420,7 +2443,7 @@ function placeCard(info) {
 }
 // arma todo: Nazaret con sus talleres, el templo y el lago (si existe la etapa de Galilea)
 function buildTowns(scene, g, hx, HW, pois) {
-  S.cols = HCOLS; HCOLS = []; S.lore = []; S.desert = null; S.floors = []; S.ramps = []; S.rooms = []; FLORA.poiProps = []; const poiProp = (id, list, o) => FLORA.poiProps.push([id, list, o]); const yAt = (x, z) => HW ? HW.hAt(x, z) : 0;
+  S.cols = HCOLS; HCOLS = []; S.lore = []; S.desert = null; S.garden = null; S.tomb = null; S.floors = []; S.ramps = []; S.rooms = []; FLORA.poiProps = []; const poiProp = (id, list, o) => FLORA.poiProps.push([id, list, o]); const yAt = (x, z) => HW ? HW.hAt(x, z) : 0;
   for (const p of pois) {
     if (p.k === 'taller') { // Nazaret: cuatro talleres alrededor de una plaza con pozo
       const pv = new THREE.Mesh(new THREE.CircleGeometry(15, 40), new THREE.MeshStandardMaterial({ map: townTex().pave, color: hx ? '#BFAE8E' : '#FFFFFF', roughness: 1 })); pv.rotation.x = -Math.PI / 2; pv.position.set(p.x, yAt(p.x, p.z) + .03, p.z); pv.receiveShadow = true; scene.add(pv);
@@ -3132,7 +3155,9 @@ const mixC = (a, b, k) => { if (!_c1) { _c1 = new THREE.Color(); _c2 = new THREE
 function dayNow() { const n = Date.now(), i = Math.floor(n / DAYP) % 2, f = n % DAYP, k = f < DAYX ? f / DAYX : 1; return { i, prev: (i + 1) % 2, k: k * k * (3 - 2 * k) }; }
 /* la noche de Getsemaní: en Hero, al entrar al huerto cae la noche (luna, estrellas, luz azulada) y al salir vuelve el día */
 const NIGHT = { top: '#060A1C', mid: '#141C3C', hor: '#2C3260', sunC: '#C8D4FF', dir: [.32, .5, -.8], sunL: '#8EA4E6', sI: .75, hs: '#4A5C9C', hg: '#15141C', hI: .42, fog: '#161C36', fd: .011, st: 1, ex: .92 };
-function nightTarget() { if (!S.pois) return 0; const a = S.av.position; for (const p of S.pois) if (p.k === 'garden') { const d = Math.hypot(a.x - p.x, a.z - p.z); return (1 - sstep(28, 44, d)) * (S.hx ? 1 : .78); } return 0; } /* en Kids, un anochecer suave: azul lavanda, sin oscuridad */
+const DAWN = { top: '#2E4486', mid: '#B9839E', hor: '#FFAE74', sunC: '#FFC48A', dir: [.62, .07, -.78], sunL: '#FFB078', sI: 2.1, hs: '#B4A4D2', hg: '#4A3A30', hI: .62, fog: '#D49A88', fd: .0085, st: .12, ex: 1.02 };
+const DAWNK = { top: '#8FA0E0', bot: '#FFC9A6', sun: '#FFC08A', sI: 1.2, hs: '#F2D2E0', hg: '#B49070', hI: .9, fog: '#F6CDB8', st: .05, kb: .12 };
+function nightTarget() { if (!S.pois) return 0; const a = S.av.position; for (const p of S.pois) if (p.k === 'garden' || p.k === 'tomb') { const d = Math.hypot(a.x - p.x, a.z - p.z), t = 1 - sstep(p.k === 'tomb' ? 20 : 28, p.k === 'tomb' ? 36 : 44, d); if (t > 0) { const dawn = p.k === 'tomb'; S.moodP = dawn ? DAWN : NIGHT; S.moodK = dawn ? DAWNK : NIGHTK; return t * (S.hx ? 1 : dawn ? .9 : .78); } } return 0; } /* Getsemaní de noche; la tumba al amanecer (Marcos 16:2) */ /* en Kids, un anochecer suave: azul lavanda, sin oscuridad */
 const NIGHTK = { top: '#3A4A8E', bot: '#B39AC8', sun: '#B9C4FF', sI: .5, hs: '#9EA8E6', hg: '#4A4058', hI: .62, fog: '#7E7AA8' };
 function dayTick(dt) {
   if (!S) return; { const now = performance.now(), rd = Math.min(.25, (now - (S.nkT || now)) / 1000); S.nkT = now; const t = nightTarget(); S.nk = (S.nk || 0) + (t - (S.nk || 0)) * Math.min(1, rd * 1.1); if (S.nk < .003 && !t) S.nk = 0; if (S.nk > .997 && t === 1) S.nk = 1; }
@@ -3150,8 +3175,8 @@ function dayTick(dt) {
     S.W.hemi.color.copy(mixC(A.hs, B.hs, k)); S.W.hemi.groundColor.copy(mixC(A.hg, B.hg, k)); S.W.hemi.intensity = A.hI + (B.hI - A.hI) * k;
     S.scene.fog.color.copy(mixC(A.fog, B.fog, k)); S.scene.fog.density = A.fd + (B.fd - A.fd) * k; u.gnd.value.copy(S.scene.fog.color); if (S.scene.environment) S.W.hemi.intensity *= .6;
     S.renderer.toneMappingExposure = A.ex + (B.ex - A.ex) * k;
-    const nk = S.nk || 0; u.kb.value = 1 - nk * .78;
-    if (nk > 0) { const N = NIGHT, c = new THREE.Color(); ['top', 'mid', 'hor', 'sunC'].forEach(n => u[n].value.lerp(c.set(N[n]), nk)); u.stars.value += (N.st - u.stars.value) * nk;
+    const nk = S.nk || 0, N = S.moodP || NIGHT; u.kb.value = 1 - nk * (N === NIGHT ? .78 : .25);
+    if (nk > 0) { c = new THREE.Color(); ['top', 'mid', 'hor', 'sunC'].forEach(n => u[n].value.lerp(c.set(N[n]), nk)); u.stars.value += (N.st - u.stars.value) * nk;
       S.W.sunDir.lerp(new THREE.Vector3(N.dir[0], N.dir[1], N.dir[2]).normalize(), nk).normalize(); S.W.sunL.color.lerp(c.set(N.sunL), nk); S.W.sunL.intensity += (N.sI - S.W.sunL.intensity) * nk;
       S.W.hemi.color.lerp(c.set(N.hs), nk); S.W.hemi.groundColor.lerp(c.set(N.hg), nk); S.W.hemi.intensity += (N.hI - S.W.hemi.intensity) * nk;
       S.scene.fog.color.lerp(c.set(N.fog), nk); S.scene.fog.density += (N.fd - S.scene.fog.density) * nk; u.gnd.value.copy(S.scene.fog.color); S.renderer.toneMappingExposure += (N.ex - S.renderer.toneMappingExposure) * nk;
@@ -3162,8 +3187,8 @@ function dayTick(dt) {
     L.sun.color.copy(mixC(A.sun, B.sun, k)); L.sun.intensity = A.sI + (B.sI - A.sI) * k;
     if (L.hemi) { L.hemi.color.copy(mixC(A.hs, B.hs, k)); L.hemi.groundColor.copy(mixC(A.hg, B.hg, k)); L.hemi.intensity = A.hI + (B.hI - A.hI) * k; }
     if (S.scene.fog) S.scene.fog.color.copy(mixC(A.fog, B.fog, k));
-    const nk = S.nk || 0; if (S.W && S.W.sky) { const u = S.W.sky.material.uniforms; u.kb.value = 1.12 * (1 - nk * .55); u.stars.value = nk; }
-    if (nk > 0) { const N = NIGHTK, c = new THREE.Color(), t2 = '#' + mixC(top, N.top, nk).getHexString(), b2 = '#' + mixC(bot, N.bot, nk).getHexString(), g2 = x.createLinearGradient(0, 0, 0, 256); g2.addColorStop(0, t2); g2.addColorStop(.62, b2); g2.addColorStop(1, b2); x.fillStyle = g2; x.fillRect(0, 0, 4, 256); L.tex.needsUpdate = true;
+    const nk = S.nk || 0, N = S.moodK || NIGHTK; if (S.W && S.W.sky) { const u = S.W.sky.material.uniforms; u.kb.value = 1.12 * (1 - nk * (N.kb != null ? N.kb : .55)); u.stars.value = nk * (N.st != null ? N.st : 1); }
+    if (nk > 0) { c = new THREE.Color(), t2 = '#' + mixC(top, N.top, nk).getHexString(), b2 = '#' + mixC(bot, N.bot, nk).getHexString(), g2 = x.createLinearGradient(0, 0, 0, 256); g2.addColorStop(0, t2); g2.addColorStop(.62, b2); g2.addColorStop(1, b2); x.fillStyle = g2; x.fillRect(0, 0, 4, 256); L.tex.needsUpdate = true;
       L.sun.color.lerp(c.set(N.sun), nk); L.sun.intensity += (N.sI - L.sun.intensity) * nk; if (L.hemi) { L.hemi.color.lerp(c.set(N.hs), nk); L.hemi.groundColor.lerp(c.set(N.hg), nk); L.hemi.intensity += (N.hI - L.hemi.intensity) * nk; } if (S.scene.fog) S.scene.fog.color.lerp(c.set(N.fog), nk); }
     if (S.W && S.W.sky) { S.W.sky.material.uniforms.gnd.value.copy(S.scene.fog.color); if (S.scene.environment && L.hemi) L.hemi.intensity *= .6; }
   }
