@@ -4866,10 +4866,10 @@ export async function avatarPreview(host, getLook) {
   await heroLoad(); if (!H3.ok) return null;
   const cv = document.createElement('canvas'); cv.className = 'av3d'; host.appendChild(cv);
   const low = qEarly() <= 0, r = new THREE.WebGLRenderer({ canvas: cv, antialias: !low, alpha: true, preserveDrawingBuffer: true });
-  r.setPixelRatio(Math.min(low ? 1 : 2, devicePixelRatio || 1)); r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.05;
-  const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#FFF4E2', '#5E4E3E', 2.3)); const dl = new THREE.DirectionalLight('#FFFFFF', 2.2); dl.position.set(1.5, 3, 2.5); sc.add(dl); const rim = new THREE.DirectionalLight('#FFD9A0', 1.2); rim.position.set(-2, 2, -2); sc.add(rim);
+  r.setPixelRatio(Math.min(low ? 1 : 2, devicePixelRatio || 1)); r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.2;
+  const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#FFF4E2', '#6E5E4E', 2.9)); const dl = new THREE.DirectionalLight('#FFFFFF', 2.2); dl.position.set(1.5, 3, 2.5); sc.add(dl); const rim = new THREE.DirectionalLight('#FFD9A0', 1.2); rim.position.set(-2, 2, -2); sc.add(rim);
   const cam = new THREE.PerspectiveCamera(28, 1, .05, 30), clk = new THREE.Clock(); let av = null, key = '', alive = true, yaw = .35, spin = 1, drag = null, h = 1.7;
-  const fit = () => { h = 1.75 * av.scale.y; cam.position.set(0, h * .56, h * 2.55); cam.lookAt(0, h * .5, 0); };
+  const fit = () => { h = 1.75 * av.scale.y; cam.position.set(0, h * .58, h * 2.05); cam.lookAt(0, h * .52, 0); };
   const set = () => { const look = Object.assign({}, getLook(), { gear: {}, ins: [], glow: 0 }); delete look.face; const k = JSON.stringify(look); if (k === key) return; key = k; if (av) sc.remove(av); av = buildHero3(look); const u = av.userData.h3; if (u.lamp) u.lamp.visible = false; av.rotation.y = yaw; sc.add(av); fit(); };
   cv.addEventListener('pointerdown', e => { drag = e.clientX; spin = 0; cv.setPointerCapture(e.pointerId); });
   cv.addEventListener('pointermove', e => { if (drag == null) return; yaw += (e.clientX - drag) * .012; drag = e.clientX; });
@@ -4881,7 +4881,7 @@ export async function avatarPreview(host, getLook) {
   };
   const stop = () => { alive = false; try { r.dispose(); } catch (e) {} cv.remove(); };
   // foto de la cara (cuadrada, chica) para el perfil y el HUD
-  const face = () => { try { if (!av) return ''; const b = av.userData.h3.bones.Head, p = new THREE.Vector3(); av.rotation.y = 0; av.updateMatrixWorld(true); b.getWorldPosition(p); const c2 = new THREE.PerspectiveCamera(24, 1, .02, 10); c2.position.set(p.x, p.y + .03 * av.scale.y, p.z + .62 * av.scale.y); c2.lookAt(p.x, p.y + .02 * av.scale.y, p.z); const sz = r.getSize(new THREE.Vector2()), pr = r.getPixelRatio(); r.setPixelRatio(1); r.setSize(96, 96, false); r.render(sc, c2); const u = cv.toDataURL('image/webp', .82); r.setPixelRatio(pr); r.setSize(sz.x, sz.y, false); av.rotation.y = yaw; return u.length < 14000 ? u : ''; } catch (e) { return ''; } };
+  const face = () => { try { if (!av) return ''; const b = av.userData.h3.bones.Head, p = new THREE.Vector3(); av.rotation.y = 0; av.updateMatrixWorld(true); b.getWorldPosition(p); const c2 = new THREE.PerspectiveCamera(24, 1, .02, 10); c2.position.set(p.x, p.y + .1 * av.scale.y, p.z + .9 * av.scale.y); c2.lookAt(p.x, p.y + .09 * av.scale.y, p.z); const sz = r.getSize(new THREE.Vector2()), pr = r.getPixelRatio(); r.setPixelRatio(1); r.setSize(96, 96, false); r.render(sc, c2); const u = cv.toDataURL('image/webp', .82); r.setPixelRatio(pr); r.setSize(sz.x, sz.y, false); av.rotation.y = yaw; return u.length < 14000 ? u : ''; } catch (e) { return ''; } };
   set(); loop();
   return { update: set, face, stop };
 }
