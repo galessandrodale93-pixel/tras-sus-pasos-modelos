@@ -1187,10 +1187,19 @@ function crestSync() {
   if (CR.lv != null && +lv > +CR.lv) fx('lvup'); else if (CR.xp != null && pc > CR.xp) fx('gain');
   CR.lv = lv; CR.xp = pc;
 }
+/* Kids también cuenta los días de camino (como Hero), al lado del Mapa */
+const KD = { t0: 0 };
+function kidDay() {
+  if (!S || S.sv || !document.body.classList.contains('v3on')) return; const box = document.querySelector('.v3mmbox'); if (!box) return;
+  const p = G().P(); if (!p) return; const now = performance.now(); if (KD.t0) { const dt = Math.min(1, (now - KD.t0) / 1000); if (!sheetUp()) p.kplay = (p.kplay || 0) + dt; } KD.t0 = now;
+  let d = box.querySelector('.v3kday'); if (!d) { d = document.createElement('span'); d.className = 'v3kday'; box.insertBefore(d, box.firstChild); }
+  const t = 'Día ' + (Math.floor((p.kplay || 0) / SV.DAY) + 1); if (d.textContent !== t) { d.textContent = t; try { G().save(); } catch (e) { } }
+}
 function hudLay() {
   try { crestSync(); } catch (e) { }
+  try { kidDay(); } catch (e) { }
   const h = document.querySelector('body.v3on #v3crest') || document.querySelector('body.v3on .hud-in'), B = document.body.style; if (!h) return; const r = h.getBoundingClientRect(); if (!r.width || !r.height) return;
-  const hb = Math.round(r.bottom + 8); if (B.getPropertyValue('--hudB') !== hb + 'px') B.setProperty('--hudB', hb + 'px');
+  const hb = Math.round(r.bottom + (h.id === 'v3crest' ? 18 : 8)); // el escudo del nivel sobresale debajo del emblema if (B.getPropertyValue('--hudB') !== hb + 'px') B.setProperty('--hudB', hb + 'px');
   try { topStack(); } catch (e) { }
 }
 /* Ningún cartel pisa a otro ni a los controles. Los de arriba (rumbo, sala, misión, estación, aldea, avisos…) se apilan de arriba hacia abajo
@@ -1490,7 +1499,8 @@ let S0 = null, S_poiPts = null;
 function misState() { const p = G().P(); p.missions = p.missions || {}; return p; }
 function regionOpen(r) { const g = G(); return Object.keys(g.NODES).some(id => id.startsWith(g.REGIONS[r].id + '-') && g.reachable(id)); }
 function misUI() {
-  if (!S.misEl) { S.misEl = document.createElement('div'); S.misEl.className = 'v3mis'; S.misEl.hidden = true; S.misEl.innerHTML = '<i><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3l7 16-7-4-7 4Z" fill="currentColor"/></svg></i><span></span>'; document.body.appendChild(S.misEl); }
+  if (!S.misEl) { S.misEl = document.createElement('div'); S.misEl.className = 'v3mis'; S.misEl.hidden = true; S.misEl.innerHTML = '<i><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3l7 16-7-4-7 4Z" fill="currentColor"/></svg></i><button class="mis-x" aria-label="Achicar el cartel">✕</button><span></span>'; document.body.appendChild(S.misEl);
+    S.misEl.querySelector('.mis-x').onclick = e => { e.stopPropagation(); const st = misState(); S.misMin = st && st.mact ? st.mact.id : null; }; }
   return S.misEl;
 }
 function misPop(title, sub) { const el = document.getElementById('v3pop'); if (!el) return; el.innerHTML = `<span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.6 6.6L21 9.3l-5 4.5L17.4 21 12 17.3 6.6 21 8 13.8 3 9.3l6.4-.7Z" fill="#FFD25E"/></svg></span><span class="tx"><small>${esc(title)}</small><b>${esc(sub)}</b></span>`; el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); clearTimeout(pop.t); pop.t = setTimeout(() => { el.classList.remove('on'); el.hidden = true; }, 3200); }
@@ -1537,6 +1547,7 @@ function misTick(t) {
     }
     const C = S.yaw + S.camYaw, dx = goal[0] - a.x, dz = goal[1] - a.z, xs = dx * -Math.cos(C) + dz * Math.sin(C), ys = dx * Math.sin(C) + dz * Math.cos(C);
     ui.hidden = false; ui.lastChild.textContent = txt; ui.firstChild.style.transform = `rotate(${Math.atan2(xs, ys)}rad)`; ui.firstChild.style.visibility = cap ? 'hidden' : ''; ui.classList.toggle('tap', cap); ui.onclick = cap ? () => openCapture(act) : null;
+    const mn = S.misMin === p.mact.id; ui.classList.toggle('min', mn); if (mn) { ui.firstChild.style.visibility = ''; ui.onclick = () => { S.misMin = null; }; }
   } else ui.hidden = true;
   if (sheetUp() || S.walking) return;
   if (!act) for (const id in S.mis) { const m = S.mis[id]; if (p.missions[id] || !regionOpen(m.d.r)) continue; const dd = d2(m.gp); if (dd < 2.6) { if (S.misSkip !== id) { S.joy.x = 0; S.joy.y = 0; openMission(m); } } else if (S.misSkip === id && dd > 9) S.misSkip = null; }
