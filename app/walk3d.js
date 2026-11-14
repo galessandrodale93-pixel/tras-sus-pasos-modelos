@@ -3171,13 +3171,18 @@ const MP = { peer: null, conns: {}, host: false, code: null, players: {}, conn: 
 const PHR = ['¡Hola!', '¡Vamos!', '¡Seguime!', '¡Esperame!', '¡Bien ahí!', '¡Gracias!', '¡Amén!', 'Oremos 🙏'];
 const CODECH = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', mkCode = () => Array.from({ length: 6 }, () => CODECH[Math.floor(Math.random() * CODECH.length)]).join('');
 const pid = c => 'habitat-tsp-' + c.toLowerCase();
-function mpLoad() { return window.Peer ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+/* el presentador de las salas: primero el nuestro (Cloudflare, con relevo TURN); si no responde, el público de PeerJS */
+const SALAS = 'tsp-salas.galessandrodale-93.workers.dev';
+let MPO = null;
+async function mpOpts() { if (MPO) return MPO; MPO = {}; try { const ac = new AbortController(), tm2 = setTimeout(() => ac.abort(), 2500), r = await fetch('https://' + SALAS + '/ice', { signal: ac.signal, cache: 'no-store' }); clearTimeout(tm2); if (r.ok) { const j = await r.json(); MPO = { host: SALAS, port: 443, secure: true, path: '/', key: 'peerjs', config: { iceServers: j.iceServers } }; } } catch (e) { } return MPO; }
+const newPeer = id => id ? new Peer(id, MPO || {}) : new Peer(MPO || {});
+function mpLoad() { const lib = window.Peer ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); return Promise.all([lib, mpOpts()]); }
 const meInfo = () => { const p = G().P(); return { name: (p.name || 'Invitado').slice(0, 16), avatar: lookOf(p), branch: G().branch, hum: (p.attr && p.attr.hum) || 0 }; };
 const roomLink = () => location.origin + location.pathname + '#sala-' + (G().branch === 'ados' ? 'hero' : 'kids') + '-' + MP.code;
 function mpSend(msg, except) { const d = msg; if (MP.host) { for (const id in MP.conns) if (id !== except && MP.conns[id].open) MP.conns[id].send(d); } else if (MP.conn && MP.conn.open) MP.conn.send(d); }
 async function mpCreate() {
   try { await mpLoad(); } catch (e) { G().toast('No se pudo cargar el modo con amigos. Revisá la conexión.'); return; }
-  mpLeave(true); MP.code = mkCode(); MP.host = true; MP.peer = new Peer(pid(MP.code)); talkPeer(MP.peer);
+  mpLeave(true); MP.code = mkCode(); MP.host = true; MP.peer = newPeer(pid(MP.code)); talkPeer(MP.peer);
   MP.peer.on('open', () => { mpUI(); mpPanel(); });
   MP.peer.on('connection', c => {
     c.on('open', () => { if (Object.keys(MP.conns).length >= 4) { c.send({ t: 'full' }); setTimeout(() => c.close(), 300); return; } });
@@ -3196,7 +3201,7 @@ async function mpCreate() {
 async function mpJoin(code) {
   code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); if (code.length !== 6) { G().toast('El código tiene 6 letras y números.'); return; }
   try { await mpLoad(); } catch (e) { G().toast('No se pudo cargar el modo con amigos. Revisá la conexión.'); return; }
-  mpLeave(true); MP.code = code; MP.host = false; MP.peer = new Peer(); talkPeer(MP.peer);
+  mpLeave(true); MP.code = code; MP.host = false; MP.peer = newPeer(); talkPeer(MP.peer);
   MP.peer.on('open', () => { const c = MP.conn = MP.peer.connect(pid(code), { reliable: true }); let ok = false;
     const to = setTimeout(() => { if (!ok) { G().toast('No encontramos esa sala. Revisá el código o pedí el link de nuevo.'); mpLeave(); } }, 9000);
     c.on('open', () => { c.send({ t: 'hi', info: meInfo() }); });
