@@ -28,7 +28,7 @@
 .zm-t{display:flex;gap:8px;align-items:center;padding:10px 14px;border-radius:14px;background:var(--paper);border:1px solid var(--line);font-size:.95rem}
 .zm-t.hot{background:#fff6e3;border-color:var(--gold-2)}.zm-t i{font-style:normal;font-size:1.2rem}
 .zm-q{font:600 .8rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin:18px 0 8px}
-.zm-va{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.zm-va{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .zm-va button{padding:12px 8px;border-radius:14px;border:1px solid var(--line);background:#fff;font:600 .95rem var(--sans);color:var(--ink);cursor:pointer;transition:all .2s}
 .zm-va button:hover{border-color:var(--gold)}
 .zm-va button.on[data-v=si]{background:#2f7a4f;border-color:#2f7a4f;color:#fff}
@@ -100,7 +100,7 @@ function tarjeta(z,i){
   return '<div class="zm-card" data-i="'+i+'"><div class="zm-when"><div class="zm-date"><small>'+MS[d.getMonth()]+'</small><b>'+d.getDate()+'</b></div><div><h2>'+esc(z.title||'Zarza')+'</h2><p>'+DL[d.getDay()]+' '+d.getDate()+' de '+ML[d.getMonth()]+' · '+cuando+'</p></div></div>'+
   '<div class="zm-times"><div class="zm-t hot"><i>🎸</i><span>Llegá a las <b>'+esc(z.llegada)+'</b></span></div><div class="zm-t"><i>🔥</i><span>Empieza <b>'+esc(z.hora)+'</b></span></div>'+(z.lugar?'<div class="zm-t"><i>📍</i><span>'+esc(z.lugar)+'</span></div>':'')+'</div>'+
   (z.nota?'<p class="zm-empty" style="text-align:left;padding:8px 0 0">'+esc(z.nota)+'</p>':'')+
-  '<p class="zm-q">¿Venís?</p><div class="zm-va">'+[['si','🙌🏽 Voy'],['quizas','🤔 Quizás'],['no','😕 No puedo']].map(function(o){return '<button type="button" data-v="'+o[0]+'" class="'+(z.va===o[0]?'on':'')+'">'+o[1]+'</button>';}).join('')+'</div>'+
+  '<p class="zm-q">¿Venís?</p><div class="zm-va">'+[['si','🙌🏽 Voy'],['quizas','🤔 Todavía no sé']].map(function(o){return '<button type="button" data-v="'+o[0]+'" class="'+(z.va===o[0]?'on':'')+'">'+o[1]+'</button>';}).join('')+'</div>'+
   '<p class="zm-q">Repertorio</p>'+(L.length?'<div class="zm-prog"><div class="zm-bar"><i style="width:'+(L.length?100*hechas/L.length:0)+'%"></i></div><span>'+(hechas===L.length?'¡Todo ensayado! 🎉':'Ensayaste '+hechas+' de '+L.length)+'</span></div><ol class="zm-songs">'+L.map(function(c,k){var on=z.ensayadas.indexOf(c.id)>=0;return '<li class="zm-s'+(on?' ok':'')+'" data-c="'+esc(c.id)+'"><button type="button" class="zm-chk" aria-label="Marcar como ensayada" aria-pressed="'+on+'">✓</button><div><b>'+(k+1)+'. '+esc(c.t)+'</b>'+(c.nota?'<small>'+esc(c.nota)+'</small>':'<small>'+(on?'Ensayada':'Tocá el círculo cuando la ensayes')+'</small>')+'</div><span class="zm-tono" title="Tono">'+esc(c.tono||'—')+'</span><a class="zm-play'+(c.link?'':' off')+'" href="'+esc(c.link||'#')+'" target="_blank" rel="noopener" aria-label="Escuchar">▶</a></li>';}).join('')+'</ol>':'<p class="zm-empty">Agustina todavía no cargó las canciones. Te avisamos por mail apenas estén. 🎶</p>')+
   (i===0&&D.equipo&&D.equipo.length?'<p class="zm-q">El equipo</p><div class="zm-team">'+D.equipo.slice().sort(function(a,b){var o={si:0,quizas:1,'':2,no:3};return o[a.va]-o[b.va];}).map(function(m){return '<span class="zm-m '+(m.va||'')+(m.yo?' yo':'')+'">'+(m.va==='si'?'✅':m.va==='quizas'?'🤔':m.va==='no'?'—':'⏳')+' '+esc(m.yo?'Vos':m.nombre)+(m.instrumento?' <em>· '+esc(m.instrumento)+'</em>':'')+'</span>';}).join('')+'</div>':'')+
   '</div>';
@@ -112,7 +112,7 @@ function pintar(){
   $('#mBox').innerHTML=Z.length?tarjeta(Z[0],0)+(Z.length>1?'<details class="zm-more"><summary>Próximas Zarzas</summary>'+Z.slice(1).map(function(z,i){return tarjeta(z,i+1);}).join('')+'</details>':''):'';
   $$('.zm-card').forEach(function(c){
     var z=Z[+c.dataset.i];
-    $$('.zm-va button',c).forEach(function(b){b.onclick=function(){var prev=z.va;z.va=z.va===b.dataset.v?'':b.dataset.v;pintar();guardar(z).then(function(){ok(z.va==='si'?'¡Genial! Te esperamos 🙌🏽':z.va==='no'?'Gracias por avisar':'Guardado ✓');}).catch(function(e){z.va=prev;pintar();ok(e.message);});};});
+    $$('.zm-va button',c).forEach(function(b){b.onclick=function(){var prev=z.va;z.va=z.va===b.dataset.v?'':b.dataset.v;pintar();guardar(z).then(function(){ok(z.va==='si'?'¡Genial! Te esperamos 🙌🏽':'Guardado ✓');}).catch(function(e){z.va=prev;pintar();ok(e.message);});};});
     $$('.zm-s',c).forEach(function(li){var t=function(){var id=li.dataset.c,at=z.ensayadas.indexOf(id),prev=z.ensayadas.slice();if(at>=0)z.ensayadas.splice(at,1);else z.ensayadas.push(id);pintar();guardar(z).then(function(){var L=z.canciones;ok(L.every(function(x){return z.ensayadas.indexOf(x.id)>=0;})?'¡Todo ensayado! 🎉':'Guardado ✓');}).catch(function(e){z.ensayadas=prev;pintar();ok(e.message);});};$('.zm-chk',li).onclick=t;});
   });
 }
