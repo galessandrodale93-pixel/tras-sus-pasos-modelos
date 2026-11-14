@@ -830,15 +830,23 @@ const HOWTO = {
 const LB_IMG = { hero: ['hero_e1.jpg', 'hero_e2.jpg', 'hero_e3.jpg', 'hero_e4.jpg', 'hero_e5.jpg'], kids: ['kids_e1.jpg', 'kids_e2.jpg', 'kids_e3.jpg', 'kids_e4.jpg', 'kids_e5.jpg'] };
 const LB_CAP = [['Mar de Galilea', 'Donde Jesús llamó a los pescadores'], ['Templo de Jerusalén', 'La casa de su Padre'], ['La colina de los cinco mil', 'Cinco panes y dos peces'], ['El Gólgota', 'Donde dio su vida'], ['Desierto de Judea', 'Cuarenta días en el desierto']];
 const esc3 = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+/* palabra con las letras de nube del juego (el mismo atlas de los carteles de Kids), en alta para la sala */
+function foamWord(c, txt) {
+  const T = ATLAS.foam; if (!c) return; atlasLoad(T);
+  const draw = () => { const k = 1, g = [...txt].map(ch => T.A.g[ch]).filter(Boolean), w = g.reduce((s, q) => s + (q[2] - T.adv) * k, 0) + 40, h = T.A.h * k + 30; c.width = w; c.height = h; const x = c.getContext('2d');
+    const pass = sh => { let px = 20; x.save(); if (sh) { x.shadowColor = 'rgba(30,60,130,.45)'; x.shadowBlur = 18; x.shadowOffsetY = 8; } for (const q of g) { x.drawImage(T.img, q[0], q[1], q[2], q[3], px, 12, q[2] * k, q[3] * k); px += (q[2] - T.adv) * k; } x.restore(); };
+    pass(true); try { x.filter = 'brightness(' + T.bright + ')'; } catch (e) {} pass(false); try { x.filter = 'none'; } catch (e) {} c.classList.add('on'); };
+  const wait = () => { if (T.ready) draw(); else if (c.isConnected || !c.dataset.t) { c.dataset.t = 1; setTimeout(wait, 120); } }; wait();
+}
 function lobbyUI(kid) {
   const ov = document.createElement('div'); ov.className = 'v3lobby' + (kid ? ' kid' : ''); const H = HOWTO[kid ? 'kids' : 'hero'];
   const im = (LB_IMG[kid ? 'kids' : 'hero'] || []).map(n => `url(${DLM.r2}app/lobby/${n}),url(${DLW.root}app/lobby/${n})`);
   let lines = []; try { lines = (G().lobbyLines && G().lobbyLines()) || []; } catch (e) {}
   let st = null; try { st = G().lobbyStage && G().lobbyStage(); } catch (e) {}
-  const logo = kid ? '<h1 class="lb-kidlogo" aria-label="Kids"><svg width="0" height="0" aria-hidden="true" style="position:absolute"><filter id="kcloud" x="-20%" y="-30%" width="140%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="5" result="d"/><feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="d" in2="n" scale="16" xChannelSelector="R" yChannelSelector="G" result="w"/><feGaussianBlur in="w" stdDeviation="1.4" result="b"/><feComponentTransfer in="b" result="s"><feFuncA type="table" tableValues="0 0 1 1"/></feComponentTransfer><feFlood flood-color="#FFFFFF"/><feComposite in2="s" operator="in"/></filter></svg><span class="kc-back" aria-hidden="true">Kids</span><span class="kc-front" aria-hidden="true">Kids</span></h1>' : `<h1 class="lb-hero"><picture><source type="image/webp" srcset="${new URL('./lobby/hero-oro-v4.webp', import.meta.url).href}"><img src="${new URL('./lobby/hero-oro-v4.png', import.meta.url).href}" alt="Hero" width="1200" height="308" onerror="this.closest('h1').outerHTML='<small>Hero</small>'"></picture></h1>`;
+  const logo = kid ? '<h1 class="lb-kidlogo lb-foam" aria-label="Kids"><canvas width="10" height="10"></canvas></h1>' : `<h1 class="lb-hero"><picture><source type="image/webp" srcset="${new URL('./lobby/hero-oro-v4.webp', import.meta.url).href}"><img src="${new URL('./lobby/hero-oro-v4.png', import.meta.url).href}" alt="Hero" width="1200" height="308" onerror="this.closest('h1').outerHTML='<small>Hero</small>'"></picture></h1>`;
   const steps = st && st.names ? st.names : [], cur = st ? st.n - 1 : 0;
   ov.classList.add('lb2');
-  ov.innerHTML = `<div class="lb-sl">${im.map((u, i) => `<div class="lb-im k${i % 3}${i ? '' : ' on'}" style="background-image:${u}"></div>`).join('')}</div><div class="lb-shade"></div><div class="lb-grain"></div>${kid ? `<div class="kd-rays" aria-hidden="true"></div><div class="kd-clouds" aria-hidden="true">${[0, 1, 2, 3].map(i => `<i class="c${i}"></i>`).join('')}</div><div class="kd-spark" aria-hidden="true">${Array.from({ length: 14 }, (_, i) => `<b style="left:${(i * 37 + 11) % 100}%;top:${(i * 53 + 7) % 70}%;animation-delay:${(i * .37 % 3).toFixed(2)}s"></b>`).join('')}</div>` : ''}
+  ov.innerHTML = `<div class="lb-sl">${im.map((u, i) => `<div class="lb-im k${i % 3}${i ? '' : ' on'}" style="background-image:${u}"></div>`).join('')}</div><div class="lb-shade"></div><div class="lb-grain"></div>${kid ? `<div class="kd-rays" aria-hidden="true"></div><div class="kd-spark" aria-hidden="true">${Array.from({ length: 14 }, (_, i) => `<b style="left:${(i * 37 + 11) % 100}%;top:${(i * 53 + 7) % 70}%;animation-delay:${(i * .37 % 3).toFixed(2)}s"></b>`).join('')}</div>` : ''}
     <div class="lb-top"><button class="lb-mus" aria-label="Tocar para música">🎵 <span>Música</span></button></div>
     <div class="lb-cap" aria-hidden="true"><i></i><b></b><span></span></div>
     <div class="lb-in">
@@ -848,6 +856,7 @@ function lobbyUI(kid) {
       <div class="lb-dl"><div class="lb-path">${steps.map((n, i) => `<i class="${i < cur ? 'done' : i === cur ? 'here' : ''}" title="${esc3(n)}"></i>`).join('')}<div class="lb-bar"><i></i></div></div><p class="lb-n">Preparando el mundo…</p></div>
       <div class="lb-act"><button class="lb-go" hidden></button></div><p class="lb-note"></p></div>`;
   document.body.appendChild(ov); document.body.classList.add('v3lb');
+  if (kid) foamWord(ov.querySelector('.lb-foam canvas'), 'KIDS');
   const $ = q => ov.querySelector(q), ims = [...ov.querySelectorAll('.lb-im')], T = [], cap = $('.lb-cap'), capS = () => { const c = LB_CAP[si % LB_CAP.length]; cap.classList.remove('on'); setTimeout(() => { cap.querySelector('b').textContent = c[0]; cap.querySelector('span').textContent = c[1]; cap.classList.add('on'); }, 500); };
   let si = 0; capS(); T.push(setInterval(() => { if (ims.length < 2) return; ims[si].classList.remove('on'); si = (si + 1) % ims.length; ims[si].classList.add('on'); capS(); }, 7000));
   let vi = Math.floor(Math.random() * Math.max(1, lines.length)); const vs = $('.lb-vs'), verse = () => { if (!lines.length) { vs.hidden = true; return; } vs.classList.remove('on'); setTimeout(() => { const t = String(lines[vi % lines.length]), m = /^(.*?)\s*\(([^()]+)\)\s*$/.exec(t); vs.querySelector('p').textContent = m ? m[1] : t; vs.querySelector('cite').textContent = m ? m[2] : ''; vi++; vs.classList.add('on'); }, 450); }; verse(); T.push(setInterval(verse, 9000));

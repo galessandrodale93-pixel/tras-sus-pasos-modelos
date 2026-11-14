@@ -959,3 +959,8 @@ body[data-branch="kids"] .kh-pill b{color:#FFD25E}
 .lb2.kid .kd-clouds .c3{top:48%}
 .lb2.kid .kd-clouds .c1{top:2%}.lb2.kid .kd-clouds .c3{top:12%}
 @media (min-width:761px){.lb2.kid .kd-clouds{left:38%}}
+/* Kids: «KIDS» con las letras de nube del juego */
+.lb2.kid .lb-kidlogo.lb-foam{transform:rotate(-3deg);margin:0 0 6px -10px;font-size:0;line-height:0}
+.lb2.kid .lb-foam canvas{display:block;height:clamp(96px,15vh,150px);width:auto;opacity:0;transition:opacity .5s;filter:drop-shadow(0 6px 18px rgba(20,50,130,.35))}
+.lb2.kid .lb-foam canvas.on{opacity:1}
+@media (max-height:560px){.lb2.kid .lb-foam canvas{height:72px}}
