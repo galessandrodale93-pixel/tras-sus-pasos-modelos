@@ -3134,7 +3134,7 @@ function dayNow() { const n = Date.now(), i = Math.floor(n / DAYP) % 2, f = n % 
 const NIGHT = { top: '#060A1C', mid: '#141C3C', hor: '#2C3260', sunC: '#C8D4FF', dir: [.32, .5, -.8], sunL: '#8EA4E6', sI: .75, hs: '#4A5C9C', hg: '#15141C', hI: .42, fog: '#161C36', fd: .011, st: 1, ex: .92 };
 function nightTarget() { if (!S.hx || !S.pois) return 0; const a = S.av.position; for (const p of S.pois) if (p.k === 'garden') { const d = Math.hypot(a.x - p.x, a.z - p.z); return 1 - sstep(28, 44, d); } return 0; }
 function dayTick(dt) {
-  if (!S) return; { const t = nightTarget(); S.nk = (S.nk || 0) + (t - (S.nk || 0)) * Math.min(1, dt * 1.2); if (S.nk < .002 && !t) S.nk = 0; }
+  if (!S) return; { const now = performance.now(), rd = Math.min(.25, (now - (S.nkT || now)) / 1000); S.nkT = now; const t = nightTarget(); S.nk = (S.nk || 0) + (t - (S.nk || 0)) * Math.min(1, rd * 1.1); if (S.nk < .003 && !t) S.nk = 0; if (S.nk > .997 && t === 1) S.nk = 1; }
   S.dayAcc = (S.dayAcc || 9) + dt; if (S.dayAcc < (S.nk || S.nkA ? .05 : .5)) return; S.dayAcc = 0;
   const d = dayNow(), sig = d.i + ':' + d.k.toFixed(3) + ':' + (S.nk || 0).toFixed(3); if (sig === S.daySig) return; S.daySig = sig; S.nkA = S.nk;
   if (S.dayI !== undefined && S.dayI !== d.i && d.k < .5) G().toast(['🌅 Amanece un día nuevo…', '☀️ Llegó el mediodía.'][d.i]);
