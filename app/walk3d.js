@@ -828,21 +828,29 @@ const HOWTO = {
 // sala de espera: aparece al instante (fondo con degradé, fotos del juego, versículos y tarjetas), baja el mundo completo
 // y se queda mientras se arma el mundo 3D; se cierra sola cuando todo está listo
 const LB_IMG = { hero: ['hero_e1.jpg', 'hero_e2.jpg', 'hero_e3.jpg', 'hero_e4.jpg', 'hero_e5.jpg'], kids: ['kids_e1.jpg', 'kids_e2.jpg', 'kids_e3.jpg', 'kids_e4.jpg', 'kids_e5.jpg'] };
+const LB_CAP = [['Mar de Galilea', 'Donde Jesús llamó a los pescadores'], ['Templo de Jerusalén', 'La casa de su Padre'], ['La colina de los cinco mil', 'Cinco panes y dos peces'], ['El Gólgota', 'Donde dio su vida'], ['Desierto de Judea', 'Cuarenta días en el desierto']];
+const esc3 = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function lobbyUI(kid) {
   const ov = document.createElement('div'); ov.className = 'v3lobby' + (kid ? ' kid' : ''); const H = HOWTO[kid ? 'kids' : 'hero'];
   const im = (LB_IMG[kid ? 'kids' : 'hero'] || []).map(n => `url(${DLM.r2}app/lobby/${n}),url(${DLW.root}app/lobby/${n})`);
   let lines = []; try { lines = (G().lobbyLines && G().lobbyLines()) || []; } catch (e) {}
-  ov.innerHTML = `<div class="lb-sl">${im.map((u, i) => `<div class="lb-im${i ? '' : ' on'}" style="background-image:${u}"></div>`).join('')}</div><div class="lb-shade"></div>
-    <div class="lb-top"><button class="lb-mus" aria-label="Tocar para música">🎵 <span>Tocar para música</span></button></div>
-    <div class="lb-in">${kid ? '<small>Kids</small>' : `<h1 class="lb-hero"><picture><source type="image/webp" srcset="${new URL('./lobby/hero-oro-v4.webp', import.meta.url).href}"><img src="${new URL('./lobby/hero-oro-v4.png', import.meta.url).href}" alt="Hero" width="1200" height="308" onerror="this.closest('h1').outerHTML='<small>Hero</small>'"></picture></h1>`}<b>Tras sus pasos</b><p class="lb-sub">${kid ? '¡Vamos a caminar la historia de Jesús!' : 'Recorré la tierra donde caminó Jesús.'}</p>
-      <p class="lb-vs" aria-live="polite"></p>
+  let st = null; try { st = G().lobbyStage && G().lobbyStage(); } catch (e) {}
+  const logo = kid ? '<h1 class="lb-kidlogo">Kids</h1>' : `<h1 class="lb-hero"><picture><source type="image/webp" srcset="${new URL('./lobby/hero-oro-v4.webp', import.meta.url).href}"><img src="${new URL('./lobby/hero-oro-v4.png', import.meta.url).href}" alt="Hero" width="1200" height="308" onerror="this.closest('h1').outerHTML='<small>Hero</small>'"></picture></h1>`;
+  const steps = st && st.names ? st.names : [], cur = st ? st.n - 1 : 0;
+  ov.classList.add('lb2');
+  ov.innerHTML = `<div class="lb-sl">${im.map((u, i) => `<div class="lb-im k${i % 3}${i ? '' : ' on'}" style="background-image:${u}"></div>`).join('')}</div><div class="lb-shade"></div><div class="lb-grain"></div>
+    <div class="lb-top"><button class="lb-mus" aria-label="Tocar para música">🎵 <span>Música</span></button></div>
+    <div class="lb-cap" aria-hidden="true"><i></i><b></b><span></span></div>
+    <div class="lb-in">
+      <div class="lb-head">${logo}<b class="lb-title">Tras sus pasos</b>${st ? `<p class="lb-stage"><span>${kid ? 'Seguís en' : 'Etapa ' + st.n + ' de ' + st.total}</span> ${esc3(st.name)}</p>` : `<p class="lb-sub">${kid ? '¡Vamos a caminar la historia de Jesús!' : 'Recorré la tierra donde caminó Jesús.'}</p>`}</div>
+      <blockquote class="lb-vs" aria-live="polite"><p></p><cite></cite></blockquote>
       <div class="lb-cards" hidden></div>
-      <div class="lb-dl"><div class="lb-bar"><i></i></div><p class="lb-n">Preparando el mundo…</p></div>
-      <button class="lb-go" hidden></button><p class="lb-note"></p></div>`;
+      <div class="lb-dl"><div class="lb-path">${steps.map((n, i) => `<i class="${i < cur ? 'done' : i === cur ? 'here' : ''}" title="${esc3(n)}"></i>`).join('')}<div class="lb-bar"><i></i></div></div><p class="lb-n">Preparando el mundo…</p></div>
+      <div class="lb-act"><button class="lb-go" hidden></button></div><p class="lb-note"></p></div>`;
   document.body.appendChild(ov); document.body.classList.add('v3lb');
-  const $ = q => ov.querySelector(q), ims = [...ov.querySelectorAll('.lb-im')], T = [];
-  let si = 0; T.push(setInterval(() => { if (ims.length < 2) return; ims[si].classList.remove('on'); si = (si + 1) % ims.length; ims[si].classList.add('on'); }, 5000));
-  let vi = Math.floor(Math.random() * Math.max(1, lines.length)); const vs = $('.lb-vs'), verse = () => { if (!lines.length) return; vs.classList.remove('on'); setTimeout(() => { vs.textContent = lines[vi % lines.length]; vi++; vs.classList.add('on'); }, 350); }; verse(); T.push(setInterval(verse, 8000));
+  const $ = q => ov.querySelector(q), ims = [...ov.querySelectorAll('.lb-im')], T = [], cap = $('.lb-cap'), capS = () => { const c = LB_CAP[si % LB_CAP.length]; cap.classList.remove('on'); setTimeout(() => { cap.querySelector('b').textContent = c[0]; cap.querySelector('span').textContent = c[1]; cap.classList.add('on'); }, 500); };
+  let si = 0; capS(); T.push(setInterval(() => { if (ims.length < 2) return; ims[si].classList.remove('on'); si = (si + 1) % ims.length; ims[si].classList.add('on'); capS(); }, 7000));
+  let vi = Math.floor(Math.random() * Math.max(1, lines.length)); const vs = $('.lb-vs'), verse = () => { if (!lines.length) { vs.hidden = true; return; } vs.classList.remove('on'); setTimeout(() => { const t = String(lines[vi % lines.length]), m = /^(.*?)\s*\(([^()]+)\)\s*$/.exec(t); vs.querySelector('p').textContent = m ? m[1] : t; vs.querySelector('cite').textContent = m ? m[2] : ''; vi++; vs.classList.add('on'); }, 450); }; verse(); T.push(setInterval(verse, 9000));
   const fresh = (() => { try { return !localStorage.getItem('tsp:howto'); } catch (e) { return false; } })(), cards = $('.lb-cards'); let ci = 0;
   const card = () => { cards.innerHTML = `<div class="lb-card"><span class="lb-ico">${H[ci][0]}</span><div><b>${H[ci][1]}</b><p>${H[ci][2]}</p></div></div><div class="lb-dots">${H.map((_, i) => `<i class="${i === ci ? 'on' : ''}"></i>`).join('')}</div>`; };
   if (fresh) { cards.hidden = false; card(); T.push(setInterval(() => { ci = (ci + 1) % H.length; card(); }, 6500)); cards.onclick = () => { ci = (ci + 1) % H.length; card(); }; }
