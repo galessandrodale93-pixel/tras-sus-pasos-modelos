@@ -1136,3 +1136,15 @@ body.v3on{--fanR:max(24px,calc(env(safe-area-inset-right,0px) + 18px));--fanB:ca
 body.v3on .v3fan{right:var(--fanR)!important;bottom:var(--fanB)!important}
 body.v3on #v3acts [data-a="room"]{position:fixed!important;right:calc(var(--fanR) + 52px + 12px)!important;bottom:calc(var(--fanB) + 3px)!important;top:auto!important;left:auto!important;width:46px!important;height:46px!important;margin:0!important;z-index:7}
 @media (max-height:520px){body.v3on{--fanB:calc(12px + env(safe-area-inset-bottom,0px))}}
+/* ===== botones de los bordes alineados entre sí (PC y celular) ===== */
+/* la barra de comida ocupa el mismo ancho que Día + Mapa */
+body.v3on .v3surv .sv-food{width:auto!important;justify-self:stretch!important}
+/* abajo a la derecha: amigos y menú del mismo tamaño, sobre la misma línea */
+body.v3on .v3fan .fan-tg{width:52px;height:52px}
+body.v3on #v3acts [data-a="room"]{width:52px!important;height:52px!important;bottom:var(--fanB)!important;right:calc(var(--fanR) + 52px + 12px)!important;border-radius:50%!important;display:grid!important;place-items:center}
+/* abajo a la izquierda: el joystick sobre la misma línea que los botones de la derecha y la cámara centrada justo arriba */
+body.v3on{--joyL:max(24px,calc(env(safe-area-inset-left,0px) + 18px));--joyW:104px}
+body.v3on .v3joy{left:var(--joyL)!important;bottom:var(--fanB)!important;width:var(--joyW)!important;height:var(--joyW)!important}
+body.v3on .v3cam{left:var(--joyL)!important;bottom:var(--fanB)!important}
+@media (pointer:coarse){body.v3on .v3cam{left:calc(var(--joyL) + (var(--joyW) - 44px) / 2)!important;bottom:calc(var(--fanB) + var(--joyW) + 12px)!important}}
+@media (max-height:520px){body.v3on{--joyW:92px}}
