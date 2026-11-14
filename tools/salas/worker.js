@@ -71,3 +71,4 @@ export class Hub {
   async webSocketClose(ws) { try { ws.close(1000, 'chau'); } catch (e) { } }
   async webSocketError(ws) { try { ws.close(1011, 'error'); } catch (e) { } }
 }
+// v1
