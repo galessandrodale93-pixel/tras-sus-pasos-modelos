@@ -3083,11 +3083,12 @@ function khShow(kind){if(document.querySelector('.khp'))return;const p=current;i
     const ok=()=>{if(+box.querySelector('.kh-ans').value===a*b){box.innerHTML=pay;wire();}else box.querySelector('.kh-err').hidden=false;};box.querySelector('.kh-ok').onclick=ok;box.querySelector('.kh-ans').onkeydown=e=>{if(e.key==='Enter')ok();};box.querySelector('.kh-ans').focus();};}
 async function khPay(btn){if(KH.busy)return;KH.busy=true;btn.disabled=true;btn.textContent='Abriendo Mercado Pago…';
   try{const r=await fetch(KH_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accion:'iniciar',u:khUid(),prueba:!!KH_TEST})});const j=await r.json();if(!j.url)throw new Error(j.error||'sin url');
-    try{localStorage.setItem('kh-pago:'+khUid(),String(Date.now()));localStorage.removeItem('kh-act:'+khUid());}catch(e){}try{sessionStorage.setItem('kh-pend',JSON.stringify({u:khUid(),e:khMail(),rama:branch,t:Date.now()}));}catch(e){}location.href=j.url;}
+    try{localStorage.setItem('kh-volver',HASH[branch]||'hero');}catch(e){}try{localStorage.setItem('kh-pago:'+khUid(),String(Date.now()));localStorage.removeItem('kh-act:'+khUid());}catch(e){}try{sessionStorage.setItem('kh-pend',JSON.stringify({u:khUid(),e:khMail(),rama:branch,t:Date.now()}));}catch(e){}location.href=j.url;}
   catch(e){console.warn(e);btn.disabled=false;btn.textContent='Pagar';toast('No pudimos abrir Mercado Pago. Probá de nuevo en un rato.');}finally{KH.busy=false;}}
 /* vuelta del checkout de Mercado Pago (?kh=vuelta&preapproval_id=…) */
 (async function khReturn(){let sp;try{sp=new URLSearchParams(location.search);}catch(e){return;}if(sp.get('kh')!=='vuelta')return;const pid=sp.get('preapproval_id')||'';
-  try{const u=new URL(location.href);['kh','preapproval_id','status','external_reference'].forEach(k=>u.searchParams.delete(k));history.replaceState(null,'',u.pathname+u.search+u.hash);}catch(e){}
+  /* Mercado Pago vuelve a la raíz del juego: se lo devuelve a la portada de su rama (Kids o Hero) para que elija el perfil y siga */
+  try{const u=new URL(location.href);['kh','preapproval_id','status','external_reference'].forEach(k=>u.searchParams.delete(k));let h=u.hash;if(!h){const r=localStorage.getItem('kh-volver');if(r)h='#'+r;}history.replaceState(null,'',u.pathname+u.search+h);}catch(e){}
   for(let i=0;i<60&&getMemberState().loading;i++)await new Promise(r=>setTimeout(r,250));
   const uid=khUid();if(!pid||!uid)return;
   try{const r=await fetch(KH_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accion:'vincular',u:uid,e:khMail(),pid,rama:branch||''})});const j=await r.json();
