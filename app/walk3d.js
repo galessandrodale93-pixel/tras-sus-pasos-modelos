@@ -1120,27 +1120,43 @@ const HUDL = { t: 0 };
 function hudLay() {
   const h = document.querySelector('body.v3on .hud-in'), B = document.body.style; if (!h) return; const r = h.getBoundingClientRect(); if (!r.width || !r.height) return;
   const hb = Math.round(r.bottom + 8); if (B.getPropertyValue('--hudB') !== hb + 'px') B.setProperty('--hudB', hb + 'px');
-  try { topStack(r); } catch (e) { }
+  try { topStack(); } catch (e) { }
 }
-/* carteles de arriba sin pisarse: cada uno que esté a la vista (rumbo, sala, misión, estación, aldea, avisos) se apila debajo
-   del anterior y nunca encima del panel del jugador ni de la caja de supervivencia. Vale para PC y celular, vertical o apaisado. */
-const TOPQ = ['.v3comp', '#v3room', '.v3topics', '.v3mis', '.v3seas', '#v3vil', '#toast'];
-function topVis(e) { if (!e || e.hidden) return false; const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden') return false; return +cs.opacity > .04 || e.classList.contains('on') || e.classList.contains('show'); }
-function topStack(hr) {
-  let sp = document.getElementById('v3sat'); if (!sp) { sp = document.createElement('div'); sp.id = 'v3sat'; sp.style.cssText = 'position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;height:env(safe-area-inset-top,0px)'; document.body.appendChild(sp); }
-  const safe = sp.offsetHeight || 0, base = 10 + safe, obs = [];
-  if (hr) obs.push({ l: hr.left, r: hr.right, t: hr.top, b: hr.bottom });
-  document.querySelectorAll('body.v3on .hud, body.v3on .v3surv, body.v3on .v3mapbtn, body.v3on .v3baghud').forEach(sv => { if (sv.offsetParent === null && getComputedStyle(sv).position !== 'fixed') return; const q = sv.getBoundingClientRect(); if (q.width && q.height && q.top < innerHeight * .5) obs.push({ l: q.left, r: q.right, t: q.top, b: q.bottom }); });
-  const seen = new Set();
-  TOPQ.forEach(sel => document.querySelectorAll(sel).forEach(e => {
-    if (seen.has(e)) return; seen.add(e);
-    if (!topVis(e)) { if (e.dataset.tsY) { e.style.removeProperty('top'); delete e.dataset.tsY; } return; }
-    const q = e.getBoundingClientRect(), h = e.offsetHeight || q.height, l = q.left, rr = q.right; if (!q.width) return;
-    let y = base, moved = true, n = 0;
-    while (moved && n++ < 12) { moved = false; for (const o of obs) if (l < o.r + 6 && rr > o.l - 6 && y < o.b + 6 && y + h > o.t - 6) { y = o.b + 6; moved = true; } }
-    y = Math.round(y); if (e.dataset.tsY !== String(y)) { e.style.setProperty('top', y + 'px', 'important'); e.dataset.tsY = y; }
-    obs.push({ l, r: rr, t: y, b: y + h });
-  }));
+/* Ningún cartel pisa a otro ni a los controles. Los de arriba (rumbo, sala, misión, estación, aldea, avisos…) se apilan de arriba hacia abajo
+   y los de abajo (lugar, frase, ayuda) de abajo hacia arriba. Si un cartel chocaría con el panel del jugador, la cámara, el joystick
+   o los botones de la derecha, se angosta para entrar en el hueco del medio; si igual no entra, baja (o sube) hasta quedar libre. */
+const BAN_TOP = ['.v3comp', '#v3room', '.v3topics', '.v3mis', '.v3seas', '#v3vil', '.v3bagt', '.v3pop', '#toast'];
+const BAN_BOT = ['.v3place', '.v3say', '.v3hint'];
+const BAN_OBS = ['.hud', '.v3surv', '.v3mapbtn', '.v3baghud', '.v3mmbox', '.v3cam', '.v3joy', '#v3joy', '.v3fan .fan-tg', '.v3fan.open .fan-items button', '#v3acts > button', '#v3go', '.v3go', '#wixheadless-banner-container'];
+const BAN_LEFT = new Set(['v3mis']);
+function topVis(e) { if (!e || e.hidden) return false; const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden' || cs.position !== 'fixed') return false; return +cs.opacity > .04 || e.classList.contains('on') || e.classList.contains('show'); }
+function banReset(e) { if (e.dataset.tsY == null) return; ['top', 'bottom', 'left', 'max-width'].forEach(k => e.style.removeProperty(k)); delete e.dataset.tsY; }
+function topStack() {
+  if (!document.body.classList.contains('v3on')) return;
+  let sp = document.getElementById('v3sat'); if (!sp) { sp = document.createElement('div'); sp.id = 'v3sat'; sp.style.cssText = 'position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;height:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)'; document.body.appendChild(sp); }
+  const sT = sp.offsetHeight || 0, sB = parseFloat(getComputedStyle(sp).paddingBottom) || 0, W = innerWidth, H = innerHeight, G6 = 6, obs = [];
+  document.querySelectorAll(BAN_OBS.join(',')).forEach(o => { const cs = getComputedStyle(o); if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < .05) return; const q = o.getBoundingClientRect(); if (q.width && q.height && q.bottom > 0 && q.top < H) obs.push({ l: q.left, r: q.right, t: q.top, b: q.bottom }); });
+  const hits = (l, r, t, b, L) => L.filter(o => l < o.r + G6 && r > o.l - G6 && t < o.b + G6 && b > o.t - G6);
+  const place = (e, fromTop, placed) => {
+    const left = BAN_LEFT.has(String(e.className).split(' ')[0]); let cx = W / 2, mw = W - 24;
+    e.style.setProperty('max-width', mw + 'px', 'important');
+    let w = e.offsetWidth, h = e.offsetHeight, y = fromTop ? 10 + sT : H - 10 - sB - h;
+    for (let n = 0; n < 24; n++) {
+      const all = obs.concat(placed), hit = hits(cx - w / 2, cx + w / 2, y, y + h, all); if (!hit.length) break;
+      // ¿entra angostándolo en el hueco entre lo que choca a los costados?
+      const band = hits(0, W, y, y + h, obs); let L = 12, R = W - 12; band.forEach(o => { const oc = (o.l + o.r) / 2; if (oc < W / 2) L = Math.max(L, o.r + G6 * 2); else R = Math.min(R, o.l - G6 * 2); });
+      if (R - L >= 170 && (R - L) < mw - 1) { mw = R - L; cx = (L + R) / 2; e.style.setProperty('max-width', mw + 'px', 'important'); w = e.offsetWidth; h = e.offsetHeight; if (!fromTop) y = Math.min(y, H - 10 - sB - h); continue; }
+      // si no, se corre: hacia abajo los de arriba, hacia arriba los de abajo
+      if (fromTop) y = Math.max(...hit.map(o => o.b)) + G6; else y = Math.min(...hit.map(o => o.t)) - G6 - h;
+      if (y < sT || y + h > H) break;
+    }
+    y = Math.round(y); const lx = Math.round(left ? cx - w / 2 : cx), key = y + ',' + lx + ',' + Math.round(mw);
+    if (e.dataset.tsY !== key) { e.style.setProperty('top', y + 'px', 'important'); e.style.setProperty('bottom', 'auto', 'important'); e.style.setProperty('left', lx + 'px', 'important'); e.dataset.tsY = key; }
+    placed.push({ l: cx - w / 2, r: cx + w / 2, t: y, b: y + h });
+  };
+  const placed = [], seen = new Set();
+  const run = (list, top) => list.forEach(sel => document.querySelectorAll(sel).forEach(e => { if (seen.has(e)) return; seen.add(e); if (!topVis(e)) { banReset(e); return; } place(e, top, placed); }));
+  run(BAN_TOP, true); run(BAN_BOT, false);
 }
 function compassTick(dt) {
   HUDL.t = (HUDL.t || 0) - dt; if (HUDL.t <= 0) { HUDL.t = .1; try { hudLay(); } catch (e) {} }
