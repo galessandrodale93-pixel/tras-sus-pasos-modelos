@@ -4,6 +4,8 @@
 // ?p=<programId> incluye solo los eventos generales y los de ese curso.
 import type { APIRoute } from "astro";
 import { items } from "@wix/data";
+import { agendaAlumno } from "./agenda";
+import { progsDe } from "../../lib/vol";
 
 type Ev = {
   _id: string; title?: string; tipo?: string; inicio?: string | Date; fin?: string | Date;
@@ -33,6 +35,12 @@ export const GET: APIRoute = async ({ url }) => {
     const r = await items.query("CampusEventos").ge("inicio", desde).ascending("inicio").limit(200).find();
     evs = (r.items as Ev[]).filter((e) => !e.programId || !p || e.programId === p);
   } catch (e) { console.error("calendario", e); }
+  // sus clases (si el link trae ?c=Carrera) y la Zarza y el Selah, para todos
+  try {
+    const c = progsDe(url.searchParams.get("c") || "");
+    const extra = (await agendaAlumno(c, 120)).filter((e) => c.length || e._id.startsWith("esp-"));
+    evs = evs.concat(extra as unknown as Ev[]);
+  } catch (e) { console.error("calendario extra", e); }
 
   const L: string[] = [
     "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Habitat CFM//Campus//ES", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",

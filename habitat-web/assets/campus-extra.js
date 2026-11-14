@@ -20,12 +20,14 @@
     google: function (pid) { return 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(X.webcal(pid)); },
 
     /* Agenda: eventos que vienen (y avisos recientes). */
-    async agenda(pids) {
+    async agenda(pids, carreras) {
       var desde = new Date(Date.now() - 21 * 864e5).toISOString();
       var r = await q('CampusEventos', { filter: { inicio: { $gte: { $date: desde } } }, sort: [{ fieldName: 'inicio', order: 'ASC' }], paging: { limit: 100 } });
       var mine = {}; (pids || []).forEach(function (p) { mine[p] = 1; });
-      return rows(r).map(function (e) { e.ini = d(e.inicio); e.end = d(e.fin); return e; })
-        .filter(function (e) { return e.ini && (!e.programId || mine[e.programId]); });
+      var L = rows(r).filter(function (e) { return !e.programId || mine[e.programId]; });
+      // sus clases (por carrera) y la Zarza y el Selah
+      try { var x = await fetch('/api/agenda?c=' + encodeURIComponent((carreras || []).join(','))).then(function (y) { return y.json(); }); L = L.concat(x.eventos || []); } catch (e) {}
+      return L.map(function (e) { e.ini = d(e.inicio); e.end = d(e.fin); return e; }).filter(function (e) { return e.ini; }).sort(function (a, b) { return a.ini - b.ini; });
     },
     unseen: function (list) { var t = +(lsGet('campus:seen') || 0); return list.filter(function (e) { return /aviso/i.test(e.tipo || '') && e.ini && e.ini.getTime() > t; }).length; },
     markSeen: function () { lsSet('campus:seen', String(Date.now())); },
