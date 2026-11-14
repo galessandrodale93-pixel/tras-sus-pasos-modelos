@@ -964,3 +964,4 @@ body[data-branch="kids"] .kh-pill b{color:#FFD25E}
 .lb2.kid .lb-foam canvas{display:block;height:clamp(96px,15vh,150px);width:auto;opacity:0;transition:opacity .5s;filter:drop-shadow(0 6px 18px rgba(20,50,130,.35))}
 .lb2.kid .lb-foam canvas.on{opacity:1}
 @media (max-height:560px){.lb2.kid .lb-foam canvas{height:72px}}
+.lb2.kid .lb-foam canvas{height:clamp(110px,22vh,190px)}
