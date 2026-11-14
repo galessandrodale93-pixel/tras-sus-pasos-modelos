@@ -1155,8 +1155,41 @@ const COMP = { el: null, t: 0 };
 /* el HUD de arriba se acomoda midiendo el marco del panel: Día, Mapa y la bolsa van justo debajo, y la guía «Rumbo a…»
    se corre debajo de todo si en el centro chocaría con el panel (celular en vertical). Corre en Hero y en Kids. */
 const HUDL = { t: 0 };
+/* ---------- Emblema del jugador (arriba a la izquierda): medallón con su foto, anillo de experiencia que brilla, nivel en un escudo,
+   título, barra con destello y la mochila. Lee los datos del panel original del juego (que queda oculto en 3D). ---------- */
+const CR = { el: null, sig: '', xp: null, lv: null };
+const BAG_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6V5a3 3 0 0 1 6 0v1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M5.5 8.5A2.5 2.5 0 0 1 8 6h8a2.5 2.5 0 0 1 2.5 2.5V19a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2Z" fill="currentColor" opacity=".9"/><path d="M8.5 12.5h7v3.2a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1Z" fill="none" stroke="rgba(0,0,0,.45)" stroke-width="1.4"/><path d="M12 12.5v1.6" stroke="rgba(0,0,0,.45)" stroke-width="1.4" stroke-linecap="round"/></svg>';
+function crestInit() {
+  if (CR.el && document.body.contains(CR.el)) return CR.el;
+  const el = document.createElement('div'); el.id = 'v3crest'; el.className = 'v3crest';
+  el.innerHTML = `<button class="cr-med" aria-label="Ver mi progreso"><svg class="cr-ring" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="crG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF3B8"/><stop offset=".45" stop-color="#F5C443"/><stop offset="1" stop-color="#C77A16"/></linearGradient></defs><circle class="trk" cx="50" cy="50" r="45"/><circle class="arc" cx="50" cy="50" r="45" pathLength="100"/><circle class="tip" cx="50" cy="5" r="4"/></svg><span class="cr-ph"></span><span class="cr-lv"><svg viewBox="0 0 32 36" aria-hidden="true"><path d="M16 1 30 6v11c0 9-6.5 15.5-14 18C8.5 32.5 2 26 2 17V6Z" fill="url(#crG)" stroke="#5A3A0A" stroke-width="1.6"/></svg><b></b></span><i class="cr-badge" hidden></i></button>
+    <button class="cr-txt" aria-label="Ver mi progreso"><small class="cr-rank"></small><b class="cr-name"></b><span class="cr-bar"><i></i><em></em></span><span class="cr-xp"></span></button>
+    <div class="cr-side"><span class="cr-pts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 15 9l7 .6-5.3 4.7L18.4 22 12 18.2 5.6 22l1.7-7.7L2 9.6 9 9Z" fill="url(#crG)" stroke="#6B4510" stroke-width="1"/></svg><b></b></span><button class="cr-bag" aria-label="Abrir mochila">${BAG_SVG}<i class="cr-bdg" hidden></i></button></div>`;
+  document.body.appendChild(el); CR.el = el;
+  const prog = () => { const h = document.getElementById('hudLv'); if (h) h.click(); };
+  el.querySelector('.cr-med').onclick = prog; el.querySelector('.cr-txt').onclick = prog;
+  el.querySelector('.cr-bag').onclick = () => { try { openBag(); } catch (e) { const b = document.getElementById('v3bag'); if (b) b.click(); } };
+  return el;
+}
+function crestSync() {
+  if (!document.body.classList.contains('v3on')) return; const el = crestInit(), $q = q => document.getElementById(q);
+  const lv = ($q('lvN') || {}).textContent || '1', rank = ($q('lvT') || {}).textContent || '', pts = ($q('score') || {}).textContent || '0', hl = $q('hudLv');
+  const xp = hl ? +(getComputedStyle(hl).getPropertyValue('--xp') || 0) : 0, tt = hl ? (hl.title || '') : '', mm = tt.match(/(\d+)\s*de\s*(\d+)/);
+  const ph = $q('hudPh'), av = $q('hudAv'), phU = ph && !ph.hidden && ph.src ? ph.src : '', bd = [...document.querySelectorAll('.hud .hud-badge')].map(b => b.offsetParent !== null || getComputedStyle(b).display !== 'none' ? (b.textContent || '').trim() : '').find(Boolean) || '';
+  const sig = [lv, rank, pts, xp, tt, phU, av ? av.innerHTML.length : 0, bd].join('|'); if (sig === CR.sig) return; CR.sig = sig;
+  el.querySelector('.cr-lv b').textContent = lv; el.querySelector('.cr-rank').textContent = rank; el.querySelector('.cr-name').textContent = 'Nivel ' + lv;
+  el.querySelector('.cr-pts b').textContent = pts; el.querySelector('.cr-xp').textContent = mm ? `${mm[1]} / ${mm[2]}` : '';
+  const pc = Math.max(0, Math.min(100, xp)); el.style.setProperty('--xp', pc); el.querySelector('.cr-ring .arc').style.strokeDasharray = `${pc} 100`;
+  const an = (pc / 100) * 6.283 - Math.PI / 2, tp = el.querySelector('.cr-ring .tip'); tp.setAttribute('cx', 50 + Math.cos(an) * 45); tp.setAttribute('cy', 50 + Math.sin(an) * 45); tp.style.display = pc > 1 && pc < 99.5 ? '' : 'none';
+  const box = el.querySelector('.cr-ph'); if (phU) { if (box.dataset.u !== phU) { box.innerHTML = `<img alt="" src="${phU}">`; box.dataset.u = phU; } } else if (av && box.dataset.u !== 'av' + av.innerHTML.length) { box.innerHTML = av.innerHTML; box.dataset.u = 'av' + av.innerHTML.length; }
+  const b = el.querySelector('.cr-badge'); b.hidden = !bd; b.textContent = bd;
+  const fx = c => { el.classList.remove(c); void el.offsetWidth; el.classList.add(c); clearTimeout(CR['t' + c]); CR['t' + c] = setTimeout(() => el.classList.remove(c), 1600); };
+  if (CR.lv != null && +lv > +CR.lv) fx('lvup'); else if (CR.xp != null && pc > CR.xp) fx('gain');
+  CR.lv = lv; CR.xp = pc;
+}
 function hudLay() {
-  const h = document.querySelector('body.v3on .hud-in'), B = document.body.style; if (!h) return; const r = h.getBoundingClientRect(); if (!r.width || !r.height) return;
+  try { crestSync(); } catch (e) { }
+  const h = document.querySelector('body.v3on #v3crest') || document.querySelector('body.v3on .hud-in'), B = document.body.style; if (!h) return; const r = h.getBoundingClientRect(); if (!r.width || !r.height) return;
   const hb = Math.round(r.bottom + 8); if (B.getPropertyValue('--hudB') !== hb + 'px') B.setProperty('--hudB', hb + 'px');
   try { topStack(); } catch (e) { }
 }
@@ -1165,7 +1198,7 @@ function hudLay() {
    o los botones de la derecha, se angosta para entrar en el hueco del medio; si igual no entra, baja (o sube) hasta quedar libre. */
 const BAN_TOP = ['.v3comp', '#v3room', '.v3topics', '.v3mis', '.v3seas', '#v3vil', '.v3bagt', '.v3pop', '#toast'];
 const BAN_BOT = ['.v3place', '.v3say', '.v3hint'];
-const BAN_OBS = ['.hud', '.v3surv', '.v3mapbtn', '.v3baghud', '.v3mmbox', '.v3cam', '.v3joy', '#v3joy', '.v3fan .fan-tg', '.v3fan.open .fan-items button', '#v3acts > button', '#v3go', '.v3go', '#wixheadless-banner-container'];
+const BAN_OBS = ['#v3crest', '.hud', '.v3surv', '.v3mapbtn', '.v3baghud', '.v3mmbox', '.v3cam', '.v3joy', '#v3joy', '.v3fan .fan-tg', '.v3fan.open .fan-items button', '#v3acts > button', '#v3go', '.v3go', '#wixheadless-banner-container'];
 const BAN_LEFT = new Set(['v3mis']);
 function topVis(e) { if (!e || e.hidden) return false; const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden' || cs.position !== 'fixed') return false; return +cs.opacity > .04 || e.classList.contains('on') || e.classList.contains('show'); }
 function banReset(e) { if (e.dataset.tsY == null) return; ['top', 'bottom', 'left', 'max-width'].forEach(k => e.style.removeProperty(k)); delete e.dataset.tsY; }
@@ -1248,12 +1281,14 @@ function iosHint() {
 function bagBtn() { const b = document.getElementById('v3bag'); if (!b) return; b.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M8 7V6a4 4 0 0 1 8 0v1h2.5a1 1 0 0 1 1 1l-1 12H5.5l-1-12a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'; b.setAttribute('aria-label', 'Abrir mochila'); }
 function openBag(first) {
   const el = document.getElementById('v3sheet'); if (!el) return; S.joy.x = 0; S.joy.y = 0;
-  el.innerHTML = `<div class="inv${S.hx ? ' hx' : ''}"><div class="inv-h"><b>Mochila</b><button class="bag-x" aria-label="Cerrar">✕</button></div>
-    <div class="inv-tabs" role="tablist"><button data-t="eq" class="on">Equipo</button><button data-t="ob">Objetos</button><button data-t="me">Recuerdos</button><button data-t="cu">Cursos hechos</button>${S.hx ? '<button data-t="su">Trabajo</button>' : ''}<button data-t="at">${S.hx ? 'Atributos' : 'Mis fuerzas'}</button></div>
+  const tx = id => ((document.getElementById(id) || {}).textContent || '').trim(), lvn = tx('lvN') || '1', rk = tx('lvT'), pts = tx('score');
+  const T = (t, ic, n) => `<button data-t="${t}" role="tab"><span class="it-ic" aria-hidden="true">${ic}</span><span class="it-tx">${n}</span></button>`;
+  el.innerHTML = `<div class="inv${S.hx ? ' hx' : ''}"><div class="inv-h"><div class="inv-tt"><span class="inv-emb">${BAG_SVG}</span><div><b>Mochila</b><small>Nivel ${esc(lvn)}${rk ? ' · ' + esc(rk) : ''}${pts ? ` · <em>✦ ${esc(pts)}</em>` : ''}</small></div></div><button class="bag-x" aria-label="Cerrar">✕</button></div>
+    <div class="inv-tabs" role="tablist">${T('eq', '🛡️', 'Equipo')}${T('ob', '🏺', 'Objetos')}${T('me', '📜', 'Recuerdos')}${T('cu', '🎓', 'Cursos')}${S.hx ? T('su', '🔨', 'Trabajo') : ''}${T('at', '💪', S.hx ? 'Atributos' : 'Mis fuerzas')}</div>
     <div class="inv-body"></div></div>`;
   el.hidden = false; const close = () => { el.hidden = true; }; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   const tabs = el.querySelectorAll('.inv-tabs button'), body = el.querySelector('.inv-body');
-  const show = t => { tabs.forEach(b => b.classList.toggle('on', b.dataset.t === t)); body.innerHTML = ''; if (t === 'eq') invEquip(body); else if (t === 'ob') invItems(body); else if (t === 'su') invSurv(body); else if (t === 'at') invAttr(body); else if (t === 'cu') invCourses(body); else invMemories(body); };
+  const show = t => { tabs.forEach(b => { b.classList.toggle('on', b.dataset.t === t); b.setAttribute('aria-selected', b.dataset.t === t ? 'true' : 'false'); }); body.dataset.t = t; body.classList.remove('in'); void body.offsetWidth; body.classList.add('in'); body.innerHTML = ''; if (t === 'eq') invEquip(body); else if (t === 'ob') invItems(body); else if (t === 'su') invSurv(body); else if (t === 'at') invAttr(body); else if (t === 'cu') invCourses(body); else invMemories(body); };
   tabs.forEach(b => b.onclick = () => show(b.dataset.t)); show((typeof first === 'string' ? first : 'eq'));
 }
 /* ícono dibujado de cada prenda: su forma, su color real y su detalle (rayas, vendas, bordado, metal) */
