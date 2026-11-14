@@ -1112,3 +1112,4 @@ body:not([data-branch="ados"]) .cr-rank{color:#AFC3EE}
 .v3crest .cr-med{width:62px;height:62px}
 .v3crest .cr-bag{border:0;padding:0;margin:0;min-height:0}
 @media (max-height:520px){.v3crest .cr-med{width:48px;height:48px}}
+.cr-ph svg.hud-av{width:100%!important;height:100%!important;display:block!important;background:linear-gradient(180deg,#DDEBFF,#FFFFFF)}

@@ -1181,7 +1181,7 @@ function crestSync() {
   el.querySelector('.cr-pts b').textContent = pts; el.querySelector('.cr-xp').textContent = mm ? `${mm[1]} / ${mm[2]}` : '';
   const pc = Math.max(0, Math.min(100, xp)); el.style.setProperty('--xp', pc); el.querySelector('.cr-ring .arc').style.strokeDasharray = `${pc} 100`;
   const an = (pc / 100) * 6.283 - Math.PI / 2, tp = el.querySelector('.cr-ring .tip'); tp.setAttribute('cx', 50 + Math.cos(an) * 45); tp.setAttribute('cy', 50 + Math.sin(an) * 45); tp.style.display = pc > 1 && pc < 99.5 ? '' : 'none';
-  const box = el.querySelector('.cr-ph'); if (phU) { if (box.dataset.u !== phU) { box.innerHTML = `<img alt="" src="${phU}">`; box.dataset.u = phU; } } else if (av && box.dataset.u !== 'av' + av.innerHTML.length) { box.innerHTML = av.innerHTML; box.dataset.u = 'av' + av.innerHTML.length; }
+  const box = el.querySelector('.cr-ph'); if (phU) { if (box.dataset.u !== phU) { box.innerHTML = `<img alt="" src="${phU}">`; box.dataset.u = phU; } } else if (av && box.dataset.u !== 'av' + av.innerHTML.length) { box.innerHTML = av.outerHTML.replace(/\sid="hudAv"/, '').replace(/\sstyle="[^"]*"/, ''); box.dataset.u = 'av' + av.innerHTML.length; }
   const b = el.querySelector('.cr-badge'); b.hidden = !bd; b.textContent = bd;
   const fx = c => { el.classList.remove(c); void el.offsetWidth; el.classList.add(c); clearTimeout(CR['t' + c]); CR['t' + c] = setTimeout(() => el.classList.remove(c), 1600); };
   if (CR.lv != null && +lv > +CR.lv) fx('lvup'); else if (CR.xp != null && pc > CR.xp) fx('gain');
