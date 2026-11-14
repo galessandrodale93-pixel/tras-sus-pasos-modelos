@@ -3,6 +3,7 @@ import type { APIRoute } from "astro";
 import { auth } from "@wix/essentials";
 import { items } from "@wix/data";
 import { animo, grupos, type Ev } from "../../lib/vol";
+import { paraProyectar } from "../../lib/material";
 const save = auth.elevate(items.save);
 
 const q = auth.elevate(items.query);
@@ -34,7 +35,8 @@ export const GET: APIRoute = async ({ request }) => {
     const nombres = Object.fromEntries((vs.items as { _id: string; title?: string }[]).map((x) => [x._id, x.title || ""]));
     const equipo = (eq.items as { fecha: string; tarea: string; voluntarioId: string; nota?: string }[]).map((t) => ({ fecha: t.fecha, tarea: t.tarea, nota: t.nota || "", quien: nombres[t.voluntarioId] || "", yo: t.voluntarioId === v._id }));
     const dias = new Set((hist.items as { fecha: string }[]).map((t) => t.fecha)).size;
-    return json({ eventos: evs, voluntario: { nombre: v.title, ics: "https://www.habitat-cfm.org/api/voluntario.ics?v=" + v._id + "&k=" + v.clave }, turnos, equipo, servido: { dias, tareas: hist.items.length }, animo: animo(hoy + v._id) });
+    const proyectar = await paraProyectar(hoy).catch(() => []);
+    return json({ proyectar, eventos: evs, voluntario: { nombre: v.title, ics: "https://www.habitat-cfm.org/api/voluntario.ics?v=" + v._id + "&k=" + v.clave }, turnos, equipo, servido: { dias, tareas: hist.items.length }, animo: animo(hoy + v._id) });
   } catch (e) {
     console.error("voluntario", e);
     return json({ voluntario: null });

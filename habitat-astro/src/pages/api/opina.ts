@@ -21,7 +21,7 @@ export const GET: APIRoute = async ({ request }) => {
     if (!me) return json({ ok: false });
     const hoy = hoyAR();
     const [clases, mats, mias] = await Promise.all([
-      todos<Clase>("TutClases"), todos<{ _id: string; title?: string; claseId: string; url?: string; mime?: string }>("ProfMaterial"),
+      todos<Clase>("TutClases"), todos<{ _id: string; title?: string; claseId: string; url?: string; mime?: string; para?: string }>("ProfMaterial").then((L) => L.filter((m) => m.para !== "equipo")),
       q("AluOpina").eq("email", me.email).limit(500).find().then((r) => r.items as { claseId?: string }[]),
     ]);
     const mis = clases.filter((c) => esClase(c) && (!me.progs.length || progsDe(c.programa).some((p) => me.progs.includes(p))));

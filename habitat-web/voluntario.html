@@ -58,6 +58,7 @@
   <a class="tt-card" id="vOra" href="/intercesion.html" hidden style="display:block;text-decoration:none;color:inherit;border-left:4px solid var(--gold)"></a>
   <div class="vs-next tt-card" id="vNext"><p class="tt-empty">Cargando tus turnos…</p></div>
   <div class="tt-card vs-lista" id="lista" hidden></div>
+  <div class="tt-card" id="vProy" hidden></div>
   <div class="vs-row">
     <div class="tt-card"><h2 class="tt-h">Tus próximos turnos</h2><div class="tt-tl" id="vList"></div></div>
     <div class="tt-card vs-cal"><h2 class="tt-h">Avisos en tu teléfono</h2><p class="tt-tip">Sumá tu calendario de servicio y te llega el recordatorio: lo de la tarde y la noche el mismo día, lo de la mañana el día anterior. También Zarza, el tiempo de mesa por Zoom y Selah. Si cambian los turnos, se actualiza solo.</p><div class="tt-wa"><a class="tt-btn" id="vIcs" href="#">Sumar a mi teléfono</a><a class="tt-btn s" id="vGcal" href="#" target="_blank" rel="noopener">Google Calendar</a></div><div class="tt-stats" id="vStats"></div></div>
@@ -105,6 +106,7 @@ function bindSelah(){var b=$('#vsOk');if(!b)return;b.onclick=async function(){b.
 var nom=(r.voluntario.nombre||'').replace(/\(.*\)/,'').trim().split(' ')[0];
 $('#vHola').textContent=(h<12?'Buen día':h<20?'Buenas tardes':'Buenas noches')+', '+nom;
 var hoy=new Date(Date.now()-3*3600e3).toISOString().slice(0,10);
+var PR=r.proyectar||[];if(PR.length){var DLs=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];$('#vProy').innerHTML='<h2 class="tt-h">🖥️ Para proyectar en Habitat</h2><p class="tt-tip">La presentación de las próximas clases. Descargala en la PC de Habitat antes de empezar.</p>'+PR.map(function(c){var d=new Date(c.fecha+'T12:00:00');return '<div style="padding:8px 0;border-top:1px solid var(--line)"><b>'+DLs[d.getDay()]+' '+d.getDate()+'/'+(d.getMonth()+1)+(c.programa?' · '+esc(c.programa):'')+'</b>'+(c.title?' <small>'+esc(c.title)+'</small>':'')+'<div>'+c.items.map(function(x){return '<a class="tt-btn s" style="margin:6px 6px 0 0" href="'+esc(x.url)+'" target="_blank" rel="noopener" download>⬇️ '+esc(x.title)+'</a>';}).join('')+'</div></div>';}).join('');$('#vProy').hidden=false;}
 var T=r.turnos||[];
 $('#vWho').textContent=T.length?'Tenés '+T.length+(T.length===1?' turno':' turnos')+' por delante. Gracias por servir.':'No tenés turnos asignados por ahora.';
 if(T.length){var n=T[0],dd=Math.round((pd(n.fecha)-pd(hoy))/864e5);

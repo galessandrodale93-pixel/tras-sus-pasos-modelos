@@ -283,8 +283,38 @@
     modal('<form class="tt-form"><h2 class="w">' + (c._id ? 'Editar clase' : 'Nueva clase') + '</h2><label>Fecha<input type="date" name="fecha" required value="' + esc(c.fecha) + '"></label><label>Carrera<select name="programa">' + ['Maranata', 'Liderazgo', 'Adoración'].map(function (p) { return '<option' + (c.programa === p ? ' selected' : '') + '>' + p + '</option>'; }).join('') + '</select></label><label class="w">Tema<input name="title" required value="' + esc(c.title || '') + '"></label><label>Profe<input name="profe" list="profesL" value="' + esc(c.profe || '') + '"><datalist id="profesL">' + Object.keys((D.clases || []).reduce(function (o, x) { if (x.profe) o[x.profe] = 1; return o; }, {})).sort().map(function (p) { return '<option>' + esc(p) + '</option>'; }).join('') + '</datalist></label><label>Tipo<select name="tipo">' + ['Clase', 'Examen', 'Intro', 'Receso'].map(function (t) { return '<option' + (c.tipo === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select></label><label class="w">Bloque<input name="bloque" list="bloquesL" value="' + esc(c.bloque || '') + '"><datalist id="bloquesL">' + Object.keys(bl).map(function (b) { return '<option>' + esc(b) + '</option>'; }).join('') + '</datalist></label><label class="w">Nota<input name="nota" value="' + esc(c.nota || '') + '" placeholder="Ej.: preparar material, a confirmar…"></label><div class="w tt-wa"><button class="tt-btn" type="submit">Guardar</button><button class="tt-btn s" type="button" data-close>Cancelar</button>' + (c._id ? '<button class="tt-btn s" type="button" data-del style="margin-left:auto;color:var(--r)">Borrar</button>' : '') + '</div></form>', function (m, close) {
       var f = $('form', m);
       f.onsubmit = function (e) { e.preventDefault(); send({ op: 'clase', id: c._id || '', fecha: f.fecha.value, programa: f.programa.value, title: f.title.value, profe: f.profe.value, tipo: f.tipo.value, bloque: f.bloque.value, nota: f.nota.value }, c._id, 'clases').then(function () { close(); toast('Clase guardada.'); refresh(); }); };
+      if (c._id && (D.me.rol === 'director' || D.me.org)) matBox(m, c);
       var del = $('[data-del]', m); if (del) del.onclick = function () { if (!del.dataset.ok) { del.dataset.ok = 1; del.textContent = '¿Borrar de verdad?'; return; } send({ op: 'clase', borrar: true, id: c._id }, c._id, 'clases').then(function () { close(); refresh(); }); };
     });
+  }
+  /* Material de la clase: para los alumnos (Campus + mail) o solo para el equipo (la presentación para proyectar) */
+  function matIco(mm) { return /pdf/.test(mm || '') ? '📄' : /presentation|powerpoint|keynote/.test(mm || '') ? '🖥️' : /video/.test(mm || '') ? '🎬' : /image/.test(mm || '') ? '🖼️' : '📎'; }
+  function matBox(m, c) {
+    var box = document.createElement('div'); box.className = 'w tt-mat'; box.style.cssText = 'border-top:1px solid var(--line);padding-top:14px;margin-top:6px';
+    $('form', m).appendChild(box);
+    var draw = function () {
+      var L = (D.materiales || []).filter(function (x) { return x.claseId === c._id; });
+      box.innerHTML = '<p class="tt-lbl">Material de la clase</p>' + (L.map(function (x) { return '<div style="display:flex;gap:8px;align-items:center;padding:6px 0"><span>' + matIco(x.mime) + '</span><a href="' + esc(x.url) + '" target="_blank" rel="noopener" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">' + esc(x.title) + '</a><small class="tt-tip" style="margin:0">' + (x.para === 'equipo' ? '🖥️ Solo equipo' : '🎓 Alumnos' + (x.avisado && x.avisado !== 'viejo' ? ' · avisados' : ' · se avisa mañana a la mañana')) + '</small><button type="button" class="tt-btn s" data-mx="' + esc(x._id) + '" aria-label="Quitar">✕</button></div>'; }).join('') || '<p class="tt-tip">Todavía no hay material. Lo que subas para los alumnos les aparece en el Campus y les llega por mail; lo que sea solo para el equipo lo ven los voluntarios en Mi servicio para proyectarlo.</p>') +
+        '<div class="tt-wa"><button type="button" class="tt-btn s" data-up="alumnos">🎓 Subir para los alumnos</button><button type="button" class="tt-btn s" data-up="equipo">🖥️ Subir para proyectar (solo equipo)</button></div><input type="file" hidden multiple data-file>';
+      var inp = $('[data-file]', box), para = 'alumnos';
+      $$('[data-up]', box).forEach(function (b) { b.onclick = function () { para = b.dataset.up; inp.click(); }; });
+      inp.onchange = async function () {
+        var fs = Array.prototype.slice.call(inp.files || []); inp.value = '';
+        for (var i = 0; i < fs.length; i++) {
+          var fl = fs[i]; if (fl.size > 50e6) { toast(fl.name + ' pesa más de 50 MB.'); continue; }
+          toast('Subiendo ' + fl.name + '…');
+          try {
+            var mime = fl.type || 'application/octet-stream', u = await api('POST', { op: 'matSubir', nombre: fl.name, mime: mime });
+            var up = await fetch(u.uploadUrl + (u.uploadUrl.indexOf('?') >= 0 ? '&' : '?') + 'filename=' + encodeURIComponent(fl.name), { method: 'PUT', headers: { 'Content-Type': mime }, body: fl });
+            var j = await up.json(), url = j.file && j.file.url; if (!url) throw new Error('No se pudo subir ' + fl.name);
+            var r = await api('POST', { op: 'material', claseId: c._id, url: url, nombre: fl.name, mime: mime, para: para });
+            (D.materiales = D.materiales || []).push(r.item); draw(); toast('Listo: ' + fl.name);
+          } catch (x) { toast(x.message || 'No se pudo subir.'); }
+        }
+      };
+      $$('[data-mx]', box).forEach(function (b) { b.onclick = function () { if (!b.dataset.ok) { b.dataset.ok = 1; b.textContent = '¿Quitar?'; return; } api('POST', { op: 'material', borrar: true, id: b.dataset.mx }).then(function () { D.materiales = D.materiales.filter(function (x) { return x._id !== b.dataset.mx; }); draw(); }).catch(function (x) { toast(x.message); }); }; });
+    };
+    draw();
   }
   function planModal(p) {
     p = p || { programa: CP };
