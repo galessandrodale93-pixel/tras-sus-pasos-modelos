@@ -15,7 +15,7 @@ import { debiDiario } from "../../lib/debi";
 import { edicionDiario } from "../../lib/edicion";
 import { oracionAviso } from "../../lib/oracion";
 import { zarzaDiario } from "../../lib/zarza";
-import { materialDiario } from "../../lib/material";
+import { especialesSemana, materialDiario } from "../../lib/material";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
@@ -104,7 +104,9 @@ export const GET: APIRoute = async ({ url }) => {
       // el resumen semanal sale el domingo (hora de Argentina) y cubre del lunes siguiente al domingo
       if (new Date(hoy + "T12:00:00Z").getUTCDay() !== 0) return json({ ok: true, hoy, semana: "solo los domingos", enviados: [] });
       const lun = mas(hoy, 1);
-      return json({ ok: true, hoy, semana: lun + " a " + mas(lun, 6), enviados: await semanal(lun, dry, remitente) });
+      let alumnos: unknown = {};
+      try { alumnos = await especialesSemana(lun, dry, remitente); } catch (e) { alumnos = String((e as Error).message || e); }
+      return json({ ok: true, hoy, semana: lun + " a " + mas(lun, 6), enviados: await semanal(lun, dry, remitente), alumnos });
     }
     let profes: unknown = [];
     try { profes = await avisarProfes(hoy, dry, remitente); } catch (e) { profes = String((e as Error).message || e); }
