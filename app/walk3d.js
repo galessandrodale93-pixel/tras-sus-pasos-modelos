@@ -2569,8 +2569,7 @@ function judeaTrails(scene, p, yAt, poiProp, hx) {
       for (let k = 0; k < 2; k++) { const egg = new THREE.Mesh(new THREE.SphereGeometry(.09, 10, 8), tm('egg', '#E9E1CF')); egg.scale.y = 1.25; egg.position.set(-.07 + k * .14, .12, .02 * k); nest.add(egg); }
       nest.position.set(nx, ny, nz); scene.add(nest);
       S.lore.push({ x: nx, z: nz, r: 2.4, label: 'Mirar el nido', fx: 'aguila', dur: 6, info: ['Alas como las águilas', 'En lo alto de los montes anidan las águilas. «Los que esperan en el Señor tendrán nuevas fuerzas; levantarán alas como las águilas; correrán, y no se cansarán; caminarán, y no se fatigarán».', 'Isaías 40:31'] }); }
-    { const g = new THREE.Group(), wm = new THREE.MeshStandardMaterial({ color: '#4A3626', side: THREE.DoubleSide, roughness: 1 }), body = new THREE.Mesh(new THREE.ConeGeometry(.16, .9, 6), wm); body.rotation.x = Math.PI / 2; g.add(body); const hd = new THREE.Mesh(new THREE.SphereGeometry(.1, 8, 6), tm('eaglehead', '#EDE6D8')); hd.position.z = .5; g.add(hd);
-      const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, .2, 0, 0, -.25, 1.5, .08, -.12], 3)); wg.computeVertexNormals(); const wl = new THREE.Mesh(wg, wm), wr = wl.clone(); wr.scale.x = -1; g.add(wl, wr); g.scale.setScalar(1.7); scene.add(g); J.eagle = { g, wl, wr, cx: e.x, cz: e.z, y: y + 9 }; }
+    { const g = eagleMesh(); scene.add(g); J.eagle = { g, cx: e.x, cz: e.z, y: y + 9 }; }
     /* la bajada: desde la cima, sin camino, hasta la meta al pie del monte (sola contra reloj o con amigos en «Carrera a un lugar») */
     { const D = TRL.desc; if (D) { const fy = yAt(D.fx, D.fz), ring = new THREE.Mesh(new THREE.TorusGeometry(2.4, .13, 8, 40), new THREE.MeshBasicMaterial({ color: '#FFD47A', transparent: true, opacity: .8 })); ring.rotation.x = Math.PI / 2; ring.position.set(D.fx, fy + .15, D.fz); scene.add(ring);
       const gl = glowSpr('#FFE2A0', 5, .4); gl.position.set(D.fx, fy + 1.2, D.fz); scene.add(gl);
@@ -2604,6 +2603,25 @@ function descTick() { const J = S.judea, R0 = J && J.race; if (!R0) return; R0.r
   if (s2 > 240) { R0.on = false; if (el) el.hidden = true; return; }
   if (Math.hypot(a.x - R0.fx, a.z - R0.fz) < 2.8) { R0.on = false; if (el) el.hidden = true; let best = null; try { best = +localStorage.getItem('tsp:bajada') || null; } catch (e) { } const rec = !best || s2 < best; if (rec) { best = s2; try { localStorage.setItem('tsp:bajada', s2.toFixed(1)); } catch (e) { } }
     placeCard([rec ? '¡Nuevo récord!' : '¡Llegaste!', `Bajaste en ${s2.toFixed(1)} segundos. Tu mejor marca: ${best.toFixed(1)} s. «Corramos con paciencia la carrera que tenemos por delante, puestos los ojos en Jesús».`, 'Hebreos 12:1-2']); sello('bajada', 'La bajada del monte'); } }
+// águila real: cuerpo, cabeza blanca con pico amarillo y ganchudo, cola en abanico y alas largas en dos partes con plumas primarias separadas
+function eagleMesh() {
+  const g = new THREE.Group(), br = new THREE.MeshStandardMaterial({ color: '#3B2A1C', roughness: .9, side: THREE.DoubleSide }), br2 = new THREE.MeshStandardMaterial({ color: '#5A4129', roughness: .9, side: THREE.DoubleSide }), wh = new THREE.MeshStandardMaterial({ color: '#F1ECE2', roughness: .8 }), yl = new THREE.MeshStandardMaterial({ color: '#E8B02A', roughness: .5 });
+  const body = new THREE.Mesh(new THREE.SphereGeometry(.22, 14, 10), br); body.scale.set(1, .9, 2.4); g.add(body);
+  const neck = new THREE.Mesh(new THREE.SphereGeometry(.15, 12, 8), wh); neck.scale.set(1, 1, 1.3); neck.position.set(0, .06, .52); g.add(neck);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.13, 12, 10), wh); head.position.set(0, .1, .66); g.add(head);
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(.045, .16, 8), yl); beak.rotation.x = Math.PI / 2 + .45; beak.position.set(0, .06, .8); g.add(beak);
+  [-1, 1].forEach(sx => { const eye = new THREE.Mesh(new THREE.SphereGeometry(.018, 6, 4), new THREE.MeshBasicMaterial({ color: '#1A1208' })); eye.position.set(sx * .075, .13, .73); g.add(eye); });
+  const tail = new THREE.Group(); for (let k = 0; k < 7; k++) { const fe = new THREE.Mesh(new THREE.PlaneGeometry(.1, .42), k % 2 ? br : wh); fe.rotation.x = -Math.PI / 2; fe.position.set((k - 3) * .045, 0, -.21); fe.rotation.z = (k - 3) * .09; tail.add(fe); } tail.position.set(0, -.02, -.48); g.add(tail);
+  const wings = []; [-1, 1].forEach(sx => {
+    const sh = new THREE.Group(); sh.position.set(sx * .16, .05, .08); g.add(sh);
+    const inner = new THREE.Mesh(new THREE.PlaneGeometry(.95, .5), br); inner.rotation.x = -Math.PI / 2; inner.position.set(sx * .48, 0, 0); sh.add(inner);
+    const cov = new THREE.Mesh(new THREE.PlaneGeometry(.9, .22), br2); cov.rotation.x = -Math.PI / 2; cov.position.set(sx * .48, .01, .12); sh.add(cov);
+    const el = new THREE.Group(); el.position.set(sx * .95, 0, 0); sh.add(el);
+    const outer = new THREE.Mesh(new THREE.PlaneGeometry(.7, .42), br); outer.rotation.x = -Math.PI / 2; outer.position.set(sx * .35, 0, -.02); el.add(outer);
+    for (let k = 0; k < 6; k++) { const pf = new THREE.Mesh(new THREE.PlaneGeometry(.4, .075), br); pf.rotation.x = -Math.PI / 2; pf.rotation.z = sx * (-.2 + k * .12); pf.position.set(sx * (.78 + k * .015), 0, .14 - k * .07); el.add(pf); } // plumas primarias abiertas como dedos
+    wings.push([sh, el]); });
+  g.userData.wings = wings; g.userData.tail = tail; g.scale.setScalar(1.6); g.traverse(m => { if (m.isMesh) m.castShadow = true; }); return g;
+}
 function judeaTick(dt, t) {
   const J = S.judea; if (!J) return; J.t += dt; if (!J.cleaned && J.t > 2.5) { J.cleaned = 1; try { judeaClean(); } catch (e) { } } const on = fx => S.lore.some(l => l.fx === fx && l.on);
   J.ibex.forEach(q => { const hop = on('ibex') ? Math.max(0, Math.sin(t * 5 + q.ph)) * .5 : 0; q.g.position.y = q.y + hop; q.g.rotation.y += Math.sin(t * .4 + q.ph) * dt * .2; });
@@ -2611,7 +2629,7 @@ function judeaTick(dt, t) {
   if (J.flower) J.flower.material.opacity = on('flor') ? .95 : .4 + Math.sin(t * 1.7) * .15;
   if (J.sheep) J.sheep.gl.material.opacity = on('oveja') ? .9 : .35 + Math.sin(t * 2.2) * .15;
   descTick();
-  if (J.eagle) { const E = J.eagle, k2 = on('aguila') ? 1.8 : 1, an = t * .28 * k2, r = 14 - (k2 - 1) * 5; E.g.position.set(E.cx + Math.cos(an) * r, E.y + Math.sin(t * .6) * 1.5 - (k2 - 1) * 3, E.cz + Math.sin(an) * r); E.g.rotation.set(0, -an, .35); const fl = (t % 6) < 1.2 || k2 > 1 ? Math.sin(t * 12) * .5 : .08; E.wl.rotation.z = fl; E.wr.rotation.z = -fl; }
+  if (J.eagle) { const E = J.eagle, U = E.g.userData, k2 = on('aguila') ? 1.7 : 1, an = t * .26 * k2, r = 15 - (k2 - 1) * 6, dip = Math.sin(t * .45) * 2.2; E.g.position.set(E.cx + Math.cos(an) * r, E.y + dip - (k2 - 1) * 4, E.cz + Math.sin(an) * r); E.g.rotation.set(Math.cos(t * .45) * .12, -an, .42 + Math.sin(t * .3) * .08); /* planea con las alas abiertas y cada tanto aletea fuerte */ const flap = (t % 7) < 1.6 || k2 > 1, w = flap ? Math.sin(t * 9) : 0, f = flap ? .55 : .06 + Math.sin(t * 1.3) * .03; U.wings.forEach(([sh, el], s2) => { const sg = s2 ? -1 : 1; sh.rotation.z = sg * (w * f + .04); el.rotation.z = sg * (w * f * .7 - .05); }); U.tail.rotation.x = -.08 + Math.sin(t * 1.1) * .05; }
   if (J.cima) { const a = S.av.position, d = Math.hypot(a.x - J.cima.x, a.z - J.cima.z), k = 1 - sstep(10, 45, d); S.fogMul = 1 - k * .93; if (S.scene.fog && S.scene.fog.isFogExp2) { if (k < .01 || J.fd0 == null) J.fd0 = S.scene.fog.density; else S.scene.fog.density = J.fd0 * S.fogMul; } if (S.scene.fog && S.scene.fog.isFog) { if (J.far0 == null) J.far0 = S.scene.fog.far; S.scene.fog.far = J.far0 + k * 450; } if (J.cityGlow) J.cityGlow.material.opacity = .08 + k * (on('ciudad') ? .4 : .2); }
   J.lamps.forEach((l, i) => { l.material.opacity = .6 + Math.sin(t * 9 + i) * .1 + Math.sin(t * 23 + i * 2) * .05; });
   if (J.vision) { const k = on('reinos') ? 1 : 0; J.vision.big.material.opacity += ((k ? .55 : .2 + Math.sin(t * .5) * .05) - J.vision.big.material.opacity) * Math.min(1, dt * 2); J.vision.g.children.forEach((c, i) => { if (c !== J.vision.big) c.material.opacity = (k ? .7 : .3) + Math.sin(t * 1.3 + i) * .1; }); }
