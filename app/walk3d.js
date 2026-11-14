@@ -1013,6 +1013,8 @@ function groundAt(x, z, cur) {
   for (const h of [stairH(x, z), floorH(x, z), rampH(x, z)]) if (h > g && h <= c + STEP) g = h;
   return g;
 }
+// barandas invisibles: estando arriba de una escalera o terraza no se puede salir por el costado al vacío (se baja por los escalones)
+function edgeDrop(x, z, cur) { if (cur == null) return false; const t = S.W ? Math.max(0, S.W.hAt(x, z)) : 0; if (cur - t < STEP) return false; return groundAt(x, z, cur) < cur - STEP; }
 // escalones y rampas son macizos: desde abajo no se atraviesan (las terrazas sí tienen hueco debajo)
 function solidAbove(x, z, cur) { const c = cur == null ? 0 : cur; return stairH(x, z) > c + STEP || rampH(x, z) > c + STEP; }
 
@@ -5167,7 +5169,7 @@ function freeWalk(dt) {
   const C = S.yaw + S.camYaw, fx = Math.sin(C), fz = Math.cos(C), rx = -Math.cos(C), rz = Math.sin(C);
   let mx = fx * -jy + rx * jx, mz = fz * -jy + rz * jx; const ml = Math.hypot(mx, mz) || 1; mx /= ml; mz /= ml;
   if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint ? 1.55 : 1) * (S.boostT > 0 ? 1.3 : 1), a = S.av.position, fr = frontier(), z0 = 6;
-  const ok = (x, z) => S.pocket ? pocketOk(x, z) : Math.abs(x) < XB && z > fr && z < z0 && !blockedAt(x, z) && !solidAbove(x, z, S.gy);
+  const ok = (x, z) => S.pocket ? pocketOk(x, z) : Math.abs(x) < XB && z > fr && z < z0 && !blockedAt(x, z) && !solidAbove(x, z, S.gy) && !edgeDrop(x, z, S.gy);
   let nx = a.x + mx * sp, nz = a.z + mz * sp;
   if (!ok(nx, nz)) { if (nz <= fr && performance.now() - (S.wallT || 0) > 6000) { S.wallT = performance.now(); G().toast('Hasta acá llega el camino por ahora.'); } if (ok(nx, a.z)) nz = a.z; else if (ok(a.x, nz)) nx = a.x; else { nx = a.x; nz = a.z; } }
   a.x = nx; a.z = nz; S.freeMoving = true; S.quiet = true; wake(); autoEnter(); if (!S.freeMoving) return;
