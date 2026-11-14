@@ -71,7 +71,20 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ ok: true, uploadUrl: j.uploadUrl });
     }
     if (x.op === "comprobante") {
-      const u = s(x.url, 600);
+      let u = s(x.url, 600);
+      // el archivo puede venir en el pedido (base64) y lo subimos desde el servidor: evita los bloqueos del navegador
+      if (!u && typeof x.archivo === "string") {
+        const mime = s(x.mime, 120) || "application/octet-stream", nombre = s(x.nombre, 160) || "comprobante";
+        const bytes = Uint8Array.from(atob(String(x.archivo).replace(/^data:[^,]*,/, "")), (c) => c.charCodeAt(0));
+        if (bytes.length > 8e6) return json({ error: "El archivo es muy pesado (máximo 8 MB). Probá con una captura de pantalla." }, 400);
+        const g = await fetchAuth("https://www.wixapis.com/site-media/v1/files/generate-upload-url", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mimeType: mime, fileName: nombre }) });
+        const gj = await g.json().catch(() => ({}));
+        if (!g.ok || !gj.uploadUrl) { console.error("cuota upload-url", g.status, JSON.stringify(gj).slice(0, 300)); return json({ error: "No pudimos preparar la subida (" + g.status + ")." }, 500); }
+        const up = await fetch(gj.uploadUrl + (gj.uploadUrl.includes("?") ? "&" : "?") + "filename=" + encodeURIComponent(nombre), { method: "PUT", headers: { "Content-Type": mime }, body: bytes });
+        const uj = await up.json().catch(() => ({}));
+        u = (uj && uj.file && uj.file.url) || "";
+        if (!up.ok || !u) { console.error("cuota upload", up.status, JSON.stringify(uj).slice(0, 300)); return json({ error: "No se pudo subir el archivo (" + up.status + ")." }, 500); }
+      }
       if (!/^https:\/\//.test(u)) return json({ error: "No se subió el archivo." }, 400);
       const meses = (Array.isArray(x.meses) ? (x.meses as unknown[]) : []).map((m) => s(m, 40)).filter((m) => /^[^|]+\|\d{4}-\d{2}$/.test(m)).slice(0, 12);
       if (!meses.length) return json({ error: "Elegí qué meses pagaste." }, 400);
@@ -88,6 +101,6 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ error: "op" }, 400);
   } catch (e) {
     console.error("cuota POST", e);
-    return json({ error: "No pudimos guardar el comprobante." }, 500);
+    return json({ error: "No pudimos guardar el comprobante (" + String((e as Error).message || e).slice(0, 120) + ")." }, 500);
   }
 };
