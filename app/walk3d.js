@@ -3669,6 +3669,12 @@ function kidApply(u) {
   if (k.last !== undefined && B.pelvis.position.y === k.last) B.pelvis.position.y += k.drop; // el clip no movió la pelvis: no acumular
   B.pelvis.position.y -= k.drop; k.last = B.pelvis.position.y;
 }
+/* cuerpo de chico para Kids: el modelo es adulto; se achata el pecho y se ensancha la cintura deformando solo la piel de esos huesos
+   (se corrige su matriz después de calcular la de los hijos, así brazos, cuello y cabeza no se deforman) */
+function kidBody(B, sx) {
+  const S = sx === 'f' ? { spine_03: [.94, 1, .7], spine_02: [1.1, 1, .9], spine_01: [1.1, 1, 1], pelvis: [.94, 1, 1] } : { spine_03: [.9, 1, .85], spine_02: [1, 1, .92] };
+  for (const n in S) { const b = B[n]; if (!b || b.__kb) continue; b.__kb = 1; const m = new THREE.Matrix4().makeScale(...S[n]), up = b.updateMatrixWorld.bind(b); b.updateMatrixWorld = function (f) { up(f); this.matrixWorld.multiply(m); }; }
+}
 /* color de ojos: se repinta solo el iris (círculo del centro de la textura del ojo), el blanco y el pupila quedan igual */
 const EYE_TX = new Map();
 function eyeTint(mat, c) {
@@ -3715,6 +3721,7 @@ function buildHero3(av) {
   });
   drop.forEach(m => m.parent.remove(m));
   let bones = {}; o.traverse(b => { if (b.isBone) bones[b.name] = b; });
+  if (kid && !npc) kidBody(bones, sx);
   if (hatProc) { const g = new THREE.Group(); g.matrixAutoUpdate = false; g.matrix.copy(tpl.hatM); bones.Head.add(g); const k = new THREE.Group(); k.scale.setScalar(.95); g.add(k);
     dressHero({ hat: hatProc }, (c, r, op) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: r ?? .9 }, op || {})), 1, { head: k, hideHair: () => {} }); }
   const lamp = new THREE.Group(), lb = new THREE.Mesh(new THREE.CylinderGeometry(.045, .055, .12, 8), new THREE.MeshStandardMaterial({ color: '#B8862E', roughness: .4, metalness: .6 })); lamp.add(lb);
