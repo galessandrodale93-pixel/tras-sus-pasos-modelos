@@ -101,6 +101,21 @@
   <div class="cx-h"><h2>Material de tus clases</h2></div>
   <div class="op-mats" id="matList"></div>
 </div></section>
+<section class="cx-sec" id="cuotaSec" hidden><div class="wrap">
+  <div class="cx-h"><h2>Mi cuota</h2></div>
+  <div id="cuotaBox"></div>
+</div></section>
+<style>
+.cu-e{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:12px}
+.cu-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.cu-h b{font:500 1.3rem var(--serif)}.cu-fp{font-size:.9rem;padding:6px 12px;border-radius:99px;background:var(--paper);border:1px solid var(--line)}
+.cu-m{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px}
+.cu-c{text-align:center;padding:8px 4px;border-radius:12px;font-size:.78rem;border:1px solid var(--line);background:#fff}
+.cu-c small{display:block;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.cu-c.pago,.cu-c.especial,.cu-c.becado{background:#eef5f0;border-color:#b9d8c4}
+.cu-c.debe{background:#fbeceb;border-color:#e5b9b3}.cu-c.pendiente{background:#fff6e3;border-color:#ecd39c}
+.cu-tip{margin:12px 0 0;font-size:.92rem;color:var(--muted)}.cu-tip b{color:var(--ink)}
+</style>
 <section class="cx-sec" id="agenda"><div class="wrap">
   <div class="cx-h"><h2>Agenda y avisos</h2><span class="cal-act"><a id="calG" href="#" target="_blank" rel="noopener">+ Google Calendar</a><a id="calI" href="#">+ iPhone / Outlook</a></span></div>
   <div class="ag" id="agList"><p class="cx-empty">Cargando la agenda…</p></div>
@@ -175,6 +190,16 @@ var X=window.CampusExtra;
 }).catch(function(){});fetch('/api/testimonio',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();}).then(function(t){if(t&&t.clave&&t.estado!=='Subido'){var a=document.getElementById('lnTes');a.href='/testimonio.html?k='+t.clave;a.hidden=false;}}).catch(function(){});var r=await fetch('/api/voluntario',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();});
  if(!r.voluntario||!r.turnos||!r.turnos.length)return;var hoy=new Date(Date.now()-3*3600e3).toISOString().slice(0,10),man=new Date(Date.now()+21*3600e3).toISOString().slice(0,10);window.__eqVol=function(){var c=document.querySelector('#eq-vol small');if(!c)return;var t=r.turnos[0],x=new Date(t.fecha+'T12:00:00-03:00');c.textContent=(t.fecha===hoy?'Servís hoy':t.fecha===man?'Servís mañana':'Tu próximo turno: '+['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][x.getDay()]+' '+x.getDate()+'/'+(x.getMonth()+1));if(t.fecha===hoy||t.fecha===man)c.classList.add('hot');};window.__eqVol();
 }catch(e){}})();
+function cuota(){(async function(){try{var A=window.HabitatAuth;await A.api('GET','/members/v1/members/my');var tk=JSON.parse(localStorage.getItem('habitat:mtok')).a;var r=await fetch('/api/cuota',{headers:{'x-habitat-auth':tk}}).then(function(x){return x.json();});
+ if(!r.ok||!r.alumno||!(r.escuelas||[]).length)return;
+ var MC=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],T={pago:'✓ Pagado',especial:'✓ Cubierto',becado:'Becado',debe:'Pendiente',pendiente:'En curso',baja:'Baja',futuro:'—'};
+ var dsc=function(e){return e.debito?'Débito automático':(e.formaPago||'Pago manual');};
+ var h=r.escuelas.map(function(e){return '<div class="cu-e"><div class="cu-h"><b>'+esc(e.escuela)+'</b><span class="cu-fp">'+(e.debito?'🔁 ':'💳 ')+esc(dsc(e))+'</span></div><div class="cu-m">'+e.meses.map(function(m){return '<div class="cu-c '+m.estado+'"><small>'+MC[+m.mes.slice(5,7)-1]+'</small>'+(T[m.estado]||m.estado)+'</div>';}).join('')+'</div>'+
+  (e.debe?'<p class="cu-tip">Tenés <b>'+e.debe+(e.debe===1?' mes pendiente':' meses pendientes')+'</b>. Podés transferir al alias <b>'+esc(r.alias)+'</b> y mandarnos el comprobante'+(e.debito?', o cargar saldo en la cuenta del débito para el próximo intento':'')+'.</p>':'<p class="cu-tip">¡Estás al día! Gracias 🙌🏽</p>')+'</div>';}).join('');
+ var u=r.ultimoDebito;if(u&&r.escuelas.some(function(e){return e.debito;})){var d=new Date(u.fecha+'T12:00:00');h+='<p class="cu-tip">Último débito: '+d.getDate()+'/'+(d.getMonth()+1)+' por $ '+Number(u.monto).toLocaleString('es-AR')+' · '+(u.estado==='aprobado'?'<b style="color:#2f7a4f">aprobado</b>':u.estado==='rechazado'?'<b style="color:#8a3b2f">rechazado</b>':'pendiente')+'.</p>';}
+ h+='<p class="cu-tip">Si ves algo que no coincide con lo que pagaste, escribinos y lo revisamos.</p>';
+ document.getElementById('cuotaBox').innerHTML=h;document.getElementById('cuotaSec').hidden=false;}catch(e){}})();}
+cuota();
 function agenda(pids,car){X.agenda(pids,car).then(function(L){
  var now=Date.now(),up=L.filter(function(e){return (e.end||e.ini).getTime()>=now-3600e3;}),av=L.filter(function(e){return /aviso/i.test(e.tipo||'')&&e.ini.getTime()<=now;}).reverse().slice(0,4);
  var n=X.unseen(L);var bn=document.getElementById('bellN');if(n){bn.textContent=n;bn.hidden=false;}
