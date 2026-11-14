@@ -390,8 +390,14 @@ function groundMat(Q, kids) {
 }
 /* ---------- agua de verdad: Mar de Galilea y río Jordán (oleaje, reflejo según el ángulo, espuma en la orilla y corriente) ---------- */
 const WATER = { basins: [], river: null, uT: { value: 0 }, WL: -.05, RL: -.12, nm: null, env: null, mats: [] };
+/* cañón del desierto de Judea: un valle seco que se abre al camino y se mete serpenteando entre paredes de roca escalonadas */
+function canyonAt(x, z) { const C = WATER.canyon; if (!C) return 0; const u = (x - C.x) * -C.sd, v = z - C.z; if (u > 28 || u < -120 || Math.abs(v) > 70) return 0;
+  const k = 1 - sstep(-34, -12, u), mv = v - Math.sin(u * .06) * 9 * k, hw = 21 - 12 * k + (vnoise(u * .09 + 4, v * .09) - .5) * 5;
+  return sstep(hw, hw + 6.5, Math.abs(mv)) * (1 - sstep(6, 22, u)); }
+function canyonH(x, z) { const w = canyonAt(x, z); if (w <= 0) return 0; const t = w * (9 + fbm(x * .05 + 9, z * .05) * 8); return t + (Math.round(t / 2.3) * 2.3 - t) * .55; }
 function waterPlan(pois) {
-  WATER.basins = []; WATER.river = null; WATER.mats = [];
+  WATER.basins = []; WATER.river = null; WATER.mats = []; WATER.canyon = null;
+  for (const p of pois) if (p.k === 'desert') WATER.canyon = { x: p.x, z: p.z, sd: p.side || -1 }; /* el desierto es un cañón */
   for (const p of pois) { if (p.k === 'lake') { WATER.basins.push({ x: p.x, z: p.z, r: 30 }); WATER.basins.push({ x: p.x + p.side * 78, z: p.z - 8, r: 70, sea: 1 }); } /* el lago se abre hacia afuera, pasando las piedras, hasta el horizonte: un mar de verdad */ if (p.k === 'shore') WATER.basins.push({ x: p.x + p.side * 8, z: p.z, r: 10.5 }); if (p.k === 'river') WATER.river = p.pts; }
 }
 // mapa de normales que se repite sin costura (suma de ondas con frecuencias enteras)
@@ -473,7 +479,7 @@ function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
   const dOf = F => (x, z) => { const fx = Math.max(0, Math.min(NX - 1.001, (x - X0) / CS)), fz = Math.max(0, Math.min(NZ - 1.001, (z - Z0) / CS)), i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, a = F[j * NX + i], b = F[j * NX + i + 1], c = F[(j + 1) * NX + i], d = F[(j + 1) * NX + i + 1]; return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; };
   const dAt = dOf(DF), roadAt = dOf(DR);
   const dNz = (x, z) => { const d = dAt(x, z); return d + ((vnoise(x * .11 + 11, z * .11 - 5) - .5) * 6 + (vnoise(x * .37, z * .37) - .5) * 1.6) * sstep(1.2, 3.5, d); }; /* borde organico: los escenarios se funden con el campo */
-  const h0 = (x, z) => { const d = dNz(x, z), m = sstep(2.6, 10, d), side = sstep(16 * WS, 44 * WS, Math.abs(x)); return m * (fbm(x * .07 + 3, z * .07) * 3.4 - .9 + side * (4 + fbm(x * .025, z * .025) * 14)) * (KK ? .5 : 1); };
+  const h0 = (x, z) => { const d = dNz(x, z), m = sstep(2.6, 10, d), side = sstep(16 * WS, 44 * WS, Math.abs(x)), cy0 = WATER.canyon ? canyonH(x, z) * sstep(4, 9, roadAt(x, z)) * sstep(1.5, 5, dAt(x, z)) * (KK ? .75 : 1) : 0; return cy0 + m * (fbm(x * .07 + 3, z * .07) * 3.4 - .9 + side * (4 + fbm(x * .025, z * .025) * 14)) * (KK ? .5 : 1); };
   // cauce del Jordán: distancia al río en la misma grilla
   let RF = null; if (WATER.river) { RF = new Float32Array(NX * NZ); const rb = new Map(); WATER.river.forEach(p => { const k = bk(p[1]); if (!rb.has(k)) rb.set(k, []); rb.get(k).push(p); });
     for (let j = 0; j < NZ; j++) { const z = Z0 + j * CS, b0 = bk(z); for (let i = 0; i < NX; i++) { const x = X0 + i * CS; let d = 400; for (let b = b0 - 2; b <= b0 + 2; b++) { const L = rb.get(b); if (!L) continue; for (const p of L) { const q = (p[0] - x) ** 2 + (p[1] - z) ** 2; if (q < d) d = q; } } RF[j * NX + i] = Math.min(20, Math.sqrt(d)); } } }
@@ -1464,7 +1470,7 @@ function buildPois(scene, pois, hx, HW, R, ribbon) {
 // cajas de choque (paredes) y pisos elevados (plataforma del templo, muelle); se llenan al armar el mundo
 function rotXZ(lx, lz, r) { const c = Math.cos(r), s = Math.sin(r); return [lx * c + lz * s, -lx * s + lz * c]; }
 function wBox(x, z, r, lx0, lx1, lz0, lz1) { const P = [[lx0, lz0], [lx1, lz0], [lx0, lz1], [lx1, lz1]].map(([a, b]) => rotXZ(a, b, r)); return { x0: x + Math.min(...P.map(p => p[0])), x1: x + Math.max(...P.map(p => p[0])), z0: z + Math.min(...P.map(p => p[1])), z1: z + Math.max(...P.map(p => p[1])) }; }
-function blockedAt(x, z) { const L = S && S.cols; if (!L) return false; const r = S.hx ? .34 : .28; for (const b of L) if (x > b.x0 - r && x < b.x1 + r && z > b.z0 - r && z < b.z1 + r) { if (b.oi != null && S.sv && S.sv.felled && S.sv.felled.has(b.oi)) continue; if (b.r == null || (x - b.cx) ** 2 + (z - b.cz) ** 2 < (b.r + r) ** 2) return true; } return false; }
+function blockedAt(x, z) { const L = S && S.cols; if (!L) return false; if (WATER.canyon && S.W && canyonAt(x, z) > .45 && S.W.roadAt(x, z) > 6) return true; const r = S.hx ? .34 : .28; for (const b of L) if (x > b.x0 - r && x < b.x1 + r && z > b.z0 - r && z < b.z1 + r) { if (b.oi != null && S.sv && S.sv.felled && S.sv.felled.has(b.oi)) continue; if (b.r == null || (x - b.cx) ** 2 + (z - b.cz) ** 2 < (b.r + r) ** 2) return true; } return false; }
 function floorH(x, z) { const L = S && S.floors; if (!L) return -1; let h = -1; for (const f of L) if (x > f.x0 && x < f.x1 && z > f.z0 && z < f.z1 && f.y > h) h = f.y; return h; }
 function cnvTex(w, h, fn, rep) { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]); } return t; }
 let TT = null; // texturas compartidas
@@ -2245,8 +2251,47 @@ function desertScene(scene, p, yAt, poiProp, hx, HW) {
   { const tk = [[3, 4, 'dead_tree_trunk', 1.1], [-13, 14, 'dead_tree_trunk_02', 1.2], [15, -8, 'dead_tree_trunk', 1.3]]; tk.forEach(([u, v, id, s]) => { const x = p.x + u * sd, z = p.z + v; if (HW && HW.dAt(x, z) < 3) return; poiProp(id, [{ x, y: yAt(x, z) - .08, z, ry: R() * 6.283, s }], { shadow: true, nocol: 1 }); }); }
   { const sh = []; for (let i = 0; i < 9; i++) { const a = R() * 6.283, r = 8 + R() * 16, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (blockedAt(x, z) || (HW && HW.dAt(x, z) < 3)) continue; sh.push({ x, y: yAt(x, z) - .06, z, ry: R() * 6.283, s: .7 + R() * .5, v: i }); } poiProp('wild_rooibos_bush', sh, { shadow: true, wind: 2, col: .4 }); }
   { const tr = []; [[-4, -9], [7, 3], [-16, 6]].forEach(([u, v], i) => { const x = p.x + u * sd, z = p.z + v; tr.push({ x, y: yAt(x, z) - .05, z, ry: i * 2, s: 1 + i * .08, v: i }); }); poiProp('quiver_tree_02', tr, { shadow: true, wind: 1, far: 1, col: .35, force: 1 }); }
+  desertLife(scene, p, yAt, sd, rf, hx);
   S.rooms.push({ x0: p.x - 20, x1: p.x + 20, z0: p.z - 20, z1: p.z + 20, trade: 'desierto', roof: [], open: true, y }); const lb = textSprite(p.name, hx); lb.scale.multiplyScalar(1.3); lb.position.set(p.x, y + 6.5, p.z); scene.add(lb);
 }
+/* lugares para tocar: en Hero con la acción, en Kids se abren solos al acercarse */
+function loreNear(r) { if (!S || !S.lore) return null; const a = S.av.position; let best = null, bd = r * r; for (const l of S.lore) { const d = (l.x - a.x) ** 2 + (l.z - a.z) ** 2; if (d < (l.r || r) ** 2 && d < bd + 4) { bd = d; best = l; } } return best; }
+function loreDo(l) { placeCard(l.info); l.t = 0; l.on = 1; }
+function desertLife(scene, p, yAt, sd, rf, hx) {
+  const D = S.desert = { t: 0, bees: [], stones: [], hawk: null, dust: null, beam: null }, gold = new THREE.Color('#FFC86A');
+  /* piedras redondas como panes, en el centro */
+  { const cx = p.x, cz = p.z - 3, sm = new THREE.MeshStandardMaterial({ color: '#C79A62', roughness: .95, emissive: gold, emissiveIntensity: 0 });
+    for (let i = 0; i < 9; i++) { const a = i / 9 * 6.283 + (i % 2) * .3, r = i ? .55 + (i % 3) * .3 : 0, x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r, m = new THREE.Mesh(new THREE.SphereGeometry(.26 + (i % 4) * .04, 12, 8), sm); m.scale.set(1.15, .62, 1); m.rotation.y = i; m.position.set(x, yAt(x, z) + .1, z); m.castShadow = true; scene.add(m); }
+    D.stones = sm; S.lore.push({ x: cx, z: cz, r: 2.6, label: 'Mirar las piedras', fx: 'stones', info: ['Piedras como panes', 'Después de cuarenta días de ayuno, el tentador le dijo a Jesús que convirtiera estas piedras en pan. Jesús le respondió con la Escritura: el hombre vive de toda palabra que sale de la boca de Dios.', 'Mateo 4:3-4'] }); }
+  /* la cueva del ayuno */
+  { const x = rf.x + sd * 3.4, z = rf.z - 1.2; S.lore.push({ x, z, r: 2.8, label: 'Entrar a la cueva', info: ['La cueva del ayuno', 'El Espíritu llevó a Jesús al desierto. Ahí ayunó cuarenta días y cuarenta noches, y al final tuvo hambre.', 'Mateo 4:1-2'] });
+    const L = new THREE.PointLight('#FFB45A', .9, 5, 2); L.position.set(x, yAt(x, z) + .5, z); scene.add(L); const lamp = new THREE.Mesh(new THREE.SphereGeometry(.07, 8, 6), new THREE.MeshBasicMaterial({ color: '#FFD08A' })); lamp.position.copy(L.position); scene.add(lamp); D.lamp = L; }
+  /* panal entre las rocas, con abejas */
+  { const x = rf.x - sd * 1.2, z = rf.z - 3.9, y = yAt(x, z) + 1.3, hv = new THREE.Mesh(new THREE.CylinderGeometry(.32, .26, .5, 6), new THREE.MeshStandardMaterial({ color: '#D9962E', roughness: .45, emissive: '#5A3200', emissiveIntensity: .35 })); hv.position.set(x, y, z); hv.rotation.z = .3; scene.add(hv);
+    const bm = new THREE.MeshBasicMaterial({ color: '#2A2010' }); for (let i = 0; i < 9; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(.035, 6, 4), bm); scene.add(b); D.bees.push({ b, c: hv.position, ph: i * .7, r: .4 + (i % 3) * .2 }); }
+    S.lore.push({ x, z, r: 2.6, label: 'Mirar el panal', fx: 'bees', info: ['Miel silvestre', 'Juan el Bautista vivía en este desierto. Se vestía con pelo de camello y comía langostas y miel silvestre.', 'Mateo 3:4'] }); }
+  /* al fondo del cañón: un montón de piedras con una luz que invita a entrar */
+  { const u = -40, x = p.x - sd * u, z = p.z + Math.sin(u * .06) * 9, y = yAt(x, z); const R2 = rng(4141), st = tm('cairn', '#B29470');
+    for (let i = 0; i < 7; i++) { const m = new THREE.Mesh(new THREE.DodecahedronGeometry(.42 - i * .04, 0), st); m.position.set(x + (R2() - .5) * .3, y + .3 + i * .42, z + (R2() - .5) * .3); m.scale.y = .7; m.rotation.set(R2(), R2() * 6, R2()); m.castShadow = true; scene.add(m); }
+    const bm = new THREE.Mesh(new THREE.CylinderGeometry(.5, 1.6, 26, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#FFE2A0', transparent: true, opacity: .16, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); bm.position.set(x, y + 13, z); scene.add(bm); D.beam = bm;
+    S.lore.push({ x, z, r: 3, label: 'Mirar las piedras apiladas', fx: 'beam', info: ['Con las fieras y los ángeles', 'Jesús estuvo en el desierto entre los animales salvajes, y los ángeles lo servían.', 'Marcos 1:13'] }); }
+  /* un halcón que planea en círculos */
+  { const g = new THREE.Group(), wm = new THREE.MeshStandardMaterial({ color: '#3A2C22', side: THREE.DoubleSide, roughness: 1 }), body = new THREE.Mesh(new THREE.ConeGeometry(.12, .7, 6), wm); body.rotation.x = Math.PI / 2; g.add(body);
+    const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, .15, 0, 0, -.2, .95, .05, -.1], 3)); wg.computeVertexNormals(); const wl = new THREE.Mesh(wg, wm), wr = wl.clone(); wr.scale.x = -1; g.add(wl, wr); g.scale.setScalar(1.6); scene.add(g); D.hawk = { g, wl, wr, cx: p.x - sd * 6, cz: p.z, y: yAt(p.x, p.z) + 17 }; }
+  /* remolino de arena que cruza el valle */
+  { const n = 140, pos = new Float32Array(n * 3), seed = new Float32Array(n); for (let i = 0; i < n; i++) seed[i] = Math.random(); const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const m = new THREE.Points(g, new THREE.PointsMaterial({ color: '#D9BF8E', size: hx ? .14 : .2, transparent: true, opacity: .55, depthWrite: false })); m.frustumCulled = false; scene.add(m); D.dust = { m, seed, n, p, sd, yAt }; }
+}
+function desertTick(dt) { const D = S.desert, a = S.av.position; D.t += dt; const t = D.t;
+  if (Math.abs(a.z - (D.dust ? D.dust.p.z : a.z)) > 90) return;
+  if (D.stones) { const on = S.lore.find(l => l.fx === 'stones' && l.on); D.stones.emissiveIntensity = on ? Math.max(0, .55 * Math.sin(Math.min(1, on.t / 2.5) * Math.PI)) : 0; }
+  for (const l of S.lore) { if (l.on) { l.t += dt; if (l.t > 3) l.on = 0; } if (!S.hx && !l.seen && (l.x - a.x) ** 2 + (l.z - a.z) ** 2 < (l.r || 2.6) ** 2) { l.seen = 1; loreDo(l); } }
+  const fast = S.lore.some(l => l.fx === 'bees' && l.on) ? 2.4 : 1; D.bees.forEach((q, i) => { const k = t * 3.2 * fast + q.ph; q.b.position.set(q.c.x + Math.cos(k) * q.r * fast, q.c.y + Math.sin(k * 1.7) * .25, q.c.z + Math.sin(k) * q.r * fast); });
+  if (D.beam) { const on = S.lore.some(l => l.fx === 'beam' && l.on); D.beam.material.opacity += ((on ? .42 : .14 + Math.sin(t * 1.3) * .04) - D.beam.material.opacity) * Math.min(1, dt * 3); D.beam.rotation.y += dt * .2; }
+  if (D.lamp) D.lamp.intensity = .8 + Math.sin(t * 9) * .12 + Math.sin(t * 23) * .06;
+  if (D.hawk) { const h = D.hawk, an = t * .22, r = 16; h.g.position.set(h.cx + Math.cos(an) * r, h.y + Math.sin(t * .5) * 1.2, h.cz + Math.sin(an) * r); h.g.rotation.set(0, -an, .35); const fl = (t % 7) < 1.4 ? Math.sin(t * 14) * .5 : .08; h.wl.rotation.z = fl; h.wr.rotation.z = -fl; }
+  if (D.dust) { const q = D.dust, P = q.m.geometry.attributes.position, cx = q.p.x - q.sd * (Math.sin(t * .05) * 10 - 6), cz = q.p.z + Math.sin(t * .083) * 11, y0 = q.yAt(cx, cz);
+    for (let i = 0; i < q.n; i++) { const s0 = q.seed[i], hh = ((s0 * 7 + t * .35) % 1), rr = .3 + hh * 2.1, an = s0 * 40 + t * (5 - hh * 2.5); P.setXYZ(i, cx + Math.cos(an) * rr, y0 + hh * 6, cz + Math.sin(an) * rr); } P.needsUpdate = true; q.m.material.opacity = .35 + Math.sin(t * .4) * .15; } }
 // ---------- campos de los pastores: corral de piedra con ovejas, la cueva-establo con pesebre, la carpa de pelo de cabra, el fuego y los pastores ----------
 function goatTent(w, d) {
   const g = new THREE.Group(), cl = tm('goat', '#3A2E26', { side: THREE.DoubleSide, roughness: 1 }), geo = new THREE.PlaneGeometry(w, d, 8, 4), P = geo.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i); P.setZ(i, 1.9 - Math.pow(Math.abs(y) / (d / 2), 1.6) * 1.2 - Math.abs(Math.sin(x * 1.2)) * .12); } geo.computeVertexNormals();
@@ -2338,6 +2383,7 @@ function roomTick(dt) {
   if (inR !== S.inRoom) { if (inR && !S.inRoom) S.camKeep = { d: S.camDist, p: S.camPitch }; if (!inR && S.camKeep) { S.camDist = S.camKeep.d; S.camPitch = S.camKeep.p; S.camKeep = null; } S.inRoom = inR; }
   if (inR) { S.camDist += (Math.min(S.camKeep ? S.camKeep.d : 6, 5.2) - S.camDist) * Math.min(1, dt * 3); S.camPitch += (Math.max(S.camKeep ? S.camKeep.p : .4, .95) - S.camPitch) * Math.min(1, dt * 3); }
   const here = inR || openR; if (here && here.trade && TRADE_INFO[here.trade]) { const p = G().P(); p.seen = p.seen || {}; if (!p.seen[here.trade]) { p.seen[here.trade] = 1; G().save(); placeCard(TRADE_INFO[here.trade]); } }
+  if (S.desert) desertTick(dt);
   if (S.lake) { S.lake.uni.t.value += dt; S.lake.boats.forEach((b, i) => { b.position.y = b.userData.y0 + Math.sin(S.t * 1.2 + i) * .06; b.rotation.z = Math.sin(S.t * .9 + i * 2) * .04; }); (S.lake.fishers || []).forEach(f => { f.t -= dt; const n = f.net;
     if (f.k < 0 && f.t <= 0) { h3npcPlay(f.o, ['M_Throw', 'M_Picking_Up'], 2.2); f.k = 0; const wp = new THREE.Vector3(); f.o.getWorldPosition(wp); const q = f.o.getWorldQuaternion(new THREE.Quaternion()), fw = new THREE.Vector3(0, 0, 1).applyQuaternion(q); n.position.set(wp.x + fw.x * 3.2, WATER.WL + .03, wp.z + fw.z * 3.2); n.visible = true; }
     if (f.k >= 0) { f.k += dt; const e = f.k < .7 ? 0 : Math.min(1, (f.k - .7) / .6); n.scale.setScalar(.2 + e * 2.2); n.material.opacity = f.k < 5 ? Math.min(.85, e) : Math.max(0, .85 - (f.k - 5) * .6); n.position.y = WATER.WL + .03 - Math.max(0, f.k - 3) * .05; if (f.k > 6.5) { n.visible = false; f.k = -1; f.t = 9 + Math.random() * 8; h3npcPlay(f.o, ['M_Picking_Up', 'M_Lifting_Object'], 2); } } }); }
@@ -2352,7 +2398,7 @@ function placeCard(info) {
 }
 // arma todo: Nazaret con sus talleres, el templo y el lago (si existe la etapa de Galilea)
 function buildTowns(scene, g, hx, HW, pois) {
-  S.cols = HCOLS; HCOLS = []; S.floors = []; S.ramps = []; S.rooms = []; FLORA.poiProps = []; const poiProp = (id, list, o) => FLORA.poiProps.push([id, list, o]); const yAt = (x, z) => HW ? HW.hAt(x, z) : 0;
+  S.cols = HCOLS; HCOLS = []; S.lore = []; S.desert = null; S.floors = []; S.ramps = []; S.rooms = []; FLORA.poiProps = []; const poiProp = (id, list, o) => FLORA.poiProps.push([id, list, o]); const yAt = (x, z) => HW ? HW.hAt(x, z) : 0;
   for (const p of pois) {
     if (p.k === 'taller') { // Nazaret: cuatro talleres alrededor de una plaza con pozo
       const pv = new THREE.Mesh(new THREE.CircleGeometry(15, 40), new THREE.MeshStandardMaterial({ map: townTex().pave, color: hx ? '#BFAE8E' : '#FFFFFF', roughness: 1 })); pv.rotation.x = -Math.PI / 2; pv.position.set(p.x, yAt(p.x, p.z) + .03, p.z); pv.receiveShadow = true; scene.add(pv);
@@ -5176,6 +5222,7 @@ function svNear() {
   { const v = vilNearNpc(); if (v) return { k: 'vil', v, label: vilLabel(v) }; }
   { const x = pocketNear(); if (x) return x; if (S.pocket) return null; }
   { const r = readNear(); if (r) return r; }
+  { const l = loreNear(2.6); if (l) return { k: 'lore', l, label: l.label }; }
   { const e = secNear(); if (e) return { k: 'sec', e, label: secP().secrets[e.d.id] ? 'Ver el lugar secreto' : SEC.mod.ENTRY[e.d.entry][0] }; }
   { const m = matNear(); if (m) return m; }
   for (const b of (st.beggars || [])) if (d2(b.x, b.z) < 6) return { k: 'beg', b, label: 'Ayudar' };
@@ -5195,6 +5242,7 @@ function svNear() {
 function svWaterNear() {
   const a = S.av.position; for (const p of (S.pois || [])) {
     if (p.k === 'lake') { const d = Math.hypot(a.x - p.x, a.z - p.z); if (d > 24 && d < 38) return true; }
+    if (p.k === 'lake') for (const b of WATER.basins) if (b.sea) { const d = Math.hypot(a.x - b.x, a.z - b.z); if (d > b.r * .86 - 4 && d < b.r * 1.05 + 3) return true; }
     if (p.k === 'shore') { const d = Math.hypot(a.x - (p.x + p.side * 7), a.z - p.z); if (d < 11.5) return true; }
     if (p.k === 'river') for (const q of p.pts) if ((q[0] - a.x) ** 2 + (q[1] - a.z) ** 2 < 26) return true;
   } return false;
@@ -5219,6 +5267,7 @@ function svAct() {
   if (n.k === 'sec') { secOpen(n.e); return; }
   if (n.k === 'secx') { pocketExit(); return; }
   if (n.k === 'read') { readOpen(n); return; }
+  if (n.k === 'lore') { loreDo(n.l); return; }
   if (n.k === 'seci') { pocketItem(n); return; }
   if (n.k === 'mato') { matObj(n.e); return; }
   if (n.k === 'matp') { matTalk(n.e); return; }
