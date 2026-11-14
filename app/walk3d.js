@@ -1910,9 +1910,8 @@ function shoreScene(scene, p, yAt, poiProp, hx, HW) {
 // ---------- multitudes: un personaje real se posa una vez (sentado, de pie…) y se "hornea" en geometría fija; después se repite con instancias ----------
 // así cien personas cuestan como un puñado de objetos, sin esqueletos ni animación por cada una (importante en el celular)
 const CROWD = { cache: new Map(), ppl: [], live: [], t: 0 };
-function crowdBake(look, anim, t) {
-  if (!H3.ok) return null; const key = JSON.stringify(look) + '|' + anim + '|' + (t || 0); if (CROWD.cache.has(key)) return CROWD.cache.get(key);
-  const o = buildHero3(Object.assign({}, look, { anim: [anim], tintK: look.tintK ?? .08 })), i0 = H3.npcs.indexOf(o); if (i0 >= 0) H3.npcs.splice(i0, 1);
+/* pose de multitud (sentado en el piso, arrodillado, de costado o de pie) aplicada a un personaje; sirve para hornear y para la gente con vida */
+function crowdPoseApply(o, anim, t) {
   const u = o.userData.h3, pose = /^(cross|kneel|side)$/.test(anim) ? anim : null, cross = !!pose; try { u.mixer.stopAllAction(); const a = u.act[cross ? 'Idle_Loop' : anim] || u.act['Idle_Loop']; a.reset().play(); u.mixer.setTime(t || .6); } catch (e) {}
   o.updateMatrixWorld(true);
   if (cross) try { const B = u.bones, aim = (bone, child, dirW) => { if (!bone || !child) return; o.updateMatrixWorld(true); const a0 = bone.getWorldPosition(new THREE.Vector3()), b0 = child.getWorldPosition(new THREE.Vector3()), cur = b0.sub(a0).normalize(), want = dirW.clone().normalize(), qW = new THREE.Quaternion().setFromUnitVectors(cur, want), pq = bone.parent.getWorldQuaternion(new THREE.Quaternion()); bone.quaternion.premultiply(pq.clone().invert().multiply(qW).multiply(pq)); };
@@ -1928,7 +1927,13 @@ function crowdBake(look, anim, t) {
       aim(B.upperarm_l, B.lowerarm_l, mix(.5, .25, -.8)); aim(B.upperarm_r, B.lowerarm_r, mix(.5, -.25, -.8)); aim(B.lowerarm_l, B.hand_l, mix(.9, .3, -.3)); aim(B.lowerarm_r, B.hand_r, mix(.9, -.3, -.3)); }
     // la pelvis baja hasta casi el piso (el tronco va con ella) y el torso se inclina apenas adelante
     if (B.pelvis) { const hipY = B.pelvis.getWorldPosition(new THREE.Vector3()).y, ps = B.pelvis.parent.getWorldScale(new THREE.Vector3()); B.pelvis.position.y -= (hipY - (pose === 'kneel' ? .34 : pose === 'side' ? .4 : .36)) / (ps.y || 1); }
-    if (B.spine_01) { B.spine_01.rotateX(pose === 'kneel' ? .06 : .12); if (pose === 'side') B.spine_01.rotateZ(.05); } o.updateMatrixWorld(true); } catch (e) { console.warn('cross', e); } const parts = [], v = new THREE.Vector3(); let minY = 1e9;
+    if (B.spine_01) { B.spine_01.rotateX(pose === 'kneel' ? .06 : .12); if (pose === 'side') B.spine_01.rotateZ(.05); } o.updateMatrixWorld(true); } catch (e) { console.warn('cross', e); }
+  return { u, pose, cross };
+}
+function crowdBake(look, anim, t) {
+  if (!H3.ok) return null; const key = JSON.stringify(look) + '|' + anim + '|' + (t || 0); if (CROWD.cache.has(key)) return CROWD.cache.get(key);
+  const o = buildHero3(Object.assign({}, look, { anim: [anim], tintK: look.tintK ?? .08 })), i0 = H3.npcs.indexOf(o); if (i0 >= 0) H3.npcs.splice(i0, 1);
+  const { u, pose, cross } = crowdPoseApply(o, anim, t); const parts = [], v = new THREE.Vector3(); let minY = 1e9;
   o.traverse(m => { if (!m.isSkinnedMesh || !m.visible) return; const g0 = m.geometry, P = g0.attributes.position, pos = new Float32Array(P.count * 3);
     for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i); m.applyBoneTransform(i, v); v.applyMatrix4(m.matrixWorld); pos[i * 3] = v.x; pos[i * 3 + 1] = v.y; pos[i * 3 + 2] = v.z; if (v.y < minY) minY = v.y; }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); if (g0.attributes.uv) g.setAttribute('uv', g0.attributes.uv); if (g0.attributes.color) g.setAttribute('color', g0.attributes.color); if (g0.attributes.uv1) g.setAttribute('uv1', g0.attributes.uv1); if (g0.index) g.setIndex(g0.index); g.computeVertexNormals(); parts.push({ g, mat: m.material }); });
@@ -1954,7 +1959,7 @@ function crowdPlace(scene, list, looks, anim, sh) {
   looks.forEach((lk, li) => { const L = by[li]; if (!L.length) return; const parts = crowdBake(lk, anim, .4 + li * .37); if (!parts) { crowdSimple(scene, L, [lk], anim, sh); return; }
     const ims = []; parts.forEach(pt => { crowdSway(pt.mat); const im = new THREE.InstancedMesh(pt.g, pt.mat, L.length); L.forEach((p, i) => { E.set(0, p.ry, 0); M.compose(V.set(p.x, p.y, p.z), Q.setFromEuler(E), SC.setScalar(p.s || 1)); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.castShadow = !!sh && QUAL.lv >= 2; im.receiveShadow = true; im.computeBoundingSphere(); crowdReg(im); scene.add(im); ims.push(im); });
     // la gente de pie puede cobrar vida cuando el jugador se acerca (ver crowdLiveTick); sentados y arrodillados quedan horneados
-    if (!/^(cross|kneel|side)$/.test(anim) && !/Sit|Kneel|Crouch/i.test(anim)) L.forEach((p, i) => CROWD.ppl.push({ p, look: lk, anim, ims, i, sh: !!sh, o: null })); });
+    L.forEach((p, i) => CROWD.ppl.push({ p, look: lk, anim, t: .4 + li * .37, ims, i, sh: !!sh, o: null, seat: /^(cross|kneel|side)$/.test(anim) || /Sit|Kneel|Crouch/i.test(anim) })); });
   return true;
 }
 // vida leve para la gente horneada: respiración y un balanceo mínimo por shader (casi gratis), con fase distinta por persona según dónde está
@@ -1977,8 +1982,17 @@ function crowdLiveTick(dt) {
   // soltar los que ya no corresponden (lejos o desplazados por otros más cerca)
   CROWD.live = CROWD.live.filter(c => { if (want.has(c) && c.d < (CROWD_LR + 4) ** 2) return true; if (c.o) { S.scene.remove(c.o); const k = H3.npcs.indexOf(c.o); if (k >= 0) H3.npcs.splice(k, 1); c.o = null; } if (c.col) { S.cols.push(c.col); c.col = null; } crowdHide(c, false); return false; });
   // sumar uno por vez
-  for (const c of want) { if (c.o) continue; try { const look = Object.assign({}, c.look, { anim: CROWD_IDLES, tintK: c.look.tintK ?? .08 }), o = buildHero3(look), p = c.p; o.position.set(p.x, p.y, p.z); o.rotation.y = p.ry; if (p.s) o.scale.multiplyScalar(p.s); o.traverse(m => { if (m.isMesh) m.castShadow = c.sh && QUAL.lv >= 2; }); S.scene.add(o); c.o = o;
+  for (const c of want) { if (c.o) continue; try { const p = c.p, look = Object.assign({}, c.look, { anim: c.seat ? [c.anim] : CROWD_IDLES, tintK: c.look.tintK ?? .08 }), o = buildHero3(look);
+      if (c.seat) { const { u, cross } = crowdPoseApply(o, c.anim, c.t); let low = 0; if (/Sit/.test(c.anim) && !cross) { const h = u.bones.pelvis; low = h ? h.getWorldPosition(new THREE.Vector3()).y - .14 : 0; } else { const v = new THREE.Vector3(); let mn = 1e9; o.traverse(m => { if (!m.isSkinnedMesh || !m.visible) return; const P = m.geometry.attributes.position; for (let q = 0; q < P.count; q += 9) { v.fromBufferAttribute(P, q); m.applyBoneTransform(q, v); v.applyMatrix4(m.matrixWorld); if (v.y < mn) mn = v.y; } }); low = mn < 1e8 ? mn : 0; }
+        if (cross) { u.mixer.stopAllAction(); u.baseQ = []; o.traverse(b => { if (b.isBone) u.baseQ.push([b, b.quaternion.clone()]); }); } o.userData.stay = 1; o.position.y = -low * (p.s || 1); }
+      o.position.set(p.x, p.y + o.position.y, p.z); o.rotation.y = p.ry; if (p.s) o.scale.multiplyScalar(p.s); o.traverse(m => { if (m.isMesh) m.castShadow = c.sh && QUAL.lv >= 2; }); S.scene.add(o); c.o = o;
       const k = S.cols.findIndex(b => b.cx === p.x && b.cz === p.z); if (k >= 0) c.col = S.cols.splice(k, 1)[0]; crowdHide(c, true); CROWD.live.push(c); CROWD.t = .12; } catch (e) { console.warn('gente viva', e); CROWD.ppl.splice(CROWD.ppl.indexOf(c), 1); } break; }
+  // charlas: cada uno, cada tanto, se da vuelta hacia el de al lado, asiente y mueve las manos (sentados o de pie)
+  for (const c of CROWD.live) { const o = c.o, u = o && o.userData.h3; if (!u) continue;
+    if (c.nb === undefined) { let best = null, bd = 2.8 * 2.8; for (const q of CROWD.ppl) { if (q === c) continue; const d = (q.p.x - c.p.x) ** 2 + (q.p.z - c.p.z) ** 2; if (d < bd) { bd = d; best = q; } } c.nb = best; c.chatT = Math.random() * 3; }
+    if (!c.nb || (u.talkT > -.4 && u.talkAge != null) || u.cur === 'Walk_Loop') continue; if ((c.chatT -= .4) > 0) continue;
+    const q = c.nb.o ? c.nb.o.position : c.nb.p, dp = (o.position.x - a.x) ** 2 + (o.position.z - a.z) ** 2;
+    u.talkTo = dp < 9 ? null : new THREE.Vector3(q.x, (q.y || 0) + (c.nb.seat ? .85 : 1.5), q.z); u.talkT = 2.5 + Math.random() * 3.5; u.talkAge = 0; u.talkPh = u.talkPh ?? Math.random() * 6.28; u.gestT = .6 + Math.random() * 1.5; u.gest = null; u.nodT = .8 + Math.random() * 2; c.chatT = u.talkT + 2 + Math.random() * 5; }
 }
 function crowdTick() { if (!S || !S.crowdIms) return; const a = S.av.position, R0 = CROWD_R[QUAL.lv]; for (const im of S.crowdIms) { if (!im.parent) continue; if (!im.boundingSphere) im.computeBoundingSphere(); const bs = im.boundingSphere; if (!bs) continue; const vis = Math.hypot(bs.center.x - a.x, bs.center.z - a.z) - bs.radius < R0; if (im.visible !== vis) im.visible = vis; } }
 const CROWD_LOOKS = [
@@ -3974,7 +3988,7 @@ function h3npcTick(dt) {
   if (!S || !H3.npcs.length) return; const a = S.av.position;
   for (const o of H3.npcs) { if (!o.parent) continue; const u = o.userData.h3;
     if (u.backT > 0 && (u.backT -= dt) <= 0) { const a = u.act[u.idleK], b = u.act[u.cur]; a.reset(); a.setLoop(THREE.LoopRepeat); a.play(); if (b && b !== a) a.crossFadeFrom(b, .4, false); u.cur = u.idleK; }
-    const e = o.matrixWorld.elements, d = (e[12] - a.x) ** 2 + (e[14] - a.z) ** 2, vis = d < [1600, 2500, 4900, 8100][QUAL.lv]; if (o.visible !== vis) o.visible = vis; if (d < 1600 && vis) { u.mixer.update(dt); if (u.headS && u.bones.Head) u.bones.Head.scale.setScalar(u.headS); if (u.talkT > -.4 && u.talkAge != null) { const V = h3vec(); S.av.getWorldPosition(V.b); V.b.y += 1.5 * S.av.scale.y; talkLayer(o, u, dt, CINE.on && S.camera ? S.camera.position : V.b); if (u.talkT <= -.4) u.talkAge = null; } } }
+    const e = o.matrixWorld.elements, d = (e[12] - a.x) ** 2 + (e[14] - a.z) ** 2, vis = d < [1600, 2500, 4900, 8100][QUAL.lv]; if (o.visible !== vis) o.visible = vis; if (d < 1600 && vis) { u.mixer.update(dt); if (u.headS && u.bones.Head) u.bones.Head.scale.setScalar(u.headS); if (u.baseQ) for (const [b, q] of u.baseQ) b.quaternion.copy(q); if (u.talkT > -.4 && u.talkAge != null) { const V = h3vec(); S.av.getWorldPosition(V.b); V.b.y += 1.5 * S.av.scale.y; talkLayer(o, u, dt, CINE.on && S.camera ? S.camera.position : (u.talkTo || V.b)); if (u.talkT <= -.4) { u.talkAge = null; u.talkTo = null; } } } }
 }
 
 /* ---------- Poly Haven (CC0): árboles, rocas, plantas y objetos reales escaneados ----------
