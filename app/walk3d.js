@@ -1831,7 +1831,7 @@ function tombScene(scene, p, yAt, poiProp, risen, hx, HW) {
     const inM = new THREE.MeshStandardMaterial({ map: rockT2, color: '#CDBFA6', roughness: 1, emissive: '#4A3E2C', emissiveIntensity: .45 });
     [-1, 1].forEach(sd => add(new THREE.BoxGeometry(.5, 2.7, 3.6), inM, sd * 1.85, 1.35, -2.5)); add(new THREE.BoxGeometry(4.2, 2.7, .5), inM, 0, 1.35, -4.3); add(new THREE.BoxGeometry(4.2, .45, 4.1), inM, 0, 2.62, -2.4); add(new THREE.BoxGeometry(3.3, .06, 3.5), inM, 0, .03, -2.45);
     add(new THREE.BoxGeometry(.9, .55, 2.6), inM, 1.15, .28, -2.6); const ln1 = add(new THREE.BoxGeometry(.6, .06, 1.7), tm('lino', '#F4EEDC'), 1.15, .59, -2.8); ln1.rotation.y = .05; add(new THREE.BoxGeometry(.3, .1, .28), tm('lino2', '#FAF6EA'), 1.2, .62, -1.55);
-    const lg = glowSpr('#FFE9B0', 3.2, .55); lg.position.set(0, 1.3, -2.5); g.add(lg); }
+    const lg = glowSpr('#FFE9B0', 2.4, .32); lg.position.set(0, 1.6, -3.4); g.add(lg); }
   add(new THREE.BoxGeometry(2.1, .32, .26), faceM, 0, 2.38, .5); // dintel
   [-1, 1].forEach(sd => add(new THREE.BoxGeometry(.32, 2.2, .24), faceM, sd * .93, 1.15, .5)); // jambas
   if (!risen) add(new THREE.BoxGeometry(1.25, 1.65, .5), darkM, 0, .85, .26); // la boca: un hueco bajo, había que agacharse para entrar
@@ -1841,7 +1841,7 @@ function tombScene(scene, p, yAt, poiProp, risen, hx, HW) {
   [[2.6, .08, 1.5], [2.1, .03, 2.02]].forEach(([w, yy, z]) => add(new THREE.BoxGeometry(w, .16, .55), faceM, 0, yy, z)); // escalones
   const stone = add(new THREE.CylinderGeometry(1.08, 1.08, .42, 28), new THREE.MeshStandardMaterial({ map: rockT2, color: '#F4ECDA', roughness: .85, emissive: '#40382A', emissiveIntensity: .3 }), risen ? -2.05 : 0, 1.12, .82); stone.rotation.x = Math.PI / 2; if (risen) stone.rotation.y = .4;
   { const rim = add(new THREE.TorusGeometry(1.02, .06, 6, 28), stoneM, stone.position.x, 1.12, 1.04); }
-  if (risen) { const gl = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 1.55), new THREE.MeshBasicMaterial({ color: '#FFF2C8', transparent: true, opacity: .7, blending: THREE.AdditiveBlending, depthWrite: false })); gl.position.set(0, .84, .52); g.add(gl);
+  if (risen) {
   }
   // farallón real atrás y a los costados (modelos de Poly Haven, sin colisión propia: la pone la caja de la fachada)
   { const [a, b] = W(0, -3.4), [c1, d1] = W(-5.4, -1.2), [e1, f1] = W(5.6, -1.4); poiProp('namaqualand_cliff_01', risen ? [] : [{ x: a, y: y - .3, z: b, ry: th + Math.PI, s: 1.35, v: 0 }], { shadow: true, far: 1, nocol: 1 }); poiProp('rock_face_01', [{ x: c1, y: y - .2, z: d1, ry: th + 1.2, s: 1.15, v: 0 }, { x: e1, y: y - .25, z: f1, ry: th - 1.9, s: 1.25, v: 1 }], { shadow: true, far: 1, nocol: 1 }); }
@@ -2383,7 +2383,7 @@ function tombTick(dt) { const T = S.tomb; T.t += dt; if (T.race) raceTick(dt);
   if (T.stone && T.push > 0) { T.push -= dt; T.stone.rotation.z = Math.sin(T.t * 18) * .012 * Math.min(1, T.push); }
   if (S.tombMist) S.tombMist.forEach((q, i) => { q.m.position.x = q.x + Math.sin(T.t * .07 + q.ph) * 2.2; q.m.position.z = q.z + Math.cos(T.t * .05 + q.ph) * 2.2; q.m.rotation.z += dt * .01 * (i % 2 ? 1 : -1); });
   if (S.tombFl) S.tombFl.forEach((f, i) => { f.material.opacity = .6 + Math.sin(T.t * 11 + i) * .1; });
-  if (T.inside) { const a = S.av.position, inn = (a.x - T.inside[0]) ** 2 + (a.z - T.inside[1]) ** 2 < 4.4; if (inn && T.cd == null) { T.cd = S.camDist; S.camDist = Math.min(S.camDist, 1.7); } else if (!inn && T.cd != null) { S.camDist = T.cd; T.cd = null; } } if (T.glow) T.glow.material.opacity = .45 + Math.sin(T.t * 1.4) * .12; if (T.beam) { const on = S.lore.some(l => l.label === 'Mirar al ángel' && l.on); T.beam.material.opacity += ((on ? .4 : .1 + Math.sin(T.t * .8) * .03) - T.beam.material.opacity) * Math.min(1, dt * 2); } }
+  if (T.inside) { const a = S.av.position, inn = (a.x - T.inside[0]) ** 2 + (a.z - T.inside[1]) ** 2 < 4.4; if (inn) { if (T.cd == null) { T.cd = S.camDist; T.cp = S.camPitch; } S.camDist = 1.3; S.camPitch = .04; } else if (T.cd != null) { S.camDist = T.cd; S.camPitch = T.cp; T.cd = null; } } if (T.glow) T.glow.material.opacity = .45 + Math.sin(T.t * 1.4) * .12; if (T.beam) { const on = S.lore.some(l => l.label === 'Mirar al ángel' && l.on); T.beam.material.opacity += ((on ? .4 : .1 + Math.sin(T.t * .8) * .03) - T.beam.material.opacity) * Math.min(1, dt * 2); } }
 function gardenTick(dt) { const G2 = S.garden, a = S.av.position; if (Math.abs(a.z - G2.p.z) > 110) return; G2.t += dt; const t = G2.t;
   if (G2.flies) { const f = G2.flies, P = f.m.geometry.attributes.position; for (let i = 0; i < f.n; i++) { const k = t * .4 + f.ph[i]; P.setXYZ(i, f.base[i * 3] + Math.sin(k) * .9, f.base[i * 3 + 1] + Math.sin(k * 1.7) * .35, f.base[i * 3 + 2] + Math.cos(k * .8) * .9); } P.needsUpdate = true; f.m.material.opacity = .6 + Math.sin(t * 2.3) * .3; }
   if (G2.beam) { const on = S.lore.some(l => l.label === 'Orar en la roca' && l.on); G2.beam.material.opacity += ((on ? .5 : .07 + Math.sin(t * .9) * .03) - G2.beam.material.opacity) * Math.min(1, dt * 2); }
