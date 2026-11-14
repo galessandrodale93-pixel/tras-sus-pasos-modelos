@@ -1109,3 +1109,7 @@ body:not([data-branch="ados"]) .cr-rank{color:#AFC3EE}
   #v3sheet .inv-body[data-t="eq"] .inv-slot{width:52px!important;height:52px!important}
 }
 @media (prefers-reduced-motion:reduce){.v3crest::after,.cr-bar em,.cr-ring .tip,#v3sheet .inv-doll::before,#v3sheet .inv-slot.full,#v3sheet .inv-cell[data-id]{animation:none!important}}
+.v3crest .cr-med,.v3crest .cr-txt{background:none;border:0;padding:0;margin:0;color:inherit;font:inherit;text-align:left;box-shadow:none;min-height:0;width:auto}
+.v3crest .cr-med{width:62px;height:62px}
+.v3crest .cr-bag{border:0;padding:0;margin:0;min-height:0}
+@media (max-height:520px){.v3crest .cr-med{width:48px;height:48px}}
