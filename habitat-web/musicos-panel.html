@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="/assets/tutor.css">
 <style>
 [hidden]{display:none!important}
+.tt-v>*{min-width:0;max-width:100%}.tt-card{overflow:hidden}.zp-z>div{min-width:0}
 .zp-z{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .zp-date{flex:none;width:70px;height:76px;border-radius:16px;background:var(--ink);color:var(--cream);display:grid;place-items:center;align-content:center;line-height:1}
 .zp-date b{font:500 2rem var(--serif)}.zp-date small{font:600 .7rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--gold-2)}
@@ -122,7 +123,7 @@ function drawEq(){
 }
 function drawMus(){
   var box=$('#zMus'),M=D.musicos;
-  box.innerHTML='<h2 class="tt-h">Músicos</h2><p class="tt-tip">Cargalos con su mail: les llega la bienvenida con su link personal (no necesitan cuenta). Con ese link ven el repertorio, confirman si vienen y marcan lo que ensayaron.</p>'+
+  box.innerHTML='<h2 class="tt-h">Músicos</h2><p class="tt-tip">Cargalos con su mail: les llega la bienvenida para entrar con Google (o con su link personal, sin cuenta). Ahí ven el repertorio, confirman si vienen y marcan lo que ensayaron.</p>'+
     (M.map(function(m){return '<div class="zp-m"><div><b>'+esc(m.title)+'</b>'+(m.activo==='no'?' <small>(inactivo)</small>':'')+'<small>'+esc([m.instrumento,m.email,m.telefono].filter(Boolean).join(' · '))+'</small></div><div class="tt-wa"><button class="tt-btn s" type="button" data-cp="'+esc(m.link)+'">Copiar link</button>'+(m.telefono?'<a class="tt-btn s" target="_blank" rel="noopener" href="https://wa.me/'+esc(String(m.telefono).replace(/\D/g,''))+'?text='+encodeURIComponent('¡Hola '+String(m.title).split(' ')[0]+'! Este es tu link para la Zarza de Habitat: repertorio, tonos y confirmación 🎶 '+m.link)+'">WhatsApp</a>':'')+'<button class="tt-btn s" type="button" data-ed="'+esc(m._id)+'">Editar</button></div></div>';}).join('')||'<p class="tt-empty">Todavía no hay músicos cargados.</p>')+
     '<div class="tt-wa"><button class="tt-btn" type="button" id="zNew">+ Sumar músico</button></div>';
   $$('[data-cp]',box).forEach(function(b){b.onclick=function(){var t=b.dataset.cp;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){toast('Link copiado');}).catch(function(){prompt('Copiá el link:',t);});};});
