@@ -1051,12 +1051,11 @@ function hudSwap(on) {
 const FAN = { el: null, open: false, t: 0 };
 function fanFire(b) { if (!b) return; if (b.onpointerdown) b.onpointerdown({ preventDefault() {}, stopPropagation() {}, pointerType: 'mouse', button: 0, target: b, currentTarget: b }); else b.click(); }
 // cada opción: [ícono, nombre, acción, clave, grupo]. En el abanico van solo las 4 principales; el resto, en «Más opciones».
-const FAN_GR = { acc: 'Acciones', pj: 'Tu personaje', son: 'Sonido', ayu: 'Ayuda y ajustes' };
+const FAN_GR = { acc: 'Acciones', pj: 'Historia', son: 'Sonido', ayu: 'Ayuda y ajustes' };
 const FAN_ACT = { jump: 'acc', pray: 'acc', wave: 'acc', glow: 'acc', music: 'son', voice: 'son', mix: 'son', help: 'ayu', vida: 'ayu' };
 function fanAll() {
-  const L = [], money = (() => { const m = document.querySelector('#v3surv .sv-money'); return m ? (m.textContent.match(/\d+/) || ['0'])[0] : null; })();
-  L.push(['💪', 'Atributos', () => openBag('at'), 'attr', 'pj']);
-  if (S && S.sv) { L.push(['🍽️', 'Comer (C)', () => svEat(), 'eat', 'pj']); L.push(['🔨', 'Fabricar (B)', () => svCraft(), 'craft', 'pj']); if (money != null) L.push([`<span class="fan-coin"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#F5C443" stroke="#8A5A12" stroke-width="1.6"/><circle cx="12" cy="12" r="7" fill="none" stroke="#B9801E" stroke-width="1.2"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="900" font-family="Georgia,serif" fill="#7A4E0E">D</text></svg><em>${money}</em></span>`, `${money} denarios (monedas)`, () => openBag(), 'coin', 'pj']); }
+  const L = [];
+  // Atributos, comer, fabricar y monedas ya están en la mochila: no se repiten acá
   const acts = document.getElementById('v3acts'); if (acts) acts.querySelectorAll('button[data-a]').forEach(b => { if (b.dataset.a === 'room') return; L.push([b.innerHTML, b.title || b.getAttribute('aria-label') || b.dataset.a, () => fanFire(b), b.dataset.a, FAN_ACT[b.dataset.a] || 'acc', b.classList.contains('off')]); });
   try { if (G().hstHas && G().hstHas()) L.push(['📜', 'Rollo de Isaías', () => G().hstScroll(), 'scroll', 'pj']); } catch (e) {}
   L.push(['⭐', 'Mi progreso', () => { const h = document.getElementById('hudLv'); if (h) h.click(); }, 'prog', 'ayu']);
@@ -1064,7 +1063,7 @@ function fanAll() {
   return L;
 }
 function fanItems() {
-  const all = fanAll(), pri = (S && S.sv) ? ['eat', 'craft', 'pray', 'prog'] : ['pray', 'wave', 'jump', 'prog'], main = [];
+  const all = fanAll(), pri = ['pray', 'wave', 'jump', 'prog'], main = [];
   pri.forEach(k => { const f = all.find(x => x[3] === k); if (f) main.push(f); });
   all.forEach(f => { if (main.length < 4 && !main.includes(f)) main.push(f); });
   main.push(['<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="5" cy="12" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="19" cy="12" r="2.2" fill="currentColor"/></svg>', 'Más opciones', () => moreOpen(), 'more', '']);
