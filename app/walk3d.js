@@ -427,7 +427,12 @@ function trailBuild(h0r) {
       if (k === 'cueva') { TRL.ends.push({ k, x: e.x + ux * 3, z: e.z + uz * 3, y: e.y, dx: ux, dz: uz, r: 4.2 }); TRL.ends.push({ k: 'plaza', x: e.x - ux * 4, z: e.z - uz * 4, y: e.y, dx: ux, dz: uz, r: 9 }); } // explanada delante de la cueva
       else TRL.ends.push({ k, x: e.x, z: e.z, y: e.y, dx: ux, dz: uz, r: k === 'cima' ? 3 : 7 }); }
   }
+  // la ladera libre: desde la cima, hacia la izquierda mirando el estandarte, una bajada empinada sin camino hasta el llano
+  TRL.desc = null; { const e = TRL.ends.find(q => q.k === 'cima'), c = TRL.city; if (e && c) { const ang = Math.atan2(c.x - e.x, c.z - e.z) - Math.PI / 2, sx = Math.sin(ang), sz = Math.cos(ang), slope = .8; let len = 20;
+    for (let d = 20; d < 160; d += 2) { const x = e.x + sx * d, z = e.z + sz * d; len = d; if (e.y - d * slope <= h0r(x, z) + .5) break; }
+    TRL.desc = { x: e.x, z: e.z, y: e.y, ang, sx, sz, slope, len, half: .32, fx: e.x + sx * (len - 3), fz: e.z + sz * (len - 3) }; } }
   TRL.S.forEach(q => { const k = trlKey(Math.floor(q.x / TRLC), Math.floor(q.z / TRLC)); if (!TRL.B.has(k)) TRL.B.set(k, []); TRL.B.get(k).push(q); });
+  if (TRL.desc) { const D = TRL.desc, ex = D.x + D.sx * D.len, ez = D.z + D.sz * D.len; x0 = Math.min(x0, ex); x1 = Math.max(x1, ex); z0 = Math.min(z0, ez); z1 = Math.max(z1, ez); }
   TRL.bb = { x0: x0 - 70, x1: x1 + 70, z0: z0 - 70, z1: z1 + 70 }; TRL.ridge = (TRL.lines.cima || []).filter((_, i) => i % 3 === 0);
 }
 function trailNear(x, z) {
@@ -435,18 +440,21 @@ function trailNear(x, z) {
   for (let i = i0 - 1; i <= i0 + 1; i++) for (let j = j0 - 1; j <= j0 + 1; j++) { const L = TRL.B.get(trlKey(i, j)); if (!L) continue; for (const q of L) { const d = (q.x - x) ** 2 + (q.z - z) ** 2; if (d < bd) { bd = d; best = q; } } }
   return best ? { d: Math.sqrt(bd), y: best.y, f: best.f, q: best } : null;
 }
+// la ladera de la bajada: superficie empinada y pareja (con ondulaciones) que va del pico al llano
+function descAt(x, z) { const D = TRL.desc; if (!D) return null; const dx = x - D.x, dz = z - D.z, al = dx * D.sx + dz * D.sz, lat = Math.abs(dx * D.sz - dz * D.sx); if (al < -2 || al > D.len + 12) return null; const wid = 3.5 + Math.max(0, al) * .33; return { d: Math.max(0, al), lat, wid, h: D.y - Math.max(0, al) * D.slope + (vnoise(x * .12 + 3, z * .12) - .5) * 1.4 * sstep(4, 12, al) }; }
 function trailBlend(x, z, h) {
   const B = TRL.bb; if (!B || x < B.x0 || x > B.x1 || z < B.z0 || z > B.z1) return h; let hh = h;
   for (const e of TRL.ends) { const dx = x - e.x, dz = z - e.z, dd = Math.hypot(dx, dz); if (dd > 42) continue;
     if (e.k === 'cumbre' || e.k === 'cima') hh = Math.max(hh, e.y - Math.max(0, dd - e.r) * (e.k === 'cima' ? 1.05 : .8)); // la cumbre domina; la cima es un pico
     else if (e.k === 'cueva') { const fw = dx * e.dx + dz * e.dz - 1.5; hh = Math.max(hh, e.y + 12 * (1 - sstep(5, 26, dd)) * sstep(-1, 9, fw)); } } // cerro detrás de la cueva (pendiente suave, sin paredes estiradas)
+  { const q = descAt(x, z); if (q) { const w = (1 - sstep(q.wid, q.wid + 9, q.lat)) * (1 - sstep(TRL.desc.len, TRL.desc.len + 10, q.d)); if (w > 0 && q.h > hh) hh += (q.h - hh) * w; } }
   if (TRL.ridge && TRL.ridge.length) { let m = -1e9; for (const q of TRL.ridge) { const d = Math.hypot(q.x - x, q.z - z); if (d < 75) m = Math.max(m, q.y - Math.max(0, d - 2.6) * .85); } if (m > hh) hh += (m - hh) * sstep(28, 42, (x - TRL.p.x) * TRL.sd); } // la montaña: lomos que bajan desde el sendero (solo del lado del monte, nunca sobre los pueblos)
   const t = trailNear(x, z); if (t) { const w = 1 - sstep(2.4, 7.8, t.d); hh += (t.y - hh) * w; }
   for (const e of TRL.ends) { const dd = Math.hypot(x - e.x, z - e.z); if (dd > e.r + 4) continue; let w = 1 - sstep(e.r, e.r + 3.5, dd); if (e.k === 'cueva') { const fw = (x - e.x) * e.dx + (z - e.z) * e.dz; w *= 1 - sstep(1, 4.5, fw); } hh += (e.y - hh) * w; }
   return hh;
 }
 // se puede caminar fuera del borde del mundo solo por el sendero, la explanada de la cumbre y adentro de la cueva
-function inTrail(x, z) { const B = TRL.bb; if (!B || x < B.x0 || x > B.x1 || z < B.z0 || z > B.z1) return false; const t = trailNear(x, z); if (t && t.d < 2.7) return true; for (const e of TRL.ends) if (Math.hypot(x - e.x, z - e.z) < e.r + (e.k === 'plaza' ? 2.5 : -.6)) return true; return false; }
+function inTrail(x, z) { const B = TRL.bb; if (!B || x < B.x0 || x > B.x1 || z < B.z0 || z > B.z1) return false; const t = trailNear(x, z); if (t && t.d < 2.7) return true; for (const e of TRL.ends) if (Math.hypot(x - e.x, z - e.z) < e.r + (e.k === 'plaza' ? 2.5 : -.6)) return true; { const q = descAt(x, z); if (q && q.d < TRL.desc.len + 6 && q.lat < q.wid) return true; } return false; }
 // qué tan desierto es cada lugar: el cañón y los senderos, y más seco cuanto más arriba
 function desertK(x, z) {
   let k = 0; const C = WATER.canyon; if (C) { const u = (x - C.x) * -C.sd, v = z - C.z; if (u < 30 && u > -150 && Math.abs(v) < 60) k = (1 - sstep(-28, 6, u)) * (1 - sstep(26, 50, Math.abs(v))) * .8; }
@@ -470,7 +478,7 @@ function spDist(x, z) { if (!SP.S.length) return 99; const i0 = Math.floor(x / S
 function waterPlan(pois) {
   WATER.basins = []; WATER.river = null; WATER.mats = []; WATER.canyon = null;
   for (const p of pois) if (p.k === 'desert') WATER.canyon = { x: p.x, z: p.z, sd: p.side || -1 }; /* el desierto es un cañón */
-  TRL.defs = null; for (const p of pois) if (p.k === 'desert') trailPlan(p); /* y desde el fondo del cañón suben los senderos del Monte de la Tentación */
+  TRL.defs = null; TRL.city = pois.find(q => q.k === 'temple') || null; for (const p of pois) if (p.k === 'desert') trailPlan(p); /* y desde el fondo del cañón suben los senderos del Monte de la Tentación */
   WATER.hill = null; for (const p of pois) if (p.k === 'golgota') WATER.hill = { x: p.x, z: p.z }; /* el Gólgota se levanta como una loma que se ve desde lejos */
   WATER.quarry = null; for (const p of pois) if (p.k === 'tomb') { const th = p.side > 0 ? -Math.PI / 2 : Math.PI / 2; WATER.quarry = { x: p.x, z: p.z, c: Math.cos(th), s: Math.sin(th) }; } /* la tumba, en una cantera de caliza */
   for (const p of pois) { if (p.k === 'lake') { WATER.basins.push({ x: p.x, z: p.z, r: 30 }); WATER.basins.push({ x: p.x + p.side * 78, z: p.z - 8, r: 70, sea: 1 }); } /* el lago se abre hacia afuera, pasando las piedras, hasta el horizonte: un mar de verdad */ if (p.k === 'shore') WATER.basins.push({ x: p.x + p.side * 8, z: p.z, r: 10.5 }); if (p.k === 'river') WATER.river = p.pts; }
@@ -2572,9 +2580,9 @@ function judeaBanner(lines, ref) { const g = new THREE.Group(), wd = tm('signwoo
   ambBanner(g, 0, 3.15, .14, .9, 1.7, '#FFFFFF', { map: tex }); return g; } // la tela cuelga delante del poste
 // los adornos de las lomas que quedaron colgando sobre las laderas nuevas del monte se acomodan al suelo (o se sacan si la pendiente es muy fuerte)
 function judeaClean() { const B = TRL.bb; if (!B || !S.W) return; const M = new THREE.Matrix4(), P = new THREE.Vector3(), Q = new THREE.Quaternion(), SC = new THREE.Vector3(), mine = S.judea && S.judea.own;
-  S.scene.traverse(o => { if (!o.isInstancedMesh || (mine && mine.has(o))) return; let ch = false;
+  S.scene.traverse(o => { if (!o.isInstancedMesh || (mine && mine.has(o))) return; let ch = false; const big = (o.geometry.attributes.position.count || 0) >= 2000; // peñascos grandes de las lomas: en el monte no van
     for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, M); M.decompose(P, Q, SC); if (P.x < B.x0 || P.x > B.x1 || P.z < B.z0 || P.z > B.z1 || (P.x - TRL.p.x) * TRL.sd < 26 || TRL.ends.some(q => q.k === 'cueva' && Math.hypot(P.x - q.x, P.z - q.z) < q.r + 9)) continue; const h = S.W.hAt(P.x, P.z), sl = Math.hypot(S.W.hAt(P.x + 1.5, P.z) - S.W.hAt(P.x - 1.5, P.z), S.W.hAt(P.x, P.z + 1.5) - S.W.hAt(P.x, P.z - 1.5)) / 3;
-      if (sl > .55 || Math.abs(P.y - h) > 3) { SC.setScalar(0); M.compose(P, Q, SC); o.setMatrixAt(i, M); ch = true; } else if (Math.abs(P.y - h) > .6) { P.y = h - .3; M.compose(P, Q, SC); o.setMatrixAt(i, M); ch = true; } }
+      if (big || sl > .55 || Math.abs(P.y - h) > 3) { SC.setScalar(0); M.compose(P, Q, SC); o.setMatrixAt(i, M); ch = true; } else if (Math.abs(P.y - h) > .6) { P.y = h - .3; M.compose(P, Q, SC); o.setMatrixAt(i, M); ch = true; } }
     if (ch) { o.instanceMatrix.needsUpdate = true; o.computeBoundingSphere && o.computeBoundingSphere(); } }); }
 function judeaTick(dt, t) {
   const J = S.judea; if (!J) return; J.t += dt; if (!J.cleaned && J.t > 2.5) { J.cleaned = 1; try { judeaClean(); } catch (e) { } } const on = fx => S.lore.some(l => l.fx === fx && l.on);

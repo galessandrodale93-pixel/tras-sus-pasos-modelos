@@ -1148,3 +1148,5 @@ body.v3on .v3joy{left:var(--joyL)!important;bottom:var(--fanB)!important;width:v
 body.v3on .v3cam{left:var(--joyL)!important;bottom:var(--fanB)!important}
 @media (pointer:coarse){body.v3on .v3cam{left:calc(var(--joyL) + (var(--joyW) - 44px) / 2)!important;bottom:calc(var(--fanB) + var(--joyW) + 12px)!important}}
 @media (max-height:520px){body.v3on{--joyW:92px}}
+.v3timer{position:fixed;z-index:8;left:50%;top:calc(60px + env(safe-area-inset-top,0px));transform:translateX(-50%);padding:8px 18px;border-radius:999px;background:rgba(20,15,10,.85);border:1px solid rgba(255,210,94,.7);color:#FFE7A6;font:900 18px/1 "Nunito",sans-serif;letter-spacing:.04em;box-shadow:0 0 18px rgba(255,200,80,.35)}
+.v3timer[hidden],body:not(.v3on) .v3timer{display:none}
