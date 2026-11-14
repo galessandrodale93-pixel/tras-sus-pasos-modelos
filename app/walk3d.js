@@ -2554,7 +2554,7 @@ function judeaTrails(scene, p, yAt, poiProp, hx) {
     const lb = textSprite('La cumbre', hx); lb.position.set(e.x, y + 4.5, e.z); scene.add(lb); } }
   // la cima del monte: arriba de todo, sin nada que tape, se ve la ciudad entera
   { const e = TRL.ends.find(q => q.k === 'cima'); if (e) { const y = yAt(e.x, e.z), city = (S.pois || []).find(q => q.k === 'temple') || { x: 0, z: e.z }; J.cima = { x: e.x, z: e.z };
-    const look = Math.atan2(city.x - e.x, city.z - e.z), tr = []; for (let k = 0; k < 4; k++) { const an = look + Math.PI + (k - 1.5) * .55, x = e.x + Math.sin(an) * (e.r + 1.5), z = e.z + Math.cos(an) * (e.r + 1.5); /* las piedras van detrás: hacia la ciudad la vista queda libre */ tr.push({ x, y: yAt(x, z) - .4, z, ry: R() * 6.283, s: .9 + R() * .6, v: k }); } poiProp('namaqualand_boulder_03', tr, { shadow: true, nocol: 1 });
+    /* la cima queda despejada: sin peñascos que tapen la vista ni la cámara */
     S.lore.push({ x: e.x, z: e.z, r: 3.2, label: 'Mirar la ciudad', fx: 'ciudad', dur: 8, go: () => sello('cima-monte', 'La cima del monte'), info: ['Montes alrededor de Jerusalén', 'Desde la cima se ve toda la ciudad. «Como Jerusalén tiene montes alrededor de ella, así el Señor está alrededor de su pueblo, desde ahora y para siempre». Jesús, al ver la ciudad, lloró por ella.', 'Salmo 125:2 · Lucas 19:41'] });
     const lb = textSprite('La cima', hx); lb.position.set(e.x, y + 4.5, e.z); scene.add(lb);
     const ray = glowSpr('#FFE4A0', 40, .18); ray.position.set(city.x, yAt(city.x, city.z) + 18, city.z); scene.add(ray); J.cityGlow = ray; } }
@@ -2565,7 +2565,7 @@ function judeaTick(dt, t) {
   if (J.drop) { J.drop.s.position.y = J.drop.y + Math.sin(t * 2) * .12; J.drop.s.material.opacity = on('gota') ? 1 : .55 + Math.sin(t * 3) * .2; }
   if (J.flower) J.flower.material.opacity = on('flor') ? .95 : .4 + Math.sin(t * 1.7) * .15;
   if (J.sheep) J.sheep.gl.material.opacity = on('oveja') ? .9 : .35 + Math.sin(t * 2.2) * .15;
-  if (J.cima) { const a = S.av.position, d = Math.hypot(a.x - J.cima.x, a.z - J.cima.z), k = 1 - sstep(10, 45, d); S.fogMul = 1 - k * .93; if (S.scene.fog && S.scene.fog.isFogExp2) { if (k < .01 || J.fd0 == null) J.fd0 = S.scene.fog.density; else S.scene.fog.density = J.fd0 * S.fogMul; } if (S.scene.fog && S.scene.fog.isFog) { if (J.far0 == null) J.far0 = S.scene.fog.far; S.scene.fog.far = J.far0 + k * 230; } if (J.cityGlow) J.cityGlow.material.opacity = .08 + k * (on('ciudad') ? .4 : .2); }
+  if (J.cima) { const a = S.av.position, d = Math.hypot(a.x - J.cima.x, a.z - J.cima.z), k = 1 - sstep(10, 45, d); S.fogMul = 1 - k * .93; if (S.scene.fog && S.scene.fog.isFogExp2) { if (k < .01 || J.fd0 == null) J.fd0 = S.scene.fog.density; else S.scene.fog.density = J.fd0 * S.fogMul; } if (S.scene.fog && S.scene.fog.isFog) { if (J.far0 == null) J.far0 = S.scene.fog.far; S.scene.fog.far = J.far0 + k * 450; } if (J.cityGlow) J.cityGlow.material.opacity = .08 + k * (on('ciudad') ? .4 : .2); }
   J.lamps.forEach((l, i) => { l.material.opacity = .6 + Math.sin(t * 9 + i) * .1 + Math.sin(t * 23 + i * 2) * .05; });
   if (J.vision) { const k = on('reinos') ? 1 : 0; J.vision.big.material.opacity += ((k ? .55 : .2 + Math.sin(t * .5) * .05) - J.vision.big.material.opacity) * Math.min(1, dt * 2); J.vision.g.children.forEach((c, i) => { if (c !== J.vision.big) c.material.opacity = (k ? .7 : .3) + Math.sin(t * 1.3 + i) * .1; }); }
 }
