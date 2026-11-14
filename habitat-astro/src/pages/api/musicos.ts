@@ -20,6 +20,14 @@ async function porClave(k: string) {
   const m = (await q("ZarMusicos").eq("clave", k).limit(1).find()).items[0] as Musico | undefined;
   return m && m.activo !== "no" ? m : undefined;
 }
+// el músico entra con su link personal o con su cuenta (Google o mail), por el email
+async function musicoDe(request: Request, k: string) {
+  if (k) return porClave(k);
+  const me = await emailDe(request);
+  if (!me.email) return undefined;
+  const ms = (await q("ZarMusicos").contains("email", me.email).limit(5).find()).items as Musico[];
+  return ms.find((m) => m.activo !== "no" && String(m.email || "").toLowerCase() === me.email);
+}
 const vistaZarza = (z: Zarza) => ({ fecha: z.fecha, title: z.title || "Zarza", hora: z.hora || HORA, llegada: llegada(z), lugar: z.lugar || "", nota: z.nota || "", canciones: canciones(z) });
 
 export const GET: APIRoute = async ({ request, url }) => {
@@ -36,8 +44,8 @@ export const GET: APIRoute = async ({ request, url }) => {
         ensayos: ens.map((e) => ({ fecha: e.fecha, musicoId: e.musicoId, va: e.va || "", ensayadas: ensayadas(e), nota: e.nota || "" })),
       });
     }
-    const m = await porClave(s(url.searchParams.get("k"), 60));
-    if (!m) return json({ error: "Este link no es válido. Pedile uno nuevo a Agustina." }, 404);
+    const m = await musicoDe(request, s(url.searchParams.get("k"), 60));
+    if (!m) return json({ error: request.headers.get("x-habitat-auth") ? "Tu cuenta no figura como músico de la Zarza. Pedile a Agustina que te sume con este mail." : "Este link no es válido. Pedile uno nuevo a Agustina." }, 404);
     const zs = (await proximas()).slice(0, 3);
     const ens = zs.length ? ((await q("ZarEnsayos").eq("musicoId", m._id).ge("fecha", zs[0].fecha).limit(20).find()).items as Ensayo[]) : [];
     // quiénes van (sin datos de contacto)
@@ -61,8 +69,8 @@ export const POST: APIRoute = async ({ request }) => {
     try { x = await request.json(); } catch { /* vacío */ }
     const op = s(x.op, 30);
     if (op === "yo") {
-      const m = await porClave(s(x.k, 60));
-      if (!m) return json({ error: "Este link no es válido." }, 404);
+      const m = await musicoDe(request, s(x.k, 60));
+      if (!m) return json({ error: "No pudimos reconocerte como músico." }, 404);
       const f = s(x.fecha, 10);
       if (!DATE.test(f)) return json({ error: "fecha" }, 400);
       const z = (await q("VolEventos").eq("_id", "zarza|" + f).limit(1).find()).items[0] as Zarza | undefined;
