@@ -827,7 +827,7 @@ const HOWTO = {
 };
 // sala de espera: aparece al instante (fondo con degradé, fotos del juego, versículos y tarjetas), baja el mundo completo
 // y se queda mientras se arma el mundo 3D; se cierra sola cuando todo está listo
-const LB_IMG = { hero: ['hero_n1.jpg', 'hero_n2.jpg', 'hero_n3.jpg', 'hero_n4.jpg', 'hero_n5.jpg', 'hero_n6.jpg'], kids: ['kids_e1.jpg', 'kids_e2.jpg', 'kids_e3.jpg', 'kids_e4.jpg', 'kids_e5.jpg'] };
+const LB_IMG = { hero: ['hero_e1.jpg', 'hero_e2.jpg', 'hero_e3.jpg', 'hero_e4.jpg', 'hero_e5.jpg'], kids: ['kids_e1.jpg', 'kids_e2.jpg', 'kids_e3.jpg', 'kids_e4.jpg', 'kids_e5.jpg'] };
 function lobbyUI(kid) {
   const ov = document.createElement('div'); ov.className = 'v3lobby' + (kid ? ' kid' : ''); const H = HOWTO[kid ? 'kids' : 'hero'];
   const im = (LB_IMG[kid ? 'kids' : 'hero'] || []).map(n => `url(${DLM.r2}app/lobby/${n}),url(${DLW.root}app/lobby/${n})`);
