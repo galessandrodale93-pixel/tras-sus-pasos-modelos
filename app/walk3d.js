@@ -392,7 +392,7 @@ function groundMat(Q, kids) {
 const WATER = { basins: [], river: null, uT: { value: 0 }, WL: -.05, RL: -.12, nm: null, env: null, mats: [] };
 function waterPlan(pois) {
   WATER.basins = []; WATER.river = null; WATER.mats = [];
-  for (const p of pois) { if (p.k === 'lake') WATER.basins.push({ x: p.x, z: p.z, r: 30 }); if (p.k === 'shore') WATER.basins.push({ x: p.x + p.side * 8, z: p.z, r: 10.5 }); if (p.k === 'river') WATER.river = p.pts; }
+  for (const p of pois) { if (p.k === 'lake') { WATER.basins.push({ x: p.x, z: p.z, r: 30 }); WATER.basins.push({ x: p.x + p.side * 78, z: p.z - 8, r: 70, sea: 1 }); } /* el lago se abre hacia afuera, pasando las piedras, hasta el horizonte: un mar de verdad */ if (p.k === 'shore') WATER.basins.push({ x: p.x + p.side * 8, z: p.z, r: 10.5 }); if (p.k === 'river') WATER.river = p.pts; }
 }
 // mapa de normales que se repite sin costura (suma de ondas con frecuencias enteras)
 function waterNormalTex() {
@@ -472,7 +472,8 @@ function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
   for (let j = 0; j < NZ; j++) { const z = Z0 + j * CS, b0 = bk(z); for (let i = 0; i < NX; i++) { const x = X0 + i * CS; let d = 400, dr = 400; for (let b = b0 - 3; b <= b0 + 3; b++) { const L = buckets.get(b); if (!L) continue; for (const p of L) { const q = (p[0] - x) ** 2 + (p[1] - z) ** 2; if (q < d) d = q; if (p[2] && q < dr) dr = q; } } DF[j * NX + i] = Math.min(20, Math.sqrt(d)); DR[j * NX + i] = Math.min(20, Math.sqrt(dr)); } }
   const dOf = F => (x, z) => { const fx = Math.max(0, Math.min(NX - 1.001, (x - X0) / CS)), fz = Math.max(0, Math.min(NZ - 1.001, (z - Z0) / CS)), i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, a = F[j * NX + i], b = F[j * NX + i + 1], c = F[(j + 1) * NX + i], d = F[(j + 1) * NX + i + 1]; return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; };
   const dAt = dOf(DF), roadAt = dOf(DR);
-  const h0 = (x, z) => { const d = dAt(x, z), m = sstep(2.6, 10, d), side = sstep(16 * WS, 44 * WS, Math.abs(x)); return m * (fbm(x * .07 + 3, z * .07) * 3.4 - .9 + side * (4 + fbm(x * .025, z * .025) * 14)) * (KK ? .5 : 1); };
+  const dNz = (x, z) => { const d = dAt(x, z); return d + ((vnoise(x * .11 + 11, z * .11 - 5) - .5) * 6 + (vnoise(x * .37, z * .37) - .5) * 1.6) * sstep(1.2, 3.5, d); }; /* borde organico: los escenarios se funden con el campo */
+  const h0 = (x, z) => { const d = dNz(x, z), m = sstep(2.6, 10, d), side = sstep(16 * WS, 44 * WS, Math.abs(x)); return m * (fbm(x * .07 + 3, z * .07) * 3.4 - .9 + side * (4 + fbm(x * .025, z * .025) * 14)) * (KK ? .5 : 1); };
   // cauce del Jordán: distancia al río en la misma grilla
   let RF = null; if (WATER.river) { RF = new Float32Array(NX * NZ); const rb = new Map(); WATER.river.forEach(p => { const k = bk(p[1]); if (!rb.has(k)) rb.set(k, []); rb.get(k).push(p); });
     for (let j = 0; j < NZ; j++) { const z = Z0 + j * CS, b0 = bk(z); for (let i = 0; i < NX; i++) { const x = X0 + i * CS; let d = 400; for (let b = b0 - 2; b <= b0 + 2; b++) { const L = rb.get(b); if (!L) continue; for (const p of L) { const q = (p[0] - x) ** 2 + (p[1] - z) ** 2; if (q < d) d = q; } } RF[j * NX + i] = Math.min(20, Math.sqrt(d)); } } }
@@ -497,7 +498,7 @@ function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
   const P = geo.attributes.position, col = new Float32Array(P.count * 3), spl = new Float32Array(P.count * 4);
   for (let i = 0; i < P.count; i++) { const x = P.getX(i), z = P.getZ(i), d = dAt(x, z), h = hAt(x, z); P.setY(i, h); const n = fbm(x * .15, z * .15), n2 = vnoise(x * .04 + 7, z * .04);
     const sl = Math.hypot(hAt(x + .8, z) - hAt(x - .8, z), hAt(x, z + .8) - hAt(x, z - .8)) / 1.6;
-    let wd = 1 - sstep(1.1, 2.8, d), wr = Math.max(sstep(5, 11, h) * .8, sstep(.6, 1.1, sl)), wy = sstep(.55, .85, n2) * .65 * (1 - wd), wg = 1;
+    let wd = Math.max(1 - sstep(1.1, 2.8, roadAt(x, z)), 1 - sstep(.8, 4.6, dNz(x, z))), wr = Math.max(sstep(5, 11, h) * .8, sstep(.6, 1.1, sl)), wy = sstep(.55, .85, n2) * .65 * (1 - wd), wg = 1;
     wg *= (1 - wd) * (1 - wr) * (1 - wy * .9); wy *= (1 - wr); wd *= (1 - wr * .6); const tt = wg + wy + wd + wr || 1;
     const wet = waterWet(x, z, RF ? rAt(x, z) : null); if (wet > 0) { const k2 = wet * .9; wg *= 1 - k2; wy *= 1 - k2; wr *= 1 - k2; wd = wd * (1 - k2) + k2; }
     { const t2 = wg + wy + wd + wr || 1; spl.set([wg / t2, wy / t2, wd / t2, wr / t2], i * 4); } const v = (.86 + n * .26) * (1 - wet * .22); col.set([v, v * (1 - wet * .02), v * (1 - wet * .05)], i * 3); }
@@ -2302,20 +2303,31 @@ function nazaretMore(scene, p, yAt, poiProp, hx, HW) {
 // el lago de Galilea: agua con olas suaves, orilla, muelle, barcas y la casa del pescador
 function buildLake(scene, cx, cz, side, hx, yAt) {
   const R = 30, y0 = WATER.WL - .42;
-  const uni = { t: { value: 0 } }; waterLake(scene, cx, cz, R * 1.2, hx, yAt);
+  const uni = { t: { value: 0 } }; waterLake(scene, cx, cz, R * 1.2, hx, yAt); waterLake(scene, cx + side * 78, cz - 8, 92, hx, yAt);
   // muelle de tablas que entra al agua
   const dock = new THREE.Group(), dx = cx + side * (R - 3.5), len = 12; for (let i = 0; i < 24; i++) bx(.48, .1, 2.2, WOODL(), -len / 2 + i * .5, 0, 0, dock).rotation.y = (i % 3 - 1) * .02; for (let i = 0; i < 7; i++) [-1, 1].forEach(s => cy(.1, .1, 1.6, WOOD(), -len / 2 + i * 2, -.6, s * 1.05, dock, 7));
   dock.position.set(dx, y0 + .62, cz + 4); scene.add(dock); const df = { x0: dx - len / 2, x1: dx + len / 2, z0: cz + 4 - 1.1, z1: cz + 4 + 1.1, y: y0 + .67 }; S.floors.push(df);
   const boat = (bx2, bz, ry, i) => { const b = boatMesh({ L: 5.2 - i * .3, B: 1.75, D: .74, sail: i === 1 ? 'furled' : 'up', oars: 1, nets: i === 0 }); b.position.set(bx2, WATER.WL - .3, bz); b.rotation.y = ry; b.userData.y0 = WATER.WL - .3; scene.add(b); return b; };
   const boats = [boat(dx - side * 5, cz + 8, .2, 0), boat(cx - side * 6, cz - 10, 1.4, 1), boat(cx + side * 4, cz + 14, -.8, 2)];
+  // más barcas mar adentro y pescadores: reman, tiran la red y la recogen; en la orilla otros remiendan redes
+  boats.push(boat(cx + side * 30, cz - 4, .9, 0), boat(cx + side * 44, cz + 12, -.4, 1), boat(cx + side * 58, cz - 18, 2.1, 0));
+  const fishers = []; if (H3.ok) { const LK = [['#8A6A44', '#2A1B14'], ['#5A6A7A', '#3A2412'], ['#7A5A3A', '#5A5A5A'], ['#6A5A44', '#2A1B14']];
+    boats.forEach((b, i) => { if (i === 1) return; const [oc, hc] = LK[i % 4], o = buildHeroAvatar({ g: 'chico', age: 18, skin: '#B98A62', hair: hc, outfit: oc, anim: ['M_Standing_Idle', 'M_Holding_Idle'] }); o.userData.stay = 1; o.position.set(-.6, .32, 0); o.rotation.y = Math.PI / 2 * (i % 2 ? 1 : -1); b.add(o); o.traverse(m => { if (m.isPointLight) m.intensity = 0; });
+      const net = new THREE.Mesh(new THREE.RingGeometry(.1, 1, 24, 1), new THREE.MeshStandardMaterial({ color: '#C8B48A', roughness: 1, transparent: true, opacity: 0, side: THREE.DoubleSide, wireframe: true, depthWrite: false })); net.rotation.x = -Math.PI / 2; net.visible = false; scene.add(net);
+      fishers.push({ o, b, net, t: 2 + i * 2.3 + Math.random() * 4, k: -1 }); });
+    const shore = (x, z, ry, oc) => { const o = buildHeroAvatar({ g: 'chico', age: 18, skin: '#C99A72', hair: '#3A2412', outfit: oc, anim: ['M_Kneeling_Idle'] }); o.userData.stay = 1; o.position.set(x, yAt(x, z), z); o.rotation.y = ry; scene.add(o); return o; };
+    const nx = cx - side * (R + 4), nz = cz + 10, heap = new THREE.Mesh(new THREE.SphereGeometry(.9, 12, 6, 0, 6.283, 0, 1.2), new THREE.MeshStandardMaterial({ color: '#B8A27A', roughness: 1, wireframe: false })); heap.scale.set(1.4, .35, 1); heap.position.set(nx, yAt(nx, nz), nz); scene.add(heap);
+    const netW = new THREE.Mesh(new THREE.PlaneGeometry(3, 2, 10, 6), new THREE.MeshStandardMaterial({ color: '#D8C8A0', roughness: 1, wireframe: true })); netW.rotation.x = -Math.PI / 2; netW.position.set(nx + side * 1.8, yAt(nx, nz) + .03, nz + .6); scene.add(netW);
+    shore(nx - .9, nz + 1.2, 2.4, '#7A6A4A'); shore(nx + .8, nz - 1, -.6, '#5A6A7A'); }
   // juncos en la orilla
   const reed = new THREE.InstancedMesh(new THREE.CylinderGeometry(.015, .02, 1, 4), tm('reed', '#6E8A44'), 260), m4 = new THREE.Matrix4(), rr = rng(31); for (let i = 0; i < 260; i++) { const a = rr() * 6.28, r = R - .5 + rr() * 2.5, x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r; m4.makeScale(1, .6 + rr() * .9, 1); m4.setPosition(x, y0 + .85, z); reed.setMatrixAt(i, m4); } scene.add(reed);
   // el agua no se camina: un anillo de cajas finas alrededor (dejando libre el muelle)
   for (let i = 0; i < 48; i++) { const a = i / 48 * 6.283, a2 = (i + 1) / 48 * 6.283, x1 = cx + Math.cos(a) * (R * 1.08), z1 = cz + Math.sin(a) * (R * 1.08), x2 = cx + Math.cos(a2) * (R * 1.08), z2 = cz + Math.sin(a2) * (R * 1.08); const b = { x0: Math.min(x1, x2) - .3, x1: Math.max(x1, x2) + .3, z0: Math.min(z1, z2) - .3, z1: Math.max(z1, z2) + .3 }; if (b.x1 > df.x0 - .5 && b.x0 < df.x1 + .5 && b.z1 > df.z0 - .5 && b.z0 < df.z1 + .5) continue; S.cols.push(b); }
   S.cols.push({ x0: df.x0 - .3, x1: df.x1 + .3, z0: df.z0 - .5, z1: df.z0 - .2 }, { x0: df.x0 - .3, x1: df.x1 + .3, z0: df.z1 + .2, z1: df.z1 + .5 }); // barandas invisibles del muelle
+  { const sx = cx + side * 78, sz = cz - 8, SR = 70 * 1.02; for (let i = 0; i < 96; i++) { const a1 = i / 96 * 6.283, a2 = (i + 1) / 96 * 6.283, x1 = sx + Math.cos(a1) * SR, z1 = sz + Math.sin(a1) * SR, x2 = sx + Math.cos(a2) * SR, z2 = sz + Math.sin(a2) * SR; if (Math.min(Math.abs(x1), Math.abs(x2)) > XB + 12) continue; if (Math.hypot(x1 - cx, z1 - cz) < R * 1.05) continue; S.cols.push({ x0: Math.min(x1, x2) - .3, x1: Math.max(x1, x2) + .3, z0: Math.min(z1, z2) - .3, z1: Math.max(z1, z2) + .3 }); } } /* orilla del mar: no se camina sobre el agua */
   const r = { x0: cx - R, x1: cx + R, z0: cz - R, z1: cz + R, trade: 'lago', roof: [], open: true, y: y0 }; S.rooms.push(r);
   const lb = textSprite('Mar de Galilea', hx); lb.scale.multiplyScalar(1.5); lb.position.set(cx, y0 + 7, cz); scene.add(lb);
-  return { uni, boats, y0 };
+  return { uni, boats, y0, fishers };
 }
 // estado de "adentro": oculta el techo, acomoda la cámara y cuenta la historia del lugar la primera vez
 function roomTick(dt) {
@@ -2325,7 +2337,9 @@ function roomTick(dt) {
   if (inR !== S.inRoom) { if (inR && !S.inRoom) S.camKeep = { d: S.camDist, p: S.camPitch }; if (!inR && S.camKeep) { S.camDist = S.camKeep.d; S.camPitch = S.camKeep.p; S.camKeep = null; } S.inRoom = inR; }
   if (inR) { S.camDist += (Math.min(S.camKeep ? S.camKeep.d : 6, 5.2) - S.camDist) * Math.min(1, dt * 3); S.camPitch += (Math.max(S.camKeep ? S.camKeep.p : .4, .95) - S.camPitch) * Math.min(1, dt * 3); }
   const here = inR || openR; if (here && here.trade && TRADE_INFO[here.trade]) { const p = G().P(); p.seen = p.seen || {}; if (!p.seen[here.trade]) { p.seen[here.trade] = 1; G().save(); placeCard(TRADE_INFO[here.trade]); } }
-  if (S.lake) { S.lake.uni.t.value += dt; S.lake.boats.forEach((b, i) => { b.position.y = b.userData.y0 + Math.sin(S.t * 1.2 + i) * .06; b.rotation.z = Math.sin(S.t * .9 + i * 2) * .04; }); }
+  if (S.lake) { S.lake.uni.t.value += dt; S.lake.boats.forEach((b, i) => { b.position.y = b.userData.y0 + Math.sin(S.t * 1.2 + i) * .06; b.rotation.z = Math.sin(S.t * .9 + i * 2) * .04; }); (S.lake.fishers || []).forEach(f => { f.t -= dt; const n = f.net;
+    if (f.k < 0 && f.t <= 0) { h3npcPlay(f.o, ['M_Throw', 'M_Picking_Up'], 2.2); f.k = 0; const wp = new THREE.Vector3(); f.o.getWorldPosition(wp); const q = f.o.getWorldQuaternion(new THREE.Quaternion()), fw = new THREE.Vector3(0, 0, 1).applyQuaternion(q); n.position.set(wp.x + fw.x * 3.2, WATER.WL + .03, wp.z + fw.z * 3.2); n.visible = true; }
+    if (f.k >= 0) { f.k += dt; const e = f.k < .7 ? 0 : Math.min(1, (f.k - .7) / .6); n.scale.setScalar(.2 + e * 2.2); n.material.opacity = f.k < 5 ? Math.min(.85, e) : Math.max(0, .85 - (f.k - 5) * .6); n.position.y = WATER.WL + .03 - Math.max(0, f.k - 3) * .05; if (f.k > 6.5) { n.visible = false; f.k = -1; f.t = 9 + Math.random() * 8; h3npcPlay(f.o, ['M_Picking_Up', 'M_Lifting_Object'], 2); } } }); }
   if (S.shoreBoats) S.shoreBoats.forEach((q, i) => { q.b.position.y = q.y0 + Math.sin(S.t * 1.1 + i) * .05; q.b.rotation.z = Math.sin(S.t * .8 + i) * .035; });
   if (S.temple && S.temple.smoke) { const sm = S.temple.smoke; sm.position.y = 1.5 + (S.t * .4 % 1.2); sm.material.opacity = .3 * (1 - (S.t * .4 % 1.2) / 1.2); sm.scale.setScalar(1 + (S.t * .4 % 1.2)); }
 }
