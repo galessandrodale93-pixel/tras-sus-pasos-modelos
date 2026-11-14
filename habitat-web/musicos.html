@@ -84,6 +84,7 @@
 <div class="bt"><span>© <span id="yr">2026</span> Habitat · Centro de Formación Ministerial</span><span>Hecho con amor para Su presencia</span></div>
 </div></footer>
 <script src="/assets/site.js"></script>
+<script src="/assets/auth.js"></script>
 <script>
 (function(){
 var $=function(s,r){return (r||document).querySelector(s);},$$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
@@ -93,7 +94,8 @@ function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return
 function dd(f){return new Date(f+'T12:00:00');}
 function faltan(f){var h=new Date();h.setHours(12,0,0,0);return Math.round((dd(f)-h)/864e5);}
 function ok(t){var e=$('#mOk');e.textContent=t||'Guardado ✓';e.classList.add('on');clearTimeout(ok.t);ok.t=setTimeout(function(){e.classList.remove('on');},1800);}
-async function guardar(z){var r=await fetch('/api/musicos',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({k:K,op:'yo',fecha:z.fecha,va:z.va,ensayadas:z.ensayadas,nota:z.nota||''})});var j={};try{j=await r.json();}catch(e){}if(!r.ok)throw new Error(j.error||'No se guardó. Revisá la conexión.');return j;}
+var TK='';function hd(){var h={'content-type':'application/json'};if(TK)h['x-habitat-auth']=TK;return h;}
+async function guardar(z){var r=await fetch('/api/musicos',{method:'POST',headers:hd(),body:JSON.stringify({k:K,op:'yo',fecha:z.fecha,va:z.va,ensayadas:z.ensayadas,nota:z.nota||''})});var j={};try{j=await r.json();}catch(e){}if(!r.ok)throw new Error(j.error||'No se guardó. Revisá la conexión.');return j;}
 function tarjeta(z,i){
   var d=dd(z.fecha),n=faltan(z.fecha),L=z.canciones||[],hechas=L.filter(function(c){return z.ensayadas.indexOf(c.id)>=0;}).length;
   var cuando=n===0?'¡Es hoy!':n===1?'Es mañana':'Faltan '+n+' días';
@@ -117,8 +119,9 @@ function pintar(){
   });
 }
 (async function(){
-  if(!K){$('#mL').textContent='Entrá desde el link que te llegó por mail.';return;}
-  try{var r=await fetch('/api/musicos?k='+encodeURIComponent(K));D=await r.json();if(!r.ok)throw new Error(D.error);}catch(e){$('#mL').textContent=e.message||'Este link no es válido.';return;}
+  if(!K){var A=window.HabitatAuth;if(!A||!A.loggedIn()){try{sessionStorage.setItem('habitat:ret','/musicos.html');}catch(e){}location.replace('/ingresar.html');return;}
+    try{await A.api('GET','/members/v1/members/my');TK=JSON.parse(localStorage.getItem('habitat:mtok')).a;}catch(e){}}
+  try{var r=await fetch('/api/musicos'+(K?'?k='+encodeURIComponent(K):''),{headers:hd()});D=await r.json();if(!r.ok)throw new Error(D.error);}catch(e){$('#mL').textContent=e.message||'Este link no es válido.';return;}
   pintar();
 })();
 })();
