@@ -32,6 +32,10 @@ jobs:
         run: |
           [ -n "$WIX_API_KEY" ] || { echo "::error::Falta el secreto WIX_API_KEY"; exit 1; }
           npx wix login --api-key "$WIX_API_KEY"
+      - name: Traer variables de Wix
+        env:
+          CI: "true"
+        run: npx wix env pull < /dev/null
       - name: Compilar
         run: npm run build
       - name: Publicar
