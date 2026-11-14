@@ -437,7 +437,7 @@ function trailBlend(x, z, h) {
   const B = TRL.bb; if (!B || x < B.x0 || x > B.x1 || z < B.z0 || z > B.z1) return h; let hh = h;
   for (const e of TRL.ends) { const dx = x - e.x, dz = z - e.z, dd = Math.hypot(dx, dz); if (dd > 42) continue;
     if (e.k === 'cumbre') hh = Math.max(hh, e.y - Math.max(0, dd - e.r) * .8); // la cumbre domina: el cerro baja desde la explanada
-    else { const fw = dx * e.dx + dz * e.dz - 1.5; hh = Math.max(hh, e.y + 15 * (1 - sstep(4, 20, dd)) * sstep(0, 4, fw)); } } // farallón detrás de la cueva
+    else { const fw = dx * e.dx + dz * e.dz - 1.5; hh = Math.max(hh, e.y + 12 * (1 - sstep(5, 26, dd)) * sstep(-1, 9, fw)); } } // cerro detrás de la cueva (pendiente suave, sin paredes estiradas)
   const t = trailNear(x, z); if (t) { const w = 1 - sstep(2.4, 7.8, t.d); hh += (t.y - hh) * w; }
   for (const e of TRL.ends) { const dd = Math.hypot(x - e.x, z - e.z); if (dd > e.r + 4) continue; let w = 1 - sstep(e.r, e.r + 3.5, dd); if (e.k === 'cueva') { const fw = (x - e.x) * e.dx + (z - e.z) * e.dz; w *= 1 - sstep(1, 4.5, fw); } hh += (e.y - hh) * w; }
   return hh;
