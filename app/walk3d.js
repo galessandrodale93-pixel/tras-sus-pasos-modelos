@@ -1286,7 +1286,7 @@ function hudLay() {
 /* Ningún cartel pisa a otro ni a los controles. Los de arriba (rumbo, sala, misión, estación, aldea, avisos…) se apilan de arriba hacia abajo
    y los de abajo (lugar, frase, ayuda) de abajo hacia arriba. Si un cartel chocaría con el panel del jugador, la cámara, el joystick
    o los botones de la derecha, se angosta para entrar en el hueco del medio; si igual no entra, baja (o sube) hasta quedar libre. */
-const BAN_TOP = ['.v3comp', '#v3room', '.v3topics', '.v3mis', '.v3seas', '#v3vil', '.v3bagt', '.v3pop', '#toast'];
+const BAN_TOP = ['.v3comp', '#v3timer', '#v3room', '.v3topics', '.v3mis', '.v3seas', '#v3vil', '.v3bagt', '.v3pop', '#toast'];
 const BAN_BOT = ['.v3place', '.v3say', '.v3hint'];
 const BAN_OBS = ['#v3crest', '.hud', '.v3surv', '.v3mapbtn', '.v3baghud', '.v3mmbox', '.v3cam', '.v3joy', '#v3joy', '.v3fan .fan-tg', '.v3fan.open .fan-items button', '#v3acts > button', '#v3go', '.v3go', '#wixheadless-banner-container'];
 const BAN_LEFT = new Set(['v3mis']);
@@ -2569,6 +2569,12 @@ function judeaTrails(scene, p, yAt, poiProp, hx) {
       S.lore.push({ x: nx, z: nz, r: 2.4, label: 'Mirar el nido', fx: 'aguila', dur: 6, info: ['Alas como las águilas', 'En lo alto de los montes anidan las águilas. «Los que esperan en el Señor tendrán nuevas fuerzas; levantarán alas como las águilas; correrán, y no se cansarán; caminarán, y no se fatigarán».', 'Isaías 40:31'] }); }
     { const g = new THREE.Group(), wm = new THREE.MeshStandardMaterial({ color: '#4A3626', side: THREE.DoubleSide, roughness: 1 }), body = new THREE.Mesh(new THREE.ConeGeometry(.16, .9, 6), wm); body.rotation.x = Math.PI / 2; g.add(body); const hd = new THREE.Mesh(new THREE.SphereGeometry(.1, 8, 6), tm('eaglehead', '#EDE6D8')); hd.position.z = .5; g.add(hd);
       const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, .2, 0, 0, -.25, 1.5, .08, -.12], 3)); wg.computeVertexNormals(); const wl = new THREE.Mesh(wg, wm), wr = wl.clone(); wr.scale.x = -1; g.add(wl, wr); g.scale.setScalar(1.7); scene.add(g); J.eagle = { g, wl, wr, cx: e.x, cz: e.z, y: y + 9 }; }
+    /* la bajada: desde la cima, sin camino, hasta la meta al pie del monte (sola contra reloj o con amigos en «Carrera a un lugar») */
+    { const D = TRL.desc; if (D) { const fy = yAt(D.fx, D.fz), ring = new THREE.Mesh(new THREE.TorusGeometry(2.4, .13, 8, 40), new THREE.MeshBasicMaterial({ color: '#FFD47A', transparent: true, opacity: .8 })); ring.rotation.x = Math.PI / 2; ring.position.set(D.fx, fy + .15, D.fz); scene.add(ring);
+      const gl = glowSpr('#FFE2A0', 5, .4); gl.position.set(D.fx, fy + 1.2, D.fz); scene.add(gl);
+      const fb = judeaBanner(['Meta'], 'Pie del monte'), bx2 = D.fx + D.sz * 3.4, bz2 = D.fz - D.sx * 3.4; fb.position.set(bx2, yAt(bx2, bz2), bz2); fb.rotation.y = D.ang + Math.PI; scene.add(fb);
+      J.race = { ring, gl, fx: D.fx, fz: D.fz, on: false };
+      const sx2 = D.x + D.sx * 2.6, sz2 = D.z + D.sz * 2.6; S.lore.push({ x: sx2, z: sz2, r: 2, label: 'Bajar corriendo', dur: 1, go: () => descStart(), info: ['¡Bajada a toda carrera!', 'Bajá corriendo por la ladera, sin camino, hasta la meta al pie del monte. ¡Fijate cuánto tardás! Con amigos en una sala, elegí «Carrera a un lugar» estando acá arriba y compitan. «Corramos con paciencia la carrera que tenemos por delante».', 'Hebreos 12:1'] }); } }
     S.lore.push({ x: e.x, z: e.z, r: 3.2, label: 'Mirar la ciudad', fx: 'ciudad', dur: 8, go: () => sello('cima-monte', 'La cima del monte'), info: ['Montes alrededor de Jerusalén', 'Desde la cima se ve toda la ciudad. «Como Jerusalén tiene montes alrededor de ella, así el Señor está alrededor de su pueblo, desde ahora y para siempre». Jesús, al ver la ciudad, lloró por ella.', 'Salmo 125:2 · Lucas 19:41'] });
     const lb = textSprite('La cima', hx); lb.position.set(e.x, y + 4.5, e.z); scene.add(lb);
     const ray = glowSpr('#FFE4A0', 40, .18); ray.position.set(city.x, yAt(city.x, city.z) + 18, city.z); scene.add(ray); J.cityGlow = ray; } }
@@ -2584,12 +2590,19 @@ function judeaClean() { const B = TRL.bb; if (!B || !S.W) return; const M = new 
     for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, M); M.decompose(P, Q, SC); if (P.x < B.x0 || P.x > B.x1 || P.z < B.z0 || P.z > B.z1 || (P.x - TRL.p.x) * TRL.sd < 26 || TRL.ends.some(q => q.k === 'cueva' && Math.hypot(P.x - q.x, P.z - q.z) < q.r + 9)) continue; const h = S.W.hAt(P.x, P.z), sl = Math.hypot(S.W.hAt(P.x + 1.5, P.z) - S.W.hAt(P.x - 1.5, P.z), S.W.hAt(P.x, P.z + 1.5) - S.W.hAt(P.x, P.z - 1.5)) / 3;
       if (big || sl > .55 || Math.abs(P.y - h) > 3) { SC.setScalar(0); M.compose(P, Q, SC); o.setMatrixAt(i, M); ch = true; } else if (Math.abs(P.y - h) > .6) { P.y = h - .3; M.compose(P, Q, SC); o.setMatrixAt(i, M); ch = true; } }
     if (ch) { o.instanceMatrix.needsUpdate = true; o.computeBoundingSphere && o.computeBoundingSphere(); } }); }
+// bajada contra reloj: arranca en la cima y termina en el anillo dorado del llano; guarda la mejor marca
+function descStart() { const J = S.judea; if (!J || !J.race) return; J.race.on = true; J.race.t0 = performance.now(); let el = document.getElementById('v3timer'); if (!el) { el = document.createElement('div'); el.id = 'v3timer'; el.className = 'v3timer'; document.body.appendChild(el); } el.hidden = false; el.textContent = '⏱ 0.0 s'; G().toast('🏁 ¡Ya! Bajá corriendo hasta el anillo dorado.'); }
+function descTick() { const J = S.judea, R0 = J && J.race; if (!R0) return; R0.ring.rotation.z += .01; if (!R0.on) return; const el = document.getElementById('v3timer'), a = S.av.position, s2 = (performance.now() - R0.t0) / 1000; if (el) el.textContent = '⏱ ' + s2.toFixed(1) + ' s';
+  if (s2 > 240) { R0.on = false; if (el) el.hidden = true; return; }
+  if (Math.hypot(a.x - R0.fx, a.z - R0.fz) < 2.8) { R0.on = false; if (el) el.hidden = true; let best = null; try { best = +localStorage.getItem('tsp:bajada') || null; } catch (e) { } const rec = !best || s2 < best; if (rec) { best = s2; try { localStorage.setItem('tsp:bajada', s2.toFixed(1)); } catch (e) { } }
+    placeCard([rec ? '¡Nuevo récord!' : '¡Llegaste!', `Bajaste en ${s2.toFixed(1)} segundos. Tu mejor marca: ${best.toFixed(1)} s. «Corramos con paciencia la carrera que tenemos por delante, puestos los ojos en Jesús».`, 'Hebreos 12:1-2']); sello('bajada', 'La bajada del monte'); } }
 function judeaTick(dt, t) {
   const J = S.judea; if (!J) return; J.t += dt; if (!J.cleaned && J.t > 2.5) { J.cleaned = 1; try { judeaClean(); } catch (e) { } } const on = fx => S.lore.some(l => l.fx === fx && l.on);
   J.ibex.forEach(q => { const hop = on('ibex') ? Math.max(0, Math.sin(t * 5 + q.ph)) * .5 : 0; q.g.position.y = q.y + hop; q.g.rotation.y += Math.sin(t * .4 + q.ph) * dt * .2; });
   if (J.drop) { J.drop.s.position.y = J.drop.y + Math.sin(t * 2) * .12; J.drop.s.material.opacity = on('gota') ? 1 : .55 + Math.sin(t * 3) * .2; }
   if (J.flower) J.flower.material.opacity = on('flor') ? .95 : .4 + Math.sin(t * 1.7) * .15;
   if (J.sheep) J.sheep.gl.material.opacity = on('oveja') ? .9 : .35 + Math.sin(t * 2.2) * .15;
+  descTick();
   if (J.eagle) { const E = J.eagle, k2 = on('aguila') ? 1.8 : 1, an = t * .28 * k2, r = 14 - (k2 - 1) * 5; E.g.position.set(E.cx + Math.cos(an) * r, E.y + Math.sin(t * .6) * 1.5 - (k2 - 1) * 3, E.cz + Math.sin(an) * r); E.g.rotation.set(0, -an, .35); const fl = (t % 6) < 1.2 || k2 > 1 ? Math.sin(t * 12) * .5 : .08; E.wl.rotation.z = fl; E.wr.rotation.z = -fl; }
   if (J.cima) { const a = S.av.position, d = Math.hypot(a.x - J.cima.x, a.z - J.cima.z), k = 1 - sstep(10, 45, d); S.fogMul = 1 - k * .93; if (S.scene.fog && S.scene.fog.isFogExp2) { if (k < .01 || J.fd0 == null) J.fd0 = S.scene.fog.density; else S.scene.fog.density = J.fd0 * S.fogMul; } if (S.scene.fog && S.scene.fog.isFog) { if (J.far0 == null) J.far0 = S.scene.fog.far; S.scene.fog.far = J.far0 + k * 450; } if (J.cityGlow) J.cityGlow.material.opacity = .08 + k * (on('ciudad') ? .4 : .2); }
   J.lamps.forEach((l, i) => { l.material.opacity = .6 + Math.sin(t * 9 + i) * .1 + Math.sin(t * 23 + i * 2) * .05; });
@@ -6189,7 +6202,7 @@ const GMH = {
   },
   /* Carrera a un lugar: todos ven el destino con la flecha del piso */
   carrera: {
-    start(E) { const g = G(), ok = (S.pois || []).filter(q => q.k !== 'river' && regionOpen(q.r)), a = S.av.position; const near = ok.filter(q => Math.hypot(q.x - a.x, q.z - a.z) > 30 && Math.hypot(q.x - a.x, q.z - a.z) < 220); const q = (near.length ? near : ok)[Math.floor(Math.random() * (near.length || ok.length))]; if (!q) { GM.on = null; G().toast('No hay un lugar para correr.'); return; }
+    start(E) { const g = G(), ok = (S.pois || []).filter(q => q.k !== 'river' && regionOpen(q.r)), a = S.av.position; const near = ok.filter(q => Math.hypot(q.x - a.x, q.z - a.z) > 30 && Math.hypot(q.x - a.x, q.z - a.z) < 220); let q = (near.length ? near : ok)[Math.floor(Math.random() * (near.length || ok.length))]; { const D = TRL.desc; if (D && Math.hypot(a.x - D.x, a.z - D.z) < 22) q = { x: D.fx, z: D.fz, name: 'el pie del monte', k: 'desert' }; } if (!q) { GM.on = null; G().toast('No hay un lugar para correr.'); return; }
       E.goal = q; E.arr = {}; gmTo({ ev: 'go', x: q.x, z: q.z, name: q.name }); E.tm = setTimeout(() => this.finish(E), 150000); },
     finish(E) { if (E.fin) return; E.fin = 1; clearTimeout(E.tm); const order = Object.entries(E.arr).sort((a, b) => a[1] - b[1]); order.forEach(([id], i) => { E.score[id] = [5, 3, 2][i] || 1; }); gmTo({ ev: 'end', score: E.score, names: gmNames(), name: E.goal.name, trade: E.goal.k }); },
     on(m) { const E = GM.on;
