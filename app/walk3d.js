@@ -506,7 +506,7 @@ function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
   const terrain = new THREE.Mesh(geo, groundMat(Q, !!KK)); terrain.receiveShadow = true; scene.add(terrain); splitZ(scene, terrain, 64);
   // montañas: el mismo terreno sigue y se levanta en cordones continuos (sin piedras sueltas), con roca según la pendiente
   const MW = 140, mtnH = (x, z) => { const ax = Math.abs(x), u = Math.max(0, (ax - X1) / MW), e = hAt(Math.sign(x) * X1, z), r = 1 - Math.abs(vnoise(x * .018 + 11, z * .014) * 2 - 1), n = fbm(x * .011 + 5, z * .009), rr = 1 - Math.abs(vnoise(x * .05 - 3, z * .045) * 2 - 1);
-    let fj = 0; for (const b of WATER.basins) { if (!b.sea || Math.sign(b.x) !== Math.sign(x)) continue; const w = b.r * .8 * (1 - sstep(.15, .7, u)) + 4, dz = Math.abs(z - b.z + Math.sin(u * 7) * 9); fj = Math.max(fj, 1 - sstep(w * .55, w, dz)); } /* el mar entra entre los cerros como un caudal */
+    let fj = 0; for (const b of WATER.basins) { if (!b.sea || Math.sign(b.x) !== Math.sign(x)) continue; const w = b.r * .8 * (1 - sstep(.15, .7, u)) + 4, dz = Math.abs(z - b.z + Math.sin(u * 7) * 9); fj = Math.max(fj, 1 - sstep(w * .35, w * 1.45, dz)); } /* el mar entra entre los cerros como un caudal */
     return e + sstep(0, .55, u) * (10 + n * 34 + r * r * 30 + rr * 6) * (KK ? .55 : 1) * (1 - fj) - sstep(.85, 1, u) * 4 * (1 - fj); };
   [-1, 1].forEach(sd => { const mg = new THREE.PlaneGeometry(MW, L, Math.round(MW / 3.5), Math.round(L / 3.5)); mg.rotateX(-Math.PI / 2); mg.translate(sd * (X1 + MW / 2), 0, (Z0 + Z1) / 2);
     const mp = mg.attributes.position, mc = new Float32Array(mp.count * 3), ms = new Float32Array(mp.count * 4);
@@ -516,7 +516,7 @@ function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
       const v = .82 + fbm(x * .15, z * .15) * .26 + sstep(30, 60, h) * .12; mc.set([v, v, v], i * 3); }
     mg.setAttribute('color', new THREE.BufferAttribute(mc, 3)); mg.setAttribute('splat', new THREE.BufferAttribute(ms, 4)); mg.computeVertexNormals();
     const m = new THREE.Mesh(mg, terrain.material); m.receiveShadow = true; scene.add(m); splitZ(scene, m, 96); });
-  return { hAt, dAt, roadAt, sunL, sunDir, sky, terrain, hemi, mtnH, X1 };
+  return { hAt, dAt, dNz, roadAt, sunL, sunDir, sky, terrain, hemi, mtnH, X1 };
 }
 /* plantas reales escaneadas (Poly Haven, CC0): pasto, pasto bermuda y flores amarillas, con viento */
 const FLB = new URL('./flora/', import.meta.url).href;
@@ -4388,7 +4388,7 @@ function pgCell(ix, iz) {
   const lvm = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), dens = Math.min(6, PG_TRI[lvm] / PG.avgTri / (Math.PI * PG_R[lvm] * PG_R[lvm] * .8)), n = Math.round(dens * PG_CELL * PG_CELL * 1.1);
   for (let i = 0; i < n; i++) { const x = x0 + R() * PG_CELL, z = z0 + R() * PG_CELL, r1 = R(), r2 = R();
     if (!PG_ONLY) { const cl = pgNoise(x * .06, z * .06) * .75 + pgNoise(x * .21 + 40, z * .21) * .35; if (r1 > cl * 1.15 + .1) continue; } // matas y claros
-    const d = W.dAt(x, z); if (d < 1.5 || (d < 3.2 && r2 > (d - 1.5) / 1.7)) continue; // el camino queda libre, con borde natural
+    const d = W.dNz ? Math.min(W.dNz(x, z), W.roadAt(x, z) + .9) : W.dAt(x, z); if (d < 1.5 || (d < 3.2 && r2 > (d - 1.5) / 1.7)) continue; // el camino queda libre, con borde natural
     const h = W.hAt(x, z); if (h > 9 || (h > 5.5 && r2 > (9 - h) / 3.5)) continue;
     if (waterWet(x, z, null) > .04 || blockedAt(x, z) || poi.some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < 14)) continue;
     // qué planta: flores donde el ruido lo marca (manchones), el resto pasto
