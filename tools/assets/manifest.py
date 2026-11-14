@@ -3,7 +3,7 @@ import os,json,glob,sys
 R=sys.argv[1] if len(sys.argv)>1 else '.'
 os.chdir(R)
 def L(*pats): out=[]; [out.extend(sorted(glob.glob(p))) for p in pats]; return [p for p in out if os.path.isfile(p)]
-core=L('app/game.js','app/walk3d.js','app/walk3d.css','hero/gltf.js','hero/fx.js','hero/basis/*','hero/hero_anims*.glb','hero/hero_m.glb','hero/hero_f.glb','app/lobby/*','app/flora/*','app/tex/*.jpg','app/tex/*.png','app/tex/pbr/*.webp','ph/*.glb')  # la voz (1452 mp3, 32 MB) se pide sola al hablar cada personaje: no va en la descarga inicial
+core=L('app/game.js','app/walk3d.js','app/walk3d.css','hero/gltf.js','hero/fx.js','hero/basis/*','hero/hero_anims*.glb','hero/hero_m.glb','hero/hero_f2.glb','app/lobby/*','app/flora/*','app/tex/*.jpg','app/tex/*.png','app/tex/pbr/*.webp','ph/*.glb')  # la voz (1452 mp3, 32 MB) se pide sola al hablar cada personaje: no va en la descarga inicial
 lazy=[p for p in core if p.startswith('ph/')]
 sky={'1k':L('app/sky/*_1k.webp'),'2k':L('app/sky/*_2k.webp'),'4k':L('app/sky/*_4k.webp')}
 tex={'1k':L('tex/1k/*.ktx2'),'2k':L('tex/2k/*_diff.ktx2')+L('tex/1k/*_nor.ktx2')+L('tex/1k/*_rough.ktx2'),'4k':L('hd/4k/*.ktx2')}

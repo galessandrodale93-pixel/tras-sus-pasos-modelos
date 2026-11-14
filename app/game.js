@@ -2986,7 +2986,7 @@ function creatorFields(){
   const of=c.querySelector('.swatches[data-k="outfit"]');if(of&&of.closest('.field'))of.closest('.field').hidden=true;
   const hairF=c.querySelector('.swatches[data-k="hair"]').closest('.field');
   const seg3=(k,opts)=>`<div class="seg" data-k="${k}" style="grid-template-columns:repeat(${opts.length},1fr)">${opts.map(([v,t])=>`<button data-v="${v}">${t}</button>`).join('')}</div>`;
-  hairF.insertAdjacentHTML('afterend',`<div class="field" id="fHs"><span>Peinado</span>${seg3('hs',[['a',''],['b','']])}</div>
+  hairF.insertAdjacentHTML('afterend',`<div class="field" id="fHs"><span>Peinado</span>${seg3('hs',[['a',''],['b',''],['c','']])}</div>
 <div class="field" id="fBeard"><span>Barba</span>${seg3('beard',[['0','Sin barba'],['1','Con barba']])}</div>
 <div class="field"><span>Ojos</span><div class="swatches" data-k="eye"></div></div>
 <div class="field"><span>Altura</span>${seg3('ht',[['b','Más bajo'],['n','Normal'],['a','Más alto']])}</div>
@@ -3004,7 +3004,7 @@ function paintCreate(){
   document.querySelectorAll('.seg,.swatches').forEach(g=>g.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(draft[g.dataset.k]===b.dataset.v))));
   $('#cAgeOut').textContent=draft.age+' años';$('#cAgeNote').textContent=ageNote(draft.age);
   $('#preview').innerHTML=`<g class="idle">${avatarSVG(draft)}</g>`;
-  const hs=document.querySelectorAll('#fHs button');if(hs.length===2){const L=draft.g==='chica'?['Pelo largo','Rodete']:['Raya al costado','Corto'];hs[0].textContent=L[0];hs[1].textContent=L[1];}
+  const hs=document.querySelectorAll('#fHs button');if(hs.length===3){const ch=draft.g==='chica',L=ch?['Pelo largo','Rodete','Corto']:['Raya al costado','Corto',''];hs.forEach((b,i)=>b.textContent=L[i]);hs[2].hidden=!ch;hs[0].parentElement.style.gridTemplateColumns=`repeat(${ch?3:2},1fr)`;if(!ch&&draft.hs==='c')draft.hs='a';}
   const fb=$('#fBeard');if(fb){const ok=draft.g!=='chica'&&branch==='ados'&&draft.age>=15;fb.hidden=!ok;if(!ok)draft.beard='0';}
   if(PV)PV.update();
 }

@@ -3619,7 +3619,7 @@ async function heroLoad() {
   try {
     globalThis.__THREE = THREE; buildStep('personajes'); const mod = await withTO(import(H3_BASE + 'gltf.js'), 30000, 'gltf.js'), L = new mod.GLTFLoader(); const coarseM = matchMedia('(pointer: coarse)').matches;
     const ld = u => new Promise((r, j) => L.load((ABASE ? ABASE + 'hero/' : H3_BASE) + u, r, undefined, j));
-    const [m, f, an] = await Promise.race([Promise.all([ld(qEarly() >= 3 && !coarseM ? 'hero_m_hd.glb' : 'hero_m.glb'), ld(qEarly() >= 3 && !coarseM ? 'hero_f_hd.glb' : 'hero_f.glb'), ld('hero_anims.glb')]), new Promise((_, j) => setTimeout(() => j(new Error('tiempo')), window.H3_TO || 45000))]);
+    const [m, f, an] = await Promise.race([Promise.all([ld(qEarly() >= 3 && !coarseM ? 'hero_m_hd.glb' : 'hero_m.glb'), ld(qEarly() >= 3 && !coarseM ? 'hero_f2_hd.glb' : 'hero_f2.glb'), ld('hero_anims.glb')]), new Promise((_, j) => setTimeout(() => j(new Error('tiempo')), window.H3_TO || 45000))]);
     H3.skClone = skCloneShared; const all = gl => { const r = new THREE.Group(); gl.scenes.forEach(x => r.add(x)); return r; }; H3.sex.m = h3Template(all(m)); H3.sex.f = h3Template(all(f));
     H3.clips = Object.fromEntries(an.animations.map(c => [c.name, c]));
     const xl = f => new Promise((r, j) => L.load(new URL('../hero/' + f, import.meta.url).href, r, undefined, j)).then(ex => ex.animations.forEach(c => { if (!H3.clips[c.name] && !/dance/i.test(c.name)) H3.clips[c.name] = c; })).catch(e2 => console.warn('hero3d extra', f, e2));
@@ -3702,7 +3702,7 @@ function buildHero3(av) {
     else if (want('legs')) { keep = n.includes(pick.legs); part = 'legs'; }
     else if (want('feet')) { keep = n.includes(pick.feet); part = 'feet'; }
     else if (/^Hair_/.test(n) || /Hair/.test(mn) && !/Eyebrow/i.test(n)) {
-      const def = sx === 'm' ? (av.hs === 'b' ? 'Hair_Buzzed' : 'Hair_SimpleParted') : (av.hs === 'b' ? 'Hair_Buns' : 'Hair_Long'), isBeard = /Beard/.test(n);
+      const def = sx === 'm' ? (av.hs === 'b' ? 'Hair_Buzzed' : 'Hair_SimpleParted') : (av.hs === 'b' ? 'Hair_Buns' : av.hs === 'c' ? 'Hair_BuzzedFemale' : 'Hair_Long'), isBeard = /Beard/.test(n);
       keep = isBeard ? (sx === 'm' && (npc ? gray : (av.beard === '1' && !kid))) : (n.startsWith(def) && !hood && !(hatProc && hatProc.t !== 'straw'));
     }
     if (!keep) { drop.push(m); return; }
@@ -4883,7 +4883,7 @@ export async function avatarPreview(host, getLook) {
   // foto de la cara (cuadrada, chica) para el perfil y el HUD
   const face = () => { try { if (!av) return ''; const b = av.userData.h3.bones.Head, p = new THREE.Vector3(), hs = av.userData.h3.headS || 1; av.rotation.y = 0; av.updateMatrixWorld(true); b.getWorldPosition(p); const c2 = new THREE.PerspectiveCamera(24, 1, .02, 10); c2.position.set(p.x, p.y + .1 * av.scale.y * hs, p.z + .9 * av.scale.y * hs); c2.lookAt(p.x, p.y + .09 * av.scale.y * hs, p.z); const sz = r.getSize(new THREE.Vector2()), pr = r.getPixelRatio(); r.setPixelRatio(1); r.setSize(96, 96, false); r.render(sc, c2); const u = cv.toDataURL('image/webp', .82); r.setPixelRatio(pr); r.setSize(sz.x, sz.y, false); av.rotation.y = yaw; return u.length < 14000 ? u : ''; } catch (e) { return ''; } };
   set(); loop();
-  return { update: set, face, stop };
+  return { update: set, face, stop, get av() { return av; } };
 }
 export function enter() {
   const btn = document.getElementById('viewToggle'); if (!btn) return;
