@@ -1318,7 +1318,8 @@ function bangSprite() { const c = document.createElement('canvas'); c.width = c.
 function buildMissions(scene, g, hx, HW, rr) {
   const yAt = (x, z) => Math.max(HW ? HW.hAt(x, z) : 0, floorH(x, z)), M = {};
   const regNodes = r => Object.keys(g.NODES).filter(id => id.startsWith(g.REGIONS[r].id + '-') && !/gate|fA|fB/.test(id)).map(id => S0.markers[id]).sort((a, b) => b.position.z - a.position.z);
-  const npc = (look, x, z, face) => { const rig = hx || H3.ok, o = rig ? buildHeroAvatar(look) : buildAvatar(look, false); if (!rig) o.scale.setScalar(1.08); o.position.set(x, yAt(x, z), z); o.rotation.y = face; if (rig) o.traverse(q => { if (q.isMesh) q.castShadow = true; }); o.traverse(q => { if (q.isPointLight) q.intensity = 0; }); scene.add(o); return o; };
+  const npc = (look, x, z, face) => { const rig = hx || H3.ok, o = rig ? buildHeroAvatar(look) : buildAvatar(look, false); o.userData.stay = 1; // los de misión no se mueven (tienen su aro)
+   if (!rig) o.scale.setScalar(1.08); o.position.set(x, yAt(x, z), z); o.rotation.y = face; if (rig) o.traverse(q => { if (q.isMesh) q.castShadow = true; }); o.traverse(q => { if (q.isPointLight) q.intensity = 0; }); scene.add(o); return o; };
   const ring = (x, z) => { const m = new THREE.Mesh(new THREE.RingGeometry(.55, .7, 36), new THREE.MeshBasicMaterial({ color: '#FFD873', transparent: true, opacity: .7, side: THREE.DoubleSide, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.set(x, yAt(x, z) + .05, z); m.visible = false; scene.add(m); return m; };
   const per = new Array(16).fill(0);
   // Hero: las misiones no van sobre el camino; se reparten por la etapa en lugares con sentido (aldeas, pozo, lago, monte…) y siempre en suelo alcanzable
@@ -3926,6 +3927,33 @@ function talkLayer(o, u, dt, tgt) {
   if (u.gest) { const gs = u.gest; gs.k += dt / gs.d; if (gs.k >= 1) u.gest = null; else { const e = Math.sin(gs.k * Math.PI), sx = gs.s === 'r' ? -1 : 1, lo = 'lowerarm_' + gs.s, hd = 'hand_' + gs.s;
     if (B[lo] && B[hd]) { h3aim(o, B, lo, hd, sx * .25, -.05 + e * .15, 1, e * .55 * w); h3aim(o, B, hd, hd === 'hand_r' ? (B.middle_01_r ? 'middle_01_r' : hd) : (B.middle_01_l ? 'middle_01_l' : hd), sx * .35, .1, 1, e * .3 * w); } } }
 }
+/* gente que camina: la mayoría de los personajes pasea alrededor de su lugar, se frena si el jugador se acerca
+   y vuelve a su postura; los que están arrodillados, sentados, trabajando o con algo en las manos se quedan quietos */
+const W_STILL = /Kneel|Crouch|Sit|Sad|Lying|Pray|Pick|Box|Holding|Death|Reach|Lift|Throw|Drink|Yawn/i;
+function wanderReg(o) { for (const L of [VIL.npcs, MAT.npcs]) for (const v of L || []) if (v && v.o === o) return v; return null; }
+function wanderTick(dt) {
+  if (!S || !H3.npcs.length || CINE.on) return; const a = S.av.position, W = S.W;
+  for (const o of H3.npcs) {
+    const u = o.userData.h3; if (!u || !o.parent || o.parent !== S.scene || !o.visible) continue;
+    let w = o.userData.wd;
+    if (w === undefined) { w = o.userData.wd = (o.userData.stay || W_STILL.test(u.idleK || '') || !H3.clips.Walk_Loop || Math.random() > .75) ? null : { hx: o.position.x, hz: o.position.z, st: 0, t: 1 + Math.random() * 6, reg: null }; }
+    if (!w) continue;
+    const dx0 = o.position.x - a.x, dz0 = o.position.z - a.z, dp = dx0 * dx0 + dz0 * dz0; if (dp > 1600) continue;
+    const busy = (u.backT > 0) || (u.talkT > -.4 && u.talkAge != null), near = dp < 4.5;
+    const toIdle = () => { const ia = u.act[u.idleK], cur = u.act[u.cur]; ia.reset(); ia.setLoop(THREE.LoopRepeat); ia.play(); if (cur && cur !== ia) ia.crossFadeFrom(cur, .35, false); u.cur = u.idleK; w.st = 0; w.t = 4 + Math.random() * 8; };
+    if (w.st === 0) {
+      if (busy || near || (w.t -= dt) > 0) continue;
+      let ok = false; for (let k = 0; k < 6 && !ok; k++) { const an = Math.random() * 6.283, r = 1.5 + Math.random() * 3.5, tx = w.hx + Math.cos(an) * r, tz = w.hz + Math.sin(an) * r; ok = true; for (let q = 1; q <= 4; q++) { const sx = o.position.x + (tx - o.position.x) * q / 4, sz = o.position.z + (tz - o.position.z) * q / 4; if (blockedAt(sx, sz) || waterWet(sx, sz, null) > .05 || Math.abs(sx) > XB * .9) { ok = false; break; } } if (ok) { w.tx = tx; w.tz = tz; } }
+      if (!ok) { w.t = 3 + Math.random() * 4; continue; }
+      const wa = u.act.Walk_Loop, cur = u.act[u.cur]; wa.reset(); wa.setLoop(THREE.LoopRepeat); wa.timeScale = .9; wa.play(); if (cur && cur !== wa) wa.crossFadeFrom(cur, .35, false); u.cur = 'Walk_Loop'; w.st = 1; w.life = 9; if (!w.reg) w.reg = wanderReg(o);
+    } else {
+      if (busy) { w.st = 0; w.t = 3; continue; } if (near) { toIdle(); continue; }
+      const dx = w.tx - o.position.x, dz = w.tz - o.position.z, d = Math.hypot(dx, dz); if (d < .25 || (w.life -= dt) <= 0) { toIdle(); continue; }
+      const want = Math.atan2(dx, dz); let dr = want - o.rotation.y; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); o.rotation.y += dr * Math.min(1, dt * 5);
+      if (Math.abs(dr) < 1) { const sp = 1.05 * (o.scale.y || 1) * dt, nx = o.position.x + Math.sin(o.rotation.y) * sp, nz = o.position.z + Math.cos(o.rotation.y) * sp; if (blockedAt(nx, nz)) { toIdle(); continue; } o.position.x = nx; o.position.z = nz; const gy = Math.max(W && W.hAt ? W.hAt(nx, nz) : o.position.y, floorH(nx, nz)); o.position.y += (Math.max(0, gy) - o.position.y) * Math.min(1, dt * 10); if (w.reg) { w.reg.x = nx; w.reg.z = nz; } }
+    }
+  }
+}
 function h3npcTick(dt) {
   if (!S || !H3.npcs.length) return; const a = S.av.position;
   for (const o of H3.npcs) { if (!o.parent) continue; const u = o.userData.h3;
@@ -4817,7 +4845,7 @@ function loop(now) {
   cineTick(dt); if (window.__camFix) { const f = window.__camFix; S.camera.position.set(...f.p); S.camera.lookAt(...f.l); }
   fxWatch(now); if (S.W) { const u = S.W.sky.material.uniforms; u.inv.value = S.fx ? 1 : 0; u.ex.value = S.renderer.toneMappingExposure; }
   const p5 = PF ? performance.now() : 0; if (S.fx) S.fx.render(dt); else S.renderer.render(S.scene, S.camera); const p6 = PF ? performance.now() : 0; QUAL.lastCalls = S.renderer.info.render.calls; QUAL.lastTris = S.renderer.info.render.triangles;
-  idle(dt); misTick(t); voiceTick(dt); wpTick(t); mpTick(t, dt); dayTick(dt); seasonTick(dt); gearDropTick(dt, t); doorTick(t); h3npcTick(dt); crowdTick(); roomTick(dt); survTick(dt, t); prayTogetherTick(dt); axVerse(dt);
+  idle(dt); misTick(t); voiceTick(dt); wpTick(t); mpTick(t, dt); dayTick(dt); seasonTick(dt); gearDropTick(dt, t); doorTick(t); try { wanderTick(dt); } catch (e) {} h3npcTick(dt); crowdTick(); roomTick(dt); survTick(dt, t); prayTogetherTick(dt); axVerse(dt);
   if (PF) { const p7 = performance.now(); PROF.add({ mov: p1 - p0, zonas: p2 - p1, agua_fuego: p3 - p2, avatar: p4 - p3, escena: p5 - p4, render: p6 - p5, npc_misiones: p7 - p6 }); }
 }
 
