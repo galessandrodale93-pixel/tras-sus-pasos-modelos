@@ -21,7 +21,7 @@ type Comp = { _id: string; alumnoId: string; meses?: string; estado?: string; fe
 async function alumnoDe(request: Request) {
   const me = await emailDe(request);
   if (!me.email) return null;
-  const al = (await q("TutAlumnos").eq("email", me.email).limit(1).find()).items[0] as { _id: string; title?: string; activo?: boolean; cuota?: number; cuotaCon?: string } | undefined;
+  const al = (await q("TutAlumnos").eq("email", me.email).limit(1).find()).items[0] as { _id: string; title?: string; activo?: boolean; cuota?: number; cuotaCon?: string; cuotaDetalle?: string } | undefined;
   return al && al.activo !== false ? al : undefined;
 }
 
@@ -51,7 +51,7 @@ export const GET: APIRoute = async ({ request }) => {
       return { escuela: pl.escuela, formaPago: transf ? "Transferencia al alias habitatcfm" : pl.formaPago || "", debito: !transf && /d[eé]bito/i.test(pl.formaPago || ""), meses, debe: meses.filter((x) => x.estado === "debe").length };
     });
     const ult = debi.sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
-    return json({ ok: true, alumno: true, nombre: al.title, hoy, cuota: Number(al.cuota) || 0, cuotaCon: al.cuotaCon || "", escuelas, ultimoDebito: ult ? { fecha: ult.fecha, mes: ult.mes, estado: ult.estado === "approved" ? "aprobado" : ult.estado === "rejected" ? "rechazado" : "pendiente", monto: ult.monto } : null, alias: "habitatcfm", transferencia: transf, vence: VENCE });
+    return json({ ok: true, alumno: true, nombre: al.title, hoy, cuota: Number(al.cuota) || 0, cuotaCon: al.cuotaCon || "", cuotaDetalle: al.cuotaDetalle || "", escuelas, ultimoDebito: ult ? { fecha: ult.fecha, mes: ult.mes, estado: ult.estado === "approved" ? "aprobado" : ult.estado === "rejected" ? "rechazado" : "pendiente", monto: ult.monto } : null, alias: "habitatcfm", transferencia: transf, vence: VENCE });
   } catch (e) {
     console.error("cuota", e);
     return json({ ok: false }, 500);
