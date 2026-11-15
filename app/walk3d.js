@@ -4761,11 +4761,18 @@ function h3dress(o, av, c) {
     san = { c: bo ? bo.c : '#7A5232', high: bo ? !!(bo.hi || /doradas/.test(bo.id)) : false, metal: bo && bo.id === 'doradas' ? .5 : 0, glow: bo && bo.id === 'evangelio' ? '#8A6A1A' : null }; }
   if (!c.npc && !D.shirt) o.traverse(m => { if (m.isSkinnedMesh && (H3_PART.body.test(m.name) || H3_PART.arms.test(m.name))) { m.material = m.material.clone(); m.material.color.set(tun.c); try { h3cloth(m.material); } catch (e) {} } });
   const made = []; try { made.push(h3tunic(body, B, tun)); } catch (e) { console.warn('túnica', e); }
-  if (man) try { made.push(h3mantle(body, B, man)); } catch (e) { console.warn('manto', e); }
+  o.traverse(m => { if (m.isSkinnedMesh && H3_PART.body.test(m.name)) try { h3clipBelow(m, B.P.pelvis.y + B.H * .15); } catch (e) { console.warn('faldón', e); } });
   let sandOk = false; try { made.push(h3sandals(body, B, san, c.skinC)); sandOk = true; } catch (e) { console.warn('sandalias', e); }
   /* las piernas, descalzas bajo la túnica: el pantalón del modelo pasa a color piel; las botas se sacan si hay sandalias */
-  const rm = []; o.traverse(m => { if (!m.isSkinnedMesh) return; if (H3_PART.legs.test(m.name)) { m.material = m.material.clone(); m.material.map = null; m.material.normalMap = null; m.material.color.set(tun.c).multiplyScalar(.82); m.material.roughness = .9; } /* del color de la túnica: si el muslo asoma al caminar, no se ve una mancha */ if (sandOk && H3_PART.feet.test(m.name)) rm.push(m); }); rm.forEach(m => m.parent.remove(m));
+  const rm = []; o.traverse(m => { if (!m.isSkinnedMesh) return; if (H3_PART.legs.test(m.name)) { rm.push(m); return; } if (0) { m.material = m.material.clone(); m.material.map = null; m.material.normalMap = null; m.material.color.set(tun.c).multiplyScalar(.82); m.material.roughness = .9; } /* del color de la túnica: si el muslo asoma al caminar, no se ve una mancha */ if (sandOk && H3_PART.feet.test(m.name)) rm.push(m); }); rm.forEach(m => m.parent.remove(m));
   return made.length > 0;
+}
+/* corta una prenda del modelo por debajo de una altura (la camisa original tenía un faldón que asomaba por la túnica) */
+function h3clipBelow(m, yBind) {
+  const inv = m.bindMatrixInverse, p0 = new THREE.Vector3(0, yBind, 0).applyMatrix4(inv), n = new THREE.Vector3(0, 1, 0).transformDirection(inv), old = m.material, prev = old.onBeforeCompile, pk = old.customProgramCacheKey, mt = old.clone(), f = v => v.toFixed(5);
+  mt.onBeforeCompile = sh => { if (prev) prev.call(old, sh); sh.vertexShader = sh.vertexShader.replace('void main() {', 'varying float vH3c;\nvoid main() {').replace('#include <begin_vertex>', `#include <begin_vertex>\nvH3c = dot( position - vec3( ${f(p0.x)}, ${f(p0.y)}, ${f(p0.z)} ), vec3( ${f(n.x)}, ${f(n.y)}, ${f(n.z)} ) );`);
+    sh.fragmentShader = sh.fragmentShader.replace('void main() {', 'varying float vH3c;\nvoid main() {\nif ( vH3c < 0. ) discard;'); };
+  mt.customProgramCacheKey = () => (pk ? pk.call(old) : '') + 'clip' + f(p0.y) + f(n.y); m.material = mt;
 }
 function h3cloth(mt, rb) {
   mt.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', '#ifdef USE_MAP\nvec4 sampledDiffuseColor = texture2D( map, vMapUv );\nfloat lum = dot( sampledDiffuseColor.rgb, vec3( .299, .587, .114 ) );\nsampledDiffuseColor.rgb = mix( sampledDiffuseColor.rgb, vec3( clamp( sqrt( lum ) * 1.55, 0., 1.25 ) ), .88 );\n' + (rb ? 'sampledDiffuseColor.rgb *= .45 + .55 * cos( 6.2832 * ( vec3( 0., .33, .67 ) + floor( vMapUv.y * 9. ) / 9. * 1.7 ) );\n' : '') + 'diffuseColor *= sampledDiffuseColor;\n#endif'); };
