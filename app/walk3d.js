@@ -2354,7 +2354,7 @@ function townLayout(scene, p, yAt, HW, o) {
 }
 /* la vida en la puerta de cada casa: cántaros, vasijas, canastas, cajones, leña o un banquito contra la pared, a los dos lados de la puerta
    (modelos reales; nunca delante de la puerta ni sobre el camino) */
-const DRESS = [['ceramic_pot', 3], ['ceramic_vase_01', 2], ['ceramic_vase_03', 2], ['jug_01', 2], ['antique_ceramic_vase_01', 1], ['wicker_basket_01', 3], ['wicker_basket_02', 2], ['wooden_crate_01', 1], ['wooden_bucket_01', 1], ['wooden_stool_01', 1], ['dry_branches_medium_01', 2], ['planter_pot_clay', 1]];
+const DRESS = [['planter_pot_clay', 3], ['antique_ceramic_vase_01', 3], ['wicker_basket_01', 3], ['wicker_basket_02', 2], ['wooden_crate_01', 1], ['wooden_bucket_01', 1], ['wooden_stool_01', 1], ['dry_branches_medium_01', 2]]; /* solo barro, mimbre y madera: nada de loza esmaltada moderna */
 function dressPick(R) { const t = DRESS.reduce((a, q) => a + q[1], 0); let k = R() * t; for (const [id, w] of DRESS) { k -= w; if (k <= 0) return id; } return DRESS[0][0]; }
 function dressPut(id, x, y, z, ry, s) { (FLORA.poiProps = FLORA.poiProps || []).push([id, [{ x, y, z, ry, s, v: 0 }], { shadow: true, nocol: 1 }]); if (/crate|stool|branches/.test(id)) S.cols.push({ x0: x - .35, x1: x + .35, z0: z - .35, z1: z + .35, cx: x, cz: z, r: .32 }); }
 function houseDress(x, z, face, H, y, R, yAt) {
@@ -4353,8 +4353,8 @@ function doorTheme(scene, g, d, hx, HW) {
         const face = add(new THREE.PlaneGeometry(1.1, 1.7), new THREE.MeshStandardMaterial({ map: words([[L[0], '700 54px serif', 70], [L[1], '700 54px serif', 150], ['— — —', '400 40px serif', 222], ['— — —', '400 40px serif', 282]], 256, 360, '#5A4630'), transparent: true, roughness: 1 }), tx + (i ? .68 : -.68), 2.05, tz + .13); face.castShadow = false; });
       solid(tx, tz, 1.8); lore(tx, tz + 3, 'Leer las tablas', ['Las dos tablas', 'En el monte Sinaí, Dios le dio a Moisés las diez palabras de la ley escritas en dos tablas de piedra, para que el pueblo libre supiera cómo vivir con Dios y con los demás.', 'Éxodo 20; 31:18']); }
     /* la columna de nube y de fuego, alta sobre la puerta */
-    { const cm = new THREE.SpriteMaterial({ map: cloudTex(), color: '#D9CDBE', transparent: true, opacity: .9, depthWrite: false, fog: false }); T.cloud = []; /* nube densa y algo gris: se distingue del cielo claro */
-      for (let i = 0; i < 22; i++) { const sp = new THREE.Sprite(cm); const y = 24 + i * 2.6, r = 1.4 + (i % 3) * .8; sp.position.copy(V(Math.sin(i * 2.1) * r, y, -3 + Math.cos(i * 2.1) * r)); sp.scale.set(11 - i * .12, 7, 1); scene.add(sp); T.cloud.push({ sp, y, p: i }); }
+    { const cm = new THREE.SpriteMaterial({ map: cloudTex(), color: '#B8A68C', transparent: true, opacity: .95, depthWrite: false, fog: false }); T.cloud = []; /* nube densa y algo gris: se distingue del cielo claro */
+      for (let i = 0; i < 22; i++) { const sp = new THREE.Sprite(cm); const y = 24 + i * 2.6, r = 1.4 + (i % 3) * .8; sp.position.copy(V(Math.sin(i * 2.1) * r, y, -3 + Math.cos(i * 2.1) * r)); sp.scale.set(15 - i * .15, 9, 1); scene.add(sp); T.cloud.push({ sp, y, p: i }); }
       const fm = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 2.4, 52, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#FFB050', transparent: true, opacity: .22, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); fm.position.copy(V(0, 46, -3)); scene.add(fm); T.fire = fm;
       lore(0, 18, 'Mirar la columna', ['Nube de día, fuego de noche', 'Cuando el pueblo salió de Egipto, el Señor iba delante de ellos: de día en una columna de nube para guiarlos y de noche en una columna de fuego para alumbrarlos.', 'Éxodo 13:21-22'], 3.4); }
   }
@@ -5361,7 +5361,7 @@ function phWorld(scene, W, allPts, zMax, hx, R0) { try { if (grpBase()) setTimeo
   ((S.sv && S.sv.beggars) || []).forEach(b => { if (b.bowl) b.bowl.visible = false; const x = b.bx ?? b.x, z = b.bz ?? b.z; props.wooden_bowl_02.push({ x, z, y: yAt(x, z) + .02, ry: 0, s: 2 }); });
   for (const id in props) if (props[id].length) phPlace(id, props[id], { shadow: /chest|bucket|stool|basket|fire/.test(id) });
   // ---- más objetos de época (Poly Haven, CC0; ver CREDITOS-ASSETS.md): vasijas, cántaros, canastos, cajones, granadas, banquitos, rocas, arbustos y árboles
-  const P2 = {}, put2 = (id, o) => (P2[id] = P2[id] || []).push(o), pots = ['ceramic_vase_01', 'ceramic_vase_02', 'ceramic_vase_03', 'ceramic_vase_04', 'antique_ceramic_vase_01', 'jug_01', 'ceramic_pot', 'planter_pot_clay'];
+  const P2 = {}, put2 = (id, o) => (P2[id] = P2[id] || []).push(o), pots = ['antique_ceramic_vase_01', 'antique_ceramic_vase_01', 'jug_01', 'ceramic_pot', 'planter_pot_clay', 'planter_pot_clay']; /* sin los jarrones esmaltados (blancos con dibujos): no son de la época */
   for (const p of towns) {
     ring(p, 3, 11, (x, z, y, ry) => { const n = 1 + Math.floor(R() * 3); for (let i = 0; i < n; i++) put2(pots[Math.floor(R() * pots.length)], { x: x + (R() - .5) * .9, z: z + (R() - .5) * .9, y, ry: R() * 6.28, s: .9 + R() * .35 }); }, p.k === 'taller' ? 6 : 4);
     ring(p, 4, 11, (x, z, y, ry) => { put2(R() < .5 ? 'wooden_crate_01' : 'wooden_crate_02', { x, z, y, ry, s: 1 }); if (R() < .5) put2('wicker_basket_02', { x: x + .7, z, y, ry, s: 1 }); }, 2);
