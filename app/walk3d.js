@@ -483,7 +483,7 @@ function waterPlan(pois) {
   TRL.defs = null; TRL.city = pois.find(q => q.k === 'temple') || null; for (const p of pois) if (p.k === 'desert') trailPlan(p); /* y desde el fondo del cañón suben los senderos del Monte de la Tentación */
   WATER.hill = null; for (const p of pois) if (p.k === 'golgota') WATER.hill = { x: p.x, z: p.z }; /* el Gólgota se levanta como una loma que se ve desde lejos */
   WATER.quarry = null; for (const p of pois) if (p.k === 'tomb') { const th = p.side > 0 ? -Math.PI / 2 : Math.PI / 2; WATER.quarry = { x: p.x, z: p.z, c: Math.cos(th), s: Math.sin(th) }; } /* la tumba, en una cantera de caliza */
-  for (const p of pois) { if (p.k === 'lake') { WATER.basins.push({ x: p.x, z: p.z, r: 30 }); WATER.basins.push({ x: p.x + p.side * 78, z: p.z - 8, r: 70, sea: 1 }); } /* el lago se abre hacia afuera, pasando las piedras, hasta el horizonte: un mar de verdad */ if (p.k === 'shore') WATER.basins.push({ x: p.x + p.side * 8, z: p.z, r: 10.5 }); if (p.k === 'river') WATER.river = p.pts; }
+  for (const p of pois) { if (p.k === 'lake') { WATER.basins.push({ x: p.x, z: p.z, r: 30 }); WATER.basins.push({ x: p.x + p.side * 78, z: p.z - 8, r: 70, sea: 1 }); } /* el lago se abre hacia afuera, pasando las piedras, hasta el horizonte: un mar de verdad */ if (p.k === 'shore') { WATER.basins.push({ x: p.x + p.side * 8, z: p.z, r: 10.5 }); WATER.basins.push({ x: p.x + p.side * 80, z: p.z + 6, r: 66, sea: 1 }); } /* la orilla de Juan 21 da al mismo mar abierto, no a un estanque */ if (p.k === 'river') WATER.river = p.pts; }
 }
 // mapa de normales que se repite sin costura (suma de ondas con frecuencias enteras)
 function waterNormalTex() {
@@ -501,9 +501,9 @@ function waterEnv(renderer) {
 }
 function waterMat(hx, flow) {
   const nm = waterNormalTex().clone(), cn = waterNormalTex().clone(); nm.needsUpdate = cn.needsUpdate = true; nm.repeat.set(1, 1); cn.repeat.set(1, 1);
-  const m = new THREE.MeshPhysicalMaterial({ color: hx ? '#27565F' : '#2E8C98', roughness: hx ? .2 : .12, metalness: 0, transparent: true, opacity: .93, normalMap: nm, normalScale: new THREE.Vector2(hx ? .85 : .55, hx ? .85 : .55), clearcoat: 1, clearcoatRoughness: .05, clearcoatNormalMap: cn, clearcoatNormalScale: new THREE.Vector2(.35, .35), envMap: S ? waterEnv(S.renderer) : null, envMapIntensity: hx ? .8 : 1, depthWrite: false });
+  const m = new THREE.MeshPhysicalMaterial({ color: flow ? (hx ? '#3A5A4A' : '#3F9A8A') : hx ? '#27565F' : '#2E8C98', /* el Jordán es verde barroso; el lago, azul */ roughness: hx ? .2 : .12, metalness: 0, transparent: true, opacity: .93, normalMap: nm, normalScale: new THREE.Vector2(hx ? .85 : .55, hx ? .85 : .55), clearcoat: 1, clearcoatRoughness: .05, clearcoatNormalMap: cn, clearcoatNormalScale: new THREE.Vector2(.35, .35), envMap: S ? waterEnv(S.renderer) : null, envMapIntensity: hx ? .8 : 1, depthWrite: false });
   m.userData = { nm, cn, flow, env: m.envMap };
-  m.onBeforeCompile = sh => { sh.uniforms.wt = WATER.uT; sh.uniforms.shal = { value: new THREE.Color(hx ? '#7A9E8C' : '#86C9C2') };
+  m.onBeforeCompile = sh => { sh.uniforms.wt = WATER.uT; sh.uniforms.shal = { value: new THREE.Color(flow ? (hx ? '#8E9468' : '#A6CBA0') : hx ? '#7A9E8C' : '#86C9C2') };
     sh.vertexShader = 'attribute float shore;varying float vSh;uniform float wt;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvSh=shore;vec4 wp0=modelMatrix*vec4(position,1.);transformed.y+=(sin(wp0.x*.35+wt*1.3)*.05+sin(wp0.z*.29-wt*1.05)*.045)*smoothstep(0.,.25,shore);');
     sh.fragmentShader = 'varying float vSh;uniform float wt;uniform vec3 shal;\n' + sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\ndiffuseColor.rgb=mix(shal,diffuseColor.rgb,smoothstep(.0,.35,vSh));float fo=smoothstep(.09,.0,vSh)*(.55+.45*sin(vSh*140.-wt*2.6));diffuseColor.rgb=mix(diffuseColor.rgb,vec3(1.),clamp(fo,0.,1.)*.75);diffuseColor.a=mix(.55,diffuseColor.a,smoothstep(0.,.12,vSh));'); };
   WATER.mats.push(m); return m;
@@ -528,7 +528,7 @@ function waterTick(dt, t) {
   WATER.uT.value = t; for (const m of WATER.mats) { const u = m.userData; if (u.flow) { u.nm.offset.y -= dt * .09; u.cn.offset.y -= dt * .14; u.cn.offset.x = Math.sin(t * .2) * .05; } else { u.nm.offset.x += dt * .012; u.nm.offset.y += dt * .007; u.cn.offset.x -= dt * .009; u.cn.offset.y += dt * .013; } }
 }
 // cuánto "moja" la orilla en este punto (0 lejos, 1 en el borde del agua)
-function waterWet(x, z, rf) { let w = 0; for (const b of WATER.basins) { const dd = Math.hypot(x - b.x, z - b.z) / b.r; w = Math.max(w, 1 - sstep(.92, 1.35, dd)); } if (rf != null) w = Math.max(w, 1 - sstep(2.4, 5, rf)); return w; }
+function waterWet(x, z, rf) { let w = 0; for (const b of WATER.basins) { const dd = Math.hypot(x - b.x, z - b.z) / b.r; w = Math.max(w, 1 - sstep(.92, 1.35, dd)); } if (rf != null) w = Math.max(w, 1 - sstep(3.6, 7.5, rf)); return w; }
 
 /* ---------- cielo real (HDRI CC0 de Poly Haven): amanecer y mediodía, con reflejos del cielo en los materiales ---------- */
 const SKY = { tex: {}, env: {}, res: '', rot: [-1.462, -2.631], dir: [[.575, .083, -.814], [-.300, .742, -.599]], gen: null };
@@ -572,7 +572,7 @@ function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
   const rAt = (x, z) => { if (!RF) return 20; const fx = Math.max(0, Math.min(NX - 1.001, (x - X0) / CS)), fz = Math.max(0, Math.min(NZ - 1.001, (z - Z0) / CS)), i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, a = RF[j * NX + i], b = RF[j * NX + i + 1], c = RF[(j + 1) * NX + i], d = RF[(j + 1) * NX + i + 1]; return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; };
   // el lago y el río se cavan en el terreno: así el agua queda adentro y la orilla es de verdad
   const hAt = (x, z) => { let h = h0(x, z); for (const b of WATER.basins) { const dd = Math.hypot(x - b.x, z - b.z) / b.r; if (dd < 1.25) h = Math.min(h, -1.5 + (h + 1.5) * sstep(.86, 1.22, dd) + sstep(.86, 1.05, dd) * .18); }
-    if (RF) { const rf = rAt(x, z); if (rf < 4.5) h = Math.min(h, -.6 + (h + .6) * sstep(1.7, 4.2, rf) + sstep(1.7, 2.9, rf) * .12); } return h; };
+    if (RF) { const rf = rAt(x, z); if (rf < 9) h = Math.min(h, -.75 + (h + .75) * sstep(2.6, 8.5, rf) + sstep(2.6, 4.2, rf) * .14); /* el Jordán: cauce ancho con orillas que bajan suave */ } return h; };
   // cielo de atardecer
   const sunDir = new THREE.Vector3(-.42, .17, -.89).normalize();
   const sky = new THREE.Mesh(new THREE.SphereGeometry(160, 32, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false,
@@ -1054,8 +1054,10 @@ function refresh() {
   Object.values(S.markers).forEach(m => {
     const id = m.userData.id, n = g.NODES[id], reach = g.reachable(id), vis = g.visited(id), done = n.kind === 'ch' && g.isDone(id), ok = done && p.done[id];
     const col = done ? (ok ? '#5FD39A' : '#FF7A5C') : (reach && !vis ? '#FFD873' : (vis ? '#E9B44C' : '#8C8A84'));
-    m.userData.orbM.color.set(col); m.userData.orbM.emissive.set(done ? (ok ? '#2FAE7C' : '#C9452E') : (reach ? '#FFB43C' : '#2A2A2A'));
-    m.userData.orbM.emissiveIntensity = reach && !vis ? 1.2 : .35;
+    /* las paradas todavía cerradas son reliquias de bronce con un brillo tenue (antes, piedras grises apagadas) */
+    const lock = !done && !reach && !vis; m.userData.orbM.color.set(lock ? '#B8935A' : col); m.userData.orbM.metalness = lock ? .75 : 0; m.userData.orbM.roughness = lock ? .35 : .3;
+    m.userData.orbM.emissive.set(done ? (ok ? '#2FAE7C' : '#C9452E') : (reach ? '#FFB43C' : '#6B4A1E'));
+    m.userData.orbM.emissiveIntensity = reach && !vis ? 1.2 : lock ? .45 : .35;
     m.userData.beam.visible = reach && !vis && !done; m.userData.ring.material.color.set(reach ? '#E9B44C' : '#6B6A64');
     m.userData.label.material.opacity = reach || vis ? 1 : .45; m.userData.label.visible = id !== p.pos;
     m.userData.orb.visible = id !== p.pos;
@@ -1290,7 +1292,7 @@ function hudLay() {
    o los botones de la derecha, se angosta para entrar en el hueco del medio; si igual no entra, baja (o sube) hasta quedar libre. */
 const BAN_TOP = ['.v3comp', '#v3timer', '#v3room', '.v3topics', '.v3mis', '.v3seas', '#v3vil', '.v3bagt', '.v3pop', '#toast'];
 const BAN_BOT = ['.v3place', '.v3say', '.v3hint'];
-const BAN_OBS = ['#v3crest', '.hud', '.v3surv', '.v3mapbtn', '.v3baghud', '.v3mmbox', '.v3cam', '.v3joy', '#v3joy', '.v3fan .fan-tg', '.v3fan.open .fan-items button', '#v3acts > button', '#v3go', '.v3go', '#wixheadless-banner-container'];
+const BAN_OBS = ['#v3crest', '.hud', '.v3surv', '.v3mapbtn', '.v3baghud', '.v3mmbox', '.v3cam', '.v3joy', '#v3joy', '.v3fan .fan-tg', '.v3fan.open .fan-items button', '#v3acts > button', '#v3go', '.v3go', '#v3go button', '#v3go .v3k', '.v3act', '#wixheadless-banner-container'];
 const BAN_LEFT = new Set(['v3mis']);
 function topVis(e) { if (!e || e.hidden) return false; const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden' || cs.position !== 'fixed') return false; return +cs.opacity > .04 || e.classList.contains('on') || e.classList.contains('show'); }
 function banReset(e) { if (e.dataset.tsY == null) return; ['top', 'bottom', 'left', 'max-width'].forEach(k => e.style.removeProperty(k)); delete e.dataset.tsY; }
@@ -1688,7 +1690,7 @@ function buildPois(scene, pois, hx, HW, R, ribbon) {
       const hall = new THREE.Mesh(new THREE.BoxGeometry(6, 3.4, 4.5), stone); hall.position.set(0, 2.5, -1); t.add(hall); const roof = new THREE.Mesh(new THREE.BoxGeometry(6.6, .3, 5), dark); roof.position.set(0, 4.3, -1); t.add(roof);
       for (let i = 0; i < 6; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(.2, .24, 3.2, 10), stone); c.position.set(-2.6 + i * 1.04, 2.4, 1.6); t.add(c); }
       const door = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2, .1), M('#6B4A2C')); door.position.set(0, 1.8, 1.27); t.add(door); add(t, p.x, p.z, p.side > 0 ? -Math.PI / 2 : Math.PI / 2); }
-    if (p.k === 'river') { waterRiver(scene, p.pts, 9, hx, yAt); try { jordanLife(scene, p, yAt, hx); } catch (e) { console.warn('jordán', e); }
+    if (p.k === 'river') { waterRiver(scene, p.pts, 13, hx, yAt); try { jordanLife(scene, p, yAt, hx); } catch (e) { console.warn('jordán', e); }
       const reed = new THREE.InstancedMesh(new THREE.CylinderGeometry(.015, .02, 1, 4), M('#6E8A44'), 160), m4 = new THREE.Matrix4(); let n = 0; for (let i = 0; i < 160; i++) { const q = p.pts[Math.floor(R() * p.pts.length)], s = R() < .5 ? -1 : 1, x = q[0] + s * (2.4 + R() * .8), z = q[1] + (R() - .5); m4.makeScale(1, .6 + R() * .7, 1); m4.setPosition(x, yAt(x, z) + .4, z); reed.setMatrixAt(n++, m4); } reed.instanceMatrix.needsUpdate = true; scene.add(reed); }
     if (p.k === 'desert' && false) { const sand = new THREE.Mesh(new THREE.CircleGeometry(7, 28), M('#C9A86E', { flatShading: false })); sand.rotation.x = -Math.PI / 2; sand.position.set(p.x, yAt(p.x, p.z) + .03, p.z); sand.receiveShadow = true; scene.add(sand);
       for (let i = 0; i < 9; i++) { const rk = new THREE.Mesh(new THREE.DodecahedronGeometry(.6 + R() * 1.1, 0), M('#A88E66')); rk.scale.y = .6 + R() * .5; const a = R() * 6.28, r = 2 + R() * 4.5; const gr = new THREE.Group(); rk.position.y = .3; gr.add(rk); add(gr, p.x + Math.cos(a) * r, p.z + Math.sin(a) * r, R() * 6); } }
@@ -2131,6 +2133,8 @@ function gardenScene(scene, p, yAt, poiProp, hx, HW) {
 function shoreScene(scene, p, yAt, poiProp, hx, HW) {
   const y = yAt(p.x, p.z), sd = p.side, cx = p.x + sd * 8, R = rng(2121), W = (u, v) => [p.x + u * sd, p.z + v], WR = 10.5;
   waterLake(scene, cx, p.z, WR * 1.25, hx, yAt); S.cols.push({ x0: cx - WR, x1: cx + WR, z0: p.z - WR, z1: p.z + WR, cx, cz: p.z, r: WR - 1.8 });
+  /* el mar abierto detrás de la orilla, entre los cerros, hasta el horizonte (como en el lago de Galilea) */
+  { const sx = p.x + sd * 80, sz = p.z + 6, SR = 66, HWm = HW; waterLake(scene, sx, sz, 92, hx, (x, z) => HWm && HWm.mtnH && Math.abs(x) > HWm.X1 ? HWm.mtnH(x, z) : yAt(x, z)); S.cols.push({ x0: sx - SR, x1: sx + SR, z0: sz - SR, z1: sz + SR, cx: sx, cz: sz, r: SR * .84 }); }
   // playa: una franja de arena clara entre el pasto y el agua
   { const sand = new THREE.Mesh(new THREE.RingGeometry(WR - 1.5, WR + 5.5, 48, 1, Math.PI * .45, Math.PI * 1.1), new THREE.MeshStandardMaterial({ map: (() => { const t = texL('dirt.jpg', 4); t.repeat.set(5, 5); return t; })(), color: '#E6D5AE', roughness: 1, transparent: true, opacity: .96, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 })); sand.rotation.x = -Math.PI / 2; sand.rotation.z = sd > 0 ? 0 : Math.PI; sand.position.set(cx, y + .035, p.z); sand.receiveShadow = true; sand.renderOrder = 1; scene.add(sand); }
   // barcas: una flotando, dos varadas en la arena con la vela recogida
@@ -3913,8 +3917,9 @@ function ambFlameMat() {
 }
 function ambSmokeMat() {
   return new THREE.ShaderMaterial({ uniforms: { uT: AMB.uT }, transparent: true, depthWrite: false,
-    vertexShader: AMB_VB + 'void main(){vUv=uv;vS=aSeed;vec3 c=(instanceMatrix*vec4(0.,0.,0.,1.)).xyz;float sc=length(instanceMatrix[0].xyz);float l=fract(uT*.16+aSeed);vL=l;vec3 p=c+vec3(sin(aSeed*40.+uT*.7)*.35*l+l*.6,l*4.2*sc,cos(aSeed*33.)*.3*l);vec4 mv=modelViewMatrix*vec4(p,1.);float s=sc*(.35+l*1.6);mv.xy+=position.xy*s;gl_Position=projectionMatrix*mv;}',
-    fragmentShader: 'varying vec2 vUv;varying float vL;varying float vS;' + AMB_GLSL + 'void main(){vec2 p=vUv-.5;float d=length(p);float n=an(p*4.+vS*9.);float a=smoothstep(.5,.05,d)*(.55+.45*n)*smoothstep(0.,.12,vL)*(1.-vL)*.32;gl_FragColor=vec4(vec3(.42,.4,.38)+n*.08,a);}' });
+    vertexShader: AMB_VB + 'varying float vD;void main(){vUv=uv;vS=aSeed;vec3 c=(instanceMatrix*vec4(0.,0.,0.,1.)).xyz;float sc=length(instanceMatrix[0].xyz);float l=fract(uT*.16+aSeed);vL=l;vec3 p=c+vec3(sin(aSeed*40.+uT*.7)*.35*l+l*.6,l*4.2*sc,cos(aSeed*33.)*.3*l);vec4 mv=modelViewMatrix*vec4(p,1.);vD=-mv.z;float s=sc*(.35+l*1.6);mv.xy+=position.xy*s;gl_Position=projectionMatrix*mv;}',
+    /* humo claro y que se desvanece con la distancia: de lejos no queda una mancha negra en el cielo */
+    fragmentShader: 'varying vec2 vUv;varying float vL;varying float vS;varying float vD;' + AMB_GLSL + 'void main(){vec2 p=vUv-.5;float d=length(p);float n=an(p*4.+vS*9.);float a=smoothstep(.5,.05,d)*(.55+.45*n)*smoothstep(0.,.12,vL)*(1.-vL)*.24*smoothstep(70.,18.,vD);gl_FragColor=vec4(mix(vec3(.5,.47,.43),vec3(.78,.76,.72),vL)+n*.06,a);}' });
 }
 function ambEmberMat() {
   return new THREE.ShaderMaterial({ uniforms: { uT: AMB.uT }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
