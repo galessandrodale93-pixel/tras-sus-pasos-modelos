@@ -2,6 +2,8 @@ name = "tsp-salas"
 main = "worker.js"
 compatibility_date = "2026-11-01"
 workers_dev = true
+# no borrar en cada despliegue las variables cargadas en el panel (claves del relevo TURN)
+keep_vars = true
 
 [[durable_objects.bindings]]
 name = "HUB"
