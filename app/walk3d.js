@@ -4664,7 +4664,7 @@ const h3mat = (o) => { const m = new THREE.MeshStandardMaterial(Object.assign({ 
 function h3tunic(body, B, o) {
   const { I, P, fy, H, lat, fwd } = B, yTop = P.pelvis.y + H * .2, yBot = fy + H * (o.len ?? .34), NR = 14, NS = 24, pos = [], si = [], sw = [], col = [];
   const base = new THREE.Color(o.c), c2 = new THREE.Color(o.c2 || o.c), belt = new THREE.Color(o.belt || '#3A2A1C'), RB = ['#C0392B', '#E6B04A', '#3E8A4A', '#3E5A9A', '#7A3E8A'].map(q => new THREE.Color(q));
-  for (let r = 0; r <= NR; r++) { const t = r / NR, y = yTop + (yBot - yTop) * t, rad = H * (.2 + .018 * t + (o.len < .15 ? .03 * t * t : 0)); /* recta, apenas abierta abajo: túnica, no vestido */
+  for (let r = 0; r <= NR; r++) { const t = r / NR, y = yTop + (yBot - yTop) * t, rad = H * (.2 + .018 * t + (o.len < .15 ? .015 * t * t : 0)); /* recta, apenas abierta abajo: túnica, no vestido */
     for (let k = 0; k <= NS; k++) { const a = k / NS * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a), lx = ca * rad, lz = sa * rad * .84, wob = 1 + .025 * Math.sin(a * 9 + t * 4) * t;
       pos.push(P.pelvis.x + (lat.x * lx + fwd.x * lz) * wob, y, P.pelvis.z + (lat.z * lx + fwd.z * lz) * wob);
       const wl = THREE.MathUtils.smoothstep(ca, -.55, .55), L = Math.min(1, Math.max(0, (t - .12) / .45)) * .9, cw = Math.min(1, Math.max(0, (t - .55) / .4)) * .8;
@@ -4681,7 +4681,7 @@ function h3tunic(body, B, o) {
 function h3mantle(body, B, o) {
   const { I, P, fy, H, lat, fwd } = B, top = P.spine_03.y + H * .06, bot = fy + H * (o.len ?? .55), sw0 = Math.hypot(P.upperarm_l.x - P.upperarm_r.x, P.upperarm_l.z - P.upperarm_r.z) / 2;
   const NR = 16, NS = 22, A0 = Math.PI * .8, A1 = Math.PI * 2.2, pos = [], si = [], sw = [], col = [], base = new THREE.Color(o.c), c2 = new THREE.Color(o.c2 || o.c).lerp(new THREE.Color(o.c2 ? o.c2 : '#000000'), 0), dk = base.clone().multiplyScalar(.7);
-  for (let r = 0; r <= NR; r++) { const t = r / NR, y = top + (bot - top) * t, rad = (sw0 + .045) * (1 - t) + H * .245 * t + H * .012 * Math.sin(t * Math.PI); const ce = t < .5 ? P.spine_03.clone().lerp(P.pelvis, t / .5) : P.pelvis; /* pegado al cuerpo, sin joroba */
+  for (let r = 0; r <= NR; r++) { const t = r / NR, y = top + (bot - top) * t, rad = (sw0 + .045) * (1 - t) + H * .27 * t + H * .012 * Math.sin(t * Math.PI); const ce = t < .5 ? P.spine_03.clone().lerp(P.pelvis, t / .5) : P.pelvis; /* pegado al cuerpo, sin joroba */
     for (let k = 0; k <= NS; k++) { const u = k / NS, a = A0 + (A1 - A0) * u, ca = Math.cos(a), sa = Math.sin(a), lx = ca * rad, lz = sa * rad * (t < .15 ? .7 : .86) - .01, fold = 1 + .025 * Math.sin(u * 30) * t;
       pos.push(ce.x + (lat.x * lx + fwd.x * lz) * fold, y - (t < .05 ? 0 : .015 * Math.cos(u * 30)), ce.z + (lat.z * lx + fwd.z * lz) * fold);
       const side = ca > 0 ? 'l' : 'r', sv = Math.abs(ca), upW = Math.max(0, 1 - t / .32), midW = Math.max(0, 1 - Math.abs(t - .45) / .3), lowW = Math.max(0, (t - .5) / .5);
@@ -4690,7 +4690,7 @@ function h3mantle(body, B, o) {
   const idx = []; for (let r = 0; r < NR; r++) for (let k = 0; k < NS; k++) { const a = r * (NS + 1) + k, b = a + NS + 1; idx.push(a, b, a + 1, b, b + 1, a + 1); }
   const m = h3part(body, pos, idx, si, sw, col, h3mat(o.glow ? { emissive: new THREE.Color(o.glow), emissiveIntensity: .35 } : null));
   /* flecos en las cuatro puntas (tzitzit), azules como pide Números 15:38 */
-  if (o.tassels !== false) { const tp = [], tsi = [], tsw = [], tc = [], ti = [], blue = new THREE.Color('#3E5A9A'); [[A0, bot], [A1, bot]].forEach(([a, y]) => { const rad = H * .245 + .01, cx = P.pelvis.x + lat.x * Math.cos(a) * rad + fwd.x * Math.sin(a) * rad * .9, cz = P.pelvis.z + lat.z * Math.cos(a) * rad + fwd.z * Math.sin(a) * rad * .9, side = Math.cos(a) > 0 ? 'l' : 'r';
+  if (o.tassels !== false) { const tp = [], tsi = [], tsw = [], tc = [], ti = [], blue = new THREE.Color('#3E5A9A'); [[A0, bot], [A1, bot]].forEach(([a, y]) => { const rad = H * .27 + .01, cx = P.pelvis.x + lat.x * Math.cos(a) * rad + fwd.x * Math.sin(a) * rad * .9, cz = P.pelvis.z + lat.z * Math.cos(a) * rad + fwd.z * Math.sin(a) * rad * .9, side = Math.cos(a) > 0 ? 'l' : 'r';
       for (let q = 0; q < 4; q++) { const n0 = tp.length / 3, ox = (q - 1.5) * .012; tp.push(cx + ox, y, cz, cx + ox + .006, y - .09, cz, cx + ox - .006, y - .09, cz); ti.push(n0, n0 + 1, n0 + 2); for (let v = 0; v < 3; v++) { h3w([[I['thigh_' + side], .6], [I.pelvis, .4]]).forEach(w => { tsi.push(w[0]); tsw.push(w[1]); }); tc.push(blue.r, blue.g, blue.b); } } });
     h3part(body, tp, ti, tsi, tsw, tc, h3mat()); }
   return m;
@@ -4707,7 +4707,7 @@ function h3sandals(body, B, o, skin) {
     [.22, .5, -.18].forEach(f => box(cx + dir.x * len * f * .5, gy + .07, cz + dir.z * len * f * .5, .018, .092, .03, dir, sd, wf(f), strap));
     if (o.high) [0, .06, .12].forEach(h => box(F.x, F.y + .05 + h, F.z, .085, .085, .016, dir, sd, [[I['calf_' + sd], 1]], strap)); });
   /* las piernas de la rodilla al tobillo: con pantorrilla de verdad (antes asomaban dos palitos debajo de la túnica) */
-  ['l', 'r'].forEach(sd => { const K = P['calf_' + sd], F = P['foot_' + sd], Hh = B.H, seg = 10, rings = [[-.1, .058], [0, .064], [.28, .076], [.55, .064], [.8, .048], [1, .04]];
+  ['l', 'r'].forEach(sd => { const K = P['calf_' + sd], F = P['foot_' + sd], Hh = B.H, seg = 10, rings = [[-.1, .062], [0, .068], [.28, .08], [.55, .072], [.8, .06], [1, .054]];
     const ax = new THREE.Vector3().subVectors(F, K), L = ax.length(); ax.normalize(); const u = new THREE.Vector3(1, 0, 0).cross(ax).normalize(), v = ax.clone().cross(u).normalize(); const n0 = pos.length / 3;
     rings.forEach(([t, rr]) => { const c = K.clone().addScaledVector(ax, L * t), R = rr * Hh; for (let k = 0; k < seg; k++) { const an = k / seg * Math.PI * 2, fb = Math.cos(an - Math.PI) > 0 && t > .1 && t < .7 ? 1.12 : 1; pos.push(c.x + (u.x * Math.cos(an) + v.x * Math.sin(an)) * R * fb, c.y + (u.y * Math.cos(an) + v.y * Math.sin(an)) * R * fb, c.z + (u.z * Math.cos(an) + v.z * Math.sin(an)) * R * fb); const wf = Math.max(0, Math.min(1, (t - .6) / .4)); h3w([[I['calf_' + sd], 1 - wf], [I['foot_' + sd], wf], [I['thigh_' + sd], t < 0 ? .5 : 0]]).forEach(q => { si.push(q[0]); sw.push(q[1]); }); col.push(sk.r, sk.g, sk.b); } });
     for (let r = 0; r < rings.length - 1; r++) for (let k = 0; k < seg; k++) { const a0 = n0 + r * seg + k, a1 = n0 + r * seg + (k + 1) % seg, b0 = a0 + seg, b1 = a1 + seg; idx.push(a0, a1, b0, a1, b1, b0); } });
