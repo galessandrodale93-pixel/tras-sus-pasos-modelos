@@ -3889,7 +3889,7 @@ function bagWear(el, pick) {
 /* ---------- puertas gigantes de los otros cursos (y la escalera al cielo de Maranata) ---------- */
 const DOORS = [
   { ico: '👑', id: 'maranata', k: 'stair', r: 0, side: 1, f: .2, dx: 10 * WS, name: 'Escuela Maranata', sub: '150 capítulos de los últimos tiempos', c: '#E6C46A', txt: 'Una escalera al cielo para estudiar lo que la Biblia enseña sobre el regreso de Jesús.' },
-  { ico: '🌳', id: 'genesis', k: 'door', r: 0, side: -1, f: .82, dx: 16 * WS, name: 'Génesis', sub: 'Los comienzos', c: '#7FB38A', txt: 'La creación, Abraham, José y las promesas de Dios desde el principio.' },
+  { ico: '🌳', id: 'genesis', k: 'door', r: 0, side: -1, f: .82, dx: 12 * WS, name: 'Génesis', sub: 'Los comienzos', c: '#7FB38A', txt: 'La creación, Abraham, José y las promesas de Dios desde el principio.' },
   { ico: '📜', id: 'exodo', k: 'door', r: 1, side: 1, f: .32, dx: 16 * WS, name: 'Éxodo', sub: 'La gran salida', c: '#D98A5A', txt: 'Moisés, las plagas, el mar abierto y el camino por el desierto.' },
   { ico: '🔥', id: 'hechos', k: 'door', r: 2, side: -1, f: .3, dx: 16 * WS, name: 'Hechos', sub: 'La iglesia en marcha', c: '#6FA6D9', txt: 'Pentecostés, Pedro, Pablo y el evangelio llegando hasta lo último de la tierra.' }
 ];
@@ -4210,6 +4210,7 @@ function gateTick(t) {
 }
 
 function buildDoors(scene, doors, hx, HW) {
+  PG_HOLE.length = 0;
   const yAt = (x, z) => HW ? Math.max(0, HW.hAt(x, z)) : 0, M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .85 }, o || {}));
   const stone = M(hx ? '#CFC2A4' : '#F2E6CC'), stone2 = M(hx ? '#A89878' : '#E2D2B0'), wood = M(hx ? '#5A3A22' : '#9A6A3E'), gold = M('#E6B04A', { metalness: .6, roughness: .35, emissive: '#7A5410', emissiveIntensity: .3 });
   const sh = o => { if (hx) o.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); return o; };
@@ -4299,29 +4300,31 @@ function doorTheme(scene, g, d, hx, HW) {
   const add = (geo, m, x, y, z, par) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); (par || g).add(o); o.castShadow = true; o.receiveShadow = true; return o; };
   const solid = (x, z, r) => { const w = V(x, 0, z); S.cols.push({ x0: w.x - r, x1: w.x + r, z0: w.z - r, z1: w.z + r, cx: w.x, cz: w.z, r }); };
   const lore = (x, z, label, info, r) => { const w = V(x, 0, z); (S.lore || (S.loreEarly = S.loreEarly || [])).push({ x: w.x, z: w.z, r: r || 2.6, label, info }); };
-  const T = { list: [], tick: null }, stone = pbrMat('old_sandstone_02', 1, 1, { color: '#F4EADA' });
+  const T = { list: [], tick: null }, stone = pbrMat('old_sandstone_02', 1, 1, { color: '#F4EADA' }), hole = (x, z, r) => { const w = V(x, 0, z); PG_HOLE.push({ x: w.x, z: w.z, r }); };
   /* faro: una columna de luz del color del curso, alta, que se ve desde el camino */
   { const bm = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 2.6, 110, 20, 1, true), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: .07, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); bm.position.copy(V(0, 55, -2)); scene.add(bm); T.beam = bm; }
   const words = (lines, w, h, ink, bg) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); if (bg) { x.fillStyle = bg; x.fillRect(0, 0, w, h); } x.fillStyle = ink; x.textAlign = 'center'; x.textBaseline = 'middle'; lines.forEach(([t, f, y]) => { x.font = f; x.fillText(t, w / 2, y); }); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
   if (d.id === 'genesis') {
     /* el huerto: árboles a los dos lados del sendero y arbustos bajos */
-    [[-7.5, 9, 1.1], [7.8, 9.6, 1.05], [-12.5, 15, 1.25], [12.2, 16, 1.2], [-9, 22, 1], [9.5, 23, .95]].forEach(([x, z, k], i) => { phOne(i % 2 ? 'island_tree_01' : 'tree_small_02', g, x, 0, z, i * 1.7, k); solid(x, z, .6); });
-    [[-4.6, 13], [4.8, 14.5], [-5.2, 19], [5.6, 20.5], [-14.5, 9], [14.6, 10]].forEach(([x, z], i) => phOne(i % 2 ? 'searsia_lucida' : 'wild_rooibos_bush', g, x, 0, z, i, .9));
+    /* (con phPlace, en coordenadas del mundo: así usa los árboles comprados, con viento y sombra) */
+    const tw = (L, id, o) => { const it = L.map(([x, z, k], i) => { const w = V(x, 0, z); return { x: w.x, y: yAt(w.x, w.z) - .04, z: w.z, ry: i * 1.7, s: k, v: i }; }); try { phPlace(id, it, Object.assign({ shadow: true, wind: 3, far: 1 }, o || {})); } catch (e) {} };
+    const TL = [[-7.5, 8.5, 1.1], [7.8, 9, 1.05], [-12.5, 13.5, 1.2], [12.2, 14, 1.15]]; tw(TL.filter((q, i) => !(i % 2)), 'tree_small_02'); tw(TL.filter((q, i) => i % 2), 'island_tree_01'); TL.forEach(([x, z]) => solid(x, z, .6));
+    tw([[-4.6, 12.5, .9], [4.8, 13.5, .85], [-14.5, 8, .9], [14.6, 8.5, .95]], 'shrub_02');
     /* el árbol de la vida, enorme, asomando detrás del muro, con frutos de luz */
-    phOne('island_tree_02', g, 0, 0, -10, .6, 3.1); T.fruits = [];
-    for (let i = 0; i < 14; i++) { const a = i / 14 * 6.283, r = 3 + (i % 3) * 1.6, sp = glowSpr('#FFE9A0', .9, .85); sp.position.copy(V(Math.cos(a) * r, 15 + (i % 4) * 2.2, -10 + Math.sin(a) * r)); scene.add(sp); T.fruits.push({ sp, y: sp.position.y, p: i }); }
-    { const pl = new THREE.PointLight('#D8FFC8', hx ? 22 : 10, 30, 1.4); pl.position.copy(V(0, 16, -9)); scene.add(pl); }
+    tw([[0, -8, 2.6]], 'island_tree_02', { force: true }); T.fruits = [];
+    for (let i = 0; i < 14; i++) { const a = i / 14 * 6.283, r = 3 + (i % 3) * 1.6, sp = glowSpr('#FFE9A0', .9, .85); sp.position.copy(V(Math.cos(a) * r, 13 + (i % 4) * 2, -8 + Math.sin(a) * r)); scene.add(sp); T.fruits.push({ sp, y: sp.position.y, p: i }); }
+    { const pl = new THREE.PointLight('#D8FFC8', hx ? 22 : 10, 30, 1.4); pl.position.copy(V(0, 14, -7)); scene.add(pl); }
     /* el manantial que riega el huerto: pila de piedra con agua que se mueve */
     { const cx = 0, cz = 12.5, rim = add(new THREE.TorusGeometry(1.7, .28, 10, 36), stone, cx, .32, cz); rim.rotation.x = Math.PI / 2; add(new THREE.CylinderGeometry(1.95, 2.05, .35, 36), stone, cx, .17, cz);
-      const wg = new THREE.CircleGeometry(1.62, 36); wg.rotateX(-Math.PI / 2); const n = wg.attributes.position.count; wg.setAttribute('shore', new THREE.BufferAttribute(new Float32Array(n).fill(1), 1)); add(wg, waterMat(hx, 0), cx, .42, cz).castShadow = false; solid(cx, cz, 2);
+      const wg = new THREE.CircleGeometry(1.62, 36); wg.rotateX(-Math.PI / 2); const n = wg.attributes.position.count; wg.setAttribute('shore', new THREE.BufferAttribute(new Float32Array(n).fill(1), 1)); add(wg, waterMat(hx, 0), cx, .42, cz).castShadow = false; solid(cx, cz, 2); hole(cx, cz, 3.2);
       for (let i = 0; i < 4; i++) { const a = i / 4 * 6.283 + .4; add(new THREE.CylinderGeometry(.06, .06, .5, 6), stone, cx + Math.cos(a) * 1.7, .55, cz + Math.sin(a) * 1.7); } }
     lore(0, 15.5, 'Mirar el manantial', ['El huerto del principio', 'Dios plantó un huerto en Edén y puso allí al hombre que había formado. De la tierra hizo crecer toda clase de árboles hermosos y buenos para comer; en medio del huerto estaba el árbol de la vida, y un río salía de Edén para regar el huerto.', 'Génesis 2:8-10']);
   }
   if (d.id === 'exodo') {
     /* el desierto llega hasta la puerta: un manto de arena */
-    { const t = texL('dry.jpg', 4); t.repeat.set(5, 5); const sm = new THREE.MeshStandardMaterial({ map: t, color: '#E8C99A', roughness: 1, polygonOffset: true, polygonOffsetFactor: -2 }); const sd = add(new THREE.CircleGeometry(15, 40).rotateX(-Math.PI / 2), sm, 0, .05, 11); sd.castShadow = false; }
+    { const t = texL('dry.jpg', 4); t.repeat.set(5, 5); const sm = new THREE.MeshStandardMaterial({ map: t, color: '#E8C99A', roughness: 1, polygonOffset: true, polygonOffsetFactor: -2 }); const sd = add(new THREE.CircleGeometry(15, 40).rotateX(-Math.PI / 2), sm, 0, .05, 11); sd.castShadow = false; hole(0, 11, 15.5); }
     /* la zarza que arde y no se consume */
-    { const bx = -7, bz = 11; phOne('wild_rooibos_bush', g, bx, 0, bz, .4, 1.5); phOne('searsia_lucida', g, bx + .6, 0, bz - .4, 1.4, .9); const w = V(bx, 1, bz); T.bush = ambFire(w.x, w.y, w.z, .75, { smoke: false });
+    { const bx = -7, bz = 11; { const w = V(bx, 0, bz); try { phPlace('shrub_02', [{ x: w.x, y: yAt(w.x, w.z) - .04, z: w.z, ry: .4, s: 1.4, v: 0 }, { x: w.x + .7, y: yAt(w.x, w.z) - .04, z: w.z - .4, ry: 1.4, s: 1, v: 1 }], { shadow: true, far: 1 }); } catch (e) {} } const w = V(bx, 1, bz); T.bush = ambFire(w.x, w.y, w.z, .75, { smoke: false });
       const gl = glowSpr('#FFC060', 5, .55); gl.position.copy(V(bx, 1.4, bz)); scene.add(gl); T.bushG = gl; solid(bx, bz, 1.3);
       lore(bx + 2.8, bz + .5, 'Acercarse a la zarza', ['La zarza que no se consumía', 'Moisés cuidaba ovejas cerca del monte de Dios cuando vio una zarza envuelta en llamas que no se quemaba. Al acercarse, Dios lo llamó desde la zarza: tenía que sacarse las sandalias porque estaba en tierra santa.', 'Éxodo 3:1-6']); }
     /* las dos tablas de piedra sobre su pedestal */
@@ -4339,7 +4342,7 @@ function doorTheme(scene, g, d, hx, HW) {
   }
   if (d.id === 'hechos') {
     /* la calzada romana que sale de la puerta hacia el mundo */
-    { const pv = pbrMat('large_sandstone_blocks', 2, 7, { color: '#D9CDB8', polygonOffset: true, polygonOffsetFactor: -2 }); const rd = add(new THREE.PlaneGeometry(5.2, 24).rotateX(-Math.PI / 2), pv, 0, .06, 15.5); rd.castShadow = false;
+    { const pv = pbrMat('large_sandstone_blocks', 2, 7, { color: '#D9CDB8', polygonOffset: true, polygonOffsetFactor: -2 }); const rd = add(new THREE.PlaneGeometry(5.2, 24).rotateX(-Math.PI / 2), pv, 0, .06, 15.5); rd.castShadow = false; for (let z = 4; z <= 28; z += 3) hole(0, z, 3.6); hole(4.6, 14, 2.2);
       [-1, 1].forEach(sx => { const cb = add(new THREE.BoxGeometry(.35, .22, 24), stone, sx * 2.75, .11, 15.5); cb.castShadow = false; }); }
     /* la piedra miliaria */
     { const mx = 4.6, mz = 14; add(bevBox(1.4, .5, 1.4, .06), stone, mx, .25, mz); const c = add(new THREE.CylinderGeometry(.48, .55, 2.6, 24), stone, mx, 1.8, mz);
@@ -5135,6 +5138,8 @@ async function pgBuild() {
   try { if (S.renderer.compileAsync) await S.renderer.compileAsync(S.scene, S.camera); } catch (e) {}
 }
 // lo que va en una parcela de 16 m (se calcula una sola vez y queda guardado)
+/* claros sin plantas que pide la escena (la arena de Éxodo, la calzada de Hechos, la pila de Génesis) */
+const PG_HOLE = [];
 function pgCell(ix, iz) {
   const key = ix + ',' + iz; let L = PG.cache.get(key); if (L) return L; L = []; const W = S.W, R = rng((ix * 73856093) ^ (iz * 19349663) ^ 0x51ed);
   const x0 = ix * PG_CELL, z0 = iz * PG_CELL, cx = x0 + PG_CELL / 2, cz = z0 + PG_CELL / 2;
@@ -5147,7 +5152,7 @@ function pgCell(ix, iz) {
     const h = W.hAt(x, z); if (h > 9 || (h > 5.5 && r2 > (9 - h) / 3.5)) continue;
     if (desertK(x, z) > .25) continue; // en el desierto de Judea y en el monte no crece pasto
     { const sp = spDist(x, z); if (sp < .7 || (sp < 1.6 && r2 > (sp - .7) / .9)) continue; } // los senderitos quedan pisados
-    if (waterWet(x, z, null) > .04 || blockedAt(x, z) || (!lawn && poi.some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < 14))) continue;
+    if (waterWet(x, z, null) > .04 || blockedAt(x, z) || PG_HOLE.some(q => (x - q.x) ** 2 + (z - q.z) ** 2 < q.r * q.r) || (!lawn && poi.some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < 14))) continue;
     // qué planta: flores donde el ruido lo marca (manchones), el resto pasto
     const G = PG.groups, fz = pgNoise(x * .045 + 90, z * .045 - 30) > .66, wantF = fz && R() < .55, pool = G.map((g, k) => k).filter(k => G[k].fl === wantF), P = pool.length ? pool : G.map((g, k) => k);
     let pick = R() * P.reduce((t, k) => t + G[k].w, 0), gi = P[P.length - 1]; for (const k of P) { pick -= G[k].w; if (pick <= 0) { gi = k; break; } }
