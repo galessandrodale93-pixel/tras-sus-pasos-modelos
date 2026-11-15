@@ -4307,7 +4307,7 @@ function doorTheme(scene, g, d, hx, HW) {
   if (d.id === 'genesis') {
     /* el huerto: árboles a los dos lados del sendero y arbustos bajos */
     /* (con phPlace, en coordenadas del mundo: así usa los árboles comprados, con viento y sombra) */
-    const tw = (L, id, o) => { const it = L.map(([x, z, k], i) => { const w = V(x, 0, z); return { x: w.x, y: yAt(w.x, w.z) - .04, z: w.z, ry: i * 1.7, s: k, v: i }; }); try { phPlace(id, it, Object.assign({ shadow: true, wind: 3, far: 1 }, o || {})); } catch (e) {} };
+    const tw = (L, id, o) => { const it = L.map(([x, z, k], i) => { const w = V(x, 0, z); return { x: w.x, y: yAt(w.x, w.z) - .04, z: w.z, ry: i * 1.7, s: k, v: i }; }); (FLORA.poiProps = FLORA.poiProps || []).push([id, it, Object.assign({ shadow: true, wind: 3, far: 1 }, o || {})]); }; /* diferido: phWorld arma las plantas después de las puertas */
     const TL = [[-7.5, 8.5, 1.1], [7.8, 9, 1.05], [-12.5, 13.5, 1.2], [12.2, 14, 1.15]]; tw(TL.filter((q, i) => !(i % 2)), 'tree_small_02'); tw(TL.filter((q, i) => i % 2), 'island_tree_01'); TL.forEach(([x, z]) => solid(x, z, .6));
     tw([[-4.6, 12.5, .9], [4.8, 13.5, .85], [-14.5, 8, .9], [14.6, 8.5, .95]], 'shrub_02');
     /* el árbol de la vida, enorme, asomando detrás del muro, con frutos de luz */
@@ -4324,7 +4324,7 @@ function doorTheme(scene, g, d, hx, HW) {
     /* el desierto llega hasta la puerta: un manto de arena */
     { const t = texL('dry.jpg', 4); t.repeat.set(5, 5); const sm = new THREE.MeshStandardMaterial({ map: t, color: '#E8C99A', roughness: 1, polygonOffset: true, polygonOffsetFactor: -2 }); const sd = add(new THREE.CircleGeometry(15, 40).rotateX(-Math.PI / 2), sm, 0, .05, 11); sd.castShadow = false; hole(0, 11, 15.5); }
     /* la zarza que arde y no se consume */
-    { const bx = -7, bz = 11; { const w = V(bx, 0, bz); try { phPlace('shrub_02', [{ x: w.x, y: yAt(w.x, w.z) - .04, z: w.z, ry: .4, s: 1.4, v: 0 }, { x: w.x + .7, y: yAt(w.x, w.z) - .04, z: w.z - .4, ry: 1.4, s: 1, v: 1 }], { shadow: true, far: 1 }); } catch (e) {} } const w = V(bx, 1, bz); T.bush = ambFire(w.x, w.y, w.z, .75, { smoke: false });
+    { const bx = -7, bz = 11; { const w = V(bx, 0, bz); (FLORA.poiProps = FLORA.poiProps || []).push(['shrub_02', [{ x: w.x, y: yAt(w.x, w.z) - .04, z: w.z, ry: .4, s: 1.4, v: 0 }, { x: w.x + .7, y: yAt(w.x, w.z) - .04, z: w.z - .4, ry: 1.4, s: 1, v: 1 }], { shadow: true, far: 1 }]); } const w = V(bx, 1, bz); T.bush = ambFire(w.x, w.y, w.z, .75, { smoke: false });
       const gl = glowSpr('#FFC060', 5, .55); gl.position.copy(V(bx, 1.4, bz)); scene.add(gl); T.bushG = gl; solid(bx, bz, 1.3);
       lore(bx + 2.8, bz + .5, 'Acercarse a la zarza', ['La zarza que no se consumía', 'Moisés cuidaba ovejas cerca del monte de Dios cuando vio una zarza envuelta en llamas que no se quemaba. Al acercarse, Dios lo llamó desde la zarza: tenía que sacarse las sandalias porque estaba en tierra santa.', 'Éxodo 3:1-6']); }
     /* las dos tablas de piedra sobre su pedestal */
@@ -5087,8 +5087,16 @@ function phPlace(id, items, o) {
   by.forEach((list, b) => PH.bands.push({ id, list, o, zc: (b + .5) * PH_BAND, built: false, ims: [] }));
 }
 let _phM, _phQ, _phE, _phV, _phS;
+/* una roca siempre apoyada: si el relieve cambió después de ubicarla (el monte, los senderos), baja hasta el punto más bajo del suelo
+   bajo su base; si quedó colgando sobre un barranco, no se dibuja */
+function phSettle(it) {
+  const W = S.W, h = W.hAt(it.x, it.z), d = it.y - h, s = it.s || 1; if (it.s === 0) return;
+  if (d > 3 && !blockedAt(it.x, it.z)) { it.s = 0.0001; it.sy = 0.0001; return; }
+  if (d > 3) return; let lo = h; const r = .8 * s; for (const [dx, dz] of [[r, 0], [-r, 0], [0, r], [0, -r]]) lo = Math.min(lo, W.hAt(it.x + dx, it.z + dz));
+  if (h - lo > 2.5 * s) { it.s = 0.0001; it.sy = 0.0001; return; } it.y = Math.min(it.y, lo - .06 * s);
+}
 async function phBuild(B) {
-  B.built = true; if (!_phM) { _phM = new THREE.Matrix4(); _phQ = new THREE.Quaternion(); _phE = new THREE.Euler(); _phV = new THREE.Vector3(); _phS = new THREE.Vector3(); } const vars = await phGet(B.id); if (!vars.length || !S) return; const per = vars.map(() => []);
+  B.built = true; if (/(boulder|rock|stone)/.test(B.id) && !/(rock_face|cliff)/.test(B.id) && S && S.W && !B.o.keepY) B.list.forEach(phSettle); if (!_phM) { _phM = new THREE.Matrix4(); _phQ = new THREE.Quaternion(); _phE = new THREE.Euler(); _phV = new THREE.Vector3(); _phS = new THREE.Vector3(); } const vars = await phGet(B.id); if (!vars.length || !S) return; const per = vars.map(() => []);
   B.list.forEach((it, i) => per[it.v != null ? it.v % vars.length : i % vars.length].push(it));
   vars.forEach((ms, vi) => { const L = per[vi]; if (!L.length) return;
     ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, mm.mat.userData && mm.mat.userData.still ? Object.assign({}, B.o, { wind: 0 }) : B.o), L.length);
