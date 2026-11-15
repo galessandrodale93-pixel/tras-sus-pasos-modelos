@@ -1258,3 +1258,4 @@ body:has(#arcade:not([hidden])) #khPill,body:has(#v3sheet:not([hidden])) #khPill
 .v3surv .sv-stam i{background:linear-gradient(90deg,#2E6A8A,#5AC2E0)}
 .v3surv .sv-stam i.low{background:linear-gradient(90deg,#8E2E22,#E8642C);animation:svpulse 1s ease-in-out infinite}
 .v3surv .sv-stam[hidden]{display:none}
+body.v3on .v3surv .sv-stam{transform:translateY(calc(100% + 6px))}
