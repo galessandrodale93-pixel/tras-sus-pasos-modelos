@@ -115,20 +115,23 @@ function draw(){stats();
 function card(x){
   var env=x.entrega==='envio',wa=String(x.telefono||'').replace(/\D/g,'');if(wa&&wa.indexOf('54')!==0)wa='549'+wa.replace(/^0/,'').replace(/^15/,'');
   var a=[];
-  if(x.estado==='Nuevo')a.push('<button class="tt-btn" data-act="pagado">✓ Ya pagó</button>');
+  if(x.estado==='Nuevo'&&x.probable)a.push('<button class="tt-btn" data-act="probable">✓ Es este pago</button>');
+  if(x.estado==='Nuevo')a.push('<button class="tt-btn'+(x.probable?' s':'')+'" data-act="pagado">✓ Ya pagó</button>');
+  if(x.comprobante)a.push('<a class="tt-btn s" href="'+esc(x.comprobante)+'" target="_blank" rel="noopener">🧾 Ver comprobante</a>');
   if(env&&x.estado!=='Cancelado')a.push('<button class="tt-btn'+(x.estado==='Pagado'?'':' s')+'" data-act="andreani">📦 Datos para Andreani</button>');
   if(!env&&x.estado==='Pagado')a.push('<button class="tt-btn" data-act="entregado">✓ Lo retiró</button>');
   if(wa)a.push('<a class="tt-btn s" href="https://wa.me/'+wa+'" target="_blank" rel="noopener">WhatsApp</a>');
   if(x.estado==='Nuevo')a.push('<button class="tt-btn s" data-act="reenviar">Reenviar mail</button>');
   if(x.estado==='Nuevo')a.push('<button class="tt-btn s" data-act="cancelar">Cancelar</button>');
   return '<div class="lb-p'+(/Entregado|Despachado|Cancelado/.test(x.estado)?' done':'')+'" data-id="'+esc(x._id)+'"><div class="lb-h"><b>'+esc(x.title)+' <span class="lb-st '+esc(x.estado)+'">'+esc(x.estado)+'</span> <button type="button" class="lb-who" data-act="quien" title="Cambiar">'+(IC[x.quien]||'')+' '+esc(x.quien||'')+'</button></b><strong>'+ps(x.total)+'</strong></div>'+
-   '<div class="lb-m">'+(x.cantidad||1)+' '+((x.cantidad||1)===1?'libro':'libros')+' · '+(env?'Envío a '+esc(dom(x)):'Retira en Habitat')+'<br>'+esc(x.email)+' · '+esc(x.telefono)+' · pidió el '+fe(x.fecha)+(x.pagado?' · pagó el '+fe(x.pagado):'')+(x.tracking?' · seguimiento <b>'+esc(x.tracking)+'</b>':'')+(x.mail?'':' · <b style="color:#8a3b2f">no le llegó el mail</b>')+(x.canal?'<br>Lo conoció: '+esc(x.canal):'')+(x.origen==='mano'?' · venta en mano':'')+(x.nota?'<br>“'+esc(x.nota)+'”':'')+'</div>'+
+   '<div class="lb-m">'+(x.cantidad||1)+' '+((x.cantidad||1)===1?'libro':'libros')+' · '+(env?'Envío a '+esc(dom(x)):'Retira en Habitat')+'<br>'+esc(x.email)+' · '+esc(x.telefono)+' · pidió el '+fe(x.fecha)+(x.pagado?' · pagó el '+fe(x.pagado):'')+(x.tracking?' · seguimiento <b>'+esc(x.tracking)+'</b>':'')+(x.mail?'':' · <b style="color:#8a3b2f">no le llegó el mail</b>')+(x.estado==='Nuevo'&&x.comprobante?'<br><b style="color:#1f5f3a">🧾 Subió el comprobante el '+fe(x.compFecha)+': revisalo y marcá pagado.</b>':'')+(x.estado==='Nuevo'&&x.probable?'<br><b style="color:#7a5410">💸 Posible pago: entró una transferencia de '+ps(x.total)+' de '+esc(x.probable.split('|')[1])+' el '+fe(x.probable.split('|')[2])+'.</b>':'')+(x.pagoDe?'<br>Pagó por Mercado Pago: '+esc(x.pagoDe):'')+(x.canal?'<br>Lo conoció: '+esc(x.canal):'')+(x.origen==='mano'?' · venta en mano':'')+(x.nota?'<br>“'+esc(x.nota)+'”':'')+'</div>'+
    (a.length?'<div class="lb-a">'+a.join('')+'</div>':'')+'</div>';
 }
-async function estado(x,est,extra,msg){var r=await api('POST',Object.assign({op:'estado',id:x._id,estado:est},extra||{}));Object.assign(x,r.item);draw();toast(msg+(r.aviso===true?' · le avisamos por mail':r.aviso===false?' · no salió el mail':''));}
+async function estado(x,est,extra,msg){var r=await api('POST',Object.assign({op:'estado',id:x._id,estado:est},extra||{}));Object.assign(x,r.item);draw();toast(msg+(r.aviso===true?' · le avisamos por mail':''));}
 async function act(k,x,b){
   try{
     if(k==='pagado'){b.disabled=true;await estado(x,'Pagado',null,'Marcado como pagado');}
+    else if(k==='probable'){b.disabled=true;await estado(x,'Pagado',{probable:true},'Pago confirmado');}
     else if(k==='entregado'){b.disabled=true;await estado(x,'Entregado',null,'Listo, entregado 📖');}
     else if(k==='reenviar'){b.disabled=true;await api('POST',{op:'reenviar',id:x._id});x.mail='ok';toast('Le reenviamos el mail');b.disabled=false;}
     else if(k==='cancelar'){if(!b.dataset.ok){b.dataset.ok=1;b.textContent='¿Cancelar el pedido?';return;}await estado(x,'Cancelado',null,'Pedido cancelado');}

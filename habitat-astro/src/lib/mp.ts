@@ -8,6 +8,7 @@ import { q, todos, guardar, hoyAR, desdePago, mandar, marco, p, slug } from "./s
 import { esc } from "./vol";
 import { registrarSalida } from "./salidas";
 import { estadoMes, type Plan, type Cobro } from "./fin";
+import { libroDesdeIngreso } from "./libro";
 
 const getSecret = auth.elevate(secrets.getSecretValue);
 const rem = auth.elevate(items.remove);
@@ -87,6 +88,10 @@ export async function registrarPago(pg: Pago, ctx?: { pag: Pagador[]; al: Alumno
   const fecha = fechaAR(pg.date_approved || pg.date_created || new Date().toISOString());
   const it: Ingreso = { _id, title: nombrePagador(pg), email: String((pg.payer || {}).email || "").toLowerCase(), fecha, mes: fecha.slice(0, 7), monto: Number(pg.transaction_amount) || 0, neto: Number((pg.transaction_details || {}).net_received_amount) || 0, tipo: c.tipo, origen: c0 === 1 ? "Mercado Pago" : "Mercado Pago (cuenta " + c0 + ")", alumnoId: c.alumnoId, pagador: c.key, descripcion: ((esSuscripcion(pg) ? "Suscripción · " : "") + String(pg.description || "")).slice(0, 300), estado: pg.status, nota: (prev && prev.nota) || "", por: "Mercado Pago" };
   await guardar("FinIngresos", it as unknown as Record<string, unknown>);
+  if (!prev) {
+    const lb = await libroDesdeIngreso(it).catch((e) => { console.error("libro mp", e); return null; });
+    if (lb && lb.auto && it.tipo !== "Libros") { it.tipo = "Libros"; it.alumnoId = ""; await guardar("FinIngresos", it as unknown as Record<string, unknown>); }
+  }
   await cuotaDesdeIngreso(it).catch((e) => console.error("cuota mp", e));
   if (!prev && SIEMBRA.includes(it.tipo) && it.email) await desdePago({ email: it.email, nombre: it.title || "", monto: it.monto, recurrente: it.tipo === "Siembra automática", fecha });
   return it;
