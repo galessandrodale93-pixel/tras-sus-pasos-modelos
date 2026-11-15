@@ -2316,7 +2316,7 @@ function vHouse(R, o) {
     const k = R(); if (k < .4) { const ov = new THREE.Mesh(new THREE.SphereGeometry(.55, 14, 8, 0, 6.283, 0, 1.6), tm('vhoven', '#B08A60')); ov.position.set(-yw / 2 + .9, 0, z0 + 1); ov.castShadow = true; g.add(ov); cols.push([-yw / 2 + .3, -yw / 2 + 1.5, z0 + .4, z0 + 1.6]); }
     else if (k < .7) { [-1, 1].forEach(s2 => cy(.04, .05, 1.8, wd, yw / 2 - .9 + s2 * .5, .9, z0 + 1.2, g, 6)); add(1.2, .06, .06, wd, yw / 2 - .9, 1.75, z0 + 1.2); const cl = new THREE.Mesh(new THREE.PlaneGeometry(.9, 1.3), tm('vhcl' + Math.floor(R() * 3), ['#8E2E22', '#3E5A8A', '#C9A46A'][Math.floor(R() * 3)], { side: THREE.DoubleSide })); cl.position.set(yw / 2 - .9, 1.05, z0 + 1.2); g.add(cl); }
     else { for (let i = 0; i < 4; i++) cy(.05, .06, .9, wd, -yw / 2 + .5, .1 + i * .12, z0 + .6 + i * .05, g, 6).rotation.z = Math.PI / 2; } }
-  g.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); return { g, cols, w, d };
+  g.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); return { g, cols, w, d, dx, yard: !!(o.yard ?? null) };
 }
 // alturas del terreno bajo las cuatro esquinas y el centro de una casa girada
 function footH(yAt, x, z, rot, w, d) { const P = [[0, 0], [-w / 2, -d / 2], [w / 2, -d / 2], [-w / 2, d / 2], [w / 2, d / 2], [0, d / 2], [0, -d / 2], [-w / 2, 0], [w / 2, 0]].map(([a, b]) => { const q = rotXZ(a, b, rot); return yAt(x + q[0], z + q[1]); }); return { min: Math.min(...P), max: Math.max(...P) }; }
@@ -2347,9 +2347,26 @@ function townLayout(scene, p, yAt, HW, o) {
     else { const grow = t > n * 30 ? 1.4 : 1, a = R() * 6.283, r = plaza + 3 + R() * (rad * grow - plaza - 3); x = p.x + Math.cos(a) * r; z = p.z + Math.sin(a) * r; face = Math.atan2(p.x - x, p.z - z) + (R() - .5) * .5; }
     const H = vHouse(R, o.house ? o.house(R, placed.length) : {}), rr = Math.hypot(H.w, H.d + 1.5) / 2; if (!ok(x, z, rr)) continue;
     const hs = footH(yAt, x, z, face, H.w, H.d); if (hs.max - hs.min > 2.2) continue; // ladera muy empinada: otro lugar
-    const y = hs.min - .05; placeV(scene, H, x, z, face, y); if (hs.max - hs.min > .35) plinth(scene, x, z, face, H.w, H.d, hs.min - .6, hs.max + .08); placed.push({ x, z, rr, face }); } catch (e) { fails++; lastErr = e; }
+    const y = hs.min - .05; placeV(scene, H, x, z, face, y); if (hs.max - hs.min > .35) plinth(scene, x, z, face, H.w, H.d, hs.min - .6, hs.max + .08); placed.push({ x, z, rr, face }); if (o.dress !== false) houseDress(x, z, face, H, y, R, yAt); } catch (e) { fails++; lastErr = e; }
+  if (o.dress !== false) try { plazaDress(p, plaza, placed, R, yAt, HW); } catch (e) { console.warn('plaza', e); }
   r2log('pueblo ' + (o.seed || 777) + ': ' + placed.length + ' de ' + n + ' casas' + (fails ? ' (' + fails + ' errores: ' + (lastErr && lastErr.message) + ')' : '')); if (lastErr) console.warn('pueblo', lastErr);
   return placed;
+}
+/* la vida en la puerta de cada casa: cántaros, vasijas, canastas, cajones, leña o un banquito contra la pared, a los dos lados de la puerta
+   (modelos reales; nunca delante de la puerta ni sobre el camino) */
+const DRESS = [['ceramic_pot', 3], ['ceramic_vase_01', 2], ['ceramic_vase_03', 2], ['jug_01', 2], ['antique_ceramic_vase_01', 1], ['wicker_basket_01', 3], ['wicker_basket_02', 2], ['wooden_crate_01', 1], ['wooden_bucket_01', 1], ['wooden_stool_01', 1], ['dry_branches_medium_01', 2], ['planter_pot_clay', 1]];
+function dressPick(R) { const t = DRESS.reduce((a, q) => a + q[1], 0); let k = R() * t; for (const [id, w] of DRESS) { k -= w; if (k <= 0) return id; } return DRESS[0][0]; }
+function dressPut(id, x, y, z, ry, s) { (FLORA.poiProps = FLORA.poiProps || []).push([id, [{ x, y, z, ry, s, v: 0 }], { shadow: true, nocol: 1 }]); if (/crate|stool|branches/.test(id)) S.cols.push({ x0: x - .35, x1: x + .35, z0: z - .35, z1: z + .35, cx: x, cz: z, r: .32 }); }
+function houseDress(x, z, face, H, y, R, yAt) {
+  const n = 1 + Math.floor(R() * 3), side = R() < .5 ? -1 : 1, used = [];
+  for (let i = 0; i < n; i++) { const sd = i % 2 ? -side : side, a = H.dx + sd * (1.05 + R() * Math.max(.2, H.w / 2 - 1.6 - Math.abs(H.dx) * .2)), b = H.d / 2 + .38 + R() * .15; if (Math.abs(a) > H.w / 2 - .35) continue; if (used.some(u => Math.abs(u - a) < .7)) continue; used.push(a);
+    const q = rotXZ(a, b, face), wx = x + q[0], wz = z + q[1], gy = yAt(wx, wz); dressPut(dressPick(R), wx, Math.max(gy, y + .05) - .02, wz, R() * 6.28, .9 + R() * .25); }
+}
+/* el borde de la plaza: alguna higuera u olivo con sombra, y rincones con canastas y vasijas (la plaza queda libre para caminar) */
+function plazaDress(p, plaza, placed, R, yAt, HW) {
+  const rr = Math.max(5, plaza) + 1.5, ok = (x, z, r) => !blockedAt(x, z) && (!HW || (HW.roadAt || HW.dAt)(x, z) > 3) && waterWet(x, z, null) < .02 && !placed.some(q => Math.hypot(q.x - x, q.z - z) < q.rr + r);
+  let trees = 0; for (let t = 0; t < 30 && trees < 2; t++) { const a = R() * 6.283, x = p.x + Math.cos(a) * rr, z = p.z + Math.sin(a) * rr; if (!ok(x, z, 2.2)) continue; trees++; (FLORA.poiProps = FLORA.poiProps || []).push([trees % 2 ? 'tree_small_02' : 'island_tree_01', [{ x, y: yAt(x, z) - .04, z, ry: R() * 6.28, s: 1.3 + R() * .4, v: t }], { shadow: true, wind: 3, far: 1 }]); S.cols.push({ x0: x - .5, x1: x + .5, z0: z - .5, z1: z + .5, cx: x, cz: z, r: .45 }); }
+  let k = 0; for (let t = 0; t < 40 && k < 3; t++) { const a = R() * 6.283, x = p.x + Math.cos(a) * (rr - .8), z = p.z + Math.sin(a) * (rr - .8); if (!ok(x, z, 1.4)) continue; k++; const m = 2 + Math.floor(R() * 2); for (let i = 0; i < m; i++) { const ox = (R() - .5) * 1.2, oz = (R() - .5) * 1.2; dressPut(dressPick(R), x + ox, yAt(x + ox, z + oz) - .02, z + oz, R() * 6.28, .9 + R() * .2); } }
 }
 // gente del pueblo: de pie y algunos sentados en la puerta (horneados, baratos)
 function townFolk(scene, p, yAt, HW, n, rad, seed, avoid) {
@@ -4308,10 +4325,10 @@ function doorTheme(scene, g, d, hx, HW) {
     /* el huerto: árboles a los dos lados del sendero y arbustos bajos */
     /* (con phPlace, en coordenadas del mundo: así usa los árboles comprados, con viento y sombra) */
     const tw = (L, id, o) => { const it = L.map(([x, z, k], i) => { const w = V(x, 0, z); return { x: w.x, y: yAt(w.x, w.z) - .04, z: w.z, ry: i * 1.7, s: k, v: i }; }); (FLORA.poiProps = FLORA.poiProps || []).push([id, it, Object.assign({ shadow: true, wind: 3, far: 1 }, o || {})]); }; /* diferido: phWorld arma las plantas después de las puertas */
-    const TL = [[-7.5, 8.5, 1.1], [7.8, 9, 1.05], [-12.5, 13.5, 1.2], [12.2, 14, 1.15]]; tw(TL.filter((q, i) => !(i % 2)), 'tree_small_02'); tw(TL.filter((q, i) => i % 2), 'island_tree_01'); TL.forEach(([x, z]) => solid(x, z, .6));
+    const TL = [[-8, 7.5, 1.9], [8.2, 8, 1.8], [-13, 12.5, 2.1], [12.8, 13, 2], [-15.5, 4.5, 1.7], [15.6, 5, 1.75], [-11, 19, 1.6], [11.5, 19.5, 1.65]]; tw(TL.filter((q, i) => !(i % 2)), 'tree_small_02'); tw(TL.filter((q, i) => i % 2), 'island_tree_01'); TL.forEach(([x, z]) => solid(x, z, .6));
     tw([[-4.6, 12.5, .9], [4.8, 13.5, .85], [-14.5, 8, .9], [14.6, 8.5, .95]], 'shrub_02');
     /* el árbol de la vida, enorme, asomando detrás del muro, con frutos de luz */
-    tw([[0, -8, 2.6]], 'island_tree_02', { force: true }); T.fruits = [];
+    tw([[0, -8, 3.3]], 'island_tree_01', { force: true }); T.fruits = [];
     for (let i = 0; i < 14; i++) { const a = i / 14 * 6.283, r = 3 + (i % 3) * 1.6, sp = glowSpr('#FFE9A0', .9, .85); sp.position.copy(V(Math.cos(a) * r, 13 + (i % 4) * 2, -8 + Math.sin(a) * r)); scene.add(sp); T.fruits.push({ sp, y: sp.position.y, p: i }); }
     { const pl = new THREE.PointLight('#D8FFC8', hx ? 22 : 10, 30, 1.4); pl.position.copy(V(0, 14, -7)); scene.add(pl); }
     /* el manantial que riega el huerto: pila de piedra con agua que se mueve */
@@ -4322,7 +4339,8 @@ function doorTheme(scene, g, d, hx, HW) {
   }
   if (d.id === 'exodo') {
     /* el desierto llega hasta la puerta: un manto de arena */
-    { const t = texL('dry.jpg', 4); t.repeat.set(5, 5); const sm = new THREE.MeshStandardMaterial({ map: t, color: '#E8C99A', roughness: 1, polygonOffset: true, polygonOffsetFactor: -2 }); const sd = add(new THREE.CircleGeometry(15, 40).rotateX(-Math.PI / 2), sm, 0, .05, 11); sd.castShadow = false; hole(0, 11, 15.5); }
+    { const t = texL('dry.jpg', 4); t.repeat.set(5, 5); const am = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), gr = x.createRadialGradient(64, 64, 20, 64, 64, 64); gr.addColorStop(0, '#FFF'); gr.addColorStop(.7, '#FFF'); gr.addColorStop(1, '#000'); x.fillStyle = gr; x.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c); })(); /* borde que se funde con el pasto */
+      const sm = new THREE.MeshStandardMaterial({ map: t, color: '#E8C99A', roughness: 1, alphaMap: am, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }); const sd = add(new THREE.CircleGeometry(15, 40).rotateX(-Math.PI / 2), sm, 0, .05, 11); sd.castShadow = false; hole(0, 11, 15.5); }
     /* la zarza que arde y no se consume */
     { const bx = -7, bz = 11; { const w = V(bx, 0, bz); (FLORA.poiProps = FLORA.poiProps || []).push(['shrub_02', [{ x: w.x, y: yAt(w.x, w.z) - .04, z: w.z, ry: .4, s: 1.4, v: 0 }, { x: w.x + .7, y: yAt(w.x, w.z) - .04, z: w.z - .4, ry: 1.4, s: 1, v: 1 }], { shadow: true, far: 1 }]); } const w = V(bx, 1, bz); T.bush = ambFire(w.x, w.y, w.z, .75, { smoke: false });
       const gl = glowSpr('#FFC060', 5, .55); gl.position.copy(V(bx, 1.4, bz)); scene.add(gl); T.bushG = gl; solid(bx, bz, 1.3);
@@ -4335,9 +4353,9 @@ function doorTheme(scene, g, d, hx, HW) {
         const face = add(new THREE.PlaneGeometry(1.1, 1.7), new THREE.MeshStandardMaterial({ map: words([[L[0], '700 54px serif', 70], [L[1], '700 54px serif', 150], ['— — —', '400 40px serif', 222], ['— — —', '400 40px serif', 282]], 256, 360, '#5A4630'), transparent: true, roughness: 1 }), tx + (i ? .68 : -.68), 2.05, tz + .13); face.castShadow = false; });
       solid(tx, tz, 1.8); lore(tx, tz + 3, 'Leer las tablas', ['Las dos tablas', 'En el monte Sinaí, Dios le dio a Moisés las diez palabras de la ley escritas en dos tablas de piedra, para que el pueblo libre supiera cómo vivir con Dios y con los demás.', 'Éxodo 20; 31:18']); }
     /* la columna de nube y de fuego, alta sobre la puerta */
-    { const cm = new THREE.SpriteMaterial({ map: cloudTex(), color: '#FFF4E6', transparent: true, opacity: .55, depthWrite: false }); T.cloud = [];
-      for (let i = 0; i < 16; i++) { const sp = new THREE.Sprite(cm); const y = 24 + i * 3.4, r = 1.2 + (i % 3) * .6; sp.position.copy(V(Math.sin(i * 2.1) * r, y, -3 + Math.cos(i * 2.1) * r)); sp.scale.set(9 - i * .15, 6, 1); scene.add(sp); T.cloud.push({ sp, y, p: i }); }
-      const fm = new THREE.Mesh(new THREE.CylinderGeometry(.9, 1.8, 46, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#FFB050', transparent: true, opacity: .22, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); fm.position.copy(V(0, 46, -3)); scene.add(fm); T.fire = fm;
+    { const cm = new THREE.SpriteMaterial({ map: cloudTex(), color: '#D9CDBE', transparent: true, opacity: .9, depthWrite: false, fog: false }); T.cloud = []; /* nube densa y algo gris: se distingue del cielo claro */
+      for (let i = 0; i < 22; i++) { const sp = new THREE.Sprite(cm); const y = 24 + i * 2.6, r = 1.4 + (i % 3) * .8; sp.position.copy(V(Math.sin(i * 2.1) * r, y, -3 + Math.cos(i * 2.1) * r)); sp.scale.set(11 - i * .12, 7, 1); scene.add(sp); T.cloud.push({ sp, y, p: i }); }
+      const fm = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 2.4, 52, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#FFB050', transparent: true, opacity: .22, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); fm.position.copy(V(0, 46, -3)); scene.add(fm); T.fire = fm;
       lore(0, 18, 'Mirar la columna', ['Nube de día, fuego de noche', 'Cuando el pueblo salió de Egipto, el Señor iba delante de ellos: de día en una columna de nube para guiarlos y de noche en una columna de fuego para alumbrarlos.', 'Éxodo 13:21-22'], 3.4); }
   }
   if (d.id === 'hechos') {
@@ -4360,7 +4378,7 @@ function doorTheme(scene, g, d, hx, HW) {
     if (T.fruits) T.fruits.forEach(f => { f.sp.position.y = f.y + Math.sin(t * .8 + f.p) * .25; f.sp.material.opacity = .65 + Math.sin(t * 1.6 + f.p * 1.3) * .25; });
     if (T.bushG) T.bushG.material.opacity = .45 + Math.sin(t * 7) * .08 + Math.sin(t * 3.1) * .06;
     if (T.cloud) T.cloud.forEach(c => { c.sp.position.y = c.y + Math.sin(t * .3 + c.p) * .8; c.sp.material.rotation = t * .02; });
-    if (T.fire) { const night = S.nk || 0; T.fire.material.opacity = .14 + night * .3 + Math.sin(t * 2.2) * .04; }
+    if (T.fire) { const night = S.nk || 0; T.fire.material.opacity = .1 + night * .45 + Math.sin(t * 2.2) * .04; if (T.cloud) T.cloud.forEach(c => { c.sp.material.opacity = .9 - night * .55; }); }
     if (T.tongues) T.tongues.forEach(k => { const fl = .85 + Math.sin(t * 11 + k.p) * .12 + Math.sin(t * 6.3 + k.p * 2) * .08; k.f1.scale.set(1, fl, 1); k.f2.scale.set(1, fl * 1.1, 1); k.o.position.y = k.y + Math.sin(t * 1.4 + k.p) * .12; });
     if (T.wind) { const P = T.wind.pts.geometry.attributes.position, ph = T.wind.ph; for (let k = 0; k < ph.length; k++) { ph[k] += dt * (.6 + (k % 5) * .12); const r = 2.5 + (k % 7) * 1.1; P.setX(k, Math.cos(ph[k]) * r); P.setZ(k, Math.sin(ph[k]) * r * .7); let y = P.getY(k) + dt * .5; if (y > 9) y = 0; P.setY(k, y); } P.needsUpdate = true; }
   };
@@ -5707,9 +5725,11 @@ function idle(dt) {
   if (S.idleT > 60) { S.hint.classList.add('on'); if (S.quiet) { S.quiet = false; S.sig = ''; } }
   if (S.think.classList.contains('on')) {
     if (!HV.v) HV.v = new THREE.Vector3();
-    HV.v.set(S.av.position.x, 2.35, S.av.position.z).project(S.camera);
+    HV.v.set(S.av.position.x, S.av.position.y + 2.35, S.av.position.z).project(S.camera); /* sobre la cabeza también en lomas y escaleras */
     const r = S.root.getBoundingClientRect(), x = (HV.v.x + 1) / 2 * r.width, y = (1 - HV.v.y) / 2 * r.height;
-    const w = S.think.firstChild.offsetWidth, cx = Math.max(30, Math.min(x, r.width - w - 4)); S.think.style.transform = `translate(${Math.round(cx)}px,${Math.round(y)}px)`;
+    const w = S.think.firstChild.offsetWidth, cx = Math.max(30, Math.min(x, r.width - w - 4));
+    let yy = y; { let ob = 1e9; for (const q of [S.hint && S.hint.classList.contains('on') ? S.hint : null, document.querySelector('#v3go button'), document.querySelector('.v3surv .sv-do')]) { if (!q || !q.offsetParent) continue; const b = q.getBoundingClientRect(); if (b.height && b.right > x - 20 && b.left < x + w + 20) ob = Math.min(ob, b.top - r.top); } if (yy > ob + 28) yy = ob + 28; } /* la nube nunca pisa la ayuda ni los botones de abajo */
+    S.think.style.transform = `translate(${Math.round(cx)}px,${Math.round(yy)}px)`;
   }
 }
 
