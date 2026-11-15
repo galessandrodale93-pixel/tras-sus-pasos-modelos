@@ -5354,6 +5354,8 @@ const PG_DROP = new Set(['grass_medium_01', 'grass_medium_02', 'grass_bermuda_01
 const PG_TSUB = { pine_sapling_small: 'tree_small_02', pine_sapling_medium: 'island_tree_03', quiver_tree_01: 'island_tree_01', quiver_tree_02: 'island_tree_03', jacaranda_tree: 'island_tree_01', searsia_lucida: 'tree_small_02' };
 function phPlace(id, items, o) {
   o = o || {}; if (FLORA.paidG && PG_DROP.has(id)) return; if (BARE && !o.force && /tree|palm|olive|pine|jacaranda|quiver|searsia|rooibos|shrub|bush|sapling/i.test(id)) return;
+  /* ningún árbol ni palmera plantado encima de un sendero o del camino de luz que lleva a una escena */
+  if (!o.force && !o.poi && /tree|palm|olive|pine|cypress|jacaranda|sapling|grp_|trp_/i.test(id) && Array.isArray(items)) { try { items = items.filter(it => it.x == null || (spDist(it.x, it.z) > 1.8 && !inTrail(it.x, it.z))); } catch (e) {} }
   if (FLORA.paidT && PG_TSUB[id]) { id = PG_TSUB[id]; items = items.map(it => Object.assign({}, it, { s: Math.max(.8, Math.min(1.3, it.s || 1)) })); o = Object.assign({}, o); }
   if (FLORA.paidT && /^(island_tree_0[13]|tree_small_02)$/.test(id)) o = Object.assign({}, o, { shadow: true, wind: 3, far: 1, imp: 1 }); if (/^grass_/.test(id)) o.grass = 1; const by = new Map();
   items.forEach(it => { const b = Math.floor(it.z / PH_BAND); if (!by.has(b)) by.set(b, []); by.get(b).push(it); });
