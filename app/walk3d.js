@@ -4671,7 +4671,7 @@ const h3mat = (o) => { const m = new THREE.MeshStandardMaterial(Object.assign({ 
 function h3tunic(body, B, o) {
   const { I, P, fy, H, lat, fwd } = B, yTop = P.pelvis.y + H * .2, yBot = fy + H * (o.len ?? .34), NR = 14, NS = 24, pos = [], si = [], sw = [], col = [];
   const base = new THREE.Color(o.c), c2 = new THREE.Color(o.c2 || o.c), belt = new THREE.Color(o.belt || '#3A2A1C'), RB = ['#C0392B', '#E6B04A', '#3E8A4A', '#3E5A9A', '#7A3E8A'].map(q => new THREE.Color(q));
-  for (let r = 0; r <= NR; r++) { const t = r / NR, y = yTop + (yBot - yTop) * t, rad = H * (.2 + .018 * t + (o.len < .15 ? .015 * t * t : 0)); /* recta, apenas abierta abajo: túnica, no vestido */
+  for (let r = 0; r <= NR; r++) { const t = r / NR, y = yTop + (yBot - yTop) * t, rad = H * (.212 + .02 * t + (o.len < .15 ? .015 * t * t : 0)); /* recta, apenas abierta abajo: túnica, no vestido */
     for (let k = 0; k <= NS; k++) { const a = k / NS * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a), lx = ca * rad, lz = sa * rad * .84, wob = 1 + .025 * Math.sin(a * 9 + t * 4) * t;
       pos.push(P.pelvis.x + (lat.x * lx + fwd.x * lz) * wob, y, P.pelvis.z + (lat.z * lx + fwd.z * lz) * wob);
       const wl = THREE.MathUtils.smoothstep(ca, -.55, .55), L = Math.min(1, Math.max(0, (t - .12) / .45)) * .9, cw = Math.min(1, Math.max(0, (t - .55) / .4)) * .8;
@@ -4764,7 +4764,7 @@ function h3dress(o, av, c) {
   if (man) try { made.push(h3mantle(body, B, man)); } catch (e) { console.warn('manto', e); }
   let sandOk = false; try { made.push(h3sandals(body, B, san, c.skinC)); sandOk = true; } catch (e) { console.warn('sandalias', e); }
   /* las piernas, descalzas bajo la túnica: el pantalón del modelo pasa a color piel; las botas se sacan si hay sandalias */
-  const rm = []; o.traverse(m => { if (!m.isSkinnedMesh) return; if (H3_PART.legs.test(m.name)) { m.material = m.material.clone(); m.material.map = null; m.material.normalMap = null; m.material.color.copy(c.skinC).multiplyScalar(.9); m.material.roughness = .7; } if (sandOk && H3_PART.feet.test(m.name)) rm.push(m); }); rm.forEach(m => m.parent.remove(m));
+  const rm = []; o.traverse(m => { if (!m.isSkinnedMesh) return; if (H3_PART.legs.test(m.name)) { m.material = m.material.clone(); m.material.map = null; m.material.normalMap = null; m.material.color.set(tun.c).multiplyScalar(.82); m.material.roughness = .9; } /* del color de la túnica: si el muslo asoma al caminar, no se ve una mancha */ if (sandOk && H3_PART.feet.test(m.name)) rm.push(m); }); rm.forEach(m => m.parent.remove(m));
   return made.length > 0;
 }
 function h3cloth(mt, rb) {
@@ -4910,7 +4910,7 @@ function h3pose(av, t, dt, st) {
   if (u.lamp.visible && B.hand_l) { const busy = (u.tools && Object.values(u.tools).some(g2 => g2.visible)) || p > .3 || /Swim|Sitting|Kneel|Fixing|Sleep|Lying|Fishing|Pick|Chop|Carry/i.test(u.cur || ''), ud = u.lamp.userData; ud.w = (ud.w || 0) + ((busy ? 0 : 1) - (ud.w || 0)) * Math.min(1, dt * 8);
     /* el codo se dobla y el antebrazo va hacia adelante: el objeto queda agarrado en el puño, a la vista */
     if (ud.w > .02) { h3aim(av, B, 'upperarm_l', 'lowerarm_l', .1, -.96, .18, ud.w); h3aim(av, B, 'lowerarm_l', 'hand_l', .06, ud.lampY ? .05 : -.12, .99, ud.w); av.updateMatrixWorld(true); }
-    const V = h3vec(); B.hand_l.getWorldPosition(V.a); av.worldToLocal(V.a); u.lamp.position.copy(V.a); u.lamp.position.z += (ud.lampY ? .05 : .06) / av.scale.z; u.lamp.position.y += (ud.lampY ? .035 : 0) / av.scale.y; u.lamp.rotation.set(ud.up ? .1 : 0, 0, 0); u.lamp.scale.setScalar(Math.max(.001, ud.w > .5 ? 1 : ud.w * 2));
+    const V = h3vec(); B.hand_l.getWorldPosition(V.a); av.worldToLocal(V.a); u.lamp.position.copy(V.a); u.lamp.position.z += (ud.lampY ? .05 : .015) / av.scale.z; u.lamp.position.y += (ud.lampY ? .035 : 0) / av.scale.y; u.lamp.rotation.set(ud.up ? .1 : 0, 0, 0); u.lamp.scale.setScalar(Math.max(.001, ud.w > .5 ? 1 : ud.w * 2));
     if (ud.flame) ud.flame.scale.y = 1 + Math.sin(t * 13) * .18 + Math.sin(t * 7.1) * .1; }
 }
 /* ---------- herramientas en la mano mientras se hace la acción: caña o red al pescar, hacha al talar, pico al picar, pedernal al encender ---------- */
