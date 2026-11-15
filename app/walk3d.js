@@ -1427,9 +1427,9 @@ function invEquip(body) {
   const cell = (it, cls) => `<span class="inv-ico ${cls || ''}" style="--rc:${RAR[it.r][1]}">${icoGear(it)}</span>`;
   const draw = () => {
     body.querySelectorAll('.inv-slot').forEach(b => { const s = b.dataset.s, it = GBY[st.eq[s]]; b.classList.toggle('full', !!it); b.classList.toggle('sel', !!(sel && sel.from === 'slot' && sel.s === s));
-      b.innerHTML = it ? cell(it) : `<span class="inv-ghost"><svg viewBox="0 0 24 24" aria-hidden="true">${GICO[s]}</svg></span>`; b.style.setProperty('--rc', it ? RAR[it.r][1] : 'transparent'); });
+      b.innerHTML = it ? cell(it) : `<span class="inv-ghost"><svg viewBox="0 0 24 24" aria-hidden="true">${GICO[s]}</svg></span>`; b.style.setProperty('--rc', it ? RAR[it.r][1] : 'transparent'); ['c', 'r', 'e', 'l', 'u'].forEach(q => b.classList.toggle('rr-' + q, !!it && it.r === q)); });
     const free = GEAR.filter(x => st.own.includes(x.id) && st.eq[x.s] !== x.id), n = Math.max(16, Math.ceil((free.length + 1) / 4) * 4);
-    body.querySelector('.inv-grid').innerHTML = Array.from({ length: n }, (_, i) => { const it = free[i]; return it ? `<button class="inv-cell${sel && sel.id === it.id && sel.from === 'grid' ? ' sel' : ''}" data-id="${it.id}" style="--rc:${RAR[it.r][1]}" aria-label="${esc(it.name)}">${cell(it)}</button>` : '<span class="inv-cell empty"></span>'; }).join('');
+    body.querySelector('.inv-grid').innerHTML = Array.from({ length: n }, (_, i) => { const it = free[i]; return it ? `<button class="inv-cell rr-${it.r}${sel && sel.id === it.id && sel.from === 'grid' ? ' sel' : ''}" data-id="${it.id}" style="--rc:${RAR[it.r][1]}" aria-label="${esc(it.name)}">${cell(it)}</button>` : '<span class="inv-cell empty"></span>'; }).join('');
     const info = body.querySelector('.inv-info'), it = sel && GBY[sel.id];
     if (!it) info.innerHTML = st.own.length ? '<p class="inv-tip">Tocá una prenda del inventario para ponértela. Tocá un casillero del personaje para sacártela.</p>' : '<p class="inv-tip">Todavía no tenés ropa de la época. Aparece muy de vez en cuando brillando cerca del camino, y a veces llega como premio al terminar una misión.</p>';
     else info.innerHTML = `<div class="inv-sel" style="--rc:${RAR[it.r][1]}">${cell(it)}<div><small>${RAR[it.r][0]} · ${SLOTS.find(q => q[0] === it.s)[1]}</small><b>${esc(it.name)}</b><span>${esc(it.desc)}</span></div></div>
@@ -3834,8 +3834,20 @@ function gearRoll() {
   const w = left.map(x => RAR[x.r][2]), tot = w.reduce((a, b) => a + b, 0); let r = Math.random() * tot, i = 0; while (r > w[i]) r -= w[i++];
   return left[Math.min(i, left.length - 1)];
 }
+/* una prenda rara, épica, legendaria o única no pasa desapercibida: la pantalla se detiene con rayos de su color,
+   la prenda gira grande en el centro y se anuncia qué tipo de elemento es (tocar para seguir) */
+function gearReveal(it, why) {
+  const R = RAR[it.r], tier = { r: 'rara', e: 'épica', l: 'legendaria', u: 'única' }[it.r] || ''; let el = document.getElementById('v3reveal'); if (el) el.remove();
+  el = document.createElement('div'); el.id = 'v3reveal'; el.className = 'v3rv rv-' + it.r; el.style.setProperty('--rc', R[1]);
+  const slot = (SLOTS.find(q => q[0] === it.s) || [0, ''])[1];
+  el.innerHTML = `<div class="rv-rays"></div><div class="rv-in"><small>${esc(why || '¡Encontraste algo!')}</small><div class="rv-ico">${icoGear(it)}</div><span class="rv-tier">${it.r === 'u' ? 'Prenda única' : 'Prenda ' + tier}</span><b>${esc(it.name)}</b><p>${esc(it.desc || '')}</p><em>${esc(slot)} · tocá para seguir</em></div>`;
+  (document.getElementById('view3d') || document.body).appendChild(el); requestAnimationFrame(() => el.classList.add('on'));
+  try { const A = new (window.AudioContext || window.webkitAudioContext)(), notes = it.r === 'l' || it.r === 'u' ? [523, 659, 784, 1047, 1319] : it.r === 'e' ? [587, 740, 880, 1175] : [660, 880, 990]; notes.forEach((f, i) => { const o = A.createOscillator(), gn = A.createGain(); o.type = 'triangle'; o.frequency.value = f; gn.gain.setValueAtTime(0, A.currentTime + i * .12); gn.gain.linearRampToValueAtTime(.18 * (window.TSP_MIX ? TSP_MIX.sfx ?? 1 : 1), A.currentTime + i * .12 + .02); gn.gain.exponentialRampToValueAtTime(.001, A.currentTime + i * .12 + .9); o.connect(gn).connect(A.destination); o.start(A.currentTime + i * .12); o.stop(A.currentTime + i * .12 + 1); }); } catch (e) {}
+  const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 400); }; el.onclick = close; setTimeout(close, it.r === 'r' ? 4200 : 6500);
+}
 function gearGive(it, why) {
   if (!it) return; const st = gearState(); if (st.own.includes(it.id)) return; st.own.push(it.id); G().save();
+  if (it.r !== 'c') { try { gearReveal(it, why); } catch (e) {} }
   const el = document.getElementById('v3pop'); if (!el) return; const R = RAR[it.r];
   el.innerHTML = `<span class="ic" style="background:${R[1]}33;border:1px solid ${R[1]}">${icoGear(it)}</span><span class="tx"><small style="color:${R[1]}">${esc(why)} · ${R[0]}</small><b>${esc(it.name)}</b><em class="gp-tip">Ponétela desde la mochila</em></span>`;
   el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); clearTimeout(pop.t); pop.t = setTimeout(() => { el.classList.remove('on'); el.hidden = true; }, 4200);

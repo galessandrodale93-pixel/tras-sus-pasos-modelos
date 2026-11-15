@@ -1178,3 +1178,30 @@ body.v3on .v3cam{left:var(--joyL)!important;bottom:var(--fanB)!important}
 @media (max-height:520px){body.v3on{--joyW:92px}}
 .v3timer{position:fixed;z-index:8;left:50%;top:calc(60px + env(safe-area-inset-top,0px));transform:translateX(-50%);padding:8px 18px;border-radius:999px;background:rgba(20,15,10,.85);border:1px solid rgba(255,210,94,.7);color:#FFE7A6;font:900 18px/1 "Nunito",sans-serif;letter-spacing:.04em;box-shadow:0 0 18px rgba(255,200,80,.35)}
 .v3timer[hidden],body:not(.v3on) .v3timer{display:none}
+
+/* rareza a la vista: el casillero se tiñe del color de su rareza; las épicas laten y las legendarias y únicas tienen un brillo que las cruza */
+.inv-cell.rr-r,.inv-cell.rr-e,.inv-cell.rr-l,.inv-cell.rr-u,.inv-slot.rr-r,.inv-slot.rr-e,.inv-slot.rr-l,.inv-slot.rr-u{background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--rc) 62%,transparent),color-mix(in srgb,var(--rc) 22%,transparent) 62%,transparent 78%)!important;position:relative;overflow:hidden}
+.inv-cell.rr-c,.inv-slot.rr-c{background:radial-gradient(circle at 50% 42%,rgba(201,194,180,.18),transparent 70%)!important}
+.inv-cell.rr-e,.inv-slot.rr-e{animation:rrPulse 2.4s ease-in-out infinite}
+.inv-cell.rr-l,.inv-slot.rr-l,.inv-cell.rr-u,.inv-slot.rr-u{animation:rrPulse 1.8s ease-in-out infinite}
+.inv-cell.rr-l::after,.inv-slot.rr-l::after,.inv-cell.rr-u::after,.inv-slot.rr-u::after{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%);animation:rrShine 2.8s ease-in-out infinite;pointer-events:none}
+@keyframes rrPulse{0%,100%{filter:drop-shadow(0 0 2px var(--rc))}50%{filter:drop-shadow(0 0 10px var(--rc))}}
+@keyframes rrShine{0%{transform:translateX(-60%)}60%,100%{transform:translateX(60%)}}
+/* el momento de encontrar una prenda especial */
+.v3rv{position:fixed;inset:0;z-index:2147482000;display:grid;place-items:center;background:radial-gradient(circle at 50% 46%,color-mix(in srgb,var(--rc) 35%,rgba(6,5,3,.55)),rgba(6,5,3,.86) 70%);opacity:0;transition:opacity .35s;cursor:pointer;overflow:hidden}
+.v3rv.on{opacity:1}
+.rv-rays{position:absolute;width:220vmax;height:220vmax;left:50%;top:46%;margin:-110vmax 0 0 -110vmax;background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--rc) 40%,transparent) 0 6deg,transparent 6deg 18deg);animation:rvSpin 18s linear infinite;mask:radial-gradient(circle,#000 0,transparent 42%);-webkit-mask:radial-gradient(circle,#000 0,transparent 42%);opacity:.75}
+.rv-in{position:relative;text-align:center;color:#FFF6E2;max-width:min(92vw,460px);padding:10px 18px;transform:scale(.6);transition:transform .55s cubic-bezier(.2,1.5,.4,1)}
+.v3rv.on .rv-in{transform:none}
+.rv-in small{display:block;font:800 13px "Nunito",sans-serif;letter-spacing:.12em;text-transform:uppercase;opacity:.85}
+.rv-ico{width:132px;height:132px;margin:14px auto 10px;border-radius:26px;display:grid;place-items:center;background:radial-gradient(circle,color-mix(in srgb,var(--rc) 70%,#000),color-mix(in srgb,var(--rc) 25%,#000));box-shadow:0 0 0 3px var(--rc),0 0 60px var(--rc);animation:rvFloat 2.6s ease-in-out infinite}
+.rv-ico svg{width:74%;height:74%;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6))}
+.rv-tier{display:inline-block;padding:5px 14px;border-radius:99px;background:var(--rc);color:#1A1208;font:900 13px "Nunito",sans-serif;letter-spacing:.14em;text-transform:uppercase;box-shadow:0 0 22px var(--rc)}
+.rv-in b{display:block;margin:10px 0 6px;font:900 30px/1.1 "Cinzel","Fraunces",Georgia,serif;color:#FFE9B8;text-shadow:0 0 18px var(--rc)}
+.rv-in p{margin:0 auto 10px;font:600 15px/1.45 "Nunito",sans-serif;opacity:.92}
+.rv-in em{font:700 12px "Nunito",sans-serif;opacity:.6;font-style:normal}
+.rv-l .rv-in b,.rv-u .rv-in b{font-size:34px}
+.rv-l .rv-ico,.rv-u .rv-ico{width:150px;height:150px}
+@keyframes rvSpin{to{transform:rotate(360deg)}}
+@keyframes rvFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(2deg)}}
+body:not([data-branch="ados"]) .rv-in b{font-family:"Fraunces",Georgia,serif}
