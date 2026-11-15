@@ -3855,8 +3855,15 @@ function legSpark(x, y, z, big) {
   const q = LEG.pool[LEG.i++ % LEG.pool.length]; if (q.sp.parent !== S.scene) S.scene.add(q.sp); q.sp.position.set(x + (Math.random() - .5) * .5, y, z + (Math.random() - .5) * .5); q.life = 1; q.max = big ? 1.8 : 1.15; q.vy = (big ? 1.6 : .45) + Math.random() * .4; q.s = (big ? .34 : .2) + Math.random() * .12;
   q.sp.material.color.setHSL(.11 + Math.random() * .05, 1, .62 + Math.random() * .2); q.sp.visible = true;
 }
+/* solo para testers: ?prendas=leyenda viste al jugador con lo mejor de cada espacio, en cualquier aparato */
+function testerGear() {
+  let q = null; try { q = new URLSearchParams(location.search).get('prendas'); } catch (e) {} if (q !== 'leyenda') return; let ok = false; try { ok = localStorage.getItem('tsp:tester') === '1'; } catch (e) {}
+  try { const u = new URL(location.href); u.searchParams.delete('prendas'); history.replaceState(null, '', u.pathname + u.search + u.hash); } catch (e) {} if (!ok) return;
+  const st = gearState(), ord = { l: 0, e: 1, r: 2, c: 3 }; SLOTS.forEach(([sl]) => { const best = GEAR.filter(x => x.s === sl && ord[x.r] != null).sort((a, b) => ord[a.r] - ord[b.r])[0]; if (!best) return; if (!st.own.includes(best.id)) st.own.push(best.id); st.eq[sl] = best.id; });
+  G().save(); reLook(); try { G().toast('✨ Prendas de prueba puestas'); } catch (e) {}
+}
 function legTick(dt) {
-  if (!S || !S.av) return; const list = [[S.av, 'me', () => lookOf(G().P())]]; for (const id in MP.players) { const p = MP.players[id]; list.push([p.av, id, () => p.info && p.info.avatar]); }
+  if (!S || !S.av) return; if (!LEG.q) { LEG.q = 1; try { testerGear(); } catch (e) {} } const list = [[S.av, 'me', () => lookOf(G().P())]]; for (const id in MP.players) { const p = MP.players[id]; list.push([p.av, id, () => p.info && p.info.avatar]); }
   for (const [av, key, look] of list) { if (!av) continue; if (av.userData.leg === undefined) av.userData.leg = legOf(look()); if (!av.userData.leg) continue;
     const st = LEG.t[key] || (LEG.t[key] = { x: av.position.x, z: av.position.z, a: 0 }), mv = Math.hypot(av.position.x - st.x, av.position.z - st.z) > dt * 1.2; st.x = av.position.x; st.z = av.position.z; st.a -= dt;
     if (st.a <= 0) { st.a = mv ? .045 : .32; legSpark(av.position.x, av.position.y + (mv ? .15 : .4 + Math.random() * 1.3), av.position.z); } }
