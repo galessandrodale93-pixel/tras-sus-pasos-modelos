@@ -1383,12 +1383,12 @@ function openBag(first) {
   const tx = id => ((document.getElementById(id) || {}).textContent || '').trim(), lvn = tx('lvN') || '1', rk = tx('lvT'), pts = tx('score');
   const T = (t, ic, n) => `<button data-t="${t}" role="tab"><span class="it-ic" aria-hidden="true">${ic}</span><span class="it-tx">${n}</span></button>`;
   el.innerHTML = `<div class="inv${S.hx ? ' hx' : ''}"><div class="inv-h"><div class="inv-tt"><span class="inv-emb">${BAG_SVG}</span><div><b>Mochila</b><small>Nivel ${esc(lvn)}${rk ? ' · ' + esc(rk) : ''}${pts ? ` · <em>✦ ${esc(pts)}</em>` : ''}</small></div></div><button class="bag-x" aria-label="Cerrar">✕</button></div>
-    <div class="inv-tabs" role="tablist">${T('eq', '🛡️', 'Equipo')}${T('ob', '🏺', 'Objetos')}${T('me', '📜', 'Recuerdos')}${T('cu', '🎓', 'Cursos')}${S.hx ? T('su', '🔨', 'Trabajo') : ''}${T('at', '💪', S.hx ? 'Atributos' : 'Mis fuerzas')}</div>
+    <div class="inv-tabs" role="tablist">${T('eq', '🛡️', 'Equipo')}${T('di', '📖', 'Diario')}${T('ob', '🏺', 'Objetos')}${T('me', '📜', 'Recuerdos')}${T('cu', '🎓', 'Cursos')}${S.hx ? T('su', '🔨', 'Trabajo') : ''}${T('at', '💪', S.hx ? 'Atributos' : 'Mis fuerzas')}</div>
     <div class="inv-body"></div></div>`;
   el.hidden = false; const close = () => { el.hidden = true; }; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   const tabs = el.querySelectorAll('.inv-tabs button'), body = el.querySelector('.inv-body');
-  const show = t => { tabs.forEach(b => { b.classList.toggle('on', b.dataset.t === t); b.setAttribute('aria-selected', b.dataset.t === t ? 'true' : 'false'); }); body.dataset.t = t; body.classList.remove('in'); void body.offsetWidth; body.classList.add('in'); body.innerHTML = ''; if (t === 'eq') invEquip(body); else if (t === 'ob') invItems(body); else if (t === 'su') invSurv(body); else if (t === 'at') invAttr(body); else if (t === 'cu') invCourses(body); else invMemories(body); };
-  tabs.forEach(b => b.onclick = () => show(b.dataset.t)); show((typeof first === 'string' ? first : 'eq'));
+  const show = t => { tabs.forEach(b => { b.classList.toggle('on', b.dataset.t === t); b.setAttribute('aria-selected', b.dataset.t === t ? 'true' : 'false'); }); body.dataset.t = t; body.classList.remove('in'); void body.offsetWidth; body.classList.add('in'); body.innerHTML = ''; if (t === 'eq') invEquip(body); else if (t === 'ob') invItems(body); else if (t === 'su') invSurv(body); else if (t === 'at') invAttr(body); else if (t === 'cu') invCourses(body); else if (t === 'di') invDiary(body); else invMemories(body); };
+  tabs.forEach(b => b.onclick = () => show(b.dataset.t)); try { if (diaryNew()) el.querySelector('.inv-tabs [data-t="di"]').classList.add('nw'); } catch (e) {} show((typeof first === 'string' ? first : 'eq'));
 }
 /* ícono dibujado de cada prenda: su forma, su color real y su detalle (rayas, vendas, bordado, metal) */
 const icoGear = it => {
@@ -2660,7 +2660,7 @@ function judeaTick(dt, t) {
 }
 /* lugares para tocar: en Hero con la acción, en Kids se abren solos al acercarse */
 function loreNear(r) { if (!S || !S.lore) return null; const a = S.av.position; let best = null, bd = r * r; for (const l of S.lore) { const d = (l.x - a.x) ** 2 + (l.z - a.z) ** 2; if (d < (l.r || r) ** 2 && d < bd + 4) { bd = d; best = l; } } return best; }
-function loreDo(l) { placeCard(l.info); l.t = 0; l.on = 1; l.done = 1; if (l.go) try { l.go(); } catch (e) {} }
+function loreDo(l) { try { if (Array.isArray(l.info) && l.info[0]) { const dp = dyP(); if (!dp.dlore[l.info[0]]) { dp.dlore[l.info[0]] = l.info[2] || 1; G().save(); } } } catch (e) {} placeCard(l.info); l.t = 0; l.on = 1; l.done = 1; if (l.go) try { l.go(); } catch (e) {} }
 /* cada lugar para tocar tiene una chispa dorada que flota y un anillo en el piso: se ve de lejos y desaparece cuando ya lo descubriste */
 function loreMark(l) { const g = new THREE.Group(), sp = glowSpr('#FFD47A', 1.1, .85), core = new THREE.Mesh(new THREE.OctahedronGeometry(.13, 0), new THREE.MeshBasicMaterial({ color: '#FFE9B0' })), rg = new THREE.Mesh(new THREE.RingGeometry(.55, .68, 32), new THREE.MeshBasicMaterial({ color: '#FFD47A', transparent: true, opacity: .55, depthWrite: false, side: THREE.DoubleSide }));
   sp.position.y = 1.9; core.position.y = 1.9; rg.rotation.x = -Math.PI / 2; rg.position.y = .06; g.add(sp, core, rg); const y = Math.max(mapH(l.x, l.z), WATER.RL || -99); g.position.set(l.x, y, l.z); S.scene.add(g); l.mk = { g, sp, core, rg }; }
@@ -3590,6 +3590,7 @@ function mpClean(m, c) {
   if (m.t === 'list') { if (!Array.isArray(m.players)) return null; m.players = m.players.slice(0, 5).filter(p => p && ID_OK(p.id)).map(p => ({ id: p.id, info: infoOk(p.info) })); }
   if (m.t === 'st') { if (!Array.isArray(m.s)) return null; const s = m.s; m.s = [numOk(s[0], -5e3, 5e3), numOk(s[1], -500, 2e3), numOk(s[2], -5e3, 5e3), numOk(s[3], -50, 50), s[4] ? 1 : 0, typeof s[5] === 'string' ? strOk(s[5], 16) : null, s[6] ? 1 : 0, numOk(s[7], -10, 50)]; }
   if (m.t === 'say') m.k = Math.floor(numOk(m.k, 0, 99));
+  if (m.t === 'leg') { m.g = strOk(m.g, 24); if (!GBY[m.g] || GBY[m.g].r !== 'l') return null; }
   if (m.t === 'look' && !(m.avatar && typeof m.avatar === 'object' && !Array.isArray(m.avatar))) return null;
   if (m.t === 'x') { if (typeof m.k !== 'string') return null; if ('give' in m) m.give = resOk(m.give); if ('want' in m) m.want = resOk(m.want); if ('by' in m) m.by = strOk(m.by, 16); if ('name' in m) m.name = strOk(m.name, 40); if ('label' in m) m.label = strOk(m.label, 60); if ('x' in m) m.x = numOk(m.x, -5e3, 5e3); if ('z' in m) m.z = numOk(m.z, -5e3, 5e3); }
   return m;
@@ -3608,7 +3609,7 @@ async function mpCreate() {
       if (m.t === 'hi') { if (m.info.branch !== G().branch) { c.send({ t: 'branch', b: G().branch }); setTimeout(() => c.close(), 300); return; } if (Object.keys(MP.conns).length >= 4) return; MP.conns[c.peer] = c;
         c.send({ t: 'list', host: MP.peer.id, players: [{ id: MP.peer.id, info: meInfo() }].concat(Object.entries(MP.players).map(([id, p]) => ({ id, info: p.info }))) });
         mpAdd(c.peer, m.info); mpSend({ t: 'hi', id: c.peer, info: m.info }, c.peer); G().toast(m.info.name + ' entró a la sala.'); mpUI(); return; }
-      if (m.t === 'st' || m.t === 'say' || m.t === 'talk' || m.t === 'look') { m.id = c.peer; mpOn(m); mpSend(m, c.peer); }
+      if (m.t === 'st' || m.t === 'say' || m.t === 'talk' || m.t === 'look' || m.t === 'leg') { m.id = c.peer; mpOn(m); mpSend(m, c.peer); }
       if (m.t === 'x') xRelay(c, m);
     });
     c.on('close', () => { if (MP.conns[c.peer]) { delete MP.conns[c.peer]; const n = MP.players[c.peer] && MP.players[c.peer].info.name; mpDel(c.peer); mpSend({ t: 'bye', id: c.peer }); if (n) G().toast(n + ' salió de la sala.'); mpUI(); } });
@@ -3670,6 +3671,7 @@ function mpOn(m) {
   const p = MP.players[m.id]; if (!p) return;
   if (m.t === 'st') { const [x, y, z, yaw, mv, pose, wv, jy] = m.s; p.tgt = { x, y, z, yaw }; p.moving = !!mv; if (pose !== p.st.pose) { p.st.pose = pose; p.st.prayT = 0; } if (wv && !(p.st.waveT > 0)) p.st.waveT = 2.2; p.st.jy = jy; }
   if (m.t === 'say') mpBubble(p, PHR[m.k] || '');
+  if (m.t === 'leg') { legAnnounce(p, GBY[m.g]); return; }
   if (m.t === 'look' && m.avatar) { p.info.avatar = m.avatar; const pos = p.av.position.clone(), rot = p.av.rotation.y, info = p.info; S.scene.remove(p.av); delete MP.players[m.id]; mpAdd(m.id, info); const q = MP.players[m.id]; q.av.position.copy(pos); q.av.rotation.y = rot; q.tgt = p.tgt; return; }
   if (m.t === 'talk') { if (m.on) { mpBubble(p, '🎙️'); p.bT = 600; } else if (p.bubble) p.bT = .01; }
 }
@@ -3845,9 +3847,83 @@ function gearReveal(it, why) {
   try { const A = new (window.AudioContext || window.webkitAudioContext)(), notes = it.r === 'l' || it.r === 'u' ? [523, 659, 784, 1047, 1319] : it.r === 'e' ? [587, 740, 880, 1175] : [660, 880, 990]; notes.forEach((f, i) => { const o = A.createOscillator(), gn = A.createGain(); o.type = 'triangle'; o.frequency.value = f; gn.gain.setValueAtTime(0, A.currentTime + i * .12); gn.gain.linearRampToValueAtTime(.18 * (window.TSP_MIX ? TSP_MIX.sfx ?? 1 : 1), A.currentTime + i * .12 + .02); gn.gain.exponentialRampToValueAtTime(.001, A.currentTime + i * .12 + .9); o.connect(gn).connect(A.destination); o.start(A.currentTime + i * .12); o.stop(A.currentTime + i * .12 + 1); }); } catch (e) {}
   const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 400); }; el.onclick = close; setTimeout(close, it.r === 'r' ? 4200 : 6500);
 }
+/* ---------- rastro de luz: quien lleva puesta una prenda legendaria deja chispas doradas al caminar (se ve también en las salas) ---------- */
+const LEG = { pool: [], i: 0, t: {} };
+function legOf(look) { const e = (look && look.gear) || {}; return Object.values(e).some(id => GBY[id] && GBY[id].r === 'l'); }
+function legSpark(x, y, z, big) {
+  if (!S || !S.scene) return; if (!LEG.pool.length) for (let k = 0; k < 90; k++) { const sp = glowSpr('#FFD46A', .22, 0); sp.visible = false; sp.userData.keep = 1; S.scene.add(sp); LEG.pool.push({ sp, life: 0, vy: 0 }); }
+  const q = LEG.pool[LEG.i++ % LEG.pool.length]; if (q.sp.parent !== S.scene) S.scene.add(q.sp); q.sp.position.set(x + (Math.random() - .5) * .5, y, z + (Math.random() - .5) * .5); q.life = 1; q.max = big ? 1.8 : 1.15; q.vy = (big ? 1.6 : .45) + Math.random() * .4; q.s = (big ? .34 : .2) + Math.random() * .12;
+  q.sp.material.color.setHSL(.11 + Math.random() * .05, 1, .62 + Math.random() * .2); q.sp.visible = true;
+}
+function legTick(dt) {
+  if (!S || !S.av) return; const list = [[S.av, 'me', () => lookOf(G().P())]]; for (const id in MP.players) { const p = MP.players[id]; list.push([p.av, id, () => p.info && p.info.avatar]); }
+  for (const [av, key, look] of list) { if (!av) continue; if (av.userData.leg === undefined) av.userData.leg = legOf(look()); if (!av.userData.leg) continue;
+    const st = LEG.t[key] || (LEG.t[key] = { x: av.position.x, z: av.position.z, a: 0 }), mv = Math.hypot(av.position.x - st.x, av.position.z - st.z) > dt * 1.2; st.x = av.position.x; st.z = av.position.z; st.a -= dt;
+    if (st.a <= 0) { st.a = mv ? .045 : .32; legSpark(av.position.x, av.position.y + (mv ? .15 : .4 + Math.random() * 1.3), av.position.z); } }
+  for (const q of LEG.pool) { if (q.life <= 0) continue; q.life -= dt / q.max; if (q.life <= 0) { q.sp.visible = false; continue; } q.sp.position.y += q.vy * dt; q.sp.material.opacity = Math.min(1, q.life * 2.2) * .9; q.sp.scale.setScalar(q.s * (.6 + q.life * .6)); }
+}
+/* cuando alguien de la sala consigue una legendaria: aviso para todos y una columna de chispas sobre esa persona */
+function legAnnounce(p, it) {
+  if (!p || !it) return; const n = (p.info && p.info.name) || 'Alguien'; try { G().toast('⭐ ' + n + ' consiguió una prenda legendaria: ' + it.name); } catch (e) {}
+  mpBubble(p, '⭐ ¡Legendaria!'); p.av.userData.leg = undefined; const a = p.av.position; for (let k = 0; k < 40; k++) setTimeout(() => legSpark(a.x, a.y + Math.random() * .6, a.z, 1), k * 45); tone3d();
+}
+
+/* ---------- Diario del explorador: muestra que las cosas existen sin decir dónde están.
+   Lo que falta aparece como silueta con una pista (más clara desde el nivel 8); lo encontrado, a todo color. ---------- */
+const DY_LV = 8;
+function dyP() { const p = G().P(); p.dfind = p.dfind || {}; p.dlore = p.dlore || {}; p.dseen = p.dseen || {}; return p; }
+function findMark(k) { const p = dyP(); if (p.dfind[k]) return; p.dfind[k] = vday(); G().save(); try { G().toast('📖 Nuevo en tu diario: ' + ((FINDS.find(f => f[0] === k) || [])[2] || [''])[0]); } catch (e) {} }
+const FIND_ICO = {
+  ruina: '<path d="M3 21V10h3v3h2V7h3v5h2V9h3v4h2v-2h3v10Z" fill="#E9DCC2" stroke="#5A4630" stroke-width="1"/><path d="M5 17h4M12 15h3M16 18h3" stroke="#8A7458" stroke-width="1"/>',
+  pozo: '<path d="M4 6h16M7 6v6M17 6v6" stroke="#6E5238" stroke-width="1.6" stroke-linecap="round"/><path d="M12 6v5" stroke="#C9B48A" stroke-width=".9"/><rect x="10.6" y="11" width="2.8" height="2.4" rx=".4" fill="#8A6A44"/><path d="M5 14h14v7H5Z" fill="#E9DCC2" stroke="#5A4630" stroke-width="1"/><path d="M5 17.5h14" stroke="#8A7458"/>',
+  era: '<ellipse cx="12" cy="17" rx="9.5" ry="3.6" fill="#E6D3A6" stroke="#8A7458"/><path d="M7 16c0-4 .4-8 0-10M7 6l-1.6 2M7 6l1.6 2M15 16c0-4 .4-8 0-10M15 6l-1.6 2M15 6l1.6 2" stroke="#C9A04A" stroke-width="1.4" stroke-linecap="round"/><path d="M6 12.5h2M14 12.5h2" stroke="#8A6A30" stroke-width="1.6"/>',
+  torre: '<path d="M8 21V8h8v13Z" fill="#E9DCC2" stroke="#5A4630"/><path d="M7 8V4.5h2V6h2V4.5h2V6h2V4.5h2V8Z" fill="#D9C9A8" stroke="#5A4630"/><path d="M11 21v-3.5a1 1 0 0 1 2 0V21" fill="#2A2018"/><path d="M3 21c1-2 2-3 3-3M18 18c1 0 2 1 3 3" stroke="#66763E" stroke-width="1.5" stroke-linecap="round"/>',
+  prensa: '<ellipse cx="12" cy="18" rx="9" ry="3" fill="#E9DCC2" stroke="#5A4630"/><circle cx="12" cy="11" r="4.6" fill="#D9C9A8" stroke="#5A4630"/><circle cx="12" cy="11" r="1.2" fill="#6E5238"/><path d="M2.5 11h19" stroke="#6E5238" stroke-width="1.4" stroke-linecap="round"/><ellipse cx="12" cy="17.6" rx="5" ry="1.2" fill="#6E6A2A"/>',
+  cueva: '<path d="M1.5 21c1.5-8 5.5-14 10.5-14s9 6 10.5 14Z" fill="#A8987A" stroke="#5A4630"/><path d="M7.5 21c.5-5 2.3-8 4.5-8s4 3 4.5 8Z" fill="#1A140E"/><circle cx="12" cy="18" r="1.4" fill="#FFB45A" opacity=".8"/>',
+  memorial: '<ellipse cx="7" cy="18.5" rx="3.2" ry="2.3" fill="#EFE6D2" stroke="#5A4630"/><ellipse cx="13" cy="18.7" rx="3.2" ry="2.2" fill="#E2D6BC" stroke="#5A4630"/><ellipse cx="18.5" cy="18.6" rx="2.8" ry="2.1" fill="#EFE6D2" stroke="#5A4630"/><ellipse cx="10" cy="14.6" rx="3" ry="2.1" fill="#E2D6BC" stroke="#5A4630"/><ellipse cx="15.6" cy="14.6" rx="2.9" ry="2" fill="#EFE6D2" stroke="#5A4630"/><ellipse cx="12.8" cy="10.9" rx="2.8" ry="2" fill="#E2D6BC" stroke="#5A4630"/>',
+  campamento: '<path d="M2 18l7-11 7 11Z" fill="#3C2E24" stroke="#1A120C"/><path d="M9 7v11" stroke="#1A120C"/><path d="M17.5 19.5c-1.6 0-2.4-1.2-1.8-2.6.4 1 1 1 1-.4 0-1 .6-1.8 1.4-2.2-.2 1.2.8 1.6 1.2 2.6.6 1.4-.2 2.6-1.8 2.6Z" fill="#FFA640"/><path d="M15 20h5" stroke="#6E5238" stroke-width="1.4" stroke-linecap="round"/>'
+};
+function dyLevel() { const n = parseInt(((document.getElementById('lvN') || {}).textContent || '').trim(), 10); return isFinite(n) ? n : 1; }
+function dyKeys() { const p = dyP(), st = gearState(), out = []; st.own.forEach(id => out.push('g:' + id)); Object.keys(p.dfind).forEach(k => out.push('f:' + k)); Object.keys(p.dlore).forEach(k => out.push('l:' + k)); if (S && S.hx) Object.keys((G().P().secrets) || {}).forEach(k => out.push('s:' + k)); return out; }
+function diaryNew() { const p = dyP(); return dyKeys().filter(k => !p.dseen[k]).length; }
+/* pista de una prenda que todavía no tenés: primero solo la cita (si la tiene) o algo vago; desde el nivel 8, la descripción entera */
+function gearHint(it, clear) {
+  if (it.h) return it.h[clear && it.h[1] ? 1 : 0];
+  const ref = (it.desc.match(/\(([^()]*\d+:\d+[^()]*)\)/) || [])[1], how = { c: 'Aparece seguido brillando cerca del camino.', r: 'Aparece pocas veces brillando cerca del camino.', e: 'Casi nunca aparece en el camino.', l: 'Muy pocos la vieron alguna vez.' }[it.r] || '';
+  if (!clear) return (ref ? 'Pista: ' + ref + '. ' : '') + how;
+  return it.desc.replace(/Casi nadie la encuentra\.?/, '').trim() + ' ' + how;
+}
+function invDiary(body) {
+  const p = dyP(), st = gearState(), lv = dyLevel(), clear = lv >= DY_LV, hx = !!(S && S.hx), M = SEC.mod, seen = p.dseen, isNew = k => !seen[k];
+  const secs = [['g', 'Prendas'], ['f', 'Hallazgos'], ...(hx && M ? [['s', 'Lugares secretos']] : []), ['l', 'Historias']];
+  body.innerHTML = `<div class="dy"><div class="dy-tabs">${secs.map(([k, n]) => `<button data-k="${k}">${n}</button>`).join('')}</div><div class="dy-body"></div></div>`;
+  const bx = body.querySelector('.dy-body'), lock = clear ? '' : `<p class="dy-lock">🔒 Desde el nivel ${DY_LV} las pistas se vuelven más claras.</p>`;
+  const head = (n, tot, txt) => `<div class="dy-head"><b>${n}${tot ? ' <i>de ' + tot + '</i>' : ''}</b><span>${txt}</span>${tot ? `<div class="dy-bar"><em style="width:${Math.round(n / tot * 100)}%"></em></div>` : ''}</div>`;
+  const card = (key, got, ico, rc, title, sub, txt, extra) => `<button class="dy-c${got ? ' got' : ''}${got && isNew(key) ? ' nw' : ''}" data-key="${esc(key)}" style="--rc:${rc}"><span class="dy-i">${ico}${got ? '' : '<i>?</i>'}</span><span class="dy-t"><small>${sub}</small><b>${title}</b><span>${txt}</span>${extra || ''}</span></button>`;
+  const draw = k => {
+    body.querySelectorAll('.dy-tabs button').forEach(b => b.classList.toggle('on', b.dataset.k === k)); let h = '';
+    if (k === 'g') { const all = GEAR.filter(x => x.r !== 'u' || st.own.includes(x.id)), got = all.filter(x => st.own.includes(x.id)).length, ord = { l: 0, u: 1, e: 2, r: 3, c: 4 };
+      h = head(got, all.length, 'prendas de la época encontradas') + lock + '<div class="dy-g">' + all.slice().sort((a, b) => ord[a.r] - ord[b.r]).map(it => { const g2 = st.own.includes(it.id), R = RAR[it.r], sl = (SLOTS.find(q => q[0] === it.s) || [0, ''])[1];
+        return card('g:' + it.id, g2, `<span class="dy-gi">${icoGear(it)}</span>`, R[1], g2 ? esc(it.name) : '???', `${R[0].split(' ·')[0]} · ${sl}`, esc(g2 ? it.desc : gearHint(it, clear))); }).join('') + '</div>'; }
+    if (k === 'f') { const got = Object.keys(p.dfind).length;
+      h = head(got, FINDS.length, 'hallazgos del campo, escondidos entre las paradas del camino') + lock + '<div class="dy-g">' + FINDS.map(([fk, , info]) => { const g2 = !!p.dfind[fk];
+        return card('f:' + fk, g2, `<svg viewBox="0 0 24 24" aria-hidden="true">${FIND_ICO[fk] || ''}</svg>`, '#E9C37A', g2 ? esc(info[0]) : '???', esc(info[2]), g2 ? esc(info[1]) : (clear ? 'Está en el campo, un poco lejos del camino, entre dos paradas. Buscá algo que no parezca de la naturaleza.' : 'Leé la cita: ahí está la pista de lo que hay que buscar.')); }).join('') + '</div>'; }
+    if (k === 's' && M) { const sp = G().P().secrets || {}, got = Object.keys(sp).length;
+      h = head(got, M.SECRETS.length, 'lugares secretos descubiertos. Los que encontrás aparecen en tu mapa con ✦') + lock + '<div class="dy-g">' + M.SECRETS.map(d => { const g2 = !!sp[d.id], rg = (G().REGIONS.find(x => x.id === d.r) || {}).name || '';
+        return card('s:' + d.id, g2, `<span class="dy-e">${M.ENTRY[d.entry] ? M.ENTRY[d.entry][1] : '✦'}</span>`, '#B98AFF', g2 ? esc(d.name) : '???', esc(rg), g2 ? esc(d.t) : (clear ? 'Buscá ' + esc(d.hint) + '.' : 'Algo se esconde en esta etapa. Fijate en lo que parece fuera de lugar.'), g2 ? `<em class="dy-x">${d.items.map(q => q[1] + ' ' + esc(q[0])).join(' · ')}</em>` : ''); }).join('') + '</div>'; }
+    if (k === 'l') { const L = Object.entries(p.dlore);
+      h = head(L.length, 0, L.length === 1 ? 'historia leída' : 'historias leídas') + '<p class="dy-lock">Hay historias escondidas en ruinas, cuevas, cumbres, nidos y fogones. Cuando algo te llama la atención, acercate: a veces aparece un botón para mirar.</p><div class="dy-g">' + L.map(([t, ref]) => card('l:' + t, 1, '<span class="dy-e">📜</span>', '#E9C37A', esc(t), typeof ref === 'string' ? esc(ref) : '', '')).join('') + '</div>'; }
+    bx.innerHTML = h; bx.scrollTop = 0;
+    bx.querySelectorAll('.dy-c.got').forEach(c => { seen[c.dataset.key] = 1; }); G().save(); const tb = document.querySelector('#v3sheet .inv-tabs [data-t="di"]'); if (tb && !diaryNew()) tb.classList.remove('nw');
+    bx.querySelectorAll('.dy-c').forEach(c => c.onclick = () => c.classList.toggle('open'));
+  };
+  body.querySelectorAll('.dy-tabs button').forEach(b => b.onclick = () => draw(b.dataset.k)); draw('g');
+}
 function gearGive(it, why) {
   if (!it) return; const st = gearState(); if (st.own.includes(it.id)) return; st.own.push(it.id); G().save();
   if (it.r !== 'c') { try { gearReveal(it, why); } catch (e) {} }
+  if (it.r === 'l' && MP.code) { try { mpSend({ t: 'leg', id: MP.peer && MP.peer.id, g: it.id }); } catch (e) {} }
+  if (S && S.av) S.av.userData.leg = undefined;
   const el = document.getElementById('v3pop'); if (!el) return; const R = RAR[it.r];
   el.innerHTML = `<span class="ic" style="background:${R[1]}33;border:1px solid ${R[1]}">${icoGear(it)}</span><span class="tx"><small style="color:${R[1]}">${esc(why)} · ${R[0]}</small><b>${esc(it.name)}</b><em class="gp-tip">Ponétela desde la mochila</em></span>`;
   el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); clearTimeout(pop.t); pop.t = setTimeout(() => { el.classList.remove('on'); el.hidden = true; }, 4200);
@@ -4442,7 +4518,7 @@ function fieldFinds(scene, hx, HW) {
         const rug = tm('ffrug', '#8A3A2A', { roughness: 1 }); add(new THREE.PlaneGeometry(3.4, 2.2), rug, tx, .04, tz - .2, -Math.PI / 2).castShadow = false; }
       for (let j = 0; j < 8; j++) { const a = j / 8 * 6.283; add(new THREE.DodecahedronGeometry(.18, 0), stone, 1.4 + Math.cos(a) * .55, .1, 1 + Math.sin(a) * .55); } const [fx, fz] = W(1.4, 1); ambFire(fx, y + .15, fz, .45, {});
       [[3, 1.4], [-.1, 2.4]].forEach(([x, z]) => put('wooden_stool_01', ...[W(x, z)[0], yAt(...W(x, z)), W(x, z)[1]], R() * 6, 1)); put('dry_branches_medium_01', ...[W(2.6, -.6)[0], yAt(...W(2.6, -.6)), W(2.6, -.6)[1]], 1, 1); col(-2.2, -1, 1.9); col(1.4, 1, .8); }
-    const [lx, lz] = W(0, k === 'cueva' ? 2.4 : 3.2); (S.lore || (S.loreEarly = S.loreEarly || [])).push({ x: lx, z: lz, r: 4, label: F[1], info: F[2] });
+    const [lx, lz] = W(0, k === 'cueva' ? 2.4 : 3.2); (S.lore || (S.loreEarly = S.loreEarly || [])).push({ x: lx, z: lz, r: 4, label: F[1], info: F[2], go: () => findMark(k) });
     try { staticMerge(g); } catch (e) {} });
   S.finds = spots.map((q, i) => ({ k: FINDS[i % FINDS.length][0], x: q.x, z: q.z })); r2log('hallazgos en el campo: ' + spots.length);
 }
@@ -5845,7 +5921,7 @@ function loop(now) {
   cineTick(dt); if (window.__camFix) { const f = window.__camFix; S.camera.position.set(...f.p); S.camera.lookAt(...f.l); }
   fxWatch(now); if (S.W) { const u = S.W.sky.material.uniforms; u.inv.value = S.fx ? 1 : 0; u.ex.value = S.renderer.toneMappingExposure; }
   const p5 = PF ? performance.now() : 0; if (S.fx) S.fx.render(dt); else S.renderer.render(S.scene, S.camera); const p6 = PF ? performance.now() : 0; QUAL.lastCalls = S.renderer.info.render.calls; QUAL.lastTris = S.renderer.info.render.triangles;
-  idle(dt); misTick(t); voiceTick(dt); wpTick(t); mpTick(t, dt); dayTick(dt); seasonTick(dt); gearDropTick(dt, t); doorTick(t); try { wanderTick(dt); } catch (e) {} h3npcTick(dt); try { crowdLiveTick(dt); } catch (e) {} crowdTick(); roomTick(dt); survTick(dt, t); prayTogetherTick(dt); axVerse(dt);
+  idle(dt); misTick(t); voiceTick(dt); wpTick(t); mpTick(t, dt); try { legTick(dt); } catch (e) {} dayTick(dt); seasonTick(dt); gearDropTick(dt, t); doorTick(t); try { wanderTick(dt); } catch (e) {} h3npcTick(dt); try { crowdLiveTick(dt); } catch (e) {} crowdTick(); roomTick(dt); survTick(dt, t); prayTogetherTick(dt); axVerse(dt);
   if (PF) { const p7 = performance.now(); PROF.add({ mov: p1 - p0, zonas: p2 - p1, agua_fuego: p3 - p2, avatar: p4 - p3, escena: p5 - p4, render: p6 - p5, npc_misiones: p7 - p6 }); }
 }
 

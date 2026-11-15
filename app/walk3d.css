@@ -1205,3 +1205,46 @@ body.v3on .v3cam{left:var(--joyL)!important;bottom:var(--fanB)!important}
 @keyframes rvSpin{to{transform:rotate(360deg)}}
 @keyframes rvFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(2deg)}}
 body:not([data-branch="ados"]) .rv-in b{font-family:"Fraunces",Georgia,serif}
+/* legendarias más visibles: borde dorado propio además del brillo */
+.inv-cell.rr-l,.inv-slot.rr-l{box-shadow:inset 0 0 0 2px #FFC24A,inset 0 0 18px rgba(255,190,70,.55),0 0 14px -2px #FFB13B!important}
+.inv-cell.rr-l,.inv-slot.rr-l{background:radial-gradient(circle at 50% 42%,rgba(255,206,92,.85),rgba(255,160,40,.35) 60%,rgba(120,70,10,.25) 80%)!important}
+/* pestaña con novedades */
+#v3sheet .inv-tabs button.nw::after{content:"";position:absolute;top:6px;right:10px;width:9px;height:9px;border-radius:50%;background:#FF5A4A;box-shadow:0 0 0 2px rgba(0,0,0,.5),0 0 8px #FF5A4A;animation:rrPulse 1.4s infinite}
+/* ---------- Diario del explorador ---------- */
+.dy{display:grid;gap:10px}
+.dy-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.dy-tabs button{flex:1 1 auto;border:1px solid rgba(233,195,122,.25);background:rgba(0,0,0,.3);color:#B9A783;border-radius:999px;padding:7px 12px;font:900 11.5px "Nunito",sans-serif;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.dy-tabs button.on{background:linear-gradient(180deg,rgba(255,210,94,.28),rgba(255,210,94,.1));color:#FFD25E;border-color:rgba(255,210,94,.6)}
+.inv:not(.hx) .dy-tabs button{color:#9FB0D6;border-color:rgba(140,170,230,.3)}
+.inv:not(.hx) .dy-tabs button.on{color:#FFE08A}
+.dy-body{max-height:min(56vh,440px);overflow-y:auto;padding-right:4px}
+.dy-head{display:grid;gap:4px;margin-bottom:8px}
+.dy-head b{font:900 22px "Cinzel","Nunito",serif;color:#FFD25E}
+.dy-head b i{font:700 14px "Nunito",sans-serif;color:#B9A783;font-style:normal}
+.dy-head span{font:700 12.5px "Nunito",sans-serif;color:#D8CBB0}
+.dy-bar{height:6px;border-radius:9px;background:rgba(0,0,0,.4);overflow:hidden}
+.dy-bar em{display:block;height:100%;background:linear-gradient(90deg,#C9902A,#FFD25E);border-radius:9px}
+.dy-lock{margin:2px 0 10px;font:700 12px "Nunito",sans-serif;color:#C9B48A;opacity:.85}
+.dy-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.dy-c{display:flex;gap:10px;align-items:flex-start;text-align:left;border-radius:12px;padding:9px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.3));color:#E8DCC4;cursor:pointer;position:relative;font-family:"Nunito",sans-serif}
+.dy-c.got{border-color:color-mix(in srgb,var(--rc) 55%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--rc) 16%,transparent),rgba(0,0,0,.3))}
+.dy-i{flex:0 0 48px;width:48px;height:48px;border-radius:10px;display:grid;place-items:center;position:relative;background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.dy-c.got .dy-i{box-shadow:inset 0 0 0 2px var(--rc),0 0 12px -3px var(--rc);background:radial-gradient(circle,color-mix(in srgb,var(--rc) 40%,transparent),rgba(0,0,0,.3) 75%)}
+.dy-i svg,.dy-gi svg{width:34px;height:34px}
+.dy-gi{display:grid;place-items:center}
+.dy-e{font-size:26px;line-height:1}
+.dy-c:not(.got) .dy-i>*:not(i){filter:brightness(0) blur(.6px);opacity:.75}
+.dy-c:not(.got) .dy-i{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--rc) 45%,transparent)}
+.dy-i>i{position:absolute;font:900 20px "Cinzel","Nunito",serif;color:color-mix(in srgb,var(--rc) 75%,#fff);font-style:normal;text-shadow:0 0 8px var(--rc)}
+.dy-t{display:grid;gap:2px;min-width:0}
+.dy-t small{font:900 10px "Nunito",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--rc)}
+.dy-t b{font:900 14px "Nunito",sans-serif;color:#FFF3DA}
+.dy-c:not(.got) .dy-t b{letter-spacing:.2em;color:#9C8E74}
+.dy-t>span{font:600 12px/1.35 "Nunito",sans-serif;color:#CFC2A6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.dy-c.open .dy-t>span{-webkit-line-clamp:unset;display:block}
+.dy-x{font:700 11.5px "Nunito",sans-serif;color:#D9C6FF;font-style:normal}
+.dy-c.nw{animation:dyNew 1.1s ease-out}
+.dy-c.nw::before{content:"Nuevo";position:absolute;top:-7px;right:8px;padding:1px 7px;border-radius:9px;background:#FF5A4A;color:#fff;font:900 9.5px "Nunito",sans-serif;letter-spacing:.06em;text-transform:uppercase}
+@keyframes dyNew{0%{filter:grayscale(1) brightness(.5);transform:scale(.96)}60%{filter:brightness(1.35) drop-shadow(0 0 14px var(--rc));transform:scale(1.02)}100%{filter:none;transform:none}}
+body[data-layout="movil-h"] .dy-body{max-height:52vh}
+body[data-layout="movil-h"] .dy-g{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
