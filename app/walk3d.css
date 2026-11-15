@@ -1248,3 +1248,7 @@ body:not([data-branch="ados"]) .rv-in b{font-family:"Fraunces",Georgia,serif}
 @keyframes dyNew{0%{filter:grayscale(1) brightness(.5);transform:scale(.96)}60%{filter:brightness(1.35) drop-shadow(0 0 14px var(--rc));transform:scale(1.02)}100%{filter:none;transform:none}}
 body[data-layout="movil-h"] .dy-body{max-height:52vh}
 body[data-layout="movil-h"] .dy-g{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+/* el aviso de modo recorrido no se pisa con minijuegos, mochila ni anuncios */
+body:has(#arcade:not([hidden])) #khPill,body:has(#v3sheet:not([hidden])) #khPill,body:has(.v3rv.on) #khPill,body:has(.khp) #khPill{display:none!important}
+/* abajo a la izquierda, junto a la cámara: el centro queda para los botones de acción */
+.kh-pill{left:calc(env(safe-area-inset-left,0px) + 66px);transform:none;align-items:flex-start}

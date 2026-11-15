@@ -5988,6 +5988,7 @@ function idle(dt) {
     const r = S.root.getBoundingClientRect(), x = (HV.v.x + 1) / 2 * r.width, y = (1 - HV.v.y) / 2 * r.height;
     const w = S.think.firstChild.offsetWidth, cx = Math.max(30, Math.min(x, r.width - w - 4));
     let yy = y; { let ob = 1e9; for (const q of [S.hint && S.hint.classList.contains('on') ? S.hint : null, document.querySelector('#v3go button'), document.querySelector('.v3surv .sv-do')]) { if (!q || !q.offsetParent) continue; const b = q.getBoundingClientRect(); if (b.height && b.right > x - 20 && b.left < x + w + 20) ob = Math.min(ob, b.top - r.top); } if (yy > ob - 8) yy = ob - 8; } /* la nube nunca pisa la ayuda ni los botones de abajo */
+    { const bh = S.think.firstChild.offsetHeight || 0; let ot = 0; document.querySelectorAll('.v3comp, .v3comp ~ *, .sv-warn, #v3bagw').forEach(q => { if (!q.offsetParent) return; const b = q.getBoundingClientRect(); if (b.height && b.top < r.height * .35 && b.right > cx - 10 && b.left < cx + w + 10) ot = Math.max(ot, b.bottom - r.top); }); if (ot && yy - bh < ot + 6) yy = ot + 6 + bh; } /* ni la brújula ni los avisos de arriba */
     S.think.style.transform = `translate(${Math.round(cx)}px,${Math.round(yy)}px)`;
   }
 }
