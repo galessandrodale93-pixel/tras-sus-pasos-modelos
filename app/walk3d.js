@@ -6175,9 +6175,9 @@ const RECIPES = [
 function svOn() { return !!(S && S.hx); }
 /* nadar: donde el agua es más honda que el pecho, el personaje se tiende y bracea. En Hero nadar cansa: la barra de aliento baja y, si se vacía, la corriente lo devuelve a la orilla */
 function swimTick(dt, a) {
-  const av = S.av, deep = !!S.W && S.W.hAt(a.x, a.z) < WATER.RL - 1.3 && S.gy < WATER.RL - 1 && !S.down; S.swim = deep; S.swimK = (S.swimK || 0) + ((deep ? 1 : 0) - (S.swimK || 0)) * Math.min(1, dt * 4);
+  const av = S.av, deep = !!S.W && S.W.hAt(a.x, a.z) < WATER.RL - 1.3 && S.gy < WATER.RL - .8 && !S.down; S.swim = deep; S.swimK = (S.swimK || 0) + ((deep ? 1 : 0) - (S.swimK || 0)) * Math.min(1, dt * 4);
   if (!deep && S.gy > WATER.RL - .5 && !blockedAt(a.x, a.z)) S.land = [a.x, a.z];
-  av.rotation.order = 'YXZ'; av.rotation.x = S.swimK * 1.18; a.y += S.swimK * (.8 + Math.sin(performance.now() / 420) * .04);
+  av.rotation.order = 'YXZ'; av.rotation.x = S.swimK * 1.18; a.y += S.swimK * (.6 + Math.sin(performance.now() / 420) * .04);
   if (!S.hx) return; const full = 40 * agiMul();
   if (deep) S.stam = Math.max(0, (S.stam ?? 1) - dt / full); else S.stam = Math.min(1, (S.stam ?? 1) + dt / 16);
   if (deep && S.stam <= 0 && S.land) { a.x = S.land[0]; a.z = S.land[1]; S.gy = null; S.walking = null; S.stam = .2; S.swimK = 0; try { const p = svP(); p.sat = Math.max(120, p.sat - 300); G().toast('🌊 Te quedaste sin aliento y el agua te devolvió a la orilla. Descansá antes de volver a nadar.'); } catch (e) {} }
