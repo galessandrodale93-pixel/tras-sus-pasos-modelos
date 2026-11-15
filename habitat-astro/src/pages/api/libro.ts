@@ -5,7 +5,7 @@ import type { APIRoute } from "astro";
 import { auth } from "@wix/essentials";
 import { items } from "@wix/data";
 import { emailDe, organiza } from "../../lib/profe";
-import { ENVIO, ESTADOS, PRECIO, PROVINCIAS, mailAviso, mailDespacho, mailListo, mailPedido, mandar, totalDe, type Pedido } from "../../lib/libro";
+import { CANALES, ENVIO, ESTADOS, PERFILES, PRECIO, PROVINCIAS, mailAviso, mailDespacho, mailListo, mailPedido, mandar, totalDe, type Pedido } from "../../lib/libro";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
@@ -29,13 +29,31 @@ async function todos(): Promise<Pedido[]> {
   return out;
 }
 
+// quién es cada comprador: alumno, ex alumno, equipo, sembrador o externo (por email o nombre y apellido)
+const nrm = (t: unknown) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
+const cel = (t: unknown) => String(t || "").replace(/\D/g, "").slice(-8);
+type Gente = { _id: string; title?: string; email?: string; telefono?: string; activo?: unknown };
+async function lista(col: string): Promise<Gente[]> { try { return (await q(col).limit(1000).find()).items as Gente[]; } catch { return []; } }
+async function perfiles() {
+  const [al, vol, tut, sem] = await Promise.all([lista("TutAlumnos"), lista("VolVoluntarios"), lista("TutTutores"), lista("SemSembradores")]);
+  const G: [string, Gente[]][] = [["Alumno", al.filter((a) => a.activo !== false)], ["Ex alumno", al.filter((a) => a.activo === false)], ["Equipo Habitat", [...tut, ...vol]], ["Sembrador", sem]];
+  return (x: Pedido) => {
+    if (x.perfil && PERFILES.includes(x.perfil)) return x.perfil;
+    const em = String(x.email || "").toLowerCase(), nm = nrm(x.title), tel = cel(x.telefono);
+    const toks = nm.split(" ").filter((t) => t.length > 2);
+    for (const [k, L] of G) if (L.some((g) => (em && String(g.email || "").toLowerCase().split(/[,;\s]+/).includes(em)) || (tel.length === 8 && cel(g.telefono) === tel) || (toks.length >= 2 && toks.every((t) => nrm(g.title).split(" ").includes(t))))) return k;
+    return "Externo";
+  };
+}
+
 export const GET: APIRoute = async ({ request, url }) => {
   try {
-    if (url.searchParams.get("admin") !== "1") return json({ precio: PRECIO, envio: ENVIO, provincias: PROVINCIAS });
+    if (url.searchParams.get("admin") !== "1") return json({ precio: PRECIO, envio: ENVIO, provincias: PROVINCIAS, canales: CANALES });
     const me = await emailDe(request);
     if (!(await organiza(me.email))) return json({ error: "Esto lo ve quien organiza Habitat." }, 403);
-    const L = (await todos()).map((x) => clean(x as unknown as Record<string, unknown>));
-    return json({ hoy: hoyAR(), precio: PRECIO, envio: ENVIO, estados: ESTADOS, pedidos: L });
+    const [P, perfilDe] = await Promise.all([todos(), perfiles()]);
+    const L = P.map((x) => ({ ...clean(x as unknown as Record<string, unknown>), quien: perfilDe(x), manual: !!x.perfil }));
+    return json({ hoy: hoyAR(), precio: PRECIO, envio: ENVIO, estados: ESTADOS, perfiles: PERFILES, canales: CANALES, pedidos: L });
   } catch (e) {
     console.error("libro GET", e);
     return json({ error: "No pudimos cargar los pedidos." }, 500);
@@ -59,6 +77,7 @@ export const POST: APIRoute = async ({ request }) => {
         calle: envio ? s(x.calle, 80) : "", numero: envio ? s(x.numero, 10) : "", piso: envio ? s(x.piso, 6) : "", depto: envio ? s(x.depto, 6) : "",
         cp: envio ? s(x.cp, 8).toUpperCase() : "", localidad: envio ? s(x.localidad, 60) : "", provincia: envio ? s(x.provincia, 40) : "", referencia: envio ? s(x.referencia, 160) : "",
         cantidad: cant, total: totalDe(cant, envio), estado: "Nuevo", fecha: ahoraAR(), nota: s(x.nota, 300),
+        canal: CANALES.includes(s(x.canal, 40)) ? s(x.canal, 40) : "", origen: "web",
       };
       it.title = (it.nombre + " " + it.apellido).trim();
       const falta: string[] = [];
@@ -85,6 +104,16 @@ export const POST: APIRoute = async ({ request }) => {
 
     const me = await emailDe(request);
     if (!(await organiza(me.email))) return json({ error: "Esto lo maneja quien organiza Habitat." }, 403);
+    if (op === "venta") {
+      const cant = Math.min(50, Math.max(1, Math.floor(Number(x.cantidad) || 1)));
+      const tot = x.total === "" || x.total == null ? NaN : Number(x.total);
+      const it: Pedido = { _id: hoyAR() + "-" + crypto.randomUUID().slice(0, 8), nombre: s(x.nombre, 60), apellido: s(x.apellido, 60), email: s(x.email, 120).toLowerCase(), telefono: s(x.telefono, 30), entrega: "retiro", cantidad: cant, total: Number.isFinite(tot) && tot >= 0 ? Math.round(tot) : cant * PRECIO, estado: "Entregado", fecha: ahoraAR(), pagado: hoyAR(), origen: "mano", canal: CANALES.includes(s(x.canal, 40)) ? s(x.canal, 40) : "", perfil: PERFILES.includes(s(x.perfil, 30)) ? s(x.perfil, 30) : "", nota: s(x.nota, 300) };
+      it.title = (it.nombre + " " + it.apellido).trim();
+      if (!it.title) return json({ error: "Poné el nombre de quién lo compró." }, 400);
+      await save(COL, it as unknown as Record<string, unknown>);
+      const perfilDe = await perfiles();
+      return json({ ok: true, item: { ...it, quien: perfilDe(it), manual: !!it.perfil } });
+    }
     const id = s(x.id, 60);
     const cur = (await q(COL).eq("_id", id).limit(1).find()).items[0] as Pedido | undefined;
     if (!cur) return json({ error: "No encontramos ese pedido." }, 404);
@@ -103,6 +132,9 @@ export const POST: APIRoute = async ({ request }) => {
       if (est) it.estado = est;
       if (x.tracking !== undefined) it.tracking = s(x.tracking, 40);
       if (x.nota !== undefined) it.nota = s(x.nota, 300);
+      if (x.dni !== undefined) it.dni = s(x.dni, 12).replace(/\D/g, "");
+      if (x.perfil !== undefined) it.perfil = PERFILES.includes(s(x.perfil, 30)) ? s(x.perfil, 30) : "";
+      if (x.canal !== undefined) it.canal = CANALES.includes(s(x.canal, 40)) ? s(x.canal, 40) : "";
       if (est === "Pagado" && !it.pagado) it.pagado = hoyAR();
       if (est === "Despachado" && !it.despachado) it.despachado = hoyAR();
       let aviso: boolean | null = null;
@@ -111,7 +143,8 @@ export const POST: APIRoute = async ({ request }) => {
         else if (est === "Pagado" && it.entrega !== "envio") aviso = (await mandar(it.email, "Tu libro Asombro te espera en Habitat 📖", mailListo(it), await remitente())).ok;
       }
       await save(COL, it as unknown as Record<string, unknown>);
-      return json({ ok: true, item: it, aviso });
+      const perfilDe = await perfiles();
+      return json({ ok: true, item: { ...it, quien: perfilDe(it), manual: !!it.perfil }, aviso });
     }
     return json({ error: "op" }, 400);
   } catch (e) {

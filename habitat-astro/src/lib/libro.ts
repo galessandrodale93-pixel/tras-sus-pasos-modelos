@@ -14,7 +14,10 @@ export type Pedido = {
   _id: string; title?: string; nombre?: string; apellido?: string; email?: string; telefono?: string; dni?: string;
   entrega?: string; calle?: string; numero?: string; piso?: string; depto?: string; cp?: string; localidad?: string; provincia?: string; referencia?: string;
   cantidad?: number; total?: number; estado?: string; fecha?: string; pagado?: string; tracking?: string; despachado?: string; nota?: string; mail?: string;
+  canal?: string; perfil?: string; origen?: string;
 };
+export const CANALES = ["Soy alumno de Habitat", "Instagram / redes", "Me lo recomendaron", "En mi iglesia o un evento", "Otro"];
+export const PERFILES = ["Alumno", "Ex alumno", "Equipo Habitat", "Sembrador", "Externo"];
 export const ESTADOS = ["Nuevo", "Pagado", "Despachado", "Entregado", "Cancelado"];
 export const PROVINCIAS = ["CABA", "Buenos Aires", "Catamarca", "Chaco", "Chubut", "Córdoba", "Corrientes", "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja", "Mendoza", "Misiones", "Neuquén", "Río Negro", "Salta", "San Juan", "San Luis", "Santa Cruz", "Santa Fe", "Santiago del Estero", "Tierra del Fuego", "Tucumán"];
 
