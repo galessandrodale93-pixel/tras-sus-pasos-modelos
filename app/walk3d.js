@@ -3843,9 +3843,9 @@ function gearGive(it, why) {
 }
 const GICO = {
   hat: '<path d="M4 15c0-4 3.6-8 8-8s8 4 8 8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 16h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
-  shirt: '<path d="M8 3 3 6l2 5 2-1v11h10V10l2 1 2-5-5-3a3 3 0 0 1-8 0Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
-  pants: '<path d="M6 3h12l1 18h-5l-2-11-2 11H5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
-  boots: '<path d="M7 3h6v10l6 3v4H5V3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+  shirt: '<path d="M9 2.5 4.5 5l1.6 4.2L8 8.4 7 21.5h10L16 8.4l1.9.8L19.5 5 15 2.5a3 3 0 0 1-6 0Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M8 11h8" stroke="currentColor" stroke-width="1.8"/>',
+  pants: '<path d="M7 3.5c2 1.2 8 1.2 10 0l3.5 17.5H3.5Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M5.5 19h13" stroke="currentColor" stroke-width="1.4"/>',
+  boots: '<path d="M4 18.5h16v2.5H4Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M6 18.5 9 12M9 18.5 12 12M12 12l5 6.5M8 10.5h5M8.4 7h5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
   gloves: '<path d="M7 21v-8L5 9a1.5 1.5 0 0 1 2.5-1.6L9 10V4a1.5 1.5 0 0 1 3 0v6V3a1.5 1.5 0 0 1 3 0v7V5a1.5 1.5 0 0 1 3 0v9c0 4-2 7-5 7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>'
 };
 // ropa puesta sobre el modelo Hero
@@ -4554,7 +4554,7 @@ const h3mat = (o) => { const m = new THREE.MeshStandardMaterial(Object.assign({ 
 function h3tunic(body, B, o) {
   const { I, P, fy, H, lat, fwd } = B, yTop = P.pelvis.y + H * .2, yBot = fy + H * (o.len ?? .34), NR = 14, NS = 24, pos = [], si = [], sw = [], col = [];
   const base = new THREE.Color(o.c), c2 = new THREE.Color(o.c2 || o.c), belt = new THREE.Color(o.belt || '#3A2A1C'), RB = ['#C0392B', '#E6B04A', '#3E8A4A', '#3E5A9A', '#7A3E8A'].map(q => new THREE.Color(q));
-  for (let r = 0; r <= NR; r++) { const t = r / NR, y = yTop + (yBot - yTop) * t, rad = H * (.205 + .045 * t + .02 * t * t);
+  for (let r = 0; r <= NR; r++) { const t = r / NR, y = yTop + (yBot - yTop) * t, rad = H * (.2 + .018 * t + (o.len < .15 ? .03 * t * t : 0)); /* recta, apenas abierta abajo: túnica, no vestido */
     for (let k = 0; k <= NS; k++) { const a = k / NS * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a), lx = ca * rad, lz = sa * rad * .84, wob = 1 + .025 * Math.sin(a * 9 + t * 4) * t;
       pos.push(P.pelvis.x + (lat.x * lx + fwd.x * lz) * wob, y, P.pelvis.z + (lat.z * lx + fwd.z * lz) * wob);
       const wl = THREE.MathUtils.smoothstep(ca, -.55, .55), L = Math.min(1, Math.max(0, (t - .12) / .45)) * .9, cw = Math.min(1, Math.max(0, (t - .55) / .4)) * .8;
@@ -4616,6 +4616,7 @@ function h3dress(o, av, c) {
     tun = { c: (H3_GEAR[(D.shirt || {}).id] || {}).t || (sh && sh.c) || c.tint.body || '#D9CBB0', c2: sh && sh.c2, pat: sh ? (sh.rb ? 'rb' : sh.t === 'stripes' ? 'clavi' : sh.t === 'seamless' ? 'hem' : null) : null, len: fem ? .05 : .3, belt: sh && rare(sh) ? '#6A4A1E' : '#3A2A1C', glow: sh && rare(sh) === 'l' ? '#5A4410' : null };
     if (pa) man = { c: pa.c, c2: pa.c2 || new THREE.Color(pa.c).multiplyScalar(.6).getStyle(), len: fem ? .12 : .5, glow: rare(pa) === 'l' ? '#6A4A10' : rare(pa) === 'e' ? '#3A2808' : null };
     san = { c: bo ? bo.c : '#7A5232', high: bo ? !!(bo.hi || /doradas/.test(bo.id)) : false, metal: bo && bo.id === 'doradas' ? .5 : 0, glow: bo && bo.id === 'evangelio' ? '#8A6A1A' : null }; }
+  if (!c.npc && !D.shirt) o.traverse(m => { if (m.isSkinnedMesh && (H3_PART.body.test(m.name) || H3_PART.arms.test(m.name))) { m.material = m.material.clone(); m.material.color.set(tun.c); try { h3cloth(m.material); } catch (e) {} } });
   const made = []; try { made.push(h3tunic(body, B, tun)); } catch (e) { console.warn('túnica', e); }
   if (man) try { made.push(h3mantle(body, B, man)); } catch (e) { console.warn('manto', e); }
   let sandOk = false; try { made.push(h3sandals(body, B, san, c.skinC)); sandOk = true; } catch (e) { console.warn('sandalias', e); }
