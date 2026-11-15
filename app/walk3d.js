@@ -1547,7 +1547,7 @@ function misMesh(it) {
   if (it.k === 'jar' || it.k === 'honey') { const m = itemMesh(it.k); m.remove(m.userData.halo); return m; }
   const g = new THREE.Group(), M = c => new THREE.MeshStandardMaterial({ color: c, roughness: .9 });
   if (it.k === 'cloth') { const b = new THREE.Mesh(new THREE.BoxGeometry(.5, .14, .36), M(it.c)); g.add(b); const f = new THREE.Mesh(new THREE.BoxGeometry(.5, .04, .37), M(new THREE.Color(it.c).multiplyScalar(.8))); f.position.y = .03; g.add(f); }
-  else if (it.k === 'sheep') { const body = new THREE.Mesh(new THREE.SphereGeometry(.28, 14, 10), M('#F2EEE4')); body.scale.set(1.25, .9, .9); body.position.y = .38; g.add(body); const hd = new THREE.Mesh(new THREE.SphereGeometry(.12, 12, 10), M('#3A322C')); hd.position.set(.36, .46, 0); g.add(hd); [[-.15, -.12], [-.15, .12], [.15, -.12], [.15, .12]].forEach(([x, z]) => { const l = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .26, 6), M('#3A322C')); l.position.set(x, .13, z); g.add(l); }); }
+  else if (it.k === 'sheep') { realAnimal(g, 'sheep'); const body = new THREE.Mesh(new THREE.SphereGeometry(.28, 14, 10), M('#F2EEE4')); body.scale.set(1.25, .9, .9); body.position.y = .38; g.add(body); const hd = new THREE.Mesh(new THREE.SphereGeometry(.12, 12, 10), M('#3A322C')); hd.position.set(.36, .46, 0); g.add(hd); [[-.15, -.12], [-.15, .12], [.15, -.12], [.15, .12]].forEach(([x, z]) => { const l = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .26, 6), M('#3A322C')); l.position.set(x, .13, z); g.add(l); }); }
   else if (it.k === 'fish') { const b = new THREE.Mesh(new THREE.CylinderGeometry(.26, .2, .22, 12), M('#B89A5E')); b.position.y = .11; g.add(b); for (let i = 0; i < 4; i++) { const f2 = new THREE.Mesh(new THREE.SphereGeometry(.08, 8, 6), M('#9AB8C2')); f2.scale.set(2, .5, .6); f2.position.set((i % 2 - .5) * .14, .24 + (i > 1 ? .05 : 0), ((i >> 1) - .5) * .12); f2.rotation.y = i; g.add(f2); } }
   else if (it.k === 'stool') { const s = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .06, 14), M('#9A6A3E')); s.position.y = .36; g.add(s); for (let i = 0; i < 3; i++) { const a = i / 3 * 6.28, l = new THREE.Mesh(new THREE.CylinderGeometry(.03, .035, .36, 6), M('#7A5230')); l.position.set(Math.cos(a) * .14, .17, Math.sin(a) * .14); l.rotation.set(Math.sin(a) * .15, 0, -Math.cos(a) * .15); g.add(l); } }
   return g;
@@ -2526,7 +2526,7 @@ function judeaTrails(scene, p, yAt, poiProp, hx) {
     const cl = new THREE.Mesh(new THREE.SphereGeometry(.35, 10, 6), tm('bundle', '#B79A72')); cl.scale.set(1.3, .5, .9); cl.position.set(o.x - .45, o.y + .15, o.z - .2); cl.castShadow = true; scene.add(cl); }
   { const o = lore('cueva', .45, 2.4, { label: 'Mirar las cabras monteses', fx: 'ibex', info: ['Las cabras monteses', 'En las alturas de este desierto viven las cabras monteses, que saltan de roca en roca. «Los montes altos son para las cabras monteses; las peñas, refugio de los damanes».', 'Salmo 104:18'] });
     const tint = new THREE.MeshStandardMaterial({ color: '#8A6844', roughness: 1 }), hm = new THREE.MeshStandardMaterial({ color: '#3A2A1C', roughness: .8 });
-    for (let i = 0; i < 3; i++) { const [x, z] = side(o.q, 6 + i * 1.6), y = yAt(x, z); const g = misMesh({ k: 'sheep' }); g.traverse(m => { if (m.isMesh) m.material = tint; }); g.scale.setScalar(.85 - i * .12);
+    for (let i = 0; i < 3; i++) { const [x, z] = side(o.q, 6 + i * 1.6), y = yAt(x, z); const g = misMesh({ k: 'sheep' }); g.traverse(m => { if (m.isMesh) m.material = tint; }); g.scale.setScalar(.85 - i * .12); realAnimal(g, 'bighorn');
       [-1, 1].forEach(sx => { const h = new THREE.Mesh(new THREE.TorusGeometry(.2, .035, 6, 10, Math.PI * 1.1), hm); h.position.set(sx * .08, .78, .42); h.rotation.set(0, Math.PI / 2, .6); g.add(h); });
       g.position.set(x, y, z); g.rotation.y = R() * 6.28; scene.add(g); J.ibex.push({ g, y, ph: i * 2.1 }); } }
   { const o = lore('cueva', .7, 2.2, { label: 'Mirar la flor', fx: 'flor', info: ['El desierto florecerá', '«Se alegrarán el desierto y la tierra seca; el desierto se gozará y florecerá». Hasta en el lugar más seco, Dios hace brotar vida.', 'Isaías 35:1'] });
@@ -4266,7 +4266,7 @@ function buildDoors(scene, doors, hx, HW) {
     g.userData.anim = anim; return g; };
   const out = [];
   for (const d of doors) {
-    if (d.k === 'door') { const y = yAt(d.x, d.z), g = epicGate(d, 12, hx); g.position.set(d.x, y, d.z); g.rotation.y = -d.side * Math.PI / 2; scene.add(g); g.updateMatrixWorld(true); g.userData.decor(); try { staticMerge(g); } catch (e) {} out.push({ d, g, anim: g.userData.anim, fx: d.x - d.side * 4.5, fz: d.z }); continue; }
+    if (d.k === 'door') { const y = yAt(d.x, d.z), g = epicGate(d, 12, hx); g.position.set(d.x, y, d.z); g.rotation.y = -d.side * Math.PI / 2; scene.add(g); g.updateMatrixWorld(true); g.userData.decor(); let th = null; try { th = doorTheme(scene, g, d, hx, HW); } catch (e) { console.warn('antesala', d.id, e); } try { staticMerge(g); } catch (e) {} out.push({ d, g, th, anim: g.userData.anim, fx: d.x - d.side * 4.5, fz: d.z }); continue; }
     // escalera al cielo
     const y0 = yAt(d.x, d.z), g = new THREE.Group(); g.position.set(d.x, y0, d.z); g.rotation.y = d.side > 0 ? Math.PI / 2 : -Math.PI / 2; scene.add(g);
     const st = heavenStair(g, hx);
@@ -4286,10 +4286,82 @@ function doorTick(t) {
       A.fire.forEach((f, k) => { const fl = .85 + Math.sin(tt * 13 + k) * .1 + Math.sin(tt * 7.3 + k * 2) * .08; f.f1.scale.set(1, fl, 1); f.f2.scale.set(1, fl * 1.1, 1); f.pl.intensity = (S.hx ? 26 : 10) * (.8 + fl * .25); });
       if (A.gem) { A.gem.rotation.y = tt * 1.2; A.gem.material.emissiveIntensity = 1.3 + Math.sin(tt * 2.4) * .5; }
       A.glow.forEach((m, k) => { m.material.opacity = (k === 0 ? .9 : .18) + Math.sin(tt * 1.7 + k) * (k === 0 ? .1 : .06); });
-      if (A.rune) A.rune.rotation.z = tt * .25;
+      if (A.rune) A.rune.rotation.z = tt * .25; if (o.th && o.th.tick) o.th.tick(t, 1 / 60);
       if (A.parts) { const P = A.parts.geometry.attributes.position; for (let k = 0; k < P.count; k++) { let y = P.getY(k) + .03; if (y > A.ph) y = 0; P.setY(k, y); } P.needsUpdate = true; } }
     const near = (a.x - o.fx) ** 2 + (a.z - o.fz) ** 2 < (o.top ? 12 : 9) && (!o.top || stairH(a.x, a.z) >= S.stair.y0 + ST.H - .1);
     if (near && S.doorAt !== o.d.id) { S.doorAt = o.d.id; doorSheet(o.d); } else if (!near && S.doorAt === o.d.id) S.doorAt = null; }
+}
+/* la antesala de cada curso: un anticipo de lo que hay del otro lado, con cosas para mirar y leer, y un faro de su color que se ve de lejos.
+   Génesis: el huerto con el manantial y el árbol de la vida detrás del muro. Éxodo: la arena, la zarza que arde sin consumirse,
+   las dos tablas de piedra y la columna de fuego y nube. Hechos: la calzada romana, la piedra miliaria y las lenguas de fuego con el viento. */
+function doorTheme(scene, g, d, hx, HW) {
+  const V = (x, y, z) => g.localToWorld(new THREE.Vector3(x, y, z)), yAt = (x, z) => HW ? Math.max(0, HW.hAt(x, z)) : 0, col = new THREE.Color(d.c), hot = col.clone().lerp(new THREE.Color('#FFFFFF'), .5);
+  const add = (geo, m, x, y, z, par) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); (par || g).add(o); o.castShadow = true; o.receiveShadow = true; return o; };
+  const solid = (x, z, r) => { const w = V(x, 0, z); S.cols.push({ x0: w.x - r, x1: w.x + r, z0: w.z - r, z1: w.z + r, cx: w.x, cz: w.z, r }); };
+  const lore = (x, z, label, info, r) => { const w = V(x, 0, z); (S.lore || (S.loreEarly = S.loreEarly || [])).push({ x: w.x, z: w.z, r: r || 2.6, label, info }); };
+  const T = { list: [], tick: null }, stone = pbrMat('old_sandstone_02', 1, 1, { color: '#F4EADA' });
+  /* faro: una columna de luz del color del curso, alta, que se ve desde el camino */
+  { const bm = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 2.6, 110, 20, 1, true), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: .07, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); bm.position.copy(V(0, 55, -2)); scene.add(bm); T.beam = bm; }
+  const words = (lines, w, h, ink, bg) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); if (bg) { x.fillStyle = bg; x.fillRect(0, 0, w, h); } x.fillStyle = ink; x.textAlign = 'center'; x.textBaseline = 'middle'; lines.forEach(([t, f, y]) => { x.font = f; x.fillText(t, w / 2, y); }); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
+  if (d.id === 'genesis') {
+    /* el huerto: árboles a los dos lados del sendero y arbustos bajos */
+    [[-7.5, 9, 1.1], [7.8, 9.6, 1.05], [-12.5, 15, 1.25], [12.2, 16, 1.2], [-9, 22, 1], [9.5, 23, .95]].forEach(([x, z, k], i) => { phOne(i % 2 ? 'island_tree_01' : 'tree_small_02', g, x, 0, z, i * 1.7, k); solid(x, z, .6); });
+    [[-4.6, 13], [4.8, 14.5], [-5.2, 19], [5.6, 20.5], [-14.5, 9], [14.6, 10]].forEach(([x, z], i) => phOne(i % 2 ? 'searsia_lucida' : 'wild_rooibos_bush', g, x, 0, z, i, .9));
+    /* el árbol de la vida, enorme, asomando detrás del muro, con frutos de luz */
+    phOne('island_tree_02', g, 0, 0, -10, .6, 3.1); T.fruits = [];
+    for (let i = 0; i < 14; i++) { const a = i / 14 * 6.283, r = 3 + (i % 3) * 1.6, sp = glowSpr('#FFE9A0', .9, .85); sp.position.copy(V(Math.cos(a) * r, 15 + (i % 4) * 2.2, -10 + Math.sin(a) * r)); scene.add(sp); T.fruits.push({ sp, y: sp.position.y, p: i }); }
+    { const pl = new THREE.PointLight('#D8FFC8', hx ? 22 : 10, 30, 1.4); pl.position.copy(V(0, 16, -9)); scene.add(pl); }
+    /* el manantial que riega el huerto: pila de piedra con agua que se mueve */
+    { const cx = 0, cz = 12.5, rim = add(new THREE.TorusGeometry(1.7, .28, 10, 36), stone, cx, .32, cz); rim.rotation.x = Math.PI / 2; add(new THREE.CylinderGeometry(1.95, 2.05, .35, 36), stone, cx, .17, cz);
+      const wg = new THREE.CircleGeometry(1.62, 36); wg.rotateX(-Math.PI / 2); const n = wg.attributes.position.count; wg.setAttribute('shore', new THREE.BufferAttribute(new Float32Array(n).fill(1), 1)); add(wg, waterMat(hx, 0), cx, .42, cz).castShadow = false; solid(cx, cz, 2);
+      for (let i = 0; i < 4; i++) { const a = i / 4 * 6.283 + .4; add(new THREE.CylinderGeometry(.06, .06, .5, 6), stone, cx + Math.cos(a) * 1.7, .55, cz + Math.sin(a) * 1.7); } }
+    lore(0, 15.5, 'Mirar el manantial', ['El huerto del principio', 'Dios plantó un huerto en Edén y puso allí al hombre que había formado. De la tierra hizo crecer toda clase de árboles hermosos y buenos para comer; en medio del huerto estaba el árbol de la vida, y un río salía de Edén para regar el huerto.', 'Génesis 2:8-10']);
+  }
+  if (d.id === 'exodo') {
+    /* el desierto llega hasta la puerta: un manto de arena */
+    { const t = texL('dry.jpg', 4); t.repeat.set(5, 5); const sm = new THREE.MeshStandardMaterial({ map: t, color: '#E8C99A', roughness: 1, polygonOffset: true, polygonOffsetFactor: -2 }); const sd = add(new THREE.CircleGeometry(15, 40).rotateX(-Math.PI / 2), sm, 0, .05, 11); sd.castShadow = false; }
+    /* la zarza que arde y no se consume */
+    { const bx = -7, bz = 11; phOne('wild_rooibos_bush', g, bx, 0, bz, .4, 1.5); phOne('searsia_lucida', g, bx + .6, 0, bz - .4, 1.4, .9); const w = V(bx, 1, bz); T.bush = ambFire(w.x, w.y, w.z, .75, { smoke: false });
+      const gl = glowSpr('#FFC060', 5, .55); gl.position.copy(V(bx, 1.4, bz)); scene.add(gl); T.bushG = gl; solid(bx, bz, 1.3);
+      lore(bx + 2.8, bz + .5, 'Acercarse a la zarza', ['La zarza que no se consumía', 'Moisés cuidaba ovejas cerca del monte de Dios cuando vio una zarza envuelta en llamas que no se quemaba. Al acercarse, Dios lo llamó desde la zarza: tenía que sacarse las sandalias porque estaba en tierra santa.', 'Éxodo 3:1-6']); }
+    /* las dos tablas de piedra sobre su pedestal */
+    { const tx = 7, tz = 11; add(bevBox(3.4, .9, 1.6, .08), stone, tx, .45, tz); add(bevBox(2.9, .35, 1.3, .06), stone, tx, 1.05, tz);
+      const sh = new THREE.Shape(); sh.moveTo(-.62, 0); sh.lineTo(-.62, 1.5); sh.absarc(0, 1.5, .62, Math.PI, 0, true); sh.lineTo(.62, 0); sh.lineTo(-.62, 0);
+      const tg = new THREE.ExtrudeGeometry(sh, { depth: .18, bevelEnabled: true, bevelSize: .03, bevelThickness: .03, bevelSegments: 2, curveSegments: 18 });
+      const tab = pbrMat('marble_01', 1, 1, { color: '#E9E1D2' }); [['I · II · III', 'IV · V'], ['VI · VII', 'VIII · IX · X']].forEach((L, i) => { const m = add(tg, tab, tx + (i ? .68 : -.68), 1.22, tz - .1); m.rotation.y = (i ? -1 : 1) * .06;
+        const face = add(new THREE.PlaneGeometry(1.1, 1.7), new THREE.MeshStandardMaterial({ map: words([[L[0], '700 54px serif', 70], [L[1], '700 54px serif', 150], ['— — —', '400 40px serif', 222], ['— — —', '400 40px serif', 282]], 256, 360, '#5A4630'), transparent: true, roughness: 1 }), tx + (i ? .68 : -.68), 2.05, tz + .13); face.castShadow = false; });
+      solid(tx, tz, 1.8); lore(tx, tz + 3, 'Leer las tablas', ['Las dos tablas', 'En el monte Sinaí, Dios le dio a Moisés las diez palabras de la ley escritas en dos tablas de piedra, para que el pueblo libre supiera cómo vivir con Dios y con los demás.', 'Éxodo 20; 31:18']); }
+    /* la columna de nube y de fuego, alta sobre la puerta */
+    { const cm = new THREE.SpriteMaterial({ map: cloudTex(), color: '#FFF4E6', transparent: true, opacity: .55, depthWrite: false }); T.cloud = [];
+      for (let i = 0; i < 16; i++) { const sp = new THREE.Sprite(cm); const y = 24 + i * 3.4, r = 1.2 + (i % 3) * .6; sp.position.copy(V(Math.sin(i * 2.1) * r, y, -3 + Math.cos(i * 2.1) * r)); sp.scale.set(9 - i * .15, 6, 1); scene.add(sp); T.cloud.push({ sp, y, p: i }); }
+      const fm = new THREE.Mesh(new THREE.CylinderGeometry(.9, 1.8, 46, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#FFB050', transparent: true, opacity: .22, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); fm.position.copy(V(0, 46, -3)); scene.add(fm); T.fire = fm;
+      lore(0, 18, 'Mirar la columna', ['Nube de día, fuego de noche', 'Cuando el pueblo salió de Egipto, el Señor iba delante de ellos: de día en una columna de nube para guiarlos y de noche en una columna de fuego para alumbrarlos.', 'Éxodo 13:21-22'], 3.4); }
+  }
+  if (d.id === 'hechos') {
+    /* la calzada romana que sale de la puerta hacia el mundo */
+    { const pv = pbrMat('large_sandstone_blocks', 2, 7, { color: '#D9CDB8', polygonOffset: true, polygonOffsetFactor: -2 }); const rd = add(new THREE.PlaneGeometry(5.2, 24).rotateX(-Math.PI / 2), pv, 0, .06, 15.5); rd.castShadow = false;
+      [-1, 1].forEach(sx => { const cb = add(new THREE.BoxGeometry(.35, .22, 24), stone, sx * 2.75, .11, 15.5); cb.castShadow = false; }); }
+    /* la piedra miliaria */
+    { const mx = 4.6, mz = 14; add(bevBox(1.4, .5, 1.4, .06), stone, mx, .25, mz); const c = add(new THREE.CylinderGeometry(.48, .55, 2.6, 24), stone, mx, 1.8, mz);
+      const lab = add(new THREE.PlaneGeometry(.9, .74), new THREE.MeshStandardMaterial({ map: words([['HASTA LO', '700 46px serif', 46], ['ÚLTIMO DE', '700 46px serif', 104], ['LA TIERRA', '700 46px serif', 162], ['HCH 1:8', '400 36px serif', 226]], 320, 260, '#4A3A28'), transparent: true, roughness: 1, polygonOffset: true, polygonOffsetFactor: -1 }), mx, 2.15, mz + .56); lab.castShadow = false; /* placa tallada que mira a la calzada */
+      solid(mx, mz, .8); lore(mx, mz + 2.4, 'Leer la piedra miliaria', ['Hasta lo último de la tierra', 'Antes de subir al cielo, Jesús prometió a sus discípulos que recibirían poder cuando viniera el Espíritu Santo, y que serían sus testigos en Jerusalén, en Judea, en Samaria y hasta lo último de la tierra.', 'Hechos 1:8']); }
+    /* las lenguas de fuego sobre el arco y el viento que las mueve */
+    { T.tongues = []; const fm = new THREE.MeshBasicMaterial({ color: '#FFB347', transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false }), fi = new THREE.MeshBasicMaterial({ color: '#FFF0B0', transparent: true, opacity: .95, blending: THREE.AdditiveBlending, depthWrite: false });
+      for (let i = 0; i < 12; i++) { const a = Math.PI * (i + .5) / 12, x = Math.cos(a) * 7.4, y = 1.35 + 12 + Math.sin(a) * 7.4 + 2.2, o = new THREE.Group(); const f1 = new THREE.Mesh(new THREE.ConeGeometry(.32, 1.1, 10), fm), f2 = new THREE.Mesh(new THREE.ConeGeometry(.17, .7, 10), fi); f2.position.y = -.12; o.add(f1, f2); const gl = glowSpr('#FFB45A', 2, .5); o.add(gl); o.position.copy(V(x, y, 1.9)); scene.add(o); T.tongues.push({ o, f1, f2, y: o.position.y, p: i * .7 }); }
+      const N = 220, pg = new THREE.BufferGeometry(), pp = new Float32Array(N * 3), ph = new Float32Array(N); for (let k = 0; k < N; k++) { ph[k] = Math.random() * 6.283; pp[k * 3 + 1] = Math.random() * 9; }
+      pg.setAttribute('position', new THREE.BufferAttribute(pp, 3)); const wind = new THREE.Points(pg, new THREE.PointsMaterial({ color: '#E6F2FF', size: .12, transparent: true, opacity: .7, depthWrite: false, blending: THREE.AdditiveBlending })); wind.position.copy(V(0, .3, 9)); wind.frustumCulled = false; scene.add(wind); T.wind = { pts: wind, ph };
+      lore(-4.5, 12, 'Sentir el viento', ['Pentecostés', 'Los discípulos estaban reunidos cuando de repente vino del cielo un ruido como de un viento fuerte que llenó la casa; aparecieron como lenguas de fuego que se posaron sobre cada uno, y todos fueron llenos del Espíritu Santo.', 'Hechos 2:1-4']); }
+  }
+  T.tick = (t, dt) => {
+    if (T.beam) T.beam.material.opacity = .06 + Math.sin(t * .6) * .02;
+    if (T.fruits) T.fruits.forEach(f => { f.sp.position.y = f.y + Math.sin(t * .8 + f.p) * .25; f.sp.material.opacity = .65 + Math.sin(t * 1.6 + f.p * 1.3) * .25; });
+    if (T.bushG) T.bushG.material.opacity = .45 + Math.sin(t * 7) * .08 + Math.sin(t * 3.1) * .06;
+    if (T.cloud) T.cloud.forEach(c => { c.sp.position.y = c.y + Math.sin(t * .3 + c.p) * .8; c.sp.material.rotation = t * .02; });
+    if (T.fire) { const night = S.nk || 0; T.fire.material.opacity = .14 + night * .3 + Math.sin(t * 2.2) * .04; }
+    if (T.tongues) T.tongues.forEach(k => { const fl = .85 + Math.sin(t * 11 + k.p) * .12 + Math.sin(t * 6.3 + k.p * 2) * .08; k.f1.scale.set(1, fl, 1); k.f2.scale.set(1, fl * 1.1, 1); k.o.position.y = k.y + Math.sin(t * 1.4 + k.p) * .12; });
+    if (T.wind) { const P = T.wind.pts.geometry.attributes.position, ph = T.wind.ph; for (let k = 0; k < ph.length; k++) { ph[k] += dt * (.6 + (k % 5) * .12); const r = 2.5 + (k % 7) * 1.1; P.setX(k, Math.cos(ph[k]) * r); P.setZ(k, Math.sin(ph[k]) * r * .7); let y = P.getY(k) + dt * .5; if (y > 9) y = 0; P.setY(k, y); } P.needsUpdate = true; }
+  };
+  return T;
 }
 function doorSheet(d) {
   const el = document.getElementById('v3sheet'); if (!el || sheetUp()) return; S.joy.x = 0; S.joy.y = 0; S.keys = {}; const p = G().P(), want = (p.want || {})[d.id];
@@ -4820,6 +4892,22 @@ function anTick(dt) {
     k.t -= dt; if (k.t <= 0) { k.t = 4 + Math.random() * 7; const r = Math.random(); k.mode = r < .45 ? 'eat' : r < .75 ? 'walk' : 'idle'; if (k.mode === 'walk') { const an = Math.random() * 6.28; k.tx = k.cx + Math.cos(an) * k.sp.spread * .6; k.tz = k.cz + Math.sin(an) * k.sp.spread * .6; } const nx = k.act(k.mode) || k.act('idle'); if (nx && nx !== k.cur) { nx.reset().play(); if (k.cur) nx.crossFadeFrom(k.cur, .4, false); k.cur = nx; } }
     if (k.mode === 'walk') { const dx = k.tx - o.position.x, dz = k.tz - o.position.z, L2 = Math.hypot(dx, dz); if (L2 > .3) { const sp = (k.sp.walk || .6) * dt, nx = o.position.x + dx / L2 * sp, nz = o.position.z + dz / L2 * sp; if (!blockedAt(nx, nz) && waterWet(nx, nz, null) < .02) { o.position.set(nx, Math.max(0, W.hAt(nx, nz)), nz); o.rotation.y = Math.atan2(dx, dz); } else k.t = 0; } else k.t = Math.min(k.t, .2); }
     k.skip = (k.skip + 1) % (d2 < 35 * 35 ? 1 : 3); if (!k.skip) k.mx.update(d2 < 35 * 35 ? dt : dt * 3); }
+}
+/* un animal real suelto (no instanciado) para reemplazar las figuras de esferas: la oveja perdida, el corral de los pastores,
+   las ovejas de las misiones y las cabras monteses de la cueva. Mientras carga (o sin R2) queda la figura simple. */
+const AN1 = {};
+function anOne(id) {
+  if (AN1[id]) return AN1[id];
+  return AN1[id] = anInit().then(async man => { if (!man) return null; const sp = man.species.find(q => q.id === id); if (!sp) return null; const sl = anSl(man, sp), L = await phLoader();
+    const g = await new Promise((r, j) => L.load(GRP.base + sl.pre + 'models/' + sp.dir + '.glb', r, undefined, j)); g.scene.updateMatrixWorld(true);
+    const node = g.scene.getObjectByName(QUAL.lv <= 1 ? 'LOD1' : 'LOD0') || g.scene.getObjectByName('LOD0') || g.scene, parts = []; node.traverse(o => { if (o.isMesh && !o.isSkinnedMesh) parts.push(o); });
+    if (!parts.length) return null; const mats = []; for (const pm of parts) mats.push(sp.skinned ? pm.material : await grpMat(sl, (pm.material && pm.material.name) || sp.id)); return { sp, parts, mats }; }).catch(() => null);
+}
+function realAnimal(g, id, k) {
+  g.userData.want = id; anOne(id).then(r => { if (!r || g.userData.want !== id || g.userData.real === id) return; g.userData.real = id; const old = []; g.children.forEach(c => { if (c.isMesh) old.push(c); }); old.forEach(c => g.remove(c));
+    const h = new THREE.Group(); r.parts.forEach((pm, i) => { const m = new THREE.Mesh(pm.geometry, r.mats[i]); m.applyMatrix4(pm.matrixWorld); m.castShadow = QUAL.lv > 0; m.receiveShadow = true; h.add(m); });
+    h.scale.setScalar((r.sp.k || 1) * (k || 1)); h.rotation.y = Math.PI / 2; /* las figuras miraban hacia +x; los modelos, hacia +z */ g.add(h); });
+  return g;
 }
 function phGet(id) {
   if (!PH.cache[id]) PH.cache[id] = grpVars(id).catch(() => null).then(v => { if (id === 'trp_olive') { trpOlive(v); return v || []; } if (id === 'trp_palm') { if (v && v.length && !FLORA.trpP) { FLORA.trpP = 1; FLORA.chunks = FLORA.chunks.filter(im => { if (!im.userData.dpalm) return true; im.visible = false; if (im.parent) im.parent.remove(im); return false; }); } return v || []; } return v; }).then(v => v || phLoader().then(L => new Promise((r, j) => L.load(PHB + id + '.glb', r, undefined, j))).then(async g => {
