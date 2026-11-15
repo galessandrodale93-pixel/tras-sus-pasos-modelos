@@ -281,7 +281,7 @@ resurreccion:{
   ch:{t:'verse',parts:['Por lo tanto, vayan y hagan ',0,' de todas las naciones, bautizándolos en el nombre del Padre y del Hijo y del ',1,' Santo.'],blanks:['discípulos','Espíritu'],bank:['discípulos','amigos','Espíritu','Reino','soldados','Pueblo'],exp:'Esa misión también es para nosotros. Y Jesús prometió: «estoy con ustedes siempre, hasta el fin de los tiempos».',ref:'Mateo 28:18-20 · Juan 21:15-17'}},
  n5:{place:'Hito del camino',title:'Repasá el curso',scene:'hito9',
   text:'¡Llegaste al final de Tras sus pasos! Repasá lo que pasó después de la resurrección.',
-  game:{type:'plinko',title:'Caída de respuestas',how:'Leé la pregunta y tocá arriba para soltar la piedrita sobre la respuesta correcta. Los clavitos la desvían un poco.',sky:['#BFE0FF','#FFF3DD']},
+  game:{type:'plinko',title:'Caída de respuestas',how:'Leé la pregunta y tocá arriba para soltar la piedrita sobre la respuesta correcta. Rebota en los clavitos, pero siempre cae en la columna donde la soltaste.',sky:['#BFE0FF','#FFF3DD']},
   ch:{t:'order',q:'Ordená lo que pasó después de la resurrección',items:['Las mujeres encuentran la tumba vacía','Jesús camina con dos discípulos hacia Emaús','Tomás ve a Jesús y cree','Jesús da la gran misión en Galilea'],exp:'La historia de Jesús sigue en sus discípulos: la vas a vivir en el próximo curso, Hechos.',ref:'Mateo 28 · Lucas 24 · Juan 20–21'}}
 }};
 const MAP_PLACES=[
@@ -2371,10 +2371,10 @@ function Plinko(th, f) {
   deal();
   const slotW = () => GW / cur.o.length;
   return { get score() { return score }, get over() { return over },
-    input(k, d) { if (over || k !== 'tap' || ball || wait > 0) return; ball = { x: Math.max(14, Math.min(GW - 14, d.x)), y: 160, vx: 0, vy: 0 }; tone(560, .05); },
+    input(k, d) { if (over || k !== 'tap' || ball || wait > 0) return; ball = { x: Math.max(14, Math.min(GW - 14, d.x)), y: 160, vx: 0, vy: 0 }; ball.tx = ball.x; tone(560, .05); },
     update(dt) { if (over) return; fT = Math.max(0, fT - dt); if (wait > 0) { wait -= dt; if (wait <= 0) deal(); return; } if (!ball) return;
-      const sub = 4; for (let s = 0; s < sub; s++) { const h = dt / sub; ball.vy += 520 * h; ball.x += ball.vx * h; ball.y += ball.vy * h; if (ball.x < 8) { ball.x = 8; ball.vx = Math.abs(ball.vx); } if (ball.x > GW - 8) { ball.x = GW - 8; ball.vx = -Math.abs(ball.vx); }
-        for (const p of pegs) { const dx = ball.x - p.x, dy = ball.y - p.y, dd = Math.hypot(dx, dy); if (dd < 12 && dd > 0) { const nx = dx / dd, ny = dy / dd, vn = ball.vx * nx + ball.vy * ny; if (vn < 0) { ball.vx -= 1.6 * vn * nx; ball.vy -= 1.6 * vn * ny; ball.vx += (Math.random() - .5) * 20; } ball.x = p.x + nx * 12; ball.y = p.y + ny * 12; } } }
+      const sub = 4; for (let s = 0; s < sub; s++) { const h = dt / sub; ball.vy += 520 * h; ball.vx += (ball.tx - ball.x) * 9 * h; ball.vx *= 1 - 2.2 * h; /* sin azar: rebota en los clavitos pero vuelve a la columna donde la soltaste */ ball.x += ball.vx * h; ball.y += ball.vy * h; if (ball.x < 8) { ball.x = 8; ball.vx = Math.abs(ball.vx); } if (ball.x > GW - 8) { ball.x = GW - 8; ball.vx = -Math.abs(ball.vx); }
+        for (const p of pegs) { const dx = ball.x - p.x, dy = ball.y - p.y, dd = Math.hypot(dx, dy); if (dd < 12 && dd > 0) { const nx = dx / dd, ny = dy / dd, vn = ball.vx * nx + ball.vy * ny; if (vn < 0) { ball.vx -= 1.6 * vn * nx; ball.vy -= 1.6 * vn * ny; } ball.x = p.x + nx * 12; ball.y = p.y + ny * 12; } } }
       if (ball.y > 440) { const slot = Math.min(cur.o.length - 1, Math.floor(ball.x / slotW())); if (slot === cur.a) { score += 20; fb = '¡Correcto!'; tone(880, .25); } else { lives-=pazHit(); fb = 'Era: ' + cur.o[cur.a]; tone(180, .2); if (lives <= 0) { fT = 1.6; setTimeout(() => { over = true; }, 1500); wait = 9; return; } } fT = 1.4; wait = 1.6; ball.y = 440; } },
     draw(c, t) { skyBg(c, th, t); hearts(c, lives, 3); card(c, th, 14, 46, GW - 28, 96); c.fillStyle = INK(th); c.font = '800 14px Nunito,sans-serif'; c.textAlign = 'center';
       const words = cur.q.split(' '); let line = '', y = 72; words.forEach(w => { if (c.measureText(line + w).width > GW - 60) { c.fillText(line, GW / 2, y); line = ''; y += 19; } line += w + ' '; }); c.fillText(line, GW / 2, y);

@@ -4356,7 +4356,7 @@ function doorTheme(scene, g, d, hx, HW) {
     { const cm = new THREE.SpriteMaterial({ map: cloudTex(), color: '#B8A68C', transparent: true, opacity: .95, depthWrite: false, fog: false }); T.cloud = []; /* nube densa y algo gris: se distingue del cielo claro */
       for (let i = 0; i < 22; i++) { const sp = new THREE.Sprite(cm); const y = 24 + i * 2.6, r = 1.4 + (i % 3) * .8; sp.position.copy(V(Math.sin(i * 2.1) * r, y, -3 + Math.cos(i * 2.1) * r)); sp.scale.set(15 - i * .15, 9, 1); scene.add(sp); T.cloud.push({ sp, y, p: i }); }
       const fm = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 2.4, 52, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#FFB050', transparent: true, opacity: .22, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); fm.position.copy(V(0, 46, -3)); scene.add(fm); T.fire = fm;
-      lore(0, 18, 'Mirar la columna', ['Nube de día, fuego de noche', 'Cuando el pueblo salió de Egipto, el Señor iba delante de ellos: de día en una columna de nube para guiarlos y de noche en una columna de fuego para alumbrarlos.', 'Éxodo 13:21-22'], 3.4); }
+      lore(0, 18, 'Mirar la columna de nube', ['La columna de nube', 'Cuando el pueblo salió de Egipto, el Señor mismo iba delante de ellos en una columna de nube para guiarlos por el camino, y la nube nunca se apartó de su vista. (De noche, la misma columna brillaba como fuego.)', 'Éxodo 13:21-22'], 3.4); }
   }
   if (d.id === 'hechos') {
     /* la calzada romana que sale de la puerta hacia el mundo */
@@ -4378,7 +4378,7 @@ function doorTheme(scene, g, d, hx, HW) {
     if (T.fruits) T.fruits.forEach(f => { f.sp.position.y = f.y + Math.sin(t * .8 + f.p) * .25; f.sp.material.opacity = .65 + Math.sin(t * 1.6 + f.p * 1.3) * .25; });
     if (T.bushG) T.bushG.material.opacity = .45 + Math.sin(t * 7) * .08 + Math.sin(t * 3.1) * .06;
     if (T.cloud) T.cloud.forEach(c => { c.sp.position.y = c.y + Math.sin(t * .3 + c.p) * .8; c.sp.material.rotation = t * .02; });
-    if (T.fire) { const night = S.nk || 0; T.fire.material.opacity = .1 + night * .45 + Math.sin(t * 2.2) * .04; if (T.cloud) T.cloud.forEach(c => { c.sp.material.opacity = .9 - night * .55; }); }
+    if (T.fire) T.fire.material.opacity = .1 + Math.sin(t * 1.3) * .03; /* el brillo dorado de la presencia dentro de la nube */
     if (T.tongues) T.tongues.forEach(k => { const fl = .85 + Math.sin(t * 11 + k.p) * .12 + Math.sin(t * 6.3 + k.p * 2) * .08; k.f1.scale.set(1, fl, 1); k.f2.scale.set(1, fl * 1.1, 1); k.o.position.y = k.y + Math.sin(t * 1.4 + k.p) * .12; });
     if (T.wind) { const P = T.wind.pts.geometry.attributes.position, ph = T.wind.ph; for (let k = 0; k < ph.length; k++) { ph[k] += dt * (.6 + (k % 5) * .12); const r = 2.5 + (k % 7) * 1.1; P.setX(k, Math.cos(ph[k]) * r); P.setZ(k, Math.sin(ph[k]) * r * .7); let y = P.getY(k) + dt * .5; if (y > 9) y = 0; P.setY(k, y); } P.needsUpdate = true; }
   };
@@ -4479,6 +4479,28 @@ const H3_GEAR = {
   vendaslino: { t: '#D8CCB0' }, plata: { t: '#C8CCD4', metal: .7 }, oro: { t: '#E6B84A', metal: .75 }, sacerdote: {}, magos: {}, gorrogal: {}
 };
 // tiñe la tela: pasa la textura a gris (conserva costuras y pliegues) y la pinta con el color de la prenda
+/* túnica larga, con piel de huesos propia: cintura en la pelvis y falda que acompaña muslos y pantorrillas
+   (camina, se sienta y se arrodilla sin que asomen las piernas); cinto oscuro a la cintura y ruedo apenas más claro */
+function h3robe(o, col, hx) {
+  let body = null; o.traverse(m => { if (!body && m.isSkinnedMesh && m.skeleton && m.skeleton.bones.some(b => b.name === 'pelvis')) body = m; }); if (!body) return false;
+  const sk = body.skeleton, ix = n => sk.bones.findIndex(b => b.name === n), I = ['pelvis', 'thigh_l', 'calf_l', 'thigh_r', 'calf_r', 'foot_l', 'foot_r'].map(ix); if (I.some(i => i < 0)) return false;
+  const bp = i => new THREE.Vector3().setFromMatrixPosition(new THREE.Matrix4().copy(sk.boneInverses[i]).invert()), P = bp(I[0]), TL = bp(I[1]), TR = bp(I[3]), fy = Math.min(bp(I[5]).y, bp(I[6]).y), H = P.y - fy; if (!(H > .2)) return false;
+  const lat = new THREE.Vector3(TL.x - TR.x, 0, TL.z - TR.z).normalize(), fwd = new THREE.Vector3(-lat.z, 0, lat.x), yTop = P.y + H * .2, yBot = fy + H * .1, NR = 14, NS = 20;
+  const pos = [], uv = [], si = [], sw = [], colr = [], base = new THREE.Color(col), belt = base.clone().multiplyScalar(.42), hem = base.clone().lerp(new THREE.Color('#E8DCC4'), .18);
+  for (let r = 0; r <= NR; r++) { const t = r / NR, y = yTop + (yBot - yTop) * t, rad = H * (.2 + .07 * t + .1 * t * t);
+    for (let k = 0; k <= NS; k++) { const a = k / NS * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a), lx = ca * rad, lz = sa * rad * .86;
+      pos.push(P.x + lat.x * lx + fwd.x * lz, y, P.z + lat.z * lx + fwd.z * lz); uv.push(k / NS * 3, t * 2.4);
+      const wl = THREE.MathUtils.smoothstep(ca, -.55, .55), L = Math.min(1, Math.max(0, (t - .1) / .4)) * .92, cw = Math.min(1, Math.max(0, (t - .48) / .36));
+      const W = [[I[0], 1 - L], [I[1], L * wl * (1 - cw)], [I[2], L * wl * cw], [I[3], L * (1 - wl) * (1 - cw)], [I[4], L * (1 - wl) * cw]].sort((p, q) => q[1] - p[1]).slice(0, 4), tot = W.reduce((a, q) => a + q[1], 0) || 1;
+      W.forEach(q => { si.push(q[0]); sw.push(q[1] / tot); });
+      const c = t < .07 ? belt : t > .93 ? hem : base, sh = .9 + .1 * Math.sin(a * 6 + t * 3); colr.push(c.r * sh, c.g * sh, c.b * sh); } }
+  const idx = []; for (let r = 0; r < NR; r++) for (let k = 0; k < NS; k++) { const a = r * (NS + 1) + k, b = a + NS + 1; idx.push(a, b, a + 1, b, b + 1, a + 1); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setAttribute('color', new THREE.Float32BufferAttribute(colr, 3));
+  g.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4)); g.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4)); g.setIndex(idx); g.applyMatrix4(body.bindMatrixInverse); g.computeVertexNormals();
+  const mt = new THREE.MeshStandardMaterial({ color: '#FFFFFF', vertexColors: true, roughness: .96, side: THREE.DoubleSide }); try { h3cloth(mt); } catch (e) {}
+  const robe = new THREE.SkinnedMesh(g, mt); robe.name = 'Robe_NPC'; robe.position.copy(body.position); robe.quaternion.copy(body.quaternion); robe.scale.copy(body.scale); body.parent.add(robe); robe.bind(sk, body.bindMatrix); robe.castShadow = true; robe.receiveShadow = true; robe.frustumCulled = false;
+  return true;
+}
 function h3cloth(mt, rb) {
   mt.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', '#ifdef USE_MAP\nvec4 sampledDiffuseColor = texture2D( map, vMapUv );\nfloat lum = dot( sampledDiffuseColor.rgb, vec3( .299, .587, .114 ) );\nsampledDiffuseColor.rgb = mix( sampledDiffuseColor.rgb, vec3( clamp( sqrt( lum ) * 1.55, 0., 1.25 ) ), .88 );\n' + (rb ? 'sampledDiffuseColor.rgb *= .45 + .55 * cos( 6.2832 * ( vec3( 0., .33, .67 ) + floor( vMapUv.y * 9. ) / 9. * 1.7 ) );\n' : '') + 'diffuseColor *= sampledDiffuseColor;\n#endif'); };
   mt.customProgramCacheKey = () => 'h3cloth' + (rb ? 'rb' : '');
@@ -4545,6 +4567,8 @@ function buildHero3(av) {
     m.castShadow = true; m.receiveShadow = true;
   });
   drop.forEach(m => m.parent.remove(m));
+  /* la gente de la época viste túnica larga: se agrega la túnica (que se dobla con las piernas) y se sacan pantalón y botas */
+  if (npc && !av.noRobe) { try { if (h3robe(o, tint.body || av.outfit || '#B9A27E', !kid)) { const lg = []; o.traverse(m => { if (m.isSkinnedMesh && H3_PART.legs.test(m.name)) lg.push(m); }); lg.forEach(m => m.parent.remove(m)); } } catch (e) { console.warn('túnica', e); } }
   let bones = {}; o.traverse(b => { if (b.isBone) bones[b.name] = b; });
   if (kid && !npc) kidBody(bones, sx);
   if (hatProc) { const g = new THREE.Group(); g.matrixAutoUpdate = false; g.matrix.copy(tpl.hatM); bones.Head.add(g); const k = new THREE.Group(); k.scale.setScalar(.95); g.add(k);
