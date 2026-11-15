@@ -4697,13 +4697,19 @@ function h3mantle(body, B, o) {
 }
 /* sandalias: pie descalzo, suela de cuero y tiras; las "altas" se atan alrededor del tobillo y la pantorrilla */
 function h3sandals(body, B, o, skin) {
-  const { I, P, fwd } = B, sole = new THREE.Color('#3A2A1C'), strap = new THREE.Color(o.c || '#7A5232'), sk = new THREE.Color(skin), pos = [], si = [], sw = [], col = [], idx = [];
+  const { I, P, fwd } = B, sole = new THREE.Color('#6E4C2E'), strap = new THREE.Color(o.c || '#7A5232'), sk = new THREE.Color(skin), pos = [], si = [], sw = [], col = [], idx = [];
   const box = (cx, cy, cz, d, w, h, dir, side, wts, c) => { const n0 = pos.length / 3, lt = new THREE.Vector3(-dir.z, 0, dir.x); for (const [a, b, e] of [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]]) { const k = b > 0 ? .78 : 1; pos.push(cx + dir.x * a * d / 2 + lt.x * e * w / 2 * k, cy + b * h / 2, cz + dir.z * a * d / 2 + lt.z * e * w / 2 * k); const W = typeof wts === 'function' ? wts(a) : wts; h3w(W).forEach(q => { si.push(q[0]); sw.push(q[1]); }); col.push(c.r, c.g, c.b); }
     [[0, 1, 2, 0, 2, 3], [4, 6, 5, 4, 7, 6], [0, 4, 5, 0, 5, 1], [3, 2, 6, 3, 6, 7], [0, 3, 7, 0, 7, 4], [1, 5, 6, 1, 6, 2]].forEach(f => f.forEach(v => idx.push(n0 + v))); };
   ['l', 'r'].forEach(sd => { const F = P['foot_' + sd], Bl = P['ball_' + sd], dir = new THREE.Vector3(Bl.x - F.x, 0, Bl.z - F.z); const len = dir.length() + .13; dir.normalize(); const gy = Math.min(F.y, Bl.y) - .035;
     const cx = (F.x + Bl.x) / 2 + dir.x * .02, cz = (F.z + Bl.z) / 2 + dir.z * .02, wf = a => [[I['foot_' + sd], a > .3 ? .25 : 1], [I['ball_' + sd], a > .3 ? .75 : 0]];
-    box(cx, gy + .012, cz, len, .1, .024, dir, sd, wf, sole); box(cx, gy + .048, cz, len * .9, .082, .05, dir, sd, wf, sk);
-    box(F.x, F.y + .01, F.z, .07, .07, .1, dir, sd, [[I['foot_' + sd], .7], [I['calf_' + sd], .3]], sk);
+    box(cx, gy + .012, cz, len * 1.02, .112, .024, dir, sd, wf, sole);
+    /* el pie de verdad: talón redondo, empeine alto y dedos más finos (antes era una tablita) */
+    { const lt = new THREE.Vector3(-dir.z, 0, dir.x), h0 = new THREE.Vector3(cx - dir.x * len * .5, 0, cz - dir.z * len * .5), NRf = 9, NSf = 12, f0 = pos.length / 3, bot = gy + .022;
+      for (let r = 0; r <= NRf; r++) { const q = r / NRf, w = .1 * (q < .15 ? .7 + q * 2 : q > .82 ? 1 - (q - .82) * 1.6 : 1) * (q > .45 ? 1.06 : .94), hh = q < .12 ? .05 + q * .3 : q < .45 ? .086 - (q - .12) * .02 : q < .78 ? .08 - (q - .45) * .1 : .047 - (q - .78) * .08, px = h0.x + dir.x * len * q, pz = h0.z + dir.z * len * q;
+        for (let k = 0; k < NSf; k++) { const an = k / NSf * Math.PI * 2, ca = Math.cos(an), sa = Math.sin(an), yy = sa < 0 ? bot + .004 * (1 + sa) : bot + hh * sa * (q > .2 && q < .75 && Math.abs(ca) < .5 ? 1.05 : 1), ww = w / 2 * ca * (sa < 0 ? 1 : 1 - .18 * sa); pos.push(px + lt.x * ww, yy, pz + lt.z * ww);
+          h3w([[I['foot_' + sd], q < .5 ? 1 : Math.max(0, 1 - (q - .5) * 3)], [I['ball_' + sd], q < .5 ? 0 : Math.min(1, (q - .5) * 3)], [I['calf_' + sd], q < .15 ? .25 : 0]]).forEach(t => { si.push(t[0]); sw.push(t[1]); }); const shd = .8 + .2 * Math.max(0, sa); col.push(sk.r * shd, sk.g * shd, sk.b * shd); } }
+      for (let r = 0; r < NRf; r++) for (let k = 0; k < NSf; k++) { const a0 = f0 + r * NSf + k, a1 = f0 + r * NSf + (k + 1) % NSf, b0 = a0 + NSf, b1 = a1 + NSf; idx.push(a0, b0, a1, a1, b0, b1); }
+      [0, NRf].forEach((r, e) => { const c0 = pos.length / 3; let sx = 0, sy = 0, sz = 0; for (let k = 0; k < NSf; k++) { sx += pos[(f0 + r * NSf + k) * 3]; sy += pos[(f0 + r * NSf + k) * 3 + 1]; sz += pos[(f0 + r * NSf + k) * 3 + 2]; } pos.push(sx / NSf, sy / NSf, sz / NSf); const W0 = si.slice((f0 + r * NSf) * 4, (f0 + r * NSf) * 4 + 4), W1 = sw.slice((f0 + r * NSf) * 4, (f0 + r * NSf) * 4 + 4); si.push(...W0); sw.push(...W1); col.push(sk.r * .9, sk.g * .9, sk.b * .9); for (let k = 0; k < NSf; k++) { const a0 = f0 + r * NSf + k, a1 = f0 + r * NSf + (k + 1) % NSf; if (e) idx.push(c0, a1, a0); else idx.push(c0, a0, a1); } }); }
     [.22, .5, -.18].forEach(f => box(cx + dir.x * len * f * .5, gy + .07, cz + dir.z * len * f * .5, .018, .092, .03, dir, sd, wf(f), strap));
     if (o.high) [0, .06, .12].forEach(h => box(F.x, F.y + .05 + h, F.z, .085, .085, .016, dir, sd, [[I['calf_' + sd], 1]], strap)); });
   /* las piernas de la rodilla al tobillo: con pantorrilla de verdad (antes asomaban dos palitos debajo de la túnica) */
