@@ -2,14 +2,15 @@
 // Público:  POST { op: "pedido", nombre, apellido, email, telefono, cantidad, entrega: "retiro"|"envio", dni, calle, numero, piso, depto, cp, localidad, provincia, referencia }
 // Dirección y permiso «libro»:  GET ?admin=1  ·  POST { op: "estado" | "reenviar" | "borrar", id, ... }
 import type { APIRoute } from "astro";
-import { auth } from "@wix/essentials";
+import { auth, httpClient } from "@wix/essentials";
 import { items } from "@wix/data";
 import { emailDe, veLibro } from "../../lib/profe";
-import { CANALES, ENVIO, ESTADOS, PERFILES, PRECIO, PROVINCIAS, mailAviso, mailDespacho, mailListo, mailPedido, mandar, totalDe, type Pedido } from "../../lib/libro";
+import { CANALES, ENVIO, ESTADOS, PERFILES, PRECIO, PROVINCIAS, mailAviso, mailDespacho, mailPedido, mandar, marcarPagado, pesos, totalDe, type Pedido } from "../../lib/libro";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
 const rem = auth.elevate(items.remove);
+const fetchAuth = auth.elevate(httpClient.fetchWithAuth);
 const COL = "LibPedidos";
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
 const s = (v: unknown, max = 200) => (typeof v === "string" ? v : v == null ? "" : String(v)).replace(/[\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
@@ -46,6 +47,16 @@ async function perfiles() {
   };
 }
 
+// el pago de Mercado Pago confirmado a mano pasa a «Libros» en Finanzas (y deja de contar como cuota, si se había tomado así)
+async function aLibros(ingId: string) {
+  try {
+    const I = (await q("FinIngresos").eq("_id", ingId).limit(1).find()).items[0] as Record<string, unknown> | undefined;
+    if (!I) return;
+    await save("FinIngresos", { ...clean(I), tipo: "Libros", alumnoId: "" });
+    await rem("FinCobros", "mp-" + ingId).catch(() => null);
+  } catch (e) { console.error("libro aLibros", e); }
+}
+
 export const GET: APIRoute = async ({ request, url }) => {
   try {
     if (url.searchParams.get("admin") !== "1") return json({ precio: PRECIO, envio: ENVIO, provincias: PROVINCIAS, canales: CANALES });
@@ -77,7 +88,7 @@ export const POST: APIRoute = async ({ request }) => {
         calle: envio ? s(x.calle, 80) : "", numero: envio ? s(x.numero, 10) : "", piso: envio ? s(x.piso, 6) : "", depto: envio ? s(x.depto, 6) : "",
         cp: envio ? s(x.cp, 8).toUpperCase() : "", localidad: envio ? s(x.localidad, 60) : "", provincia: envio ? s(x.provincia, 40) : "", referencia: envio ? s(x.referencia, 160) : "",
         cantidad: cant, total: totalDe(cant, envio), estado: "Nuevo", fecha: ahoraAR(), nota: s(x.nota, 300),
-        canal: CANALES.includes(s(x.canal, 40)) ? s(x.canal, 40) : "", origen: "web",
+        canal: CANALES.includes(s(x.canal, 40)) ? s(x.canal, 40) : "", origen: "web", clave: crypto.randomUUID().replace(/-/g, "").slice(0, 20),
       };
       it.title = (it.nombre + " " + it.apellido).trim();
       const falta: string[] = [];
@@ -99,7 +110,32 @@ export const POST: APIRoute = async ({ request }) => {
       it.mail = r.ok ? ahoraAR() : "";
       await save(COL, it as unknown as Record<string, unknown>);
       await mandar(rmt, "Nuevo pedido del libro: " + it.title + (envio ? " (envío)" : " (retira)"), mailAviso(it), rmt).catch(() => null);
-      return json({ ok: true, total: it.total, mail: r.ok, email: it.email, entrega: it.entrega });
+      return json({ ok: true, total: it.total, mail: r.ok, email: it.email, entrega: it.entrega, id: it._id, k: it.clave });
+    }
+
+    if (op === "comprobante" || op === "ver") {
+      const P = (await q(COL).eq("_id", s(x.id, 60)).limit(1).find()).items[0] as Pedido | undefined;
+      if (!P || !P.clave || s(x.k, 40) !== P.clave) return json({ error: "Este link no es válido. Escribinos por WhatsApp y lo vemos." }, 404);
+      const pub = { nombre: P.nombre, total: P.total, entrega: P.entrega, estado: P.estado, comprobante: !!P.comprobante };
+      if (op === "ver") return json({ ok: true, pedido: pub });
+      if (P.estado !== "Nuevo") return json({ ok: true, pedido: pub, ya: true });
+      if (typeof x.archivo !== "string") return json({ error: "Elegí la foto o el PDF del comprobante." }, 400);
+      const mime = s(x.mime, 120) || "application/octet-stream", nombre = s(x.nombre, 160) || "comprobante";
+      const bytes = Uint8Array.from(atob(String(x.archivo).replace(/^data:[^,]*,/, "")), (c) => c.charCodeAt(0));
+      if (bytes.length > 8e6) return json({ error: "El archivo es muy pesado (máximo 8 MB). Probá con una captura de pantalla." }, 400);
+      const g = await fetchAuth("https://www.wixapis.com/site-media/v1/files/generate-upload-url", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mimeType: mime, fileName: "libro-" + P._id + "-" + nombre }) });
+      const gj = await g.json().catch(() => ({}));
+      if (!g.ok || !gj.uploadUrl) { console.error("libro upload-url", g.status, JSON.stringify(gj).slice(0, 300)); return json({ error: "No pudimos preparar la subida. Probá de nuevo." }, 500); }
+      const up = await fetch(gj.uploadUrl + (gj.uploadUrl.includes("?") ? "&" : "?") + "filename=" + encodeURIComponent(nombre), { method: "PUT", headers: { "Content-Type": mime }, body: bytes });
+      const uj = await up.json().catch(() => ({}));
+      const u = (uj && uj.file && uj.file.url) || "";
+      if (!up.ok || !u) { console.error("libro upload", up.status, JSON.stringify(uj).slice(0, 300)); return json({ error: "No se pudo subir el archivo. Probá con una captura de pantalla." }, 500); }
+      const it = clean(P as unknown as Record<string, unknown>) as unknown as Pedido;
+      it.comprobante = u; it.compFecha = ahoraAR();
+      await save(COL, it as unknown as Record<string, unknown>);
+      const rmt = await remitente();
+      await mandar(rmt, "Comprobante del libro: " + (it.title || "") + " (" + pesos(it.total || 0) + ")", `<div style="font-family:Arial;max-width:560px;margin:auto;color:#10251d"><p style="font:16px/1.6 Arial"><b>${(it.title || "").replace(/[<>&]/g, "")}</b> subió el comprobante de <b>${pesos(it.total || 0)}</b> por el libro Asombro.</p><p><a href="${u}" style="color:#b8904f">Ver comprobante</a></p><p><a href="https://www.habitat-cfm.org/libro-panel.html" style="background:#10251d;color:#fbf8f2;font:700 15px Arial;padding:12px 20px;border-radius:999px;text-decoration:none">Revisarlo y marcar pagado</a></p></div>`, rmt).catch(() => null);
+      return json({ ok: true, pedido: { ...pub, comprobante: true } });
     }
 
     const me = await emailDe(request);
@@ -135,12 +171,18 @@ export const POST: APIRoute = async ({ request }) => {
       if (x.dni !== undefined) it.dni = s(x.dni, 12).replace(/\D/g, "");
       if (x.perfil !== undefined) it.perfil = PERFILES.includes(s(x.perfil, 30)) ? s(x.perfil, 30) : "";
       if (x.canal !== undefined) it.canal = CANALES.includes(s(x.canal, 40)) ? s(x.canal, 40) : "";
-      if (est === "Pagado" && !it.pagado) it.pagado = hoyAR();
+      if (est === "Pagado" && antes !== "Pagado") {
+        let pid = "", quien = "";
+        if (x.probable && it.probable) { [pid, quien] = it.probable.split("|"); }
+        const y = await marcarPagado(it, { id: pid, quien, fecha: hoyAR() }, false);
+        if (pid) await aLibros(pid);
+        const perfilDe = await perfiles();
+        return json({ ok: true, item: { ...clean(y as unknown as Record<string, unknown>), quien: perfilDe(y), manual: !!y.perfil }, aviso: !!y.email });
+      }
       if (est === "Despachado" && !it.despachado) it.despachado = hoyAR();
       let aviso: boolean | null = null;
       if (est && est !== antes && it.email) {
         if (est === "Despachado" && it.entrega === "envio") aviso = (await mandar(it.email, "Tu libro Asombro ya está en camino 📦", mailDespacho(it), await remitente())).ok;
-        else if (est === "Pagado" && it.entrega !== "envio") aviso = (await mandar(it.email, "Tu libro Asombro te espera en Habitat 📖", mailListo(it), await remitente())).ok;
       }
       await save(COL, it as unknown as Record<string, unknown>);
       const perfilDe = await perfiles();
