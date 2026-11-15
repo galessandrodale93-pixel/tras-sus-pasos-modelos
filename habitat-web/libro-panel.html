@@ -36,6 +36,16 @@
 .lb-cp button small{color:var(--muted);font-weight:600}.lb-cp button span{overflow-wrap:anywhere;font-weight:600}.lb-cp button em{font-style:normal;font-size:.75rem;color:var(--gold);font-weight:700}
 .lb-cp button.ok em{color:#1f5f3a}
 .lb-tr{display:flex;gap:8px;flex-wrap:wrap}.lb-tr input{flex:1;min-width:160px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);font:inherit;background:var(--paper)}
+.lb-who{display:inline-flex;gap:4px;align-items:center;padding:3px 10px;border-radius:999px;font:600 .74rem var(--sans);background:var(--cream);border:1px dashed var(--sand);color:var(--ink);cursor:pointer}
+.lb-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:8px}
+.lb-g h3{font:600 .74rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:0 0 8px}
+.lb-r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;margin:0 0 8px;font-size:.9rem}
+.lb-r span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lb-r b{font-weight:700;color:var(--ink)}
+.lb-r i{grid-column:1/-1;height:8px;border-radius:99px;background:var(--paper);overflow:hidden;display:block}.lb-r i em{display:block;height:100%;background:var(--ink);border-radius:99px}
+.lb-r.al i em{background:var(--gold)}
+.lb-big{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:4px 0 10px}
+.lb-donut{width:92px;height:92px;border-radius:50%;display:grid;place-items:center;flex:none}
+.lb-donut b{width:62px;height:62px;border-radius:50%;background:#fff;display:grid;place-items:center;font:500 1.3rem var(--serif);color:var(--ink)}
 @media(max-width:560px){.lb-cp button{grid-template-columns:1fr auto}.lb-cp button small{grid-column:1/-1}}
 </style>
 
@@ -55,6 +65,7 @@
 </div></section>
 <div class="tt-main"><div class="wrap tt-v">
   <div class="tt-card" id="lbSum"><p class="tt-empty">Cargando…</p></div>
+  <div class="tt-card" id="lbStats" hidden></div>
   <div class="tt-card" id="lbList"></div>
 </div></div>
 <div class="tt-toast" id="ttToast" role="status" aria-live="polite"></div>
@@ -83,21 +94,21 @@ if(!A.loggedIn()){try{sessionStorage.setItem('habitat:ret','/libro-panel.html');
 var tk='';try{await A.api('GET','/members/v1/members/my');tk=JSON.parse(localStorage.getItem('habitat:mtok')).a;}catch(e){}
 async function api(m,b,qs){var r=await fetch('/api/libro'+(qs||''),{method:m,headers:{'content-type':'application/json','x-habitat-auth':tk},body:b?JSON.stringify(b):undefined});var j={};try{j=await r.json();}catch(e){}if(!r.ok)throw new Error(j.error||'No se guardó. Revisá la conexión.');return j;}
 function modal(html,onOpen){var m=document.createElement('div');m.className='tt-modal';m.innerHTML='<div class="tt-card">'+html+'</div>';document.body.appendChild(m);var close=function(){m.remove();};m.onclick=function(e){if(e.target===m||e.target.closest('[data-close]'))close();};onOpen(m,close);return m;}
-var D=null,F='cobrar';
+var D=null,F='cobrar',SOLO=false,IC={'Alumno':'🎓','Ex alumno':'📜','Equipo Habitat':'🙌🏽','Sembrador':'🌱','Externo':'🌎'};
 var FIL={cobrar:['Por cobrar',function(x){return x.estado==='Nuevo';}],despachar:['Para despachar',function(x){return x.estado==='Pagado'&&x.entrega==='envio';}],retirar:['Para retirar',function(x){return x.estado==='Pagado'&&x.entrega!=='envio';}],todos:['Todos',function(){return true;}]};
 function dom(x){return [[x.calle,x.numero].filter(Boolean).join(' '),x.piso?'piso '+x.piso:'',x.depto?'depto '+x.depto:''].filter(Boolean).join(', ')+' · '+[x.localidad,x.provincia].filter(Boolean).join(', ')+(x.cp?' (CP '+x.cp+')':'');}
 function fe(s){return s?String(s).slice(8,10)+'/'+String(s).slice(5,7):'';}
 async function load(){try{D=await api('GET',null,'?admin=1');}catch(e){$('#lbWho').textContent=e.message;$('#lbSum').innerHTML='<p class="tt-empty">'+esc(e.message)+'</p>';$('#lbList').hidden=true;return;}draw();}
-function draw(){
+function draw(){stats();
   var L=D.pedidos.filter(function(x){return x.estado!=='Cancelado';}),n=function(k){return L.filter(FIL[k][1]).length;};
   var cobrado=L.filter(function(x){return x.estado!=='Nuevo';}).reduce(function(a,x){return a+(x.total||0);},0),libros=L.reduce(function(a,x){return a+(x.cantidad||1);},0);
   $('#lbWho').textContent='Cada pedido recibe un mail con el total y el alias. Cuando paga, marcalo; los envíos tienen los datos listos para Andreani.';
   $('#lbSum').innerHTML='<div class="lb-stats"><div><b>'+n('cobrar')+'</b><small>esperando el pago</small></div><div><b>'+n('despachar')+'</b><small>para despachar</small></div><div><b>'+n('retirar')+'</b><small>para retirar en Habitat</small></div><div><b>'+libros+'</b><small>libros pedidos</small></div><div><b>'+ps(cobrado)+'</b><small>cobrado</small></div></div>';
   var V=D.pedidos.filter(FIL[F][1]);
-  $('#lbList').innerHTML='<div class="lb-bar"><div class="tt-pills">'+Object.keys(FIL).map(function(k){return '<button class="tt-pill'+(k===F?' on':'')+'" data-f="'+k+'">'+FIL[k][0]+(k!=='todos'?' · '+n(k):'')+'</button>';}).join('')+'</div>'+(n('despachar')?'<button class="tt-btn s" id="lbCsv">⬇︎ Planilla de envíos</button>':'')+'</div>'+
+  $('#lbList').innerHTML='<div class="lb-bar"><div class="tt-pills">'+Object.keys(FIL).map(function(k){return '<button class="tt-pill'+(k===F?' on':'')+'" data-f="'+k+'">'+FIL[k][0]+(k!=='todos'?' · '+n(k):'')+'</button>';}).join('')+'</div>'+'<div class="tt-wa"><button class="tt-btn s" id="lbVen">+ Venta en mano</button>'+(n('despachar')?'<button class="tt-btn s" id="lbCsv">⬇︎ Planilla de envíos</button>':'')+'</div></div>'+
    (V.length?V.map(card).join(''):'<p class="tt-empty">'+({cobrar:'No hay pedidos esperando el pago.',despachar:'No hay envíos pendientes 🙌🏽',retirar:'Nadie tiene que retirar por ahora.',todos:'Todavía no hay pedidos.'}[F])+'</p>');
   $$('#lbList [data-f]').forEach(function(b){b.onclick=function(){F=b.dataset.f;draw();};});
-  if($('#lbCsv'))$('#lbCsv').onclick=csv;
+  if($('#lbCsv'))$('#lbCsv').onclick=csv;$('#lbVen').onclick=venta;
   $$('#lbList [data-id]').forEach(function(el){var x=D.pedidos.find(function(p){return p._id===el.dataset.id;});
     $$('[data-act]',el).forEach(function(b){b.onclick=function(){act(b.dataset.act,x,b);};});});
 }
@@ -110,8 +121,8 @@ function card(x){
   if(wa)a.push('<a class="tt-btn s" href="https://wa.me/'+wa+'" target="_blank" rel="noopener">WhatsApp</a>');
   if(x.estado==='Nuevo')a.push('<button class="tt-btn s" data-act="reenviar">Reenviar mail</button>');
   if(x.estado==='Nuevo')a.push('<button class="tt-btn s" data-act="cancelar">Cancelar</button>');
-  return '<div class="lb-p'+(/Entregado|Despachado|Cancelado/.test(x.estado)?' done':'')+'" data-id="'+esc(x._id)+'"><div class="lb-h"><b>'+esc(x.title)+' <span class="lb-st '+esc(x.estado)+'">'+esc(x.estado)+'</span></b><strong>'+ps(x.total)+'</strong></div>'+
-   '<div class="lb-m">'+(x.cantidad||1)+' '+((x.cantidad||1)===1?'libro':'libros')+' · '+(env?'Envío a '+esc(dom(x)):'Retira en Habitat')+'<br>'+esc(x.email)+' · '+esc(x.telefono)+' · pidió el '+fe(x.fecha)+(x.pagado?' · pagó el '+fe(x.pagado):'')+(x.tracking?' · seguimiento <b>'+esc(x.tracking)+'</b>':'')+(x.mail?'':' · <b style="color:#8a3b2f">no le llegó el mail</b>')+(x.nota?'<br>“'+esc(x.nota)+'”':'')+'</div>'+
+  return '<div class="lb-p'+(/Entregado|Despachado|Cancelado/.test(x.estado)?' done':'')+'" data-id="'+esc(x._id)+'"><div class="lb-h"><b>'+esc(x.title)+' <span class="lb-st '+esc(x.estado)+'">'+esc(x.estado)+'</span> <button type="button" class="lb-who" data-act="quien" title="Cambiar">'+(IC[x.quien]||'')+' '+esc(x.quien||'')+'</button></b><strong>'+ps(x.total)+'</strong></div>'+
+   '<div class="lb-m">'+(x.cantidad||1)+' '+((x.cantidad||1)===1?'libro':'libros')+' · '+(env?'Envío a '+esc(dom(x)):'Retira en Habitat')+'<br>'+esc(x.email)+' · '+esc(x.telefono)+' · pidió el '+fe(x.fecha)+(x.pagado?' · pagó el '+fe(x.pagado):'')+(x.tracking?' · seguimiento <b>'+esc(x.tracking)+'</b>':'')+(x.mail?'':' · <b style="color:#8a3b2f">no le llegó el mail</b>')+(x.canal?'<br>Lo conoció: '+esc(x.canal):'')+(x.origen==='mano'?' · venta en mano':'')+(x.nota?'<br>“'+esc(x.nota)+'”':'')+'</div>'+
    (a.length?'<div class="lb-a">'+a.join('')+'</div>':'')+'</div>';
 }
 async function estado(x,est,extra,msg){var r=await api('POST',Object.assign({op:'estado',id:x._id,estado:est},extra||{}));Object.assign(x,r.item);draw();toast(msg+(r.aviso===true?' · le avisamos por mail':r.aviso===false?' · no salió el mail':''));}
@@ -122,6 +133,7 @@ async function act(k,x,b){
     else if(k==='reenviar'){b.disabled=true;await api('POST',{op:'reenviar',id:x._id});x.mail='ok';toast('Le reenviamos el mail');b.disabled=false;}
     else if(k==='cancelar'){if(!b.dataset.ok){b.dataset.ok=1;b.textContent='¿Cancelar el pedido?';return;}await estado(x,'Cancelado',null,'Pedido cancelado');}
     else if(k==='andreani')andreani(x);
+    else if(k==='quien')quien(x);
   }catch(e){toast(e.message);b.disabled=false;}
 }
 function andreani(x){
@@ -129,13 +141,44 @@ function andreani(x){
   modal('<h2 class="tt-h">Envío de '+esc(x.title)+'</h2><p class="tt-tip">Abrí Andreani → «Enviar» → envío a domicilio, y tocá cada dato para copiarlo y pegarlo. Paquete: '+(x.cantidad||1)+' libro'+((x.cantidad||1)===1?'':'s')+' (≈ '+(0.4*(x.cantidad||1)).toFixed(1).replace('.',',')+' kg).</p>'+
    '<div class="tt-wa"><a class="tt-btn" href="https://www.andreani.com/" target="_blank" rel="noopener">Abrir Andreani ↗</a><button class="tt-btn s" type="button" data-all>Copiar todo</button></div>'+
    '<div class="lb-cp">'+F.map(function(f,i){return '<button type="button" data-i="'+i+'"><small>'+f[0]+'</small><span>'+esc(f[1])+'</span><em>Copiar</em></button>';}).join('')+'</div>'+
+   (x.dni?'':'<p class="tt-lbl" style="color:#8a3b2f">Falta el DNI (lo pide Andreani):</p><div class="lb-tr" style="margin-bottom:12px"><input id="lbDni" inputmode="numeric" placeholder="DNI sin puntos"><button class="tt-btn s" type="button" data-dni>Guardar DNI</button></div>')+
    '<p class="tt-lbl">Cuando lo despaches, pegá el número de seguimiento y le avisamos por mail:</p><div class="lb-tr"><input id="lbTr" placeholder="Nº de seguimiento" value="'+esc(x.tracking||'')+'"><button class="tt-btn" type="button" data-ok>'+(x.estado==='Despachado'?'Guardar':'Marcar despachado')+'</button></div>'+
    (x.estado==='Nuevo'?'<p class="tt-tip" style="color:#8a3b2f">Ojo: este pedido todavía no figura como pagado.</p>':'')+
    '<div class="tt-wa" style="margin-top:12px"><button class="tt-btn s" type="button" data-close>Cerrar</button></div>',function(m,close){
     var cp=function(t,b){try{navigator.clipboard.writeText(t);}catch(e){}if(b){$$('.lb-cp button',m).forEach(function(z){z.classList.remove('ok');$('em',z).textContent='Copiar';});b.classList.add('ok');$('em',b).textContent='✓ Copiado';}};
     $$('.lb-cp button',m).forEach(function(b){b.onclick=function(){cp(F[+b.dataset.i][1],b);};});
+    if($('[data-dni]',m))$('[data-dni]',m).onclick=async function(){var d=$('#lbDni',m).value.replace(/\D/g,'');if(d.length<7){toast('Revisá el DNI');return;}try{var r=await api('POST',{op:'estado',id:x._id,dni:d});Object.assign(x,r.item);close();andreani(x);toast('DNI guardado');}catch(e){toast(e.message);}};
     $('[data-all]',m).onclick=function(){cp(F.map(function(f){return f[0]+': '+f[1];}).join('\n'));toast('Copiamos todos los datos');};
     $('[data-ok]',m).onclick=async function(){var b=this,t=$('#lbTr',m).value.trim();if(!t&&!b.dataset.ok){b.dataset.ok=1;b.textContent='¿Sin número de seguimiento?';return;}b.disabled=true;try{await estado(x,'Despachado',{tracking:t},'Despachado 📦');close();}catch(e){toast(e.message);b.disabled=false;}};
+  });
+}
+function bars(M,tot,cls){var K=Object.keys(M).sort(function(a,b){return M[b]-M[a];});return K.length?K.map(function(k){var p=tot?Math.round(M[k]*100/tot):0;return '<div class="lb-r '+(cls||'')+'"><span>'+esc(k)+'</span><b>'+M[k]+' <small style="color:var(--muted);font-weight:600">'+p+'%</small></b><i><em style="width:'+p+'%"></em></i></div>';}).join(''):'<p class="tt-empty">Sin datos todavía.</p>';}
+function stats(){
+  var box=$('#lbStats'),L=D.pedidos.filter(function(x){return x.estado!=='Cancelado'&&(!SOLO||x.estado!=='Nuevo');});
+  box.hidden=false;
+  var libros=0,conC=0,P={},C={},W={},M={},per={};
+  L.forEach(function(x){var c=x.cantidad||1,q=x.quien||'Externo';libros+=c;P[q]=(P[q]||0)+c;if(x.canal){C[x.canal]=(C[x.canal]||0)+c;conC+=c;}var w=x.entrega==='envio'?(x.provincia||'Envío'):'Retiro en Habitat';W[w]=(W[w]||0)+c;var mm=String(x.fecha||'').slice(0,7);if(mm)M[mm]=(M[mm]||0)+c;var key=(x.email||'').toLowerCase()||String(x.title||'').toLowerCase();per[key]=(per[key]||0)+1;});
+  var casa=(P['Alumno']||0)+(P['Ex alumno']||0)+(P['Equipo Habitat']||0)+(P['Sembrador']||0),pc=libros?Math.round(casa*100/libros):0,rep=Object.keys(per).filter(function(k){return per[k]>1;}).length,sinC=L.filter(function(x){return !x.canal;}).length;
+  var ML=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'],Mx={};Object.keys(M).sort().forEach(function(k){Mx[ML[+k.slice(5,7)-1]+' '+k.slice(2,4)]=M[k];});
+  var orden=function(O){return Object.keys(O).map(function(k){return '<div class="lb-r"><span>'+esc(k)+'</span><b>'+O[k]+'</b><i><em style="width:'+(libros?Math.round(O[k]*100/Math.max.apply(null,Object.keys(O).map(function(z){return O[z];}))):0)+'%"></em></i></div>';}).join('')||'<p class="tt-empty">Sin datos todavía.</p>';};
+  box.innerHTML='<div class="lb-bar"><h2 class="tt-h" style="margin:0">Quiénes compran el libro</h2><div class="tt-pills"><button class="tt-pill'+(SOLO?'':' on')+'" data-s="0">Todos los pedidos</button><button class="tt-pill'+(SOLO?' on':'')+'" data-s="1">Solo pagados</button></div></div>'+
+   (libros?'<div class="lb-big"><div class="lb-donut" style="background:conic-gradient(var(--gold) 0 '+pc+'%,var(--ink) '+pc+'% 100%)"><b>'+pc+'%</b></div><p style="margin:0;max-width:46ch"><b>'+libros+' libro'+(libros===1?'':'s')+'</b> en '+L.length+' pedido'+(L.length===1?'':'s')+'. El <b style="color:var(--gold)">'+pc+'%</b> fue para gente de la casa (alumnos, ex alumnos, equipo y sembradores) y el <b>'+(100-pc)+'%</b> para gente de afuera.'+(rep?' '+rep+' persona'+(rep===1?' volvió':'s volvieron')+' a comprar.':'')+'</p></div>':'')+
+   '<div class="lb-g"><div><h3>Quiénes son</h3>'+bars(P,libros,'al')+'</div><div><h3>Cómo lo conocieron</h3>'+bars(C,conC)+(sinC?'<p class="tt-tip">'+sinC+' pedido'+(sinC===1?'':'s')+' sin este dato.</p>':'')+'</div><div><h3>Dónde están</h3>'+bars(W,libros)+'</div><div><h3>Libros por mes</h3>'+orden(Mx)+'</div></div>'+
+   '<p class="tt-tip">Reconocemos a alumnos, equipo y sembradores por el mail, el celular o el nombre y apellido. Si alguno quedó mal, tocá la etiqueta del pedido y cambiala.</p>';
+  $$('[data-s]',box).forEach(function(b){b.onclick=function(){SOLO=b.dataset.s==='1';stats();};});
+}
+function quien(x){
+  modal('<h2 class="tt-h">¿Quién es '+esc(x.title)+'?</h2><p class="tt-tip">'+(x.manual?'Lo marcaste a mano.':'Lo reconocimos solos como «'+esc(x.quien)+'».')+'</p><div class="tt-pills" style="margin:12px 0">'+D.perfiles.map(function(p){return '<button class="tt-pill'+(p===x.quien?' on':'')+'" data-p="'+esc(p)+'">'+IC[p]+' '+esc(p)+'</button>';}).join('')+'</div><p class="tt-lbl">¿Cómo lo conoció?</p><div class="tt-pills" style="margin:8px 0 14px">'+D.canales.map(function(c){return '<button class="tt-pill'+(c===x.canal?' on':'')+'" data-c="'+esc(c)+'">'+esc(c)+'</button>';}).join('')+'</div><div class="tt-wa">'+(x.manual?'<button class="tt-btn s" data-auto>Que lo reconozca solo</button>':'')+'<button class="tt-btn s" data-close>Listo</button></div>',function(m,close){
+    var go=async function(b){try{var r=await api('POST',Object.assign({op:'estado',id:x._id},b));Object.assign(x,r.item);draw();close();toast('Guardado');}catch(e){toast(e.message);}};
+    $$('[data-p]',m).forEach(function(b){b.onclick=function(){go({perfil:b.dataset.p});};});
+    $$('[data-c]',m).forEach(function(b){b.onclick=function(){go({canal:b.dataset.c});};});
+    if($('[data-auto]',m))$('[data-auto]',m).onclick=function(){go({perfil:''});};
+  });
+}
+function venta(){
+  modal('<h2 class="tt-h">Venta en mano</h2><p class="tt-tip">Para los libros que vendés en Habitat, en un evento o a un conocido. Queda como pagado y entregado, y suma a las estadísticas.</p><form class="tt-form" id="lbVF"><label>Nombre<input name="nombre" required></label><label>Apellido<input name="apellido"></label><label>Email (opcional)<input name="email" type="email"></label><label>Celular (opcional)<input name="telefono" type="tel"></label><label>Cantidad<input name="cantidad" type="number" min="1" value="1"></label><label>Cobrado ($)<input name="total" type="number" min="0" placeholder="'+D.precio+'"></label><label>¿Quién es?<select name="perfil"><option value="">Que lo reconozca solo</option>'+D.perfiles.map(function(p){return '<option>'+esc(p)+'</option>';}).join('')+'</select></label><label>¿Cómo lo conoció?<select name="canal"><option value=""></option>'+D.canales.map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select></label><label class="w">Nota<input name="nota" placeholder="Ej: lo compró en la Zarza"></label><div class="w tt-wa"><button class="tt-btn" type="submit">Guardar venta</button><button class="tt-btn s" type="button" data-close>Cancelar</button></div></form>',function(m,close){
+    var f=$('#lbVF',m),q=f.querySelector('[name=cantidad]'),t=f.querySelector('[name=total]');q.oninput=function(){t.placeholder=(Math.max(1,+q.value||1)*D.precio);};
+    f.onsubmit=async function(e){e.preventDefault();var b={op:'venta'};new FormData(f).forEach(function(v,k){b[k]=String(v).trim();});try{var r=await api('POST',b);D.pedidos.unshift(r.item);F='todos';draw();close();toast('Venta guardada 📖');}catch(er){toast(er.message);}};
   });
 }
 function csv(){
