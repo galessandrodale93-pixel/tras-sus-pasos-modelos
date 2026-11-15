@@ -13,6 +13,30 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Raleway:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="/assets/site.css">
+<style>
+#pedir{scroll-margin-top:90px}.lp{background:var(--cream)}.lp .wrap{max-width:860px}
+.lp h2{font:500 clamp(2rem,4vw,2.8rem)/1.1 var(--serif);color:var(--ink);margin:0 0 6px}
+.lp-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:clamp(18px,4vw,34px);box-shadow:0 18px 40px rgba(16,37,29,.07)}
+.lp-f{display:grid;grid-template-columns:1fr 1fr;gap:14px}.lp-f .w{grid-column:1/-1}
+.lp-f label{display:grid;gap:6px;font:600 .8rem var(--sans);color:var(--muted)}
+.lp-f input,.lp-f select,.lp-f textarea{font:500 1rem var(--sans);padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);width:100%;min-width:0}
+.lp-f input:focus,.lp-f select:focus,.lp-f textarea:focus{outline:2px solid var(--gold);outline-offset:1px}
+.lp-op{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lp-op button{display:grid;gap:4px;text-align:left;padding:16px;border-radius:16px;border:1.5px solid var(--line);background:var(--paper);cursor:pointer;font:inherit;color:var(--ink)}
+.lp-op button b{font:600 1rem var(--sans)}.lp-op button span{font-size:.88rem;color:var(--muted)}.lp-op button i{font-style:normal;font:500 1.4rem var(--serif);color:var(--gold)}
+.lp-op button.on{border-color:var(--ink);background:var(--ink);color:var(--cream)}.lp-op button.on span{color:var(--sand)}.lp-op button.on i{color:var(--gold-2)}
+.lp-q{display:flex;align-items:center;gap:10px}.lp-q button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--paper);font:600 1.2rem var(--sans);cursor:pointer;color:var(--ink)}.lp-q b{font:500 1.6rem var(--serif);min-width:28px;text-align:center;color:var(--ink)}
+.lp-env{display:contents}.lp-env[hidden]{display:none}
+.lp-sub{grid-column:1/-1;margin:6px 0 0;font:600 .72rem var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+.lp-tot{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 18px;border-radius:16px;background:var(--paper);border:1px dashed var(--sand)}
+.lp-tot small{display:block;color:var(--muted)}.lp-tot strong{font:500 2rem var(--serif);color:var(--ink)}
+.lp-err{grid-column:1/-1;color:#8a3b2f;font-weight:600;margin:0}
+.lp-ok{text-align:center;display:grid;gap:10px;justify-items:center}.lp-ok .ic{font-size:2.6rem}
+.lp-alias{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:14px 18px;border-radius:16px;background:var(--ink);color:var(--cream)}
+.lp-alias b{font:500 1.7rem var(--serif);letter-spacing:.04em}.lp-alias button{border:0;border-radius:999px;padding:9px 16px;font:600 .8rem var(--sans);background:var(--gold);color:#fff;cursor:pointer}
+.lp-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+@media(max-width:640px){.lp-f,.lp-op{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -25,14 +49,45 @@
 <main>
 <section class="hero phero book" style="color:var(--ink)"><div class="wrap split" style="text-align:left;justify-items:stretch">
 <div class="txt rv"><span class="kick">El libro</span><span class="word-s">ASOMBRO</span><h2 style="font-style:italic">Volviendo nuestro corazón a la belleza de Jesús</h2><span class="by">Guido Alessandro Dalé</span>
-<div><a class="btn btn-gold" href="https://www.habitat-cfm.org/lead-collection-1">Comprar libro</a></div></div>
+<div><a class="btn btn-gold" href="#pedir">Comprar libro</a></div></div>
 <div class="ph rv" style="aspect-ratio:1/1"><img src="https://static.wixstatic.com/media/43ca3b_47cb93874fee46ddb03043d78ec2b42e~mv2.png/v1/fill/w_1000,h_1000,al_c,q_82,enc_auto/43ca3b_47cb93874fee46ddb03043d78ec2b42e.jpg" alt="Libro Asombro"></div></div></section>
 <section class="sec"><div class="wrap split rev">
 <div class="txt rv"><blockquote style="margin:0;font:400 clamp(1.3rem,2.4vw,1.75rem)/1.55 var(--serif);color:var(--ink)">“Por mucho tiempo hemos profundizado en la contemplación como una disciplina espiritual estática vinculada con la quietud, cuando la Biblia nos la muestra dinámica y llena de frutos en el carácter y en obras de justicia.”</blockquote>
 <p class="lead">El libro <i>Asombro</i> es una invitación a recuperar eso que la religiosidad y el misticismo nos quitaron: la capacidad de volver a mirar a Dios hasta quedar genuinamente rendidos ante Su belleza por medio de Su persona y de todo lo que existe.</p>
 <p class="lead">Entre testimonios y contemplación, estas páginas recorren la devoción a Cristo, Su belleza, Sus atributos y el valor incomparable de Su sacrificio hasta llegar al lugar más profundo de nuestros afectos, para ser heridos por Su amor.</p>
-<div><a class="btn btn-line" href="https://www.habitat-cfm.org/lead-collection-1">Quiero mi ejemplar</a></div></div>
+<div><a class="btn btn-line" href="#pedir">Quiero mi ejemplar</a></div></div>
 <div class="ph rv"><img loading="lazy" src="https://static.wixstatic.com/media/43ca3b_b66aadccfe7f45f1af0b6d788d586bc8~mv2.png/v1/fill/w_900,h_1125,al_c,q_82,enc_auto/43ca3b_b66aadccfe7f45f1af0b6d788d586bc8.jpg" alt="Contratapa del libro Asombro"></div>
+</div></section>
+<section class="sec lp" id="pedir"><div class="wrap">
+<div style="text-align:center;margin:0 0 22px"><span class="kick">Pedí tu ejemplar</span><h2>Quiero el libro <i>Asombro</i></h2><p class="lead" style="margin:0 auto">Completá tus datos y te llega un mail con el total y cómo pagar por transferencia.</p></div>
+<div class="lp-card" id="lpBox">
+<form class="lp-f" id="lpF" novalidate>
+<div class="w lp-op" role="radiogroup" aria-label="Entrega">
+<button type="button" class="on" data-e="retiro" role="radio" aria-checked="true"><i>$22.000</i><b>Retiro en Habitat</b><span>Av. Juan Bautista Justo 8177, CABA</span></button>
+<button type="button" data-e="envio" role="radio" aria-checked="false"><i>$33.000</i><b>Envío a domicilio</b><span>Por Andreani a todo el país (+$11.000)</span></button>
+</div>
+<label>Nombre<input name="nombre" autocomplete="given-name" required></label>
+<label>Apellido<input name="apellido" autocomplete="family-name" required></label>
+<label>Email<input name="email" type="email" autocomplete="email" inputmode="email" required></label>
+<label>Celular (WhatsApp)<input name="telefono" type="tel" autocomplete="tel" inputmode="tel" placeholder="11 2345 6789" required></label>
+<div class="w"><span class="lp-sub" style="display:block;margin:0 0 6px">Cantidad</span><div class="lp-q"><button type="button" data-q="-1" aria-label="Uno menos">−</button><b id="lpQ">1</b><button type="button" data-q="1" aria-label="Uno más">+</button></div></div>
+<div class="lp-env" id="lpEnv" hidden>
+<p class="lp-sub">Datos para el envío</p>
+<label>DNI<input name="dni" inputmode="numeric" placeholder="Sin puntos"></label>
+<label>Provincia<select name="provincia"><option value="">Elegí…</option></select></label>
+<label class="w">Calle<input name="calle" autocomplete="address-line1"></label>
+<label>Número<input name="numero" inputmode="numeric"></label>
+<label>Piso / Depto<span style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input name="piso" placeholder="Piso"><input name="depto" placeholder="Depto"></span></label>
+<label>Localidad<input name="localidad" autocomplete="address-level2"></label>
+<label>Código postal<input name="cp" autocomplete="postal-code" inputmode="numeric"></label>
+<label class="w">Entre calles o referencia (opcional)<input name="referencia"></label>
+</div>
+<label class="w">¿Algo que quieras contarnos? (opcional)<textarea name="nota" rows="2"></textarea></label>
+<label class="lp-hp" aria-hidden="true">Web<input name="web" tabindex="-1" autocomplete="off"></label>
+<div class="lp-tot"><div><small id="lpDet">1 ejemplar · retiro en Habitat</small><strong id="lpT">$22.000</strong></div><button class="btn btn-gold" type="submit" id="lpGo">Hacer el pedido</button></div>
+<p class="lp-err" id="lpErr" hidden></p>
+</form>
+</div>
 </div></section>
 </main>
 <footer class="foot"><div class="wrap">
@@ -46,5 +101,31 @@
 <div class="bt"><span>© <span id="yr">2026</span> Habitat · Centro de Formación Ministerial</span><span>Hecho con amor para Su presencia</span></div>
 </div></footer>
 <script src="/assets/site.js"></script>
+<script>
+(function(){
+var P=22000,E=11000,PROV=["CABA","Buenos Aires","Catamarca","Chaco","Chubut","Córdoba","Corrientes","Entre Ríos","Formosa","Jujuy","La Pampa","La Rioja","Mendoza","Misiones","Neuquén","Río Negro","Salta","San Juan","San Luis","Santa Cruz","Santa Fe","Santiago del Estero","Tierra del Fuego","Tucumán"];
+var f=document.getElementById('lpF'),q=1,ent='retiro',$=function(s){return f.querySelector(s);};
+var sel=$('[name=provincia]');PROV.forEach(function(p){var o=document.createElement('option');o.textContent=p;sel.appendChild(o);});
+function ps(n){return '$'+n.toLocaleString('es-AR');}
+function upd(){var t=q*P+(ent==='envio'?E:0);document.getElementById('lpQ').textContent=q;document.getElementById('lpT').textContent=ps(t);document.getElementById('lpDet').textContent=q+(q===1?' ejemplar':' ejemplares')+(ent==='envio'?' · envío por Andreani':' · retiro en Habitat');document.getElementById('lpEnv').hidden=ent!=='envio';return t;}
+f.querySelectorAll('[data-e]').forEach(function(b){b.onclick=function(){ent=b.dataset.e;f.querySelectorAll('[data-e]').forEach(function(x){x.classList.toggle('on',x===b);x.setAttribute('aria-checked',x===b);});upd();};});
+f.querySelectorAll('[data-q]').forEach(function(b){b.onclick=function(){q=Math.min(10,Math.max(1,q+ +b.dataset.q));upd();};});
+function err(t){var e=document.getElementById('lpErr');e.textContent=t;e.hidden=!t;}
+f.onsubmit=async function(ev){ev.preventDefault();err('');
+ var d={op:'pedido',entrega:ent,cantidad:q};new FormData(f).forEach(function(v,k){d[k]=String(v).trim();});
+ var need=['nombre','apellido','email','telefono'].concat(ent==='envio'?['dni','provincia','calle','numero','localidad','cp']:[]),bad=need.filter(function(k){return !d[k];});
+ if(bad.length){var i=$('[name='+bad[0]+']');i.focus();err('Completá los datos marcados para poder hacer el pedido.');return;}
+ if(!/^\S+@\S+\.\S+$/.test(d.email)){$('[name=email]').focus();err('Revisá el email: ahí te llega el detalle para pagar.');return;}
+ var b=document.getElementById('lpGo');b.disabled=true;b.textContent='Enviando…';
+ try{var r=await fetch('/api/libro',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(d)});var j={};try{j=await r.json();}catch(e){}if(!r.ok)throw new Error(j.error||'No pudimos tomar el pedido. Probá de nuevo.');
+  var t=j.total||upd(),box=document.getElementById('lpBox');
+  box.innerHTML='<div class="lp-ok"><div class="ic">📖</div><h2>¡Gracias, '+(d.nombre||'').replace(/[<>&"]/g,'')+'!</h2><p class="lead" style="margin:0">Tomamos tu pedido. Para confirmarlo transferí <b>'+ps(t)+'</b> al alias:</p><div class="lp-alias"><b>habitatcfm</b><button type="button" id="lpCp">Copiar alias</button></div><p style="color:var(--muted);margin:0">'+(j.mail?'Te mandamos el detalle a <b>'+(j.email||'').replace(/[<>&"]/g,'')+'</b>. ':'')+'Después mandanos el comprobante respondiendo el mail o por <a href="https://wa.me/5491171637995" style="color:var(--gold)">WhatsApp</a>.'+(ent==='envio'?' Apenas se acredite lo despachamos por Andreani y te pasamos el seguimiento.':' Te avisamos cuando esté listo para retirar.')+'</p></div>';
+  document.getElementById('lpCp').onclick=function(){var me=this;try{navigator.clipboard.writeText('habitatcfm');}catch(e){}me.textContent='¡Copiado!';setTimeout(function(){me.textContent='Copiar alias';},1800);};
+  box.scrollIntoView({behavior:'smooth',block:'center'});
+ }catch(e){err(e.message);b.disabled=false;b.textContent='Hacer el pedido';}
+};
+upd();
+})();
+</script>
 </body>
 </html>
