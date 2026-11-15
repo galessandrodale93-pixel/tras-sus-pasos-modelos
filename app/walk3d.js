@@ -4680,17 +4680,17 @@ function h3tunic(body, B, o) {
 /* manto: media capa sobre los hombros y la espalda, abierta adelante, hasta las rodillas (más largo en las mujeres) */
 function h3mantle(body, B, o) {
   const { I, P, fy, H, lat, fwd } = B, top = P.spine_03.y + H * .06, bot = fy + H * (o.len ?? .55), sw0 = Math.hypot(P.upperarm_l.x - P.upperarm_r.x, P.upperarm_l.z - P.upperarm_r.z) / 2;
-  const NR = 16, NS = 22, A0 = Math.PI * .62, A1 = Math.PI * 2.38, pos = [], si = [], sw = [], col = [], base = new THREE.Color(o.c), c2 = new THREE.Color(o.c2 || o.c).lerp(new THREE.Color(o.c2 ? o.c2 : '#000000'), 0), dk = base.clone().multiplyScalar(.7);
-  for (let r = 0; r <= NR; r++) { const t = r / NR, y = top + (bot - top) * t, rad = (sw0 + .05) * (1 - t) + H * .34 * t + H * .04 * Math.sin(t * Math.PI);
-    for (let k = 0; k <= NS; k++) { const u = k / NS, a = A0 + (A1 - A0) * u, ca = Math.cos(a), sa = Math.sin(a), lx = ca * rad, lz = sa * rad * (t < .15 ? .7 : .9) - .02, fold = 1 + .04 * Math.sin(u * 30) * t;
-      pos.push(P.pelvis.x + (lat.x * lx + fwd.x * lz) * fold, y - (t < .05 ? 0 : .015 * Math.cos(u * 30)), P.pelvis.z + (lat.z * lx + fwd.z * lz) * fold);
+  const NR = 16, NS = 22, A0 = Math.PI * .8, A1 = Math.PI * 2.2, pos = [], si = [], sw = [], col = [], base = new THREE.Color(o.c), c2 = new THREE.Color(o.c2 || o.c).lerp(new THREE.Color(o.c2 ? o.c2 : '#000000'), 0), dk = base.clone().multiplyScalar(.7);
+  for (let r = 0; r <= NR; r++) { const t = r / NR, y = top + (bot - top) * t, rad = (sw0 + .045) * (1 - t) + H * .245 * t + H * .012 * Math.sin(t * Math.PI); const ce = t < .5 ? P.spine_03.clone().lerp(P.pelvis, t / .5) : P.pelvis; /* pegado al cuerpo, sin joroba */
+    for (let k = 0; k <= NS; k++) { const u = k / NS, a = A0 + (A1 - A0) * u, ca = Math.cos(a), sa = Math.sin(a), lx = ca * rad, lz = sa * rad * (t < .15 ? .7 : .86) - .01, fold = 1 + .025 * Math.sin(u * 30) * t;
+      pos.push(ce.x + (lat.x * lx + fwd.x * lz) * fold, y - (t < .05 ? 0 : .015 * Math.cos(u * 30)), ce.z + (lat.z * lx + fwd.z * lz) * fold);
       const side = ca > 0 ? 'l' : 'r', sv = Math.abs(ca), upW = Math.max(0, 1 - t / .32), midW = Math.max(0, 1 - Math.abs(t - .45) / .3), lowW = Math.max(0, (t - .5) / .5);
       h3w([[I.spine_03, upW * (1 - sv * .6)], [I['clavicle_' + side], upW * sv * .6], [I.spine_01, midW * .7], [I.pelvis, midW * .3 + lowW * .45], [I['thigh_' + side], lowW * .55 * Math.min(1, sv + .3)]]).forEach(q => { si.push(q[0]); sw.push(q[1]); });
       const edge = u < .07 || u > .93 || t > .93; const c = edge ? c2 : (Math.floor(u * 22) % 2 ? base : dk.clone().lerp(base, .82)); col.push(c.r, c.g, c.b); } }
   const idx = []; for (let r = 0; r < NR; r++) for (let k = 0; k < NS; k++) { const a = r * (NS + 1) + k, b = a + NS + 1; idx.push(a, b, a + 1, b, b + 1, a + 1); }
   const m = h3part(body, pos, idx, si, sw, col, h3mat(o.glow ? { emissive: new THREE.Color(o.glow), emissiveIntensity: .35 } : null));
   /* flecos en las cuatro puntas (tzitzit), azules como pide Números 15:38 */
-  if (o.tassels !== false) { const tp = [], tsi = [], tsw = [], tc = [], ti = [], blue = new THREE.Color('#3E5A9A'); [[A0, bot], [A1, bot]].forEach(([a, y]) => { const rad = H * .34 + .01, cx = P.pelvis.x + lat.x * Math.cos(a) * rad + fwd.x * Math.sin(a) * rad * .9, cz = P.pelvis.z + lat.z * Math.cos(a) * rad + fwd.z * Math.sin(a) * rad * .9, side = Math.cos(a) > 0 ? 'l' : 'r';
+  if (o.tassels !== false) { const tp = [], tsi = [], tsw = [], tc = [], ti = [], blue = new THREE.Color('#3E5A9A'); [[A0, bot], [A1, bot]].forEach(([a, y]) => { const rad = H * .245 + .01, cx = P.pelvis.x + lat.x * Math.cos(a) * rad + fwd.x * Math.sin(a) * rad * .9, cz = P.pelvis.z + lat.z * Math.cos(a) * rad + fwd.z * Math.sin(a) * rad * .9, side = Math.cos(a) > 0 ? 'l' : 'r';
       for (let q = 0; q < 4; q++) { const n0 = tp.length / 3, ox = (q - 1.5) * .012; tp.push(cx + ox, y, cz, cx + ox + .006, y - .09, cz, cx + ox - .006, y - .09, cz); ti.push(n0, n0 + 1, n0 + 2); for (let v = 0; v < 3; v++) { h3w([[I['thigh_' + side], .6], [I.pelvis, .4]]).forEach(w => { tsi.push(w[0]); tsw.push(w[1]); }); tc.push(blue.r, blue.g, blue.b); } } });
     h3part(body, tp, ti, tsi, tsw, tc, h3mat()); }
   return m;
