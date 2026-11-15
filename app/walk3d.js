@@ -2962,7 +2962,7 @@ function buildLake(scene, cx, cz, side, hx, yAt, HWm) {
   // juncos en la orilla
   const reed = new THREE.InstancedMesh(new THREE.CylinderGeometry(.015, .02, 1, 4), tm('reed', '#6E8A44'), 260), m4 = new THREE.Matrix4(), rr = rng(31); for (let i = 0; i < 260; i++) { const a = rr() * 6.28, r = R - .5 + rr() * 2.5, x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r; m4.makeScale(1, .6 + rr() * .9, 1); m4.setPosition(x, y0 + .85, z); reed.setMatrixAt(i, m4); } scene.add(reed);
   // el agua no se camina: un anillo de cajas finas alrededor (dejando libre el muelle)
-  for (let i = 0; i < 48; i++) { const a = i / 48 * 6.283, a2 = (i + 1) / 48 * 6.283, x1 = cx + Math.cos(a) * (R * 1.08), z1 = cz + Math.sin(a) * (R * 1.08), x2 = cx + Math.cos(a2) * (R * 1.08), z2 = cz + Math.sin(a2) * (R * 1.08); const b = { x0: Math.min(x1, x2) - .3, x1: Math.max(x1, x2) + .3, z0: Math.min(z1, z2) - .3, z1: Math.max(z1, z2) + .3 }; if (b.x1 > df.x0 - .5 && b.x0 < df.x1 + .5 && b.z1 > df.z0 - .5 && b.z0 < df.z1 + .5) continue; S.cols.push(b); }
+  for (let i = 0; i < 48; i++) { const a = i / 48 * 6.283, a2 = (i + 1) / 48 * 6.283, x1 = cx + Math.cos(a) * (R * 1.08), z1 = cz + Math.sin(a) * (R * 1.08), x2 = cx + Math.cos(a2) * (R * 1.08), z2 = cz + Math.sin(a2) * (R * 1.08); const b = { x0: Math.min(x1, x2) - .3, x1: Math.max(x1, x2) + .3, z0: Math.min(z1, z2) - .3, z1: Math.max(z1, z2) + .3 }; if (b.x1 > df.x0 - .5 && b.x0 < df.x1 + .5 && b.z1 > df.z0 - .5 && b.z0 < df.z1 + .5) continue; void b; } /* el lago ya no tiene borde invisible: se puede entrar a nadar */
   S.cols.push({ x0: df.x0 - .3, x1: df.x1 + .3, z0: df.z0 - .5, z1: df.z0 - .2 }, { x0: df.x0 - .3, x1: df.x1 + .3, z0: df.z1 + .2, z1: df.z1 + .5 }); // barandas invisibles del muelle
   { const sx = cx + side * 78, sz = cz - 8, SR = 70 * 1.02; for (let i = 0; i < 96; i++) { const a1 = i / 96 * 6.283, a2 = (i + 1) / 96 * 6.283, x1 = sx + Math.cos(a1) * SR, z1 = sz + Math.sin(a1) * SR, x2 = sx + Math.cos(a2) * SR, z2 = sz + Math.sin(a2) * SR; if (Math.min(Math.abs(x1), Math.abs(x2)) > XB + 12) continue; if (Math.hypot(x1 - cx, z1 - cz) < R * 1.05) continue; S.cols.push({ x0: Math.min(x1, x2) - .3, x1: Math.max(x1, x2) + .3, z0: Math.min(z1, z2) - .3, z1: Math.max(z1, z2) + .3 }); } } /* orilla del mar: no se camina sobre el agua */
   const r = { x0: cx - R, x1: cx + R, z0: cz - R, z1: cz + R, trade: 'lago', roof: [], open: true, y: y0 }; S.rooms.push(r);
@@ -4913,8 +4913,9 @@ function h3pose(av, t, dt, st) {
     h3aim(av, B, 'upperarm_r', 'lowerarm_r', .18, -.88, .48, p); h3aim(av, B, 'lowerarm_r', 'hand_r', .38, .8, .45, p); h3aim(av, B, 'upperarm_l', 'lowerarm_l', -.18, -.88, .48, p); h3aim(av, B, 'lowerarm_l', 'hand_l', -.38, .8, .45, p); }
   if (q > .01 && !mxWave && u.cur !== 'M_Waving') { h3aim(av, B, 'upperarm_r', 'lowerarm_r', -.85, .38, .18, q); h3aim(av, B, 'lowerarm_r', 'hand_r', -.15 + Math.sin(t * 11) * .38, 1, .15, q); }
   if (me) toolPose(av, B, t, dt, st);
+  if (me && S && S.swimK > .05) { const k = S.swimK; ['l', 'r'].forEach((sd, i) => { const ph = t * 3.2 + i * Math.PI, sx = sd === 'l' ? 1 : -1, c = Math.cos(ph), sn = Math.sin(ph); h3aim(av, B, 'upperarm_' + sd, 'lowerarm_' + sd, sx * (.25 + .55 * Math.max(0, sn)), c, -.25 * Math.max(0, -sn), k); h3aim(av, B, 'lowerarm_' + sd, 'hand_' + sd, sx * (.1 + .4 * Math.max(0, sn)), c, -.35 * Math.max(0, -sn), k); h3aim(av, B, 'thigh_' + sd, 'calf_' + sd, sx * .08, -1, .22 * Math.sin(t * 7 + i * Math.PI), k); h3aim(av, B, 'calf_' + sd, 'foot_' + sd, sx * .05, -1, -.2 + .25 * Math.sin(t * 7 + i * Math.PI), k); }); av.updateMatrixWorld(true); } /* brazada y patada al nadar */
   if (me && u.talkT > -.4 && u.talkAge != null) { talkLayer(av, u, dt, null); if (u.talkT <= -.4) u.talkAge = null; }
-  if (u.lamp.visible && B.hand_l) { const busy = (u.tools && Object.values(u.tools).some(g2 => g2.visible)) || p > .3 || /Swim|Sitting|Kneel|Fixing|Sleep|Lying|Fishing|Pick|Chop|Carry/i.test(u.cur || ''), ud = u.lamp.userData; const mov = /Jog|Run|Sprint/i.test(u.cur || '') ? .5 : /Walk/i.test(u.cur || '') ? .68 : .85; ud.w = (ud.w || 0) + ((busy ? 0 : 1) - (ud.w || 0)) * Math.min(1, dt * 8); ud.k = (ud.k ?? .85) + (mov - (ud.k ?? .85)) * Math.min(1, dt * 5); /* al caminar y correr el brazo conserva parte de su vaivén */
+  if (u.lamp.visible && B.hand_l) { const busy = (u.tools && Object.values(u.tools).some(g2 => g2.visible)) || p > .3 || (me && S && S.swim) || /Swim|Sitting|Kneel|Fixing|Sleep|Lying|Fishing|Pick|Chop|Carry/i.test(u.cur || ''), ud = u.lamp.userData; const mov = /Jog|Run|Sprint/i.test(u.cur || '') ? .5 : /Walk/i.test(u.cur || '') ? .68 : .85; ud.w = (ud.w || 0) + ((busy ? 0 : 1) - (ud.w || 0)) * Math.min(1, dt * 8); ud.k = (ud.k ?? .85) + (mov - (ud.k ?? .85)) * Math.min(1, dt * 5); /* al caminar y correr el brazo conserva parte de su vaivén */
     /* el codo se dobla y el antebrazo va hacia adelante: el objeto queda agarrado en el puño, a la vista */
     if (ud.w > .02) { const wk = ud.w * ud.k; h3aim(av, B, 'upperarm_l', 'lowerarm_l', .34, -.93, -.06, wk); h3aim(av, B, 'lowerarm_l', 'hand_l', .2, ud.lampY ? -.1 : -.38, .9, wk); av.updateMatrixWorld(true); } /* codo abierto hacia afuera: de atrás se ve el brazo */
     const V = h3vec(); B.hand_l.getWorldPosition(V.a); av.worldToLocal(V.a); u.lamp.position.copy(V.a); u.lamp.position.z += (ud.lampY ? .05 : .015) / av.scale.z; u.lamp.position.y += (ud.lampY ? .035 : 0) / av.scale.y; u.lamp.rotation.set(ud.up ? .1 : 0, 0, 0); u.lamp.scale.setScalar(Math.max(.001, ud.w > .5 ? 1 : ud.w * 2));
@@ -5917,7 +5918,7 @@ function freeWalk(dt) {
   const mag = Math.min(1, Math.hypot(jx, jy)); if (mag >= .12 && S.pose === 'pray') { S.pose = null; actUI(); } if (mag >= .12 && S.sit) { S.sit = false; actUI(); } if (mag >= .12 && S.poseK) poseEnd(); S.fullT = mag > .96 ? (S.fullT || 0) + dt : 0; if (S.sprint && S.hx) { AXS.run = (AXS.run || 0) + dt; if (AXS.run > 12) { AXS.run = 0; axGain('agi', 1); } } S.sprint = !!S.hx && (!!k.Shift || S.fullT > 1.2); if (mag < .12) { if (S.freeMoving) { S.freeMoving = false; snapToStop(); } return; }
   const C = S.yaw + S.camYaw, fx = Math.sin(C), fz = Math.cos(C), rx = -Math.cos(C), rz = Math.sin(C);
   let mx = fx * -jy + rx * jx, mz = fz * -jy + rz * jx; const ml = Math.hypot(mx, mz) || 1; mx /= ml; mz /= ml;
-  if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint ? 1.55 : 1) * (S.boostT > 0 ? 1.3 : 1) * (S.gy != null && S.gy < WATER.RL - .4 ? .6 : 1), /* en el agua se avanza más lento */ a = S.av.position, fr = frontier(), z0 = 6;
+  if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint ? 1.55 : 1) * (S.boostT > 0 ? 1.3 : 1) * (S.gy != null && S.gy < WATER.RL - .4 ? (S.swim && S.hx && (S.stam ?? 1) < .25 ? .4 : .6) : 1), /* en el agua se avanza más lento */ a = S.av.position, fr = frontier(), z0 = 6;
   const curG = groundAt(a.x, a.z, S.gy); // el suelo donde estás parado (no la altura suavizada de la cámara)
   const ok = (x, z) => S.pocket ? pocketOk(x, z) : (Math.abs(x) < XB || inTrail(x, z)) && z > fr && z < z0 && !blockedAt(x, z) && !solidAbove(x, z, S.gy) && !edgeDrop(x, z, curG) && !descUp(a.x, a.z, x, z);
   let nx = a.x + mx * sp, nz = a.z + mz * sp;
@@ -5993,7 +5994,7 @@ function loop(now) {
     if ((m.position.x - S.av.position.x) ** 2 + (m.position.z - S.av.position.z) ** 2 < 2.6) collect(id, m);
   }
   camFollow(dt); const yaw = S.yaw + S.camYaw, a = S.av.position, ph = S.camPitch ?? .4, back = camSafeBack(a, yaw, S.camDist * Math.cos(ph)), up = (S.hx ? 1.3 : 1.02) + S.camDist * Math.sin(ph);
-  { const gnd = groundAt(a.x, a.z, S.gy); if (S.gy != null && gnd < S.gy - 1.1) { S.fallV = (S.fallV || 0) + 22 * dt; S.gy = Math.max(gnd, S.gy - S.fallV * dt); } else { S.fallV = 0; S.gy = (S.gy ?? gnd) + (gnd - (S.gy ?? gnd)) * Math.min(1, dt * 12); } if (S.jy > 0) { S.jv -= 17 * dt; S.jy = Math.max(0, S.jy + S.jv * dt); } a.y = S.gy + (S.jy || 0); }
+  { const gnd = groundAt(a.x, a.z, S.gy); if (S.gy != null && gnd < S.gy - 1.1) { S.fallV = (S.fallV || 0) + 22 * dt; S.gy = Math.max(gnd, S.gy - S.fallV * dt); } else { S.fallV = 0; S.gy = (S.gy ?? gnd) + (gnd - (S.gy ?? gnd)) * Math.min(1, dt * 12); } if (S.jy > 0) { S.jv -= 17 * dt; S.jy = Math.max(0, S.jy + S.jv * dt); } a.y = S.gy + (S.jy || 0); try { swimTick(dt, a); } catch (e) {} }
   if (S.W) { S.W.sunL.position.set(a.x + S.W.sunDir.x * 40, a.y + 11, a.z + S.W.sunDir.z * 40); S.W.sunL.target.position.copy(a); S.uGrass.value = t; S.W.sky.material.uniforms.t.value = t; }
   const cx = a.x - Math.sin(yaw) * back, cz = a.z - Math.cos(yaw) * back;
   S.camera.position.x += (cx - S.camera.position.x) * .08; S.camera.position.z += (cz - S.camera.position.z) * .08;
@@ -6172,6 +6173,16 @@ const RECIPES = [
   { id: 'lampara', name: 'Lámpara de aceite', furn: 1, need: { block: 1 }, desc: 'Ilumina tu casa de noche.' }
 ];
 function svOn() { return !!(S && S.hx); }
+/* nadar: donde el agua es más honda que el pecho, el personaje se tiende y bracea. En Hero nadar cansa: la barra de aliento baja y, si se vacía, la corriente lo devuelve a la orilla */
+function swimTick(dt, a) {
+  const av = S.av, deep = !!S.W && S.W.hAt(a.x, a.z) < WATER.RL - 1.3 && S.gy < WATER.RL - 1 && !S.down; S.swim = deep; S.swimK = (S.swimK || 0) + ((deep ? 1 : 0) - (S.swimK || 0)) * Math.min(1, dt * 4);
+  if (!deep && S.gy > WATER.RL - .5 && !blockedAt(a.x, a.z)) S.land = [a.x, a.z];
+  av.rotation.order = 'YXZ'; av.rotation.x = S.swimK * 1.18; a.y += S.swimK * (.8 + Math.sin(performance.now() / 420) * .04);
+  if (!S.hx) return; const full = 40 * agiMul();
+  if (deep) S.stam = Math.max(0, (S.stam ?? 1) - dt / full); else S.stam = Math.min(1, (S.stam ?? 1) + dt / 16);
+  if (deep && S.stam <= 0 && S.land) { a.x = S.land[0]; a.z = S.land[1]; S.gy = null; S.walking = null; S.stam = .2; S.swimK = 0; try { const p = svP(); p.sat = Math.max(120, p.sat - 300); G().toast('🌊 Te quedaste sin aliento y el agua te devolvió a la orilla. Descansá antes de volver a nadar.'); } catch (e) {} }
+  const el = document.querySelector('.v3surv .sv-stam'); if (el) { const show = S.stam < .995; el.hidden = !show; if (show) { const i = el.firstChild; i.style.width = (S.stam * 100).toFixed(1) + '%'; i.className = S.stam < .25 ? 'low' : ''; el.lastChild.textContent = S.stam < .25 ? '¡Volvé a la orilla!' : deep ? '🏊 Aliento' : '😮‍💨 Recuperando'; } }
+}
 function svP() { const p = G().P(); p.surv = p.surv || {}; const s = p.surv; if (s.sat == null) s.sat = SV.FULL; s.play = s.play || 0; s.inv = s.inv || {}; s.tools = s.tools || []; s.furn = s.furn || []; s.chest = s.chest || {}; return s; }
 function atP() { const p = G().P(); p.attr = p.attr || {}; ATTR.forEach(([k]) => { p.attr[k] = p.attr[k] || 0; }); if (!p.attr.v2 && typeof atMigrate === 'function') try { atMigrate(p.attr); } catch (e) {} return p.attr; }
 function atr(k) { return fv(k) / 10; }
@@ -6492,7 +6503,7 @@ function survTick(dt, t) {
 function svUI() {
   if (!svOn()) { const e = document.getElementById('v3surv'); if (e) e.hidden = true; return; }
   let el = document.getElementById('v3surv'); if (!el) { el = document.createElement('div'); el.id = 'v3surv'; el.className = 'v3surv';
-    el.innerHTML = '<div class="sv-day"></div><div class="sv-day sv-money" title="Denarios"></div><div class="sv-food" title="Alimento"><i></i><span></span></div><button class="sv-do" data-a="do"><b>✋</b><span></span></button><button class="sv-btn" data-a="eat" title="Comer (C)">🍽️</button><button class="sv-btn" data-a="craft" title="Fabricar y construir (B)">🔨</button>';
+    el.innerHTML = '<div class="sv-day"></div><div class="sv-day sv-money" title="Denarios"></div><div class="sv-food" title="Alimento"><i></i><span></span></div><div class="sv-food sv-stam" title="Aliento para nadar" hidden><i></i><span></span></div><button class="sv-do" data-a="do"><b>✋</b><span></span></button><button class="sv-btn" data-a="eat" title="Comer (C)">🍽️</button><button class="sv-btn" data-a="craft" title="Fabricar y construir (B)">🔨</button>';
     document.body.appendChild(el); { const b = el.querySelector('[data-a="do"]'); b.onpointerdown = e => { e.preventDefault(); axHold(true); }; b.onpointerup = b.onpointerleave = b.onpointercancel = () => axHold(false); } el.querySelector('[data-a="eat"]').onclick = svEat; el.querySelector('[data-a="craft"]').onclick = svCraft; }
   el.hidden = document.getElementById('view3d').hidden; const s = svP(), k = Math.max(0, s.sat) / SV.FULL, mins = Math.ceil(Math.max(0, s.sat) / 60);
   el.querySelector('.sv-day').textContent = 'Día ' + (Math.floor(s.play / SV.DAY) + 1); el.querySelector('.sv-money').textContent = '🪙 ' + (s.inv.money || 0);

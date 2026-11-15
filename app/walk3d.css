@@ -1254,3 +1254,7 @@ body:has(#arcade:not([hidden])) #khPill,body:has(#v3sheet:not([hidden])) #khPill
 .kh-pill{left:calc(env(safe-area-inset-left,0px) + 66px);transform:none;align-items:flex-start}
 .inv-pow{display:block;margin-top:6px;padding:5px 9px;border-radius:9px;background:linear-gradient(90deg,rgba(255,196,74,.25),rgba(255,196,74,.06));border:1px solid rgba(255,196,74,.5);color:#FFE2A0;font:800 12px/1.3 "Nunito",sans-serif;font-style:normal}
 .inv-pow{display:block;margin-top:6px;padding:5px 9px;border-radius:9px;background:linear-gradient(90deg,rgba(255,196,74,.25),rgba(255,196,74,.06));border:1px solid rgba(255,196,74,.5);color:#FFE2A0;font:800 12px/1.3 "Nunito",sans-serif;font-style:normal}
+/* aliento para nadar, debajo del hambre */
+.v3surv .sv-stam i{background:linear-gradient(90deg,#2E6A8A,#5AC2E0)}
+.v3surv .sv-stam i.low{background:linear-gradient(90deg,#8E2E22,#E8642C);animation:svpulse 1s ease-in-out infinite}
+.v3surv .sv-stam[hidden]{display:none}
