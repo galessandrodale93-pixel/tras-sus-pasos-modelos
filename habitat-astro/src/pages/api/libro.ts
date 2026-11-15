@@ -1,10 +1,10 @@
 // Libro Asombro · pedidos.
 // Público:  POST { op: "pedido", nombre, apellido, email, telefono, cantidad, entrega: "retiro"|"envio", dni, calle, numero, piso, depto, cp, localidad, provincia, referencia }
-// Quien organiza:  GET ?admin=1  ·  POST { op: "estado" | "reenviar" | "borrar", id, ... }
+// Dirección y permiso «libro»:  GET ?admin=1  ·  POST { op: "estado" | "reenviar" | "borrar", id, ... }
 import type { APIRoute } from "astro";
 import { auth } from "@wix/essentials";
 import { items } from "@wix/data";
-import { emailDe, organiza } from "../../lib/profe";
+import { emailDe, veLibro } from "../../lib/profe";
 import { CANALES, ENVIO, ESTADOS, PERFILES, PRECIO, PROVINCIAS, mailAviso, mailDespacho, mailListo, mailPedido, mandar, totalDe, type Pedido } from "../../lib/libro";
 
 const q = auth.elevate(items.query);
@@ -50,7 +50,7 @@ export const GET: APIRoute = async ({ request, url }) => {
   try {
     if (url.searchParams.get("admin") !== "1") return json({ precio: PRECIO, envio: ENVIO, provincias: PROVINCIAS, canales: CANALES });
     const me = await emailDe(request);
-    if (!(await organiza(me.email))) return json({ error: "Esto lo ve quien organiza Habitat." }, 403);
+    if (!(await veLibro(me.email))) return json({ error: "Esto lo ve la dirección de Habitat." }, 403);
     const [P, perfilDe] = await Promise.all([todos(), perfiles()]);
     const L = P.map((x) => ({ ...clean(x as unknown as Record<string, unknown>), quien: perfilDe(x), manual: !!x.perfil }));
     return json({ hoy: hoyAR(), precio: PRECIO, envio: ENVIO, estados: ESTADOS, perfiles: PERFILES, canales: CANALES, pedidos: L });
@@ -103,7 +103,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const me = await emailDe(request);
-    if (!(await organiza(me.email))) return json({ error: "Esto lo maneja quien organiza Habitat." }, 403);
+    if (!(await veLibro(me.email))) return json({ error: "Esto lo maneja la dirección de Habitat." }, 403);
     if (op === "venta") {
       const cant = Math.min(50, Math.max(1, Math.floor(Number(x.cantidad) || 1)));
       const tot = x.total === "" || x.total == null ? NaN : Number(x.total);

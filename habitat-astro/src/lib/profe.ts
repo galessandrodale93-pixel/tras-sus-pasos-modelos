@@ -48,3 +48,9 @@ export async function organiza(email: string) {
   const t = (await q("TutTutores").eq("email", email).limit(1).find()).items[0] as { rol?: string; org?: boolean } | undefined;
   return !!t && (t.rol === "director" || !!t.org);
 }
+// libro Asombro: la dirección y quien tenga el permiso «libro» en TutTutores (Raquel)
+export async function veLibro(email: string) {
+  if (!email) return false;
+  const t = (await q("TutTutores").eq("email", email).limit(1).find()).items[0] as { rol?: string; libro?: boolean } | undefined;
+  return !!t && (t.rol === "director" || !!t.libro);
+}
