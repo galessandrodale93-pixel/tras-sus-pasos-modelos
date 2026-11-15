@@ -1399,10 +1399,11 @@ const icoGear = it => {
   let g = '';
   if (it.s === 'shirt') { const body = 'M8 3 3 6l2 5 2-1v11h10V10l2 1 2-5-5-3a3 3 0 0 1-8 0Z';
     g = sh(body, it.t === 'stripes' ? ln('M10.2 4.5V20.5M13.8 4.5V20.5', c2, 1.5) : it.t === 'seamless' ? ln('M9 3.6a3 3 0 0 0 6 0', c2, 1.4) + ln('M7.5 19.2h9', c2, 1.2) : ln('M7.4 13.5h9.2', D, 1.6)); }
+  else if (it.s === 'pants' && it.t === 'mantle') g = sh('M7 3.5c2 1.2 8 1.2 10 0l3.5 17.5H3.5Z', ln('M4.6 19.4h14.8M7.4 4.4 4.9 18.6M16.6 4.4l2.5 14.2', c2, 1.5) + ln('M5.2 21.6v1.6M18.8 21.6v1.6', '#3E5A9A', 1.4) + ln('M12 6.5v12', D, .6));
   else if (it.s === 'pants') { const leg = 'M6 3h12l1 18h-5l-2-11-2 11H5Z';
     g = sh(leg, it.t === 'wrap' ? ln('M5.9 7.6l4.3 1.3M5.6 11.6l4 1.2M5.3 15.6l3.6 1.1M13.8 8.9l4.3-1.3M14.6 12.8l3.9-1.2M15.4 16.7l3.4-1.1', it.c2 || L, 1) : ln('M6 5.2h12', D, 1.8) + (it.id === 'cabra' ? ln('M7 9l-.6 2M8 13l-.6 2M7.2 17l-.5 1.8M16.6 9l.6 2M17 13.4l.5 2M16.4 17l.4 1.8', L, .8) : '')); }
   else if (it.s === 'boots') {
-    g = it.t === 'sandal' ? `<path d="M4 18.5h16v2.5H4Z" fill="${fill}" stroke="${L}" stroke-width="1.1"/>` + ln('M6 18.5 9 12M9 18.5 12 12M12 12l5 6.5M8 10.5h5', c, 1.8) + ln('M6 18.5 9 12M9 18.5 12 12M12 12l5 6.5M8 10.5h5', L, .5)
+    g = it.t === 'sandal' ? `<path d="M4 18.5h16v2.5H4Z" fill="${fill}" stroke="${L}" stroke-width="1.1"/>` + ln('M6 18.5 9 12M9 18.5 12 12M12 12l5 6.5M8 10.5h5', c, 1.8) + ln('M6 18.5 9 12M9 18.5 12 12M12 12l5 6.5M8 10.5h5', L, .5) + (it.hi ? ln('M8.4 8h5.2M8.6 5.6h4.8M8.8 3.2h4.4', c, 1.6) : '')
       : sh('M7 3h6v10l6 3v4H5V3Z', ln('M7 7h6M5 17.6h14', D, 1.4) + (it.c2 ? ln('M7 7h6', it.c2, 1.2) : '')); }
   else if (it.s === 'gloves') {
     g = it.t === 'bracer' ? sh('M6 6h12l-1 13H7Z', ln('M6.6 9h10.8M7 16h10', c2, 1.8) + `<circle cx="12" cy="12.5" r="1.6" fill="${c2}"/>`)
@@ -3772,7 +3773,7 @@ function dayTick(dt) {
 }
 
 /* ---------- vestimenta de la época: se encuentra rara vez en el camino o como premio de misión ---------- */
-const SLOTS = [['hat', 'Sombrero'], ['shirt', 'Camiseta'], ['pants', 'Pantalones'], ['boots', 'Botas'], ['gloves', 'Guantes']];
+const SLOTS = [['hat', 'Tocado'], ['shirt', 'Túnica'], ['pants', 'Manto'], ['boots', 'Sandalias'], ['gloves', 'Muñequeras']]; /* ropa de la época: los ids de siempre, así nadie pierde lo que tiene */
 const RAR = { c: ['Común', '#C9C2B4', 60], r: ['Rara', '#6FB6FF', 28], e: ['Épica', '#C77DFF', 9], l: ['Legendaria', '#FFB13B', 2.5], u: ['Única · nunca se pierde', '#4FD1C5', 0] };
 const GEAR = [
   { id: 'turbante', s: 'hat', r: 'c', t: 'turban', c: '#E8DDC6', name: 'Turbante de lino', desc: 'Una tela larga enrollada en la cabeza para cubrirse del sol del camino.' },
@@ -3785,18 +3786,18 @@ const GEAR = [
   { id: 'rayas', s: 'shirt', r: 'r', t: 'stripes', c: '#C9B48A', c2: '#7A2E22', name: 'Túnica a rayas de Galilea', desc: 'Con dos franjas de color que bajan desde los hombros, muy usadas en la época.' },
   { id: 'pescador', s: 'shirt', r: 'r', t: 'stripes', c: '#8A9A8E', c2: '#2E4A5A', name: 'Túnica de pescador', desc: 'Corta y resistente, como la de Pedro y Andrés cuando echaban las redes.' },
   { id: 'sincostura', s: 'shirt', r: 'e', t: 'seamless', c: '#EFE6D2', c2: '#C9A04A', name: 'Túnica sin costura', desc: 'Tejida de una sola pieza de arriba abajo, como la túnica de Jesús que menciona Juan 19:23.' },
-  { id: 'calzas', s: 'pants', r: 'c', t: 'wrap', c: '#CDBF9E', name: 'Calzas de lino', desc: 'Vendas de lino enrolladas en las piernas para caminar entre los espinos.' },
-  { id: 'polainas', s: 'pants', r: 'c', t: 'wrap', c: '#6E5A44', name: 'Polainas de lana', desc: 'Abrigan las piernas en las noches del campo.' },
-  { id: 'cabra', s: 'pants', r: 'r', t: 'plain', c: '#8A7A68', name: 'Calzas de pelo de cabra', desc: 'El pelo de cabra se tejía para carpas y prendas que aguantan la lluvia.' },
-  { id: 'bordadas', s: 'pants', r: 'e', t: 'wrap', c: '#2E3E6A', c2: '#E6B04A', name: 'Calzas bordadas', desc: 'Con bordados dorados, dignas de una fiesta de bodas como la de Caná.' },
-  { id: 'altas', s: 'boots', r: 'c', t: 'sandal', c: '#9A6A3E', name: 'Sandalias de caña alta', desc: 'Con tiras de cuero que suben por el tobillo.' },
-  { id: 'cuero', s: 'boots', r: 'c', t: 'boot', c: '#6A4528', name: 'Botines de cuero', desc: 'Hechos por un curtidor, como Simón, el de Jope (Hechos 9:43).' },
-  { id: 'pastor', s: 'boots', r: 'r', t: 'boot', c: '#3E2E22', name: 'Botas de pastor', desc: 'Firmes para subir a las colinas detrás de las ovejas.' },
-  { id: 'caminante', s: 'boots', r: 'r', t: 'sandal', c: '#5A3A22', name: 'Sandalias de caminante', desc: 'Con suela gruesa y clavos, para los caminos largos entre ciudades.' },
-  { id: 'rojas', s: 'boots', r: 'e', t: 'boot', c: '#8E2E22', name: 'Botas de cuero teñido', desc: 'Cuero teñido de rojo, un lujo que pocos se daban.' },
+  { id: 'calzas', s: 'pants', r: 'c', t: 'mantle', c: '#CDBF9E', c2: '#8A7A5A', name: 'Manto de lino crudo', desc: 'El manto de todos los días: de día abriga del viento y de noche sirve de cobija (Éxodo 22:26-27).' },
+  { id: 'polainas', s: 'pants', r: 'c', t: 'mantle', c: '#6E5A44', c2: '#C9B48A', name: 'Manto de lana', desc: 'Grueso y abrigado para las noches del campo.' },
+  { id: 'cabra', s: 'pants', r: 'r', t: 'mantle', c: '#4A3E34', c2: '#A8987A', name: 'Manto de pelo de cabra', desc: 'El pelo de cabra se tejía para carpas y mantos que aguantan la lluvia.' },
+  { id: 'bordadas', s: 'pants', r: 'e', t: 'mantle', c: '#2E3E6A', c2: '#E6B04A', name: 'Manto bordado en oro', desc: 'Con bordes bordados en oro, digno de una fiesta de bodas como la de Caná.' },
+  { id: 'altas', s: 'boots', r: 'c', t: 'sandal', hi: 1, c: '#9A6A3E', name: 'Sandalias de caña alta', desc: 'Con tiras de cuero que suben por el tobillo.' },
+  { id: 'cuero', s: 'boots', r: 'c', t: 'sandal', c: '#6A4528', name: 'Sandalias de cuero', desc: 'Hechos por un curtidor, como Simón, el de Jope (Hechos 9:43).' },
+  { id: 'pastor', s: 'boots', r: 'r', t: 'sandal', hi: 1, c: '#3E2E22', name: 'Sandalias de pastor', desc: 'Atadas firmes a la pierna para subir a las colinas detrás de las ovejas.' },
+  { id: 'caminante', s: 'boots', r: 'r', t: 'sandal', hi: 1, c: '#5A3A22', name: 'Sandalias de caminante', desc: 'Con suela gruesa y clavos, para los caminos largos entre ciudades.' },
+  { id: 'rojas', s: 'boots', r: 'e', t: 'sandal', hi: 1, c: '#8E2E22', name: 'Sandalias de cuero rojo', desc: 'Cuero teñido de rojo, un lujo que pocos se daban.' },
   { id: 'carpintero', s: 'gloves', r: 'c', t: 'wrap', c: '#8A6A44', name: 'Vendas de carpintero', desc: 'Protegen las manos en el taller, como en el de José en Nazaret.' },
-  { id: 'red', s: 'gloves', r: 'c', t: 'glove', c: '#B8A27A', name: 'Guantes de pescador', desc: 'Para tirar de las redes en el Mar de Galilea.' },
-  { id: 'lana', s: 'gloves', r: 'r', t: 'glove', c: '#7A4E3A', name: 'Guantes de lana', desc: 'Calentitos para las madrugadas en el desierto.' },
+  { id: 'red', s: 'gloves', r: 'c', t: 'glove', c: '#B8A27A', name: 'Vendas de pescador', desc: 'Protegen las manos al tirar de las redes en el Mar de Galilea.' },
+  { id: 'lana', s: 'gloves', r: 'r', t: 'glove', c: '#7A4E3A', name: 'Muñequeras de lana', desc: 'Calentitas para las madrugadas en el desierto.' },
   { id: 'bronce', s: 'gloves', r: 'e', t: 'bracer', c: '#6A4528', c2: '#C08A3A', name: 'Brazaletes de bronce', desc: 'Pulidos y brillantes, con cuero por debajo.' },
   { id: 'capucha', s: 'hat', r: 'c', t: 'cloth', c: '#7A5A3A', c2: '#3A2A1A', name: 'Capucha de peregrino', desc: 'Para los que subían a Jerusalén a las fiestas, como la familia de Jesús (Lucas 2:41).' },
   { id: 'gorrogal', s: 'hat', r: 'c', t: 'cap', c: '#5A6A44', name: 'Gorro de Galilea', desc: 'Tejido a mano en las aldeas junto al lago.' },
@@ -3805,21 +3806,21 @@ const GEAR = [
   { id: 'sacerdote', s: 'hat', r: 'l', t: 'turban', c: '#F4EEE2', name: 'Turbante de lino fino', desc: 'Como el del sumo sacerdote, con la inscripción «Santo para el SEÑOR» (Éxodo 28:36-39).' },
   { id: 'arcilla', s: 'shirt', r: 'c', t: 'plain', c: '#A85A34', name: 'Túnica color arcilla', desc: 'Teñida con tierra roja, como la de los alfareros.' },
   { id: 'olivo', s: 'shirt', r: 'c', t: 'plain', c: '#66763E', name: 'Túnica verde olivo', desc: 'Del color de los olivares que rodean Jerusalén.' },
-  { id: 'pastorm', s: 'shirt', r: 'r', t: 'stripes', c: '#8A7A5A', c2: '#3A2A1A', name: 'Manto de pastor', desc: 'Grueso y abrigado, para cuidar el rebaño de noche (Lucas 2:8).' },
+  { id: 'pastorm', s: 'shirt', r: 'r', t: 'stripes', c: '#8A7A5A', c2: '#3A2A1A', name: 'Túnica de pastor', desc: 'Grueso y abrigado, para cuidar el rebaño de noche (Lucas 2:8).' },
   { id: 'grana', s: 'shirt', r: 'e', t: 'plain', c: '#8E1E2A', name: 'Túnica teñida de grana', desc: 'La mujer virtuosa vestía a los suyos de grana para el invierno (Proverbios 31:21).' },
   { id: 'jose', s: 'shirt', r: 'l', t: 'stripes', c: '#D9A63A', c2: '#3E5A9A', rb: 1, name: 'Túnica de muchos colores', desc: 'Como la que Jacob le hizo a su hijo José (Génesis 37:3). Casi nadie la encuentra.' },
-  { id: 'arena', s: 'pants', r: 'c', t: 'wrap', c: '#C2A878', name: 'Calzas color arena', desc: 'Para caminar por el desierto de Judea sin llamar la atención.' },
-  { id: 'lananegra', s: 'pants', r: 'c', t: 'plain', c: '#2E2824', name: 'Calzas de lana oscura', desc: 'Resistentes al polvo y al barro del camino.' },
-  { id: 'viajero', s: 'pants', r: 'r', t: 'wrap', c: '#6A5038', c2: '#C9A04A', name: 'Calzas de viajero', desc: 'Con cintas de cuero, como las de los que llevaban el mensaje de ciudad en ciudad.' },
-  { id: 'purpurap', s: 'pants', r: 'e', t: 'plain', c: '#5A2A6A', name: 'Calzas de púrpura', desc: 'Teñidas con el caracol de Tiro, el color de los reyes.' },
+  { id: 'arena', s: 'pants', r: 'c', t: 'mantle', c: '#C2A878', c2: '#7A6A4A', name: 'Manto color arena', desc: 'Para cruzar el desierto de Judea protegido del sol.' },
+  { id: 'lananegra', s: 'pants', r: 'c', t: 'mantle', c: '#2E2824', c2: '#8A7A62', name: 'Manto de lana oscura', desc: 'Resistente al polvo y al barro del camino.' },
+  { id: 'viajero', s: 'pants', r: 'r', t: 'mantle', c: '#6A5038', c2: '#C9A04A', name: 'Manto de viajero', desc: 'Con franjas de color, como el de los que llevaban el mensaje de ciudad en ciudad.' },
+  { id: 'purpurap', s: 'pants', r: 'e', t: 'mantle', c: '#5A2A6A', c2: '#E6B04A', name: 'Manto de púrpura', desc: 'Teñido con el caracol de Tiro, el color de los reyes.' },
   { id: 'juncos', s: 'boots', r: 'c', t: 'sandal', c: '#B89A5E', name: 'Sandalias de juncos', desc: 'Livianas, tejidas con las cañas del río.' },
-  { id: 'desierto', s: 'boots', r: 'c', t: 'boot', c: '#A8865A', name: 'Botas del desierto', desc: 'Para la arena caliente del camino a Jericó.' },
-  { id: 'jordan', s: 'boots', r: 'r', t: 'boot', c: '#3E4A5A', name: 'Botas del Jordán', desc: 'Aguantan el agua y el barro de la orilla del río.' },
+  { id: 'desierto', s: 'boots', r: 'c', t: 'sandal', hi: 1, c: '#A8865A', name: 'Sandalias del desierto', desc: 'De suela ancha para la arena caliente del camino a Jericó.' },
+  { id: 'jordan', s: 'boots', r: 'r', t: 'sandal', c: '#3E4A5A', name: 'Sandalias del Jordán', desc: 'Aguantan el agua y el barro de la orilla del río.' },
   { id: 'doradas', s: 'boots', r: 'e', t: 'sandal', c: '#C9A04A', name: 'Sandalias doradas', desc: 'Con hebillas de bronce que brillan al sol.' },
   { id: 'tsp', s: 'shirt', r: 'u', t: 'seamless', c: '#F4EEDC', c2: '#C9A04A', name: 'Túnica de Tras sus pasos', desc: 'La recibieron quienes terminaron Tras sus pasos antes del cinturón de la verdad. Es única y nunca se pierde.' },
   { id: 'servidor', s: 'hat', r: 'u', t: 'wrap', c: '#EFE6D2', c2: '#C9A04A', name: 'Pañuelo del servidor', desc: 'Por servir a los demás. Jesús estuvo entre sus discípulos como el que sirve (Lucas 22:27). Nunca se pierde.' },
   { id: 'siervo', s: 'boots', r: 'u', t: 'sandal', c: '#B07A3A', c2: '#EFE6D2', name: 'Sandalias del siervo', desc: 'Por crecer en humildad. Recuerdan que Jesús lavó los pies de sus discípulos (Juan 13:14-15). Nunca se pierden.' },
-  { id: 'evangelio', s: 'boots', r: 'l', t: 'sandal', c: '#FFF2C8', name: 'Sandalias del evangelio', desc: 'Calzados con la disposición de anunciar el evangelio de la paz (Efesios 6:15).' },
+  { id: 'evangelio', s: 'boots', r: 'l', t: 'sandal', hi: 1, c: '#FFF2C8', name: 'Sandalias del evangelio', desc: 'Calzados con la disposición de anunciar el evangelio de la paz (Efesios 6:15).' },
   { id: 'vendaslino', s: 'gloves', r: 'c', t: 'wrap', c: '#D8CCB0', name: 'Vendas de lino', desc: 'Para proteger las manos al cosechar.' },
   { id: 'plata', s: 'gloves', r: 'r', t: 'bracer', c: '#5A4A3A', c2: '#C8CCD4', name: 'Brazaletes de plata', desc: 'Trabajados por un platero, con dibujos de vid.' },
   { id: 'oro', s: 'gloves', r: 'e', t: 'bracer', c: '#5A3A22', c2: '#E6B84A', name: 'Brazaletes de oro', desc: 'Un regalo de valor, como los que llevaba Rebeca (Génesis 24:22).' }
@@ -4528,27 +4529,99 @@ const H3_GEAR = {
   vendaslino: { t: '#D8CCB0' }, plata: { t: '#C8CCD4', metal: .7 }, oro: { t: '#E6B84A', metal: .75 }, sacerdote: {}, magos: {}, gorrogal: {}
 };
 // tiñe la tela: pasa la textura a gris (conserva costuras y pliegues) y la pinta con el color de la prenda
-/* túnica larga, con piel de huesos propia: cintura en la pelvis y falda que acompaña muslos y pantorrillas
-   (camina, se sienta y se arrodilla sin que asomen las piernas); cinto oscuro a la cintura y ruedo apenas más claro */
-function h3robe(o, col, hx) {
-  let body = null; o.traverse(m => { if (!body && m.isSkinnedMesh && m.skeleton && m.skeleton.bones.some(b => b.name === 'pelvis')) body = m; }); if (!body) return false;
-  const sk = body.skeleton, ix = n => sk.bones.findIndex(b => b.name === n), I = ['pelvis', 'thigh_l', 'calf_l', 'thigh_r', 'calf_r', 'foot_l', 'foot_r'].map(ix); if (I.some(i => i < 0)) return false;
-  const bp = i => new THREE.Vector3().setFromMatrixPosition(new THREE.Matrix4().copy(sk.boneInverses[i]).invert()), P = bp(I[0]), TL = bp(I[1]), TR = bp(I[3]), fy = Math.min(bp(I[5]).y, bp(I[6]).y), H = P.y - fy; if (!(H > .2)) return false;
-  const lat = new THREE.Vector3(TL.x - TR.x, 0, TL.z - TR.z).normalize(), fwd = new THREE.Vector3(-lat.z, 0, lat.x), yTop = P.y + H * .2, yBot = fy + H * .1, NR = 14, NS = 20;
-  const pos = [], uv = [], si = [], sw = [], colr = [], base = new THREE.Color(col), belt = base.clone().multiplyScalar(.42), hem = base.clone().lerp(new THREE.Color('#E8DCC4'), .18);
-  for (let r = 0; r <= NR; r++) { const t = r / NR, y = yTop + (yBot - yTop) * t, rad = H * (.2 + .07 * t + .1 * t * t);
-    for (let k = 0; k <= NS; k++) { const a = k / NS * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a), lx = ca * rad, lz = sa * rad * .86;
-      pos.push(P.x + lat.x * lx + fwd.x * lz, y, P.z + lat.z * lx + fwd.z * lz); uv.push(k / NS * 3, t * 2.4);
-      const wl = THREE.MathUtils.smoothstep(ca, -.55, .55), L = Math.min(1, Math.max(0, (t - .1) / .4)) * .92, cw = Math.min(1, Math.max(0, (t - .48) / .36));
-      const W = [[I[0], 1 - L], [I[1], L * wl * (1 - cw)], [I[2], L * wl * cw], [I[3], L * (1 - wl) * (1 - cw)], [I[4], L * (1 - wl) * cw]].sort((p, q) => q[1] - p[1]).slice(0, 4), tot = W.reduce((a, q) => a + q[1], 0) || 1;
-      W.forEach(q => { si.push(q[0]); sw.push(q[1] / tot); });
-      const c = t < .07 ? belt : t > .93 ? hem : base, sh = .9 + .1 * Math.sin(a * 6 + t * 3); colr.push(c.r * sh, c.g * sh, c.b * sh); } }
-  const idx = []; for (let r = 0; r < NR; r++) for (let k = 0; k < NS; k++) { const a = r * (NS + 1) + k, b = a + NS + 1; idx.push(a, b, a + 1, b, b + 1, a + 1); }
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setAttribute('color', new THREE.Float32BufferAttribute(colr, 3));
+/* ===== ROPA DE LA ÉPOCA (Galilea, siglo I) =====
+   Prendas armadas con piel de huesos propia sobre el esqueleto del personaje, así caminan, se sientan y se arrodillan con él:
+   · túnica: de la cintura a media pierna (hasta el tobillo en las mujeres), con cinto; franjas de color (clavi), ruedo dorado o muchos colores
+   · manto: sobre los hombros y la espalda, abierto adelante, con borde bordado; los épicos y legendarios brillan
+   · sandalias: suela de cuero y tiras sobre el pie descalzo; las altas se atan a la pierna */
+const H3_BIND = new WeakMap();
+function h3bind(body) {
+  let r = H3_BIND.get(body.skeleton); if (r) return r; const sk = body.skeleton, ix = n => sk.bones.findIndex(b => b.name === n), bp = n => { const i = ix(n); return i < 0 ? null : new THREE.Vector3().setFromMatrixPosition(new THREE.Matrix4().copy(sk.boneInverses[i]).invert()); };
+  const N = ['pelvis', 'spine_01', 'spine_02', 'spine_03', 'clavicle_l', 'clavicle_r', 'upperarm_l', 'upperarm_r', 'thigh_l', 'calf_l', 'foot_l', 'ball_l', 'thigh_r', 'calf_r', 'foot_r', 'ball_r'], I = {}, P = {};
+  for (const n of N) { I[n] = ix(n); P[n] = bp(n); if (I[n] < 0) return null; }
+  const fy = Math.min(P.ball_l.y, P.ball_r.y) - .03, H = P.pelvis.y - fy, lat = new THREE.Vector3(P.thigh_l.x - P.thigh_r.x, 0, P.thigh_l.z - P.thigh_r.z).normalize(), fwd = new THREE.Vector3(-lat.z, 0, lat.x);
+  { const tq = new THREE.Vector3().subVectors(P.ball_l, P.foot_l); tq.y = 0; if (tq.dot(fwd) < 0) fwd.negate(); }
+  r = { I, P, fy, H, lat, fwd }; H3_BIND.set(body.skeleton, r); return r;
+}
+function h3part(body, pos, idx, si, sw, col, mat) {
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); if (col) g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
   g.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4)); g.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4)); g.setIndex(idx); g.applyMatrix4(body.bindMatrixInverse); g.computeVertexNormals();
-  const mt = new THREE.MeshStandardMaterial({ color: '#FFFFFF', vertexColors: true, roughness: .96, side: THREE.DoubleSide }); try { h3cloth(mt); } catch (e) {}
-  const robe = new THREE.SkinnedMesh(g, mt); robe.name = 'Robe_NPC'; robe.position.copy(body.position); robe.quaternion.copy(body.quaternion); robe.scale.copy(body.scale); body.parent.add(robe); robe.bind(sk, body.bindMatrix); robe.castShadow = true; robe.receiveShadow = true; robe.frustumCulled = false;
-  return true;
+  const m = new THREE.SkinnedMesh(g, mat); m.position.copy(body.position); m.quaternion.copy(body.quaternion); m.scale.copy(body.scale); body.parent.add(m); m.bind(body.skeleton, body.bindMatrix); m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; return m;
+}
+const h3w = (W) => { W = W.filter(q => q[1] > 1e-4).sort((a, b) => b[1] - a[1]).slice(0, 4); while (W.length < 4) W.push([0, 0]); const t = W.reduce((a, q) => a + q[1], 0) || 1; return W.map(q => [q[0], q[1] / t]); };
+const h3mat = (o) => { const m = new THREE.MeshStandardMaterial(Object.assign({ color: '#FFFFFF', vertexColors: true, roughness: .95, side: THREE.DoubleSide }, o || {})); try { h3cloth(m); } catch (e) {} return m; };
+/* túnica (la falda; el torso lo da la camisa del modelo teñida del mismo color) */
+function h3tunic(body, B, o) {
+  const { I, P, fy, H, lat, fwd } = B, yTop = P.pelvis.y + H * .2, yBot = fy + H * (o.len ?? .34), NR = 14, NS = 24, pos = [], si = [], sw = [], col = [];
+  const base = new THREE.Color(o.c), c2 = new THREE.Color(o.c2 || o.c), belt = new THREE.Color(o.belt || '#3A2A1C'), RB = ['#C0392B', '#E6B04A', '#3E8A4A', '#3E5A9A', '#7A3E8A'].map(q => new THREE.Color(q));
+  for (let r = 0; r <= NR; r++) { const t = r / NR, y = yTop + (yBot - yTop) * t, rad = H * (.205 + .045 * t + .02 * t * t);
+    for (let k = 0; k <= NS; k++) { const a = k / NS * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a), lx = ca * rad, lz = sa * rad * .84, wob = 1 + .025 * Math.sin(a * 9 + t * 4) * t;
+      pos.push(P.pelvis.x + (lat.x * lx + fwd.x * lz) * wob, y, P.pelvis.z + (lat.z * lx + fwd.z * lz) * wob);
+      const wl = THREE.MathUtils.smoothstep(ca, -.55, .55), L = Math.min(1, Math.max(0, (t - .12) / .45)) * .9, cw = Math.min(1, Math.max(0, (t - .55) / .4)) * .8;
+      h3w([[I.pelvis, 1 - L], [I.thigh_l, L * wl * (1 - cw)], [I.calf_l, L * wl * cw], [I.thigh_r, L * (1 - wl) * (1 - cw)], [I.calf_r, L * (1 - wl) * cw]]).forEach(q => { si.push(q[0]); sw.push(q[1]); });
+      let c = base; const fa = Math.abs(Math.atan2(sa, ca) - Math.PI / 2), ba = Math.abs(Math.atan2(sa, ca) + Math.PI / 2);
+      if (o.pat === 'clavi' && ((Math.abs(fa - .42) < .1 || Math.abs(fa + .42) < .1) || (Math.abs(ba - .42) < .1 || Math.abs(ba + .42) < .1))) c = c2;
+      if (o.pat === 'rb') c = RB[Math.floor(t * 4.99)];
+      if (t > .9) c = o.pat === 'hem' || o.pat === 'clavi' ? c2 : base.clone().multiplyScalar(.78); if (t < .075) c = belt;
+      const sh = .9 + .1 * Math.sin(a * 7 + t * 2.5); col.push(c.r * sh, c.g * sh, c.b * sh); } }
+  const idx = []; for (let r = 0; r < NR; r++) for (let k = 0; k < NS; k++) { const a = r * (NS + 1) + k, b = a + NS + 1; idx.push(a, b, a + 1, b, b + 1, a + 1); }
+  return h3part(body, pos, idx, si, sw, col, h3mat(o.glow ? { emissive: new THREE.Color(o.glow), emissiveIntensity: .25 } : null));
+}
+/* manto: media capa sobre los hombros y la espalda, abierta adelante, hasta las rodillas (más largo en las mujeres) */
+function h3mantle(body, B, o) {
+  const { I, P, fy, H, lat, fwd } = B, top = P.spine_03.y + H * .06, bot = fy + H * (o.len ?? .55), sw0 = Math.hypot(P.upperarm_l.x - P.upperarm_r.x, P.upperarm_l.z - P.upperarm_r.z) / 2;
+  const NR = 16, NS = 22, A0 = Math.PI * .62, A1 = Math.PI * 2.38, pos = [], si = [], sw = [], col = [], base = new THREE.Color(o.c), c2 = new THREE.Color(o.c2 || o.c).lerp(new THREE.Color(o.c2 ? o.c2 : '#000000'), 0), dk = base.clone().multiplyScalar(.7);
+  for (let r = 0; r <= NR; r++) { const t = r / NR, y = top + (bot - top) * t, rad = (sw0 + .05) * (1 - t) + H * .34 * t + H * .04 * Math.sin(t * Math.PI);
+    for (let k = 0; k <= NS; k++) { const u = k / NS, a = A0 + (A1 - A0) * u, ca = Math.cos(a), sa = Math.sin(a), lx = ca * rad, lz = sa * rad * (t < .15 ? .7 : .9) - .02, fold = 1 + .04 * Math.sin(u * 30) * t;
+      pos.push(P.pelvis.x + (lat.x * lx + fwd.x * lz) * fold, y - (t < .05 ? 0 : .015 * Math.cos(u * 30)), P.pelvis.z + (lat.z * lx + fwd.z * lz) * fold);
+      const side = ca > 0 ? 'l' : 'r', sv = Math.abs(ca), upW = Math.max(0, 1 - t / .32), midW = Math.max(0, 1 - Math.abs(t - .45) / .3), lowW = Math.max(0, (t - .5) / .5);
+      h3w([[I.spine_03, upW * (1 - sv * .6)], [I['clavicle_' + side], upW * sv * .6], [I.spine_01, midW * .7], [I.pelvis, midW * .3 + lowW * .45], [I['thigh_' + side], lowW * .55 * Math.min(1, sv + .3)]]).forEach(q => { si.push(q[0]); sw.push(q[1]); });
+      const edge = u < .07 || u > .93 || t > .93; const c = edge ? c2 : (Math.floor(u * 22) % 2 ? base : dk.clone().lerp(base, .82)); col.push(c.r, c.g, c.b); } }
+  const idx = []; for (let r = 0; r < NR; r++) for (let k = 0; k < NS; k++) { const a = r * (NS + 1) + k, b = a + NS + 1; idx.push(a, b, a + 1, b, b + 1, a + 1); }
+  const m = h3part(body, pos, idx, si, sw, col, h3mat(o.glow ? { emissive: new THREE.Color(o.glow), emissiveIntensity: .35 } : null));
+  /* flecos en las cuatro puntas (tzitzit), azules como pide Números 15:38 */
+  if (o.tassels !== false) { const tp = [], tsi = [], tsw = [], tc = [], ti = [], blue = new THREE.Color('#3E5A9A'); [[A0, bot], [A1, bot]].forEach(([a, y]) => { const rad = H * .34 + .01, cx = P.pelvis.x + lat.x * Math.cos(a) * rad + fwd.x * Math.sin(a) * rad * .9, cz = P.pelvis.z + lat.z * Math.cos(a) * rad + fwd.z * Math.sin(a) * rad * .9, side = Math.cos(a) > 0 ? 'l' : 'r';
+      for (let q = 0; q < 4; q++) { const n0 = tp.length / 3, ox = (q - 1.5) * .012; tp.push(cx + ox, y, cz, cx + ox + .006, y - .09, cz, cx + ox - .006, y - .09, cz); ti.push(n0, n0 + 1, n0 + 2); for (let v = 0; v < 3; v++) { h3w([[I['thigh_' + side], .6], [I.pelvis, .4]]).forEach(w => { tsi.push(w[0]); tsw.push(w[1]); }); tc.push(blue.r, blue.g, blue.b); } } });
+    h3part(body, tp, ti, tsi, tsw, tc, h3mat()); }
+  return m;
+}
+/* sandalias: pie descalzo, suela de cuero y tiras; las "altas" se atan alrededor del tobillo y la pantorrilla */
+function h3sandals(body, B, o, skin) {
+  const { I, P, fwd } = B, sole = new THREE.Color('#3A2A1C'), strap = new THREE.Color(o.c || '#7A5232'), sk = new THREE.Color(skin), pos = [], si = [], sw = [], col = [], idx = [];
+  const box = (cx, cy, cz, d, w, h, dir, side, wts, c) => { const n0 = pos.length / 3, lt = new THREE.Vector3(-dir.z, 0, dir.x); for (const [a, b, e] of [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]]) { const k = b > 0 ? .78 : 1; pos.push(cx + dir.x * a * d / 2 + lt.x * e * w / 2 * k, cy + b * h / 2, cz + dir.z * a * d / 2 + lt.z * e * w / 2 * k); const W = typeof wts === 'function' ? wts(a) : wts; h3w(W).forEach(q => { si.push(q[0]); sw.push(q[1]); }); col.push(c.r, c.g, c.b); }
+    [[0, 1, 2, 0, 2, 3], [4, 6, 5, 4, 7, 6], [0, 4, 5, 0, 5, 1], [3, 2, 6, 3, 6, 7], [0, 3, 7, 0, 7, 4], [1, 5, 6, 1, 6, 2]].forEach(f => f.forEach(v => idx.push(n0 + v))); };
+  ['l', 'r'].forEach(sd => { const F = P['foot_' + sd], Bl = P['ball_' + sd], dir = new THREE.Vector3(Bl.x - F.x, 0, Bl.z - F.z); const len = dir.length() + .13; dir.normalize(); const gy = Math.min(F.y, Bl.y) - .035;
+    const cx = (F.x + Bl.x) / 2 + dir.x * .02, cz = (F.z + Bl.z) / 2 + dir.z * .02, wf = a => [[I['foot_' + sd], a > .3 ? .25 : 1], [I['ball_' + sd], a > .3 ? .75 : 0]];
+    box(cx, gy + .012, cz, len, .1, .024, dir, sd, wf, sole); box(cx, gy + .048, cz, len * .9, .082, .05, dir, sd, wf, sk);
+    box(F.x, F.y + .01, F.z, .07, .07, .1, dir, sd, [[I['foot_' + sd], .7], [I['calf_' + sd], .3]], sk);
+    [.22, .5, -.18].forEach(f => box(cx + dir.x * len * f * .5, gy + .07, cz + dir.z * len * f * .5, .018, .092, .03, dir, sd, wf(f), strap));
+    if (o.high) [0, .06, .12].forEach(h => box(F.x, F.y + .05 + h, F.z, .085, .085, .016, dir, sd, [[I['calf_' + sd], 1]], strap)); });
+  return h3part(body, pos, idx, si, sw, col, new THREE.MeshStandardMaterial({ color: '#FFFFFF', vertexColors: true, roughness: .75, metalness: o.metal || 0, emissive: new THREE.Color(o.glow || '#000000'), emissiveIntensity: o.glow ? .5 : 0 }));
+}
+const h3hash = s => { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967296; };
+const NPC_TUNIC = ['#D9CBB0', '#CBB894', '#B8A27E', '#8A7A62', '#7A6A54', '#A8865A', '#6E5A44', '#9C8A70', '#C9B48A', '#5E6E58', '#8E4A36', '#3E5470'];
+const NPC_MANTO = ['#5A4634', '#6E5A44', '#3E3428', '#8A7A62', '#4A4A40', '#7A3E2E', '#2E3E54', '#A8987A'];
+function h3dress(o, av, c) {
+  let body = null; o.traverse(m => { if (!body && m.isSkinnedMesh && m.skeleton && m.skeleton.bones.some(b => b.name === 'pelvis') && /_Body/.test(m.name)) body = m; });
+  if (!body) o.traverse(m => { if (!body && m.isSkinnedMesh && m.skeleton && m.skeleton.bones.some(b => b.name === 'pelvis')) body = m; }); if (!body) return false;
+  const B = h3bind(body); if (!B || !(B.H > .2)) return false; const fem = c.sx === 'f', D = c.D, it = (s) => D[s] ? Object.assign({}, D[s], H3_GEAR[D[s].id] || {}) : null;
+  const rare = q => q && (q.r === 'l' || q.r === 'u') ? 'l' : q && q.r === 'e' ? 'e' : '';
+  let tun, man = null, san;
+  if (c.npc) { const h = h3hash((av.outfit || '') + (av.skin || '') + (av.hair || '') + c.sx), h2 = h3hash(h + 'm'), h3 = h3hash(h + 's');
+    const tc = av.outfit ? new THREE.Color(av.outfit).lerp(new THREE.Color('#C9BBA0'), .45).getStyle() : NPC_TUNIC[Math.floor(h * NPC_TUNIC.length)];
+    tun = { c: tc, c2: h2 < .3 ? NPC_TUNIC[Math.floor(h3 * NPC_TUNIC.length)] : null, pat: h2 < .3 ? 'clavi' : null, len: fem ? .05 : .28 + h3 * .1, belt: ['#3A2A1C', '#5A3A22', '#7A2E22', '#6E5A44'][Math.floor(h2 * 4)] };
+    if (h2 < (fem ? .75 : .38)) man = { c: NPC_MANTO[Math.floor(h3 * NPC_MANTO.length)], c2: '#C9B48A', len: fem ? .12 : .5, tassels: !fem };
+    san = { c: ['#7A5232', '#5A3A22', '#8E6A44'][Math.floor(h * 3)], high: h3 > .7 }; body.material = body.material.clone(); body.material.color.set(tc); try { h3cloth(body.material); } catch (e) {} o.traverse(m => { if (m.isSkinnedMesh && H3_PART.arms.test(m.name)) { m.material = m.material.clone(); m.material.color.set(tc); try { h3cloth(m.material); } catch (e) {} } });
+  } else { const sh = it('shirt'), pa = it('pants'), bo = it('boots'), tc = sh ? (sh.t && sh.t !== 'plain' && sh.t !== 'stripes' && sh.t !== 'seamless' ? sh.t : sh.c) : (c.tint.body || '#D9CBB0');
+    tun = { c: (H3_GEAR[(D.shirt || {}).id] || {}).t || (sh && sh.c) || c.tint.body || '#D9CBB0', c2: sh && sh.c2, pat: sh ? (sh.rb ? 'rb' : sh.t === 'stripes' ? 'clavi' : sh.t === 'seamless' ? 'hem' : null) : null, len: fem ? .05 : .3, belt: sh && rare(sh) ? '#6A4A1E' : '#3A2A1C', glow: sh && rare(sh) === 'l' ? '#5A4410' : null };
+    if (pa) man = { c: pa.c, c2: pa.c2 || new THREE.Color(pa.c).multiplyScalar(.6).getStyle(), len: fem ? .12 : .5, glow: rare(pa) === 'l' ? '#6A4A10' : rare(pa) === 'e' ? '#3A2808' : null };
+    san = { c: bo ? bo.c : '#7A5232', high: bo ? !!(bo.hi || /doradas/.test(bo.id)) : false, metal: bo && bo.id === 'doradas' ? .5 : 0, glow: bo && bo.id === 'evangelio' ? '#8A6A1A' : null }; }
+  const made = []; try { made.push(h3tunic(body, B, tun)); } catch (e) { console.warn('túnica', e); }
+  if (man) try { made.push(h3mantle(body, B, man)); } catch (e) { console.warn('manto', e); }
+  let sandOk = false; try { made.push(h3sandals(body, B, san, c.skinC)); sandOk = true; } catch (e) { console.warn('sandalias', e); }
+  /* las piernas, descalzas bajo la túnica: el pantalón del modelo pasa a color piel; las botas se sacan si hay sandalias */
+  const rm = []; o.traverse(m => { if (!m.isSkinnedMesh) return; if (H3_PART.legs.test(m.name)) { m.material = m.material.clone(); m.material.map = null; m.material.normalMap = null; m.material.color.copy(c.skinC).multiplyScalar(.9); m.material.roughness = .7; } if (sandOk && H3_PART.feet.test(m.name)) rm.push(m); }); rm.forEach(m => m.parent.remove(m));
+  return made.length > 0;
 }
 function h3cloth(mt, rb) {
   mt.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', '#ifdef USE_MAP\nvec4 sampledDiffuseColor = texture2D( map, vMapUv );\nfloat lum = dot( sampledDiffuseColor.rgb, vec3( .299, .587, .114 ) );\nsampledDiffuseColor.rgb = mix( sampledDiffuseColor.rgb, vec3( clamp( sqrt( lum ) * 1.55, 0., 1.25 ) ), .88 );\n' + (rb ? 'sampledDiffuseColor.rgb *= .45 + .55 * cos( 6.2832 * ( vec3( 0., .33, .67 ) + floor( vMapUv.y * 9. ) / 9. * 1.7 ) );\n' : '') + 'diffuseColor *= sampledDiffuseColor;\n#endif'); };
@@ -4616,8 +4689,8 @@ function buildHero3(av) {
     m.castShadow = true; m.receiveShadow = true;
   });
   drop.forEach(m => m.parent.remove(m));
-  /* la gente de la época viste túnica larga: se agrega la túnica (que se dobla con las piernas) y se sacan pantalón y botas */
-  if (npc && !av.noRobe) { try { if (h3robe(o, tint.body || av.outfit || '#B9A27E', !kid)) { const lg = []; o.traverse(m => { if (m.isSkinnedMesh && H3_PART.legs.test(m.name)) lg.push(m); }); lg.forEach(m => m.parent.remove(m)); } } catch (e) { console.warn('túnica', e); } }
+  /* ropa de la época para todos (avatar y gente): túnica con cinto, manto y sandalias; las piernas quedan descalzas bajo la túnica */
+  try { h3dress(o, av, { npc, sx, kid, D, tint, skinC }); } catch (e) { console.warn('ropa de época', e); }
   let bones = {}; o.traverse(b => { if (b.isBone) bones[b.name] = b; });
   if (kid && !npc) kidBody(bones, sx);
   if (hatProc) { const g = new THREE.Group(); g.matrixAutoUpdate = false; g.matrix.copy(tpl.hatM); bones.Head.add(g); const k = new THREE.Group(); k.scale.setScalar(.95); g.add(k);
