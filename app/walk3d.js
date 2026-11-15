@@ -502,6 +502,7 @@ function waterEnv(renderer) {
 function waterMat(hx, flow) {
   const nm = waterNormalTex().clone(), cn = waterNormalTex().clone(); nm.needsUpdate = cn.needsUpdate = true; nm.repeat.set(1, 1); cn.repeat.set(1, 1);
   const m = new THREE.MeshPhysicalMaterial({ color: flow ? (hx ? '#3A5A4A' : '#3F9A8A') : hx ? '#27565F' : '#2E8C98', /* el Jordán es verde barroso; el lago, azul */ roughness: hx ? .2 : .12, metalness: 0, transparent: true, opacity: .93, normalMap: nm, normalScale: new THREE.Vector2(hx ? .85 : .55, hx ? .85 : .55), clearcoat: 1, clearcoatRoughness: .05, clearcoatNormalMap: cn, clearcoatNormalScale: new THREE.Vector2(.35, .35), envMap: S ? waterEnv(S.renderer) : null, envMapIntensity: hx ? .8 : 1, depthWrite: false });
+  if (flow) { m.normalScale.set(hx ? .42 : .3, hx ? .42 : .3); cn.repeat.set(2.3, 1.7); m.clearcoatNormalScale.set(.2, .2); } /* el río sin el dibujo de rombos */
   m.userData = { nm, cn, flow, env: m.envMap };
   m.onBeforeCompile = sh => { sh.uniforms.wt = WATER.uT; sh.uniforms.shal = { value: new THREE.Color(flow ? (hx ? '#8E9468' : '#A6CBA0') : hx ? '#7A9E8C' : '#86C9C2') };
     sh.vertexShader = 'attribute float shore;varying float vSh;uniform float wt;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvSh=shore;vec4 wp0=modelMatrix*vec4(position,1.);transformed.y+=(sin(wp0.x*.35+wt*1.3)*.05+sin(wp0.z*.29-wt*1.05)*.045)*smoothstep(0.,.25,shore);');
@@ -528,7 +529,7 @@ function waterTick(dt, t) {
   WATER.uT.value = t; for (const m of WATER.mats) { const u = m.userData; if (u.flow) { u.nm.offset.y -= dt * .09; u.cn.offset.y -= dt * .14; u.cn.offset.x = Math.sin(t * .2) * .05; } else { u.nm.offset.x += dt * .012; u.nm.offset.y += dt * .007; u.cn.offset.x -= dt * .009; u.cn.offset.y += dt * .013; } }
 }
 // cuánto "moja" la orilla en este punto (0 lejos, 1 en el borde del agua)
-function waterWet(x, z, rf) { let w = 0; for (const b of WATER.basins) { const dd = Math.hypot(x - b.x, z - b.z) / b.r; w = Math.max(w, 1 - sstep(.92, 1.35, dd)); } if (rf != null) w = Math.max(w, 1 - sstep(3.6, 7.5, rf)); return w; }
+function waterWet(x, z, rf) { let w = 0; for (const b of WATER.basins) { const dd = Math.hypot(x - b.x, z - b.z) / b.r; w = Math.max(w, 1 - sstep(.92, 1.35, dd)); } if (rf != null) w = Math.max(w, 1 - sstep(5, 10.5, rf)); return w; }
 
 /* ---------- cielo real (HDRI CC0 de Poly Haven): amanecer y mediodía, con reflejos del cielo en los materiales ---------- */
 const SKY = { tex: {}, env: {}, res: '', rot: [-1.462, -2.631], dir: [[.575, .083, -.814], [-.300, .742, -.599]], gen: null };
@@ -1690,7 +1691,7 @@ function buildPois(scene, pois, hx, HW, R, ribbon) {
       const hall = new THREE.Mesh(new THREE.BoxGeometry(6, 3.4, 4.5), stone); hall.position.set(0, 2.5, -1); t.add(hall); const roof = new THREE.Mesh(new THREE.BoxGeometry(6.6, .3, 5), dark); roof.position.set(0, 4.3, -1); t.add(roof);
       for (let i = 0; i < 6; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(.2, .24, 3.2, 10), stone); c.position.set(-2.6 + i * 1.04, 2.4, 1.6); t.add(c); }
       const door = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2, .1), M('#6B4A2C')); door.position.set(0, 1.8, 1.27); t.add(door); add(t, p.x, p.z, p.side > 0 ? -Math.PI / 2 : Math.PI / 2); }
-    if (p.k === 'river') { waterRiver(scene, p.pts, 13, hx, yAt); try { jordanLife(scene, p, yAt, hx); } catch (e) { console.warn('jordán', e); }
+    if (p.k === 'river') { waterRiver(scene, p.pts, 19, hx, yAt); /* más ancho que el cauce: el borde del agua lo marca la orilla, no la malla */ try { jordanLife(scene, p, yAt, hx); } catch (e) { console.warn('jordán', e); }
       const reed = new THREE.InstancedMesh(new THREE.CylinderGeometry(.015, .02, 1, 4), M('#6E8A44'), 160), m4 = new THREE.Matrix4(); let n = 0; for (let i = 0; i < 160; i++) { const q = p.pts[Math.floor(R() * p.pts.length)], s = R() < .5 ? -1 : 1, x = q[0] + s * (2.4 + R() * .8), z = q[1] + (R() - .5); m4.makeScale(1, .6 + R() * .7, 1); m4.setPosition(x, yAt(x, z) + .4, z); reed.setMatrixAt(n++, m4); } reed.instanceMatrix.needsUpdate = true; scene.add(reed); }
     if (p.k === 'desert' && false) { const sand = new THREE.Mesh(new THREE.CircleGeometry(7, 28), M('#C9A86E', { flatShading: false })); sand.rotation.x = -Math.PI / 2; sand.position.set(p.x, yAt(p.x, p.z) + .03, p.z); sand.receiveShadow = true; scene.add(sand);
       for (let i = 0; i < 9; i++) { const rk = new THREE.Mesh(new THREE.DodecahedronGeometry(.6 + R() * 1.1, 0), M('#A88E66')); rk.scale.y = .6 + R() * .5; const a = R() * 6.28, r = 2 + R() * 4.5; const gr = new THREE.Group(); rk.position.y = .3; gr.add(rk); add(gr, p.x + Math.cos(a) * r, p.z + Math.sin(a) * r, R() * 6); } }
