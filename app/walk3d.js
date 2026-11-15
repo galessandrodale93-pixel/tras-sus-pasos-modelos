@@ -757,7 +757,7 @@ const KL = {};
   buildStep('casas del mapa');
   // escenas del mapa (casas, palmeras)
   const addV = o => { if (HW) { o.position.y = HW.hAt(o.position.x, o.position.z) - .05; o.traverse(m => { m.castShadow = m.receiveShadow = true; }); } scene.add(o); };
-  g.VIGN.forEach(([r, x, y, k]) => { const [vx, vz] = toV(x, g.TOP + r * g.RH + y); if (k === 'house' || k === 'stable' || k === 'temple') { for (let i = 0; i < 3; i++) { const h = house(R, hx), hx0 = vx + (i - 1) * 7.2, hz0 = vz + (R() - .5) * 3, ry = (R() - .5) * .6; if (HW && HW.dAt(hx0, hz0) < 5.5) continue; h.position.set(hx0, 0, hz0); h.rotation.y = ry; addV(h); HCOLS.push(wBox(hx0, hz0, ry, ...h.userData.box)); } } if (k === 'palms' || k === 'tree') { for (let i = 0; i < 3; i++) { const q = R(), x = vx + (R() - .5) * 3, z = vz + (R() - .5) * 2, s = .8 + q * .35, id = ['tree_small_02', 'island_tree_03', 'tree_small_02'][i]; if (HW) (DPALM.spots = DPALM.spots || []).push({ x, y: HW.hAt(x, z) - .05, z, ry: q * 40, s: s * (i === 1 ? 1.12 : 1) }); void id; } } if (k === 'riv') { const w = new THREE.Mesh(new THREE.PlaneGeometry(9, 3.2), mat(hx ? '#3B6266' : '#7FC4F0', { roughness: hx ? .08 : .2, metalness: hx ? .35 : .1 })); w.rotation.x = -Math.PI / 2; w.position.set(vx, .02, vz); scene.add(w); } });
+  g.VIGN.forEach(([r, x, y, k]) => { const [vx, vz] = toV(x, g.TOP + r * g.RH + y); if (k === 'house' || k === 'stable' || k === 'temple') { for (let i = 0; i < 3; i++) { const h = house(R, hx), hx0 = vx + (i - 1) * 7.2, hz0 = vz + (R() - .5) * 3, ry = (R() - .5) * .6; if (HW && HW.dAt(hx0, hz0) < 5.5) continue; h.position.set(hx0, 0, hz0); h.rotation.y = ry; addV(h); HCOLS.push(wBox(hx0, hz0, ry, ...h.userData.box)); } } if (k === 'palms' || k === 'tree') { for (let i = 0; i < 3; i++) { const q = R(), x = vx + (R() - .5) * 3, z = vz + (R() - .5) * 2, s = .8 + q * .35, id = ['tree_small_02', 'island_tree_03', 'tree_small_02'][i]; if (HW) (DPALM.spots = DPALM.spots || []).push({ x, y: HW.hAt(x, z) - .05, z, ry: q * 40, s: s * (i === 1 ? 1.12 : 1) }); void id; } } });
   // nubes (Kids) o luciérnagas (Hero)
   let flies = null;
   if (hx) { const n = 900, pos = new Float32Array(n * 3); for (let i = 0; i < n; i++) { pos[i * 3] = (R() - .5) * 30 * WS; pos[i * 3 + 1] = .4 + R() * 3; pos[i * 3 + 2] = R() * zMax; } const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); flies = new THREE.Points(geo, new THREE.PointsMaterial({ color: '#FFD27A', size: .09, transparent: true, opacity: .9, depthWrite: false, blending: THREE.AdditiveBlending })); scene.add(flies); }
@@ -777,7 +777,7 @@ const KL = {};
   const markers = {};
   Object.values(g.NODES).forEach(n => {
     const [x, z] = toV(n.x, n.y), grp = new THREE.Group(); grp.position.set(x, 0, z);
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(.62, .72, .18, 24), mat(hx ? '#3A342A' : '#FFFFFF')); base.position.y = .09; grp.add(base);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(.66, .78, .22, 8), hx ? pbrMat('large_sandstone_blocks', 1, 1, { color: '#CDBF9F' }) : mat('#FFFFFF')); base.position.y = .1; base.rotation.y = Math.PI / 8; base.receiveShadow = true; /* losa de piedra tallada */ grp.add(base);
     const ring = new THREE.Mesh(new THREE.TorusGeometry(.62, .05, 8, 32), new THREE.MeshBasicMaterial({ color: '#E9B44C' })); ring.rotation.x = Math.PI / 2; ring.position.y = .19; grp.add(ring);
     const orbM = new THREE.MeshStandardMaterial({ color: '#FFD873', emissive: '#FFB43C', emissiveIntensity: .9, roughness: .3 });
     const orb = new THREE.Mesh(n.kind === 'gate' ? new THREE.TorusGeometry(.42, .1, 10, 24, Math.PI) : new THREE.OctahedronGeometry(.28, 0), orbM); orb.position.y = n.kind === 'gate' ? .2 : 1.05; grp.add(orb);
@@ -1060,7 +1060,7 @@ function refresh() {
     const lock = !done && !reach && !vis; m.userData.orbM.color.set(lock ? '#B8935A' : col); m.userData.orbM.metalness = lock ? .75 : 0; m.userData.orbM.roughness = lock ? .35 : .3;
     m.userData.orbM.emissive.set(done ? (ok ? '#2FAE7C' : '#C9452E') : (reach ? '#FFB43C' : '#6B4A1E'));
     m.userData.orbM.emissiveIntensity = reach && !vis ? 1.2 : lock ? .45 : .35;
-    m.userData.beam.visible = reach && !vis && !done; m.userData.ring.material.color.set(reach ? '#E9B44C' : '#6B6A64');
+    m.userData.beam.visible = reach && !vis && !done; m.userData.ring.material.color.set(reach ? '#E9B44C' : '#9A7A48');
     m.userData.label.material.opacity = reach || vis ? 1 : .45; m.userData.label.visible = id !== p.pos;
     m.userData.orb.visible = id !== p.pos;
   });
