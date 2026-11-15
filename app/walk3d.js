@@ -3204,8 +3204,16 @@ function auVol(el, v) { if (!el) return; v = Math.max(0, Math.min(1, v)); if (IO
 function musLoop(url) {
   const mk = () => { const a = auEl(url); auVol(a, 0); return a; };
   const t = { list: [url], loop: true, a: mk(), b: null, cur: 'a', xf: false, v: 0, ok: true, primed: false, get el() { return this[this.cur]; } };
-  t.a.onerror = () => { t.ok = false; }; return t;
+  t.a.onerror = () => musFail(t); t.a.addEventListener('playing', () => { t.err = 0; }); return t;
 }
+/* si la pista no carga o se traba (señal floja), reintenta sola con espera creciente; recién al 5.º fallo queda la música sintetizada */
+function musFail(t) {
+  if (t.wait) return; t.err = (t.err || 0) + 1; t.ok = false; if (t.err > 5) return;
+  t.wait = setTimeout(() => { t.wait = 0; [t.a, t.b].forEach(e => { if (e) { try { e.pause(); } catch (er) {} } });
+    const u = t.list[0] + (t.list[0].includes('?') ? '&' : '?') + 'r=' + Date.now(), a = auEl(u); auVol(a, 0); a.onerror = () => musFail(t); a.addEventListener('playing', () => { t.err = 0; });
+    t.a = a; t.b = null; t.cur = 'a'; t.xf = false; t.primed = false; t.lt = -1; t.ok = true; musGesture(); }, 2500 * t.err);
+}
+const canPlay = t => t.primed || (!IOS && navigator.userActivation && navigator.userActivation.hasBeenActive);
 function musLoopTick(t) {
   const A = t.el, o = t.cur === 'a' ? 'b' : 'a', v = Math.max(0, Math.min(1, t.v * mixV('mus'))), now = performance.now();
   if (!t.xf && A.duration && !A.paused && A.currentTime > A.duration - 3) { if (!t[o]) t[o] = auEl(t.list[0]); const B = t[o]; t.xf = true; t.x0 = now; try { B.currentTime = 0; } catch (e) {} auVol(B, 0); B.play().catch(() => {}); }
@@ -3229,13 +3237,14 @@ function musGesture() { // en un toque del usuario: habilita la reproducción (i
 }
 function musTick() {
   const m = AU.mus; if (!m) return false; if (S && (S.hx ? 'hero' : 'kids') !== m.br) { m.adv.el.pause(); m.adv = musTrack(MUS[S.hx ? 'hero' : 'kids']); m.br = S.hx ? 'hero' : 'kids'; m.adv.primed = false; }
-  if (!m.adv.ok && !m.pray.ok) return false;
   const arcOpen = !document.getElementById('arcade').hidden, shown = !document.getElementById('view3d').hidden && !arcOpen, pray = S && (S.pose === 'pray' || S.solemn === 2), on = AU.on && shown && !(S && S.solemn === 1), kidsMg = !!(m.mg && arcOpen && !(S && S.hx) && G().branch !== 'ados');
+  if (!(pray ? m.pray : m.adv).ok && on) { if (m.adv.loop && !m.adv.ok) musFail(m.adv); return false; }
   m.adv.want = on && !pray ? (AU.speaking || AU.narr ? .22 : .55) : 0; m.pray.want = on && pray ? (AU.speaking || AU.narr ? .35 : .7) : 0; if (m.mg) m.mg.want = AU.on && kidsMg ? (AU.speaking || AU.narr ? .22 : .5) : 0;
   for (const t of [m.adv, m.pray, m.mg]) { if (!t) continue;
     if (!t.ok) continue; const step = t.want > t.v ? .045 : .07; t.v += Math.max(-step, Math.min(step, t.want - t.v));
     if (!t.xf) auVol(t.el, t.v * mixV('mus'));
-    if (t.want > 0 && t.el.paused && t.primed) t.el.play().catch(() => {});
+    if (t.want > 0 && t.el.paused && canPlay(t)) { const q = t.el.play(); if (q) q.then(() => { t.primed = true; }).catch(() => {}); }
+    if (t.loop && t.want > 0 && !t.el.paused && !t.xf) { const ct = t.el.currentTime, nw = performance.now(); if (ct !== t.lt) { t.lt = ct; t.lc = nw; } else if (nw - (t.lc || nw) > 12000) { t.lc = nw; musFail(t); continue; } }
     if (t.want <= 0 && !t.el.paused && (t.v < .01 || IOS)) t.el.pause();
     if (t.loop) musLoopTick(t);
   }
@@ -3541,6 +3550,26 @@ let MPO = null;
 async function mpOpts() { if (MPO) return MPO; MPO = {}; try { const ac = new AbortController(), tm2 = setTimeout(() => ac.abort(), 2500), r = await fetch('https://' + SALAS + '/ice', { signal: ac.signal, cache: 'no-store' }); clearTimeout(tm2); if (r.ok) { const j = await r.json(); MPO = { host: SALAS, port: 443, secure: true, path: '/', key: 'peerjs', config: { iceServers: j.iceServers } }; } } catch (e) { } return MPO; }
 const newPeer = id => id ? new Peer(id, MPO || {}) : new Peer(MPO || {});
 function mpLoad() { const lib = window.Peer ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); return Promise.all([lib, mpOpts()]); }
+/* seguridad: todo lo que llega de otro jugador se revisa antes de usarlo (tamaño, tipos, cantidades y nombres),
+   así un mensaje trucado no puede romper el juego, inyectar código ni regalar cosas de más */
+const ID_OK = v => typeof v === 'string' && /^[\w\-]{1,64}$/.test(v);
+const numOk = (v, a, b) => { v = +v; return Number.isFinite(v) ? Math.max(a, Math.min(b, v)) : 0; };
+const strOk = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f<>]/g, '').slice(0, n);
+const resOk = o => { const r = {}; if (o && typeof o === 'object') for (const k of XRES) if (Object.prototype.hasOwnProperty.call(o, k)) { const n = Math.floor(numOk(o[k], 0, 99)); if (n > 0) r[k] = n; } return r; };
+const infoOk = i => { i = i && typeof i === 'object' ? i : {}; return { name: strOk(i.name, 16) || 'Invitado', avatar: i.avatar && typeof i.avatar === 'object' && !Array.isArray(i.avatar) ? i.avatar : {}, branch: strOk(i.branch, 12), hum: numOk(i.hum, 0, 999) }; };
+function mpClean(m, c) {
+  if (!m || typeof m !== 'object' || typeof m.t !== 'string') return null;
+  try { if (JSON.stringify(m).length > 12000) return null; } catch (e) { return null; }
+  if (c) { const now = performance.now(), q = c._rl || (c._rl = { t: now, n: 0 }); if (now - q.t > 1000) { q.t = now; q.n = 0; } if (++q.n > 40) return null; }
+  if (m.id != null && !ID_OK(m.id)) return null; if (m.to != null && !ID_OK(m.to)) return null;
+  if (m.info) m.info = infoOk(m.info);
+  if (m.t === 'list') { if (!Array.isArray(m.players)) return null; m.players = m.players.slice(0, 5).filter(p => p && ID_OK(p.id)).map(p => ({ id: p.id, info: infoOk(p.info) })); }
+  if (m.t === 'st') { if (!Array.isArray(m.s)) return null; const s = m.s; m.s = [numOk(s[0], -5e3, 5e3), numOk(s[1], -500, 2e3), numOk(s[2], -5e3, 5e3), numOk(s[3], -50, 50), s[4] ? 1 : 0, typeof s[5] === 'string' ? strOk(s[5], 16) : null, s[6] ? 1 : 0, numOk(s[7], -10, 50)]; }
+  if (m.t === 'say') m.k = Math.floor(numOk(m.k, 0, 99));
+  if (m.t === 'look' && !(m.avatar && typeof m.avatar === 'object' && !Array.isArray(m.avatar))) return null;
+  if (m.t === 'x') { if (typeof m.k !== 'string') return null; if ('give' in m) m.give = resOk(m.give); if ('want' in m) m.want = resOk(m.want); if ('by' in m) m.by = strOk(m.by, 16); if ('name' in m) m.name = strOk(m.name, 40); if ('label' in m) m.label = strOk(m.label, 60); if ('x' in m) m.x = numOk(m.x, -5e3, 5e3); if ('z' in m) m.z = numOk(m.z, -5e3, 5e3); }
+  return m;
+}
 const meInfo = () => { const p = G().P(); return { name: (p.name || 'Invitado').slice(0, 16), avatar: lookOf(p), branch: G().branch, hum: (p.attr && p.attr.hum) || 0 }; };
 const roomLink = () => location.origin + location.pathname + '#sala-' + (G().branch === 'ados' ? 'hero' : 'kids') + '-' + MP.code;
 function mpSend(msg, except) { const d = msg; if (MP.host) { for (const id in MP.conns) if (id !== except && MP.conns[id].open) MP.conns[id].send(d); } else if (MP.conn && MP.conn.open) MP.conn.send(d); }
@@ -3551,7 +3580,7 @@ async function mpCreate() {
   MP.peer.on('connection', c => {
     c.on('open', () => { if (Object.keys(MP.conns).length >= 4) { c.send({ t: 'full' }); setTimeout(() => c.close(), 300); return; } });
     c.on('data', m => {
-      if (!m || !m.t) return;
+      m = mpClean(m, c); if (!m) return;
       if (m.t === 'hi') { if (m.info.branch !== G().branch) { c.send({ t: 'branch', b: G().branch }); setTimeout(() => c.close(), 300); return; } if (Object.keys(MP.conns).length >= 4) return; MP.conns[c.peer] = c;
         c.send({ t: 'list', host: MP.peer.id, players: [{ id: MP.peer.id, info: meInfo() }].concat(Object.entries(MP.players).map(([id, p]) => ({ id, info: p.info }))) });
         mpAdd(c.peer, m.info); mpSend({ t: 'hi', id: c.peer, info: m.info }, c.peer); G().toast(m.info.name + ' entró a la sala.'); mpUI(); return; }
@@ -3569,7 +3598,7 @@ async function mpJoin(code) {
   MP.peer.on('open', () => { const c = MP.conn = MP.peer.connect(pid(code), { reliable: true }); let ok = false;
     const to = setTimeout(() => { if (!ok) { G().toast('No encontramos esa sala. Revisá el código o pedí el link de nuevo.'); mpLeave(); } }, 9000);
     c.on('open', () => { c.send({ t: 'hi', info: meInfo() }); });
-    c.on('data', m => { if (!m || !m.t) return; ok = true; clearTimeout(to);
+    c.on('data', m => { m = mpClean(m, c); if (!m) return; ok = true; clearTimeout(to);
       if (m.t === 'full') { G().toast('La sala ya tiene 5 personas.'); mpLeave(); return; }
       if (m.t === 'branch') { G().toast(m.b === 'ados' ? 'Esa sala es de Hero. Entrá con tu perfil de Hero.' : 'Esa sala es de Kids. Entrá con tu perfil de Kids.'); mpLeave(); return; }
       if (m.t === 'list') { m.players.forEach(p => { if (p.id !== MP.peer.id) mpAdd(p.id, p.info); }); G().toast('¡Entraste a la sala ' + code + '!'); mpUI(); return; }
@@ -3612,7 +3641,7 @@ function mpAdd(id, info) {
   if (TALK.stream) setTimeout(talkCallAll, 600);
   MP.players[id] = { info, av, tag, tgt: { x: av.position.x, y: 0, z: av.position.z, yaw: 0 }, st: { pose: null, waveT: 0, jy: 0 }, moving: false, bubble: null, bT: 0 };
 }
-function mpDel(id) { if (TALK.calls[id]) { try { TALK.calls[id].close(); } catch (e) {} delete TALK.calls[id]; } if (TALK.aus[id]) { TALK.aus[id].srcObject = null; delete TALK.aus[id]; } const p = MP.players[id]; if (!p) return; if (S) S.scene.remove(p.av); delete MP.players[id]; }
+function mpDel(id) { if (MP.pend && MP.pend[id]) { try { Object.entries(MP.pend[id].give).forEach(([k, n]) => svAdd(k, n)); G().save(); } catch (e) {} delete MP.pend[id]; } if (TALK.calls[id]) { try { TALK.calls[id].close(); } catch (e) {} delete TALK.calls[id]; } if (TALK.aus[id]) { TALK.aus[id].srcObject = null; delete TALK.aus[id]; } const p = MP.players[id]; if (!p) return; if (S) S.scene.remove(p.av); delete MP.players[id]; }
 function mpOn(m) {
   const p = MP.players[m.id]; if (!p) return;
   if (m.t === 'st') { const [x, y, z, yaw, mv, pose, wv, jy] = m.s; p.tgt = { x, y, z, yaw }; p.moving = !!mv; if (pose !== p.st.pose) { p.st.pose = pose; p.st.prayT = 0; } if (wv && !(p.st.waveT > 0)) p.st.waveT = 2.2; p.st.jy = jy; }
@@ -6067,7 +6096,7 @@ function xRelay(c, m) { m.id = c.peer; if (!m.to || m.to === myId()) { mpX(m); i
 function mpX(m) {
   if (m.k === 'offer') return xOfferIn(m);
   if (m.k === 'offerOk') return xOfferOk(m);
-  if (m.k === 'offerNo') { const s = svP(); Object.entries(m.give || {}).forEach(([k, n]) => svAdd(k, n)); G().save(); svUI && svUI(); G().toast(pName(m.id) + ' no aceptó el intercambio. Te devolvimos tus cosas.'); return; }
+  if (m.k === 'offerNo') { const pd = MP.pend && MP.pend[m.id]; if (!pd) return; delete MP.pend[m.id]; Object.entries(pd.give).forEach(([k, n]) => svAdd(k, n)); G().save(); svUI && svUI(); G().toast(pName(m.id) + ' no aceptó el intercambio. Te devolvimos tus cosas.'); return; }
   if (m.k === 'gift') return xGiftIn(m);
   if (m.k === 'esp') return espIn(m);
   if (m.k === 'g') return gmIn(m);
@@ -6075,7 +6104,7 @@ function mpX(m) {
 }
 function playerPick(title, onPick) {
   const el = document.getElementById('v3sheet'), ids = Object.keys(MP.players); if (!ids.length) { G().toast('Todavía no hay nadie más en la sala.'); return; }
-  el.innerHTML = `<div class="inv${S.hx ? ' hx' : ''}"><div class="inv-h"><b>${esc(title)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="x-list">${ids.map(id => `<button data-id="${id}">${esc(pName(id))}</button>`).join('')}</div></div>`;
+  el.innerHTML = `<div class="inv${S.hx ? ' hx' : ''}"><div class="inv-h"><b>${esc(title)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="x-list">${ids.map(id => `<button data-id="${esc(id)}">${esc(pName(id))}</button>`).join('')}</div></div>`;
   el.hidden = false; el.querySelector('.bag-x').onclick = () => { el.hidden = true; }; el.querySelectorAll('[data-id]').forEach(b => b.onclick = () => onPick(b.dataset.id));
 }
 
@@ -6090,7 +6119,7 @@ function xTrade() {
       <div class="sv-row"><button class="x-send">Enviar propuesta</button></div><p class="sv-tip">Lo que das queda reservado hasta que la otra persona responda.</p></div>`;
       el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
       el.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { const o = b.dataset.s === 'g' ? give : want, k = b.dataset.k, mx = b.dataset.s === 'g' ? (s.inv[k] || 0) : 99; o[k] = Math.max(0, Math.min(mx, (o[k] || 0) + +b.dataset.d)); if (!o[k]) delete o[k]; draw(); });
-      el.querySelector('.x-send').onclick = () => { if (!Object.keys(give).length && !Object.keys(want).length) { G().toast('Elegí algo para dar o pedir.'); return; } if (!svHas(give)) return; svPay(give); G().save(); svUI(); xSend({ k: 'offer', to, give, want }); el.hidden = true; G().toast('Propuesta enviada a ' + pName(to) + '.'); }; };
+      el.querySelector('.x-send').onclick = () => { if (!Object.keys(give).length && !Object.keys(want).length) { G().toast('Elegí algo para dar o pedir.'); return; } if (!svHas(give)) return; MP.pend = MP.pend || {}; if (MP.pend[to]) { G().toast('Esperá que ' + pName(to) + ' responda la propuesta anterior.'); return; } svPay(give); MP.pend[to] = { give: { ...give }, want: { ...want } }; G().save(); svUI(); xSend({ k: 'offer', to, give, want }); el.hidden = true; G().toast('Propuesta enviada a ' + pName(to) + '.'); }; };
     draw();
   });
 }
@@ -6103,7 +6132,7 @@ function xOfferIn(m) {
   el.querySelector('.x-ok').onclick = () => { if (!svHas(m.want || {})) { G().toast('No tenés lo que te piden.'); return; } svPay(m.want || {}); Object.entries(m.give || {}).forEach(([k, n]) => svAdd(k, n)); G().save(); svUI(); xSend({ k: 'offerOk', to: m.id, want: m.want }); el.hidden = true; G().toast(gift ? '¡Recibiste el regalo!' : '¡Intercambio hecho!'); };
   el.querySelector('.x-no').onclick = () => { xSend({ k: 'offerNo', to: m.id, give: m.give }); el.hidden = true; };
 }
-function xOfferOk(m) { Object.entries(m.want || {}).forEach(([k, n]) => svAdd(k, n)); G().save(); svUI(); G().toast(pName(m.id) + ' aceptó. ' + (Object.keys(m.want || {}).length ? 'Recibiste ' + lst(m.want) + '.' : '¡Gracias por tu generosidad!')); }
+function xOfferOk(m) { const pd = MP.pend && MP.pend[m.id]; if (!pd) return; delete MP.pend[m.id]; Object.entries(pd.want).forEach(([k, n]) => svAdd(k, n)); G().save(); svUI(); G().toast(pName(m.id) + ' aceptó. ' + (Object.keys(pd.want).length ? 'Recibiste ' + lst(pd.want) + '.' : '¡Gracias por tu generosidad!')); }
 
 /* ---------- humildad: dar puntos de tus atributos ---------- */
 function humToday() { const s = svP(), a = atP(), day = Math.floor(s.play / SV.DAY); if (a.hDay !== day) { a.hDay = day; a.hN = 0; a.hTo = []; } return a; }
