@@ -1433,7 +1433,7 @@ function invEquip(body) {
     const info = body.querySelector('.inv-info'), it = sel && GBY[sel.id];
     if (!it) info.innerHTML = st.own.length ? '<p class="inv-tip">Tocá una prenda del inventario para ponértela. Tocá un casillero del personaje para sacártela.</p>' : '<p class="inv-tip">Todavía no tenés ropa de la época. Aparece muy de vez en cuando brillando cerca del camino, y a veces llega como premio al terminar una misión.</p>';
     else info.innerHTML = `<div class="inv-sel" style="--rc:${RAR[it.r][1]}">${cell(it)}<div><small>${RAR[it.r][0]} · ${SLOTS.find(q => q[0] === it.s)[1]}</small><b>${esc(it.name)}</b><span>${esc(it.desc)}</span></div></div>
-      <button class="inv-act">${sel.from === 'slot' ? 'Sacármela' : 'Ponérmela'}</button>`;
+      <button class="inv-act">${(() => { const e = { hat: 'lo', shirt: 'la', pants: 'lo', boots: 'las', gloves: 'las' }[it.s] || 'la'; return (sel.from === 'slot' ? 'Sacárme' : 'Ponérme') + e; })()}</button>`;
     const act = info.querySelector('.inv-act'); if (act) act.onclick = () => sel.from === 'slot' ? unequip(sel.s) : equip(it);
     body.querySelectorAll('.inv-cell[data-id]').forEach(b => { b.onclick = () => { const id = b.dataset.id; if (sel && sel.id === id && sel.from === 'grid') { equip(GBY[id]); return; } sel = { id, from: 'grid' }; draw(); }; });
     body.querySelectorAll('.inv-slot').forEach(b => b.onclick = () => { const s = b.dataset.s; if (!st.eq[s]) { sel = null; draw(); return; } if (sel && sel.from === 'slot' && sel.s === s) { unequip(s); return; } sel = { id: st.eq[s], from: 'slot', s }; draw(); });
