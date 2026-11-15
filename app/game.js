@@ -2497,7 +2497,7 @@ function burstAt(x,y){bursts.push({x,y,t:0});}
 function splash(x,y){bursts.push({x,y,t:0,w:1});}
 function startArcade(n,done){
   const p=P(),th=branch==='ados'?{...n.game,sky:['#0C1410','#2A2015'],night:true,hx:true}:n.game,cv=$('#arc');
-  $('#arcade').hidden=false;$('#arTitle').textContent=th.title;$('#arScore').textContent='0';
+  $('#arcade').hidden=false;$('#arTitle').textContent=th.title;$('#arScore').textContent='0';try{arFrame(n,th,p);}catch(e){}
   avSprReq(p.avatar);ar={n,th,f:ageFactor(p.avatar.age)*(branch==='ados'?1.28:1),game:null,raf:0,last:0,t:0,k:1,done,running:false};
   ar.fit=()=>{if(!ar)return;const st=$('#arStage').getBoundingClientRect(),w=Math.max(200,Math.min(st.width,st.height*GW/GH)),h=w*GH/GW,d=Math.min(devicePixelRatio||1,2);cv.style.width=w+'px';cv.style.height=h+'px';cv.width=Math.round(w*d);cv.height=Math.round(h*d);ar.k=cv.width/GW;if(!ar.running)drawFrame();};
   const arrow=(d,rot)=>`<button data-k="${d}" aria-label="${{left:'Izquierda',right:'Derecha',up:'Avanzar',down:'Bajar'}[d]}"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(${rot}deg)"><path d="M15 5l-7 7 7 7" stroke="#22407F" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
@@ -2546,6 +2546,18 @@ function gameOver(){
   if(gain>0)p.games[id]=sc;try{const al=branch==='ados'&&window.W3&&W3.fvOf?W3.fvOf('ale'):0;if(gain>0&&al>=20)p.bonus=(p.bonus||0)+Math.round(gain*(al>=50?.2:al>=30?.15:.1));}catch(e){}
   if(sc>=300)award('jugador');
   save();showArCard('over',{score:sc,best:Math.max(best,sc),gain});
+}
+/* la pantalla del minijuego a lo ancho: de fondo, el escenario 3D donde estás (desenfocado); a la izquierda el lugar, cómo se juega
+   y la cita; a la derecha el puntaje grande y tu mejor marca. Solo con pantalla apaisada y espacio a los costados. */
+function arFrame(n,th,p){
+  const A=$('#arcade');let bg='';try{const W=window.W3&&W3.S&&W3.S(),v=document.getElementById('view3d');if(W&&v&&!v.hidden){W.renderer.render(W.scene,W.camera);bg=W.renderer.domElement.toDataURL('image/jpeg',.6);}}catch(e){}
+  A.style.setProperty('--arbg',bg?`url(${bg})`:'none');A.classList.toggle('ar-hasbg',!!bg);A.classList.toggle('ar-hx',branch==='ados');
+  A.querySelectorAll('.ar-side').forEach(e=>e.remove());const ins=A.querySelector('.ar-in');if(!ins)return;
+  const best=(p.games||{})[n.id]||0,ref=(n.ch&&n.ch.ref)||'',where=[n.place||n.label,n.title].filter(Boolean).join(' · ');
+  const L=document.createElement('aside');L.className='ar-side l';L.innerHTML=`${where?`<span class="ar-where">${esc(where)}</span>`:''}<h4>Cómo se juega</h4><p>${esc(th.how||'')}</p>${ref?`<span class="ar-ref">📜 ${esc(ref)}</span>`:''}`;
+  const Rr=document.createElement('aside');Rr.className='ar-side r';Rr.innerHTML=`<small>Puntaje</small><b class="ar-big" id="arBig">0</b><small>Tu mejor marca</small><b class="ar-best">${fmt(best)}</b>`;
+  ins.prepend(L);ins.append(Rr);
+  if(!arFrame.obs){arFrame.obs=new MutationObserver(()=>{const b=document.getElementById('arBig'),s=document.getElementById('arScore');if(b&&s&&b.textContent!==s.textContent){b.textContent=s.textContent;b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');}});arFrame.obs.observe($('#arScore'),{childList:true,characterData:true,subtree:true});}
 }
 function endArcade(abort){
   if(!ar)return;cancelAnimationFrame(ar.raf);removeEventListener('resize',ar.fit);removeEventListener('keydown',ar.key);removeEventListener('keyup',ar.keyup);
