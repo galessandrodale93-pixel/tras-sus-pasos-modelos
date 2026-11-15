@@ -1252,3 +1252,5 @@ body[data-layout="movil-h"] .dy-g{grid-template-columns:repeat(auto-fill,minmax(
 body:has(#arcade:not([hidden])) #khPill,body:has(#v3sheet:not([hidden])) #khPill,body:has(.v3rv.on) #khPill,body:has(.khp) #khPill{display:none!important}
 /* abajo a la izquierda, junto a la cámara: el centro queda para los botones de acción */
 .kh-pill{left:calc(env(safe-area-inset-left,0px) + 66px);transform:none;align-items:flex-start}
+.inv-pow{display:block;margin-top:6px;padding:5px 9px;border-radius:9px;background:linear-gradient(90deg,rgba(255,196,74,.25),rgba(255,196,74,.06));border:1px solid rgba(255,196,74,.5);color:#FFE2A0;font:800 12px/1.3 "Nunito",sans-serif;font-style:normal}
+.inv-pow{display:block;margin-top:6px;padding:5px 9px;border-radius:9px;background:linear-gradient(90deg,rgba(255,196,74,.25),rgba(255,196,74,.06));border:1px solid rgba(255,196,74,.5);color:#FFE2A0;font:800 12px/1.3 "Nunito",sans-serif;font-style:normal}

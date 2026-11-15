@@ -1399,6 +1399,13 @@ const icoGear = it => {
   let g = '';
   if (it.s === 'shirt') { const body = 'M8 3 3 6l2 5 2-1v11h10V10l2 1 2-5-5-3a3 3 0 0 1-8 0Z';
     g = sh(body, it.t === 'stripes' ? ln('M10.2 4.5V20.5M13.8 4.5V20.5', c2, 1.5) : it.t === 'seamless' ? ln('M9 3.6a3 3 0 0 0 6 0', c2, 1.4) + ln('M7.5 19.2h9', c2, 1.2) : ln('M7.4 13.5h9.2', D, 1.6)); }
+  else if (it.s === 'pants' && it.t === 'hand') { const W = '#8A6A44';
+    g = it.k === 'staff' ? ln('M8 21.5 16 2.5', W, 2.6) + ln('M8 21.5 16 2.5', L, .5)
+      : it.k === 'crook' ? ln('M8 21.5 14 7c1-3 5-3 5 .2s-3 3.4-4 1.6', W, 2.6) + ln('M8 21.5 14 7c1-3 5-3 5 .2s-3 3.4-4 1.6', L, .5)
+      : it.k === 'bloom' ? ln('M8 21.5 16 2.5', W, 2.6) + '<circle cx="15" cy="5" r="2.1" fill="#F6D7E2"/><circle cx="17.6" cy="8.2" r="1.7" fill="#FFFFFF"/><circle cx="12.6" cy="8.6" r="1.7" fill="#F2B8CC"/><circle cx="14.4" cy="11.6" r="1.4" fill="#FFFFFF"/>'
+      : it.k === 'scroll' ? `<rect x="5" y="7" width="14" height="10" rx="1" fill="${c}" stroke="${L}" stroke-width="1"/>` + ln('M4 6v12M20 6v12', W, 2.4) + ln('M8 10.5h8M8 13.5h6', D, 1)
+      : it.k === 'branch' || it.k === 'palm' ? ln('M6 21 17 4', '#5A4630', 1.6) + `<path d="M9 16c-3-.5-4-2.5-4-4 2 .2 4 1.2 4 4ZM12 11.5c-3-.6-4-2.6-4-4 2 .2 4 1.2 4 4ZM10.5 15c3 .6 5-.4 6-2-2-.6-4.5-.2-6 2ZM13.5 10.5c3 .6 5-.4 6-2-2-.6-4.5-.2-6 2ZM16.5 5c.2-1.6 1.6-2.4 3-2.4-.2 1.6-1.2 2.4-3 2.4Z" fill="${c}" stroke="${L}" stroke-width=".6"/>`
+      : `<path d="M4 14c0-2.2 3-3.4 8-3.4 3.4 0 5.6.6 8 2.2l-2.2 1.4c0 2.6-2.6 4.6-6.4 4.6S4 16.8 4 14Z" fill="${c}" stroke="${L}" stroke-width="1"/><path d="M19.2 11.4c-1.6-1.2-1.4-3.4.2-5 .2 1.6 1.8 2.2 1.4 3.8-.2.8-.8 1.2-1.6 1.2Z" fill="#FFB43C"/>` + ln('M4.4 13.4c-1.6-.4-1.6-2.6.4-2.6', L, 1.2); }
   else if (it.s === 'pants' && it.t === 'mantle') g = sh('M7 3.5c2 1.2 8 1.2 10 0l3.5 17.5H3.5Z', ln('M4.6 19.4h14.8M7.4 4.4 4.9 18.6M16.6 4.4l2.5 14.2', c2, 1.5) + ln('M5.2 21.6v1.6M18.8 21.6v1.6', '#3E5A9A', 1.4) + ln('M12 6.5v12', D, .6));
   else if (it.s === 'pants') { const leg = 'M6 3h12l1 18h-5l-2-11-2 11H5Z';
     g = sh(leg, it.t === 'wrap' ? ln('M5.9 7.6l4.3 1.3M5.6 11.6l4 1.2M5.3 15.6l3.6 1.1M13.8 8.9l4.3-1.3M14.6 12.8l3.9-1.2M15.4 16.7l3.4-1.1', it.c2 || L, 1) : ln('M6 5.2h12', D, 1.8) + (it.id === 'cabra' ? ln('M7 9l-.6 2M8 13l-.6 2M7.2 17l-.5 1.8M16.6 9l.6 2M17 13.4l.5 2M16.4 17l.4 1.8', L, .8) : '')); }
@@ -1432,7 +1439,7 @@ function invEquip(body) {
     body.querySelector('.inv-grid').innerHTML = Array.from({ length: n }, (_, i) => { const it = free[i]; return it ? `<button class="inv-cell rr-${it.r}${sel && sel.id === it.id && sel.from === 'grid' ? ' sel' : ''}" data-id="${it.id}" style="--rc:${RAR[it.r][1]}" aria-label="${esc(it.name)}">${cell(it)}</button>` : '<span class="inv-cell empty"></span>'; }).join('');
     const info = body.querySelector('.inv-info'), it = sel && GBY[sel.id];
     if (!it) info.innerHTML = st.own.length ? '<p class="inv-tip">Tocá una prenda del inventario para ponértela. Tocá un casillero del personaje para sacártela.</p>' : '<p class="inv-tip">Todavía no tenés ropa de la época. Aparece muy de vez en cuando brillando cerca del camino, y a veces llega como premio al terminar una misión.</p>';
-    else info.innerHTML = `<div class="inv-sel" style="--rc:${RAR[it.r][1]}">${cell(it)}<div><small>${RAR[it.r][0]} · ${SLOTS.find(q => q[0] === it.s)[1]}</small><b>${esc(it.name)}</b><span>${esc(it.desc)}</span></div></div>
+    else info.innerHTML = `<div class="inv-sel" style="--rc:${RAR[it.r][1]}">${cell(it)}<div><small>${RAR[it.r][0]} · ${SLOTS.find(q => q[0] === it.s)[1]}</small><b>${esc(it.name)}</b><span>${esc(it.desc)}</span>${LEG_POW[it.id] ? `<em class="inv-pow">⚡ ${esc(LEG_POW[it.id][0])}: ${esc(LEG_POW[it.id][1])}</em>` : ''}</div></div>
       <button class="inv-act">${(() => { const e = /^(Turbante|Gorro|Sombrero|Pañuelo|Velo|Tocado)/.test(it.name) ? 'lo' : /^(Capucha)/.test(it.name) ? 'la' : { hat: 'lo', shirt: 'la', pants: 'lo', boots: 'las', gloves: 'las' }[it.s] || 'la'; return (sel.from === 'slot' ? 'Sacárme' : 'Ponérme') + e; })()}</button>`;
     const act = info.querySelector('.inv-act'); if (act) act.onclick = () => sel.from === 'slot' ? unequip(sel.s) : equip(it);
     body.querySelectorAll('.inv-cell[data-id]').forEach(b => { b.onclick = () => { const id = b.dataset.id; if (sel && sel.id === id && sel.from === 'grid') { equip(GBY[id]); return; } sel = { id, from: 'grid' }; draw(); }; });
@@ -1474,7 +1481,7 @@ function invItems(body) {
     const n = Math.max(16, Math.ceil(got.length / 4) * 4);
     body.innerHTML = `<div class="inv-cap"><b>Objetos del camino</b><span>${got.length} de ${ITEMS.length}</span></div>
       <div class="inv-grid">${Array.from({ length: n }, (_, i) => { const it = got[i]; return it ? `<button class="inv-cell obj${sel === it.id ? ' sel' : ''}" data-id="${it.id}" aria-label="${esc(it.name)}"><span class="inv-ico"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[it.k]}</svg></span></button>` : '<span class="inv-cell empty"></span>'; }).join('')}</div>
-      <div class="inv-info">${sel ? (it => `<div class="inv-sel obj"><span class="inv-ico"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[it.k]}</svg></span><div><small>${esc(it.ref)}</small><b>${esc(it.name)}</b><span>${esc(it.desc)}</span></div></div>`)(ITEMS.find(x => x.id === sel)) : `<p class="inv-tip">${got.length ? 'Tocá un objeto para ver de dónde viene en la Biblia.' : 'Todavía no encontraste nada. Salí del camino y explorá: hay objetos escondidos que brillan.'}</p>`}</div>`;
+      <div class="inv-info">${sel ? (it => `<div class="inv-sel obj"><span class="inv-ico"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[it.k]}</svg></span><div><small>${esc(it.ref)}</small><b>${esc(it.name)}</b><span>${esc(it.desc)}</span>${LEG_POW[it.id] ? `<em class="inv-pow">⚡ ${esc(LEG_POW[it.id][0])}: ${esc(LEG_POW[it.id][1])}</em>` : ''}</div></div>`)(ITEMS.find(x => x.id === sel)) : `<p class="inv-tip">${got.length ? 'Tocá un objeto para ver de dónde viene en la Biblia.' : 'Todavía no encontraste nada. Salí del camino y explorá: hay objetos escondidos que brillan.'}</p>`}</div>`;
     body.querySelectorAll('.inv-cell[data-id]').forEach(b => b.onclick = () => { sel = b.dataset.id; draw(); });
   };
   draw();
@@ -3777,7 +3784,7 @@ function dayTick(dt) {
 }
 
 /* ---------- vestimenta de la época: se encuentra rara vez en el camino o como premio de misión ---------- */
-const SLOTS = [['hat', 'Cabeza'], ['shirt', 'Túnica'], ['pants', 'Manto'], ['boots', 'Sandalias'], ['gloves', 'Muñequeras']]; /* ropa de la época: los ids de siempre, así nadie pierde lo que tiene */
+const SLOTS = [['hat', 'Cabeza'], ['shirt', 'Túnica'], ['pants', 'Mano'], ['boots', 'Sandalias'], ['gloves', 'Muñequeras']]; /* ropa de la época: los ids de siempre, así nadie pierde lo que tiene */
 const RAR = { c: ['Común', '#C9C2B4', 60], r: ['Rara', '#6FB6FF', 28], e: ['Épica', '#C77DFF', 9], l: ['Legendaria', '#FFB13B', 2.5], u: ['Única · nunca se pierde', '#4FD1C5', 0] };
 const GEAR = [
   { id: 'turbante', s: 'hat', r: 'c', t: 'turban', c: '#E8DDC6', name: 'Turbante de lino', desc: 'Una tela larga enrollada en la cabeza para cubrirse del sol del camino.' },
@@ -3790,10 +3797,10 @@ const GEAR = [
   { id: 'rayas', s: 'shirt', r: 'r', t: 'stripes', c: '#C9B48A', c2: '#7A2E22', name: 'Túnica a rayas de Galilea', desc: 'Con dos franjas de color que bajan desde los hombros, muy usadas en la época.' },
   { id: 'pescador', s: 'shirt', r: 'r', t: 'stripes', c: '#8A9A8E', c2: '#2E4A5A', name: 'Túnica de pescador', desc: 'Corta y resistente, como la de Pedro y Andrés cuando echaban las redes.' },
   { id: 'sincostura', s: 'shirt', r: 'e', t: 'seamless', c: '#EFE6D2', c2: '#C9A04A', name: 'Túnica sin costura', desc: 'Tejida de una sola pieza de arriba abajo, como la túnica de Jesús que menciona Juan 19:23.' },
-  { id: 'calzas', s: 'pants', r: 'c', t: 'mantle', c: '#CDBF9E', c2: '#8A7A5A', name: 'Manto de lino crudo', desc: 'El manto de todos los días: de día abriga del viento y de noche sirve de cobija (Éxodo 22:26-27).' },
-  { id: 'polainas', s: 'pants', r: 'c', t: 'mantle', c: '#6E5A44', c2: '#C9B48A', name: 'Manto de lana', desc: 'Grueso y abrigado para las noches del campo.' },
-  { id: 'cabra', s: 'pants', r: 'r', t: 'mantle', c: '#4A3E34', c2: '#A8987A', name: 'Manto de pelo de cabra', desc: 'El pelo de cabra se tejía para carpas y mantos que aguantan la lluvia.' },
-  { id: 'bordadas', s: 'pants', r: 'e', t: 'mantle', c: '#2E3E6A', c2: '#E6B04A', name: 'Manto bordado en oro', desc: 'Con bordes bordados en oro, digno de una fiesta de bodas como la de Caná.' },
+  { id: 'calzas', s: 'pants', r: 'c', t: 'hand', k: 'staff', c: '#8A6A44', name: 'Bastón de caminante', desc: 'Un bastón de madera para los caminos largos de Galilea (Marcos 6:8).' },
+  { id: 'polainas', s: 'pants', r: 'c', t: 'hand', k: 'crook', c: '#7A5532', name: 'Cayado de pastor', desc: 'Con la punta curva, para guiar a las ovejas y traer de vuelta a la que se aleja (Salmo 23:4).' },
+  { id: 'cabra', s: 'pants', r: 'r', t: 'hand', k: 'branch', c: '#5E7A3A', name: 'Rama de olivo', desc: 'Una rama de olivo recién cortada, señal de paz (Génesis 8:11).' },
+  { id: 'bordadas', s: 'pants', r: 'e', t: 'hand', k: 'lamp', c: '#C9963A', metal: 1, name: 'Lámpara de bronce', desc: 'Una lámpara de aceite de bronce, siempre encendida (Mateo 5:15-16).' },
   { id: 'altas', s: 'boots', r: 'c', t: 'sandal', hi: 1, c: '#9A6A3E', name: 'Sandalias de caña alta', desc: 'Con tiras de cuero que suben por el tobillo.' },
   { id: 'cuero', s: 'boots', r: 'c', t: 'sandal', c: '#6A4528', name: 'Sandalias de cuero', desc: 'Hechos por un curtidor, como Simón, el de Jope (Hechos 9:43).' },
   { id: 'pastor', s: 'boots', r: 'r', t: 'sandal', hi: 1, c: '#3E2E22', name: 'Sandalias de pastor', desc: 'Atadas firmes a la pierna para subir a las colinas detrás de las ovejas.' },
@@ -3813,10 +3820,10 @@ const GEAR = [
   { id: 'pastorm', s: 'shirt', r: 'r', t: 'stripes', c: '#8A7A5A', c2: '#3A2A1A', name: 'Túnica de pastor', desc: 'Grueso y abrigado, para cuidar el rebaño de noche (Lucas 2:8).' },
   { id: 'grana', s: 'shirt', r: 'e', t: 'plain', c: '#8E1E2A', name: 'Túnica teñida de grana', desc: 'La mujer virtuosa vestía a los suyos de grana para el invierno (Proverbios 31:21).' },
   { id: 'jose', s: 'shirt', r: 'l', t: 'stripes', c: '#D9A63A', c2: '#3E5A9A', rb: 1, name: 'Túnica de muchos colores', desc: 'Como la que Jacob le hizo a su hijo José (Génesis 37:3). Casi nadie la encuentra.' },
-  { id: 'arena', s: 'pants', r: 'c', t: 'mantle', c: '#C2A878', c2: '#7A6A4A', name: 'Manto color arena', desc: 'Para cruzar el desierto de Judea protegido del sol.' },
-  { id: 'lananegra', s: 'pants', r: 'c', t: 'mantle', c: '#2E2824', c2: '#8A7A62', name: 'Manto de lana oscura', desc: 'Resistente al polvo y al barro del camino.' },
-  { id: 'viajero', s: 'pants', r: 'r', t: 'mantle', c: '#6A5038', c2: '#C9A04A', name: 'Manto de viajero', desc: 'Con franjas de color, como el de los que llevaban el mensaje de ciudad en ciudad.' },
-  { id: 'purpurap', s: 'pants', r: 'e', t: 'mantle', c: '#5A2A6A', c2: '#E6B04A', name: 'Manto de púrpura', desc: 'Teñido con el caracol de Tiro, el color de los reyes.' },
+  { id: 'arena', s: 'pants', r: 'c', t: 'hand', k: 'lamp', c: '#B5764A', name: 'Lámpara de barro', desc: 'La lámpara de aceite de todas las casas (Salmo 119:105).' },
+  { id: 'lananegra', s: 'pants', r: 'c', t: 'hand', k: 'palm', c: '#6E8A3E', name: 'Hoja de palmera', desc: 'Como las que la gente agitaba cuando Jesús entró a Jerusalén (Juan 12:13).' },
+  { id: 'viajero', s: 'pants', r: 'r', t: 'hand', k: 'scroll', c: '#E9DCC0', name: 'Rollo de las Escrituras', desc: 'Un rollo como el que Jesús leyó en la sinagoga de Nazaret (Lucas 4:16-17).' },
+  { id: 'purpurap', s: 'pants', r: 'e', t: 'hand', k: 'bloom', c: '#8A6A44', name: 'Vara florecida', desc: 'Como la vara de Aarón, que echó brotes, flores y almendras (Números 17:8).' },
   { id: 'juncos', s: 'boots', r: 'c', t: 'sandal', c: '#B89A5E', name: 'Sandalias de juncos', desc: 'Livianas, tejidas con las cañas del río.' },
   { id: 'desierto', s: 'boots', r: 'c', t: 'sandal', hi: 1, c: '#A8865A', name: 'Sandalias del desierto', desc: 'De suela ancha para la arena caliente del camino a Jericó.' },
   { id: 'jordan', s: 'boots', r: 'r', t: 'sandal', c: '#3E4A5A', name: 'Sandalias del Jordán', desc: 'Aguantan el agua y el barro de la orilla del río.' },
@@ -4746,11 +4753,11 @@ function h3dress(o, av, c) {
   if (c.npc) { const h = h3hash((av.outfit || '') + (av.skin || '') + (av.hair || '') + c.sx), h2 = h3hash(h + 'm'), h3 = h3hash(h + 's');
     const tc = av.outfit ? new THREE.Color(av.outfit).lerp(new THREE.Color('#C9BBA0'), .45).getStyle() : NPC_TUNIC[Math.floor(h * NPC_TUNIC.length)];
     tun = { c: tc, c2: h2 < .3 ? NPC_TUNIC[Math.floor(h3 * NPC_TUNIC.length)] : null, pat: h2 < .3 ? 'clavi' : null, len: fem ? .05 : .17 + h3 * .07, belt: ['#3A2A1C', '#5A3A22', '#7A2E22', '#6E5A44'][Math.floor(h2 * 4)] };
-    if (h2 < (fem ? .75 : .38)) man = { c: NPC_MANTO[Math.floor(h3 * NPC_MANTO.length)], c2: '#C9B48A', len: fem ? .12 : .5, tassels: !fem };
+    if (0) man = { c: NPC_MANTO[Math.floor(h3 * NPC_MANTO.length)], c2: '#C9B48A', len: fem ? .12 : .5, tassels: !fem };
     san = { c: ['#7A5232', '#5A3A22', '#8E6A44'][Math.floor(h * 3)], high: h3 > .7 }; body.material = body.material.clone(); body.material.color.set(tc); try { h3cloth(body.material); } catch (e) {} o.traverse(m => { if (m.isSkinnedMesh && H3_PART.arms.test(m.name)) { m.material = m.material.clone(); m.material.color.set(tc); try { h3cloth(m.material); } catch (e) {} } });
   } else { const sh = it('shirt'), pa = it('pants'), bo = it('boots'), tc = sh ? (sh.t && sh.t !== 'plain' && sh.t !== 'stripes' && sh.t !== 'seamless' ? sh.t : sh.c) : (c.tint.body || '#D9CBB0');
     tun = { c: (H3_GEAR[(D.shirt || {}).id] || {}).t || (sh && sh.c) || c.tint.body || '#D9CBB0', c2: sh && sh.c2, pat: sh ? (sh.rb ? 'rb' : sh.t === 'stripes' ? 'clavi' : sh.t === 'seamless' ? 'hem' : null) : null, len: fem ? .05 : .18, belt: sh && rare(sh) ? '#6A4A1E' : '#3A2A1C', glow: sh && rare(sh) === 'l' ? '#5A4410' : null };
-    if (pa) man = { c: pa.c, c2: pa.c2 || new THREE.Color(pa.c).multiplyScalar(.6).getStyle(), len: fem ? .12 : .5, glow: rare(pa) === 'l' ? '#6A4A10' : rare(pa) === 'e' ? '#3A2808' : null };
+    if (0) man = { c: pa.c, c2: pa.c2 || new THREE.Color(pa.c).multiplyScalar(.6).getStyle(), len: fem ? .12 : .5, glow: rare(pa) === 'l' ? '#6A4A10' : rare(pa) === 'e' ? '#3A2808' : null };
     san = { c: bo ? bo.c : '#7A5232', high: bo ? !!(bo.hi || /doradas/.test(bo.id)) : false, metal: bo && bo.id === 'doradas' ? .5 : 0, glow: bo && bo.id === 'evangelio' ? '#8A6A1A' : null }; }
   if (!c.npc && !D.shirt) o.traverse(m => { if (m.isSkinnedMesh && (H3_PART.body.test(m.name) || H3_PART.arms.test(m.name))) { m.material = m.material.clone(); m.material.color.set(tun.c); try { h3cloth(m.material); } catch (e) {} } });
   const made = []; try { made.push(h3tunic(body, B, tun)); } catch (e) { console.warn('túnica', e); }
@@ -4832,8 +4839,8 @@ function buildHero3(av) {
   if (kid && !npc) kidBody(bones, sx);
   if (hatProc) { const g = new THREE.Group(); g.matrixAutoUpdate = false; g.matrix.copy(tpl.hatM); bones.Head.add(g); const k = new THREE.Group(); k.scale.setScalar(.95); g.add(k);
     dressHero({ hat: hatProc }, (c, r, op) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: r ?? .9 }, op || {})), 1, { head: k, hideHair: () => {} }); }
-  const lamp = new THREE.Group(), lb = new THREE.Mesh(new THREE.CylinderGeometry(.045, .055, .12, 8), new THREE.MeshStandardMaterial({ color: '#B8862E', roughness: .4, metalness: .6 })); lamp.add(lb);
-  const gl = new THREE.Mesh(new THREE.SphereGeometry(.034, 10, 8), new THREE.MeshBasicMaterial({ color: '#FFD27A' })); lamp.add(gl); const pl = new THREE.PointLight('#FFB45A', 5, 7, 1.6); lamp.add(pl); lamp.visible = !npc; o.add(lamp);
+  /* lo que lleva en la mano izquierda: la lámpara de siempre, o el objeto del espacio «Mano» */
+  const lamp = new THREE.Group(); { const hid = !npc && av.gear && av.gear.pants, hit = hid && GBY[hid] && GBY[hid].t === 'hand' ? GBY[hid] : null; try { h3held(lamp, hit); } catch (e) { console.warn('mano', e); } lamp.userData.kind = hit ? hit.k : 'lamp'; } lamp.visible = !npc; o.add(lamp);
   const age = Math.max(12, Math.min(18, av.age || 16)); o.scale.setScalar(npc ? 1 : kid ? .66 + Math.max(0, Math.min(5, (av.age || 8) - 6)) * .018 : .9 + (age - 12) / 6 * .1);
   if (!npc) { const H = { b: .95, a: 1.05 }[av.ht] || 1, W = { d: .93, r: 1.08 }[av.bd] || 1; o.scale.set(o.scale.x * W, o.scale.y * H, o.scale.z * W); } // altura y contextura elegidas al crear el personaje
   if (!npc || av.ins) insBelt(o, bones, av.ins || []);
@@ -4900,10 +4907,31 @@ function h3pose(av, t, dt, st) {
   if (q > .01 && !mxWave && u.cur !== 'M_Waving') { h3aim(av, B, 'upperarm_r', 'lowerarm_r', -.85, .38, .18, q); h3aim(av, B, 'lowerarm_r', 'hand_r', -.15 + Math.sin(t * 11) * .38, 1, .15, q); }
   if (me) toolPose(av, B, t, dt, st);
   if (me && u.talkT > -.4 && u.talkAge != null) { talkLayer(av, u, dt, null); if (u.talkT <= -.4) u.talkAge = null; }
-  if (u.lamp.visible) { const V = h3vec(); B.hand_r.getWorldPosition(V.a); av.worldToLocal(V.a); u.lamp.position.copy(V.a); u.lamp.position.y -= .1 / av.scale.y; }
+  if (u.lamp.visible && B.hand_l) { const busy = (u.tools && Object.values(u.tools).some(g2 => g2.visible)) || p > .3 || /Swim|Sitting|Kneel|Fixing|Sleep|Lying|Fishing|Pick|Chop|Carry/i.test(u.cur || ''), ud = u.lamp.userData; ud.w = (ud.w || 0) + ((busy ? 0 : 1) - (ud.w || 0)) * Math.min(1, dt * 8);
+    /* el codo se dobla y el antebrazo va hacia adelante: el objeto queda agarrado en el puño, a la vista */
+    if (ud.w > .02) { h3aim(av, B, 'upperarm_l', 'lowerarm_l', .1, -.96, .18, ud.w); h3aim(av, B, 'lowerarm_l', 'hand_l', .06, ud.lampY ? .05 : -.12, .99, ud.w); av.updateMatrixWorld(true); }
+    const V = h3vec(); B.hand_l.getWorldPosition(V.a); av.worldToLocal(V.a); u.lamp.position.copy(V.a); u.lamp.position.z += (ud.lampY ? .05 : .06) / av.scale.z; u.lamp.position.y += (ud.lampY ? .035 : 0) / av.scale.y; u.lamp.rotation.set(ud.up ? .1 : 0, 0, 0); u.lamp.scale.setScalar(Math.max(.001, ud.w > .5 ? 1 : ud.w * 2));
+    if (ud.flame) ud.flame.scale.y = 1 + Math.sin(t * 13) * .18 + Math.sin(t * 7.1) * .1; }
 }
 /* ---------- herramientas en la mano mientras se hace la acción: caña o red al pescar, hacha al talar, pico al picar, pedernal al encender ---------- */
 const TOOLH = { line: null, bob: null, net: null, rope: null, fish: null, mats: null };
+function h3held(g, it) {
+  const k = it ? it.k : 'lamp', M = (c, r, o2) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: r ?? .8 }, o2 || {})), add = (geo, m, x, y, z, rx, rz) => { const q = new THREE.Mesh(geo, m); q.position.set(x || 0, y || 0, z || 0); if (rx) q.rotation.x = rx; if (rz) q.rotation.z = rz; q.castShadow = true; q.frustumCulled = false; g.add(q); return q; };
+  const wood = M(it && it.c && /staff|crook|bloom/.test(k) ? it.c : '#7A5532', .75), rare = it && (it.r === 'e' || it.r === 'l');
+  if (k === 'staff' || k === 'crook' || k === 'bloom') { add(new THREE.CylinderGeometry(.018, .024, 1.62, 8), wood, 0, -.2, 0); add(new THREE.SphereGeometry(.03, 8, 6), wood, 0, .62, 0);
+    if (k === 'crook') { const t = add(new THREE.TorusGeometry(.1, .018, 6, 14, Math.PI * 1.15), wood, 0, .61, .1); t.rotation.y = Math.PI / 2; t.rotation.x = -.2; }
+    if (k === 'bloom') { const pk = M('#F6CADB', .6, { emissive: '#7A3A4A', emissiveIntensity: .35 }), wh = M('#FFFFFF', .6, { emissive: '#6A6A5A', emissiveIntensity: .3 }), lf = M('#6E9A46', .8); for (let i = 0; i < 9; i++) { const a = i * 2.4, y = .3 + (i % 5) * .08; add(new THREE.IcosahedronGeometry(.032 + (i % 3) * .008, 0), i % 2 ? pk : wh, Math.cos(a) * .045, y, Math.sin(a) * .045); if (i % 3 === 0) { const l = add(new THREE.ConeGeometry(.02, .09, 4), lf, Math.cos(a + 1) * .05, y - .03, Math.sin(a + 1) * .05); l.rotation.z = Math.cos(a + 1) * -1.1; l.rotation.x = Math.sin(a + 1) * 1.1; } } }
+    g.userData.up = 1; }
+  else if (k === 'scroll') { const pa = M((it && it.c) || '#E9DCC0', .9), wd = M('#6A4A2A', .7); add(new THREE.CylinderGeometry(.04, .04, .26, 12), pa, 0, .02, 0, 0, Math.PI / 2); [-1, 1].forEach(e => { add(new THREE.CylinderGeometry(.012, .012, .1, 6), wd, e * .17, .02, 0, 0, Math.PI / 2); add(new THREE.SphereGeometry(.02, 6, 5), wd, e * .225, .02, 0); }); add(new THREE.TorusGeometry(.042, .006, 5, 14), M('#8E2A2A', .6), 0, .02, 0, 0, 0).rotation.y = Math.PI / 2; }
+  else if (k === 'branch' || k === 'palm') { const st = M('#5A4630', .85), lf = new THREE.MeshStandardMaterial({ color: (it && it.c) || '#5E7A3A', roughness: .75, side: THREE.DoubleSide, flatShading: true }); add(new THREE.CylinderGeometry(.008, .014, k === 'palm' ? .95 : .7, 6), st, 0, k === 'palm' ? .34 : .22, 0);
+    const n = k === 'palm' ? 22 : 14; for (let i = 0; i < n; i++) { const t = i / (n - 1), sd = i % 2 ? 1 : -1, y = (k === 'palm' ? .12 + t * .68 : .08 + t * .5), L = k === 'palm' ? .2 * (1 - Math.abs(t - .45) * .9) + .05 : .09, geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, sd * L * .55, .03, .012, sd * L, k === 'palm' ? .09 : .04, 0, sd * L * .55, .05, -.012], 3)); geo.setIndex([0, 1, 2, 0, 2, 3]); geo.computeVertexNormals(); const l = add(geo, lf, 0, y, 0); l.rotation.y = k === 'palm' ? 0 : i * 1.3; }
+    g.userData.up = 1; }
+  else { const body = it && it.metal ? M((it && it.c) || '#C9963A', .32, { metalness: .8 }) : M((it && it.c) || '#B5764A', .85); /* lámpara de aceite: cuerpo chato, pico con la llama y asa atrás */
+    const b = add(new THREE.SphereGeometry(.065, 14, 10), body, 0, .045, 0); b.scale.set(1, .5, 1.25); const sp = add(new THREE.ConeGeometry(.026, .08, 8), body, 0, .05, .1, Math.PI / 2 + .25); sp.scale.x = 1.2; add(new THREE.TorusGeometry(.026, .008, 6, 12), body, 0, .055, -.09).rotation.y = Math.PI / 2; add(new THREE.CylinderGeometry(.02, .024, .012, 10), body, 0, .08, -.005);
+    const fl = add(new THREE.ConeGeometry(.016, .06, 8), new THREE.MeshBasicMaterial({ color: '#FFB43C' }), 0, .105, .135); fl.castShadow = false; const fc = add(new THREE.SphereGeometry(.012, 8, 6), new THREE.MeshBasicMaterial({ color: '#FFF1B8' }), 0, .09, .135); fc.castShadow = false; g.userData.flame = fl; g.userData.lampY = 1; }
+  if (rare) { const gl = glowSpr(it.r === 'l' ? '#FFD46A' : '#C9A0FF', .5, .35); gl.position.y = k === 'bloom' ? .45 : .1; g.add(gl); }
+  const pl = new THREE.PointLight('#FFB45A', k === 'lamp' ? 5 : 2.2, 7, 1.6); pl.position.y = .15; g.add(pl);
+}
 function toolMats() {
   if (TOOLH.mats) return TOOLH.mats; const M = (c, r, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: r ?? .85, metalness: 0 }, o || {}));
   return TOOLH.mats = { wood: M('#7A5532', .8), dark: M('#4A3020', .85), iron: M('#8A8E96', .38, { metalness: .75 }), cane: M('#B89A62', .7), rope: M('#C9B48A', .95), stone: M('#34343C', .55), red: M('#C8402E', .6), white: M('#F2EEE4', .6),
@@ -6154,7 +6182,7 @@ function attrMigrate() {
   const pm = p.mat; if (pm && (pm.sabi || 0) > (pm.sabiM || 0)) { set('sab', tot('sab') + pm.sabi - (pm.sabiM || 0)); pm.sabiM = pm.sabi; dirty = true; }
   if (dirty) G().save();
 }
-function axGain(k, n) {
+function axGain(k, n) { if (legOn('sacerdote')) n *= 1.25;
   if (!AXN[k] || !S) return; if (G() && G().khLocked && G().khLocked()) return; /* modo recorrido: los atributos no crecen */ const a = axP(); a.xp[k] = (a.xp[k] || 0) + n; let up = false;
   while (a.xp[k] >= axNeed(a.xl[k] || 0) && (a.xl[k] || 0) < 30) { a.xp[k] -= axNeed(a.xl[k] || 0); a.xl[k] = (a.xl[k] || 0) + 1; up = true; }
   axFloat(up ? `+1 ${AXN[k]}` : `+${n} exp. ${AXN[k]}`, up); if (up) { G().toast(`💪 Tu ${AXN[k]} subió a ${(a[k] || 0) + a.xl[k]} de tanto practicar.`); G().save(); }
@@ -6175,7 +6203,10 @@ function axVerse(dt) {
   AXS.vT = (AXS.vT == null ? 45 + Math.random() * 45 : AXS.vT) - dt; if (AXS.vT > 0) return; AXS.vT = 45 + Math.random() * 45;
   try { const g = G(), t = g.stageLine && g.stageLine(); if (t) g.vo(t, 'narrador', { queue: 1 }); } catch (e) {}
 }
-function agiMul() { return 1 + atr('agi') * .06; }
+/* poderes de las prendas legendarias: valen solo mientras la llevás puesta */
+const LEG_POW = { evangelio: ['Pies ligeros', 'Caminás y corrés un 15% más rápido.'], jose: ['Graneros llenos', 'El hambre te baja un 30% más lento.'], sacerdote: ['Consagrado', 'Tus atributos crecen un 25% más rápido con cada cosa que hacés.'] };
+function legOn(id) { try { const e = gearState().eq; return Object.values(e).includes(id); } catch (e) { return false; } }
+function agiMul() { return (1 + atr('agi') * .06) * (legOn('evangelio') ? 1.15 : 1); }
 function lvlNow() { const g = G(); return g.level ? g.level() : 1; }
 const ATTR_PER_LV = 3, ATTR_MAX = 100, LV_MAX = 75;
 // cada punto cuesta más cuanto más alto está el atributo: del 1 al 30 vale 1, del 31 al 60 vale 2, del 61 al 100 vale 3 (especializarse es posible, pero es una decisión de años)
@@ -6387,7 +6418,7 @@ function svFurnish(id, silent) {
 
 /* ---------- hambre, desmayo y la bolsa en el piso ---------- */
 function svTickHunger(dt) {
-  const s = svP(); if (S.down) return; s.play += dt; const drain = S.hx ? 1 - [0, .1, .1, .2, .2, .35][ft('dom')] : 1 - Math.min(.6, atr('dom') * .07); s.sat -= dt * drain;
+  const s = svP(); if (S.down) return; s.play += dt; const drain = S.hx ? 1 - [0, .1, .1, .2, .2, .35][ft('dom')] : 1 - Math.min(.6, atr('dom') * .07); s.sat -= dt * drain * (legOn('jose') ? .7 : 1);
   if (s.sat <= SV.WARN && (!s.warned || s.play - s.warned > 120)) { s.warned = s.play; svToast('🍞 Tenés hambre. Necesitás comer pronto: frutos de los granados o pescado asado.'); }
   if (s.sat <= 0) svFaint();
 }
