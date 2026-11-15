@@ -4702,10 +4702,10 @@ function h3sandals(body, B, o, skin) {
     [[0, 1, 2, 0, 2, 3], [4, 6, 5, 4, 7, 6], [0, 4, 5, 0, 5, 1], [3, 2, 6, 3, 6, 7], [0, 3, 7, 0, 7, 4], [1, 5, 6, 1, 6, 2]].forEach(f => f.forEach(v => idx.push(n0 + v))); };
   ['l', 'r'].forEach(sd => { const F = P['foot_' + sd], Bl = P['ball_' + sd], dir = new THREE.Vector3(Bl.x - F.x, 0, Bl.z - F.z); const len = dir.length() + .13; dir.normalize(); const gy = Math.min(F.y, Bl.y) - .035;
     const cx = (F.x + Bl.x) / 2 + dir.x * .02, cz = (F.z + Bl.z) / 2 + dir.z * .02, wf = a => [[I['foot_' + sd], a > .3 ? .25 : 1], [I['ball_' + sd], a > .3 ? .75 : 0]];
-    box(cx, gy + .012, cz, len * 1.02, .112, .024, dir, sd, wf, sole);
+    box(cx + dir.x * .015, gy + .012, cz + dir.z * .015, len * 1.2, .13, .026, dir, sd, wf, sole);
     /* el pie de verdad: talón redondo, empeine alto y dedos más finos (antes era una tablita) */
-    { const lt = new THREE.Vector3(-dir.z, 0, dir.x), h0 = new THREE.Vector3(cx - dir.x * len * .5, 0, cz - dir.z * len * .5), NRf = 9, NSf = 12, f0 = pos.length / 3, bot = gy + .022;
-      for (let r = 0; r <= NRf; r++) { const q = r / NRf, w = .1 * (q < .15 ? .7 + q * 2 : q > .82 ? 1 - (q - .82) * 1.6 : 1) * (q > .45 ? 1.06 : .94), hh = q < .12 ? .05 + q * .3 : q < .45 ? .086 - (q - .12) * .02 : q < .78 ? .08 - (q - .45) * .1 : .047 - (q - .78) * .08, px = h0.x + dir.x * len * q, pz = h0.z + dir.z * len * q;
+    { const lt = new THREE.Vector3(-dir.z, 0, dir.x), FL = len * 1.16, h0 = new THREE.Vector3(cx - dir.x * FL * .46, 0, cz - dir.z * FL * .46), NRf = 9, NSf = 12, f0 = pos.length / 3, bot = gy + .022;
+      for (let r = 0; r <= NRf; r++) { const q = r / NRf, w = .122 * (q < .15 ? .7 + q * 2 : q > .82 ? 1 - (q - .82) * 1.6 : 1) * (q > .45 ? 1.06 : .94), hh = 1.38 * (q < .12 ? .05 + q * .3 : q < .45 ? .086 - (q - .12) * .02 : q < .78 ? .08 - (q - .45) * .1 : .047 - (q - .78) * .08), px = h0.x + dir.x * FL * q, pz = h0.z + dir.z * FL * q;
         for (let k = 0; k < NSf; k++) { const an = k / NSf * Math.PI * 2, ca = Math.cos(an), sa = Math.sin(an), yy = sa < 0 ? bot + .004 * (1 + sa) : bot + hh * sa * (q > .2 && q < .75 && Math.abs(ca) < .5 ? 1.05 : 1), ww = w / 2 * ca * (sa < 0 ? 1 : 1 - .18 * sa); pos.push(px + lt.x * ww, yy, pz + lt.z * ww);
           h3w([[I['foot_' + sd], q < .5 ? 1 : Math.max(0, 1 - (q - .5) * 3)], [I['ball_' + sd], q < .5 ? 0 : Math.min(1, (q - .5) * 3)], [I['calf_' + sd], q < .15 ? .25 : 0]]).forEach(t => { si.push(t[0]); sw.push(t[1]); }); const shd = .8 + .2 * Math.max(0, sa); col.push(sk.r * shd, sk.g * shd, sk.b * shd); } }
       for (let r = 0; r < NRf; r++) for (let k = 0; k < NSf; k++) { const a0 = f0 + r * NSf + k, a1 = f0 + r * NSf + (k + 1) % NSf, b0 = a0 + NSf, b1 = a1 + NSf; idx.push(a0, b0, a1, a1, b0, b1); }
