@@ -2982,6 +2982,8 @@ function placeCard(info) {
   el.innerHTML = `<small>Lugar de la época</small><b>${esc(info[0])}</b><p>${esc(info[1])}</p><em>${esc(info[2])}</em><button aria-label="Cerrar">✕</button>`;
   el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); el.querySelector('button').onclick = () => { el.hidden = true; try { G().voStop(); } catch (e) {} }; try { G().vo(info[0]); G().vo(info[1], 'narrador', { queue: 1 }); } catch (e) {}
   clearTimeout(placeCard.t); placeCard.t = setTimeout(() => { el.hidden = true; }, 14000); tone3d();
+  /* si te alejás del lugar, el cartel se cierra solo */
+  clearInterval(placeCard.w); const p0 = S && S.av ? S.av.position.clone() : null; if (p0) placeCard.w = setInterval(() => { if (el.hidden || !S || !S.av) { clearInterval(placeCard.w); return; } if (Math.hypot(S.av.position.x - p0.x, S.av.position.z - p0.z) > 16) { el.hidden = true; clearInterval(placeCard.w); } }, 700);
 }
 // arma todo: Nazaret con sus talleres, el templo y el lago (si existe la etapa de Galilea)
 function buildTowns(scene, g, hx, HW, pois) {
