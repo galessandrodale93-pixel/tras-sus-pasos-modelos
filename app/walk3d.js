@@ -3894,6 +3894,7 @@ function gearHint(it, clear) {
   return it.desc.replace(/Casi nadie la encuentra\.?/, '').trim() + ' ' + how;
 }
 function invDiary(body) {
+  if (S && S.hx && !SEC.mod && !invDiary.ld) { invDiary.ld = 1; import('./story/secrets.js').then(m => { SEC.mod = SEC.mod || m; if (body.isConnected && body.dataset.t === 'di') invDiary(body); }).catch(() => {}); }
   const p = dyP(), st = gearState(), lv = dyLevel(), clear = lv >= DY_LV, hx = !!(S && S.hx), M = SEC.mod, seen = p.dseen, isNew = k => !seen[k];
   const secs = [['g', 'Prendas'], ['f', 'Hallazgos'], ...(hx && M ? [['s', 'Lugares secretos']] : []), ['l', 'Historias']];
   body.innerHTML = `<div class="dy"><div class="dy-tabs">${secs.map(([k, n]) => `<button data-k="${k}">${n}</button>`).join('')}</div><div class="dy-body"></div></div>`;
