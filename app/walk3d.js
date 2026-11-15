@@ -4706,6 +4706,11 @@ function h3sandals(body, B, o, skin) {
     box(F.x, F.y + .01, F.z, .07, .07, .1, dir, sd, [[I['foot_' + sd], .7], [I['calf_' + sd], .3]], sk);
     [.22, .5, -.18].forEach(f => box(cx + dir.x * len * f * .5, gy + .07, cz + dir.z * len * f * .5, .018, .092, .03, dir, sd, wf(f), strap));
     if (o.high) [0, .06, .12].forEach(h => box(F.x, F.y + .05 + h, F.z, .085, .085, .016, dir, sd, [[I['calf_' + sd], 1]], strap)); });
+  /* las piernas de la rodilla al tobillo: con pantorrilla de verdad (antes asomaban dos palitos debajo de la túnica) */
+  ['l', 'r'].forEach(sd => { const K = P['calf_' + sd], F = P['foot_' + sd], Hh = B.H, seg = 10, rings = [[-.1, .05], [0, .056], [.28, .066], [.55, .056], [.8, .042], [1, .036]];
+    const ax = new THREE.Vector3().subVectors(F, K), L = ax.length(); ax.normalize(); const u = new THREE.Vector3(1, 0, 0).cross(ax).normalize(), v = ax.clone().cross(u).normalize(); const n0 = pos.length / 3;
+    rings.forEach(([t, rr]) => { const c = K.clone().addScaledVector(ax, L * t), R = rr * Hh; for (let k = 0; k < seg; k++) { const an = k / seg * Math.PI * 2, fb = Math.cos(an - Math.PI) > 0 && t > .1 && t < .7 ? 1.12 : 1; pos.push(c.x + (u.x * Math.cos(an) + v.x * Math.sin(an)) * R * fb, c.y + (u.y * Math.cos(an) + v.y * Math.sin(an)) * R * fb, c.z + (u.z * Math.cos(an) + v.z * Math.sin(an)) * R * fb); const wf = Math.max(0, Math.min(1, (t - .6) / .4)); h3w([[I['calf_' + sd], 1 - wf], [I['foot_' + sd], wf], [I['thigh_' + sd], t < 0 ? .5 : 0]]).forEach(q => { si.push(q[0]); sw.push(q[1]); }); col.push(sk.r, sk.g, sk.b); } });
+    for (let r = 0; r < rings.length - 1; r++) for (let k = 0; k < seg; k++) { const a0 = n0 + r * seg + k, a1 = n0 + r * seg + (k + 1) % seg, b0 = a0 + seg, b1 = a1 + seg; idx.push(a0, a1, b0, a1, b1, b0); } });
   return h3part(body, pos, idx, si, sw, col, new THREE.MeshStandardMaterial({ color: '#FFFFFF', vertexColors: true, roughness: .75, metalness: o.metal || 0, emissive: new THREE.Color(o.glow || '#000000'), emissiveIntensity: o.glow ? .5 : 0 }));
 }
 const h3hash = s => { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967296; };
