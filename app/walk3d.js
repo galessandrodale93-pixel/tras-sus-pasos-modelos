@@ -573,7 +573,7 @@ function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
   const rAt = (x, z) => { if (!RF) return 20; const fx = Math.max(0, Math.min(NX - 1.001, (x - X0) / CS)), fz = Math.max(0, Math.min(NZ - 1.001, (z - Z0) / CS)), i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, a = RF[j * NX + i], b = RF[j * NX + i + 1], c = RF[(j + 1) * NX + i], d = RF[(j + 1) * NX + i + 1]; return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; };
   // el lago y el río se cavan en el terreno: así el agua queda adentro y la orilla es de verdad
   const hAt = (x, z) => { let h = h0(x, z); for (const b of WATER.basins) { const dd = Math.hypot(x - b.x, z - b.z) / b.r; if (dd < 1.25) h = Math.min(h, -1.5 + (h + 1.5) * sstep(.86, 1.22, dd) + sstep(.86, 1.05, dd) * .18); }
-    if (RF) { const rf = rAt(x, z); if (rf < 9) h = Math.min(h, -.75 + (h + .75) * sstep(2.6, 8.5, rf) + sstep(2.6, 4.2, rf) * .14); /* el Jordán: cauce ancho con orillas que bajan suave */ } return h; };
+    if (RF) { const rf = rAt(x, z); if (rf < 9) h = Math.min(h, -1.4 + (h + 1.4) * sstep(2.6, 8.5, rf) + sstep(2.6, 4.2, rf) * .14); /* el Jordán: cauce ancho con orillas que bajan suave */ } return h; };
   // cielo de atardecer
   const sunDir = new THREE.Vector3(-.42, .17, -.89).normalize();
   const sky = new THREE.Mesh(new THREE.SphereGeometry(160, 32, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false,
@@ -1096,7 +1096,7 @@ async function go(id) {
    terraza seguís en el suelo, y si te bajás por el costado de una escalera caés con gravedad (no aparecés de golpe abajo). */
 const STEP = .6;
 function groundAt(x, z, cur) {
-  const t = S.W ? Math.max(0, S.W.hAt(x, z)) : 0; let g = t; const c = cur == null ? 1e9 : cur;
+  const t = S.W ? Math.max(WATER.RL - 1.12, S.W.hAt(x, z)) : 0; let g = t; const c = cur == null ? 1e9 : cur; /* en el agua el personaje se hunde hasta el pecho, en vez de caminar por arriba */
   for (const h of [stairH(x, z), floorH(x, z), rampH(x, z)]) if (h > g && h <= c + STEP) g = h;
   return g;
 }
@@ -5917,7 +5917,7 @@ function freeWalk(dt) {
   const mag = Math.min(1, Math.hypot(jx, jy)); if (mag >= .12 && S.pose === 'pray') { S.pose = null; actUI(); } if (mag >= .12 && S.sit) { S.sit = false; actUI(); } if (mag >= .12 && S.poseK) poseEnd(); S.fullT = mag > .96 ? (S.fullT || 0) + dt : 0; if (S.sprint && S.hx) { AXS.run = (AXS.run || 0) + dt; if (AXS.run > 12) { AXS.run = 0; axGain('agi', 1); } } S.sprint = !!S.hx && (!!k.Shift || S.fullT > 1.2); if (mag < .12) { if (S.freeMoving) { S.freeMoving = false; snapToStop(); } return; }
   const C = S.yaw + S.camYaw, fx = Math.sin(C), fz = Math.cos(C), rx = -Math.cos(C), rz = Math.sin(C);
   let mx = fx * -jy + rx * jx, mz = fz * -jy + rz * jx; const ml = Math.hypot(mx, mz) || 1; mx /= ml; mz /= ml;
-  if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint ? 1.55 : 1) * (S.boostT > 0 ? 1.3 : 1), a = S.av.position, fr = frontier(), z0 = 6;
+  if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint ? 1.55 : 1) * (S.boostT > 0 ? 1.3 : 1) * (S.gy != null && S.gy < WATER.RL - .4 ? .6 : 1), /* en el agua se avanza más lento */ a = S.av.position, fr = frontier(), z0 = 6;
   const curG = groundAt(a.x, a.z, S.gy); // el suelo donde estás parado (no la altura suavizada de la cámara)
   const ok = (x, z) => S.pocket ? pocketOk(x, z) : (Math.abs(x) < XB || inTrail(x, z)) && z > fr && z < z0 && !blockedAt(x, z) && !solidAbove(x, z, S.gy) && !edgeDrop(x, z, curG) && !descUp(a.x, a.z, x, z);
   let nx = a.x + mx * sp, nz = a.z + mz * sp;
