@@ -79,7 +79,7 @@ export const GET: APIRoute = async ({ url, request }) => {
     const yo = request.headers.get("x-habitat-auth") ? await personal(request).catch(() => null) : null;
     // la carrera de la ficha manda; si no hay ficha, la que diga el Campus
     const c = yo && yo.equipo ? [] : yo && yo.carreras && yo.carreras.length ? yo.carreras : progsDe(url.searchParams.get("c") || "");
-    const ev = await agendaAlumno(c);
+    const ev = await agendaAlumno(c, 100);
     const todo = yo ? [...ev, ...yo.servicio].sort((a, b) => a.inicio.localeCompare(b.inicio)) : ev;
     return new Response(JSON.stringify({ ok: true, carreras: c, eventos: todo }), { headers: { "Content-Type": "application/json", "Cache-Control": yo ? "private, no-store" : "public, max-age=300" } });
   } catch (e) {
