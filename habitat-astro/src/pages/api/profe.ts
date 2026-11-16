@@ -21,10 +21,19 @@ async function bienvenidaProfe(p: Profe) {
   const html = `<div style="font-family:Georgia,serif;max-width:560px;margin:auto;color:#10251d;background:#fbf8f2;padding:28px;border-radius:16px">
 <p style="font:600 12px Arial;letter-spacing:.14em;color:#b8904f;text-transform:uppercase;margin:0 0 10px">Habitat · Profesores</p>
 <h1 style="font-size:26px;margin:0 0 14px">Te damos la bienvenida al Campus de Habitat 🎓</h1>
-${P(`Hola ${nom}! Ya tenés tu lugar como profe en el Campus de Habitat. Ahí vas a ver tus próximas clases, vas a poder subir el material para los alumnos y dejar tu reflexión después de cada clase.`)}
+${P(`Hola ${nom}! Ya tenés tu lugar como profe en el Campus de Habitat. Te contamos cómo funciona.`)}
 ${P(`<b>Cómo entrar:</b> en <a href="https://www.habitat-cfm.org/ingresar.html" style="color:#b8904f">habitat-cfm.org/ingresar</a> tocá «Entrar con Google» con <b>${esc(email)}</b>. Si preferís usar contraseña, poné ese mismo mail y tocá «¿Olvidaste tu contraseña?» para crear una. Es importante que sea este mail: así el Campus te reconoce como profe y te lleva directo a tu panel.`)}
 <p style="margin:18px 0"><a href="https://www.habitat-cfm.org/profesor.html" style="background:#10251d;color:#fbf8f2;font:700 15px Arial;padding:12px 20px;border-radius:999px;text-decoration:none">Abrir mi panel de profe</a></p>
-${P("Una semana antes de cada clase te va a llegar un recordatorio por mail.")}
+<p style="font:700 13px Arial;letter-spacing:.12em;color:#b8904f;text-transform:uppercase;margin:22px 0 8px">Qué vas a encontrar en tu panel</p>
+<div style="background:#fff;border:1px solid #e6dccb;border-radius:14px;padding:6px 16px;margin:0 0 14px;font:15px/1.6 Arial">
+<p style="margin:10px 0">📅 <b>Tus próximas clases</b>, con fecha y horario.</p>
+<p style="margin:10px 0">🗓️ <b>Tus clases en tu calendario:</b> sumalo una vez a Google Calendar o al iPhone y aparecen solas, con aviso una semana antes y el día anterior.</p>
+<p style="margin:10px 0">📎 <b>Material:</b> si querés compartir algo con los alumnos (un PDF, una lectura, un audio), lo subís ahí y les llega en el Campus. La presentación para proyectar la armamos nosotros.</p>
+<p style="margin:10px 0">💬 <b>Opiniones de los alumnos:</b> después de cada clase cuentan cómo les fue y qué se llevaron, sin nombres. Las leés en «Clases que diste».</p>
+<p style="margin:10px 0">✍️ <b>Tu reflexión:</b> después de la clase te aparece un ratito para contar cómo la viviste. Queda para vos y para la dirección.</p>
+<p style="margin:10px 0">🌱 <b>Tu siembra este año:</b> un resumen de todo lo que diste en Habitat.</p>
+</div>
+${P("Además, una semana antes de cada clase te llega un recordatorio por mail.")}
 <p style="font:italic 17px/1.6 Georgia;border-left:3px solid #b8904f;padding-left:14px;margin:20px 0">Gracias por sembrar la Palabra en esta generación.</p>
 </div>`;
   const body = { emailTransmission: { emailSubject: "Bienvenido al Campus de Habitat 🎓", emailHtmlContent: html, senderName: "Habitat CFM", senderEmailAddress: C.remitente || "galessandrodale.93@gmail.com", toRecipients: [{ emailAddress: email }], type: "TRANSACTIONAL" }, idempotencyKey: crypto.randomUUID() };
