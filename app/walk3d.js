@@ -7325,8 +7325,56 @@ const VIVO = {
       'En Caná de Galilea, en una boda, Jesús hizo su primera señal: convirtió el agua en vino. Así mostró su gloria, y sus discípulos creyeron en él.'
     ]
   }
+  ,
+  4: {
+    talk: { at: 'Casa en Capernaúm', off: [-10, 4], id: 'efrain', name: 'Efraín', sub: 'uno de los cuatro amigos', voice: 'merc', look: { g: 'chico', age: 17, skin: '#B98A62', hair: '#1A120C', outfit: '#6A4A3A' },
+      hi: ['¡Shalom! ¿Ves ese techo arreglado? Lo rompimos nosotros. Y lo volvería a hacer.'],
+      ask: '¿Qué querés saber?',
+      q: [
+        ['¿Por qué rompieron el techo?', ['Nuestro amigo estaba paralítico desde hacía años. Lo trajimos en una camilla, pero la casa estaba tan llena que era imposible entrar.', 'Así que subimos al techo, abrimos un agujero y lo bajamos con sogas, justo delante de Jesús.'], 'pastor'],
+        ['¿Qué hizo Jesús?', ['Al ver nuestra fe, lo primero que le dijo fue: «Hijo mío, tus pecados son perdonados».', 'Algunos maestros de la ley se escandalizaron: solo Dios puede perdonar pecados. Entonces Jesús le dijo: «Levántate, toma tu camilla y vete a tu casa». ¡Y se levantó delante de todos!'], 'evangelista'],
+        ['¿Qué aprendiste vos?', ['Que a veces la fe de los amigos lleva hasta Jesús a alguien que solo no puede llegar.', 'Y que Jesús ve más hondo que nosotros: nosotros queríamos que caminara, y él empezó por sanarle el corazón.'], 'maestro']
+      ],
+      bye: ['Gracias, Efraín', '¿Tenés algún amigo que necesite llegar a Jesús? Llevalo, aunque haya que romper un techo.'] },
+    scrolls: [
+      ['Casa en Capernaúm', [-12, -8], 'Capernaúm era un pueblo de pescadores junto al lago. Jesús vivió e hizo tantos milagros ahí que Mateo la llama «su propia ciudad».'],
+      ['Casa en Capernaúm', [6, 10], 'En la sinagoga de Capernaúm, la gente se asombraba de la enseñanza de Jesús: hablaba con una autoridad que los maestros de la ley nunca habían tenido.'],
+      ['La colina de los cinco mil', [-14, -14], 'Un chico tenía cinco panes de cebada y dos pescados. Era comida de gente pobre, y en las manos de Jesús alcanzó para más de cinco mil personas.'],
+      ['La colina de los cinco mil', [4, 14], 'Cuando todos comieron, Jesús mandó juntar lo que sobró, para que nada se desperdiciara. Llenaron doce canastas.'],
+      ['La colina de los cinco mil', [10, -4], 'Al día siguiente Jesús dijo: «Yo soy el pan de vida. El que viene a mí nunca volverá a tener hambre».']
+    ],
+    fire: { at: 'La colina de los cinco mil', off: [-12, 10], steps: [
+      ['nar', 'Cae la tarde en la colina. Todavía quedan migas en el pasto. Eleazar y Asher se sientan con vos junto al fuego.'],
+      ['zel', '¡Cinco mil personas! Con un rey así, nadie pasaría hambre. Lo querían hacer rey a la fuerza, y él se fue solo al monte.'],
+      ['esc', 'Vino a dar algo más grande que pan. Al otro día les dijo: «Yo soy el pan de vida».']],
+      ask: ['zel', '¿Vos qué pensás? ¿Por qué se fue cuando lo querían hacer rey?'],
+      o: [
+        ['Porque su reino es de otra clase: viene a cambiar corazones.', 'profeta', [['esc', 'Delante de Pilato lo dijo claro: «Mi reino no es de este mundo».']]],
+        ['Porque lo buscaban por el pan, y él quería que lo buscaran a él.', 'maestro', [['esc', 'Eso mismo les dijo: «Ustedes me buscan porque comieron pan hasta llenarse».']]],
+        ['Porque sabía que su camino pasaba por la cruz.', 'evangelista', [['zel', '¿La cruz? Eso todavía me cuesta entenderlo.'], ['esc', 'Ya lo vas a entender. El pan partido de esta tarde anuncia el cuerpo que va a entregar.']]]
+      ],
+      end: [['esc', 'Lo poco que tenés, en sus manos, alcanza para mucho. Como los cinco panes de aquel chico.']] },
+    quiz: { at: 'La colina de los cinco mil', off: [-10, -6], id: 'debora', name: 'Débora', sub: 'panadera de Betsaida', voice: 'mujer', look: { g: 'chica', age: 18, skin: '#C99A72', hair: '#3A2A1A', outfit: '#6A5A3A' },
+      hi: '¡Shalom! Yo hago pan todos los días, y nunca vi pan como el de esta colina. ¿Respondés unas preguntas? Te pago con monedas.',
+      q: [
+        ['¿Cuántos panes y pescados tenía el chico?', ['Cinco panes y dos pescados', 'Siete panes y tres pescados', 'Dos panes y cinco pescados'], 'Eran cinco panes de cebada y dos pescados.'],
+        ['¿Cuántas canastas sobraron?', ['Doce', 'Siete', 'Cinco'], 'Juntaron lo que sobró y llenaron doce canastas.'],
+        ['¿Cómo llevaron al paralítico delante de Jesús?', ['Por un agujero en el techo', 'Por una ventana', 'Por la puerta del fondo'], 'Sus amigos abrieron el techo y lo bajaron en la camilla.'],
+        ['¿Qué le dijo primero Jesús al paralítico?', ['Tus pecados son perdonados', 'Tu fe te ha sanado', 'Vete en paz'], 'Le dijo: «Hijo mío, tus pecados son perdonados». Después lo sanó.'],
+        ['¿Sobre qué caminó Jesús la noche después de dar de comer a la multitud?', ['Sobre el agua', 'Sobre el fuego', 'Sobre las nubes'], 'Caminó sobre el agua del lago hasta la barca de sus discípulos.'],
+        ['¿Qué dijo Jesús de sí mismo después del milagro de los panes?', ['Yo soy el pan de vida', 'Yo soy la puerta', 'Yo soy la vid'], 'Dijo: «Yo soy el pan de vida».']
+      ],
+      ok: '¡Exacto!', no: 'Casi. ', bye: '¡Muy bien! Mañana volvé, que el pan sale fresco y las preguntas también.' },
+    narr: [
+      'En Capernaúm, Jesús sanó a la suegra de Pedro, que estaba con fiebre. Esa misma tarde le trajeron a todos los enfermos del pueblo, y él los sanaba uno por uno.',
+      'Un hombre con lepra se arrodilló delante de Jesús: «Si quieres, puedes limpiarme». Jesús lo tocó, cuando todos se apartaban de los leprosos, y le dijo: «Quiero. Queda limpio».',
+      'Después de la multiplicación de los panes, Jesús mandó a sus discípulos a cruzar el lago. De madrugada, en medio del viento, lo vieron caminando sobre el agua.',
+      'Pedro le pidió: «Señor, si eres tú, mándame ir a ti caminando sobre el agua». Caminó unos pasos, pero al ver el viento tuvo miedo y empezó a hundirse. Jesús le extendió la mano y lo sostuvo.',
+      'Los milagros de Jesús eran señales: mostraban quién era él. Por eso, después de cada uno, la gente se preguntaba lo mismo: ¿quién es este hombre?'
+    ]
+  }
 };
-const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo', 2: 'El Jordán y el desierto', 3: 'Galilea' };
+const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo', 2: 'El Jordán y el desierto', 3: 'Galilea', 4: 'Capernaúm y la colina' };
 function vivoP() { const p = G().P(); p.vivo = p.vivo || {}; return p.vivo; }
 function vivoAt(at, off) { const q = (S.pois || []).find(o => o.name === at); if (!q) return null; return freeNear(q.x + off[0] * (q.side || 1), q.z + off[1], .35); }
 function vivoBuild(scene, hx) {
