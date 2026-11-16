@@ -7373,8 +7373,56 @@ const VIVO = {
       'Los milagros de Jesús eran señales: mostraban quién era él. Por eso, después de cada uno, la gente se preguntaba lo mismo: ¿quién es este hombre?'
     ]
   }
+  ,
+  5: {
+    talk: { at: 'La posada', off: [-9, 3], id: 'ananias', name: 'Ananías', sub: 'el posadero', voice: 'varon', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#5A4A3A', outfit: '#7A5A3A' },
+      hi: ['¡Bienvenido a mi posada! Una tarde el rabí Jesús se sentó a esa mesa y contó una historia que pasaba en este mismo camino. Desde entonces miro distinto a los que llegan.'],
+      ask: '¿Qué querés saber?',
+      q: [
+        ['¿Qué historia contó?', ['Un hombre bajaba de Jerusalén a Jericó y unos ladrones lo asaltaron, le pegaron y lo dejaron medio muerto al costado del camino.', 'Pasó un sacerdote, lo vio y siguió por el otro lado. Pasó un levita, y lo mismo. Pero un samaritano se detuvo, le curó las heridas con aceite y vino, y lo llevó a una posada como esta.'], 'pastor'],
+        ['¿Por qué un samaritano?', ['Judíos y samaritanos se despreciaban desde hacía siglos. Nadie esperaba que el bueno de la historia fuera un samaritano.', 'Jesús la contó porque un maestro de la ley le había preguntado: «¿Y quién es mi prójimo?». La respuesta lo dejó sin palabras.'], 'maestro'],
+        ['¿Cómo terminó?', ['El samaritano le dejó al posadero dos monedas de plata y le dijo: «Cuídalo. Si gastas más, te lo pagaré cuando vuelva».', 'Entonces Jesús preguntó cuál de los tres había sido prójimo del herido. Y le dijo al maestro: «Ve y haz lo mismo».'], 'evangelista']
+      ],
+      bye: ['Gracias, Ananías', 'Tu prójimo es el que tenés delante y te necesita. Mirá bien por el camino.'] },
+    scrolls: [
+      ['El campo del sembrador', [-6, 14], 'La semilla que cayó en buena tierra dio treinta, sesenta y hasta cien veces más de lo que se sembró. Así crece la Palabra en un corazón abierto.'],
+      ['El campo del sembrador', [4, -14], 'Jesús dijo que el reino de Dios es como la levadura: una mujer mezcla un poquito en la masa, y crece todo el pan.'],
+      ['El campo del sembrador', [10, 6], 'En el Sermón del monte Jesús enseñó a orar: «Padre nuestro que estás en el cielo, que sea siempre santo tu nombre».'],
+      ['La posada', [-12, -10], 'Jesús contó la historia de un pastor que deja las noventa y nueve ovejas para buscar la que se perdió. Y cuando la encuentra, hace fiesta con sus amigos.'],
+      ['La posada', [6, 12], 'El hijo menor gastó toda su herencia y terminó cuidando cerdos. Cuando volvió, el padre lo vio desde lejos y corrió a abrazarlo antes de que terminara de pedir perdón.']
+    ],
+    fire: { at: 'El campo del sembrador', off: [-14, 4], steps: [
+      ['nar', 'Atardece sobre el campo del sembrador. Se ven los surcos, las piedras y los espinos. Eleazar y Asher se sientan con vos junto al fuego.'],
+      ['zel', '¿Por qué Jesús habla siempre con historias? Si dijera las cosas directo, todos le entenderían.'],
+      ['esc', 'Las historias se quedan adentro. Y el que tiene ganas de entender, pregunta: los discípulos se le acercaban después a pedirle la explicación.']],
+      ask: ['zel', '¿Vos qué pensás? ¿Para qué cuenta parábolas?'],
+      o: [
+        ['Para que pensemos y busquemos más.', 'maestro', [['esc', '«El que tenga oídos para oír, que oiga», decía. Cada parábola es una invitación a escuchar de verdad.']]],
+        ['Para que hasta los chicos y la gente sencilla entiendan.', 'pastor', [['esc', 'Usaba semillas, ovejas, monedas y pan: cosas de todos los días. Cualquiera podía seguirlo.']]],
+        ['Para que cada uno se vea a sí mismo en la historia.', 'profeta', [['zel', 'Yo me vi en el hijo menor, el que se fue de la casa…'], ['esc', 'Y el padre lo estaba esperando con los brazos abiertos. Así es Dios.']]]
+      ],
+      end: [['esc', 'Hacete esta pregunta: ¿qué clase de terreno es tu corazón? La semilla ya cayó.']] },
+    quiz: { at: 'El campo del sembrador', off: [-13, -8], id: 'lea', name: 'Lea', sub: 'sembradora de Galilea', voice: 'mujer', look: { g: 'chica', age: 18, skin: '#B98A62', hair: '#2A1B14', outfit: '#5A6A3A' },
+      hi: '¡Shalom! Siembro este campo todos los años y escuché al rabí hablar de semillas. ¿Probamos unas preguntas? Te pago con monedas.',
+      q: [
+        ['En la parábola del sembrador, ¿qué es la semilla?', ['La Palabra de Dios', 'El dinero', 'El trabajo'], 'La semilla es la Palabra de Dios, y los terrenos son las distintas maneras de recibirla.'],
+        ['¿Qué pasó con la semilla que cayó entre espinos?', ['Los espinos la ahogaron', 'Se la comieron los pájaros', 'Dio mucho fruto'], 'Los espinos la ahogaron: son las preocupaciones y las riquezas que asfixian la Palabra.'],
+        ['¿Con qué semilla chiquita comparó Jesús el reino de Dios?', ['La semilla de mostaza', 'La semilla de trigo', 'La semilla de olivo'], 'Con la semilla de mostaza: empieza chiquita y crece hasta ser un árbol donde anidan los pájaros.'],
+        ['¿Quién ayudó al hombre herido en el camino a Jericó?', ['Un samaritano', 'Un sacerdote', 'Un levita'], 'El sacerdote y el levita siguieron de largo. El que se detuvo fue un samaritano.'],
+        ['¿Qué hizo el padre cuando volvió el hijo pródigo?', ['Corrió a abrazarlo', 'Lo echó de la casa', 'Lo mandó a trabajar con los peones'], 'Lo vio de lejos, corrió, lo abrazó y lo besó. Y preparó una fiesta.'],
+        ['¿Dónde enseñó Jesús las bienaventuranzas?', ['En un monte', 'En el templo', 'En una barca'], 'Subió a un monte, se sentó y enseñó: «Dios bendice a los que son pobres en espíritu».']
+      ],
+      ok: '¡Así es!', no: 'Casi. ', bye: '¡Buena cosecha! Volvé mañana, que siempre tengo más preguntas.' },
+    narr: [
+      'Una multitud siguió a Jesús hasta un monte. Se sentó y empezó a enseñar: «Dios bendice a los que son pobres en espíritu, porque el reino del cielo les pertenece».',
+      'Jesús dijo que sus seguidores son la sal de la tierra y la luz del mundo. Una lámpara se pone en lo alto, para que alumbre a todos los de la casa.',
+      'Enseñó a amar incluso a los enemigos y a orar por los que nos persiguen. Así se parecen los hijos a su Padre del cielo.',
+      'Al final del sermón habló de dos casas: una construida sobre la roca y otra sobre la arena. Vino la tormenta, y quedó en pie la de la roca: la del que escucha y hace lo que él enseña.',
+      'Jesús contaba parábolas con cosas de todos los días: semillas, ovejas, monedas perdidas, banquetes. Cada historia guardaba un secreto del reino de Dios para el que quisiera escuchar.'
+    ]
+  }
 };
-const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo', 2: 'El Jordán y el desierto', 3: 'Galilea', 4: 'Capernaúm y la colina' };
+const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo', 2: 'El Jordán y el desierto', 3: 'Galilea', 4: 'Capernaúm y la colina', 5: 'Las parábolas' };
 function vivoP() { const p = G().P(); p.vivo = p.vivo || {}; return p.vivo; }
 function vivoAt(at, off) { const q = (S.pois || []).find(o => o.name === at); if (!q) return null; return freeNear(q.x + off[0] * (q.side || 1), q.z + off[1], .35); }
 function vivoBuild(scene, hx) {
