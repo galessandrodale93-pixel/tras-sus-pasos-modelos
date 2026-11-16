@@ -7517,8 +7517,56 @@ const VIVO = {
       'La tumba vacía cambió todo. Los mismos discípulos que habían huido con miedo salieron a contarle a todo el mundo que Jesús estaba vivo.'
     ]
   }
+  ,
+  8: {
+    talk: { at: 'Emaús', off: [-10, 4], id: 'cleofas', name: 'Cleofas', sub: 'uno de los caminantes de Emaús', voice: 'varon', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#6A6A6A', outfit: '#5A6A7A' },
+      hi: ['¡Shalom! ¿Venís de Jerusalén? Nosotros también hicimos ese camino, y lo que pasó todavía me hace arder el corazón.'],
+      ask: '¿Qué querés saber?',
+      q: [
+        ['¿Qué pasó en el camino?', ['Íbamos tristes, hablando de todo lo que había pasado con Jesús. Se nos acercó un hombre y caminó con nosotros, pero no lo reconocimos.', 'Nos preguntó de qué hablábamos. Le contamos que teníamos la esperanza de que fuera el Mesías, y que lo habían crucificado.'], 'pastor'],
+        ['¿Qué les explicó?', ['Empezando por Moisés y todos los profetas, nos explicó lo que decían las Escrituras acerca de él: que el Mesías tenía que sufrir antes de entrar en su gloria.', 'Mientras hablaba, el corazón nos ardía. Fue la primera vez que entendimos así la Palabra.'], 'maestro'],
+        ['¿Cuándo lo reconocieron?', ['Al llegar a Emaús le insistimos que se quedara, porque ya era tarde. En la mesa tomó el pan, lo bendijo, lo partió y nos lo dio.', '¡Y ahí se nos abrieron los ojos y lo reconocimos! En ese instante desapareció. Esa misma noche volvimos corriendo a Jerusalén a contarlo.'], 'evangelista']
+      ],
+      bye: ['Gracias, Cleofas', 'Él camina con vos aunque no lo veas. Abrí las Escrituras: ahí lo vas a encontrar.'] },
+    scrolls: [
+      ['Emaús', [-14, -14], 'Emaús quedaba a unos once kilómetros de Jerusalén. Cleofas y su compañero hicieron el camino dos veces el mismo día: de ida con tristeza y de vuelta con alegría.'],
+      ['Emaús', [6, 12], 'Tomás faltó la primera vez que Jesús se apareció, y dijo que tenía que tocar sus heridas para creer. Ocho días después Jesús le dijo: «Pon tu dedo aquí». Y Tomás exclamó: «¡Mi Señor y mi Dios!».'],
+      ['La orilla del lago', [-12, -12], 'Una mañana los discípulos pescaron toda la noche sin sacar nada. Desde la orilla, Jesús les dijo que echaran la red a la derecha. Sacaron ciento cincuenta y tres peces grandes.'],
+      ['La orilla del lago', [-4, 18], 'Jesús les preparó el desayuno con sus propias manos: pescado asado sobre las brasas y pan. El Resucitado cocinó para sus amigos.'],
+      ['La orilla del lago', [-20, -2], 'Antes de subir al cielo, Jesús les dijo: «Vayan y hagan discípulos de todas las naciones». Y les prometió: «Estoy con ustedes siempre, hasta el fin de los tiempos».']
+    ],
+    fire: { at: 'La orilla del lago', off: [-14, 10], steps: [
+      ['nar', 'Amanece en la orilla del lago. Hay brasas encendidas, pescado y pan. Eleazar y Asher se sientan con vos.'],
+      ['zel', 'Pedro negó a Jesús tres veces junto a un fuego. Y acá, junto a otro fuego, Jesús le preguntó tres veces: «¿Me amas?».'],
+      ['esc', 'Y las tres veces le encargó lo mismo: «Cuida de mis ovejas». Jesús lo perdonó y le devolvió su lugar.']],
+      ask: ['zel', '¿Vos qué pensás? ¿Por qué Jesús le preguntó tres veces?'],
+      o: [
+        ['Para sanar cada una de sus tres negaciones.', 'pastor', [['esc', 'Tres veces cayó, tres veces lo levantó. Así es su perdón: completo.']]],
+        ['Para que Pedro supiera que todavía tenía una misión.', 'profeta', [['esc', 'Cuidar ovejas. El pescador ahora iba a ser pastor.']]],
+        ['Porque lo primero es amarlo a él, antes que todo.', 'evangelista', [['zel', 'Antes que la pesca, antes que los planes, antes que todo…'], ['esc', 'Del amor a él sale todo lo demás.']]]
+      ],
+      end: [['esc', 'Este es el final del camino, y también el principio. Ahora te toca a vos: vayan y hagan discípulos. Él está con vos siempre.']] },
+    quiz: { at: 'Emaús', off: [-9, -8], id: 'mariacleofas', name: 'María de Cleofas', sub: 'vecina de Emaús', voice: 'mujer', look: { g: 'chica', age: 18, skin: '#C99A72', hair: '#5A4A3A', outfit: '#6A5A7A' },
+      hi: '¡Shalom! En esta casa partió el pan el Resucitado. ¿Respondés unas preguntas? Te pago con monedas.',
+      q: [
+        ['¿Cuándo reconocieron a Jesús los caminantes de Emaús?', ['Cuando partió el pan', 'Cuando vieron sus heridas', 'Cuando entraron al pueblo'], 'Lo reconocieron cuando tomó el pan, lo bendijo y lo partió.'],
+        ['¿Qué dijo Tomás cuando vio a Jesús resucitado?', ['¡Mi Señor y mi Dios!', '¡Es un fantasma!', '¡Qué alegría verte!'], 'Tomás exclamó: «¡Mi Señor y mi Dios!».'],
+        ['¿Cuántos peces sacaron en la pesca de la orilla?', ['Ciento cincuenta y tres', 'Doce', 'Mil'], 'Sacaron ciento cincuenta y tres peces grandes, y la red aguantó.'],
+        ['¿Cuántas veces le preguntó Jesús a Pedro si lo amaba?', ['Tres', 'Una', 'Siete'], 'Tres veces, una por cada vez que Pedro lo había negado.'],
+        ['¿Qué les mandó Jesús antes de subir al cielo?', ['Hacer discípulos de todas las naciones', 'Quedarse a vivir en Galilea', 'Construir un templo nuevo'], 'Les dijo: «Vayan y hagan discípulos de todas las naciones».'],
+        ['¿Qué les prometió Jesús al despedirse?', ['Estar con ellos siempre', 'Volver en un año', 'Darles riquezas'], 'Les prometió: «Estoy con ustedes siempre, hasta el fin de los tiempos».']
+      ],
+      ok: '¡Así es!', no: 'Casi. ', bye: '¡Muy bien! Volvé mañana, que siempre tengo más preguntas.' },
+    narr: [
+      'Esa misma noche, los discípulos estaban reunidos con las puertas cerradas por miedo. De repente Jesús apareció en medio de ellos: «La paz sea con ustedes». Les mostró las manos y el costado, y se llenaron de alegría.',
+      'Durante cuarenta días Jesús se apareció a sus discípulos y les habló del reino de Dios. Una vez se apareció a más de quinientas personas al mismo tiempo.',
+      'Jesús les prometió que iban a recibir poder cuando viniera sobre ellos el Espíritu Santo, y que serían sus testigos en Jerusalén, en toda Judea, en Samaria y hasta los lugares más lejanos de la tierra.',
+      'Después los llevó cerca de Betania, levantó las manos y los bendijo. Mientras los bendecía, fue llevado al cielo. Ellos lo adoraron y volvieron a Jerusalén llenos de alegría.',
+      'Así termina este camino tras sus pasos: desde un pesebre en Belén hasta una tumba vacía. Y empieza otro: el de los que lo siguen hoy.'
+    ]
+  }
 };
-const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo', 2: 'El Jordán y el desierto', 3: 'Galilea', 4: 'Capernaúm y la colina', 5: 'Las parábolas', 6: 'La última cena y Getsemaní', 7: 'La cruz y la tumba vacía' };
+const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo', 2: 'El Jordán y el desierto', 3: 'Galilea', 4: 'Capernaúm y la colina', 5: 'Las parábolas', 6: 'La última cena y Getsemaní', 7: 'La cruz y la tumba vacía', 8: 'Emaús y la orilla' };
 function vivoP() { const p = G().P(); p.vivo = p.vivo || {}; return p.vivo; }
 function vivoAt(at, off) { const q = (S.pois || []).find(o => o.name === at); if (!q) return null; return freeNear(q.x + off[0] * (q.side || 1), q.z + off[1], .35); }
 function vivoBuild(scene, hx) {
