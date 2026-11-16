@@ -1266,3 +1266,7 @@ body.v3on .v3surv .sv-stam{transform:translateY(calc(100% + 6px))}
 .v3mis.min i{transform:none!important}
 .v3mis.min i svg{display:none}
 .v3mis.min i::before{content:'📜';font-size:17px;line-height:1}
+/* requisitos para rendir: lista con barras */
+.ex-req{margin:10px 0;text-align:left}.ex-req-h{display:flex;justify-content:space-between;gap:10px;font-size:14px}.ex-req-h span{opacity:.8;white-space:nowrap}
+.ex-req i{display:block;height:8px;border-radius:6px;background:rgba(255,255,255,.14);overflow:hidden;margin:6px 0 4px}.ex-req i u{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#E6B04A,#F5D27A)}
+.ex-req.ok i u{background:linear-gradient(90deg,#5FB36A,#8FD48F)}.ex-req small{display:block;font-size:12px;opacity:.75;line-height:1.35}
