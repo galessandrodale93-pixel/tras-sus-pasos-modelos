@@ -5574,7 +5574,7 @@ function dpalmPlace(scene, list) {
 }
 // troncos y arbustos chocan como el resto de los obstáculos (cilindro simple); los modelos de Poly Haven se suman cuando se arma su franja
 const PH_RAD = { island_tree_01: .45, island_tree_02: .5, island_tree_03: .4, tree_small_02: .32, jacaranda_tree: .55, quiver_tree_01: .4, quiver_tree_02: .35, pine_tree_01: .4, dead_quiver_trunk: .35, searsia_lucida: .6, searsia_burchellii: .6, wild_rooibos_bush: .5, shrub_01: .55, shrub_02: .5, shrub_03: .5, shrub_04: .45, pine_sapling_medium: .35 };
-function phCyl(x, z, r, oi) { if (!S || !S.cols) return; S.cols.push({ x0: x - r, x1: x + r, z0: z - r, z1: z + r, cx: x, cz: z, r, oi }); }
+function phCyl(x, z, r, oi, tree) { if (!S || !S.cols) return; const c = { x0: x - r, x1: x + r, z0: z - r, z1: z + r, cx: x, cz: z, r, oi }; S.cols.push(c); if (tree) (S.camTrees = S.camTrees || []).push(c); }
 // registra un grupo de instancias; se construye cuando el jugador se acerca a su franja
 const PG_DROP = new Set(['grass_medium_01', 'grass_medium_02', 'grass_bermuda_01', 'celandine_01', 'dandelion_01', 'flower_heliophila', 'nettle_plant', 'wild_rooibos_bush', 'leipoldtia_schultzei', 'searsia_burchellii']);
 const PG_TSUB = { pine_sapling_small: 'tree_small_02', pine_sapling_medium: 'island_tree_03', quiver_tree_01: 'island_tree_01', quiver_tree_02: 'island_tree_03', jacaranda_tree: 'island_tree_01', searsia_lucida: 'tree_small_02' };
@@ -5604,7 +5604,7 @@ async function phBuild(B) {
   vars.forEach((ms, vi) => { const L = per[vi]; if (!L.length) return;
     ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, mm.mat.userData && mm.mat.userData.still ? Object.assign({}, B.o, { wind: 0 }) : B.o), L.length);
       L.forEach((it, i) => { _phE.set(it.rx || 0, it.ry || 0, it.rz || 0, 'YXZ'); _phQ.setFromEuler(_phE); _phS.set(it.s, it.sy ?? it.s, it.s); _phM.compose(_phV.set(it.x, it.y, it.z), _phQ, _phS).multiply(mm.m); im.setMatrixAt(i, _phM); if (B.o.olive && it.oi != null) { B.idx = B.idx || new Map(); const e = B.idx.get(it.oi) || []; e.push([im, i]); B.idx.set(it.oi, e); } });
-      im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.castShadow = !!B.o.shadow && QUAL.lv > 0; im.receiveShadow = true; im.userData.n = L.length; if (B.o.near) im.count = Math.floor(L.length * QT.near[QUAL.lv]); B.ims.push(im); }); const r0 = B.o.nocol ? 0 : (B.o.col ?? PH_RAD[B.id]); if (r0) { const c = B.o.near ? Math.floor(L.length * QT.near[QUAL.lv]) : L.length; for (let i = 0; i < c; i++) phCyl(L[i].x, L[i].z, r0 * (L[i].s || 1)); } });
+      im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.castShadow = !!B.o.shadow && QUAL.lv > 0; im.receiveShadow = true; im.userData.n = L.length; if (B.o.near) im.count = Math.floor(L.length * QT.near[QUAL.lv]); B.ims.push(im); }); const r0 = B.o.nocol ? 0 : (B.o.col ?? PH_RAD[B.id]); if (r0) { const c = B.o.near ? Math.floor(L.length * QT.near[QUAL.lv]) : L.length; const isTree = !!(B.o.wind && (B.o.far || /tree|olive|palm/i.test(B.id))); for (let i = 0; i < c; i++) phCyl(L[i].x, L[i].z, r0 * (L[i].s || 1), undefined, isTree); } });
   vars.forEach((ms, vi) => { const L = per[vi], I = ms.imp; if (!I || !L.length) return; const im = new THREE.InstancedMesh(I.geo, I.mat, L.length);
     L.forEach((it, i) => { _phE.set(0, it.ry || 0, 0, 'YXZ'); _phQ.setFromEuler(_phE); _phS.set(it.s, it.sy ?? it.s, it.s); _phM.compose(_phV.set(it.x, it.y, it.z), _phQ, _phS).multiply(I.m); im.setMatrixAt(i, _phM); if (B.o.olive && it.oi != null) { B.idx = B.idx || new Map(); const e = B.idx.get(it.oi) || []; e.push([im, i]); B.idx.set(it.oi, e); } });
     im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.receiveShadow = false; B.ig = B.ig || new THREE.Group(); B.ig.add(im); });
@@ -6203,7 +6203,9 @@ function camFollow(dt) {
   let d = -S.camYaw; while (d > Math.PI) d -= 6.283; while (d < -Math.PI) d += 6.283; S.camYaw += d * Math.min(1, dt / .2);
 }
 // la cámara no atraviesa paredes ni casas: se acerca al personaje si hay algo en medio
-function camSafeBack(a, yaw, back) { let b = back; for (let k = 1; k <= 8; k++) { const r = back * k / 8; if (blockedAt(a.x - Math.sin(yaw) * r, a.z - Math.cos(yaw) * r)) { b = Math.max(.9, back * (k - 1) / 8 - .2); break; } } return b; }
+/* los troncos se tuercen y la copa se abre: para la cámara cada árbol ocupa más que su choque al pie */
+function camTreeAt(x, z) { if (!S || !S.camTrees) return false; const a = S.av.position; if (!S.camNear || Math.hypot(a.x - S.camNear.x, a.z - S.camNear.z) > 2) S.camNear = { x: a.x, z: a.z, L: S.camTrees.filter(c => Math.abs(c.cx - a.x) < 9 && Math.abs(c.cz - a.z) < 9) }; for (const c of S.camNear.L) { if (S.sv && S.sv.felled && c.oi != null && S.sv.felled.has(c.oi)) continue; const rr = c.r + .55; if (Math.abs(x - c.cx) < rr && Math.abs(z - c.cz) < rr && (x - c.cx) ** 2 + (z - c.cz) ** 2 < rr * rr) return true; } return false; }
+function camSafeBack(a, yaw, back) { let b = back; for (let k = 1; k <= 10; k++) { const r = back * k / 10, x = a.x - Math.sin(yaw) * r, z = a.z - Math.cos(yaw) * r; if (blockedAt(x, z) || (r > .7 && camTreeAt(x, z))) { b = Math.max(.9, back * (k - 1) / 10 - .2); break; } } return b; }
 function wake() { if (!S) return; S.idleT = 0; if (S.hint) S.hint.classList.remove('on'); if (S.think) S.think.classList.remove('on'); }
 const HV = { v: null };
 function idle(dt) {
