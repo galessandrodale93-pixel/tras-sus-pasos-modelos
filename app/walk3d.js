@@ -7181,8 +7181,56 @@ const VIVO = {
       'Tiempo después llegaron unos sabios de oriente siguiendo una estrella. Los maestros de la ley sabían que el Mesías nacería en Belén, pero ninguno fue a verlo, aunque estaba a una caminata de distancia.'
     ]
   }
+  ,
+  1: {
+    talk: { at: 'Templo de Jerusalén', off: [-14, 6], id: 'natan', name: 'Natán', sub: 'maestro de la ley', voice: 'varon', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#8A8A8A', outfit: '#3E4A6A' },
+      hi: ['La paz sea contigo. ¿Viniste a escuchar a los maestros? Hace un tiempo pasó acá algo que todavía me da vueltas en la cabeza.'],
+      ask: '¿Qué querés saber?',
+      q: [
+        ['¿Qué pasó en el templo?', ['Era la fiesta de la Pascua. Un chico de doce años, de Nazaret, se quedó tres días sentado entre nosotros, los maestros.', 'Escuchaba, preguntaba y respondía. Todos estábamos asombrados de lo que entendía. Nunca vi algo así en alguien tan joven.'], 'maestro'],
+        ['¿Y sus padres?', ['Lo buscaron desesperados. Habían emprendido la vuelta pensando que venía con los parientes, y recién a la noche se dieron cuenta de que no estaba.', 'Cuando lo encontraron, su madre le dijo que lo habían buscado angustiados. Y él le respondió: «¿No sabían que tengo que estar en la casa de mi Padre?».'], 'evangelista'],
+        ['¿Qué hizo después?', ['Volvió a Nazaret con ellos y los obedecía en todo. El que se sentó entre los maestros volvió a trabajar en el taller de José.', 'Dicen que crecía en sabiduría y en estatura, y que Dios y la gente lo querían. Treinta años en un pueblo chico, esperando el tiempo de Dios.'], 'pastor']
+      ],
+      bye: ['Gracias, Natán', 'Seguí preguntando siempre. Las buenas preguntas te acercan a Dios.'] },
+    scrolls: [
+      ['Templo de Jerusalén', [-12, -12], 'Cuarenta días después de nacer, José y María llevaron a Jesús al templo. Ofrecieron dos tórtolas: la ofrenda que la ley pedía a las familias que no podían pagar un cordero.'],
+      ['Templo de Jerusalén', [-17, 14], 'Simeón, un anciano que esperaba al Mesías, tomó al bebé en brazos y alabó a Dios: ya podía irse en paz, porque sus ojos habían visto la salvación.'],
+      ['Templo de Jerusalén', [-24, -4], 'Ana era una profetisa muy anciana que pasaba día y noche en el templo. Cuando vio a Jesús, empezó a hablar de él a todos los que esperaban la libertad de Jerusalén.'],
+      ['Taller de José', [9, -8], 'Para el oficio de José los evangelios usan la palabra téktón: el que construye con madera y con piedra. Jesús aprendió ese oficio con sus propias manos.'],
+      ['Taller de José', [-10, 7], 'Nazaret era tan chica que Natanael preguntó: «¿Puede salir algo bueno de Nazaret?». Dios eligió crecer en un lugar que nadie tenía en cuenta.']
+    ],
+    fire: { at: 'Taller de José', off: [-6, -5], steps: [
+      ['nar', 'Cae la tarde en Nazaret. El taller huele a madera recién cortada. Eleazar y Asher se sientan con vos junto al fuego.'],
+      ['zel', 'Treinta años. El Mesías pasó treinta años haciendo mesas y arreglando techos. ¿No convenía que empezara antes?'],
+      ['esc', 'Lucas dice que crecía en sabiduría y en estatura, y que Dios y la gente lo querían. Esos años valieron muchísimo.']],
+      ask: ['zel', '¿Vos qué pensás? ¿Para qué tantos años escondido?'],
+      o: [
+        ['Para aprender a obedecer en lo chico antes que en lo grande.', 'pastor', [['esc', 'Obedecía a José y a María en todo. El que es fiel en lo poco también es fiel en lo mucho.']]],
+        ['Para vivir como nosotros: trabajar, cansarse, tener vecinos.', 'evangelista', [['esc', 'Por eso nos entiende. Pasó por lo mismo que nosotros, en todo.']]],
+        ['Porque Dios hace las cosas a su tiempo.', 'profeta', [['zel', 'A su tiempo… Pablo dice que, cuando llegó el momento justo, Dios envió a su Hijo.'], ['esc', 'Y a los doce años ya sabía de quién era Hijo. Igual esperó.']]]
+      ],
+      end: [['esc', 'Tus años de ahora también cuentan. Lo que aprendés en lo chico te prepara para lo que Dios tiene adelante.']] },
+    quiz: { at: 'Taller de José', off: [7, 6], id: 'tamar', name: 'Tamar', sub: 'vecina de Nazaret', voice: 'mujer', look: { g: 'chica', age: 18, skin: '#C99A72', hair: '#2A1B14', outfit: '#7A4A5A' },
+      hi: '¡Shalom! En Nazaret todos nos conocemos. ¿Me respondés unas preguntas? Te pago con unas monedas.',
+      q: [
+        ['¿Cuántos años tenía Jesús cuando se quedó en el templo?', ['Doce', 'Siete', 'Veinte'], 'Tenía doce años. Era la fiesta de la Pascua en Jerusalén.'],
+        ['¿A dónde huyó la familia cuando Herodes buscaba al niño?', ['A Egipto', 'A Babilonia', 'A Roma'], 'Un ángel le avisó a José en un sueño, y huyeron a Egipto esa misma noche.'],
+        ['¿Qué ofrenda llevaron José y María al presentar a Jesús en el templo?', ['Dos tórtolas', 'Un toro', 'Oro'], 'Dos tórtolas o dos pichones: la ofrenda de las familias pobres.'],
+        ['¿Quién tomó al bebé Jesús en brazos en el templo y alabó a Dios?', ['Simeón', 'Zacarías', 'Nicodemo'], 'Fue Simeón, un hombre justo que esperaba al Mesías.'],
+        ['¿En qué crecía Jesús, según Lucas?', ['En sabiduría y estatura', 'En riquezas y fama', 'En fuerza y poder'], 'Crecía en sabiduría y en estatura, y Dios y la gente lo querían.'],
+        ['¿Qué oficio tenía José?', ['Carpintero y constructor', 'Pescador', 'Cobrador de impuestos'], 'José era téktón: carpintero y constructor. Jesús aprendió el oficio con él.']
+      ],
+      ok: '¡Muy bien!', no: 'Casi. ', bye: '¡Gracias! Volvé mañana, que siempre tengo más preguntas.' },
+    narr: [
+      'Después de la visita de los magos, un ángel le habló a José en un sueño: Herodes buscaba al niño para matarlo. Esa misma noche, José tomó a María y al bebé y huyeron a Egipto.',
+      'Cuando murió Herodes, la familia volvió. Pero José tuvo miedo del hijo de Herodes, que gobernaba Judea, y se fueron a vivir a Nazaret, en Galilea.',
+      'Todos los años, José y María subían a Jerusalén para la fiesta de la Pascua. Eran unos cuatro días de caminata, en caravana con parientes y vecinos.',
+      'A los doce años, Jesús ya llamaba a Dios «mi Padre». Sabía quién era. Y aun así volvió a Nazaret y obedecía a sus padres.',
+      'De los años de Jesús en Nazaret sabemos muy poco. Los evangelios los resumen en una frase: crecía en sabiduría, en estatura y en gracia delante de Dios y de la gente.'
+    ]
+  }
 };
-const VIVO_NAMES = { 0: 'Belén' };
+const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo' };
 function vivoP() { const p = G().P(); p.vivo = p.vivo || {}; return p.vivo; }
 function vivoAt(at, off) { const q = (S.pois || []).find(o => o.name === at); if (!q) return null; return freeNear(q.x + off[0] * (q.side || 1), q.z + off[1], .35); }
 function vivoBuild(scene, hx) {
