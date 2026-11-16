@@ -2751,11 +2751,11 @@ function judeaClean() { const B = TRL.bb; if (!B || !S.W) return; const M = new 
     if (idx) { const A = idx.array; for (let t = 0; t < A.length; t += 3) { const a0 = W(A[t]); const cx = a0.x, cz = a0.z; if (inZone(cx, cz)) { A[t + 1] = A[t]; A[t + 2] = A[t]; ch2 = true; } } if (ch2) idx.needsUpdate = true; }
     else { for (let t = 0; t < P2.count; t += 3) { const a0 = W(t), x = a0.x, y = a0.y, z = a0.z; if (inZone(x, z)) { for (let k = 1; k < 3; k++) P2.setXYZ(t + k, P2.getX(t), P2.getY(t), P2.getZ(t)); ch2 = true; } } if (ch2) P2.needsUpdate = true; } }); }
 // bajada contra reloj: arranca en la cima y termina en el anillo dorado del llano; guarda la mejor marca
-function descStart() { const J = S.judea; if (!J || !J.race) return; J.race.on = true; J.race.t0 = performance.now(); let el = document.getElementById('v3timer'); if (!el) { el = document.createElement('div'); el.id = 'v3timer'; el.className = 'v3timer'; document.body.appendChild(el); } el.hidden = false; el.textContent = '⏱ 0.0 s'; G().toast('🏁 ¡Ya! Bajá corriendo hasta el anillo dorado.'); }
+function descStart() { const J = S.judea; if (!J || !J.race) return; J.race.on = true; J.race.t0 = performance.now(); { const a = S.av.position; J.race.d0 = Math.hypot(a.x - J.race.fx, a.z - J.race.fz); } /* para la legendaria: bajar en casi el tiempo de una carrera en línea recta */ let el = document.getElementById('v3timer'); if (!el) { el = document.createElement('div'); el.id = 'v3timer'; el.className = 'v3timer'; document.body.appendChild(el); } el.hidden = false; el.textContent = '⏱ 0.0 s'; G().toast('🏁 ¡Ya! Bajá corriendo hasta el anillo dorado.'); }
 function descTick() { const J = S.judea, R0 = J && J.race; if (!R0) return; R0.ring.rotation.z += .01; { const D = TRL.desc, a = S.av && S.av.position, vis = !!(R0.on || (typeof GM !== 'undefined' && GM && GM.on) || (D && a && Math.hypot(a.x - D.x, a.z - D.z) < 35)); /* la meta se ve solo durante la carrera o mirando desde la largada: desde el llano parecía una aureola flotando en el cerro */ if (R0.ring.parent) R0.ring.parent.visible = vis; R0.gl.visible = vis; } if (!R0.on) return; const el = document.getElementById('v3timer'), a = S.av.position, s2 = (performance.now() - R0.t0) / 1000; if (el) el.textContent = '⏱ ' + s2.toFixed(1) + ' s';
   if (s2 > 240) { R0.on = false; if (el) el.hidden = true; return; }
   if (Math.hypot(a.x - R0.fx, a.z - R0.fz) < 2.8) { R0.on = false; if (el) el.hidden = true; let best = null; try { best = +localStorage.getItem('tsp:bajada') || null; } catch (e) { } const rec = !best || s2 < best; if (rec) { best = s2; try { localStorage.setItem('tsp:bajada', s2.toFixed(1)); } catch (e) { } }
-    placeCard([rec ? '¡Nuevo récord!' : '¡Llegaste!', `Bajaste en ${s2.toFixed(1)} segundos. Tu mejor marca: ${best.toFixed(1)} s. «Corramos con paciencia la carrera que tenemos por delante, puestos los ojos en Jesús».`, 'Hebreos 12:1-2']); sello('bajada', 'La bajada del monte'); } }
+    if (R0.d0 && s2 <= R0.d0 / 5 * 1.25 && GBY.cuarenta && !gearState().own.includes('cuarenta')) setTimeout(() => gearGive(GBY.cuarenta, 'Bajaste el monte como el viento'), 2600); placeCard([rec ? '¡Nuevo récord!' : '¡Llegaste!', `Bajaste en ${s2.toFixed(1)} segundos. Tu mejor marca: ${best.toFixed(1)} s. «Corramos con paciencia la carrera que tenemos por delante, puestos los ojos en Jesús».`, 'Hebreos 12:1-2']); sello('bajada', 'La bajada del monte'); } }
 // águila real: cuerpo, cabeza blanca con pico amarillo y ganchudo, cola en abanico y alas largas en dos partes con plumas primarias separadas
 function eagleMesh() {
   const g = new THREE.Group(), br = new THREE.MeshStandardMaterial({ color: '#3B2A1C', roughness: .9, side: THREE.DoubleSide }), br2 = new THREE.MeshStandardMaterial({ color: '#5A4129', roughness: .9, side: THREE.DoubleSide }), wh = new THREE.MeshStandardMaterial({ color: '#F1ECE2', roughness: .8 }), yl = new THREE.MeshStandardMaterial({ color: '#E8B02A', roughness: .5 });
@@ -3899,7 +3899,7 @@ const DAWNK = { tnt: [1.08, .86, .8], top: '#8FA0E0', bot: '#FFC9A6', sun: '#FFC
 function nightTarget() { if (!S.pois) return 0; const a = S.av.position; for (const p of S.pois) if (p.k === 'garden' || p.k === 'tomb' || p.k === 'golgota' || p.k === 'pastores') { const d = Math.hypot(a.x - p.x, a.z - p.z), t = 1 - sstep(p.k === 'garden' || p.k === 'pastores' ? 28 : 20, p.k === 'garden' || p.k === 'pastores' ? 44 : 38, d); if (t > 0) { const k = p.k; S.moodP = k === 'tomb' ? DAWN : k === 'golgota' ? STORM : NIGHT; /* Getsemaní y los pastores: de noche */ S.moodK = k === 'tomb' ? DAWNK : k === 'golgota' ? STORMK : NIGHTK; return t * (S.hx ? 1 : k === 'tomb' ? .9 : k === 'golgota' ? .8 : .78); } } return 0; } /* Getsemaní de noche; la tumba al amanecer (Marcos 16:2) */ /* en Kids, un anochecer suave: azul lavanda, sin oscuridad */
 const NIGHTK = { top: '#3A4A8E', bot: '#B39AC8', sun: '#B9C4FF', sI: .5, hs: '#9EA8E6', hg: '#4A4058', hI: .62, fog: '#7E7AA8' };
 function dayTick(dt) {
-  if (!S) return; { const now = performance.now(), rd = Math.min(.25, (now - (S.nkT || now)) / 1000); S.nkT = now; const t = nightTarget(); S.nk = (S.nk || 0) + (t - (S.nk || 0)) * Math.min(1, rd * 1.1); if (S.nk < .003 && !t) S.nk = 0; if (S.nk > .997 && t === 1) S.nk = 1; }
+  if (!S) return; { const now = performance.now(), rd = Math.min(.25, (now - (S.nkT || now)) / 1000); S.nkT = now; const t = nightTarget() * (legOn('lampnoche') ? .55 : 1); S.nk = (S.nk || 0) + (t - (S.nk || 0)) * Math.min(1, rd * 1.1); if (S.nk < .003 && !t) S.nk = 0; if (S.nk > .997 && t === 1) S.nk = 1; }
   S.dayAcc = (S.dayAcc || 9) + dt; if (S.dayAcc < (S.nk || S.nkA ? .05 : .5)) return; S.dayAcc = 0;
   const d = dayNow(), sig = d.i + ':' + d.k.toFixed(3) + ':' + (S.nk || 0).toFixed(3); if (sig === S.daySig) return; S.daySig = sig; S.nkA = S.nk;
   if (S.dayI !== undefined && S.dayI !== d.i && d.k < .5) G().toast(['🌅 Amanece un día nuevo…', '☀️ Llegó el mediodía.'][d.i]);
@@ -3986,6 +3986,13 @@ const GEAR = [
   { id: 'vendaslino', s: 'gloves', r: 'c', t: 'wrap', c: '#D8CCB0', name: 'Vendas de lino', desc: 'Para proteger las manos al cosechar.' },
   { id: 'plata', s: 'gloves', r: 'r', t: 'bracer', c: '#5A4A3A', c2: '#C8CCD4', name: 'Brazaletes de plata', desc: 'Trabajados por un platero, con dibujos de vid.' },
   { id: 'oro', s: 'gloves', r: 'e', t: 'bracer', c: '#5A3A22', c2: '#E6B84A', name: 'Brazaletes de oro', desc: 'Un regalo de valor, como los que llevaba Rebeca (Génesis 24:22).' },
+  /* legendarias que solo se consiguen con un logro difícil (x: no salen en el sorteo); h: pista misteriosa antes de conseguirla */
+  { id: 'coronavida', s: 'hat', r: 'l', t: 'wrap', x: 1, c: '#F0C860', name: 'Corona de la vida', desc: 'Dios promete la corona de la vida a los que se mantienen firmes en la prueba (Santiago 1:12).', h: ['Dicen que la corona la recibe quien aprueba cada etapa a la primera.', 'Aprobá los 9 exámenes de Tras sus pasos sin repetir ninguno.'] },
+  { id: 'samuel', s: 'shirt', r: 'l', t: 'seamless', x: 1, c: '#E8DDC6', c2: '#3E5A9A', name: 'Túnica de Samuel', desc: 'Cada año, Ana le llevaba a su hijo Samuel una túnica nueva que ella misma le hacía (1 Samuel 2:19).', h: ['Dicen que se la regalan a quien no deja a nadie sin ayudar.', 'Terminá todas las misiones de Tras sus pasos.'] },
+  { id: 'lampnoche', s: 'pants', r: 'l', t: 'hand', k: 'lamp', x: 1, metal: 1, c: '#FFD46A', name: 'Lámpara que no se apaga', desc: 'El fuego del altar tenía que arder siempre, sin apagarse nunca (Levítico 6:13).', h: ['Dicen que esta lámpara se enciende para quien conoce cada rincón del camino.', 'Conseguí todos los sellos de Tras sus pasos.'] },
+  { id: 'cuarenta', s: 'boots', r: 'l', t: 'sandal', x: 1, hi: 1, c: '#A8865A', name: 'Sandalias del desierto', desc: 'En cuarenta años por el desierto, ni la ropa ni las sandalias del pueblo se gastaron (Deuteronomio 29:5).', h: ['Dicen que el desierto se las da al que baja el monte como el viento.', 'Bajá el Monte de la Tentación en muy poco tiempo: corré sin parar desde la cima.'] },
+  { id: 'pescahombres', s: 'gloves', r: 'l', t: 'glove', x: 1, c: '#5A8A96', name: 'Muñequeras de pescador de hombres', desc: 'La red salió llena: ciento cincuenta y tres peces grandes, y no se rompió (Juan 21:11).', h: ['Dicen los pescadores que se las ganan los que pescan tanto como aquella mañana.', 'Pescá 153 peces.'] },
+  { id: 'bezalel', s: 'gloves', r: 'l', t: 'bracer', x: 1, c: '#3A2A1A', c2: '#F0C860', name: 'Brazaletes de Bezalel', desc: 'Dios llenó a Bezalel de su Espíritu, de sabiduría y de habilidad para todo trabajo de artesanía (Éxodo 31:2-5).', h: ['Dicen que son para el que termina su casa con sus propias manos.', 'Construí tu casa y hacele todos los muebles.'] },
   /* catálogo ampliado: unas 28 prendas por espacio (las legendarias van aparte, cada una con su poder y su forma de conseguirla) */
   { id: 'algodon', s: 'hat', r: 'c', t: 'turban', c: '#EDE3CF', name: 'Turbante de algodón', desc: 'Liviano y fresco, para las tardes de calor en el valle.' },
   { id: 'panuelonaz', s: 'hat', r: 'c', t: 'cloth', c: '#C9B48A', c2: '#5A3A22', name: 'Pañuelo de Nazaret', desc: 'Un paño sencillo sujeto con un cordón de lana, como se usaba en la aldea.' },
@@ -6188,7 +6195,7 @@ function freeWalk(dt) {
   const mag = Math.min(1, Math.hypot(jx, jy)); if (mag >= .12 && S.pose === 'pray') { S.pose = null; actUI(); } if (mag >= .12 && S.sit) { S.sit = false; actUI(); } if (mag >= .12 && S.poseK) poseEnd(); S.fullT = mag > .96 ? (S.fullT || 0) + dt : 0; if (S.sprint && S.hx) { AXS.run = (AXS.run || 0) + dt; if (AXS.run > 12) { AXS.run = 0; axGain('agi', 1); } } S.sprint = !!S.hx && (!!k.Shift || S.fullT > 1.2); if (mag < .12) { if (S.freeMoving) { S.freeMoving = false; snapToStop(); } return; }
   const C = S.yaw + S.camYaw, fx = Math.sin(C), fz = Math.cos(C), rx = -Math.cos(C), rz = Math.sin(C);
   let mx = fx * -jy + rx * jx, mz = fz * -jy + rz * jx; const ml = Math.hypot(mx, mz) || 1; mx /= ml; mz /= ml;
-  if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint && !S.swim ? 1.55 : 1) * (S.boostT > 0 ? 1.3 : 1) * (S.gy != null && S.gy < WATER.RL - .4 ? (S.swim ? (S.hx && (S.stam ?? 1) < .25 ? .34 : .5) * (legOn('perla') ? 1.3 : 1) : .6) : 1), /* en el agua se avanza más lento */ a = S.av.position, fr = frontier(), z0 = 6;
+  if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint && !S.swim ? 1.55 * (legOn('cuarenta') ? 1.2 : 1) : 1) * (S.boostT > 0 ? 1.3 : 1) * (S.gy != null && S.gy < WATER.RL - .4 ? (S.swim ? (S.hx && (S.stam ?? 1) < .25 ? .34 : .5) * (legOn('perla') ? 1.3 : 1) : .6) : 1), /* en el agua se avanza más lento */ a = S.av.position, fr = frontier(), z0 = 6;
   const curG = groundAt(a.x, a.z, S.gy); // el suelo donde estás parado (no la altura suavizada de la cámara)
   const ok = (x, z) => S.pocket ? pocketOk(x, z) : (Math.abs(x) < XB || inTrail(x, z) || seaOk(x, z)) && z > fr && z < z0 && !blockedAt(x, z) && !solidAbove(x, z, S.gy) && !edgeDrop(x, z, curG) && !descUp(a.x, a.z, x, z);
   let nx = a.x + mx * sp, nz = a.z + mz * sp;
@@ -6498,7 +6505,17 @@ function axVerse(dt) {
   try { const g = G(), t = g.stageLine && g.stageLine(); if (t) g.vo(t, 'narrador', { queue: 1 }); } catch (e) {}
 }
 /* poderes de las prendas legendarias: valen solo mientras la llevás puesta */
-const LEG_POW = { evangelio: ['Pies ligeros', 'Caminás y corrés un 15% más rápido.'], jose: ['Graneros llenos', 'El hambre te baja un 30% más lento.'], sacerdote: ['Consagrado', 'Tus atributos crecen un 25% más rápido con cada cosa que hacés.'], perla: ['Aliento profundo', 'Nadás un 30% más rápido y tu aliento dura el doble.'] };
+const LEG_POW = { coronavida: ['Perseverancia', 'Ganás un 25% más de experiencia con todo lo que hacés.'], samuel: ['Fiel en lo poco', 'Ganás un 25% más de denarios.'], lampnoche: ['Luz en la noche', 'En los lugares de noche ves mucho más lejos y más claro.'], cuarenta: ['Cuarenta años', 'Corriendo vas un 20% más rápido.'], pescahombres: ['Red llena', 'Al pescar, pica el doble.'], bezalel: ['Manos sabias', 'Construir y fabricar te cuesta la mitad de materiales.'], evangelio: ['Pies ligeros', 'Caminás y corrés un 15% más rápido.'], jose: ['Graneros llenos', 'El hambre te baja un 30% más lento.'], sacerdote: ['Consagrado', 'Tus atributos crecen un 25% más rápido con cada cosa que hacés.'], perla: ['Aliento profundo', 'Nadás un 30% más rápido y tu aliento dura el doble.'] };
+/* las legendarias por logros: se revisa cada tanto y se entregan una sola vez */
+const SELLO_IDS = ['bajada', 'brasas', 'cana', 'carrera', 'cena', 'cruz', 'emaus', 'estrella', 'gloria', 'jordan', 'maestros', 'oveja', 'panes', 'pesebre', 'red', 'rut', 'samaritano', 'tumba', 'viuda'];
+function legCheck() { try { if (!S || !S.hx || !G() || !G().P) return; const p = G().P(), own = gearState().own, give = (id, why) => { if (GBY[id] && !own.includes(id)) gearGive(GBY[id], why); };
+  const ex = Object.values(p.exams || {}); if (ex.filter(e => e && e.passed).length >= 9 && ex.every(e => !e || !e.passed || (e.tries || (e.hist || []).length || 1) === 1)) return give('coronavida', 'Aprobaste cada etapa a la primera');
+  if (typeof MISSIONS !== 'undefined' && MISSIONS.length && MISSIONS.every(d => p.missions && p.missions[d.id])) return give('samuel', 'Terminaste todas las misiones');
+  let L = {}; try { L = JSON.parse(localStorage.getItem('tsp:sellos') || '{}'); } catch (e) {} if (SELLO_IDS.every(k => L[k])) return give('lampnoche', 'Conseguiste todos los sellos');
+  const s = svP(); if ((s.fishN || 0) >= 153) return give('pescahombres', '153 peces, como aquella mañana');
+  if (s.house && RECIPES.filter(r => r.furn).every(r => (s.furn || []).includes(r.id))) return give('bezalel', 'Terminaste tu casa con tus propias manos');
+} catch (e) {} }
+setInterval(() => { if (!document.hidden) legCheck(); }, 5000);
 function legOn(id) { try { const e = gearState().eq; return Object.values(e).includes(id); } catch (e) { return false; } }
 function agiMul() { return (1 + atr('agi') * .06) * (legOn('evangelio') ? 1.15 : 1); }
 function lvlNow() { const g = G(); return g.level ? g.level() : 1; }
@@ -6517,10 +6534,12 @@ function attrSync() {
 async function attrOpen() { try { if (document.getElementById('view3d').hidden) await show3d(true); } catch (e) {} if (S) setTimeout(() => openBag('at'), 200); }
 function ptsFree() { const a = atP(); return Math.max(0, (Math.min(LV_MAX, lvlNow()) - 1) * ATTR_PER_LV - (a.spent || 0)); }
 function humHalo() { const g = new THREE.Group(), r = new THREE.Mesh(new THREE.TorusGeometry(.32, .025, 8, 32), new THREE.MeshBasicMaterial({ color: '#FFD25E', transparent: true, opacity: .85, blending: THREE.AdditiveBlending, depthWrite: false })); r.rotation.x = Math.PI / 2; r.position.y = 2.15; g.add(r); g.name = 'humHalo'; return g; }
-function svXP(n) { const p = G().P(); p.bonus = (p.bonus || 0) + Math.round(n * (S && S.hx ? 1 + [0, .05, .05, .1, .1, .15][ft('ale')] + atr('sab') * .2 : 1 + atr('sab') * .2)); }
-function svAdd(k, n) { if (k === 'money' && n > 0 && G() && G().khLocked && G().khLocked()) return; const s = svP(); s.inv[k] = Math.max(0, (s.inv[k] || 0) + n); }
-function svHas(need) { const s = svP(); return Object.entries(need).every(([k, n]) => (s.inv[k] || 0) >= n); }
-function svPay(need) { Object.entries(need).forEach(([k, n]) => svAdd(k, -n)); }
+function svXP(n) { const p = G().P(); if (legOn('coronavida')) n *= 1.25; p.bonus = (p.bonus || 0) + Math.round(n * (S && S.hx ? 1 + [0, .05, .05, .1, .1, .15][ft('ale')] + atr('sab') * .2 : 1 + atr('sab') * .2)); }
+function svAdd(k, n) { if (k === 'money' && n > 0 && G() && G().khLocked && G().khLocked()) return; if (k === 'money' && n > 0 && legOn('samuel')) n = Math.round(n * 1.25); const s = svP(); if (k === 'fish' && n > 0) s.fishN = (s.fishN || 0) + n; s.inv[k] = Math.max(0, (s.inv[k] || 0) + n); }
+/* con los Brazaletes de Bezalel, los materiales (no los denarios) cuestan la mitad */
+const svN = (k, n) => k !== 'money' && n > 0 && legOn('bezalel') ? Math.ceil(n / 2) : n;
+function svHas(need) { const s = svP(); return Object.entries(need).every(([k, n]) => (s.inv[k] || 0) >= svN(k, n)); }
+function svPay(need) { Object.entries(need).forEach(([k, n]) => svAdd(k, -svN(k, n))); }
 function svTool(t) { return svP().tools.includes(t); }
 function svToast(t) { G().toast(t); }
 function svGiveTool(t, why) {
@@ -6650,7 +6669,7 @@ function svAct() {
   if (n.k === 'fish') { if (svTool('rod')) { st.fishing = S.hx ? { mode: 'rod', t: 0, bite: Math.max(1, (2 + Math.random() * 4) * [1, .9, .9, .8, .8, .8][ft('pac')]), win: 1.1 + (fv('pac') >= 20 ? .7 : 0) + fv('pac') * .01 } : { mode: 'rod', t: 0, bite: Math.max(1.2, 2 + Math.random() * 4 - atr('pac') * .35), win: 1.1 + atr('pac') * .15 }; svToast('🎣 Tiraste la caña. Cuando pique, tocá la acción (E).'); }
     else { st.fishing = { mode: 'net', t: 0, bite: 5 - atr('pac') * .2 }; svToast('🕸️ Tiraste la red. Esperá un momento…'); } S.joy.x = 0; S.joy.y = 0; svUI(); }
 }
-function svFishTap() { const f = S.sv.fishing; if (!f || f.mode !== 'rod') return; if (f.t >= f.bite && f.t <= f.bite + f.win) { axGain('pac', 3); const n = 1 + (S.hx ? (fv('pac') >= 40 && Math.random() < .3 ? 1 : 0) : (Math.random() < atr('pac') * .06 ? 1 : 0)); svAdd('fish', n); if (S.hx && fv('pac') >= 50 && Math.random() < .15) { svAdd('money', 3); svToast('✨ ¡Un pez raro! Lo vendiste por 3 denarios.'); } S.catchT = 1.6; h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 1.6); svXP(2); G().save(); svToast('🐟 ¡Sacaste ' + (n > 1 ? 'dos peces!' : 'un pez!') + ' Cocinalo en una fogata antes de comerlo.'); } else svToast('Muy rápido. Esperá a que pique.'); S.sv.fishing = null; svUI(); }
+function svFishTap() { const f = S.sv.fishing; if (!f || f.mode !== 'rod') return; if (f.t >= f.bite && f.t <= f.bite + f.win) { axGain('pac', 3); const n = (1 + (S.hx ? (fv('pac') >= 40 && Math.random() < .3 ? 1 : 0) : (Math.random() < atr('pac') * .06 ? 1 : 0))) * (legOn('pescahombres') ? 2 : 1); svAdd('fish', n); if (S.hx && fv('pac') >= 50 && Math.random() < .15) { svAdd('money', 3); svToast('✨ ¡Un pez raro! Lo vendiste por 3 denarios.'); } S.catchT = 1.6; h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 1.6); svXP(2); G().save(); svToast('🐟 ¡Sacaste ' + (n > 1 ? 'dos peces!' : 'un pez!') + ' Cocinalo en una fogata antes de comerlo.'); } else svToast('Muy rápido. Esperá a que pique.'); S.sv.fishing = null; svUI(); }
 function svEat() {
   if (!svOn() || S.down) return; const s = svP(), k = (s.inv.cooked || 0) > 0 ? 'cooked' : (s.inv.bread || 0) > 0 ? 'bread' : (s.inv.fruit || 0) > 0 ? 'fruit' : (s.inv.lemon || 0) > 0 ? 'lemon' : null;
   if (!k) { svToast((s.inv.fish || 0) > 0 ? 'El pescado crudo hay que cocinarlo primero en una fogata.' : 'No tenés comida. Buscá granados o pescá.'); return; }
@@ -6772,7 +6791,7 @@ function survTick(dt, t) {
   // pesca
   if (st.fishing) { const f = st.fishing; f.t += dt; const a = S.av.position; if (S.freeMoving) { st.fishing = null; svToast('Dejaste de pescar.'); }
     else if (f.mode === 'rod') { if (f.t >= f.bite && !f.cue) { f.cue = 1; svToast('🐟 ¡Pica! Tocá la acción (E) ahora.'); try { tone3d(); } catch (e) {} } if (f.t > f.bite + f.win + .2) { st.fishing = null; svToast('Se escapó el pez. Probá otra vez.'); } }
-    else if (f.t >= f.bite) { const n = 1 + (Math.random() < .35 + atr('pac') * .05 ? 1 : 0); svAdd('fish', n); svXP(2); G().save(); st.fishing = null; axGain('pac', 2); svToast('🕸️ La red sacó ' + n + (n > 1 ? ' peces.' : ' pez.') + ' Cocinalo en una fogata.'); } }
+    else if (f.t >= f.bite) { const n = (1 + (Math.random() < .35 + atr('pac') * .05 ? 1 : 0)) * (legOn('pescahombres') ? 2 : 1); svAdd('fish', n); svXP(2); G().save(); st.fishing = null; axGain('pac', 2); svToast('🕸️ La red sacó ' + n + (n > 1 ? ' peces.' : ' pez.') + ' Cocinalo en una fogata.'); } }
   // interfaz cada medio segundo
   st.ui = (st.ui || 0) + dt; if (st.ui > .5) { st.ui = 0; svUI(); }
 }
