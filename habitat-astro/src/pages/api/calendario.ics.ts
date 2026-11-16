@@ -4,7 +4,7 @@
 // ?p=<programId> incluye solo los eventos generales y los de ese curso.
 import type { APIRoute } from "astro";
 import { items } from "@wix/data";
-import { agendaAlumno } from "./agenda";
+import { agendaAlumno, emailDeClave, personalDe } from "./agenda";
 import { progsDe } from "../../lib/vol";
 
 type Ev = {
@@ -36,10 +36,21 @@ export const GET: APIRoute = async ({ url }) => {
     evs = (r.items as Ev[]).filter((e) => !e.programId || !p || e.programId === p);
   } catch (e) { console.error("calendario", e); }
   // sus clases (si el link trae ?c=Carrera) y la Zarza y el Selah, para todos
+  // link personal (?u=): sus clases (el equipo, todas), la Zarza, el Selah y sus turnos de servicio
+  let personal = false;
   try {
-    const c = progsDe(url.searchParams.get("c") || "");
-    const extra = (await agendaAlumno(c, 120)).filter((e) => c.length || e._id.startsWith("esp-"));
-    evs = evs.concat(extra as unknown as Ev[]);
+    const email = url.searchParams.get("u") ? await emailDeClave(url.searchParams.get("u") || "") : "";
+    const yo = email ? await personalDe(email) : null;
+    if (yo) {
+      personal = true;
+      const c = yo.equipo ? [] : yo.carreras || [];
+      const ag = (await agendaAlumno(c, 120)).filter((e) => yo.equipo || c.length || e._id.startsWith("esp-"));
+      evs = evs.concat(ag as unknown as Ev[], yo.servicio as unknown as Ev[]);
+    } else {
+      const c = progsDe(url.searchParams.get("c") || "");
+      const extra = (await agendaAlumno(c, 120)).filter((e) => c.length || e._id.startsWith("esp-"));
+      evs = evs.concat(extra as unknown as Ev[]);
+    }
   } catch (e) { console.error("calendario extra", e); }
 
   const L: string[] = [
@@ -71,7 +82,7 @@ export const GET: APIRoute = async ({ url }) => {
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
       "Content-Disposition": 'inline; filename="habitat-campus.ics"',
-      "Cache-Control": "public, max-age=900",
+      "Cache-Control": personal ? "private, max-age=900" : "public, max-age=900",
       "Access-Control-Allow-Origin": "*",
     },
   });

@@ -93,6 +93,11 @@
 .eq-c.hot em{background:var(--gold-2);color:var(--ink)}
 .out-txt{border:0;background:none;color:rgba(246,240,228,.6);font:500 .82rem var(--sans);text-decoration:underline;cursor:pointer;padding:8px 4px;align-self:center}
 .out-txt:hover{color:var(--cream)}
+.cal-help{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:16px;background:rgba(16,37,29,.45)}
+.cal-hc{background:#fff;border-radius:20px;padding:22px;max-width:520px;width:100%;max-height:90vh;overflow:auto;color:var(--ink)}
+.cal-hc h3{font:500 1.6rem var(--serif);margin:0 0 6px}.cal-hc p{margin:0 0 10px;color:var(--muted)}.cal-hc ol{padding-left:20px;margin:0 0 14px;display:grid;gap:8px}
+.cal-hb{display:flex;gap:8px;flex-wrap:wrap}.cal-b{font:600 .88rem var(--sans);background:var(--ink);color:var(--cream);border:0;border-radius:12px;padding:11px 16px;cursor:pointer;text-decoration:none}.cal-b.s{background:var(--paper);color:var(--ink);border:1px solid var(--line)}
+.cal-hn{font-size:.85rem;margin-top:12px!important}
 </style>
 <section class="cx-sec" id="opina" hidden><div class="wrap">
   <div class="cx-h"><h2>¿Cómo estuvo la clase?</h2></div>
@@ -260,7 +265,18 @@ function agenda(pids,car){X.agenda(pids,car).then(function(L){
  var ha=av.map(it).join('');
  document.getElementById('agList').innerHTML=(ha?'<h3 class="ag-h">Avisos</h3>'+ha:'')+(h?'<h3 class="ag-h">Próximamente</h3>'+h:'')||'<p class="cx-empty">No hay clases en vivo ni avisos por ahora. Cuando haya, te aparecen acá y en tu calendario.</p>';
 }).catch(function(){document.getElementById('agList').innerHTML='<p class="cx-empty">No pudimos cargar la agenda.</p>';});
- document.getElementById('calG').href=X.google();document.getElementById('calI').href=X.webcal();}
+ document.getElementById('calG').href=X.google();document.getElementById('calI').href=X.webcal();calPersonal();}
+function calPersonal(){
+ var G=document.getElementById('calG'),I=document.getElementById('calI'),url=X.calUrl();
+ (async function(){try{var A=window.HabitatAuth;await A.api('GET','/members/v1/members/my');var t=JSON.parse(localStorage.getItem('habitat:mtok')).a;var r=await fetch('/api/agenda?link=1',{headers:{'x-habitat-auth':t}});var j=await r.json();if(j.url){url=j.url;var w=url.replace(/^https:/,'webcal:');I.href=w;G.href='https://calendar.google.com/calendar/r?cid='+encodeURIComponent(w);}}catch(e){}})();
+ G.addEventListener('click',function(ev){
+  ev.preventDefault();var gl=G.href,m=document.createElement('div');m.className='cal-help';
+  m.innerHTML='<div class="cal-hc"><h3>Sumar Habitat a Google Calendar</h3><p>Tus clases, la Zarza, el Selah y tus turnos de servicio, con aviso un día antes y una hora antes.</p><ol><li><b>Desde la compu</b> (en el celu Google no deja suscribirse): tocá «Abrir Google Calendar» y confirmá «Agregar».</li><li>¿No te deja? Copiá el link, entrá a <b>calendar.google.com</b> → «Otros calendarios» <b>+</b> → «Desde URL» y pegalo.</li><li>En unos minutos aparece en la compu y en el celu. En el celu, si no lo ves: app de Google Calendar → menú → Configuración → «Habitat» → activá <b>Sincronizar</b>.</li></ol><div class="cal-hb"><a class="cal-b" href="'+gl+'" target="_blank" rel="noopener">Abrir Google Calendar</a><button type="button" class="cal-b s" data-cp>Copiar link</button><button type="button" class="cal-b s" data-x>Cerrar</button></div><p class="cal-hn">En iPhone es más fácil: usá «+ iPhone / Outlook».</p></div>';
+  document.body.appendChild(m);
+  m.onclick=function(e){if(e.target===m||e.target.closest('[data-x]'))m.remove();};
+  m.querySelector('[data-cp]').onclick=function(){var b=this;try{navigator.clipboard.writeText(url);}catch(e){}b.textContent='¡Copiado!';};
+ });
+}
 function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var K={curso:'Curso online',escuela:'Escuela',carrera:'Carrera'};
 try{
