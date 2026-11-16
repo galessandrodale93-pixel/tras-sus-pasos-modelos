@@ -505,7 +505,7 @@
   function parejas() { var s = {}; D.alumnos.forEach(function (a) { if (a.tutores) s[a.tutores] = 1; }); D.tutores.forEach(function (t) { if (t.pareja) s[t.pareja] = 1; }); return Object.keys(s).sort(); }
 
   /* Kids & Hero: el progreso de cada personaje y los mensajes para afirmarlos.
-     Quien organiza asigna cada jugador a una pareja de tutores; cuando un chico logra algo nuevo (etapa, nivel, examen, insignia)
+     Quien organiza asigna cada jugador a sus tutores; cuando un chico logra algo nuevo (etapa, nivel, examen, insignia)
      o viene jugando seguido, al tutor le aparece «para afirmar» y le escribe por WhatsApp a la familia (o al adolescente si los padres lo autorizan). */
   var KHF = { est: '' }, KHE = ['Nacimiento', 'Infancia', 'Bautismo', 'Galilea', 'Milagros', 'Parábolas', 'Jerusalén', 'La cruz', 'Resurrección'];
   function khJ() { return (D.jugadores || []).filter(function (j) { return !j.tester || ME.rol === 'director'; }); }
@@ -543,15 +543,15 @@
     var hace = d === 0 ? 'hoy' : d === 1 ? 'ayer' : d < 999 ? 'hace ' + d + ' días' : '—';
     var chip = function (t) { return '<span class="kh-chip">' + esc(t) + '</span>'; };
     return '<article class="kh-card' + (pa ? ' para' : '') + '" data-j="' + esc(j._id) + '">' +
-      '<div class="kh-h">' + av(j.title, pa ? 'y' : '', '') + '<div><b>' + esc(j.title || 'Jugador') + (j.tester ? ' <small>(prueba)</small>' : '') + '</b><small>' + (j.rama === 'hero' ? 'Hero' : 'Kids') + (j.edad ? ' · ' + j.edad + ' años' : '') + (j.tutores ? ' · ' + esc(j.tutores) : ' · sin pareja asignada') + '</small></div></div>' +
+      '<div class="kh-h">' + av(j.title, pa ? 'y' : '', '') + '<div><b>' + esc(j.title || 'Jugador') + (j.tester ? ' <small>(prueba)</small>' : '') + '</b><small>' + (j.rama === 'hero' ? 'Hero' : 'Kids') + (j.edad ? ' · ' + j.edad + ' años' : '') + (j.tutores ? ' · ' + esc(j.tutores) : ' · sin tutor asignado') + '</small></div></div>' +
       '<div class="kh-st"><span><b>' + (j.nivel || 1) + '</b>nivel</span><span><b>' + (j.etapas || 0) + '/' + (c.etapasTotal || 9) + '</b>etapas</span><span><b>' + String(j.horas || 0).replace('.', ',') + ' h</b>de juego</span><span><b>' + hace + '</b>última vez</span></div>' +
       (x.length || ins.length ? '<div class="kh-chips">' + x.map(function (e) { return chip('✓ Examen ' + e); }).join('') + ins.map(function (b) { return chip('🏅 ' + (b.curso || 'Insignia')); }).join('') + '</div>' : '') +
       (pa ? '<p class="kh-para">💛 Para afirmar: ' + esc(khLogro(j)) + '</p>' : j.afirmado ? '<p class="kh-ok">Afirmado el ' + fcorta(j.afirmado.slice(0, 10)) + (j.afirmPor ? ' por ' + esc(j.afirmPor.split(' ')[0]) : '') + '</p>' : '') +
       '<div class="kh-act">' + (wa ? '<a class="tt-btn s" target="_blank" rel="noopener" data-wa="' + esc(j._id) + '" href="https://wa.me/' + wa + '?text=' + encodeURIComponent(khMsg(j)) + '">Afirmar por WhatsApp</a>' : '<span class="kh-none">Falta el WhatsApp de la familia</span>') + (pa ? '<button class="tt-btn" type="button" data-ok="' + esc(j._id) + '">Ya lo afirmé</button>' : '') + '</div>' +
-      '<details class="kh-ed"><summary>Datos de contacto' + (org ? ' y pareja' : '') + '</summary><form data-f="' + esc(j._id) + '">' +
+      '<details class="kh-ed"><summary>Datos de contacto' + (org ? ' y tutor' : '') + '</summary><form data-f="' + esc(j._id) + '">' +
       '<label>WhatsApp<input name="whatsapp" inputmode="tel" placeholder="11 2345 6789" value="' + esc(j.whatsapp || '') + '"></label>' +
       '<label>De quién es<input name="contacto" placeholder="Mamá, papá o quien lo cuida" value="' + esc(j.contacto || '') + '"></label>' +
-      (org ? '<label>Pareja de tutores<select name="tutores"><option value="">Sin asignar</option>' + parejas().map(function (p) { return '<option' + (p === j.tutores ? ' selected' : '') + '>' + esc(p) + '</option>'; }).join('') + '</select></label>' + (j.email ? '<p class="tt-tip">Cuenta: ' + esc(j.email) + '</p>' : '') : '') +
+      (org ? '<label>Tutores<select name="tutores"><option value="">Sin tutor</option>' + parejas().map(function (p) { return '<option' + (p === j.tutores ? ' selected' : '') + '>' + esc(p) + '</option>'; }).join('') + '</select></label>' + (j.email ? '<p class="tt-tip">Cuenta: ' + esc(j.email) + '</p>' : '') : '') +
       '<label class="w">Nota<textarea name="nota" rows="2" placeholder="Algo para tener en cuenta">' + esc(j.nota || '') + '</textarea></label>' +
       '<button class="tt-btn s" type="submit">Guardar</button></form></details></article>';
   }
@@ -561,8 +561,8 @@
     L = L.slice().sort(function (a, b) { return (khPara(b) ? 1 : 0) - (khPara(a) ? 1 : 0) || String(b.ult || '').localeCompare(String(a.ult || '')); });
     var pill = function (v, t) { return '<button class="tt-pill' + (KHF.est === v ? ' on' : '') + '" data-kh="' + v + '">' + t + '</button>'; };
     $('#v-kh').innerHTML = '<div class="tt-card kh-intro"><h2>Kids &amp; Hero</h2><p>El progreso de los chicos y adolescentes que juegan, para acompañarlos. Cuando alguien logra algo nuevo o viene jugando seguido, aparece «para afirmar»: un mensaje corto por WhatsApp a su familia hace mucho.</p></div>' +
-      '<div class="tt-pills">' + pairPills() + '</div><div class="tt-pills">' + pill('', 'Todos · ' + all.length) + pill('para', 'Para afirmar · ' + para.length) + (org ? pill('sin', 'Sin pareja · ' + sin.length) : '') + '</div>' +
-      (L.length ? '<div class="kh-list">' + L.map(khCard).join('') + '</div>' : '<p class="tt-empty">' + (KHF.est === 'para' ? 'Nadie para afirmar por ahora. ¡Buen trabajo!' : !khJ().length ? 'Todavía no hay jugadores con cuenta.' : org ? 'No hay jugadores en esta pareja. Asignalos desde «Sin pareja».' : 'Todavía no te asignaron jugadores. Quien organiza los reparte por pareja.') + '</p>');
+      '<div class="tt-pills">' + pairPills() + '</div><div class="tt-pills">' + pill('', 'Todos · ' + all.length) + pill('para', 'Para afirmar · ' + para.length) + (org ? pill('sin', 'Sin tutor · ' + sin.length) : '') + '</div>' +
+      (L.length ? '<div class="kh-list">' + L.map(khCard).join('') + '</div>' : '<p class="tt-empty">' + (KHF.est === 'para' ? 'Nadie para afirmar por ahora. ¡Buen trabajo!' : !khJ().length ? 'Todavía no hay jugadores con cuenta.' : org ? 'No hay jugadores con estos tutores. Asignalos desde «Sin tutor».' : 'Todavía no te asignaron jugadores. Quien organiza los reparte entre los tutores.') + '</p>');
     bindPairPills('kh', renderKh);
     $$('#v-kh [data-kh]').forEach(function (b) { b.onclick = function () { KHF.est = b.dataset.kh; renderKh(); }; });
     var afirmar = function (id) { var j = khJ().find(function (x) { return x._id === id; }); if (!j) return; send({ op: 'kh-afirmar', id: id, logro: khFp(j) }, id, 'jugadores').then(function () { toast('¡Gracias por afirmarlo!'); renderKh(); notis(); }); };
