@@ -4378,6 +4378,15 @@ function ambTorch(parent, x, y, z, o) {
   const coal = new THREE.Mesh(new THREE.SphereGeometry(.13, 8, 6), ambM('coal', '#FF7A2A', { emissive: '#FF5A1A', emissiveIntensity: 2.5 })); coal.position.copy(cup.position); coal.position.y += .08; g.add(coal);
   g.position.set(x, y, z); if (o.ry) g.rotation.y = o.ry; parent.add(g); g.updateMatrixWorld(true); const w = new THREE.Vector3(); coal.getWorldPosition(w); ambFire(w.x, w.y + .02, w.z, (o.size || .62) * (o.k || 1)); g.traverse(m => { if (m.isMesh) m.castShadow = true; }); return g;
 }
+/* fogata de campo: anillo de piedras, leños cruzados y brasas, con el fuego animado de siempre */
+function ambCamp(parent, x, y, z, s) {
+  s = s || 1; const g = new THREE.Group(), st = ambM('cstone', '#8A8276', { roughness: .95 }), wd = ambM('clog', '#4A3322', { roughness: .95 }), ash = ambM('cash', '#2A2420', { roughness: 1 });
+  for (let i = 0; i < 9; i++) { const a = i / 9 * 6.283, r = new THREE.Mesh(new THREE.DodecahedronGeometry(.16 + (i % 3) * .03, 0), st); r.position.set(Math.cos(a) * .62, .08, Math.sin(a) * .62); r.rotation.set(i, i * 2, 0); r.scale.y = .7; g.add(r); }
+  const bed = new THREE.Mesh(new THREE.CircleGeometry(.55, 16), ash); bed.rotation.x = -Math.PI / 2; bed.position.y = .02; g.add(bed);
+  for (let i = 0; i < 4; i++) { const l = new THREE.Mesh(new THREE.CylinderGeometry(.05, .06, .8, 7), wd); const a = i / 4 * 3.1416; l.position.set(Math.cos(a) * .12, .14, Math.sin(a) * .12); l.rotation.set(Math.PI / 2 - .35, a, 0, 'YXZ'); g.add(l); }
+  const coal = new THREE.Mesh(new THREE.SphereGeometry(.2, 10, 6), ambM('coal', '#FF7A2A', { emissive: '#FF5A1A', emissiveIntensity: 2.5 })); coal.scale.y = .45; coal.position.y = .08; g.add(coal);
+  g.scale.setScalar(s); g.position.set(x, y, z); parent.add(g); g.updateMatrixWorld(true); const w = new THREE.Vector3(); coal.getWorldPosition(w); ambFire(w.x, w.y + .05, w.z, .7 * s); g.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); return g;
+}
 function ambBrazier(parent, x, y, z, s) {
   s = s || 1; const g = new THREE.Group(), br = ambM('bronze', '#B8853A', { metalness: .85, roughness: .32 });
   for (let i = 0; i < 3; i++) { const l = new THREE.Mesh(new THREE.CylinderGeometry(.04, .05, 1.4, 6), br); const a = i / 3 * 6.283; l.position.set(Math.cos(a) * .32, .62, Math.sin(a) * .32); l.rotation.set(Math.sin(a) * .25, 0, -Math.cos(a) * .25); g.add(l); }
@@ -7576,7 +7585,7 @@ function vivoBuild(scene, hx) {
     if (E.talk) { const T = E.talk, pos = vivoAt(T.at, T.off); if (pos) { const [x, z] = pos, o = (hx || H3.ok) ? buildHeroAvatar(Object.assign({}, T.look)) : buildAvatar(T.look, false); o.userData.stay = 1; if (!(hx || H3.ok)) o.scale.setScalar(1.08); o.position.set(x, yAt(x, z), z); const q = (S.pois || []).find(o2 => o2.name === T.at); o.rotation.y = q ? Math.atan2(q.x - x, q.z - z) : 0; o.traverse(m => { if (m.isMesh) m.castShadow = true; if (m.isPointLight) m.intensity = 0; }); scene.add(o); S.cols.push({ x0: x - .35, x1: x + .35, z0: z - .35, z1: z + .35, cx: x, cz: z, r: .3 });
       S.lore.push({ x: x + Math.sin(o.rotation.y) * 1.2, z: z + Math.cos(o.rotation.y) * 1.2, r: 2, label: 'Hablar con ' + T.name, act: () => vivoTalk(+r, o) }); } }
     // la fogata (Hero, con los compañeros)
-    if (E.fire) { const F = E.fire, pos = vivoAt(F.at, F.off); if (pos) S.lore.push({ x: pos[0], z: pos[1], r: 1.8, label: 'Sentarse con tus compañeros', act: () => (cineOk() ? vivoFire(+r) : vivoSheetFire(+r)) }); } /* en Kids también: la fogata va en una hoja con botones */
+    if (E.fire) { const F = E.fire, pos = vivoAt(F.at, F.off); if (pos && +r > 0) { const fx = pos[0], fz = pos[1] - 1.7; try { ambCamp(scene, fx, yAt(fx, fz), fz, 1); S.cols.push({ x0: fx - .7, x1: fx + .7, z0: fz - .7, z1: fz + .7, cx: fx, cz: fz, r: .7 }); } catch (e) { console.warn('fogata', e); } } /* el fuego se ve en el mundo, al lado de donde te sentás (en los pastores ya había uno) */ if (pos) S.lore.push({ x: pos[0], z: pos[1], r: 1.8, label: 'Sentarse con tus compañeros', act: () => (cineOk() ? vivoFire(+r) : vivoSheetFire(+r)) }); } /* en Kids también: la fogata va en una hoja con botones */
     // las preguntas de la gente
     if (E.quiz) { const Q = E.quiz, pos = vivoAt(Q.at, Q.off); if (pos) { const [x, z] = pos, o = (hx || H3.ok) ? buildHeroAvatar(Object.assign({}, Q.look)) : buildAvatar(Q.look, false); o.userData.stay = 1; if (!(hx || H3.ok)) o.scale.setScalar(1.08); o.position.set(x, yAt(x, z), z); const q = (S.pois || []).find(o2 => o2.name === Q.at); o.rotation.y = q ? Math.atan2(q.x - x, q.z - z) : 0; o.traverse(m => { if (m.isMesh) m.castShadow = true; if (m.isPointLight) m.intensity = 0; }); scene.add(o); S.cols.push({ x0: x - .35, x1: x + .35, z0: z - .35, z1: z + .35, cx: x, cz: z, r: .3 });
       S.lore.push({ x: x + Math.sin(o.rotation.y) * 1.2, z: z + Math.cos(o.rotation.y) * 1.2, r: 2, label: 'Hablar con ' + Q.name, act: () => vivoQuiz(+r, o) }); } }
