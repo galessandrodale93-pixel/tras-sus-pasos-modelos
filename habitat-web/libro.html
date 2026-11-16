@@ -27,6 +27,7 @@
 .lp-op button.on{border-color:var(--ink);background:var(--ink);color:var(--cream)}.lp-op button.on span{color:var(--sand)}.lp-op button.on i{color:var(--gold-2)}
 .lp-q{display:flex;align-items:center;gap:10px}.lp-q button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--paper);font:600 1.2rem var(--sans);cursor:pointer;color:var(--ink)}.lp-q b{font:500 1.6rem var(--serif);min-width:28px;text-align:center;color:var(--ink)}
 .lp-env{display:contents}.lp-env[hidden]{display:none}
+.lp-map{display:grid;gap:10px;justify-items:start}.lp-mt{margin:0;font-size:.9rem;color:var(--muted)}.lp-mp{width:100%;height:280px;border-radius:14px;border:1px solid var(--line);overflow:hidden;z-index:0}
 .lp-sub{grid-column:1/-1;margin:6px 0 0;font:600 .72rem var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
 .lp-tot{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 18px;border-radius:16px;background:var(--paper);border:1px dashed var(--sand)}
 .lp-tot small{display:block;color:var(--muted)}.lp-tot strong{font:500 2rem var(--serif);color:var(--ink)}
@@ -64,7 +65,7 @@
 <form class="lp-f" id="lpF" novalidate>
 <div class="w lp-op" role="radiogroup" aria-label="Entrega">
 <button type="button" class="on" data-e="retiro" role="radio" aria-checked="true"><i>$22.000</i><b>Retiro en Habitat</b><span>Av. Juan Bautista Justo 8177, CABA</span></button>
-<button type="button" data-e="envio" role="radio" aria-checked="false"><i>$33.000</i><b>Envío a domicilio</b><span>Por Andreani a todo el país (+$11.000)</span></button>
+<button type="button" data-e="envio" role="radio" aria-checked="false"><i>$33.000</i><b>Envío a domicilio</b><span>A todo el país (+$11.000)</span></button>
 </div>
 <label>Nombre<input name="nombre" autocomplete="given-name" required></label>
 <label>Apellido<input name="apellido" autocomplete="family-name" required></label>
@@ -81,6 +82,7 @@
 <label>Localidad<input name="localidad" autocomplete="address-level2"></label>
 <label>Código postal<input name="cp" autocomplete="postal-code" inputmode="numeric"></label>
 <label class="w">Entre calles o referencia (opcional)<input name="referencia"></label>
+<div class="w lp-map"><p class="lp-sub" style="margin:0">Marcá tu casa en el mapa</p><p class="lp-mt" id="lpMt">Cargá la dirección y tocá «Buscar en el mapa». Si el punto no quedó justo en tu casa, tocá el lugar correcto o arrastrá el marcador.</p><button type="button" class="btn btn-line" id="lpMb">📍 Buscar en el mapa</button><div id="lpMap" class="lp-mp" hidden></div></div>
 </div>
 <label class="w">¿Cómo conociste el libro?<select name="canal"><option value="">Elegí…</option><option>Soy alumno de Habitat</option><option>Instagram / redes</option><option>Me lo recomendaron</option><option>En mi iglesia o un evento</option><option>Otro</option></select></label>
 <label class="w">¿Algo que quieras contarnos? (opcional)<textarea name="nota" rows="2"></textarea></label>
@@ -108,7 +110,20 @@ var P=22000,E=11000,PROV=["CABA","Buenos Aires","Catamarca","Chaco","Chubut","C�
 var f=document.getElementById('lpF'),q=1,ent='retiro',$=function(s){return f.querySelector(s);};
 var sel=$('[name=provincia]');PROV.forEach(function(p){var o=document.createElement('option');o.textContent=p;sel.appendChild(o);});
 function ps(n){return '$'+n.toLocaleString('es-AR');}
-function upd(){var t=q*P+(ent==='envio'?E:0);document.getElementById('lpQ').textContent=q;document.getElementById('lpT').textContent=ps(t);document.getElementById('lpDet').textContent=q+(q===1?' ejemplar':' ejemplares')+(ent==='envio'?' · envío por Andreani':' · retiro en Habitat');document.getElementById('lpEnv').hidden=ent!=='envio';return t;}
+function upd(){var t=q*P+(ent==='envio'?E:0);document.getElementById('lpQ').textContent=q;document.getElementById('lpT').textContent=ps(t);document.getElementById('lpDet').textContent=q+(q===1?' ejemplar':' ejemplares')+(ent==='envio'?' · envío a domicilio':' · retiro en Habitat');document.getElementById('lpEnv').hidden=ent!=='envio';return t;}
+/* mapa: la persona marca su casa; con eso, el equipo decide si lo lleva un repartidor de Uber (CABA y alrededores) o va por Andreani */
+var PT=null,MAP=null,MK=null;
+function leaflet(){return new Promise(function(ok,ko){if(window.L)return ok();var c=document.createElement('link');c.rel='stylesheet';c.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(c);var j=document.createElement('script');j.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';j.onload=ok;j.onerror=ko;document.head.appendChild(j);});}
+function pin(la,lo,zoom){PT={lat:la,lng:lo};var m=document.getElementById('lpMap');m.hidden=false;if(!MAP){MAP=L.map(m,{scrollWheelZoom:false}).setView([la,lo],zoom||16);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(MAP);MAP.on('click',function(e){pin(e.latlng.lat,e.latlng.lng);});}else MAP.setView([la,lo],zoom||MAP.getZoom());if(!MK){MK=L.marker([la,lo],{draggable:true}).addTo(MAP);MK.on('dragend',function(){var g=MK.getLatLng();PT={lat:g.lat,lng:g.lng};});}else MK.setLatLng([la,lo]);setTimeout(function(){MAP.invalidateSize();},60);document.getElementById('lpMt').textContent='¡Listo! Si el punto no quedó justo en tu casa, tocá el lugar correcto o arrastrá el marcador.';}
+async function buscar(silent){var g=function(k){return ($('[name='+k+']').value||'').trim();},dir=[g('calle')+' '+g('numero'),g('localidad'),g('provincia')==='CABA'?'Ciudad Autónoma de Buenos Aires':g('provincia'),'Argentina'].filter(function(v){return v.trim();}).join(', ');
+ if(!g('calle')||!g('localidad')){if(!silent)err('Cargá calle, número y localidad para buscarte en el mapa.');return false;}
+ var b=document.getElementById('lpMb');b.disabled=true;b.textContent='Buscando…';
+ try{await leaflet();var r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ar&q='+encodeURIComponent(dir),{headers:{'Accept-Language':'es'}});var a=await r.json();
+  if(a&&a[0]){pin(+a[0].lat,+a[0].lon,17);err('');return true;}
+  var p0=g('provincia')==='CABA'||!g('provincia')?[-34.61,-58.44]:[-34.6,-58.6];pin(p0[0],p0[1],11);PT=null;document.getElementById('lpMt').textContent='No encontramos la dirección exacta. Tocá en el mapa el lugar de tu casa.';return false;}
+ catch(e){if(!silent)err('No pudimos abrir el mapa. Probá de nuevo en un ratito.');return false;}
+ finally{b.disabled=false;b.textContent='📍 Buscar en el mapa';}}
+document.getElementById('lpMb').onclick=function(){buscar(false);};
 f.querySelectorAll('[data-e]').forEach(function(b){b.onclick=function(){ent=b.dataset.e;f.querySelectorAll('[data-e]').forEach(function(x){x.classList.toggle('on',x===b);x.setAttribute('aria-checked',x===b);});upd();};});
 f.querySelectorAll('[data-q]').forEach(function(b){b.onclick=function(){q=Math.min(10,Math.max(1,q+ +b.dataset.q));upd();};});
 function err(t){var e=document.getElementById('lpErr');e.textContent=t;e.hidden=!t;}
@@ -117,10 +132,12 @@ f.onsubmit=async function(ev){ev.preventDefault();err('');
  var need=['nombre','apellido','email','telefono'].concat(ent==='envio'?['dni','provincia','calle','numero','localidad','cp']:[]),bad=need.filter(function(k){return !d[k];});
  if(bad.length){var i=$('[name='+bad[0]+']');i.focus();err('Completá los datos marcados para poder hacer el pedido.');return;}
  if(!/^\S+@\S+\.\S+$/.test(d.email)){$('[name=email]').focus();err('Revisá el email: ahí te llega el detalle para pagar.');return;}
+ if(ent==='envio'&&!PT){await buscar(true);if(!PT){document.getElementById('lpMap').scrollIntoView({behavior:'smooth',block:'center'});err('Marcá tu casa en el mapa para que sepamos cómo mandártelo.');return;}}
+ if(ent==='envio'&&PT){d.lat=PT.lat;d.lng=PT.lng;}
  var b=document.getElementById('lpGo');b.disabled=true;b.textContent='Enviando…';
  try{var r=await fetch('/api/libro',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(d)});var j={};try{j=await r.json();}catch(e){}if(!r.ok)throw new Error(j.error||'No pudimos tomar el pedido. Probá de nuevo.');
   var t=j.total||upd(),box=document.getElementById('lpBox');
-  box.innerHTML='<div class="lp-ok"><div class="ic">📖</div><h2>¡Gracias, '+(d.nombre||'').replace(/[<>&"]/g,'')+'!</h2><p class="lead" style="margin:0">Tomamos tu pedido. Para confirmarlo transferí <b>'+ps(t)+'</b> al alias:</p><div class="lp-alias"><b>habitatcfm</b><button type="button" id="lpCp">Copiar alias</button></div><p style="color:var(--muted);margin:0">'+(j.mail?'Te mandamos el detalle a <b>'+(j.email||'').replace(/[<>&"]/g,'')+'</b>. ':'')+'Después mandanos el comprobante respondiendo el mail o por <a href="https://wa.me/5491171637995" style="color:var(--gold)">WhatsApp</a>.'+(ent==='envio'?' Apenas se acredite lo despachamos por Andreani y te pasamos el seguimiento.':' Te avisamos cuando esté listo para retirar.')+'</p>'+(j.id?'<button class="btn btn-gold" type="button" id="lpSub">Ya transferí: subir comprobante</button>':'')+'</div>';
+  box.innerHTML='<div class="lp-ok"><div class="ic">📖</div><h2>¡Gracias, '+(d.nombre||'').replace(/[<>&"]/g,'')+'!</h2><p class="lead" style="margin:0">Tomamos tu pedido. Para confirmarlo transferí <b>'+ps(t)+'</b> al alias:</p><div class="lp-alias"><b>habitatcfm</b><button type="button" id="lpCp">Copiar alias</button></div><p style="color:var(--muted);margin:0">'+(j.mail?'Te mandamos el detalle a <b>'+(j.email||'').replace(/[<>&"]/g,'')+'</b>. ':'')+'Después mandanos el comprobante respondiendo el mail o por <a href="https://wa.me/5491171637995" style="color:var(--gold)">WhatsApp</a>.'+(ent==='envio'?' Apenas se acredite te lo mandamos y te avisamos por mail cuando salga.':' Te avisamos cuando esté listo para retirar.')+'</p>'+(j.id?'<button class="btn btn-gold" type="button" id="lpSub">Ya transferí: subir comprobante</button>':'')+'</div>';
   document.getElementById('lpCp').onclick=function(){var me=this;try{navigator.clipboard.writeText('habitatcfm');}catch(e){}me.textContent='¡Copiado!';setTimeout(function(){me.textContent='Copiar alias';},1800);};
   if(j.id)document.getElementById('lpSub').onclick=function(){comp(j.id,j.k);};
   box.scrollIntoView({behavior:'smooth',block:'center'});

@@ -15,7 +15,14 @@ export type Pedido = {
   entrega?: string; calle?: string; numero?: string; piso?: string; depto?: string; cp?: string; localidad?: string; provincia?: string; referencia?: string;
   cantidad?: number; total?: number; estado?: string; fecha?: string; pagado?: string; tracking?: string; despachado?: string; nota?: string; mail?: string;
   canal?: string; perfil?: string; origen?: string; clave?: string; pagoId?: string; pagoDe?: string; probable?: string; comprobante?: string; compFecha?: string;
+  lat?: number; lng?: number; km?: number; via?: string;
 };
+/* Cómo lo mandamos (lo decide el equipo, el comprador solo marca su casa en el mapa): en CABA y alrededores, con un repartidor de Uber; más lejos, por Andreani. */
+export const HAB = { lat: -34.6332, lng: -58.5037 }; // Av. Juan Bautista Justo 8177, CABA
+export const RADIO_UBER = 25; // km en línea recta desde Habitat
+export const kmDe = (lat: number, lng: number) => { const R = 6371, r = Math.PI / 180, dLa = (lat - HAB.lat) * r, dLo = (lng - HAB.lng) * r, a = Math.sin(dLa / 2) ** 2 + Math.cos(HAB.lat * r) * Math.cos(lat * r) * Math.sin(dLo / 2) ** 2; return Math.round(2 * R * Math.asin(Math.sqrt(a)) * 10) / 10; };
+export const viaDe = (x: Pedido) => (x.km != null && isFinite(x.km) ? (x.km <= RADIO_UBER ? "uber" : "andreani") : x.provincia === "CABA" ? "uber" : "andreani");
+export const VIA: Record<string, string> = { uber: "Uber", andreani: "Andreani" };
 export const CANALES = ["Soy alumno de Habitat", "Instagram / redes", "Me lo recomendaron", "En mi iglesia o un evento", "Otro"];
 export const PERFILES = ["Alumno", "Ex alumno", "Equipo Habitat", "Sembrador", "Externo"];
 export const ESTADOS = ["Nuevo", "Pagado", "Despachado", "Entregado", "Cancelado"];
@@ -30,7 +37,7 @@ const caja = (t: string) => `<div style="background:#fff;border:1px solid #e6dcc
 
 export function mailPedido(x: Pedido) {
   const envio = x.entrega === "envio", cant = x.cantidad || 1;
-  const det = `${cant} ${cant === 1 ? "ejemplar" : "ejemplares"} de <b>Asombro</b> × ${pesos(PRECIO)}${envio ? `<br>Envío por Andreani a domicilio: ${pesos(ENVIO)}` : `<br>Retiro en Habitat: sin costo de envío`}<br><b style="font-size:18px">Total: ${pesos(x.total || totalDe(cant, envio))}</b>`;
+  const det = `${cant} ${cant === 1 ? "ejemplar" : "ejemplares"} de <b>Asombro</b> × ${pesos(PRECIO)}${envio ? `<br>Envío a domicilio: ${pesos(ENVIO)}` : `<br>Retiro en Habitat: sin costo de envío`}<br><b style="font-size:18px">Total: ${pesos(x.total || totalDe(cant, envio))}</b>`;
   return marco("Habitat · Libro Asombro", "¡Gracias por tu pedido! 📖", [
     p(`Hola ${nom(x)}! Recibimos tu pedido del libro <i>Asombro</i>. Te dejamos el detalle y cómo pagarlo.`),
     caja(det),
@@ -38,15 +45,17 @@ export function mailPedido(x: Pedido) {
     x.clave ? `<p style="margin:18px 0"><a href="${linkComprobante(x)}" style="background:#10251d;color:#fbf8f2;font:700 15px Arial;padding:12px 20px;border-radius:999px;text-decoration:none">Subir el comprobante</a></p>` : "",
     p(`Si preferís, mandanos el comprobante respondiendo este mail o por <a href="https://wa.me/${WA}" style="color:#b8904f">WhatsApp</a>.`),
     envio
-      ? p(`<b>Envío:</b> apenas se acredite el pago lo despachamos por Andreani a <b>${esc(domicilio(x))}</b> y te mandamos el número de seguimiento.`)
+      ? p(`<b>Envío:</b> apenas se acredite el pago te lo mandamos a <b>${esc(domicilio(x))}</b> y te avisamos por mail cuando salga.`)
       : p(`<b>Retiro:</b> lo podés retirar en Habitat, Av. Juan Bautista Justo 8177, CABA. Te avisamos cuando esté listo.`),
     p("Que estas páginas te lleven a mirar a Jesús hasta quedar rendido ante Su belleza 🙌🏽"),
   ].join(""));
 }
 export function mailDespacho(x: Pedido) {
   return marco("Habitat · Libro Asombro", "Tu libro ya está en camino 📦", [
-    p(`Hola ${nom(x)}! Despachamos tu ejemplar de <i>Asombro</i> por Andreani a ${esc(domicilio(x))}.`),
-    x.tracking ? caja(`Número de seguimiento: <b style="font-size:18px">${esc(x.tracking)}</b><br>Lo podés seguir en <a href="https://www.andreani.com/" style="color:#b8904f">andreani.com</a> → «Seguí tu envío».`) : "",
+    (x.via || viaDe(x)) === "uber"
+      ? p(`Hola ${nom(x)}! Tu ejemplar de <i>Asombro</i> ya salió con un repartidor hacia ${esc(domicilio(x))}. Te llega en el transcurso del día.`)
+      : p(`Hola ${nom(x)}! Despachamos tu ejemplar de <i>Asombro</i> por Andreani a ${esc(domicilio(x))}.`),
+    (x.via || viaDe(x)) !== "uber" && x.tracking ? caja(`Número de seguimiento: <b style="font-size:18px">${esc(x.tracking)}</b><br>Lo podés seguir en <a href="https://www.andreani.com/" style="color:#b8904f">andreani.com</a> → «Seguí tu envío».`) : "",
     p("¡Que lo disfrutes!"),
   ].join(""));
 }
@@ -56,8 +65,8 @@ export function mailListo(x: Pedido) {
 export function mailAviso(x: Pedido) {
   const envio = x.entrega === "envio";
   return marco("Libro Asombro · nuevo pedido", `${esc(x.title || "")} pidió ${x.cantidad || 1} ${(x.cantidad || 1) === 1 ? "libro" : "libros"}`, [
-    caja(`<b>${esc(x.title || "")}</b><br>${esc(x.email || "")} · ${esc(x.telefono || "")}${x.dni ? "<br>DNI " + esc(x.dni) : ""}<br>${envio ? "Envío a " + esc(domicilio(x)) : "Retira en Habitat"}<br><b>Total ${pesos(x.total || 0)}</b>`),
-    p(envio ? "Los datos para cargar el envío en Andreani están listos en el panel." : "Cuando pague, marcalo como pagado en el panel y le avisamos que lo puede retirar."),
+    caja(`<b>${esc(x.title || "")}</b><br>${esc(x.email || "")} · ${esc(x.telefono || "")}${x.dni ? "<br>DNI " + esc(x.dni) : ""}<br>${envio ? "Envío a " + esc(domicilio(x)) + "<br>Sugerido: <b>" + (VIA[x.via || viaDe(x)] || "") + "</b>" + (x.km != null ? " (" + String(x.km).replace(".", ",") + " km de Habitat)" : "") : "Retira en Habitat"}<br><b>Total ${pesos(x.total || 0)}</b>`),
+    p(envio ? "Los datos para el envío están listos en el panel." : "Cuando pague, marcalo como pagado en el panel y le avisamos que lo puede retirar."),
     `<p style="margin:18px 0"><a href="${WEB}/libro-panel.html" style="background:#10251d;color:#fbf8f2;font:700 15px Arial;padding:12px 20px;border-radius:999px;text-decoration:none">Abrir pedidos del libro</a></p>`,
   ].join(""));
 }

@@ -5,7 +5,7 @@ import type { APIRoute } from "astro";
 import { auth, httpClient } from "@wix/essentials";
 import { items } from "@wix/data";
 import { emailDe, veLibro } from "../../lib/profe";
-import { CANALES, ENVIO, ESTADOS, PERFILES, PRECIO, PROVINCIAS, mailAviso, mailDespacho, mailPedido, mandar, marcarPagado, pesos, totalDe, type Pedido } from "../../lib/libro";
+import { kmDe, viaDe, VIA, CANALES, ENVIO, ESTADOS, PERFILES, PRECIO, PROVINCIAS, mailAviso, mailDespacho, mailPedido, mandar, marcarPagado, pesos, totalDe, type Pedido } from "../../lib/libro";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
@@ -90,6 +90,8 @@ export const POST: APIRoute = async ({ request }) => {
         cantidad: cant, total: totalDe(cant, envio), estado: "Nuevo", fecha: ahoraAR(), nota: s(x.nota, 300),
         canal: CANALES.includes(s(x.canal, 40)) ? s(x.canal, 40) : "", origen: "web", clave: crypto.randomUUID().replace(/-/g, "").slice(0, 20),
       };
+      // la casa marcada en el mapa: con eso sugerimos cómo mandarlo (Uber cerca, Andreani lejos)
+      { const la = Number(x.lat), lo = Number(x.lng); if (envio && isFinite(la) && isFinite(lo) && la < -21 && la > -56 && lo < -53 && lo > -74) { it.lat = Math.round(la * 1e5) / 1e5; it.lng = Math.round(lo * 1e5) / 1e5; it.km = kmDe(la, lo); } if (envio) it.via = viaDe(it); }
       it.title = (it.nombre + " " + it.apellido).trim();
       const falta: string[] = [];
       if (!it.nombre) falta.push("nombre");
@@ -171,6 +173,7 @@ export const POST: APIRoute = async ({ request }) => {
       if (x.dni !== undefined) it.dni = s(x.dni, 12).replace(/\D/g, "");
       if (x.perfil !== undefined) it.perfil = PERFILES.includes(s(x.perfil, 30)) ? s(x.perfil, 30) : "";
       if (x.canal !== undefined) it.canal = CANALES.includes(s(x.canal, 40)) ? s(x.canal, 40) : "";
+      if (x.via !== undefined && VIA[s(x.via, 10)]) it.via = s(x.via, 10);
       if (est === "Pagado" && antes !== "Pagado") {
         let pid = "", quien = "";
         if (x.probable && it.probable) { [pid, quien] = it.probable.split("|"); }
