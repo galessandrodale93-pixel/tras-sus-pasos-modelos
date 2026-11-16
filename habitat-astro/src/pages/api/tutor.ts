@@ -66,6 +66,8 @@ async function who(request: Request): Promise<Tutor | null> {
   return { ...t, rol, pagos: !!t.pagos || t.rol === "pagos", lista: !!t.lista || rol === "director", org: !!t.org, gastos: !!t.gastos };
 }
 
+const khPub = (j: Record<string, unknown>) => { let c = {}; try { c = JSON.parse(String(j.campus || "{}")); } catch { /* vacío */ } return { ...j, campus: c }; };
+
 export const OPTIONS: APIRoute = async () => new Response(null, { status: 204, headers: CORS });
 
 export const GET: APIRoute = async ({ request }) => {
@@ -85,6 +87,8 @@ export const GET: APIRoute = async ({ request }) => {
       tutores: tutores.map(({ email, ...t }) => (dir ? { email, ...t } : t)),
       voluntarios: voluntarios.map(({ clave, ...v }) => (dir ? { clave, ...v } : v)),
       debiRech: await debiRechazos(),
+      // Kids & Hero: el progreso de cada personaje, para acompañarlos y afirmarlos (el mail de la cuenta solo lo ven quienes organizan)
+      jugadores: (await all("KhJugadores").catch(() => [])).map((j) => { const { socio, email, campus, ...r } = j as Record<string, unknown>; let c = {}; try { c = JSON.parse(String(campus || "{}")); } catch { /* vacío */ } return { ...r, campus: c, ...(dir || me.org ? { email } : {}) }; }),
       materiales: dir || me.org ? (await all("ProfMaterial")).map((m) => ({ _id: m._id, claseId: m.claseId, title: m.title, url: m.url, mime: m.mime, para: m.para || "alumnos", avisado: m.avisado || "" })) : [],
       turnos, clases, plan, eventos: (ev as Record<string, unknown>[]).map(({ _createdDate, _updatedDate, _owner, ...x }) => x),
     });
@@ -143,6 +147,27 @@ export const POST: APIRoute = async ({ request }) => {
         const r = await ins("TutSeguimientos", data); return json({ ok: true, item: r });
       }
       case "seg-del": { await rem("TutSeguimientos", s(x.id, 120)); return json({ ok: true }); }
+      case "kh-jug": {
+        // datos que carga el equipo sobre un jugador de Kids & Hero: pareja de tutores (quien organiza), WhatsApp de la familia y una nota
+        const id = s(x.id, 60); if (!/^[a-zA-Z0-9-]{8,60}$/.test(id)) return json({ error: "jugador" }, 400);
+        const cur = (await q("KhJugadores").eq("_id", id).limit(1).find()).items[0] as Record<string, unknown> | undefined;
+        if (!cur) return json({ error: "No encontramos ese jugador." }, 404);
+        const it: Record<string, unknown> = { ...cur };
+        if ("tutores" in x) { if (!(me.rol === "director" || me.org)) return json({ error: "La pareja de tutores la asigna quien organiza." }, 403); it.tutores = s(x.tutores, 80); }
+        if ("whatsapp" in x) it.whatsapp = s(x.whatsapp, 30).replace(/[^\d+]/g, "");
+        if ("contacto" in x) it.contacto = s(x.contacto, 60);
+        if ("nota" in x) it.nota = s(x.nota, 1000);
+        const { _createdDate, _updatedDate, _owner, socio, email, ...out } = it;
+        await save("KhJugadores", { ...out, socio, email }); return json({ ok: true, item: khPub(out) });
+      }
+      case "kh-afirmar": {
+        // el tutor le escribió por WhatsApp: queda la fecha y el logro que afirmó, así deja de aparecer en «para afirmar»
+        const id = s(x.id, 60); if (!/^[a-zA-Z0-9-]{8,60}$/.test(id)) return json({ error: "jugador" }, 400);
+        const cur = (await q("KhJugadores").eq("_id", id).limit(1).find()).items[0] as Record<string, unknown> | undefined;
+        if (!cur) return json({ error: "No encontramos ese jugador." }, 404);
+        const { _createdDate, _updatedDate, _owner, ...it } = { ...cur, afirmado: new Date().toISOString(), afirmPor: por, afirmLogro: s(x.logro, 80), afirmVeces: (Number(cur.afirmVeces) || 0) + 1 } as Record<string, unknown>;
+        await save("KhJugadores", it); const { socio, email, ...pub } = it; return json({ ok: true, item: khPub(pub) });
+      }
       case "alumno": {
         const nuevo = !alu;
         const title = s(x.title, 120); if (!title) return json({ error: "Falta el nombre." }, 400);

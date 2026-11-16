@@ -303,3 +303,21 @@ body.tutor{background:var(--paper)}
 .tt-form .hb-pills .tt-pill.on{background:var(--ink)}
 .tt-form .hb-pills{gap:6px;align-content:flex-start}
 .tt-form .hb-pills .tt-pill{padding:6px 11px;font-size:.78rem}
+/* Kids & Hero en el panel de tutores */
+.kh-intro h2{margin:0 0 4px;font-family:var(--serif);font-weight:500}.kh-intro p{margin:0;color:var(--muted);font-size:.92rem}
+#v-kh > .tt-pills{margin:12px 0 0}
+.kh-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:14px}
+.kh-card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;display:grid;gap:10px;align-content:start}
+.kh-card.para{border-color:var(--gold);box-shadow:0 0 0 3px rgba(181,138,58,.12)}
+.kh-h{display:flex;gap:12px;align-items:center}.kh-h b{display:block}.kh-h small{color:var(--muted);font-size:.82rem}
+.kh-st{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.kh-st span{background:var(--soft);border-radius:12px;padding:8px 6px;text-align:center;font-size:.72rem;color:var(--muted);display:grid;gap:2px}
+.kh-st b{font-size:.95rem;color:var(--ink);font-variant-numeric:tabular-nums}
+.kh-chips{display:flex;flex-wrap:wrap;gap:6px}.kh-chip{font-size:.76rem;background:var(--gb);color:var(--g);border-radius:999px;padding:3px 9px}
+.kh-para{margin:0;background:var(--yb);color:var(--y);border-radius:12px;padding:8px 11px;font-size:.88rem;font-weight:600}
+.kh-ok{margin:0;color:var(--muted);font-size:.82rem}
+.kh-act{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.kh-none{font-size:.84rem;color:var(--muted)}
+.kh-ed summary{cursor:pointer;font-size:.86rem;color:var(--muted)}
+.kh-ed form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.kh-ed label{display:grid;gap:4px;font-size:.8rem;color:var(--muted)}
+.kh-ed label.w,.kh-ed .tt-tip,.kh-ed button{grid-column:1/-1}
+.kh-ed input,.kh-ed select,.kh-ed textarea{font:inherit;font-size:.9rem;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}

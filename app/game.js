@@ -320,12 +320,18 @@ function save(){
 function campusSummary(p){const ex=p.exams||{},exams={};REGIONS.forEach(R=>{const e=ex[R.id];if(e)exams[R.id]={etapa:R.name,aprobado:!!e.passed,nota:e.best||0,de:e.of||0,intentos:e.tries||(e.hist||[]).length||1,fecha:e.at||null};});
   let lv=1;try{lv=lvOf(total(p));}catch(e){}
   return {v:1,rama:branch,horas:Math.round((p.playMs||0)/36e5*10)/10,etapas:stagesDone(p),etapasTotal:REGIONS.length,examenes:exams,nivel:lv,puntos:total(p),insignias:(p.badges||[]).map(b=>({curso:b.name,don:b.donName||null,fecha:b.at})),dones:p.dones||{},frutos:(branch==='ados'&&window.W3&&W3.fruitVals)?W3.fruitVals():{},acciones:p.behav||{},vidaReal:Object.entries(p.vida||{}).map(([id,v])=>({id,fecha:v.d,texto:v.t})),sabiduriaMaterial:(p.mat&&p.mat.sabi)||0,actualizado:new Date().toISOString()};}
+/* el progreso de cada personaje llega al panel de tutores de Habitat (pestaña Kids & Hero), para que lo acompañen y lo afirmen.
+   Solo con cuenta; se manda cada 3 minutos o enseguida si hubo un logro nuevo (etapa, nivel, examen o insignia). */
+const KHT_API='https://www.habitat-cfm.org/api/kh-jugador';let khtLast=0,khtFp='';
+function khTutores(p,cs){try{const u=khUid();if(!u||p.demo)return;const fp=[cs.etapas,cs.nivel,Object.keys(cs.examenes||{}).filter(k=>cs.examenes[k].aprobado).length,(cs.insignias||[]).length].join('-');if(fp===khtFp&&Date.now()-khtLast<18e4)return;khtFp=fp;khtLast=Date.now();
+  fetch(KHT_API,{method:'POST',body:JSON.stringify({perfil:p.id,socio:u,email:khMail(),apodo:p.name,rama:branch==='ados'?'hero':'kids',edad:(p.avatar||{}).age||0,campus:cs,tester:KH_TESTER}),headers:{'Content-Type':'text/plain'},keepalive:true,credentials:'omit',mode:'cors'}).catch(()=>{});}catch(e){}}
 async function pushCloud(){
   const p=current;if(!p||p.demo)return;
   try{
     const cs=campusSummary(p);
     await patchItemFields('Perfiles',p.id,{estado:serialize(p),avatar:JSON.stringify(p.avatar),edad:p.avatar.age,puntos:total(p),etapas:stagesDone(p),medallas:p.medals.length,nivel:cs.nivel,horas:cs.horas,campus:JSON.stringify(cs)});
     if(p.rankId)await patchItemFields('Ranking',p.rankId,{apodo:p.name,avatar:JSON.stringify(p.avatar),puntos:total(p),etapas:stagesDone(p)});
+    khTutores(p,cs);
   }catch(e){console.warn(e);clearTimeout(saveT);saveT=setTimeout(pushCloud,8000);}
 }
 function fromItem(it){

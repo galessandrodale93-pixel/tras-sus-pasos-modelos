@@ -15,7 +15,7 @@ body = '''
 </div></section>
 <div class="tt-pop" id="ttNoti" hidden role="dialog" aria-label="Notificaciones"></div>
 <nav class="tt-tabs" id="ttTabs"><div class="wrap">
-  <button data-t="hoy" class="on">Hoy</button><button data-t="alumnos">Alumnos</button><button data-t="lista">Pasar lista</button><button data-t="mesa">Tiempo de mesa</button><button data-t="cal" hidden id="tabCal">Calendario</button><button data-t="clases" hidden id="tabCla">Clases y profes</button><button data-t="vol" hidden id="tabVol">Voluntarios</button><button data-t="equipo" hidden id="tabEq">Equipo</button>
+  <button data-t="hoy" class="on">Hoy</button><button data-t="alumnos">Alumnos</button><button data-t="lista">Pasar lista</button><button data-t="mesa">Tiempo de mesa</button><button data-t="kh">Kids &amp; Hero</button><button data-t="cal" hidden id="tabCal">Calendario</button><button data-t="clases" hidden id="tabCla">Clases y profes</button><button data-t="vol" hidden id="tabVol">Voluntarios</button><button data-t="equipo" hidden id="tabEq">Equipo</button>
 </div></nav>
 <div class="tt-main"><div class="wrap">
   <section id="v-hoy" class="tt-v"></section>
@@ -27,6 +27,7 @@ body = '''
     <div class="tt-pills" id="fPills"></div>
     <div class="tt-people" id="ttList"><p class="tt-empty">Cargando alumnos…</p></div>
   </section>
+  <section id="v-kh" class="tt-v" hidden></section>
   <section id="v-lista" class="tt-v" hidden>
     <div class="tt-bar">
       <label class="tt-date">Clase del <input id="lDate" type="date"></label>
@@ -116,7 +117,7 @@ org = B.head('Organización · Habitat', 'Organización de Habitat CFM.', 'organ
 org = org.replace('</head>', '<meta name="robots" content="noindex,nofollow">\n<link rel="stylesheet" href="/assets/campus.css">\n<link rel="stylesheet" href="/assets/tutor.css">\n' + POCSS + '</head>')
 org = org.replace('<body>', '<body data-solid="1" data-mode="org" class="campus tutor">')
 ob = body.replace('<p class="tt-k">Panel de tutores</p>', '<p class="tt-k">Panel de organización</p>')
-ob = ob.replace('<button data-t="hoy" class="on">Hoy</button><button data-t="alumnos">Alumnos</button><button data-t="lista">Pasar lista</button><button data-t="mesa">Tiempo de mesa</button>', '')
+ob = ob.replace('<button data-t="hoy" class="on">Hoy</button><button data-t="alumnos">Alumnos</button><button data-t="lista">Pasar lista</button><button data-t="mesa">Tiempo de mesa</button><button data-t="kh">Kids &amp; Hero</button>', '')
 ob = ob.replace('<button data-t="vol" hidden id="tabVol">Voluntarios</button>', '<button data-t="vol" hidden id="tabVol">Servicio</button>')
 ob = ob.replace('<section id="v-hoy" class="tt-v"></section>', '<section id="v-hoy" class="tt-v" hidden></section>')
 ob = ob.replace('<button data-t="equipo" hidden id="tabEq">Equipo</button>', '<button data-t="equipo" hidden id="tabEq">Equipo</button><button data-t="prof" id="tabProf">Profesores y opiniones</button>')
