@@ -4917,7 +4917,7 @@ function h3pose(av, t, dt, st) {
     h3aim(av, B, 'upperarm_r', 'lowerarm_r', .18, -.88, .48, p); h3aim(av, B, 'lowerarm_r', 'hand_r', .38, .8, .45, p); h3aim(av, B, 'upperarm_l', 'lowerarm_l', -.18, -.88, .48, p); h3aim(av, B, 'lowerarm_l', 'hand_l', -.38, .8, .45, p); }
   if (q > .01 && !mxWave && u.cur !== 'M_Waving') { h3aim(av, B, 'upperarm_r', 'lowerarm_r', -.85, .38, .18, q); h3aim(av, B, 'lowerarm_r', 'hand_r', -.15 + Math.sin(t * 11) * .38, 1, .15, q); }
   if (me) toolPose(av, B, t, dt, st);
-  if (me && S && S.swimK > .05) { const k = Math.min(1, S.swimK * 2.2), L = (p, q, w) => p + (q - p) * w; S.strK = (S.strK || 0) + ((S.swimMv ? 1 : 0) - (S.strK || 0)) * Math.min(1, dt * 4); const sk = S.strK, ph0 = S.swimPh || 0;
+  if (me && S && S.swimK > .05) { const k = Math.min(1, S.swimK * (S.swim ? 2.2 : 1)), L = (p, q, w) => p + (q - p) * w; S.strK = (S.strK || 0) + ((S.swimMv ? 1 : 0) - (S.strK || 0)) * Math.min(1, dt * 4); const sk = S.strK, ph0 = S.swimPh || 0;
     h3aim(av, B, 'spine_01', 'neck_01', 0, .97, -.24, k * sk); /* la espalda derecha y apenas arqueada, corra o camine la animación de base */
     ['l', 'r'].forEach((sd, i) => { const ph = ph0 + i * Math.PI, sx = sd === 'l' ? 1 : -1, c = Math.cos(ph), sn = Math.sin(ph), up = Math.max(0, -sn), dn = Math.max(0, sn), kk = Math.sin(ph0 * (sk > .5 ? 2.1 : 1.2) + i * Math.PI);
       h3aim(av, B, 'upperarm_' + sd, 'lowerarm_' + sd, L(sx * .75, sx * (.14 + .5 * up), sk), L(-.35 + .08 * c, c, sk), L(.4 + .14 * sn, .8 * dn - .42 * up, sk), k);
@@ -6192,7 +6192,7 @@ function svOn() { return !!(S && S.hx); }
 /* nadar: donde el agua es más honda que el pecho, el personaje se tiende y bracea. En Hero nadar cansa: la barra de aliento baja y, si se vacía, la corriente lo devuelve a la orilla */
 function swimTick(dt, a) {
   const av = S.av, deep = !!S.W && !S.pocket && S.W.hAt(a.x, a.z) < WATER.RL - 1.3 && S.gy < WATER.RL - .8 && !S.down, mov = !!(S.moving || S.freeMoving || S.walking);
-  S.swim = deep; S.swimMv = deep && mov; S.swimK = (S.swimK || 0) + ((deep ? (mov ? 1 : .3) : 0) - (S.swimK || 0)) * Math.min(1, dt * 3.5); S.swimUp = (S.swimUp || 0) + ((deep ? 1 : 0) - (S.swimUp || 0)) * Math.min(1, dt * 4); S.swimPh = (S.swimPh || 0) + dt * (mov ? 2.9 : 1.5);
+  S.swim = deep; S.swimMv = deep && mov; S.swimK = (S.swimK || 0) + ((deep ? (mov ? 1 : .3) : 0) - (S.swimK || 0)) * Math.min(1, dt * (deep ? 3.5 : 10)); if (!deep && S.swimK < .03) S.swimK = 0; S.swimUp = (S.swimUp || 0) + ((deep ? 1 : 0) - (S.swimUp || 0)) * Math.min(1, dt * (deep ? 4 : 10)); /* al salir del agua, la postura de nado se suelta enseguida */ S.swimPh = (S.swimPh || 0) + dt * (mov ? 2.9 : 1.5);
   if (!deep && !S.pocket && S.gy > WATER.RL - .5 && !blockedAt(a.x, a.z)) S.land = [a.x, a.z];
   av.rotation.order = 'YXZ'; av.rotation.x = S.swimK * 1.22; if (S.swimUp > .01) { const tg = WATER.RL - 1.3 + Math.max(0, Math.min(1, (S.swimK - .3) / .7)) * 1.02 + Math.sin(performance.now() / 420) * .04; a.y += (tg - a.y) * S.swimUp; } /* nadando, el cuerpo queda a ras del agua con la cabeza afuera; flotando, con el agua al cuello */
   if (S.grot && !S.pocket && performance.now() > (S.grotT || 0) && (a.x - S.grot.x) ** 2 + (a.z - S.grot.z) ** 2 < 16) { try { grotEnter(); } catch (e) { S.grotT = performance.now() + 4000; console.warn('[gruta]', e); } return; }
