@@ -1280,3 +1280,21 @@ body.v3on .v3surv .sv-stam{transform:translateY(calc(100% + 6px))}
 .dy-rb:hover{transform:translateY(-2px)}.dy-rb svg{width:46px;height:46px;filter:drop-shadow(0 3px 8px color-mix(in srgb,var(--rc) 55%,transparent))}.dy-rb b{font-size:15px}.dy-rb span{font-size:12px;opacity:.75}
 .dy-rb.nw::after{content:'';position:absolute;top:8px;right:10px;width:9px;height:9px;border-radius:50%;background:#FF5A4A}
 .dy-back{border:0;background:none;color:inherit;font:inherit;font-weight:800;opacity:.8;cursor:pointer;padding:2px 0 8px}
+
+/* gemas más vivas: brillo que cruza, anillo de progreso, destellos; las legendarias laten */
+.dy-gem{position:relative;width:64px;height:64px;display:grid;place-items:center}
+.dy-gem svg{position:relative;z-index:1}
+.dy-ring{position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--rc) var(--pc),rgba(255,255,255,.08) 0);-webkit-mask:radial-gradient(circle,transparent 27px,#000 28px);mask:radial-gradient(circle,transparent 27px,#000 28px)}
+.dy-rb{overflow:hidden}.dy-rb::before{content:'';position:absolute;inset:-40% auto -40% -60%;width:40%;transform:skewX(-20deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);animation:dyShine 3.6s ease-in-out infinite}
+.dy-rb.r-r::before{animation-delay:.5s}.dy-rb.r-e::before{animation-delay:1s}.dy-rb.r-l::before{animation-delay:1.5s;background:linear-gradient(90deg,transparent,rgba(255,236,170,.4),transparent)}
+@keyframes dyShine{0%,55%{left:-60%}85%,100%{left:130%}}
+.dy-sp{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 6px 2px var(--rc);opacity:0;animation:dySp 2.4s ease-in-out infinite}
+.dy-sp.s1{top:6px;right:10px}.dy-sp.s2{bottom:10px;left:6px;animation-delay:.8s}.dy-sp.s3{top:22px;left:0;animation-delay:1.6s}
+.dy-rb.r-c .dy-sp{display:none}.dy-rb.r-r .dy-sp.s3{display:none}
+@keyframes dySp{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
+.dy-rb.r-l{box-shadow:0 0 0 1px rgba(255,177,59,.4),0 0 22px rgba(255,177,59,.25)}.dy-rb.r-l svg{animation:dyBeat 2.2s ease-in-out infinite}
+.dy-rb.r-e svg{animation:dyBeat 3.2s ease-in-out infinite}
+@keyframes dyBeat{0%,100%{transform:scale(1);filter:drop-shadow(0 3px 8px color-mix(in srgb,var(--rc) 55%,transparent))}50%{transform:scale(1.08);filter:drop-shadow(0 0 14px var(--rc))}}
+@media (prefers-reduced-motion:reduce){.dy-rb::before,.dy-sp,.dy-rb svg{animation:none}}
+/* lo que falta descubrir: la silueta en sombra, sin signos de pregunta */
+.dy-i.sil svg,.dy-i.sil .dy-gi,.dy-i.sil .dy-e{filter:brightness(0) opacity(.42)}.dy-i.sil{background:rgba(0,0,0,.25)}
