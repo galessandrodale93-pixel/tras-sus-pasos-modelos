@@ -4918,6 +4918,7 @@ function h3pose(av, t, dt, st) {
   if (q > .01 && !mxWave && u.cur !== 'M_Waving') { h3aim(av, B, 'upperarm_r', 'lowerarm_r', -.85, .38, .18, q); h3aim(av, B, 'lowerarm_r', 'hand_r', -.15 + Math.sin(t * 11) * .38, 1, .15, q); }
   if (me) toolPose(av, B, t, dt, st);
   if (me && S && S.swimK > .05) { const k = Math.min(1, S.swimK * 2.2), L = (p, q, w) => p + (q - p) * w; S.strK = (S.strK || 0) + ((S.swimMv ? 1 : 0) - (S.strK || 0)) * Math.min(1, dt * 4); const sk = S.strK, ph0 = S.swimPh || 0;
+    h3aim(av, B, 'spine_01', 'neck_01', 0, .97, -.24, k * sk); /* la espalda derecha y apenas arqueada, corra o camine la animación de base */
     ['l', 'r'].forEach((sd, i) => { const ph = ph0 + i * Math.PI, sx = sd === 'l' ? 1 : -1, c = Math.cos(ph), sn = Math.sin(ph), up = Math.max(0, -sn), dn = Math.max(0, sn), kk = Math.sin(ph0 * (sk > .5 ? 2.1 : 1.2) + i * Math.PI);
       h3aim(av, B, 'upperarm_' + sd, 'lowerarm_' + sd, L(sx * .75, sx * (.14 + .5 * up), sk), L(-.35 + .08 * c, c, sk), L(.4 + .14 * sn, .8 * dn - .42 * up, sk), k);
       h3aim(av, B, 'lowerarm_' + sd, 'hand_' + sd, L(sx * .6, sx * (.08 - .25 * up), sk), L(-.1, c + .9 * up, sk), L(.7 + .2 * sn, .9 * dn + .35 * up, sk), k);
