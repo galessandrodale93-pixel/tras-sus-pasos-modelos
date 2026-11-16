@@ -66,6 +66,11 @@ export async function personalDe(email: string) {
   const porDia: Record<string, string[]> = {};
   turnos.forEach((t) => (porDia[t.fecha] = porDia[t.fecha] || []).push(t.tarea));
   const servicio = Object.entries(porDia).map(([f, ts]) => { const h = horario(f).llegada; return { _id: "srv-" + f, tipo: "Tu servicio", curso: "", title: [...new Set(ts)].join(" · "), descripcion: "Llegá a las " + h, inicio: iso(f, h), fin: iso(f, h, 180), lugar: "Habitat CFM" }; });
+  // el encuentro de fin de año del equipo (solo para dirección, tutores y voluntarios)
+  if (tu || vo) {
+    const eqs = (await q("VolEventos").eq("tipo", "equipo").ge("fecha", hoy).limit(5).find()).items as Esp[];
+    eqs.forEach((e) => { const h = /^\d{2}:\d{2}$/.test(e.hora || "") ? (e.hora as string) : "11:00"; servicio.push({ _id: "eq-" + e._id, tipo: "Equipo", curso: "", title: e.title || "Encuentro de fin de año", descripcion: "Encuentro del equipo de Habitat", inicio: iso(e.fecha, h), fin: iso(e.fecha, h, 240), lugar: e.lugar || "", link: "https://www.habitat-cfm.org/equipo-fin.html" } as unknown as (typeof servicio)[number]); });
+  }
   return { carreras: tu ? [] : al ? progsDe(al.carreras) : null, equipo: !!tu, servicio };
 }
 
