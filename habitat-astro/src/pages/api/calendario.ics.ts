@@ -35,8 +35,8 @@ export const GET: APIRoute = async ({ url }) => {
     const r = await items.query("CampusEventos").ge("inicio", desde).ascending("inicio").limit(200).find();
     evs = (r.items as Ev[]).filter((e) => !e.programId || !p || e.programId === p);
   } catch (e) { console.error("calendario", e); }
-  // sus clases (si el link trae ?c=Carrera) y la Zarza y el Selah, para todos
-  // link personal (?u=): sus clases (el equipo, todas), la Zarza, el Selah y sus turnos de servicio
+  // sus clases (si el link trae ?c=Carrera) y Zarza y Selah, para todos
+  // link personal (?u=): sus clases (el equipo, todas), Zarza, Selah y sus turnos de servicio
   let personal = false;
   try {
     const email = url.searchParams.get("u") ? await emailDeClave(url.searchParams.get("u") || "") : "";

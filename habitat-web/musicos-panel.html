@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Músicos de la Zarza · Habitat</title>
-<meta name="description" content="Músicos, repertorio y ensayos de la Zarza.">
-<meta property="og:title" content="Músicos de la Zarza · Habitat">
-<meta property="og:description" content="Músicos, repertorio y ensayos de la Zarza.">
+<title>Músicos de Zarza · Habitat</title>
+<meta name="description" content="Músicos, repertorio y ensayos de Zarza.">
+<meta property="og:title" content="Músicos de Zarza · Habitat">
+<meta property="og:description" content="Músicos, repertorio y ensayos de Zarza.">
 <meta property="og:image" content="https://static.wixstatic.com/media/43ca3b_c6ce05ca60a14606ad9863e52d5d8e9d~mv2.jpg/v1/fill/w_1200,h_630,al_c,q_82,enc_auto/43ca3b_c6ce05ca60a14606ad9863e52d5d8e9d.jpg">
 <meta name="theme-color" content="#10251d">
 <link rel="icon" type="image/png" href="https://static.wixstatic.com/media/43ca3b_2d985f94c5e04a82b1434561cce4cc35~mv2.png"><link rel="apple-touch-icon" href="https://static.wixstatic.com/media/43ca3b_2d985f94c5e04a82b1434561cce4cc35~mv2.png">
@@ -89,7 +89,7 @@ function modal(html,onOpen){var m=document.createElement('div');m.className='tt-
 async function load(){try{D=await api('GET',null,'?admin=1');}catch(e){$('#zWho').textContent=e.message;$('#zNext').innerHTML='<p class="tt-empty">'+esc(e.message)+'</p>';return;}var hoy=D.hoy;D.prox=D.zarzas.filter(function(z){return z.fecha>=hoy;});if(SEL>=D.prox.length)SEL=0;ED=null;draw();}
 function zsel(){return D.prox[SEL];}
 function draw(){
-  var me=A.user&&A.user();$('#zHola').textContent='Músicos de la Zarza';
+  var me=A.user&&A.user();$('#zHola').textContent='Músicos de Zarza';
   $('#zWho').textContent='Cargá a los músicos, armá el repertorio con los tonos y mirá quién viene y quién ensayó.';
   var z=zsel();
   if(!z){$('#zNext').innerHTML='<h2 class="tt-h">Próxima Zarza</h2><p class="tt-empty">No hay ninguna Zarza en el calendario. Cargala en Organización → Fechas especiales.</p>';$('#zRep').hidden=$('#zEq').hidden=true;drawMus();return;}
@@ -124,7 +124,7 @@ function drawEq(){
 function drawMus(){
   var box=$('#zMus'),M=D.musicos;
   box.innerHTML='<h2 class="tt-h">Músicos</h2><p class="tt-tip">Cargalos con su mail: les llega la bienvenida para entrar con Google (o con su link personal, sin cuenta). Ahí ven el repertorio, confirman si vienen y marcan lo que ensayaron.</p>'+
-    (M.map(function(m){return '<div class="zp-m"><div><b>'+esc(m.title)+'</b>'+(m.activo==='no'?' <small>(inactivo)</small>':'')+'<small>'+esc([m.instrumento,m.email,m.telefono].filter(Boolean).join(' · '))+'</small></div><div class="tt-wa"><button class="tt-btn s" type="button" data-cp="'+esc(m.link)+'">Copiar link</button>'+(m.telefono?'<a class="tt-btn s" target="_blank" rel="noopener" href="https://wa.me/'+esc(String(m.telefono).replace(/\D/g,''))+'?text='+encodeURIComponent('¡Hola '+String(m.title).split(' ')[0]+'! Este es tu link para la Zarza de Habitat: repertorio, tonos y confirmación 🎶 '+m.link)+'">WhatsApp</a>':'')+'<button class="tt-btn s" type="button" data-ed="'+esc(m._id)+'">Editar</button></div></div>';}).join('')||'<p class="tt-empty">Todavía no hay músicos cargados.</p>')+
+    (M.map(function(m){return '<div class="zp-m"><div><b>'+esc(m.title)+'</b>'+(m.activo==='no'?' <small>(inactivo)</small>':'')+'<small>'+esc([m.instrumento,m.email,m.telefono].filter(Boolean).join(' · '))+'</small></div><div class="tt-wa"><button class="tt-btn s" type="button" data-cp="'+esc(m.link)+'">Copiar link</button>'+(m.telefono?'<a class="tt-btn s" target="_blank" rel="noopener" href="https://wa.me/'+esc(String(m.telefono).replace(/\D/g,''))+'?text='+encodeURIComponent('¡Hola '+String(m.title).split(' ')[0]+'! Este es tu link para Zarza de Habitat: repertorio, tonos y confirmación 🎶 '+m.link)+'">WhatsApp</a>':'')+'<button class="tt-btn s" type="button" data-ed="'+esc(m._id)+'">Editar</button></div></div>';}).join('')||'<p class="tt-empty">Todavía no hay músicos cargados.</p>')+
     '<div class="tt-wa"><button class="tt-btn" type="button" id="zNew">+ Sumar músico</button></div>';
   $$('[data-cp]',box).forEach(function(b){b.onclick=function(){var t=b.dataset.cp;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){toast('Link copiado');}).catch(function(){prompt('Copiá el link:',t);});};});
   $$('[data-ed]',box).forEach(function(b){b.onclick=function(){musModal(D.musicos.filter(function(m){return m._id===b.dataset.ed;})[0]);};});

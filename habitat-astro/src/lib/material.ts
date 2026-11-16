@@ -69,7 +69,7 @@ export async function paraProyectar(hoy: string) {
     .filter((c) => c.items.length).sort((a, b) => a.fecha.localeCompare(b.fecha));
 }
 
-// Domingo: a los alumnos, invitación a la Zarza y al Selah de la semana que empieza (lunes a domingo).
+// Domingo: a los alumnos, invitación a Zarza y a Selah de la semana que empieza (lunes a domingo).
 type Esp = { _id: string; tipo: string; fecha: string; title?: string; hora?: string; lugar?: string; link?: string; nota?: string; avisoAlumnos?: string };
 export async function especialesSemana(lun: string, dry: boolean, remitente: string) {
   const fin = mas(lun, 6);

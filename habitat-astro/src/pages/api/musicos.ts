@@ -45,7 +45,7 @@ export const GET: APIRoute = async ({ request, url }) => {
       });
     }
     const m = await musicoDe(request, s(url.searchParams.get("k"), 60));
-    if (!m) return json({ error: request.headers.get("x-habitat-auth") ? "Tu cuenta no figura como músico de la Zarza. Pedile a Agustina que te sume con este mail." : "Este link no es válido. Pedile uno nuevo a Agustina." }, 404);
+    if (!m) return json({ error: request.headers.get("x-habitat-auth") ? "Tu cuenta no figura como músico de Zarza. Pedile a Agustina que te sume con este mail." : "Este link no es válido. Pedile uno nuevo a Agustina." }, 404);
     const zs = (await proximas()).slice(0, 3);
     const ens = zs.length ? ((await q("ZarEnsayos").eq("musicoId", m._id).ge("fecha", zs[0].fecha).limit(20).find()).items as Ensayo[]) : [];
     // quiénes van (sin datos de contacto)
@@ -59,7 +59,7 @@ export const GET: APIRoute = async ({ request, url }) => {
     });
   } catch (e) {
     console.error("musicos GET", e);
-    return json({ error: "No pudimos cargar la Zarza." }, 500);
+    return json({ error: "No pudimos cargar Zarza." }, 500);
   }
 };
 
@@ -96,7 +96,7 @@ export const POST: APIRoute = async ({ request }) => {
         let bienvenida: unknown = null;
         if (it.email && it.activo !== "no" && (!cur || !cur.bienvenida || x.reenviar)) {
           const z = (await proximas())[0];
-          const r = await mandar(it.email, "Bienvenido al equipo de músicos de la Zarza 🎶", mailBienvenida(it, z), await remitente());
+          const r = await mandar(it.email, "Bienvenido al equipo de músicos de Zarza 🎶", mailBienvenida(it, z), await remitente());
           if (r.ok) it.bienvenida = hoyAR();
           bienvenida = r.ok;
         }
@@ -122,7 +122,7 @@ export const POST: APIRoute = async ({ request }) => {
         const ms = (await todos<Musico>("ZarMusicos")).filter((m) => m.activo !== "no" && m.email);
         const rmt = await remitente();
         let ok = 0;
-        for (const m of ms) { const r = await mandar(m.email as string, "Ya está el repertorio de la Zarza 🎶", mailRepertorio(m, z), rmt); if (r.ok) ok++; }
+        for (const m of ms) { const r = await mandar(m.email as string, "Ya está el repertorio de Zarza 🎶", mailRepertorio(m, z), rmt); if (r.ok) ok++; }
         await save("VolEventos", { ...clean(z as unknown as Record<string, unknown>), avisoRep: hoyAR() });
         return json({ ok: true, enviados: ok, de: ms.length });
       }
