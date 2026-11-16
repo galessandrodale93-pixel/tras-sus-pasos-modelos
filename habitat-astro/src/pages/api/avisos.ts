@@ -1,5 +1,5 @@
 // Avisos por mail a los voluntarios. Lo llama un disparador programado:
-// · Todos los días (sin parámetros): avisos a profes, Sembradores y músicos de la Zarza (3 días antes y el mismo día). A los voluntarios ya no se les manda nada a diario.
+// · Todos los días (sin parámetros): avisos a profes, Sembradores y músicos de Zarza (3 días antes y el mismo día). A los voluntarios ya no se les manda nada a diario.
 // · Domingo a la noche (?semana=1): a cada voluntario, un solo mail con todo lo que le toca de lunes a domingo,
 //   incluidas las fechas especiales (Zarza, tiempo de mesa por Zoom y Selah con sus versículos).
 // GET /api/avisos[?semana=1]  ·  prueba: ?k=<TutConfig.cronKey>&dry=1[&fecha=YYYY-MM-DD][&semana=1]

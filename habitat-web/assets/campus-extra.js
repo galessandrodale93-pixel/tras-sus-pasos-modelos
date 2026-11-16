@@ -25,7 +25,7 @@
       var r = await q('CampusEventos', { filter: { inicio: { $gte: { $date: desde } } }, sort: [{ fieldName: 'inicio', order: 'ASC' }], paging: { limit: 100 } });
       var mine = {}; (pids || []).forEach(function (p) { mine[p] = 1; });
       var L = rows(r).filter(function (e) { return !e.programId || mine[e.programId]; });
-      // sus clases (por carrera) y la Zarza y el Selah
+      // sus clases (por carrera) y Zarza y Selah
       try { var tk = ''; try { await A.api('GET', '/members/v1/members/my'); tk = JSON.parse(localStorage.getItem('habitat:mtok')).a; } catch (e) {} var x = await fetch('/api/agenda?c=' + encodeURIComponent((carreras || []).join(',')), { headers: tk ? { 'x-habitat-auth': tk } : {} }).then(function (y) { return y.json(); }); L = L.concat(x.eventos || []); } catch (e) {}
       return L.map(function (e) { e.ini = d(e.inicio); e.end = d(e.fin); return e; }).filter(function (e) { return e.ini; }).sort(function (a, b) { return a.ini - b.ini; });
     },
