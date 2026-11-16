@@ -118,7 +118,7 @@
 .mc-c.out{visibility:hidden}.mc-c.past{color:rgba(16,37,29,.35)}.mc-c.hoy{outline:2px solid var(--gold);outline-offset:-2px}
 .mc-c.has{background:var(--paper);font-weight:700}.mc-c.sel{background:var(--ink);color:var(--cream)}
 .mc-c i{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);display:flex;gap:2px}.mc-c i em{width:5px;height:5px;border-radius:50%;background:var(--sea)}
-.mc-c i em.Examen,.mc-c i em.Entrega{background:#b0562f}.mc-c i em.Zarza,.mc-c i em.Selah{background:var(--gold)}.mc-c i em.srv{background:#1f8f4e}
+.mc-c i em.Equipo{background:#7a4fa0}.mc-c i em.Examen,.mc-c i em.Entrega{background:#b0562f}.mc-c i em.Zarza,.mc-c i em.Selah{background:var(--gold)}.mc-c i em.srv{background:#1f8f4e}
 .mc-d{border-top:1px solid var(--line);margin-top:10px;padding-top:10px;display:grid;gap:6px;max-height:190px;overflow:auto}
 .mc-i{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline;font-size:.88rem}.mc-i b{font-weight:700}.mc-i span{color:var(--muted);font-size:.8rem}
 .mc-i small{grid-row:span 2;font:600 .72rem var(--sans);color:var(--gold);text-transform:uppercase;min-width:42px}
@@ -227,6 +227,7 @@ var X=window.CampusExtra;
  var C=function(L,ok,id,href,ic,t,dsc,dato,hot){if(ok)L.push([id,href,ic,t,dsc,dato,hot]);};
  C(SV,r.musico,'mus','/musicos.html','🎶','Zarza','Repertorio, tonos y ensayos','');
  C(SV,r.voluntario,'vol','/voluntario.html','🙌🏽','Mi servicio','Tus turnos, avisos y el equipo del mes','');
+ C(dir?DI:SV,!!(r.tutor||r.voluntario),'efin','/equipo-fin.html','🎉','Fin de año del equipo','Sábado 5 de diciembre · 11 h',(function(){var n=Math.ceil((new Date(2026,11,5)-new Date().setHours(0,0,0,0))/864e5);return n>0?'Faltan '+n+' día'+(n===1?'':'s'):n===0?'¡Es hoy!':'Gracias por este año';})(),true);
  C(SV,r.intercesion,'ora','/intercesion.html','🙏','Intercesión y ayuno','El foco del día, los pedidos y tu turno',oraT,d.oracion===hoy||d.oracion===man);
  C(dir?DI:SV,r.org,'org','/organizacion.html','🗓️','Organización','Calendario, clases, servicio y equipo','');
  C(dir?DI:SV,dir||r.org,'zar','/musicos-panel.html','🎶','Músicos de Zarza','Repertorio, tonos y quién ensayó','');
