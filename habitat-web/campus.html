@@ -102,6 +102,7 @@
 .cal-hb{display:flex;gap:8px;flex-wrap:wrap}.cal-b{font:600 .88rem var(--sans);background:var(--ink);color:var(--cream);border:0;border-radius:12px;padding:11px 16px;cursor:pointer;text-decoration:none}.cal-b.s{background:var(--paper);color:var(--ink);border:1px solid var(--line)}
 .cal-hn{font-size:.85rem;margin-top:12px!important}
 .hside{display:grid;gap:16px;min-width:0}
+@media(min-width:861px){.cx-hero{padding-top:calc(100px + env(safe-area-inset-top,0px))!important;padding-bottom:40px!important}.cx-hero .wrap{grid-template-columns:1fr 1fr;grid-template-areas:"hi mc" "res mc";grid-template-rows:auto 1fr;align-items:start!important;row-gap:22px}.hside{display:contents}.cx-hero .hi{grid-area:hi;padding:6px 0 0!important}.cx-hero .resume{grid-area:res;max-width:520px}.mc{grid-area:mc;align-self:start}}
 .mc{background:#fff;border-radius:20px;padding:16px 16px 14px;box-shadow:0 18px 40px rgba(0,0,0,.18);color:var(--ink)}
 .mc-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px}.mc-h b{font:500 1.35rem var(--serif);text-transform:capitalize}
 .mc-n{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--paper);font:600 1.1rem var(--sans);cursor:pointer;color:var(--ink)}.mc-n:disabled{opacity:.3;cursor:default}
@@ -116,7 +117,7 @@
 .mc-i{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline;font-size:.88rem}.mc-i b{font-weight:700}.mc-i span{color:var(--muted);font-size:.8rem}
 .mc-i small{grid-row:span 2;font:600 .72rem var(--sans);color:var(--gold);text-transform:uppercase;min-width:42px}
 .mc-s{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.mc-sb{flex:1;min-width:120px;font:600 .8rem var(--sans);padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}.mc-sb:first-child{background:var(--ink);color:var(--cream);border-color:var(--ink)}
-.mc-e{margin:0;color:var(--muted);font-size:.88rem}
+.mc .mc-e{margin:0;color:var(--muted);font-size:.88rem}
 .mc-l{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.72rem;color:var(--muted);margin-top:6px}.mc-l span{display:inline-flex;align-items:center;gap:4px}.mc-l em{width:7px;height:7px;border-radius:50%;background:var(--sea);display:inline-block}
 </style>
 <section class="cx-sec" id="opina" hidden><div class="wrap">
