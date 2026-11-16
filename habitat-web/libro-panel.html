@@ -112,17 +112,25 @@ function draw(){stats();
    (V.length?V.map(card).join(''):'<p class="tt-empty">'+({cobrar:'No hay pedidos esperando el pago.',despachar:'No hay envíos pendientes 🙌🏽',retirar:'Nadie tiene que retirar por ahora.',todos:'Todavía no hay pedidos.'}[F])+'</p>');
   $$('#lbList [data-f]').forEach(function(b){b.onclick=function(){F=b.dataset.f;draw();};});
   if($('#lbCsv'))$('#lbCsv').onclick=csv;$('#lbVen').onclick=venta;
-  mapa(V.filter(function(x){return x.entrega==='envio';}));
+  mapa(V.filter(function(x){return x.entrega==='envio';}));ubicar(V);
   $$('#lbList [data-id]').forEach(function(el){var x=D.pedidos.find(function(p){return p._id===el.dataset.id;});
     $$('[data-act]',el).forEach(function(b){b.onclick=function(){act(b.dataset.act,x,b);};});});
 }
 /* cómo lo mandamos: Uber en CABA y alrededores (hasta 25 km de Habitat), Andreani más lejos. La sugerencia sale de la casa que marcó en el mapa; se puede cambiar. */
 var HAB=[-34.6332,-58.5037];
 function via(x){return x.via||(x.km!=null?(x.km<=25?'uber':'andreani'):(x.provincia==='CABA'?'uber':'andreani'));}
-function viaTag(x){var v=via(x);return '<span class="lb-via '+v+'">'+(v==='uber'?'🛵 Uber':'📦 Andreani')+(x.km!=null?' · '+String(x.km).replace('.',',')+' km':'')+'</span>';}
+function viaTag(x){var v=via(x);return '<span class="lb-via '+v+'">'+(v==='uber'?'🛵 Uber':'📦 Andreani')+(x.km!=null?' · '+(x.est?'≈ ':'')+String(x.km).replace('.',',')+' km':'')+'</span>';}
 function gmaps(x){return x.lat!=null?'https://www.google.com/maps/search/?api=1&query='+x.lat+','+x.lng:'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(dom(x));}
 function leaflet(){return new Promise(function(ok,ko){if(window.L)return ok();var c=document.createElement('link');c.rel='stylesheet';c.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(c);var j=document.createElement('script');j.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';j.onload=ok;j.onerror=ko;document.head.appendChild(j);});}
 var MAPA=null;
+/* pedidos de antes del mapa: los ubicamos por la dirección (estimado) para sugerir igual cómo mandarlos */
+function kmA(la,lo){var r=Math.PI/180,a=Math.pow(Math.sin((la-HAB[0])*r/2),2)+Math.cos(HAB[0]*r)*Math.cos(la*r)*Math.pow(Math.sin((lo-HAB[1])*r/2),2);return Math.round(12742*Math.asin(Math.sqrt(a))*10)/10;}
+var UBI=false;
+async function ubicar(V){if(UBI)return;var P=V.filter(function(x){return x.entrega==='envio'&&x.lat==null&&x.calle&&!x.via;}).slice(0,6);if(!P.length)return;UBI=true;var hubo=false;
+  for(var i=0;i<P.length;i++){var x=P[i],k='lb:geo:'+x._id,c=null;try{c=JSON.parse(sessionStorage.getItem(k)||'null');}catch(e){}
+    if(!c){try{var r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ar&q='+encodeURIComponent([[x.calle,x.numero].filter(Boolean).join(' '),x.localidad,x.provincia==='CABA'?'Ciudad Autónoma de Buenos Aires':x.provincia,'Argentina'].filter(Boolean).join(', ')));var a=await r.json();c=a&&a[0]?[+a[0].lat,+a[0].lon]:[0,0];try{sessionStorage.setItem(k,JSON.stringify(c));}catch(e){}}catch(e){c=null;}await new Promise(function(ok){setTimeout(ok,1100);});}
+    if(c&&c[0]){x.lat=c[0];x.lng=c[1];x.km=kmA(c[0],c[1]);x.est=1;hubo=true;}}
+  UBI=false;if(hubo)draw();}
 async function mapa(V){var el=$('#lbMap');if(!el)return;var P=V.filter(function(x){return x.lat!=null;});if(!P.length){el.hidden=true;return;}
   try{await leaflet();}catch(e){el.hidden=true;return;}
   if(MAPA){MAPA.remove();MAPA=null;}
