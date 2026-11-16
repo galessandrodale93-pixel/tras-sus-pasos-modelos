@@ -4197,9 +4197,9 @@ function gearHint(it, clear) {
   return it.desc.replace(/Casi nadie la encuentra\.?/, '').trim() + ' ' + how;
 }
 function invDiary(body) {
-  if (S && S.hx && !SEC.mod && !invDiary.ld) { invDiary.ld = 1; import('./story/secrets.js').then(m => { SEC.mod = SEC.mod || m; if (body.isConnected && body.dataset.t === 'di') invDiary(body); }).catch(() => {}); }
+  if (S && !SEC.mod && !invDiary.ld) { invDiary.ld = 1; import('./story/secrets.js').then(m => { SEC.mod = SEC.mod || m; if (body.isConnected && body.dataset.t === 'di') invDiary(body); }).catch(() => {}); }
   const p = dyP(), st = gearState(), lv = dyLevel(), clear = lv >= DY_LV, hx = !!(S && S.hx), M = SEC.mod, seen = p.dseen, isNew = k => !seen[k];
-  const secs = [['g', 'Prendas'], ['f', 'Hallazgos'], ...(hx && M ? [['s', 'Lugares secretos']] : []), ['l', 'Historias']];
+  const secs = [['g', 'Prendas'], ['f', 'Hallazgos'], ...(M ? [['s', 'Lugares secretos']] : []), ['l', 'Historias']];
   body.innerHTML = `<div class="dy"><div class="dy-tabs">${secs.map(([k, n]) => `<button data-k="${k}">${n}</button>`).join('')}</div><div class="dy-body"></div></div>`;
   const bx = body.querySelector('.dy-body'), lock = clear ? '' : `<p class="dy-lock">🔒 Desde el nivel ${DY_LV} las pistas se vuelven más claras.</p>`;
   const head = (n, tot, txt) => `<div class="dy-head"><b>${n}${tot ? ' <i>de ' + tot + '</i>' : ''}</b><span>${txt}</span>${tot ? `<div class="dy-bar"><em style="width:${Math.round(n / tot * 100)}%"></em></div>` : ''}</div>`;
@@ -8124,7 +8124,7 @@ function escAct(e) {
 const SEC = { mod: null, list: [] };
 function secP() { const p = G().P(); p.secrets = p.secrets || {}; p.relics = p.relics || []; return p; }
 async function secBuild(scene, W) {
-  if (!S.hx) return; const M = SEC.mod = await import('./story/secrets.js').catch(() => null); if (!M || !S) return; const g = G(); SEC.list = [];
+  const M = SEC.mod = await import('./story/secrets.js').catch(() => null); if (!M || !S) return; const g = G(); SEC.list = [];
   const used = Object.values(S.npos || {}).map(q => q.slice()).concat(VIL.npcs.map(v => [v.x, v.z]), Object.values(S.mis || {}).flatMap(m => [m.gp, m.tp, m.pp].filter(Boolean)));
   const ok = (x, z, wetOk) => { if (Math.abs(x) > Math.min(XB * .9, (W.X1 || XB) - 5)) return false; if (W.dAt(x, z) < 14) return false; if (!wetOk && waterWet(x, z, null) > .04) return false; for (const B of WATER.basins) if (Math.hypot(x - B.x, z - B.z) < B.r * 1.15 + 1) return false; const sl = Math.hypot(W.hAt(x + 1, z) - W.hAt(x - 1, z), W.hAt(x, z + 1) - W.hAt(x, z - 1)) / 2; if (sl > .4) return false; for (let k = 0; k < 8; k++) { const an = k / 8 * 6.283; if (blockedAt(x + Math.cos(an) * 1.6, z + Math.sin(an) * 1.6)) return false; } for (const u of used) if (Math.hypot(x - u[0], z - u[1]) < 10) return false; return true; };
   M.SECRETS.forEach((d, i) => { const r = g.REGIONS.findIndex(x => x.id === d.r); if (r < 0) return; const [za, zb] = regionZ(g, r), R = rng(7700 + i * 31), poi = d.near ? (S.pois || []).find(q => q.r === r && q.k === d.near) : null;
@@ -8136,13 +8136,13 @@ async function secBuild(scene, W) {
       if (d.id === 'cantera') phPlace('dry_branches_medium_01', sh.map(q => Object.assign({}, q, { s: 1.4 + R() * .5 })), { shadow: true, nocol: 1, force: 1 }); else phPlace('shrub_02', sh, { shadow: true, wind: 2, nocol: 1, force: 1 });
       if (d.id === 'barca' || d.id === 'manantial') { const rd = new THREE.InstancedMesh(new THREE.CylinderGeometry(.015, .022, 1, 4), tm('reed', '#6E8A44'), 60), m4 = new THREE.Matrix4(); for (let k = 0; k < 60; k++) { const an = R() * 6.283, rr = .3 + R() * 1.3; m4.makeScale(1, 1 + R() * 1.1, 1); m4.setPosition(Math.cos(an) * rr, .55, Math.sin(an) * rr); rd.setMatrixAt(k, m4); } grp.add(rd); }
       const hole = new THREE.Mesh(new THREE.CircleGeometry(.55, 16), new THREE.MeshBasicMaterial({ color: '#0E0B08' })); hole.rotation.x = -Math.PI / 2; hole.position.y = .03; hole.scale.y = .6; grp.add(hole); }
-    grp.position.set(x, y, z); grp.userData.keep = 1; scene.add(grp); SEC.list.push({ d, x, z, g: grp, r }); });
+    let spk = null; if (!S.hx) { spk = glowSpr('#FFE9A0', 1.4, .7); spk.position.y = 1.3; grp.add(spk); } /* en Kids, un brillito que se ve de cerca para que los encuentren */ grp.position.set(x, y, z); grp.userData.keep = 1; scene.add(grp); SEC.list.push({ d, x, z, g: grp, r, spk }); });
 }
-function secNear() { if (!SEC.list.length || S.pocket) return null; const a = S.av.position, p = secP(); for (const e of SEC.list) { if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < 2.6 * 2.6) return e; } return null; }
+function secNear() { if (!SEC.list.length || S.pocket) return null; const a = S.av.position, p = secP(); for (const e of SEC.list) { if (e.spk) e.spk.visible = !p.secrets[e.d.id] && (e.x - a.x) ** 2 + (e.z - a.z) ** 2 < 400; if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 < 2.6 * 2.6) return e; } return null; }
 function secOpen(e) {
   const p = secP(), d = e.d, first = !p.secrets[d.id], M = SEC.mod; if (S.secBusy) return;
   const show = () => { const n = Object.keys(p.secrets).length, el = document.getElementById('v3sheet');
-    el.innerHTML = `<div class="inv hx sv-sheet vil sec"><div class="inv-h"><b>${M.ENTRY[d.entry][1]} ${esc(d.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">${first ? '¡Descubriste un lugar secreto!' : 'Lugar secreto'} · ${n} de ${M.SECRETS.length}</small><p class="vil-p">${esc(d.t)}</p>
+    el.innerHTML = `<div class="inv${S.hx ? ' hx' : ' kd'} sv-sheet vil sec"><div class="inv-h"><b>${M.ENTRY[d.entry][1]} ${esc(d.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">${first ? '¡Descubriste un lugar secreto!' : 'Lugar secreto'} · ${n} de ${M.SECRETS.length}</small><p class="vil-p">${esc(d.t)}</p>
       <h4 class="x-h">Lo que guarda (único en todo el juego)</h4>${d.items.map(([nm, ic, ds, ref]) => `<div class="sec-it"><span>${ic}</span><div><b>${esc(nm)}</b><small>${esc(ds)}</small><em>${esc(ref)}</em></div></div>`).join('')}</div>`;
     el.hidden = false; el.querySelector('.bag-x').onclick = () => { el.hidden = true; }; };
   if (!first) { pocketEnter(e); return; }
@@ -8151,8 +8151,8 @@ function secOpen(e) {
     p.secrets[d.id] = vday(); d.items.forEach(([nm, ic, ds, ref]) => { if (!p.relics.some(x => x.n === nm)) p.relics.push({ n: nm, i: ic, d: ds, ref, from: d.name }); }); axGain('sab', 3); glowAdd(6, 'secreto'); behav('secretos'); G().save(); pocketEnter(e); setTimeout(show, 900); }, 2600);
 }
 /* ---------- adentro del lugar secreto: un mini escenario propio (cueva, cisterna, sótano…) que se arma al entrar y se desarma al salir ---------- */
-const SEC_THEME = { pastores: ['manger', 'lamb', 'embers'], taller: ['table', 'mill'], cisterna: ['jars'], manantial: ['jars'], profetas: ['linens', 'jars', 'embers'], barca: ['boat', 'nets'], lagar: ['press', 'jars'], pozo: ['jars', 'mill'], ezequias: ['jars'], cantera: ['cairn', 'cairn'], tumba: ['linens'], rollos: ['jars', 'table'] };
-const SEC_WET = new Set(['cisterna', 'manantial', 'barca', 'ezequias', 'pozo']);
+const SEC_THEME = { pastores: ['manger', 'lamb', 'embers'], taller: ['table', 'mill'], cisterna: ['jars'], manantial: ['jars'], profetas: ['linens', 'jars', 'embers'], barca: ['boat', 'nets'], lagar: ['press', 'jars'], pozo: ['jars', 'mill'], ezequias: ['jars'], cantera: ['cairn', 'cairn'], tumba: ['linens'], rollos: ['jars', 'table'], herodion: ['jars'], raquel: ['cairn'], sinagoga: ['table', 'jars'], egipto: ['embers', 'jars'], juan: ['embers'], magdala: ['nets', 'jars'], techo: ['table'], canastas: ['table', 'jars'], betesda: ['jars'], bodega: ['jars', 'table'], olivos: ['press'], caifas: ['linens'] };
+const SEC_WET = new Set(['cisterna', 'manantial', 'barca', 'ezequias', 'pozo', 'betesda']);
 function pocketEnter(e) {
   if (!S || S.pocket) return; const d = e.d, a = S.av.position, cx = e.x, cz = e.z, y0 = Math.max(0, S.W ? S.W.hAt(cx, cz) : 0) + 70, R = 7.5, Rn = rng(5000 + d.id.length * 37), g = new THREE.Group(), cols = [], items = [];
   g.position.set(cx, y0, cz); g.userData.keep = 1;
