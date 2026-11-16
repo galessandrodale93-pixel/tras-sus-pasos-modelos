@@ -3935,7 +3935,7 @@ function dayTick(dt) {
 
 /* ---------- vestimenta de la época: se encuentra rara vez en el camino o como premio de misión ---------- */
 const SLOTS = [['hat', 'Cabeza'], ['shirt', 'Túnica'], ['pants', 'Mano'], ['boots', 'Sandalias'], ['gloves', 'Muñequeras']]; /* ropa de la época: los ids de siempre, así nadie pierde lo que tiene */
-const RAR = { c: ['Común', '#C9C2B4', 60], r: ['Rara', '#6FB6FF', 28], e: ['Épica', '#C77DFF', 9], l: ['Legendaria', '#FFB13B', 2.5], u: ['Única · nunca se pierde', '#4FD1C5', 0] };
+const RAR = { c: ['Común', '#C9C2B4', 70], r: ['Rara', '#6FB6FF', 20], e: ['Épica', '#C77DFF', 7], l: ['Legendaria', '#FFB13B', 3], u: ['Única · nunca se pierde', '#4FD1C5', 0] };
 const GEAR = [
   { id: 'turbante', s: 'hat', r: 'c', t: 'turban', c: '#E8DDC6', name: 'Turbante de lino', desc: 'Una tela larga enrollada en la cabeza para cubrirse del sol del camino.' },
   { id: 'tocado', s: 'hat', r: 'c', t: 'cloth', c: '#D9CBB0', c2: '#3A2A1A', name: 'Tocado de pastor', desc: 'Paño de lana sujeto con un cordón, como el de los pastores de Belén en las noches de frío.' },
@@ -4086,8 +4086,11 @@ function lookOf(p) { const gs = p.gear || {}, eq = {}; for (const k in (gs.eq ||
 function gearOn(av) { const o = {}, e = (av && av.gear) || {}; SLOTS.forEach(([s]) => { if (GBY[e[s]]) o[s] = GBY[e[s]]; }); return o; }
 function gearRoll() {
   const st = gearState(), left = GEAR.filter(x => !st.own.includes(x.id) && x.r !== 'u' && !x.x); if (!left.length) return null;
-  const w = left.map(x => RAR[x.r][2]), tot = w.reduce((a, b) => a + b, 0); let r = Math.random() * tot, i = 0; while (r > w[i]) r -= w[i++];
-  return left[Math.min(i, left.length - 1)];
+  /* primero la rareza (común 70 %, rara 20 %, épica 7 %, legendaria 3 %) y después una prenda de esa rareza que todavía no tenga;
+     si ya tiene todas las de esa rareza, baja a la siguiente más común */
+  const ord = ['c', 'r', 'e', 'l'], u = Math.random() * 100; let k = u < 3 ? 'l' : u < 10 ? 'e' : u < 30 ? 'r' : 'c';
+  for (let j = ord.indexOf(k); j >= 0; j--) { const L = left.filter(x => x.r === ord[j]); if (L.length) return L[Math.floor(Math.random() * L.length)]; }
+  return left[Math.floor(Math.random() * left.length)];
 }
 /* una prenda rara, épica, legendaria o única no pasa desapercibida: la pantalla se detiene con rayos de su color,
    la prenda gira grande en el centro y se anuncia qué tipo de elemento es (tocar para seguir) */
