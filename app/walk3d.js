@@ -1592,7 +1592,7 @@ function buildMissions(scene, g, hx, HW, rr) {
   MISSIONS.forEach((d, i) => {
     const R = rng(900 + i), ns = regNodes(d.r); if (ns.length < 3) return; const slot = per[d.r]++, side = slot % 2 ? 1 : -1;
     const a = ns[Math.min(ns.length - 1, 1 + slot)], b = ns[Math.min(ns.length - 1, 3 + slot)];
-    let gx = a.position.x + side * 8, gz = a.position.z - .6; const own = d.id === 'taller' && S0.tallerJose, sp = own ? null : hx ? spot(d.r, R, slot * 2, null, d.at) : null; if (own) { [gx, gz] = own; used.push([gx, gz]); } if (sp) [gx, gz] = sp; const giver = npc(d.giver.look, gx, gz, own ? own[2] : sp ? Math.atan2(a.position.x - gx, a.position.z - gz) : -side * Math.PI / 2);
+    let gx = a.position.x + side * 8, gz = a.position.z - .6; const own = (d.id === 'taller' && S0.tallerJose) || (S0.templeSpots && S0.templeSpots[d.id]), sp = own ? null : hx ? spot(d.r, R, slot * 2, null, d.at) : null; if (own) { [gx, gz] = own; used.push([gx, gz]); } if (sp) [gx, gz] = sp; const giver = npc(d.giver.look, gx, gz, own ? own[2] : sp ? Math.atan2(a.position.x - gx, a.position.z - gz) : -side * Math.PI / 2);
     const bang = bangSprite(); bang.position.set(gx, yAt(gx, gz) + 2.35, gz); scene.add(bang);
     const m = { d, giver, bang, gp: [gx, gz] };
     if (d.kind === 'act') { const poi = (S0.pois || []).find(q => q.k === (d.place || 'temple')); let tx = poi ? poi.x : b.position.x - side * 8, tz = poi ? poi.z : b.position.z; if (poi && poi.k === 'river') { const q = poi.pts[Math.floor(poi.pts.length / 2)]; tx = q[0] - 3.3; tz = q[1]; } if (poi && poi.k === 'temple') { tx = poi.x - poi.side * 6.5; tz = poi.z; } if (poi && poi.k === 'lake') { tx = poi.x - poi.side * 33; tz = poi.z + 9; } if (poi && poi.k === 'shore') { tx = poi.x - poi.side * 6; tz = poi.z + 2; } if (poi && poi.k === 'golgota') { tx = poi.x - poi.side * 5; tz = poi.z + 3; } if (poi && poi.k === 'tomb') { tx = poi.x - poi.side * 5; tz = poi.z + 2; } if (poi && poi.k === 'garden') { tx = poi.x - poi.side * 2.5; tz = poi.z + 2.5; } if (poi && poi.k === 'inn') { tx = poi.x - poi.side * 6; tz = poi.z - 2; } if (poi && poi.k === 'roofhouse') { tx = poi.x - poi.side * 6; tz = poi.z + 1.5; } if (poi && poi.k === 'village') { tx = poi.x - poi.side * 1.6; tz = poi.z + 1.6; if (S0.belenStable && poi.name === 'Belén') [tx, tz] = S0.belenStable; }
@@ -1986,6 +1986,8 @@ function bigTemple0(scene, x, z, side, hx, yAt) {
 function templeLife(scene, x, z, side, hx, yAt) {
   const rot = side > 0 ? -Math.PI / 2 : Math.PI / 2, c = Math.cos(rot), s = Math.sin(rot), P = .9, y0 = yAt(x, z) + P;
   const W = (lx, lz) => [x + lx * c + lz * s, z - lx * s + lz * c];
+  // Simeón espera en el atrio, cerca de la entrada; el maestro, junto al rincón de los maestros (las misiones los toman de acá)
+  S.templeSpots = { ana: [...W(3, 9.5), rot], leer1: [...W(-10, -2.5), rot] };
   // tres maestros sentados en el banco del fondo, con un rollo abierto delante
   { const L = [{ g: 'chico', age: 18, skin: '#D6A57C', hair: '#CFCFCF', outfit: '#3E4A6A' }, { g: 'chico', age: 18, skin: '#C99A72', hair: '#5A5A5A', outfit: '#6A5A4A' }, { g: 'chico', age: 18, skin: '#B98A62', hair: '#E0E0E0', outfit: '#E8DDC6' }];
     const si = [-1.1, 0, 1.1].map((u, i) => { const [wx, wz] = W(-13.5 + u, -4); return { x: wx, y: y0 + .05, z: wz, ry: rot, s: .96, v: i }; }); crowdPlace(scene, si, L, 'Sitting_Idle_Loop', true);
