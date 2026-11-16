@@ -7576,7 +7576,7 @@ function vivoBuild(scene, hx) {
     if (E.talk) { const T = E.talk, pos = vivoAt(T.at, T.off); if (pos) { const [x, z] = pos, o = (hx || H3.ok) ? buildHeroAvatar(Object.assign({}, T.look)) : buildAvatar(T.look, false); o.userData.stay = 1; if (!(hx || H3.ok)) o.scale.setScalar(1.08); o.position.set(x, yAt(x, z), z); const q = (S.pois || []).find(o2 => o2.name === T.at); o.rotation.y = q ? Math.atan2(q.x - x, q.z - z) : 0; o.traverse(m => { if (m.isMesh) m.castShadow = true; if (m.isPointLight) m.intensity = 0; }); scene.add(o); S.cols.push({ x0: x - .35, x1: x + .35, z0: z - .35, z1: z + .35, cx: x, cz: z, r: .3 });
       S.lore.push({ x: x + Math.sin(o.rotation.y) * 1.2, z: z + Math.cos(o.rotation.y) * 1.2, r: 2, label: 'Hablar con ' + T.name, act: () => vivoTalk(+r, o) }); } }
     // la fogata (Hero, con los compañeros)
-    if (E.fire && hx) { const F = E.fire, pos = vivoAt(F.at, F.off); if (pos) S.lore.push({ x: pos[0], z: pos[1], r: 1.8, label: 'Sentarse con tus compañeros', act: () => vivoFire(+r) }); }
+    if (E.fire) { const F = E.fire, pos = vivoAt(F.at, F.off); if (pos) S.lore.push({ x: pos[0], z: pos[1], r: 1.8, label: 'Sentarse con tus compañeros', act: () => (cineOk() ? vivoFire(+r) : vivoSheetFire(+r)) }); } /* en Kids también: la fogata va en una hoja con botones */
     // las preguntas de la gente
     if (E.quiz) { const Q = E.quiz, pos = vivoAt(Q.at, Q.off); if (pos) { const [x, z] = pos, o = (hx || H3.ok) ? buildHeroAvatar(Object.assign({}, Q.look)) : buildAvatar(Q.look, false); o.userData.stay = 1; if (!(hx || H3.ok)) o.scale.setScalar(1.08); o.position.set(x, yAt(x, z), z); const q = (S.pois || []).find(o2 => o2.name === Q.at); o.rotation.y = q ? Math.atan2(q.x - x, q.z - z) : 0; o.traverse(m => { if (m.isMesh) m.castShadow = true; if (m.isPointLight) m.intensity = 0; }); scene.add(o); S.cols.push({ x0: x - .35, x1: x + .35, z0: z - .35, z1: z + .35, cx: x, cz: z, r: .3 });
       S.lore.push({ x: x + Math.sin(o.rotation.y) * 1.2, z: z + Math.cos(o.rotation.y) * 1.2, r: 2, label: 'Hablar con ' + Q.name, act: () => vivoQuiz(+r, o) }); } }
@@ -7603,6 +7603,14 @@ function vivoSheetTalk(r) { const T = VIVO[r].talk, v = vivoP(), seen = new Set(
 function vivoFire(r) { const F = VIVO[r].fire; if (!cineOk()) return; const v = vivoP();
   const steps = F.steps.map(([who, t]) => ({ who, t })).concat([{ who: F.ask[0], ask: F.ask[1], o: F.o.map(([t, k, rep]) => ({ t, fn: () => { INCL(k); v['fire' + r] = 1; G().save(); }, then: rep.map(([who, t2]) => ({ who, t: t2, g: 'nod' })) })) }], F.end.map(([who, t]) => ({ who, t })));
   cine({ cast: { esc: {}, zel: {} }, steps, onDone: () => { if (v['fire' + r]) sello('fogata-' + r, 'Una noche junto al fuego'); } }); }
+/* Kids (y si no hay cine): la fogata en una hoja, con las voces de Eleazar y Asher y tu respuesta con botones */
+function vivoSheetFire(r) { const F = VIVO[r].fire, v = vivoP(), NM = { esc: 'Eleazar', zel: 'Asher' }, VC = { esc: 'esc', zel: 'zel', nar: 'narrador' };
+  const lines = L => L.map(([w, t]) => `<p class="vil-p">${NM[w] ? `<b>${NM[w]}:</b> ` : ''}${esc(t)}</p>`).join('');
+  const say2 = L => { try { L.forEach(([w, t], k) => G().vo(t, VC[w] || 'narrador', { queue: k > 0 })); } catch (e) {} };
+  const head = `<div class="inv-h"><b>🔥 Junto al fuego</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">Con Eleazar y Asher</small>`;
+  const first = F.steps.concat([F.ask]);
+  vilSheet(head + lines(first) + `<div class="vivo-o">${F.o.map((o, i) => `<button data-i="${i}">${esc(o[0])}</button>`).join('')}</div>`, el => { say2(first); el.querySelectorAll('.vivo-o button').forEach(bt => bt.onclick = () => { const o = F.o[+bt.dataset.i]; INCL(o[1]); v['fire' + r] = 1; G().save(); try { G().voStop(); } catch (e) {} const rest = o[2].concat(F.end);
+    vilSheet(head + `<p class="vil-p"><i>${esc(o[0])}</i></p>` + lines(rest), () => { say2(rest); sello('fogata-' + r, 'Una noche junto al fuego'); }); }); }); }
 /* preguntas de la gente: tres por día, con monedas por cada acierto */
 function vivoQuiz(r, o) { const Q = VIVO[r].quiz, v = vivoP(), d = vday(), st = v[Q.id] = v[Q.id] || { d: -1, i: 0 }; if (st.d === d) { if (cineOk()) cine({ cast: { m: { o, name: Q.name, sub: Q.sub, voice: Q.voice } }, steps: [{ who: 'm', t: Q.bye }] }); else svToast(Q.name + ': ' + Q.bye); return; }
   const pick = [0, 1, 2].map(k => Q.q[(st.i + k) % Q.q.length]); let ok = 0; const dn = Math.floor(Date.now() / 864e5); /* número de día: vday() es texto y rompía el orden de las opciones */
