@@ -1270,3 +1270,6 @@ body.v3on .v3surv .sv-stam{transform:translateY(calc(100% + 6px))}
 .ex-req{margin:10px 0;text-align:left}.ex-req-h{display:flex;justify-content:space-between;gap:10px;font-size:14px}.ex-req-h span{opacity:.8;white-space:nowrap}
 .ex-req i{display:block;height:8px;border-radius:6px;background:rgba(255,255,255,.14);overflow:hidden;margin:6px 0 4px}.ex-req i u{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#E6B04A,#F5D27A)}
 .ex-req.ok i u{background:linear-gradient(90deg,#5FB36A,#8FD48F)}.ex-req small{display:block;font-size:12px;opacity:.75;line-height:1.35}
+
+/* etapas vivas: opciones de charla y preguntas en la hoja (Kids) */
+.vivo-o{display:flex;flex-direction:column;gap:8px;margin-top:12px}.vivo-o button{text-align:left;padding:11px 14px;border-radius:12px;border:1px solid rgba(233,195,122,.45);background:rgba(233,195,122,.12);color:inherit;font:inherit;font-weight:700;cursor:pointer}.vivo-o button.seen{opacity:.6}.vivo-o button:hover{background:rgba(233,195,122,.22)}

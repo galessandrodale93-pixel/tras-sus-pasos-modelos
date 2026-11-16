@@ -808,7 +808,7 @@ const KL = {};
   buildStep('lugares'); buildPois(scene, pois, hx, HW, rng(77), ribbon); buildStep('pueblos'); S.pois = pois; buildTowns(scene, g, hx, HW, pois); buildStep('puertas y misiones'); ambReset(); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; setTimeout(() => tutOpen(), 1500); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); }, 0);
   buildStep('hitos'); try { scatterNodes(g, HW); if (S.npos[g.P().pos]) { const q = S.npos[g.P().pos]; av.position.set(q[0], 0, q[1]); } } catch (e) { console.warn('hitos', e); } S.spawn = [av.position.x, av.position.z];
   try { fieldFinds(scene, hx, HW); } catch (e) { console.warn('hallazgos', e); }
-  S0 = S; try { attrMigrate(); } catch (e) { console.warn('migración de atributos', e); } insMigrate(); setTimeout(glowUI, 400); S.mis = buildMissions(scene, g, hx, HW); { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
+  S0 = S; try { attrMigrate(); } catch (e) { console.warn('migración de atributos', e); } insMigrate(); setTimeout(glowUI, 400); S.mis = buildMissions(scene, g, hx, HW); try { vivoBuild(scene, hx); } catch (e) { console.warn('etapa viva', e); } { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
   const nx = nextList()[0]; if (nx) { const N = g.NODES[nx], [bx, bz] = toV(N.x, N.y); S.yaw = Math.atan2(bx - ax, bz - az); }
   av.rotation.y = S.yaw;
   try { const sv = posLoad(); if (sv) { av.position.set(sv.x, 0, sv.z); S.yaw = sv.yaw; av.rotation.y = sv.yaw; } } catch (e) {}
@@ -2824,7 +2824,7 @@ function judeaTick(dt, t) {
 }
 /* lugares para tocar: en Hero con la acción, en Kids se abren solos al acercarse */
 function loreNear(r) { if (!S || !S.lore) return null; const a = S.av.position; let best = null, bd = r * r; for (const l of S.lore) { const d = (l.x - a.x) ** 2 + (l.z - a.z) ** 2; if (d < (l.r || r) ** 2 && d < bd + 4) { bd = d; best = l; } } return best; }
-function loreDo(l) { try { if (Array.isArray(l.info) && l.info[0]) { const dp = dyP(); if (!dp.dlore[l.info[0]]) { dp.dlore[l.info[0]] = l.info[2] || 1; G().save(); } } } catch (e) {} placeCard(l.info); l.t = 0; l.on = 1; l.done = 1; if (l.go) try { l.go(); } catch (e) {} }
+function loreDo(l) { if (l.act) { l.t = 0; l.on = 1; try { l.act(l); } catch (e) { console.warn('acción', e); } return; } try { if (Array.isArray(l.info) && l.info[0]) { const dp = dyP(); if (!dp.dlore[l.info[0]]) { dp.dlore[l.info[0]] = l.info[2] || 1; G().save(); } } } catch (e) {} placeCard(l.info); l.t = 0; l.on = 1; l.done = 1; if (l.go) try { l.go(); } catch (e) {} }
 /* cada lugar para tocar tiene una chispa dorada que flota y un anillo en el piso: se ve de lejos y desaparece cuando ya lo descubriste */
 function loreMark(l) { const g = new THREE.Group(), sp = glowSpr('#FFD47A', 1.1, .85), core = new THREE.Mesh(new THREE.OctahedronGeometry(.13, 0), new THREE.MeshBasicMaterial({ color: '#FFE9B0' })), rg = new THREE.Mesh(new THREE.RingGeometry(.55, .68, 32), new THREE.MeshBasicMaterial({ color: '#FFD47A', transparent: true, opacity: .55, depthWrite: false, side: THREE.DoubleSide }));
   sp.position.y = 1.9; core.position.y = 1.9; rg.rotation.x = -Math.PI / 2; rg.position.y = .06; g.add(sp, core, rg); const y = Math.max(mapH(l.x, l.z), WATER.RL || -99); g.position.set(l.x, y, l.z); S.scene.add(g); l.mk = { g, sp, core, rg }; }
@@ -3156,7 +3156,7 @@ function roomTick(dt) {
     const dT = Math.max(1.8, Math.min(S.camKeep ? S.camKeep.d : 6, 5.2, room / Math.max(.25, Math.cos(pT))));
     S.camDist += (dT - S.camDist) * Math.min(1, dt * 3); S.camPitch += (Math.max(S.camKeep ? S.camKeep.p : .4, pT) - S.camPitch) * Math.min(1, dt * 3); }
   const here = inR || openR; if (here && here.trade && TRADE_INFO[here.trade]) { const p = G().P(); p.seen = p.seen || {}; if (!p.seen[here.trade]) { p.seen[here.trade] = 1; G().save(); placeCard(TRADE_INFO[here.trade]); } }
-  try { poiLbTick(dt); } catch (e) {} if (S.lore && S.lore.length) loreTick(dt); if (S.desert) desertTick(dt); if (S.garden) gardenTick(dt); if (S.tomb) tombTick(dt); if (S.jordan) jordanTick(dt); if (S.golg) golgotaTick(dt); if (S.past) pastoresTick(dt);
+  try { poiLbTick(dt); } catch (e) {} if (S.lore && S.lore.length) loreTick(dt); if (S.vivo) try { vivoTick(dt); } catch (e) {} if (S.desert) desertTick(dt); if (S.garden) gardenTick(dt); if (S.tomb) tombTick(dt); if (S.jordan) jordanTick(dt); if (S.golg) golgotaTick(dt); if (S.past) pastoresTick(dt);
   if (S.lake) { S.lake.uni.t.value += dt; S.lake.boats.forEach((b, i) => { b.position.y = b.userData.y0 + Math.sin(S.t * 1.2 + i) * .06; b.rotation.z = Math.sin(S.t * .9 + i * 2) * .04; }); (S.lake.fishers || []).forEach(f => { f.t -= dt; const n = f.net;
     if (f.k < 0 && f.t <= 0) { h3npcPlay(f.o, ['M_Throw', 'M_Picking_Up'], 2.2); f.k = 0; const wp = new THREE.Vector3(); f.o.getWorldPosition(wp); const q = f.o.getWorldQuaternion(new THREE.Quaternion()), fw = new THREE.Vector3(0, 0, 1).applyQuaternion(q); n.position.set(wp.x + fw.x * 3.2, WATER.WL + .03, wp.z + fw.z * 3.2); n.visible = true; }
     if (f.k >= 0) { f.k += dt; const e = f.k < .7 ? 0 : Math.min(1, (f.k - .7) / .6); n.scale.setScalar(.2 + e * 2.2); n.material.opacity = f.k < 5 ? Math.min(.85, e) : Math.max(0, .85 - (f.k - 5) * .6); n.position.y = WATER.WL + .03 - Math.max(0, f.k - 3) * .05; if (f.k > 6.5) { n.visible = false; f.k = -1; f.t = 9 + Math.random() * 8; h3npcPlay(f.o, ['M_Picking_Up', 'M_Lifting_Object'], 2); } } }); }
@@ -7127,6 +7127,111 @@ const repOf = name => { const r = repP(); return r[name] == null ? 45 : r[name];
 const repStars = name => Math.max(1, Math.min(5, 1 + Math.floor(repOf(name) / 20)));
 function repAdd(name, n) { if (!name) return; const r = repP(); let k = n; if (n > 0 && fv('amor') >= 40) k += 1; r[name] = Math.max(0, Math.min(100, repOf(name) + k)); G().save(); }
 function vilNearest(maxD) { const a = S.av.position; let best = null, bd = (maxD || 40) ** 2; for (const v of VIL.list) { const d = (v.x - a.x) ** 2 + (v.z - a.z) ** 2; if (d < bd) { bd = d; best = v; } } return best; }
+/* ===== Etapas vivas: el material del alumno contado jugando. Por etapa: una charla con un personaje (con voz), rollos escondidos,
+   la fogata con los compañeros (Hero), preguntas de la gente del lugar y el narrador mientras jugás. Piloto: Nacimiento (etapa 0). ===== */
+const VIVO = {
+  0: {
+    talk: { at: 'Campos de los pastores', off: [3.6, 3.2], id: 'eliab', name: 'Eliab', sub: 'pastor de Belén', voice: 'past', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#BDBDBD', outfit: '#7A6A4A' },
+      hi: ['¡Shalom! ¿Venís por lo de aquella noche? Todavía me tiemblan las manos cuando lo cuento.'],
+      ask: '¿Qué querés saber?',
+      q: [
+        ['¿Qué pasó esa noche?', ['Estábamos cuidando las ovejas acá mismo. De golpe nos rodeó una luz más fuerte que el día. Era un ángel del Señor, y tuvimos muchísimo miedo.', 'Nos dijo que no tuviéramos miedo, que traía una buena noticia para todo el pueblo: había nacido el Salvador, el Mesías, en la ciudad de David.', 'Y enseguida apareció un ejército de ángeles alabando a Dios. Nunca voy a olvidar ese canto.'], 'evangelista'],
+        ['¿Por qué se lo dijeron a ustedes?', ['Eso me pregunto siempre. Nosotros éramos pastores: gente sencilla, que dormía al aire libre con los animales. Nuestra palabra ni siquiera valía en un juicio.', 'Y sin embargo Dios eligió que fuéramos los primeros en escuchar la noticia. Así es su corazón: mira a los humildes.'], 'pastor'],
+        ['¿Qué hicieron después?', ['¡Fuimos corriendo a Belén! Encontramos al bebé tal como nos había dicho el ángel: envuelto en tiras de tela, acostado en un pesebre.', 'Después le contamos a todo el que se nos cruzaba. No podíamos quedarnos callados. Y su madre, María, guardaba todo en su corazón.'], 'evangelista']
+      ],
+      bye: ['Gracias, Eliab', 'Si te cruzás con alguien triste, contale esta noticia. Es para todos.'] },
+    scrolls: [
+      ['Belén', [-9, 6], 'Belén quiere decir «casa del pan». El que más tarde diría que es el pan de vida nació en la casa del pan, y lo acostaron donde comen los animales.'],
+      ['Belén', [8, -10], 'El nombre Jesús, en hebreo Yeshúa, quiere decir «el Señor salva». Así le dijo el ángel a María que tenía que llamarlo.'],
+      ['Campos de los pastores', [-10, -9], 'José nunca dice una sola palabra en los evangelios. Lo conocemos por lo que hace: cuando Dios le habló en un sueño, obedeció sin demora.'],
+      ['Campos de los pastores', [11, 7], 'Emanuel quiere decir «Dios está con nosotros». Isaías lo había anunciado siglos antes, y Mateo lo vio cumplido en Jesús.'],
+      ['Campos de los pastores', [-4, 13], 'Juan dice que la Palabra se hizo hombre y vino a vivir entre nosotros. La palabra que usa es la de armar una carpa: Dios plantó su carpa en nuestro barrio.']
+    ],
+    fire: { at: 'Campos de los pastores', off: [-1.2, -3.4], steps: [
+      ['nar', 'Es de noche en los campos de Belén. Eleazar y Asher se sientan con vos junto al fuego.'],
+      ['zel', 'Sigo sin entenderlo. Un rey que nace en un establo, ¿y lo primero que hace Dios es avisarles a unos pastores?'],
+      ['esc', 'Juan lo explica mejor que nadie: la Palabra se hizo hombre y vino a vivir entre nosotros. Dios no nos mira de lejos.']],
+      ask: ['zel', '¿Vos qué pensás? ¿Puede un rey nacer así?'],
+      o: [
+        ['Sí. Así muestra que es para todos, también para los humildes.', 'pastor', [['esc', 'Eso mismo cantó María: Dios mira a los humildes y llena de bienes a los que tienen hambre.']]],
+        ['No sé… a mí también me cuesta entenderlo.', 'maestro', [['esc', 'Está bien preguntar. María tampoco entendía todo, pero guardaba esas cosas en su corazón y pensaba en ellas.']]],
+        ['Tal vez Dios hace las cosas al revés que nosotros.', 'profeta', [['zel', 'Al revés… Los regalos de los magos también decían algo raro: oro para un rey, incienso para Dios y mirra, que se usaba para los muertos.'], ['esc', 'Desde la cuna, esos regalos ya anunciaban quién es y lo que iba a vivir.']]]
+      ],
+      end: [['esc', 'Seguí caminando y mirando. Hay una pregunta que te va a acompañar todo el camino: ¿quién es este hombre?']] },
+    quiz: { at: 'Belén', off: [-4.4, -3.6], id: 'ruben', name: 'Rubén', sub: 'mercader de Belén', voice: 'merc', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#3A2A1A', outfit: '#8E5A3A' },
+      hi: '¡Eh, viajero! Me encantan las preguntas. Si me respondés bien, te doy unas monedas.',
+      q: [
+        ['¿Sabés qué quiere decir Belén?', ['Casa del pan', 'Ciudad de reyes', 'Lugar de ovejas'], 'Belén quiere decir «casa del pan». ¡Y ahí nació el que es el pan de vida!'],
+        ['¿Qué profeta anunció que el gobernante de Israel iba a salir de Belén?', ['Miqueas', 'Jonás', 'Elías'], 'Fue Miqueas, setecientos años antes.'],
+        ['¿Qué quiere decir el nombre Jesús?', ['El Señor salva', 'Hijo del rey', 'Luz del pueblo'], 'Jesús, Yeshúa en hebreo, quiere decir «el Señor salva».'],
+        ['¿Para qué se usaba la mirra que trajeron los magos?', ['Para preparar a los muertos', 'Para cocinar', 'Para pagar impuestos'], 'La mirra era un perfume que se usaba, entre otras cosas, para preparar a los muertos. Ya anunciaba lo que Jesús iba a vivir.'],
+        ['¿Por qué José y María viajaron a Belén?', ['Por un censo del emperador', 'Por una fiesta', 'Para visitar a su familia'], 'El emperador Augusto ordenó un censo, y cada uno tenía que anotarse en el pueblo de sus antepasados.'],
+        ['¿Qué quiere decir Emanuel?', ['Dios está con nosotros', 'Dios es grande', 'El elegido'], 'Emanuel quiere decir «Dios está con nosotros».']
+      ],
+      ok: '¡Exacto!', no: 'Casi. ', bye: '¡Muy bien! Volvé mañana, que tengo más preguntas.' },
+    narr: [
+      'La historia empieza en Nazaret, un pueblo tan chico que casi nadie lo nombraba. Ahí el ángel Gabriel visitó a María, una joven comprometida con José, y le anunció que iba a tener un hijo. María respondió con una confianza enorme: aceptó que se cumpliera en ella lo que Dios había dicho.',
+      'María viajó a la casa de su pariente Elisabet. Apenas la saludó, el bebé de Elisabet saltó dentro de su vientre. Entonces María cantó a Dios, que mira a los humildes y da vuelta la historia.',
+      'José se enteró de que María estaba embarazada. Era un hombre justo y quiso protegerla. Pero un ángel le habló en un sueño, y José obedeció sin demora.',
+      'Desde Nazaret hasta Belén había unos ciento cincuenta kilómetros. José y María los caminaron por un censo del emperador. Sin saberlo, el hombre más poderoso del mundo estaba moviendo las piezas para que se cumpliera la Palabra de Dios.',
+      'Tiempo después llegaron unos sabios de oriente siguiendo una estrella. Los maestros de la ley sabían que el Mesías nacería en Belén, pero ninguno fue a verlo, aunque estaba a una caminata de distancia.'
+    ]
+  }
+};
+const VIVO_NAMES = { 0: 'Belén' };
+function vivoP() { const p = G().P(); p.vivo = p.vivo || {}; return p.vivo; }
+function vivoAt(at, off) { const q = (S.pois || []).find(o => o.name === at); if (!q) return null; return freeNear(q.x + off[0] * (q.side || 1), q.z + off[1], .35); }
+function vivoBuild(scene, hx) {
+  S.vivo = { scrolls: [], t: 0, narT: 0 }; const yAt = (x, z) => Math.max(0, S.W ? S.W.hAt(x, z) : 0);
+  for (const r in VIVO) { const E = VIVO[r];
+    // la charla
+    if (E.talk) { const T = E.talk, pos = vivoAt(T.at, T.off); if (pos) { const [x, z] = pos, o = (hx || H3.ok) ? buildHeroAvatar(Object.assign({}, T.look)) : buildAvatar(T.look, false); o.userData.stay = 1; if (!(hx || H3.ok)) o.scale.setScalar(1.08); o.position.set(x, yAt(x, z), z); const q = (S.pois || []).find(o2 => o2.name === T.at); o.rotation.y = q ? Math.atan2(q.x - x, q.z - z) : 0; o.traverse(m => { if (m.isMesh) m.castShadow = true; if (m.isPointLight) m.intensity = 0; }); scene.add(o); S.cols.push({ x0: x - .35, x1: x + .35, z0: z - .35, z1: z + .35, cx: x, cz: z, r: .3 });
+      S.lore.push({ x: x + Math.sin(o.rotation.y) * 1.2, z: z + Math.cos(o.rotation.y) * 1.2, r: 2, label: 'Hablar con ' + T.name, act: () => vivoTalk(+r, o) }); } }
+    // la fogata (Hero, con los compañeros)
+    if (E.fire && hx) { const F = E.fire, pos = vivoAt(F.at, F.off); if (pos) S.lore.push({ x: pos[0], z: pos[1], r: 1.8, label: 'Sentarse con tus compañeros', act: () => vivoFire(+r) }); }
+    // las preguntas de la gente
+    if (E.quiz) { const Q = E.quiz, pos = vivoAt(Q.at, Q.off); if (pos) { const [x, z] = pos, o = (hx || H3.ok) ? buildHeroAvatar(Object.assign({}, Q.look)) : buildAvatar(Q.look, false); o.userData.stay = 1; if (!(hx || H3.ok)) o.scale.setScalar(1.08); o.position.set(x, yAt(x, z), z); const q = (S.pois || []).find(o2 => o2.name === Q.at); o.rotation.y = q ? Math.atan2(q.x - x, q.z - z) : 0; o.traverse(m => { if (m.isMesh) m.castShadow = true; if (m.isPointLight) m.intensity = 0; }); scene.add(o); S.cols.push({ x0: x - .35, x1: x + .35, z0: z - .35, z1: z + .35, cx: x, cz: z, r: .3 });
+      S.lore.push({ x: x + Math.sin(o.rotation.y) * 1.2, z: z + Math.cos(o.rotation.y) * 1.2, r: 2, label: 'Hablar con ' + Q.name, act: () => vivoQuiz(+r, o) }); } }
+    // los rollos escondidos
+    (E.scrolls || []).forEach(([at, off, t], i) => { const pos = vivoAt(at, off); if (!pos) return; const [x, z] = pos, g = new THREE.Group(), pap = tm('papiro', '#E9DCC0', { roughness: .95 }), wd = tm('vhwd', '#5E4128');
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, .34, 12), pap); body.rotation.z = Math.PI / 2; g.add(body); [-1, 1].forEach(s2 => { const k = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, .46, 8), wd); k.rotation.z = Math.PI / 2; k.position.y = 0; g.add(k); const cap = new THREE.Mesh(new THREE.SphereGeometry(.035, 8, 6), wd); cap.position.x = s2 * .24; g.add(cap); });
+      const tie = new THREE.Mesh(new THREE.TorusGeometry(.072, .012, 5, 14), tm('rojo', '#8E2E22')); tie.rotation.y = Math.PI / 2; g.add(tie); const gl = glowSpr('#FFE2A0', 1.1, .45); gl.position.y = .12; g.add(gl);
+      g.position.set(x, yAt(x, z) + .1, z); g.rotation.y = i * 1.3; g.traverse(m => { if (m.isMesh) m.castShadow = true; }); scene.add(g); S.vivo.scrolls.push({ r: +r, i, x, z, g, gl, t }); });
+  }
+}
+function vivoSteps(who, L) { return L.map(t => ({ who, t })); }
+/* charla con el personaje: elegís qué preguntar; después de cada respuesta quedan las que faltan, hasta despedirte */
+function vivoTalk(r, o) { const T = VIVO[r].talk, v = vivoP(), done = new Set(v[T.id] || []);
+  const end = () => { if (done.size >= T.q.length) { sello('talk-' + T.id, 'La charla con ' + T.name); if (!v[T.id + 'x']) { v[T.id + 'x'] = 1; G().save(); try { svXP(10); } catch (e) {} } } };
+  const node = (seen, first) => { const o2 = T.q.map((q, i) => i).filter(i => !seen.includes(i)).map(i => ({ t: T.q[i][0], fn: () => { done.add(i); v[T.id] = [...done]; if (T.q[i][2]) INCL(T.q[i][2]); G().save(); }, then: vivoSteps('p', T.q[i][1]).concat([node(seen.concat(i), false)]) }));
+    o2.push({ t: T.bye[0], then: [{ who: 'p', t: T.bye[1] }], fn: end }); return { who: 'p', ask: first ? T.ask : '¿Algo más?', o: o2 }; };
+  if (cineOk() && cine({ cast: { p: { o, name: T.name, sub: T.sub, voice: T.voice } }, steps: vivoSteps('p', T.hi).concat([node([], true)]) })) return;
+  vivoSheetTalk(r); }
+/* Kids (y si no hay cine): la misma charla en una hoja con botones */
+function vivoSheetTalk(r) { const T = VIVO[r].talk, v = vivoP(), seen = new Set(v[T.id] || []);
+  const show = (lines, first) => { vilSheet(`<div class="inv-h"><b>${esc(T.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">${esc(T.sub)}</small>${lines.map(t => `<p class="vil-p">${esc(t)}</p>`).join('')}<div class="vivo-o">${T.q.map((q, i) => `<button data-i="${i}"${seen.has(i) ? ' class="seen"' : ''}>${esc(q[0])}</button>`).join('')}</div>`, el => { el.querySelectorAll('.vivo-o button').forEach(b => b.onclick = () => { const i = +b.dataset.i; seen.add(i); v[T.id] = [...seen]; G().save(); if (seen.size >= T.q.length) sello('talk-' + T.id, 'La charla con ' + T.name); show(T.q[i][1]); }); }); try { lines.forEach((t, k) => G().vo(t, T.voice, { queue: k > 0 })); } catch (e) {} };
+  show(T.hi, true); }
+/* la fogata: los compañeros charlan sobre lo vivido y vos elegís qué decir */
+function vivoFire(r) { const F = VIVO[r].fire; if (!cineOk()) return; const v = vivoP();
+  const steps = F.steps.map(([who, t]) => ({ who, t })).concat([{ who: F.ask[0], ask: F.ask[1], o: F.o.map(([t, k, rep]) => ({ t, fn: () => { INCL(k); v['fire' + r] = 1; G().save(); }, then: rep.map(([who, t2]) => ({ who, t: t2, g: 'nod' })) })) }], F.end.map(([who, t]) => ({ who, t })));
+  cine({ cast: { esc: {}, zel: {} }, steps, onDone: () => { if (v['fire' + r]) sello('fogata-' + r, 'Una noche junto al fuego'); } }); }
+/* preguntas de la gente: tres por día, con monedas por cada acierto */
+function vivoQuiz(r, o) { const Q = VIVO[r].quiz, v = vivoP(), d = vday(), st = v[Q.id] = v[Q.id] || { d: -1, i: 0 }; if (st.d === d) { if (cineOk()) cine({ cast: { m: { o, name: Q.name, sub: Q.sub, voice: Q.voice } }, steps: [{ who: 'm', t: Q.bye }] }); else svToast(Q.name + ': ' + Q.bye); return; }
+  const pick = [0, 1, 2].map(k => Q.q[(st.i + k) % Q.q.length]); let ok = 0;
+  const qStep = ([q, opts, exp]) => { const order = opts.map((t, k) => k).sort((a, b) => ((a * 7 + st.i * 3) % 5) - ((b * 7 + st.i * 3) % 5)); return { who: 'm', ask: q, o: order.map(k => ({ t: opts[k], fn: () => { if (k === 0) { ok++; svAdd('money', 2); try { svXP(3); } catch (e) {} } }, then: [{ who: 'm', t: (k === 0 ? Q.ok + ' ' : Q.no) + exp }] })) }; };
+  const done = () => { st.d = d; st.i = (st.i + 3) % Q.q.length; G().save(); if (ok) svToast('🪙 Ganaste ' + ok * 2 + ' denarios respondiendo a ' + Q.name + '.'); if (ok === 3) sello('quiz-' + Q.id, 'Las preguntas de ' + Q.name); };
+  if (cineOk()) { cine({ cast: { m: { o, name: Q.name, sub: Q.sub, voice: Q.voice } }, steps: [{ who: 'm', t: Q.hi }].concat(pick.map(qStep), [{ who: 'm', t: Q.bye }]), onDone: done }); return; }
+  /* Kids: en una hoja */ let k = 0; const nextQ = () => { if (k >= pick.length) { done(); vilSheet(`<div class="inv-h"><b>${esc(Q.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="vil-p">${esc(Q.bye)}</p>`); return; } const [q, opts, exp] = pick[k]; vilSheet(`<div class="inv-h"><b>${esc(Q.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="vil-p">${esc(q)}</p><div class="vivo-o">${opts.map((t, i) => `<button data-i="${i}">${esc(t)}</button>`).join('')}</div>`, el => { try { G().vo(q, Q.voice); } catch (e) {} el.querySelectorAll('.vivo-o button').forEach(b => b.onclick = () => { const i = +b.dataset.i; if (i === 0) { ok++; svAdd('money', 2); } svToast((i === 0 ? '✅ ' + Q.ok + ' ' : '💡 ' + Q.no) + exp); k++; setTimeout(nextQ, 400); }); }); }; nextQ(); }
+function vivoRegion() { const a = S.av.position; let b = null, bd = 60 * 60; for (const q of S.pois || []) { const d = (q.x - a.x) ** 2 + (q.z - a.z) ** 2; if (d < bd) { bd = d; b = q; } } return b ? b.r : -1; }
+function vivoTick(dt) { const V = S.vivo; if (!V) return; V.t += dt; const a = S.av.position, v = vivoP();
+  // rollos: brillan de cerca y se juntan al pasar
+  for (const s of V.scrolls) { const got = (v.scr && v.scr[s.r] || []).includes(s.i); if (got) { if (s.g.visible) s.g.visible = false; continue; } const d2 = (s.x - a.x) ** 2 + (s.z - a.z) ** 2; s.gl.visible = d2 < 144; s.g.position.y += Math.sin(V.t * 2 + s.i) * .0008; if (d2 < 1.6) { v.scr = v.scr || {}; const L = v.scr[s.r] = v.scr[s.r] || []; L.push(s.i); G().save(); s.g.visible = false; const n = L.length, tot = VIVO[s.r].scrolls.length;
+      placeCard(['Rollo escondido · ' + n + ' de ' + tot, s.t, VIVO_NAMES[s.r] || '']); try { tone3d(); } catch (e) {} try { svXP(4); } catch (e) {}
+      if (n >= tot) setTimeout(() => { sello('rollos-' + s.r, 'Los rollos de ' + (VIVO_NAMES[s.r] || 'la etapa')); try { examPrize('los rollos escondidos'); } catch (e) {} }, 3500); } }
+  // el narrador cuenta un pedacito de la historia cada tanto mientras jugás en la etapa
+  if (CINE.on || AU.speaking || sheetUp()) { V.narT = Math.min(V.narT, 60); return; } V.narT += dt; if (V.narT < 150) return; const r = vivoRegion(), E = VIVO[r]; if (!E || !E.narr) { V.narT = 120; return; }
+  const heard = v['narr' + r] = v['narr' + r] || []; const i = E.narr.findIndex((t, k) => !heard.includes(k)); if (i < 0) { V.narT = -1e9; return; } V.narT = 0; heard.push(i); G().save(); say(E.narr[i], VIVO_NAMES[r] || '');
+}
 /* ===== Conversaciones cinemáticas: plano y contraplano sobre el hombro, sin salir del mundo =====
    cine({ cast: { id: { name, sub, o | look, voice, pitch, rate } }, steps: [ { who: id|'me'|'nar', t, g } | { who, ask: q, o: [ { t, fn, then: [steps], quiet } ] } ], onDone }) */
 const CINE = { on: false, side: 1 };
@@ -7206,6 +7311,7 @@ function cineStep() {
   if (st.o) { op.innerHTML = st.o.map((x, i) => `<button type="button" data-i="${i}">${esc(x.t)}</button>`).join(''); op.querySelectorAll('button').forEach(b => b.onclick = e => { e.stopPropagation(); const x = st.o[+b.dataset.i]; try { x.fn && x.fn(); } catch (er) {} CINE.q = (x.quiet ? [] : [{ who: 'me', t: x.t }]).concat(x.then || [], CINE.q); cineStep(); }); try { op.querySelector('button').focus({ preventScroll: true }); } catch (e) {} }
   const t0 = performance.now();
   const vc = st.who === 'me' ? ((G().P().avatar || {}).g === 'chica' ? 'mujer' : 'varon') : st.who === 'nar' ? 'narrador' : (c && c.voice) || 'varon';
+  /* el avatar no tiene voz: lo que elige el jugador se ve escrito, sin audio */ if (st.who === 'me') { CINE.autoT = setTimeout(() => { if (CINE.st === st && !st.o) cineStep(); }, Math.max(1600, t.length * 45)); return; }
   try { if (G().voOn && G().voOn()) G().vo(t, vc, { pitch: c && c.pitch, rate: c && c.rate, onend: () => { const el = performance.now() - t0; if (CINE.st === st && !st.o && el > 1500) CINE.autoT = setTimeout(() => { if (CINE.st === st) cineStep(); }, 1000); } }); } catch (e) {}
 }
 function cineNext() { if (!CINE.on || !CINE.ready || (CINE.st && CINE.st.o)) return; cineStep(); }
