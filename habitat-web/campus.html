@@ -32,7 +32,7 @@
     <div class="rimg"><img id="rImg" src="" alt=""><span class="play" aria-hidden="true">▶</span></div>
     <div class="rtx"><span class="kick">Continuar</span><b id="rStep"></b><small id="rProg"></small><div class="bar"><i id="rBar"></i></div></div>
   </a>
-  <div class="mc rv in" id="miniCal" aria-label="Mi calendario"><div class="mc-h"><button type="button" class="mc-n" data-m="-1" aria-label="Mes anterior">‹</button><b id="mcT">Mi calendario</b><button type="button" class="mc-n" data-m="1" aria-label="Mes siguiente">›</button></div><div class="mc-g" id="mcG"></div><div class="mc-d" id="mcD"><p class="mc-e">Cargando tus fechas…</p></div></div>
+  <div class="mc rv in" id="miniCal" aria-label="Mi calendario"><div class="mc-h"><button type="button" class="mc-n" data-m="-1" aria-label="Mes anterior">‹</button><b id="mcT">Mi calendario</b><button type="button" class="mc-n" data-m="1" aria-label="Mes siguiente">›</button></div><div class="mc-g" id="mcG"></div><div class="mc-d" id="mcD"><p class="mc-e">Cargando tus fechas…</p></div><div class="mc-s"><button type="button" class="mc-sb" data-cal="calG">📅 Sumar a Google Calendar</button><button type="button" class="mc-sb" data-cal="calI">iPhone / Outlook</button></div></div>
   </div>
 </div></section>
 <div class="wrap" id="deudaBox" hidden><div class="cu-alert"><span class="cu-ai">⚠️</span><div class="cu-at"><b id="deudaT"></b><span id="deudaD"></span></div><div class="cu-aa"><button type="button" class="cu-b cu-cp" data-copy>📋 Copiar alias</button><button type="button" class="cu-b cu-up" data-subir>📎 Ya pagué</button></div></div></div>
@@ -115,6 +115,7 @@
 .mc-d{border-top:1px solid var(--line);margin-top:10px;padding-top:10px;display:grid;gap:6px;max-height:190px;overflow:auto}
 .mc-i{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline;font-size:.88rem}.mc-i b{font-weight:700}.mc-i span{color:var(--muted);font-size:.8rem}
 .mc-i small{grid-row:span 2;font:600 .72rem var(--sans);color:var(--gold);text-transform:uppercase;min-width:42px}
+.mc-s{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.mc-sb{flex:1;min-width:120px;font:600 .8rem var(--sans);padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}.mc-sb:first-child{background:var(--ink);color:var(--cream);border-color:var(--ink)}
 .mc-e{margin:0;color:var(--muted);font-size:.88rem}
 .mc-l{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.72rem;color:var(--muted);margin-top:6px}.mc-l span{display:inline-flex;align-items:center;gap:4px}.mc-l em{width:7px;height:7px;border-radius:50%;background:var(--sea);display:inline-block}
 </style>
@@ -310,6 +311,7 @@ function miniCal(L){
   document.querySelectorAll('#mcG [data-k]').forEach(function(b){b.onclick=function(){sel=sel===b.dataset.k?'':b.dataset.k;draw();};});
   document.querySelector('.mc-n[data-m="-1"]').disabled=off<=0;document.querySelector('.mc-n[data-m="1"]').disabled=off>=3;
  }
+ document.querySelectorAll('.mc-sb').forEach(function(b){b.onclick=function(){var t=document.getElementById(b.dataset.cal);if(t.id==='calI')location.href=t.href;else t.click();};});
  document.querySelectorAll('.mc-n').forEach(function(b){b.onclick=function(){off=Math.max(0,Math.min(3,off+ +b.dataset.m));sel='';draw();};});
  draw();
 }
