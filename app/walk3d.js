@@ -7376,7 +7376,7 @@ const VIVO = {
   ,
   5: {
     talk: { at: 'La posada', off: [-9, 3], id: 'ananias', name: 'Ananías', sub: 'el posadero', voice: 'varon', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#5A4A3A', outfit: '#7A5A3A' },
-      hi: ['¡Bienvenido a mi posada! Una tarde el rabí Jesús se sentó a esa mesa y contó una historia que pasaba en este mismo camino. Desde entonces miro distinto a los que llegan.'],
+      hi: ['¡Bienvenido a mi posada! Una tarde el rabí Jesús se sentó acá, en mi posada, y contó una historia que pasaba en este mismo camino. Desde entonces miro distinto a los que llegan.'],
       ask: '¿Qué querés saber?',
       q: [
         ['¿Qué historia contó?', ['Un hombre bajaba de Jerusalén a Jericó y unos ladrones lo asaltaron, le pegaron y lo dejaron medio muerto al costado del camino.', 'Pasó un sacerdote, lo vio y siguió por el otro lado. Pasó un levita, y lo mismo. Pero un samaritano se detuvo, le curó las heridas con aceite y vino, y lo llevó a una posada como esta.'], 'pastor'],
