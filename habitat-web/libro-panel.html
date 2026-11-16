@@ -132,8 +132,8 @@ async function geo(calle,num,loc,prov){var pv=prov==='CABA'?'Ciudad Autónoma de
   for(var i=0;i<Q.length;i++){var q=Q[i].filter(function(v){return String(v||'').trim();}).concat('Argentina').join(', ');if(vis[q])continue;vis[q]=1;var r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ar&q='+encodeURIComponent(q));var a=await r.json();await new Promise(function(ok){setTimeout(ok,1100);});if(a&&a[0])return [+a[0].lat,+a[0].lon,i===Q.length-1?1:0];}
   return null;}
 async function ubicar(V){if(UBI)return;var P=V.filter(function(x){return x.entrega==='envio'&&x.lat==null&&x.calle&&!x.via;}).slice(0,6);if(!P.length)return;UBI=true;var hubo=false;
-  for(var i=0;i<P.length;i++){var x=P[i],k='lb:geo:'+x._id,c=null;try{c=JSON.parse(sessionStorage.getItem(k)||'null');}catch(e){}
-    if(!c){try{c=await geo(x.calle,x.numero,x.localidad,x.provincia);c=c||[0,0];try{sessionStorage.setItem(k,JSON.stringify(c));}catch(e){}}catch(e){c=null;}}
+  for(var i=0;i<P.length;i++){var x=P[i],k='lb:geo2:'+x._id,c=null;try{c=JSON.parse(sessionStorage.getItem(k)||'null');}catch(e){}
+    if(!c){try{c=await geo(x.calle,x.numero,x.localidad,x.provincia);if(c)try{sessionStorage.setItem(k,JSON.stringify(c));}catch(e){}}catch(e){c=null;}}
     if(c&&c[0]){x.lat=c[0];x.lng=c[1];x.km=kmA(c[0],c[1]);x.est=1;hubo=true;}}
   UBI=false;if(hubo)draw();}
 async function mapa(V){var el=$('#lbMap');if(!el)return;var P=V.filter(function(x){return x.lat!=null;});if(!P.length){el.hidden=true;return;}
