@@ -1096,6 +1096,7 @@ async function go(id) {
    terraza seguís en el suelo, y si te bajás por el costado de una escalera caés con gravedad (no aparecés de golpe abajo). */
 const STEP = .6;
 function groundAt(x, z, cur) {
+  if (S.pocket && S.pocket.hAt) return S.pocket.hAt(x, z);
   const t = S.W ? Math.max(WATER.RL - 1.12, S.W.hAt(x, z)) : 0; let g = t; const c = cur == null ? 1e9 : cur; /* en el agua el personaje se hunde hasta el pecho, en vez de caminar por arriba */
   for (const h of [stairH(x, z), floorH(x, z), rampH(x, z)]) if (h > g && h <= c + STEP) g = h;
   return g;
@@ -1402,6 +1403,7 @@ const icoGear = it => {
   else if (it.s === 'pants' && it.t === 'hand') { const W = '#8A6A44';
     g = it.k === 'staff' ? ln('M8 21.5 16 2.5', W, 2.6) + ln('M8 21.5 16 2.5', L, .5)
       : it.k === 'crook' ? ln('M8 21.5 14 7c1-3 5-3 5 .2s-3 3.4-4 1.6', W, 2.6) + ln('M8 21.5 14 7c1-3 5-3 5 .2s-3 3.4-4 1.6', L, .5)
+      : it.k === 'pearl' ? '<path d="M3 12.5a9 6.5 0 0 0 18 0Z" fill="#E9DCC8" stroke="#8A7458" stroke-width="1"/><circle cx="12" cy="10" r="4.2" fill="#FBF7FF" stroke="#BFD8FF" stroke-width="1"/><circle cx="10.6" cy="8.6" r="1.1" fill="#FFFFFF"/>'
       : it.k === 'bloom' ? ln('M8 21.5 16 2.5', W, 2.6) + '<circle cx="15" cy="5" r="2.1" fill="#F6D7E2"/><circle cx="17.6" cy="8.2" r="1.7" fill="#FFFFFF"/><circle cx="12.6" cy="8.6" r="1.7" fill="#F2B8CC"/><circle cx="14.4" cy="11.6" r="1.4" fill="#FFFFFF"/>'
       : it.k === 'scroll' ? `<rect x="5" y="7" width="14" height="10" rx="1" fill="${c}" stroke="${L}" stroke-width="1"/>` + ln('M4 6v12M20 6v12', W, 2.4) + ln('M8 10.5h8M8 13.5h6', D, 1)
       : it.k === 'branch' || it.k === 'palm' ? ln('M6 21 17 4', '#5A4630', 1.6) + `<path d="M9 16c-3-.5-4-2.5-4-4 2 .2 4 1.2 4 4ZM12 11.5c-3-.6-4-2.6-4-4 2 .2 4 1.2 4 4ZM10.5 15c3 .6 5-.4 6-2-2-.6-4.5-.2-6 2ZM13.5 10.5c3 .6 5-.4 6-2-2-.6-4.5-.2-6 2ZM16.5 5c.2-1.6 1.6-2.4 3-2.4-.2 1.6-1.2 2.4-3 2.4Z" fill="${c}" stroke="${L}" stroke-width=".6"/>`
@@ -2944,6 +2946,7 @@ function nazaretMore(scene, p, yAt, poiProp, hx, HW) {
 function buildLake(scene, cx, cz, side, hx, yAt, HWm) {
   const R = 30, y0 = WATER.WL - .42;
   const uni = { t: { value: 0 } }; waterLake(scene, cx, cz, R * 1.2, hx, yAt); waterLake(scene, cx + side * 78, cz - 8, 96, hx, (x, z) => HWm && HWm.mtnH && Math.abs(x) > HWm.X1 ? HWm.mtnH(x, z) : yAt(x, z));
+  S.sea = { x: cx + side * 78, z: cz - 8 }; { const mx = cx + side * 145, mz = cz - 8; try { grotMouth(scene, mx, mz, side); } catch (e) {} S.grot = { x: mx - side * 4.6, z: mz, bx: mx - side * 12, side }; }
   // muelle de tablas que entra al agua
   const dock = new THREE.Group(), dx = cx + side * (R - 3.5), len = 12; for (let i = 0; i < 24; i++) bx(.48, .1, 2.2, WOODL(), -len / 2 + i * .5, 0, 0, dock).rotation.y = (i % 3 - 1) * .02; for (let i = 0; i < 7; i++) [-1, 1].forEach(s => cy(.1, .1, 1.6, WOOD(), -len / 2 + i * 2, -.6, s * 1.05, dock, 7));
   dock.position.set(dx, y0 + .62, cz + 4); scene.add(dock); const df = { x0: dx - len / 2, x1: dx + len / 2, z0: cz + 4 - 1.1, z1: cz + 4 + 1.1, y: y0 + .67 }; S.floors.push(df);
@@ -3823,6 +3826,7 @@ const GEAR = [
   { id: 'arena', s: 'pants', r: 'c', t: 'hand', k: 'lamp', c: '#B5764A', name: 'Lámpara de barro', desc: 'La lámpara de aceite de todas las casas (Salmo 119:105).' },
   { id: 'lananegra', s: 'pants', r: 'c', t: 'hand', k: 'palm', c: '#6E8A3E', name: 'Hoja de palmera', desc: 'Como las que la gente agitaba cuando Jesús entró a Jerusalén (Juan 12:13).' },
   { id: 'viajero', s: 'pants', r: 'r', t: 'hand', k: 'scroll', c: '#E9DCC0', name: 'Rollo de las Escrituras', desc: 'Un rollo como el que Jesús leyó en la sinagoga de Nazaret (Lucas 4:16-17).' },
+  { id: 'perla', s: 'pants', r: 'l', t: 'hand', k: 'pearl', x: 1, c: '#F4F0FF', name: 'Perla de gran precio', desc: 'Un comerciante encontró una perla de gran valor, y vendió todo lo que tenía para comprarla (Mateo 13:45-46).', h: ['Dicen los pescadores que, del otro lado del mar, la montaña guarda una luz.', 'Cruzá a nado el Mar de Galilea hasta la pared de la montaña. Frená y flotá para recuperar el aliento, y buscá una cueva a ras del agua.'] },
   { id: 'purpurap', s: 'pants', r: 'e', t: 'hand', k: 'bloom', c: '#8A6A44', name: 'Vara florecida', desc: 'Como la vara de Aarón, que echó brotes, flores y almendras (Números 17:8).' },
   { id: 'juncos', s: 'boots', r: 'c', t: 'sandal', c: '#B89A5E', name: 'Sandalias de juncos', desc: 'Livianas, tejidas con las cañas del río.' },
   { id: 'desierto', s: 'boots', r: 'c', t: 'sandal', hi: 1, c: '#A8865A', name: 'Sandalias del desierto', desc: 'De suela ancha para la arena caliente del camino a Jericó.' },
@@ -3841,7 +3845,7 @@ function gearState() { const p = G().P(); p.gear = p.gear || { own: [], eq: {} }
 function lookOf(p) { const gs = p.gear || {}, eq = {}; for (const k in (gs.eq || {})) if (GBY[gs.eq[k]]) eq[k] = gs.eq[k]; return Object.assign({}, p.avatar || {}, { gear: eq, face: undefined, ins: Object.keys((p.ins && typeof p.ins === 'object') ? p.ins : {}).filter(k => CBY[k]), glow: glowLv((p.glow && p.glow.pts) || 0), don: (() => { const I = (p.ins && typeof p.ins === 'object') ? p.ins : {}; for (const k in I) if (I[k] && I[k].don) return I[k].don; return null; })() }); }
 function gearOn(av) { const o = {}, e = (av && av.gear) || {}; SLOTS.forEach(([s]) => { if (GBY[e[s]]) o[s] = GBY[e[s]]; }); return o; }
 function gearRoll() {
-  const st = gearState(), left = GEAR.filter(x => !st.own.includes(x.id) && x.r !== 'u'); if (!left.length) return null;
+  const st = gearState(), left = GEAR.filter(x => !st.own.includes(x.id) && x.r !== 'u' && !x.x); if (!left.length) return null;
   const w = left.map(x => RAR[x.r][2]), tot = w.reduce((a, b) => a + b, 0); let r = Math.random() * tot, i = 0; while (r > w[i]) r -= w[i++];
   return left[Math.min(i, left.length - 1)];
 }
@@ -3924,7 +3928,7 @@ function invDiary(body) {
         return card('g:' + it.id, g2, `<span class="dy-gi">${icoGear(it)}</span>`, R[1], g2 ? esc(it.name) : '???', `${R[0].split(' ·')[0]} · ${sl}`, esc(g2 ? it.desc : gearHint(it, clear))); }).join('') + '</div>'; }
     if (k === 'f') { const got = Object.keys(p.dfind).length;
       h = head(got, FINDS.length, 'hallazgos del campo, escondidos entre las paradas del camino') + lock + '<div class="dy-g">' + FINDS.map(([fk, , info]) => { const g2 = !!p.dfind[fk];
-        return card('f:' + fk, g2, `<svg viewBox="0 0 24 24" aria-hidden="true">${FIND_ICO[fk] || ''}</svg>`, '#E9C37A', g2 ? esc(info[0]) : '???', esc(info[2]), g2 ? esc(info[1]) : (clear ? 'Está en el campo, un poco lejos del camino, entre dos paradas. Buscá algo que no parezca de la naturaleza.' : 'Leé la cita: ahí está la pista de lo que hay que buscar.')); }).join('') + '</div>'; }
+        return card('f:' + fk, g2, `<svg viewBox="0 0 24 24" aria-hidden="true">${FIND_ICO[fk] || ''}</svg>`, '#E9C37A', g2 ? esc(info[0]) : '???', esc(info[2]), g2 ? esc(info[1]) : (clear ? 'Está en el campo, un poco lejos del camino, entre dos paradas. Buscá algo que no parezca de la naturaleza.' : 'Leé la cita: ahí está la pista de lo que hay que buscar.')); }).join('') + '</div>' + '<h4 class="dy-leg">Lugar legendario</h4><div class="dy-g">' + card('f:gruta', !!p.dfind.gruta, `<svg viewBox="0 0 24 24" aria-hidden="true">${FIND_ICO.cueva}</svg>`, '#FFD86A', p.dfind.gruta ? 'La gruta del tesoro escondido' : '???', 'Mateo 13:44', p.dfind.gruta ? 'Del otro lado del Mar de Galilea, a nado. Un túnel largo, un mirador y un jardín escondido dentro de la montaña' + (G().P().grotC ? ', con su cofre ya abierto.' : '. Te falta abrir el cofre.') : (clear ? 'Cruzá a nado el Mar de Galilea hasta la pared de la montaña. Frená y flotá para recuperar el aliento, y buscá una cueva a ras del agua.' : 'Dicen los pescadores que, del otro lado del mar, la montaña guarda una luz.')) + '</div>'; }
     if (k === 's' && M) { const sp = G().P().secrets || {}, got = Object.keys(sp).length;
       h = head(got, M.SECRETS.length, 'lugares secretos descubiertos. Los que encontrás aparecen en tu mapa con ✦') + lock + '<div class="dy-g">' + M.SECRETS.map(d => { const g2 = !!sp[d.id], rg = (G().REGIONS.find(x => x.id === d.r) || {}).name || '';
         return card('s:' + d.id, g2, `<span class="dy-e">${M.ENTRY[d.entry] ? M.ENTRY[d.entry][1] : '✦'}</span>`, '#B98AFF', g2 ? esc(d.name) : '???', esc(rg), g2 ? esc(d.t) : (clear ? 'Buscá ' + esc(d.hint) + '.' : 'Algo se esconde en esta etapa. Fijate en lo que parece fuera de lugar.'), g2 ? `<em class="dy-x">${d.items.map(q => q[1] + ' ' + esc(q[0])).join(' · ')}</em>` : ''); }).join('') + '</div>'; }
@@ -4913,7 +4917,11 @@ function h3pose(av, t, dt, st) {
     h3aim(av, B, 'upperarm_r', 'lowerarm_r', .18, -.88, .48, p); h3aim(av, B, 'lowerarm_r', 'hand_r', .38, .8, .45, p); h3aim(av, B, 'upperarm_l', 'lowerarm_l', -.18, -.88, .48, p); h3aim(av, B, 'lowerarm_l', 'hand_l', -.38, .8, .45, p); }
   if (q > .01 && !mxWave && u.cur !== 'M_Waving') { h3aim(av, B, 'upperarm_r', 'lowerarm_r', -.85, .38, .18, q); h3aim(av, B, 'lowerarm_r', 'hand_r', -.15 + Math.sin(t * 11) * .38, 1, .15, q); }
   if (me) toolPose(av, B, t, dt, st);
-  if (me && S && S.swimK > .05) { const k = S.swimK; ['l', 'r'].forEach((sd, i) => { const ph = t * 3.2 + i * Math.PI, sx = sd === 'l' ? 1 : -1, c = Math.cos(ph), sn = Math.sin(ph); h3aim(av, B, 'upperarm_' + sd, 'lowerarm_' + sd, sx * (.25 + .55 * Math.max(0, sn)), c, -.25 * Math.max(0, -sn), k); h3aim(av, B, 'lowerarm_' + sd, 'hand_' + sd, sx * (.1 + .4 * Math.max(0, sn)), c, -.35 * Math.max(0, -sn), k); h3aim(av, B, 'thigh_' + sd, 'calf_' + sd, sx * .08, -1, .22 * Math.sin(t * 7 + i * Math.PI), k); h3aim(av, B, 'calf_' + sd, 'foot_' + sd, sx * .05, -1, -.2 + .25 * Math.sin(t * 7 + i * Math.PI), k); }); av.updateMatrixWorld(true); } /* brazada y patada al nadar */
+  if (me && S && S.swimK > .05) { const k = Math.min(1, S.swimK * 2.2), L = (p, q, w) => p + (q - p) * w; S.strK = (S.strK || 0) + ((S.swimMv ? 1 : 0) - (S.strK || 0)) * Math.min(1, dt * 4); const sk = S.strK, ph0 = S.swimPh || 0;
+    ['l', 'r'].forEach((sd, i) => { const ph = ph0 + i * Math.PI, sx = sd === 'l' ? 1 : -1, c = Math.cos(ph), sn = Math.sin(ph), up = Math.max(0, -sn), dn = Math.max(0, sn), kk = Math.sin(ph0 * (sk > .5 ? 2.1 : 1.2) + i * Math.PI);
+      h3aim(av, B, 'upperarm_' + sd, 'lowerarm_' + sd, L(sx * .9, sx * (.16 + .22 * up), sk), L(.12 + .1 * c, c, sk), L(.4 + .14 * sn, .8 * dn - .85 * up, sk), k);
+      h3aim(av, B, 'lowerarm_' + sd, 'hand_' + sd, L(sx * .75, sx * .08, sk), L(.3, c + .8 * up, sk), L(.55 + .2 * sn, .9 * dn + .15 * up, sk), k);
+      h3aim(av, B, 'thigh_' + sd, 'calf_' + sd, sx * L(.16, .08, sk), -1, L(.16, .22, sk) * kk, k); h3aim(av, B, 'calf_' + sd, 'foot_' + sd, sx * .05, -1, L(-.1, -.2, sk) + .25 * kk, k); }); av.updateMatrixWorld(true); } /* brazada y patada al nadar */
   if (me && u.talkT > -.4 && u.talkAge != null) { talkLayer(av, u, dt, null); if (u.talkT <= -.4) u.talkAge = null; }
   if (u.lamp.visible && B.hand_l) { const busy = (u.tools && Object.values(u.tools).some(g2 => g2.visible)) || p > .3 || (me && S && S.swim) || /Swim|Sitting|Kneel|Fixing|Sleep|Lying|Fishing|Pick|Chop|Carry/i.test(u.cur || ''), ud = u.lamp.userData; const mov = /Jog|Run|Sprint/i.test(u.cur || '') ? .5 : /Walk/i.test(u.cur || '') ? .68 : .85; ud.w = (ud.w || 0) + ((busy ? 0 : 1) - (ud.w || 0)) * Math.min(1, dt * 8); ud.k = (ud.k ?? .85) + (mov - (ud.k ?? .85)) * Math.min(1, dt * 5); /* al caminar y correr el brazo conserva parte de su vaivén */
     /* el codo se dobla y el antebrazo va hacia adelante: el objeto queda agarrado en el puño, a la vista */
@@ -4930,6 +4938,7 @@ function h3held(g, it) {
     if (k === 'crook') { const t = add(new THREE.TorusGeometry(.1, .018, 6, 14, Math.PI * 1.15), wood, 0, .61, .1); t.rotation.y = Math.PI / 2; t.rotation.x = -.2; }
     if (k === 'bloom') { const pk = M('#F6CADB', .6, { emissive: '#7A3A4A', emissiveIntensity: .35 }), wh = M('#FFFFFF', .6, { emissive: '#6A6A5A', emissiveIntensity: .3 }), lf = M('#6E9A46', .8); for (let i = 0; i < 9; i++) { const a = i * 2.4, y = .3 + (i % 5) * .08; add(new THREE.IcosahedronGeometry(.032 + (i % 3) * .008, 0), i % 2 ? pk : wh, Math.cos(a) * .045, y, Math.sin(a) * .045); if (i % 3 === 0) { const l = add(new THREE.ConeGeometry(.02, .09, 4), lf, Math.cos(a + 1) * .05, y - .03, Math.sin(a + 1) * .05); l.rotation.z = Math.cos(a + 1) * -1.1; l.rotation.x = Math.sin(a + 1) * 1.1; } } }
     g.userData.up = 1; }
+  else if (k === 'pearl') { const sh = M('#E9DCC8', .55), pe = M('#FBF7FF', .12, { emissive: '#BFD8FF', emissiveIntensity: .9, metalness: .2 }); const a1 = add(new THREE.SphereGeometry(.085, 14, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), sh, 0, .03, 0); a1.material.side = THREE.DoubleSide; add(new THREE.SphereGeometry(.05, 14, 10), pe, 0, .01, 0); const l = new THREE.PointLight('#DCE9FF', 1.6, 3, 2); l.position.y = .1; g.add(l); }
   else if (k === 'scroll') { const pa = M((it && it.c) || '#E9DCC0', .9), wd = M('#6A4A2A', .7); add(new THREE.CylinderGeometry(.04, .04, .26, 12), pa, 0, .02, 0, 0, Math.PI / 2); [-1, 1].forEach(e => { add(new THREE.CylinderGeometry(.012, .012, .1, 6), wd, e * .17, .02, 0, 0, Math.PI / 2); add(new THREE.SphereGeometry(.02, 6, 5), wd, e * .225, .02, 0); }); add(new THREE.TorusGeometry(.042, .006, 5, 14), M('#8E2A2A', .6), 0, .02, 0, 0, 0).rotation.y = Math.PI / 2; }
   else if (k === 'branch' || k === 'palm') { const st = M('#5A4630', .85), lf = new THREE.MeshStandardMaterial({ color: (it && it.c) || '#5E7A3A', roughness: .75, side: THREE.DoubleSide, flatShading: true }); add(new THREE.CylinderGeometry(.008, .014, k === 'palm' ? .95 : .7, 6), st, 0, k === 'palm' ? .34 : .22, 0);
     const n = k === 'palm' ? 22 : 14; for (let i = 0; i < n; i++) { const t = i / (n - 1), sd = i % 2 ? 1 : -1, y = (k === 'palm' ? .12 + t * .68 : .08 + t * .5), L = k === 'palm' ? .2 * (1 - Math.abs(t - .45) * .9) + .05 : .09, geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, sd * L * .55, .03, .012, sd * L, k === 'palm' ? .09 : .04, 0, sd * L * .55, .05, -.012], 3)); geo.setIndex([0, 1, 2, 0, 2, 3]); geo.computeVertexNormals(); const l = add(geo, lf, 0, y, 0); l.rotation.y = k === 'palm' ? 0 : i * 1.3; }
@@ -5918,9 +5927,9 @@ function freeWalk(dt) {
   const mag = Math.min(1, Math.hypot(jx, jy)); if (mag >= .12 && S.pose === 'pray') { S.pose = null; actUI(); } if (mag >= .12 && S.sit) { S.sit = false; actUI(); } if (mag >= .12 && S.poseK) poseEnd(); S.fullT = mag > .96 ? (S.fullT || 0) + dt : 0; if (S.sprint && S.hx) { AXS.run = (AXS.run || 0) + dt; if (AXS.run > 12) { AXS.run = 0; axGain('agi', 1); } } S.sprint = !!S.hx && (!!k.Shift || S.fullT > 1.2); if (mag < .12) { if (S.freeMoving) { S.freeMoving = false; snapToStop(); } return; }
   const C = S.yaw + S.camYaw, fx = Math.sin(C), fz = Math.cos(C), rx = -Math.cos(C), rz = Math.sin(C);
   let mx = fx * -jy + rx * jx, mz = fz * -jy + rz * jx; const ml = Math.hypot(mx, mz) || 1; mx /= ml; mz /= ml;
-  if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint ? 1.55 : 1) * (S.boostT > 0 ? 1.3 : 1) * (S.gy != null && S.gy < WATER.RL - .4 ? (S.swim && S.hx && (S.stam ?? 1) < .25 ? .4 : .6) : 1), /* en el agua se avanza más lento */ a = S.av.position, fr = frontier(), z0 = 6;
+  if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint && !S.swim ? 1.55 : 1) * (S.boostT > 0 ? 1.3 : 1) * (S.gy != null && S.gy < WATER.RL - .4 ? (S.swim ? (S.hx && (S.stam ?? 1) < .25 ? .34 : .5) : .6) : 1), /* en el agua se avanza más lento */ a = S.av.position, fr = frontier(), z0 = 6;
   const curG = groundAt(a.x, a.z, S.gy); // el suelo donde estás parado (no la altura suavizada de la cámara)
-  const ok = (x, z) => S.pocket ? pocketOk(x, z) : (Math.abs(x) < XB || inTrail(x, z)) && z > fr && z < z0 && !blockedAt(x, z) && !solidAbove(x, z, S.gy) && !edgeDrop(x, z, curG) && !descUp(a.x, a.z, x, z);
+  const ok = (x, z) => S.pocket ? pocketOk(x, z) : (Math.abs(x) < XB || inTrail(x, z) || seaOk(x, z)) && z > fr && z < z0 && !blockedAt(x, z) && !solidAbove(x, z, S.gy) && !edgeDrop(x, z, curG) && !descUp(a.x, a.z, x, z);
   let nx = a.x + mx * sp, nz = a.z + mz * sp;
   if (!ok(nx, nz)) { if (nz <= fr && performance.now() - (S.wallT || 0) > 6000) { S.wallT = performance.now(); G().toast('Hasta acá llega el camino por ahora.'); } if (ok(nx, a.z)) nz = a.z; else if (ok(a.x, nz)) nx = a.x; else { nx = a.x; nz = a.z; } }
   a.x = nx; a.z = nz; S.freeMoving = true; S.quiet = true; wake(); autoEnter(); if (!S.freeMoving) return;
@@ -6175,14 +6184,18 @@ const RECIPES = [
 function svOn() { return !!(S && S.hx); }
 /* nadar: donde el agua es más honda que el pecho, el personaje se tiende y bracea. En Hero nadar cansa: la barra de aliento baja y, si se vacía, la corriente lo devuelve a la orilla */
 function swimTick(dt, a) {
-  const av = S.av, deep = !!S.W && S.W.hAt(a.x, a.z) < WATER.RL - 1.3 && S.gy < WATER.RL - .8 && !S.down; S.swim = deep; S.swimK = (S.swimK || 0) + ((deep ? 1 : 0) - (S.swimK || 0)) * Math.min(1, dt * 4);
-  if (!deep && S.gy > WATER.RL - .5 && !blockedAt(a.x, a.z)) S.land = [a.x, a.z];
-  av.rotation.order = 'YXZ'; av.rotation.x = S.swimK * 1.18; a.y += S.swimK * (.6 + Math.sin(performance.now() / 420) * .04);
-  if (!S.hx) return; const full = 40 * agiMul();
-  if (deep) S.stam = Math.max(0, (S.stam ?? 1) - dt / full); else S.stam = Math.min(1, (S.stam ?? 1) + dt / 16);
-  if (deep && S.stam <= 0 && S.land) { a.x = S.land[0]; a.z = S.land[1]; S.gy = null; S.walking = null; S.stam = .2; S.swimK = 0; try { const p = svP(); p.sat = Math.max(120, p.sat - 300); G().toast('🌊 Te quedaste sin aliento y el agua te devolvió a la orilla. Descansá antes de volver a nadar.'); } catch (e) {} }
-  const el = document.querySelector('.v3surv .sv-stam'); if (el) { const show = S.stam < .995; el.hidden = !show; if (show) { const i = el.firstChild; i.style.width = (S.stam * 100).toFixed(1) + '%'; i.className = S.stam < .25 ? 'low' : ''; el.lastChild.textContent = S.stam < .25 ? '¡Volvé a la orilla!' : deep ? '🏊 Aliento' : '😮‍💨 Recuperando'; } }
+  const av = S.av, deep = !!S.W && !S.pocket && S.W.hAt(a.x, a.z) < WATER.RL - 1.3 && S.gy < WATER.RL - .8 && !S.down, mov = !!(S.moving || S.freeMoving || S.walking);
+  S.swim = deep; S.swimMv = deep && mov; S.swimK = (S.swimK || 0) + ((deep ? (mov ? 1 : .3) : 0) - (S.swimK || 0)) * Math.min(1, dt * 3.5); S.swimUp = (S.swimUp || 0) + ((deep ? 1 : 0) - (S.swimUp || 0)) * Math.min(1, dt * 4); S.swimPh = (S.swimPh || 0) + dt * (mov ? 3.4 : 1.5);
+  if (!deep && !S.pocket && S.gy > WATER.RL - .5 && !blockedAt(a.x, a.z)) S.land = [a.x, a.z];
+  av.rotation.order = 'YXZ'; av.rotation.x = S.swimK * 1.3; a.y += S.swimUp * (.14 + S.swimK * .5 + Math.sin(performance.now() / 420) * .04);
+  if (S.grot && !S.pocket && performance.now() > (S.grotT || 0) && (a.x - S.grot.x) ** 2 + (a.z - S.grot.z) ** 2 < 16) { grotEnter(); return; }
+  if (!S.hx) return; const full = 40 * agiMul() * (legOn('perla') ? 2 : 1);
+  /* nadar gasta aliento; quedarse quieto flotando lo recupera, y en tierra vuelve más rápido */
+  if (deep && mov) S.stam = Math.max(0, (S.stam ?? 1) - dt / full); else S.stam = Math.min(1, (S.stam ?? 1) + dt / (deep ? 20 : 14));
+  if (deep && S.stam <= 0 && S.land) { a.x = S.land[0]; a.z = S.land[1]; S.gy = null; S.walking = null; S.stam = .2; S.swimK = 0; S.swimUp = 0; try { const p = svP(); p.sat = Math.max(120, p.sat - 300); G().toast('🌊 Te quedaste sin aliento y el agua te devolvió a la orilla. La próxima, frená y flotá para recuperarlo.'); } catch (e) {} }
+  const el = document.querySelector('.v3surv .sv-stam'); if (el) { const show = S.stam < .995; el.hidden = !show; if (show) { const i = el.firstChild; i.style.width = (S.stam * 100).toFixed(1) + '%'; i.className = S.stam < .25 && deep && mov ? 'low' : ''; el.lastChild.textContent = deep && mov ? (S.stam < .25 ? '¡Frená y flotá!' : '🏊 Aliento') : deep ? '🫧 Flotando' : '😮‍💨 Recuperando'; } }
 }
+
 function svP() { const p = G().P(); p.surv = p.surv || {}; const s = p.surv; if (s.sat == null) s.sat = SV.FULL; s.play = s.play || 0; s.inv = s.inv || {}; s.tools = s.tools || []; s.furn = s.furn || []; s.chest = s.chest || {}; return s; }
 function atP() { const p = G().P(); p.attr = p.attr || {}; ATTR.forEach(([k]) => { p.attr[k] = p.attr[k] || 0; }); if (!p.attr.v2 && typeof atMigrate === 'function') try { atMigrate(p.attr); } catch (e) {} return p.attr; }
 function atr(k) { return fv(k) / 10; }
@@ -6222,7 +6235,7 @@ function axVerse(dt) {
   try { const g = G(), t = g.stageLine && g.stageLine(); if (t) g.vo(t, 'narrador', { queue: 1 }); } catch (e) {}
 }
 /* poderes de las prendas legendarias: valen solo mientras la llevás puesta */
-const LEG_POW = { evangelio: ['Pies ligeros', 'Caminás y corrés un 15% más rápido.'], jose: ['Graneros llenos', 'El hambre te baja un 30% más lento.'], sacerdote: ['Consagrado', 'Tus atributos crecen un 25% más rápido con cada cosa que hacés.'] };
+const LEG_POW = { evangelio: ['Pies ligeros', 'Caminás y corrés un 15% más rápido.'], jose: ['Graneros llenos', 'El hambre te baja un 30% más lento.'], sacerdote: ['Consagrado', 'Tus atributos crecen un 25% más rápido con cada cosa que hacés.'], perla: ['Aliento profundo', 'Tu aliento para nadar dura el doble.'] };
 function legOn(id) { try { const e = gearState().eq; return Object.values(e).includes(id); } catch (e) { return false; } }
 function agiMul() { return (1 + atr('agi') * .06) * (legOn('evangelio') ? 1.15 : 1); }
 function lvlNow() { const g = G(); return g.level ? g.level() : 1; }
@@ -7336,14 +7349,105 @@ function pocketEnter(e) {
   a.set(cx + ex[0], y0, cz + ex[1] - .6); S.gy = y0; S.yaw = Math.PI; S.av.rotation.y = S.yaw; S.camYaw = 0; S.camDist = Math.min(S.camDist, 4.2); S.camPitch = Math.max(S.camPitch, .55);
   svToast('🕯️ Entraste a ' + d.name + '. Mirá lo que guarda; para salir, volvé a la luz de la entrada.'); tone3d();
 }
+/* ---------- la gruta del tesoro escondido: del otro lado del Mar de Galilea, a nado y tomando aliento. Un túnel largo, un mirador en el acantilado y un jardín escondido dentro de la montaña, con su cofre ---------- */
+function seaOk(x, z) { const q = S.sea; return !!q && !!S.W && Math.hypot(x - q.x, z - q.z) < 68.5 && S.W.hAt(x, z) < WATER.RL - .9; }
+function grotGlowTex() { if (grotGlowTex.t) return grotGlowTex.t; const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.35, 'rgba(255,255,255,.4)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return grotGlowTex.t = new THREE.CanvasTexture(c); }
+function grotGlow(col, s, op) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: grotGlowTex(), color: col, transparent: true, opacity: op ?? .8, blending: THREE.AdditiveBlending, depthWrite: false })); sp.scale.setScalar(s); return sp; }
+function grotMouth(scene, x, z, side) {
+  const g = new THREE.Group(), R = rng(8123), rt = texL('rock.jpg', 4), m = new THREE.MeshStandardMaterial({ map: rt, color: '#8E836E', roughness: 1, flatShading: true });
+  const rock = (px, py, pz, s) => { const o = new THREE.Mesh(new THREE.DodecahedronGeometry(s, 0), m); o.position.set(px, py, pz); o.rotation.set(R() * 3, R() * 3, R() * 3); o.scale.y = .8 + R() * .5; o.castShadow = o.receiveShadow = true; g.add(o); };
+  for (let i = 0; i <= 12; i++) { const an = i / 12 * Math.PI; rock(side * (.4 + R() * 1.4), Math.sin(an) * 3.9 - .4, Math.cos(an) * 4.6, 1.5 + R() * .9); }
+  for (let i = 0; i < 14; i++) rock(side * (2.6 + R() * 6), -.6 + R() * 4.2, (R() - .5) * 15, 2.6 + R() * 2);
+  const dk = new THREE.Mesh(new THREE.CircleGeometry(3.5, 20), new THREE.MeshBasicMaterial({ color: '#03080A' })); dk.rotation.y = -side * Math.PI / 2; dk.position.set(side * .9, .5, 0); g.add(dk);
+  const gl = grotGlow('#58E6D6', 5.5, .55); gl.position.set(side * .2, .9, 0); g.add(gl); const l = new THREE.PointLight('#4FE0D0', 7, 18, 1.6); l.position.set(-side * 1.5, 1.2, 0); g.add(l);
+  g.position.set(x, WATER.RL, z); scene.add(g); return g;
+}
+function grotEnter() {
+  if (!S || S.pocket || !S.grot) return; const G0 = S.grot, a = S.av.position, gx = G0.x, gz = G0.z, y0 = 240, g = new THREE.Group(), R = rng(4471), items = [], cols = [], gp = G().P();
+  g.position.set(gx, y0, gz); g.userData.keep = 1;
+  const CX = 64, RC = 23, PX = 78, PZ = 2, PR = 6.6, zc = x => 2.2 * Math.sin(x * .21) * sstep(0, 6, x) * (1 - sstep(33, 41, x));
+  const hL = (x, z) => { const r = Math.hypot(x - CX, z); if (x < 41 && r > RC - .5) return 0; if (r < 15.5) return -9; return -9 * sstep(.85, 2.55, Math.PI - Math.abs(Math.atan2(z, x - CX))); };
+  const okL = (x, z) => { if (x >= -1.8 && x <= 44 && Math.abs(z - zc(x)) < 1.25) return true; if (Math.hypot(x - CX, z) > RC - 1.2 || Math.hypot(x - PX, z - PZ) < PR + .2) return false; if (Math.abs(hL(x, z) - (S.gy - y0)) > 1) return false; for (const [cx2, cz2, cr] of cols) if ((x - cx2) ** 2 + (z - cz2) ** 2 < cr * cr) return false; return true; };
+  const rt = texL('rock.jpg', 4), M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .9 }, o || {}));
+  // la noche de la montaña alrededor: desde adentro no se ve el mundo de afuera
+  { const sh = new THREE.Mesh(new THREE.SphereGeometry(70, 24, 16), new THREE.MeshBasicMaterial({ color: '#04070A', side: THREE.BackSide, fog: false })); sh.position.set(44, 0, 0); g.add(sh); }
+  // el suelo: túnel, mirador, rampa y jardín
+  { const geo = new THREE.PlaneGeometry(96, 54, 184, 104); geo.rotateX(-Math.PI / 2); const P = geo.attributes.position, col = new Float32Array(P.count * 3), c = new THREE.Color(), c2 = new THREE.Color();
+    for (let i = 0; i < P.count; i++) { const x = P.getX(i) + 44, z = P.getZ(i), h = hL(x, z), r = Math.hypot(x - CX, z), n = Math.sin(x * 1.3 + z * .7) * Math.cos(z * 1.1 - x * .4), pd = Math.hypot(x - PX, z - PZ);
+      P.setXYZ(i, x, h + (h < -8.6 ? n * .07 - sstep(PR + 1, PR - 2, pd) * .5 : n * .04), z);
+      if (h < -8.6) { c.set('#5F9C3A').lerp(c2.set('#86C24E'), .5 + n * .5); if (pd < PR + 1.6) c.lerp(c2.set('#D6C594'), sstep(PR + 1.6, PR + .2, pd)); }
+      else { c.set('#B3A283').lerp(c2.set('#6E9A44'), Math.min(.55, -h / 9 * .7)); if (x < 40 && r > RC - .5) c.multiplyScalar(.4 + .25 * sstep(34, 40, x)); }
+      col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals(); const ft = texL('dirt.jpg', 4); ft.repeat.set(26, 15); const fm = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: ft, vertexColors: true, roughness: 1 })); fm.receiveShadow = true; fm.userData.nosh = 1; g.add(fm); }
+  // el túnel
+  { const pts = []; for (let x = -5; x <= 46; x += 2) pts.push(new THREE.Vector3(x, 1.05, zc(x))); const tt = rt.clone(); tt.needsUpdate = true; tt.repeat.set(14, 3); const tb = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 64, 3.1, 12), new THREE.MeshBasicMaterial({ map: tt, color: '#5A5346', side: THREE.BackSide })); tb.userData.nosh = 1; g.add(tb);
+    const day = new THREE.Mesh(new THREE.CircleGeometry(2.6, 20), new THREE.MeshBasicMaterial({ color: '#CFF1F5', fog: false })); day.rotation.y = Math.PI / 2; day.position.set(-4.6, 1.1, 0); g.add(day); const dg = grotGlow('#BFEFF5', 9, .5); dg.position.set(-3.6, 1.2, 0); g.add(dg); }
+  // la bóveda de la caverna, con el claro por donde entra el sol
+  const TOP = -3 + (RC + 1.5) * 1.25;
+  { let dg = new THREE.SphereGeometry(RC + 1.5, 48, 26); const P = dg.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i), k = 1 + Math.sin(x * .9 + z * .6) * Math.cos(z * .8 - y * 1.1) * .035; P.setXYZ(i, x * k, y * k * 1.25, z * k); }
+    dg = dg.toNonIndexed(); const Q = dg.attributes.position, keep = []; for (let i = 0; i < Q.count; i += 3) { const mx = (Q.getX(i) + Q.getX(i + 1) + Q.getX(i + 2)) / 3, my = (Q.getY(i) + Q.getY(i + 1) + Q.getY(i + 2)) / 3 - 3, mz = (Q.getZ(i) + Q.getZ(i + 1) + Q.getZ(i + 2)) / 3; if (mx < -18 && Math.abs(mz) < 3.3 && my > -1.2 && my < 4.4) continue; for (let j = 0; j < 3; j++) keep.push(Q.getX(i + j), Q.getY(i + j), Q.getZ(i + j)); }
+    const ng = new THREE.BufferGeometry(); ng.setAttribute('position', new THREE.Float32BufferAttribute(keep, 3)); const uv = new Float32Array(keep.length / 3 * 2); for (let i = 0; i < keep.length / 3; i++) { uv[i * 2] = Math.atan2(keep[i * 3 + 2], keep[i * 3]) / 6.283 * 9; uv[i * 2 + 1] = keep[i * 3 + 1] / 9; } ng.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); ng.computeVertexNormals();
+    const dt2 = rt.clone(); dt2.needsUpdate = true; const dome = new THREE.Mesh(ng, new THREE.MeshStandardMaterial({ map: dt2, color: '#A39A84', roughness: 1, side: THREE.BackSide, emissive: '#243230', emissiveIntensity: .55 })); dome.position.set(CX, -3, 0); dome.userData.nosh = 1; g.add(dome);
+    const oc = new THREE.Mesh(new THREE.CircleGeometry(5.6, 28), new THREE.MeshBasicMaterial({ color: '#FFFBE8', fog: false })); oc.rotation.x = Math.PI / 2; oc.position.set(CX + 5, TOP - 1.1, 1); g.add(oc);
+    const shf = new THREE.Mesh(new THREE.CylinderGeometry(5.2, 9, TOP + 9, 28, 1, true), new THREE.MeshBasicMaterial({ color: '#FFF3C4', transparent: true, opacity: .085, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false })); shf.position.set(CX + 5, (TOP - 9) / 2, 1); shf.userData.nosh = 1; g.add(shf);
+    const sun = new THREE.PointLight('#FFF1D0', 120, 80, 1.3); sun.position.set(CX + 5, 9, 1); g.add(sun); }
+  // la laguna y la cascada
+  const wf = { map: null };
+  { const w = new THREE.Mesh(new THREE.CircleGeometry(PR, 40), new THREE.MeshStandardMaterial({ color: '#2FC0B6', emissive: '#0E7A72', emissiveIntensity: .7, roughness: .06, metalness: .1, transparent: true, opacity: .84 })); w.rotation.x = -Math.PI / 2; w.position.set(PX, -8.84, PZ); w.userData.nosh = 1; g.add(w);
+    const c = document.createElement('canvas'); c.width = 64; c.height = 256; const x = c.getContext('2d'); for (let i = 0; i < 46; i++) { const sx = R() * 64, sy = R() * 256, ln = 40 + R() * 90, gr = x.createLinearGradient(0, sy, 0, sy + ln); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.5, 'rgba(255,255,255,' + (.5 + R() * .5) + ')'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(sx, sy, 1.5 + R() * 3, ln); x.fillRect(sx, sy - 256, 1.5 + R() * 3, ln); }
+    wf.map = new THREE.CanvasTexture(c); wf.map.wrapS = wf.map.wrapT = THREE.RepeatWrapping; wf.map.repeat.set(1, 2);
+    const fall = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 22), new THREE.MeshBasicMaterial({ map: wf.map, color: '#E8FBFF', transparent: true, opacity: .9, depthWrite: false, side: THREE.DoubleSide })); fall.rotation.y = -Math.PI / 2; fall.position.set(PX + 5.6, 2.1, PZ); fall.userData.nosh = 1; g.add(fall);
+    const back = new THREE.Mesh(new THREE.PlaneGeometry(3, 22), new THREE.MeshBasicMaterial({ color: '#8FD8E0', transparent: true, opacity: .35, depthWrite: false, side: THREE.DoubleSide })); back.rotation.y = -Math.PI / 2; back.position.set(PX + 5.75, 2.1, PZ); back.userData.nosh = 1; g.add(back);
+    const rm = new THREE.MeshStandardMaterial({ map: rt, color: '#8C8472', roughness: 1, flatShading: true }); for (let i = 0; i < 16; i++) { const o = new THREE.Mesh(new THREE.DodecahedronGeometry(1.6 + R() * 1.3, 0), rm); o.position.set(PX + 7 + R() * 1.6, -9 + i * 1.45, PZ + (R() - .5) * 4.4); o.rotation.set(R() * 3, R() * 3, R() * 3); g.add(o); }
+    for (let i = 0; i < 5; i++) { const ms = grotGlow('#E6FBFF', 3.4 + R() * 2, .22); ms.position.set(PX + 4.6 - R(), -8.2 + R() * 1.2, PZ + (R() - .5) * 3); g.add(ms); } }
+  // palmeras, pasto y flores
+  [[58, -10], [54, 5], [62, 11], [70, -11], [73, 11], [66, -3], [57, -3], [81, -9], [84, 8], [69, 6]].forEach(([x, z], i) => { const p = palm(R); p.scale.setScalar(1.7 + R() * .7); p.position.set(x, hL(x, z), z); p.rotation.y = R() * 6.283; p.traverse(o => { if (o.isMesh) o.castShadow = true; }); g.add(p); cols.push([x, z, .45]); });
+  { const spot = () => { for (let t = 0; t < 30; t++) { const an = R() * 6.283, r = Math.sqrt(R()) * 21, x = CX + Math.cos(an) * r, z = Math.sin(an) * r; if (hL(x, z) < -8.6 && Math.hypot(x - PX, z - PZ) > PR + .5) return [x, z]; } return [CX, 0]; }, Mx = new THREE.Matrix4(), Qn = new THREE.Quaternion(), c = new THREE.Color();
+    const gr = new THREE.InstancedMesh(new THREE.ConeGeometry(.07, .42, 4), new THREE.MeshStandardMaterial({ roughness: 1 }), 1100); for (let i = 0; i < 1100; i++) { const [x, z] = spot(), s = .7 + R() * 1.1; Qn.setFromEuler(new THREE.Euler((R() - .5) * .5, R() * 6, (R() - .5) * .5)); Mx.compose(new THREE.Vector3(x, -9 + .2 * s, z), Qn, new THREE.Vector3(s, s, s)); gr.setMatrixAt(i, Mx); gr.setColorAt(i, c.set(R() < .5 ? '#6FAE40' : '#8CCB55')); } gr.userData.nosh = 1; g.add(gr);
+    const fl = new THREE.InstancedMesh(new THREE.SphereGeometry(.1, 6, 5), new THREE.MeshStandardMaterial({ roughness: .6 }), 380), FC = ['#FFFFFF', '#FFD1E3', '#FFE27A', '#C9A6FF', '#FF9AB0', '#FFFFFF']; for (let i = 0; i < 380; i++) { const [x, z] = spot(), s = .8 + R() * .9; Mx.compose(new THREE.Vector3(x, -9 + .3 + R() * .15, z), Qn.identity(), new THREE.Vector3(s, s * .7, s)); fl.setMatrixAt(i, Mx); fl.setColorAt(i, c.set(FC[i % FC.length])); } fl.userData.nosh = 1; g.add(fl); }
+  // cristales que alumbran el túnel y la caverna
+  const crys = []; [[7, 1, 0], [16, -1, 1], [25, 1, 0], [34, -1, 1], [50, -15, 0], [50, 15, 1], [68, -20, 0], [86, -6, 1], [64, 21, 0]].forEach(([x, sd, vi], i) => { const tun = i < 4, z = tun ? zc(x) + sd * 2.35 : sd, y = hL(x, z), cg = new THREE.Group(), col = vi ? '#B58CFF' : '#49E6D4', m = new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 1.6, roughness: .2, flatShading: true });
+    for (let j = 0; j < 5; j++) { const o = new THREE.Mesh(new THREE.OctahedronGeometry(.16 + R() * .14, 0), m); o.scale.y = 2.2 + R() * 1.8; o.position.set((R() - .5) * .5, .3 + R() * .3, (R() - .5) * .5); o.rotation.set((R() - .5) * .9, R() * 3, (R() - .5) * .9); cg.add(o); }
+    const gl = grotGlow(col, tun ? 3.4 : 4.6, .5); gl.position.y = .6; cg.add(gl); if (tun) { const l = new THREE.PointLight(col, 7, 10, 1.6); l.position.y = .9; cg.add(l); } cg.position.set(x, y, z); g.add(cg); crys.push(gl); if (!tun) cols.push([x, z, .6]); });
+  // luciérnagas
+  const ffN = 150, ffP = new Float32Array(ffN * 3), ff0 = []; for (let i = 0; i < ffN; i++) { const an = R() * 6.283, r = Math.sqrt(R()) * 20; ff0.push([CX + Math.cos(an) * r, -8.3 + R() * 5, Math.sin(an) * r, R() * 6.283]); } const ffG = new THREE.BufferGeometry(); ffG.setAttribute('position', new THREE.BufferAttribute(ffP, 3)); const ffM = new THREE.Points(ffG, new THREE.PointsMaterial({ map: grotGlowTex(), color: '#FFE9A0', size: .32, transparent: true, opacity: .95, blending: THREE.AdditiveBlending, depthWrite: false })); ffM.frustumCulled = false; g.add(ffM);
+  // el cofre del tesoro escondido
+  const CH = [66, -10], chest = new THREE.Group(), lid = new THREE.Group(), opened = !!gp.grotC;
+  { const wd = M('#6B4524', { roughness: .8 }), gold = M('#E3B54A', { metalness: .85, roughness: .3, emissive: '#6A4A10', emissiveIntensity: .5 }), B = (w, h, d, m, x, y, z, p) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = true; (p || chest).add(o); return o; };
+    const dais = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.95, .34, 24), M('#A39A86', { map: rt })); dais.position.y = .17; dais.receiveShadow = true; chest.add(dais);
+    B(1.2, .62, .78, wd, 0, .65, 0); [-.42, 0, .42].forEach(x => B(.1, .66, .82, gold, x, .65, 0)); B(1.24, .06, .82, gold, 0, .36, 0);
+    lid.position.set(0, .96, -.39); const lg = new THREE.Mesh(new THREE.CylinderGeometry(.39, .39, 1.2, 14, 1, false, 0, Math.PI), wd); lg.rotation.z = Math.PI / 2; lg.rotation.y = Math.PI / 2; lg.position.set(0, 0, .39); lg.castShadow = true; lid.add(lg); [-.42, 0, .42].forEach(x => { const b = new THREE.Mesh(new THREE.CylinderGeometry(.405, .405, .1, 14, 1, false, 0, Math.PI), gold); b.rotation.z = Math.PI / 2; b.rotation.y = Math.PI / 2; b.position.set(x, 0, .39); lid.add(b); }); B(.16, .2, .05, gold, 0, -.02, .8, lid); chest.add(lid);
+    for (let i = 0; i < 26; i++) { const cn = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, .018, 10), gold); cn.position.set((R() - .5) * .95, .9 + R() * .08, (R() - .5) * .55); cn.rotation.set(R() * .8, R() * 3, R() * .8); chest.add(cn); }
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(.5, .9, 9, 18, 1, true), new THREE.MeshBasicMaterial({ color: '#FFE39A', transparent: true, opacity: opened ? .05 : .16, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false })); beam.position.y = 5.2; chest.add(beam); chest.userData.beam = beam;
+    const cl = new THREE.PointLight('#FFD27A', 10, 9, 1.6); cl.position.y = 1.8; chest.add(cl); const hg = grotGlow('#FFE39A', 3.2, .5); hg.position.y = 1.2; chest.add(hg); chest.userData.hg = hg;
+    if (opened) lid.rotation.x = -1.9; chest.position.set(CH[0], -9, CH[1]); chest.rotation.y = -.5; g.add(chest); cols.push([CH[0], CH[1], 1.15]); }
+  // lo que hay para mirar
+  [[47.4, 0, ['El mirador', '✨', 'Desde acá se ve todo el jardín escondido en el corazón de la montaña. Hay cosas que ningún ojo vio ni oído oyó, y que Dios preparó para los que lo aman.', '1 Corintios 2:9']],
+   [70.6, 1, ['Manantial de agua viva', '💧', 'Jesús prometió un agua distinta: quien la bebe no vuelve a tener sed, porque dentro suyo se vuelve un manantial que salta para vida eterna.', 'Juan 4:14']],
+   [71.5, -8, ['Árbol junto a las aguas', '🌴', 'Quien se deleita en la palabra de Dios es como un árbol plantado junto a corrientes de agua: da su fruto a su tiempo y su hoja no se seca.', 'Salmo 1:3']],
+   [60, 8, ['Lirios del campo', '🌸', 'Ni Salomón, con todo su esplendor, se vistió como una de estas flores. Si Dios viste así al campo, cuánto más va a cuidar de vos.', 'Mateo 6:28-30']]
+  ].forEach(([x, z, it]) => { const h = new THREE.Group(); h.position.set(x, hL(x, z), z); const lb = textSprite(it[1], true); lb.scale.multiplyScalar(.5); lb.position.y = 1.45; h.add(lb); g.add(h); items.push({ x: gx + x, z: gz + z, it, lb }); });
+  g.traverse(o => { if (o.isMesh && !o.userData.nosh && !o.isInstancedMesh && o.material && !o.material.isMeshBasicMaterial) o.castShadow = true; }); S.scene.add(g);
+  const flr = {}, fl = new THREE.Object3D(); let seenT = 0;
+  const tick = dt => { const P = S.pocket, lx = a.x - gx, lz = a.z - gz; if (wf.map) wf.map.offset.y += dt * .85; crys.forEach((c2, i) => { c2.material.opacity = .42 + Math.sin(P.t * 1.7 + i * 1.3) * .14; });
+    for (let i = 0; i < ffN; i++) { const f = ff0[i]; ffP[i * 3] = f[0] + Math.sin(P.t * .5 + f[3]) * .9; ffP[i * 3 + 1] = f[1] + Math.sin(P.t * .8 + f[3] * 2) * .5; ffP[i * 3 + 2] = f[2] + Math.cos(P.t * .45 + f[3]) * .9; } ffG.attributes.position.needsUpdate = true;
+    if (lx < 40) S.camDist = Math.min(S.camDist, 3.3); else S.camDist = Math.min(S.camDist, 11);
+    if (P.lidT > 0) { P.lidT = Math.max(0, P.lidT - dt); const k = 1 - P.lidT / 1.6; lid.rotation.x = -1.9 * sstep(0, 1, k); chest.userData.hg.scale.setScalar(3.2 + Math.sin(k * Math.PI) * 5); }
+    if (!gp.grotC && Math.hypot(lx - CH[0], lz - CH[1]) < 2.5) { gp.grotC = vday(); G().save(); P.lidT = 1.6; chest.userData.beam.material.opacity = .05; tone3d(); svToast('🗝️ ¡Abriste el cofre del tesoro escondido!'); try { h3do(['M_Kneeling_Inspecting', 'M_Cheering'], 2); } catch (e) {} if (S.hx) { try { svAdd('money', 40); } catch (e) {} } setTimeout(() => { try { gearGive(GEAR.find(q => q.id === 'perla'), 'Cofre de la gruta escondida'); } catch (e) {} }, 1500); }
+    if (!S.hx) { seenT -= dt; if (seenT <= 0) for (const it of items) if (!it.seen && (a.x - it.x) ** 2 + (a.z - it.z) ** 2 < 4) { it.seen = 1; seenT = 3; svToast(it.it[1] + ' ' + it.it[0] + ' · ' + it.it[3]); break; } }
+    if (lx < -1.3) { S.grotT = performance.now() + 5000; pocketExit(); } };
+  S.pocket = { e: { d: { id: 'gruta', name: 'la gruta del tesoro escondido' } }, g, cx: gx, cz: gz, r: 0, y0, flr, items, cols: [], ex: [gx - 9, gz], back: [G0.bx, gz, -G0.side * Math.PI / 2], cam: [S.camDist, S.camPitch], fl, t: 0, ok: okL, hAt: (x, z) => y0 + hL(x - gx, z - gz), tick, lidT: 0 };
+  a.set(gx + 1.6, y0, gz + zc(1.6)); S.gy = y0; S.yaw = Math.PI / 2; S.av.rotation.y = S.yaw; S.camYaw = 0; S.camDist = 3.2; S.camPitch = .3; S.walking = null; S.stam = Math.max(S.stam ?? 1, .6);
+  if (!gp.dfind) gp.dfind = {}; if (!gp.dfind.gruta) { gp.dfind.gruta = vday(); G().save(); svToast('✨ Encontraste la gruta del tesoro escondido. Seguí el túnel hasta el final.'); } else svToast('🕯️ Volviste a la gruta del tesoro escondido.'); tone3d();
+}
 function pocketExit() {
   const P = S && S.pocket; if (!P) return; S.pocket = null; if (P.g.parent) P.g.parent.remove(P.g); P.g.traverse(o => { if (o.geometry) o.geometry.dispose(); }); const i = S.floors.indexOf(P.flr); if (i >= 0) S.floors.splice(i, 1);
   const a = S.av.position; let [x, z, yaw] = P.back; if (!(Math.hypot(x - P.cx, z - P.cz) > 2.2)) { const an = Math.atan2(x - P.cx, z - P.cz) || 0; x = P.cx + Math.sin(an) * 2.8; z = P.cz + Math.cos(an) * 2.8; }
   a.set(x, 0, z); S.gy = Math.max(0, S.W ? S.W.hAt(x, z) : 0); a.y = S.gy; S.yaw = yaw; S.av.rotation.y = yaw; S.camDist = P.cam[0]; S.camPitch = P.cam[1];
 }
-function pocketOk(x, z) { const P = S.pocket; if (Math.hypot(x - P.cx, z - P.cz) > P.r) return false; for (const [a, b, r] of P.cols) if ((x - a) ** 2 + (z - b) ** 2 < (r + .3) ** 2) return false; return true; }
+function pocketOk(x, z) { const P = S.pocket; if (P.ok) return P.ok(x - P.cx, z - P.cz); if (Math.hypot(x - P.cx, z - P.cz) > P.r) return false; for (const [a, b, r] of P.cols) if ((x - a) ** 2 + (z - b) ** 2 < (r + .3) ** 2) return false; return true; }
 function pocketNear() { const P = S && S.pocket; if (!P) return null; const a = S.av.position; if ((a.x - P.ex[0]) ** 2 + (a.z - P.ex[1]) ** 2 < 1.6 * 1.6) return { k: 'secx', label: 'Salir del lugar secreto' }; for (const it of P.items) if ((a.x - it.x) ** 2 + (a.z - it.z) ** 2 < 1.6 * 1.6) return { k: 'seci', it, label: 'Mirar · ' + it.it[0] }; return null; }
-function pocketTick(dt) { const P = S && S.pocket; if (!P) return; P.t += dt; P.fl.scale.y = 1 + Math.sin(P.t * 13) * .12 + Math.sin(P.t * 7.3) * .08; P.items.forEach((it, i) => { it.lb.position.y = 1.45 + Math.sin(P.t * 1.6 + i) * .06; }); if (S.walking) pocketExit(); }
+function pocketTick(dt) { const P = S && S.pocket; if (!P) return; P.t += dt; P.fl.scale.y = 1 + Math.sin(P.t * 13) * .12 + Math.sin(P.t * 7.3) * .08; P.items.forEach((it, i) => { it.lb.position.y = 1.45 + Math.sin(P.t * 1.6 + i) * .06; }); if (P.tick) { P.tick(dt); return; } if (S.walking) pocketExit(); }
 function pocketItem(n) { const [nm, ic, ds, ref] = n.it.it; vilSheet(`<div class="inv-h"><b>${ic} ${esc(nm)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">Objeto único · ${esc(S.pocket ? S.pocket.e.d.name : '')}</small><p class="vil-p">${esc(ds)}</p><small class="vil-k">📖 ${esc(ref)}</small>`); h3do(['M_Kneeling_Inspecting', 'M_Looking'], 2); }
 function secretHint() { const M = SEC.mod; if (!M || !SEC.list.length) return; const p = secP(), left = SEC.list.filter(e => !p.secrets[e.d.id]); if (!left.length) return; const e = left[Math.floor(Math.random() * left.length)], rn = G().REGIONS[e.r] ? G().REGIONS[e.r].name : '';
   svToast(`🧭 Te cuentan un secreto: en la etapa ${rn} hay ${e.d.hint}.`); behav('pistas'); }
@@ -7354,7 +7458,7 @@ function svShop(kind) {
     const rows = sh.buy.map(([t, k, p], i) => { const cost = price(p); let label = '', ico = '', owned = false;
       if (t === 't') { label = TOOLS[k][0]; ico = TOOLS[k][1]; owned = s.tools.includes(k); }
       else if (t === 'r') { label = RES[k][0]; ico = RES[k][1]; }
-      else { const left = GEAR.filter(x => x.r === k && !gearState().own.includes(x.id)); owned = !left.length; label = 'Prenda ' + RAR[k][0].toLowerCase() + (left.length ? ' (al azar)' : ''); ico = '🧵'; }
+      else { const left = GEAR.filter(x => x.r === k && !x.x && !gearState().own.includes(x.id)); owned = !left.length; label = 'Prenda ' + RAR[k][0].toLowerCase() + (left.length ? ' (al azar)' : ''); ico = '🧵'; }
       return `<div class="sv-rec${owned || money() < cost ? ' off' : ''}"><div><b>${ico} ${esc(label)}</b><small>${owned ? 'Ya lo tenés' : cost + ' denarios'}</small></div><button data-b="${i}" ${owned || money() < cost ? 'disabled' : ''}>Comprar</button></div>`; }).join('');
     const sells = sh.sell.filter(k => (s.inv[k] || 0) > 0).map(k => `<div class="sv-rec"><div><b>${RES[k][1]} ${RES[k][0]}</b><small>Tenés ${s.inv[k]} · ${SELL[k]} denario${SELL[k] > 1 ? 's' : ''} cada uno</small></div><button data-s="${k}">Vender 1</button><button data-sa="${k}">Todo</button></div>`).join('');
     el.innerHTML = `<div class="inv hx sv-sheet"><div class="inv-h"><b>${esc(sh.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="sv-have"><span class="sv-chip">🪙 ${money()} denarios</span>${servV() >= 3 ? '<span class="sv-chip">10% menos por tu servicio</span>' : ''}</div>${S.hx && kind === 'mercado' ? `<div class="vil-hag"><button data-h="0" class="${S.haggle ? '' : 'on'}">Pagar lo justo</button><button data-h="1" class="${S.haggle ? 'on' : ''}">Regatear duro (−20%)</button><small>${S.haggle ? 'Regatear te ahorra denarios, pero en la aldea lo notan.' : 'Pagar lo justo suma Gentileza y reputación.'}</small></div>` : ''}
@@ -7364,7 +7468,7 @@ function svShop(kind) {
     el.querySelectorAll('[data-b]').forEach(b => b.onclick = () => { const [t, k, p] = sh.buy[+b.dataset.b], cost = price(p); if (money() < cost) return; if (S.hx && kind === 'mercado') { const vv = vilNearest(60); if (S.haggle) { if (vv) repAdd(vv.name, -1); behav('regateos'); } else { if (vv) repAdd(vv.name, 1); axGain('gent', 1); behav('pagoJusto'); } }
       if (t === 't') { if (s.tools.includes(k)) return; svAdd('money', -cost); svGiveTool(k, 'Compraste'); }
       else if (t === 'r') { svAdd('money', -cost); svAdd(k, 1); }
-      else { const left = GEAR.filter(x => x.r === k && !gearState().own.includes(x.id)); if (!left.length) return; svAdd('money', -cost); gearGive(left[Math.floor(Math.random() * left.length)], 'Compraste'); }
+      else { const left = GEAR.filter(x => x.r === k && !x.x && !gearState().own.includes(x.id)); if (!left.length) return; svAdd('money', -cost); gearGive(left[Math.floor(Math.random() * left.length)], 'Compraste'); }
       tone3d(); G().save(); svUI(); draw(); });
     const sell = (k, n) => { n = Math.min(n, s.inv[k] || 0); if (!n) return; svAdd(k, -n); svAdd('money', n * SELL[k]); G().save(); svUI(); draw(); };
     el.querySelectorAll('[data-s]').forEach(b => b.onclick = () => sell(b.dataset.s, 1)); el.querySelectorAll('[data-sa]').forEach(b => b.onclick = () => sell(b.dataset.sa, 999));
