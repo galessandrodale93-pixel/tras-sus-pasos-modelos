@@ -6193,7 +6193,7 @@ function swimTick(dt, a) {
   const av = S.av, deep = !!S.W && !S.pocket && S.W.hAt(a.x, a.z) < WATER.RL - 1.3 && S.gy < WATER.RL - .8 && !S.down, mov = !!(S.moving || S.freeMoving || S.walking);
   S.swim = deep; S.swimMv = deep && mov; S.swimK = (S.swimK || 0) + ((deep ? (mov ? 1 : .3) : 0) - (S.swimK || 0)) * Math.min(1, dt * 3.5); S.swimUp = (S.swimUp || 0) + ((deep ? 1 : 0) - (S.swimUp || 0)) * Math.min(1, dt * 4); S.swimPh = (S.swimPh || 0) + dt * (mov ? 2.9 : 1.5);
   if (!deep && !S.pocket && S.gy > WATER.RL - .5 && !blockedAt(a.x, a.z)) S.land = [a.x, a.z];
-  av.rotation.order = 'YXZ'; av.rotation.x = S.swimK * 1.22; a.y += S.swimUp * (Math.max(0, S.swimK - .3) * .6 + Math.sin(performance.now() / 420) * .04);
+  av.rotation.order = 'YXZ'; av.rotation.x = S.swimK * 1.22; if (S.swimUp > .01) { const tg = WATER.RL - 1.3 + Math.max(0, Math.min(1, (S.swimK - .3) / .7)) * .9 + Math.sin(performance.now() / 420) * .04; a.y += (tg - a.y) * S.swimUp; } /* nadando, el cuerpo queda a ras del agua con la cabeza afuera; flotando, con el agua al cuello */
   if (S.grot && !S.pocket && performance.now() > (S.grotT || 0) && (a.x - S.grot.x) ** 2 + (a.z - S.grot.z) ** 2 < 16) { try { grotEnter(); } catch (e) { S.grotT = performance.now() + 4000; console.warn('[gruta]', e); } return; }
   if (!S.hx) return; const full = 30 * agiMul() * (legOn('perla') ? 2 : 1);
   /* nadar gasta aliento; quedarse quieto flotando lo recupera, y en tierra vuelve más rápido */
