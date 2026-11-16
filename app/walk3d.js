@@ -7248,7 +7248,7 @@ const VIVO = {
       ['Desierto de Judea', [-12, 10], 'Cuando terminaron las tentaciones, el diablo se alejó de Jesús hasta que llegara otra oportunidad. Y vinieron ángeles a cuidarlo.']
     ],
     fire: { at: 'Desierto de Judea', off: [-15, 1], steps: [
-      ['nar', 'Noche fría en el desierto de Judea. Eleazar y Asher encienden un fuego chico entre las piedras.'],
+      ['nar', 'Cae el sol en el desierto de Judea. Eleazar y Asher encienden un fuego chico entre las piedras.'],
       ['zel', 'Si yo pasara cuarenta días sin comer y alguien me dijera que convierta las piedras en pan… lo hago sin pensarlo.'],
       ['esc', 'Jesús tenía hambre de verdad. Y respondió: «La gente no vive solo de pan, sino de cada palabra que sale de la boca de Dios».']],
       ask: ['zel', '¿Vos qué pensás? ¿Por qué se quedó con hambre?'],
@@ -7296,7 +7296,7 @@ const VIVO = {
       ['Mar de Galilea', [-48, 0], 'Cuando vio la pesca milagrosa, Pedro cayó de rodillas: «Señor, apártate de mí, soy un hombre pecador». Jesús le respondió: «No tengas miedo».']
     ],
     fire: { at: 'Mar de Galilea', off: [-44, -14], steps: [
-      ['nar', 'Noche junto al Mar de Galilea. Se escuchan las olas y las barcas que vuelven. Eleazar y Asher se sientan con vos alrededor del fuego.'],
+      ['nar', 'Atardece junto al Mar de Galilea. Se escuchan las olas y las barcas que vuelven. Eleazar y Asher se sientan con vos alrededor del fuego.'],
       ['zel', 'Pedro dejó la barca, las redes, todo. Yo dudo que pudiera dejar todo de un día para el otro.'],
       ['esc', 'Antes de llamarlo, Jesús le llenó las redes. Pedro entendió que tenía delante a alguien que valía más que cualquier pesca.']],
       ask: ['zel', '¿Vos qué pensás? ¿Qué hace que alguien deje todo para seguirlo?'],
