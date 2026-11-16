@@ -3167,7 +3167,7 @@ function ksPayload(){const p=current;if(!p||!KS.sid)return null;const f=KS.fps.s
     lore:Math.max(0,Object.keys(p.dlore||{}).length-KS.lore0),sellos:Math.max(0,ksSellos()-KS.sel0),juegos:KS.games,sala:KS.sala,amigos:KS.amigos,
     nivelIni:KS.lv0,nivelFin:lvOf(total(p)),horas:Math.round((p.playMs||0)/36e3)/100,pase:KH.activo===true?'activo':khLocked(p)?'cerrado':'libre',cierre:KS.cierre,cierreAt:p.khc&&p.khc.at?new Date(p.khc.at).toISOString():'',pagoAt:p.khc&&p.khc.pago?new Date(p.khc.pago).toISOString():'',cierreVeces:(p.khc&&p.khc.n)||0,
     tester:(()=>{try{return localStorage.getItem('tsp:tester')==='1';}catch(e){return false;}})()};}
-function ksSend(force){const x=ksPayload();if(!x||(x.seg<20&&!force))return;KS.sent=KS.act;const b=JSON.stringify(x);try{if(navigator.sendBeacon&&navigator.sendBeacon(KS_API,new Blob([b],{type:'text/plain'})))return;}catch(e){}try{fetch(KS_API,{method:'POST',body:b,headers:{'Content-Type':'text/plain'},keepalive:true}).catch(()=>{});}catch(e){}}
+function ksSend(force){const x=ksPayload();if(!x||(x.seg<20&&!force))return;KS.sent=KS.act;const b=JSON.stringify(x);/* fetch con keepalive y sin cookies: el sendBeacon manda las cookies del aparato y la web de Habitat lo rechaza (403) */try{fetch(KS_API,{method:'POST',body:b,headers:{'Content-Type':'text/plain'},keepalive:true,credentials:'omit',mode:'cors'}).catch(()=>{});}catch(e){}}
 setInterval(()=>{try{
   if(!ksIn3d()){if(KS.sid&&!current){ksSend(KS.cierre);KS.sid=null;}return;}
   if(!KS.sid||KS.perfil!==(current.id||'')||KS.rama!==branch){if(KS.sid)ksSend();ksStart();}
