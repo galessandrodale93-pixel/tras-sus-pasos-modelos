@@ -27,10 +27,13 @@
 
 <section class="cx-hero"><div class="wrap">
   <div class="hi rv in"><span class="kick">Campus Habitat</span><h1>Hola<em id="hiName"></em></h1><p id="hiLine">Cargando tus cursos…</p><div class="hi-act"><a class="out" href="#agenda" id="bell">Avisos<span class="bd" id="bellN" hidden></span></a><a class="out" href="/biblia.html">Biblia</a><a class="out" href="/diario.html">Mi diario</a><a class="out" href="/perfil.html">Mi perfil</a><span class="gdd" id="gesWrap" hidden><button class="out gold eq-btn" type="button" id="lnGes" aria-haspopup="true" aria-expanded="false">Gestión Habitat<span class="bd" id="gesN" hidden></span></button><div class="gdd-m" id="gesMenu" role="menu"></div></span><a class="out gold" href="/testimonio.html" id="lnTes" hidden>Mi testimonio 🎥</a><button class="out-txt" type="button" id="outBtn">Cerrar sesión</button></div></div>
+  <div class="hside">
   <a class="resume rv in" id="resume" href="#" hidden>
     <div class="rimg"><img id="rImg" src="" alt=""><span class="play" aria-hidden="true">▶</span></div>
     <div class="rtx"><span class="kick">Continuar</span><b id="rStep"></b><small id="rProg"></small><div class="bar"><i id="rBar"></i></div></div>
   </a>
+  <div class="mc rv in" id="miniCal" aria-label="Mi calendario"><div class="mc-h"><button type="button" class="mc-n" data-m="-1" aria-label="Mes anterior">‹</button><b id="mcT">Mi calendario</b><button type="button" class="mc-n" data-m="1" aria-label="Mes siguiente">›</button></div><div class="mc-g" id="mcG"></div><div class="mc-d" id="mcD"><p class="mc-e">Cargando tus fechas…</p></div></div>
+  </div>
 </div></section>
 <div class="wrap" id="deudaBox" hidden><div class="cu-alert"><span class="cu-ai">⚠️</span><div class="cu-at"><b id="deudaT"></b><span id="deudaD"></span></div><div class="cu-aa"><button type="button" class="cu-b cu-cp" data-copy>📋 Copiar alias</button><button type="button" class="cu-b cu-up" data-subir>📎 Ya pagué</button></div></div></div>
 <section class="cx-stats"><div class="wrap">
@@ -98,6 +101,22 @@
 .cal-hc h3{font:500 1.6rem var(--serif);margin:0 0 6px}.cal-hc p{margin:0 0 10px;color:var(--muted)}.cal-hc ol{padding-left:20px;margin:0 0 14px;display:grid;gap:8px}
 .cal-hb{display:flex;gap:8px;flex-wrap:wrap}.cal-b{font:600 .88rem var(--sans);background:var(--ink);color:var(--cream);border:0;border-radius:12px;padding:11px 16px;cursor:pointer;text-decoration:none}.cal-b.s{background:var(--paper);color:var(--ink);border:1px solid var(--line)}
 .cal-hn{font-size:.85rem;margin-top:12px!important}
+.hside{display:grid;gap:16px;min-width:0}
+.mc{background:#fff;border-radius:20px;padding:16px 16px 14px;box-shadow:0 18px 40px rgba(0,0,0,.18);color:var(--ink)}
+.mc-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px}.mc-h b{font:500 1.35rem var(--serif);text-transform:capitalize}
+.mc-n{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--paper);font:600 1.1rem var(--sans);cursor:pointer;color:var(--ink)}.mc-n:disabled{opacity:.3;cursor:default}
+.mc-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
+.mc-w{font:600 .66rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:2px 0}
+.mc-c{position:relative;aspect-ratio:1/1;max-height:42px;border:0;border-radius:10px;background:none;font:500 .9rem var(--sans);color:var(--ink);cursor:pointer;display:grid;place-items:center;padding:0}
+.mc-c.out{visibility:hidden}.mc-c.past{color:rgba(16,37,29,.35)}.mc-c.hoy{outline:2px solid var(--gold);outline-offset:-2px}
+.mc-c.has{background:var(--paper);font-weight:700}.mc-c.sel{background:var(--ink);color:var(--cream)}
+.mc-c i{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);display:flex;gap:2px}.mc-c i em{width:5px;height:5px;border-radius:50%;background:var(--sea)}
+.mc-c i em.Examen,.mc-c i em.Entrega{background:#b0562f}.mc-c i em.Zarza,.mc-c i em.Selah{background:var(--gold)}.mc-c i em.srv{background:#1f8f4e}
+.mc-d{border-top:1px solid var(--line);margin-top:10px;padding-top:10px;display:grid;gap:6px;max-height:190px;overflow:auto}
+.mc-i{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline;font-size:.88rem}.mc-i b{font-weight:700}.mc-i span{color:var(--muted);font-size:.8rem}
+.mc-i small{grid-row:span 2;font:600 .72rem var(--sans);color:var(--gold);text-transform:uppercase;min-width:42px}
+.mc-e{margin:0;color:var(--muted);font-size:.88rem}
+.mc-l{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.72rem;color:var(--muted);margin-top:6px}.mc-l span{display:inline-flex;align-items:center;gap:4px}.mc-l em{width:7px;height:7px;border-radius:50%;background:var(--sea);display:inline-block}
 </style>
 <section class="cx-sec" id="opina" hidden><div class="wrap">
   <div class="cx-h"><h2>¿Cómo estuvo la clase?</h2></div>
@@ -257,7 +276,7 @@ function cuota(){var tk='',R=null,MC=['ene','feb','mar','abr','may','jun','jul',
  async function cargar(){try{R=await api('GET');if(!R.ok||!R.alumno||!(R.escuelas||[]).length)return;pintar();}catch(e){}}
  (async function(){try{var A=window.HabitatAuth;await A.api('GET','/members/v1/members/my');tk=JSON.parse(localStorage.getItem('habitat:mtok')).a;cargar();}catch(e){}})();}
 cuota();
-function agenda(pids,car){X.agenda(pids,car).then(function(L){
+function agenda(pids,car){X.agenda(pids,car).then(function(L){miniCal(L);
  var now=Date.now(),up=L.filter(function(e){return (e.end||e.ini).getTime()>=now-3600e3;}),av=L.filter(function(e){return /aviso/i.test(e.tipo||'')&&e.ini.getTime()<=now;}).reverse().slice(0,4);
  var n=X.unseen(L);var bn=document.getElementById('bellN');if(n){bn.textContent=n;bn.hidden=false;}
  document.getElementById('bell').addEventListener('click',function(){X.markSeen();bn.hidden=true;});
@@ -265,8 +284,35 @@ function agenda(pids,car){X.agenda(pids,car).then(function(L){
  var h=up.filter(function(e){return !/aviso/i.test(e.tipo||'');}).slice(0,6).map(it).join('');
  var ha=av.map(it).join('');
  document.getElementById('agList').innerHTML=(ha?'<h3 class="ag-h">Avisos</h3>'+ha:'')+(h?'<h3 class="ag-h">Próximamente</h3>'+h:'')||'<p class="cx-empty">No hay clases en vivo ni avisos por ahora. Cuando haya, te aparecen acá y en tu calendario.</p>';
-}).catch(function(){document.getElementById('agList').innerHTML='<p class="cx-empty">No pudimos cargar la agenda.</p>';});
+}).catch(function(){document.getElementById('agList').innerHTML='<p class="cx-empty">No pudimos cargar la agenda.</p>';document.getElementById('mcD').innerHTML='<p class="mc-e">No pudimos cargar tus fechas.</p>';});
  document.getElementById('calG').href=X.google();document.getElementById('calI').href=X.webcal();calPersonal();}
+function miniCal(L){
+ var ML=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],DL=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+ var E=(L||[]).filter(function(e){return e.ini&&!/aviso/i.test(e.tipo||'');});
+ var k=function(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);};
+ var by={};E.forEach(function(e){(by[k(e.ini)]=by[k(e.ini)]||[]).push(e);});
+ var hoy=new Date();hoy.setHours(0,0,0,0);var base=new Date(hoy.getFullYear(),hoy.getMonth(),1),off=0,sel='';
+ var cls=function(e){return /servicio/i.test(e.tipo||'')?'srv':String(e.tipo||'Clase').split(' ')[0];};
+ var nom=function(e){var t=e.tipo||'',ti=e.title||'';return (/aviso/i.test(t)||!t||ti.toLowerCase().indexOf(t.toLowerCase())===0?'':t+' · ')+ti;};
+ function lista(keys,tit){var h=keys.map(function(kk){return by[kk].map(function(e){var d=e.ini;return '<div class="mc-i"><small>'+DL[d.getDay()].slice(0,3)+' '+d.getDate()+'</small><b>'+X.esc(nom(e))+'</b><span>'+(e.curso?X.esc(e.curso)+' · ':'')+X.hora(d)+' h</span></div>';}).join('');}).join('');return h||'<p class="mc-e">'+tit+'</p>';}
+ function draw(){
+  var m=new Date(base.getFullYear(),base.getMonth()+off,1),y=m.getFullYear(),mo=m.getMonth();
+  document.getElementById('mcT').textContent=ML[mo]+(y!==hoy.getFullYear()?' '+y:'');
+  var g=['lu','ma','mi','ju','vi','sá','do'].map(function(d){return '<span class="mc-w">'+d+'</span>';}).join(''),pad=(m.getDay()+6)%7,n=new Date(y,mo+1,0).getDate(),mk=[];
+  for(var i=0;i<pad;i++)g+='<span class="mc-c out"></span>';
+  for(var d=1;d<=n;d++){var dt=new Date(y,mo,d),kk=k(dt),ev=by[kk]||[];if(ev.length&&dt>=hoy)mk.push(kk);
+   g+='<button type="button" class="mc-c'+(ev.length?' has':'')+(dt<hoy?' past':'')+(+dt===+hoy?' hoy':'')+(sel===kk?' sel':'')+'" data-k="'+kk+'" aria-label="'+d+' de '+ML[mo]+(ev.length?', '+ev.length+' actividad'+(ev.length>1?'es':''):'')+'">'+d+(ev.length?'<i>'+ev.slice(0,3).map(function(e){return '<em class="'+cls(e)+'"></em>';}).join('')+'</i>':'')+'</button>';}
+  document.getElementById('mcG').innerHTML=g;
+  var D=document.getElementById('mcD');
+  if(sel&&sel.slice(0,7)===kk.slice(0,7))D.innerHTML=lista([sel],'Nada este día.');
+  else D.innerHTML=lista(mk,'No tenés nada más en '+ML[mo]+'.');
+  D.innerHTML+='<div class="mc-l"><span><em></em>Clase</span><span><em style="background:#b0562f"></em>Examen / entrega</span><span><em style="background:var(--gold)"></em>Zarza / Selah</span>'+(E.some(function(e){return cls(e)==='srv';})?'<span><em style="background:#1f8f4e"></em>Tu servicio</span>':'')+'</div>';
+  document.querySelectorAll('#mcG [data-k]').forEach(function(b){b.onclick=function(){sel=sel===b.dataset.k?'':b.dataset.k;draw();};});
+  document.querySelector('.mc-n[data-m="-1"]').disabled=off<=0;document.querySelector('.mc-n[data-m="1"]').disabled=off>=3;
+ }
+ document.querySelectorAll('.mc-n').forEach(function(b){b.onclick=function(){off=Math.max(0,Math.min(3,off+ +b.dataset.m));sel='';draw();};});
+ draw();
+}
 function calPersonal(){
  var G=document.getElementById('calG'),I=document.getElementById('calI'),url=X.calUrl();
  (async function(){try{var A=window.HabitatAuth;await A.api('GET','/members/v1/members/my');var t=JSON.parse(localStorage.getItem('habitat:mtok')).a;var r=await fetch('/api/agenda?link=1',{headers:{'x-habitat-auth':t}});var j=await r.json();if(j.url){url=j.url;var w=url.replace(/^https:/,'webcal:');I.href=w;G.href='https://calendar.google.com/calendar/r?cid='+encodeURIComponent(w);}}catch(e){}})();

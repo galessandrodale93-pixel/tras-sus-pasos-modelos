@@ -66,7 +66,7 @@ export const GET: APIRoute = async ({ url }) => {
     L.push(
       "BEGIN:VEVENT", "UID:" + e._id + "@habitat-cfm.org", "DTSTAMP:" + dt(e._updatedDate),
       "DTSTART:" + dt(ini), "DTEND:" + dt(fin),
-      fold("SUMMARY:" + esc((e.tipo && !/aviso/i.test(e.tipo) && (e.title || "").toLowerCase() !== e.tipo.toLowerCase() ? e.tipo + " · " : "") + (e.title || e.tipo || "Habitat"))),
+      fold("SUMMARY:" + esc((e.tipo && !/aviso/i.test(e.tipo) && !(e.title || "").toLowerCase().startsWith(e.tipo.toLowerCase()) ? e.tipo + " · " : "") + (e.title || e.tipo || "Habitat"))),
     );
     if (desc) L.push(fold("DESCRIPTION:" + esc(desc)));
     if (e.lugar || e.link) L.push(fold("LOCATION:" + esc(e.lugar || e.link)));
