@@ -7421,8 +7421,56 @@ const VIVO = {
       'Jesús contaba parábolas con cosas de todos los días: semillas, ovejas, monedas perdidas, banquetes. Cada historia guardaba un secreto del reino de Dios para el que quisiera escuchar.'
     ]
   }
+  ,
+  6: {
+    talk: { at: 'El aposento alto', off: [-12, 3], id: 'eli', name: 'Elí', sub: 'el hombre del cántaro', voice: 'merc', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#3A2A1A', outfit: '#5A5A6A' },
+      hi: ['¡Shalom! Yo soy el del cántaro de agua. Los discípulos me siguieron hasta esta casa, tal como les había dicho el Maestro.'],
+      ask: '¿Qué querés saber?',
+      q: [
+        ['¿Qué pasó en esta casa?', ['Mi señor les prestó el cuarto grande de arriba, ya preparado, para que comieran la Pascua.', 'Durante la cena, Jesús se levantó, se ató una toalla a la cintura y les lavó los pies a sus discípulos. Ese era el trabajo del sirviente más humilde de la casa.'], 'pastor'],
+        ['¿Qué dijo Jesús durante la cena?', ['Tomó el pan, dio gracias, lo partió y dijo: «Esto es mi cuerpo, el cual es entregado por ustedes. Hagan esto en memoria de mí».', 'Después tomó la copa: era el nuevo pacto, sellado con su sangre. Y les dio un mandamiento nuevo: que se amaran unos a otros como él los había amado.'], 'evangelista'],
+        ['¿Y después de la cena?', ['Cantaron un himno y salieron de noche hacia el monte de los Olivos. Judas, uno de los doce, ya se había ido antes.', 'Esa misma noche, en el huerto de Getsemaní, vinieron a arrestarlo con antorchas y espadas.'], 'maestro']
+      ],
+      bye: ['Gracias, Elí', 'Él se agachó a lavar pies. Ahora nos toca a nosotros servir así.'] },
+    scrolls: [
+      ['El aposento alto', [-14, 10], 'Cuando Jesús llegó a Pedro con la toalla, Pedro protestó: «¡Jamás me lavarás los pies!». Jesús le respondió: «Si no te lavo, no vas a pertenecerme». Y Pedro le pidió que le lavara también las manos y la cabeza.'],
+      ['El aposento alto', [8, -12], 'En la cena, Jesús avisó que uno de ellos lo iba a traicionar. Los discípulos, tristes, le preguntaban uno por uno: «¿Seré yo, Señor?».'],
+      ['Getsemaní', [10, 10], 'Getsemaní quiere decir «prensa de aceite». Allí, entre los olivos, Jesús sintió el peso de lo que venía como si lo aplastaran.'],
+      ['Getsemaní', [-12, -12], 'Jesús oró: «Padre, si quieres, te pido que quites esta copa de sufrimiento de mí. Sin embargo, quiero que se haga tu voluntad, no la mía».'],
+      ['Getsemaní', [4, -16], 'Pedro sacó la espada y le cortó la oreja a Malco, el sirviente del sumo sacerdote. Jesús lo tocó y lo sanó: hasta en su arresto siguió sanando.']
+    ],
+    fire: { at: 'Getsemaní', off: [-6, 12], steps: [
+      ['nar', 'Noche en el monte de los Olivos. Entre los árboles se ven las luces de Jerusalén. Eleazar y Asher se sientan con vos junto a un fuego chico.'],
+      ['zel', 'Les pidió que se quedaran despiertos orando con él… y se durmieron. ¡Tres veces! Yo me habría quedado despierto.'],
+      ['esc', 'Pedro también lo decía. Jesús les dijo: «El espíritu está dispuesto, pero el cuerpo es débil».']],
+      ask: ['zel', '¿Vos qué pensás? ¿Por qué Jesús les pidió que oraran con él?'],
+      o: [
+        ['Porque en un momento tan duro quería a sus amigos cerca.', 'pastor', [['esc', 'Era Dios hecho hombre, y como hombre sintió angustia. Buscó a sus amigos cerca.']]],
+        ['Para que ellos resistieran la tentación.', 'maestro', [['esc', 'Eso les dijo: «Velen y oren para que no cedan ante la tentación». Esa misma noche todos huyeron.']]],
+        ['Para enseñarnos a orar cuando las cosas cuestan.', 'profeta', [['zel', '«Que se haga tu voluntad». Es la oración más difícil de todas.'], ['esc', 'Y la que más paz da.']]]
+      ],
+      end: [['esc', 'Cuando te toque una noche difícil, acordate de Getsemaní: Jesús ya pasó por ahí, y ora por vos.']] },
+    quiz: { at: 'El aposento alto', off: [-11, -6], id: 'rode', name: 'Rode', sub: 'sirvienta de la casa', voice: 'mujer', look: { g: 'chica', age: 17, skin: '#D6A57C', hair: '#3A2A1A', outfit: '#6A4A5A' },
+      hi: '¡Shalom! Yo ayudé a preparar el cuarto de arriba para la Pascua. ¿Respondés unas preguntas? Te pago con monedas.',
+      q: [
+        ['¿Qué hizo Jesús durante la cena con una toalla y agua?', ['Les lavó los pies a sus discípulos', 'Limpió la mesa', 'Se lavó las manos'], 'Se ató una toalla a la cintura y les lavó los pies, como un sirviente.'],
+        ['¿Qué fiesta celebraban en la última cena?', ['La Pascua', 'Pentecostés', 'La fiesta de las Enramadas'], 'Era la cena de la Pascua, que recordaba la salida de Egipto.'],
+        ['¿Cuál es el mandamiento nuevo que dio Jesús?', ['Que nos amemos como él nos amó', 'Que ayunemos dos veces por semana', 'Que vayamos al templo cada día'], 'Les dijo: «Ámense unos a otros. Tal como yo los he amado, ustedes deben amarse unos a otros».'],
+        ['¿Qué quiere decir Getsemaní?', ['Prensa de aceite', 'Jardín del rey', 'Casa de oración'], 'Getsemaní quiere decir «prensa de aceite»: era un huerto de olivos.'],
+        ['¿Cuántas veces encontró Jesús dormidos a sus discípulos en Getsemaní?', ['Tres', 'Una', 'Siete'], 'Tres veces volvió de orar y los encontró dormidos.'],
+        ['¿Cómo entregó Judas a Jesús?', ['Con un beso', 'Con una carta', 'Señalándolo con una antorcha'], 'Judas se acercó y lo saludó con un beso: esa era la señal para los guardias.']
+      ],
+      ok: '¡Muy bien!', no: 'Casi. ', bye: '¡Gracias! Volvé mañana, que tengo más preguntas.' },
+    narr: [
+      'Unos días antes de la Pascua, Jesús entró en Jerusalén montado en un burrito. La gente tendía sus mantos en el camino y gritaba: «¡Hosanna! ¡Bendito el que viene en el nombre del Señor!».',
+      'En el templo, Jesús volcó las mesas de los que cambiaban dinero y vendían palomas: «Mi templo será llamado casa de oración».',
+      'Judas Iscariote, uno de los doce, fue a ver a los jefes de los sacerdotes y aceptó treinta monedas de plata por entregar a Jesús.',
+      'En Getsemaní, Jesús oró con tanta angustia que su sudor caía a tierra como grandes gotas de sangre. Un ángel del cielo vino a fortalecerlo.',
+      'Cuando llegaron a arrestarlo, Jesús salió a su encuentro: «¿A quién buscan?». «A Jesús de Nazaret», respondieron. «Yo soy», les dijo, y los soldados retrocedieron y cayeron al suelo.'
+    ]
+  }
 };
-const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo', 2: 'El Jordán y el desierto', 3: 'Galilea', 4: 'Capernaúm y la colina', 5: 'Las parábolas' };
+const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo', 2: 'El Jordán y el desierto', 3: 'Galilea', 4: 'Capernaúm y la colina', 5: 'Las parábolas', 6: 'La última cena y Getsemaní' };
 function vivoP() { const p = G().P(); p.vivo = p.vivo || {}; return p.vivo; }
 function vivoAt(at, off) { const q = (S.pois || []).find(o => o.name === at); if (!q) return null; return freeNear(q.x + off[0] * (q.side || 1), q.z + off[1], .35); }
 function vivoBuild(scene, hx) {
