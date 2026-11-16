@@ -7234,7 +7234,7 @@ const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo' };
 function vivoP() { const p = G().P(); p.vivo = p.vivo || {}; return p.vivo; }
 function vivoAt(at, off) { const q = (S.pois || []).find(o => o.name === at); if (!q) return null; return freeNear(q.x + off[0] * (q.side || 1), q.z + off[1], .35); }
 function vivoBuild(scene, hx) {
-  S.vivo = { scrolls: [], t: 0, narT: 0 }; const yAt = (x, z) => Math.max(0, S.W ? S.W.hAt(x, z) : 0);
+  S.vivo = { scrolls: [], t: 0, narT: 0 }; const yAt = (x, z) => { const t = Math.max(0, S.W ? S.W.hAt(x, z) : 0); try { return Math.max(t, groundAt(x, z, t + 1.5)); } catch (e) { return t; } }; /* sobre los pisos (el patio del templo), no hundidos en el terreno */
   for (const r in VIVO) { const E = VIVO[r];
     // la charla
     if (E.talk) { const T = E.talk, pos = vivoAt(T.at, T.off); if (pos) { const [x, z] = pos, o = (hx || H3.ok) ? buildHeroAvatar(Object.assign({}, T.look)) : buildAvatar(T.look, false); o.userData.stay = 1; if (!(hx || H3.ok)) o.scale.setScalar(1.08); o.position.set(x, yAt(x, z), z); const q = (S.pois || []).find(o2 => o2.name === T.at); o.rotation.y = q ? Math.atan2(q.x - x, q.z - z) : 0; o.traverse(m => { if (m.isMesh) m.castShadow = true; if (m.isPointLight) m.intensity = 0; }); scene.add(o); S.cols.push({ x0: x - .35, x1: x + .35, z0: z - .35, z1: z + .35, cx: x, cz: z, r: .3 });
