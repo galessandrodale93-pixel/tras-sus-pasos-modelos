@@ -102,10 +102,13 @@
 .cal-hn{font-size:.85rem;margin-top:12px!important}
 .resume[hidden]{display:none!important}
 .hside{display:grid;gap:16px;min-width:0}
-.duo-w{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.85fr);gap:32px;align-items:start}
+.duo-w{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.85fr);gap:32px;align-items:stretch}
+.duo-l,.duo-r{display:flex;flex-direction:column;min-width:0}.duo-l #opList{flex:1;display:flex;flex-direction:column;gap:14px}.duo-l #opList>:last-child{flex:1}
+.duo-r .mc{flex:1;display:flex;flex-direction:column}.duo-r .mc-d{flex:1;max-height:none;min-height:60px}.duo-r .mc-c{max-height:34px}
+.hside .mc{margin-top:22px}
 .duo-l[hidden]+.duo-r{grid-column:1/-1;max-width:560px}
 .duo-r .mc{box-shadow:0 14px 34px rgba(16,37,29,.10);border:1px solid var(--line)}
-@media(max-width:860px){.duo-w{grid-template-columns:1fr;gap:28px}}
+@media(max-width:860px){.duo-w{grid-template-columns:1fr;gap:28px}.duo-r{display:none}.cx-duo:has(.duo-l[hidden]){display:none}}
 .mc{background:#fff;border-radius:20px;padding:16px 16px 14px;box-shadow:0 18px 40px rgba(0,0,0,.18);color:var(--ink)}
 .mc-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px}.mc-h b{font:500 1.35rem var(--serif);text-transform:capitalize}
 .mc-n{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--paper);font:600 1.1rem var(--sans);cursor:pointer;color:var(--ink)}.mc-n:disabled{opacity:.3;cursor:default}
@@ -322,6 +325,7 @@ function miniCal(L){
  document.querySelectorAll('.mc-n').forEach(function(b){b.onclick=function(){off=Math.max(0,Math.min(3,off+ +b.dataset.m));sel='';draw();};});
  draw();
 }
+(function(){var mc=document.getElementById('miniCal'),side=document.querySelector('.hside'),duo=document.querySelector('.duo-r'),mq=window.matchMedia('(max-width:860px)');function lugar(){var t=mq.matches?side:duo;if(mc&&t&&mc.parentNode!==t)t.appendChild(mc);}lugar();if(mq.addEventListener)mq.addEventListener('change',lugar);else mq.addListener(lugar);})();
 function calPersonal(){
  var G=document.getElementById('calG'),I=document.getElementById('calI'),url=X.calUrl();
  (async function(){try{var A=window.HabitatAuth;await A.api('GET','/members/v1/members/my');var t=JSON.parse(localStorage.getItem('habitat:mtok')).a;var r=await fetch('/api/agenda?link=1',{headers:{'x-habitat-auth':t}});var j=await r.json();if(j.url){url=j.url;var w=url.replace(/^https:/,'webcal:');I.href=w;G.href='https://calendar.google.com/calendar/r?cid='+encodeURIComponent(w);}}catch(e){}})();
