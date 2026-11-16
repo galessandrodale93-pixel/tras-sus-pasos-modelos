@@ -2496,7 +2496,7 @@ function canaScene(scene, p, yAt, poiProp, hx, HW) {
 // la posada: el samaritano junto a su burro, en la puerta; adentro, el aceite, el vino y las vendas con que curó al herido
 function innLife(scene, p, yAt) {
   const rot = p.side > 0 ? -Math.PI / 2 : Math.PI / 2, c = Math.cos(rot), s = Math.sin(rot), W = (lx, lz) => [p.x + lx * c + lz * s, p.z - lx * s + lz * c], y0 = yAt(p.x, p.z);
-  { const [sx, sz] = freeNear(p.x - p.side * 7.6, p.z + 3); S.innSpots = { samaritano: [sx, sz, Math.atan2(p.x - sx, p.z - sz)] }; }
+  { const [sx, sz] = freeNear(p.x - p.side * 5, p.z + 3.4); S.innSpots = { samaritano: [sx, sz, Math.atan2(p.x - sx, p.z - sz)] }; }
   { const g = new THREE.Group(), clay = tm('clay', '#9A5A34', { roughness: .9 }); const j1 = cy(.12, .09, .32, clay, -.18, .16, 0, g, 10), j2 = cy(.1, .08, .26, tm('clay2', '#7A4A2C', { roughness: .9 }), .14, .13, .05, g, 10); void j1; void j2;
     const roll = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, .3, 10), tm('linen', '#EFE6D2', { roughness: 1 })); roll.rotation.z = Math.PI / 2; roll.position.set(0, .07, .22); g.add(roll);
     const [x, z] = W(-.9, -2.5); g.position.set(x, y0, z); g.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(g);
@@ -3034,7 +3034,7 @@ function fieldScene(scene, p, yAt, poiProp, hx, HW) {
   // el sendero pisado que cruza el campo (ahí cayó semilla y vinieron los pájaros)
   dirtRoad(scene, [W(-14, -9), W(-4, -8.6), W(5, -9.4), W(14, -8.8)], 2.4, yAt);
   // suelo pedregoso: textura de piedra suelta con rocas que asoman
-  { const m = new THREE.Mesh(new THREE.PlaneGeometry(26, 5.2, 20, 4), pbrMat('rocky_trail_02', 6, 1.2, { color: '#D8C7A8' })); const P = m.geometry.attributes.position; m.rotation.x = -Math.PI / 2; m.position.set(p.x, 0, p.z - 3.2); for (let i = 0; i < P.count; i++) { const x = p.x + P.getX(i), z = p.z - 3.2 - P.getY(i); P.setZ(i, yAt(x, z) + .04); } m.geometry.computeVertexNormals(); m.receiveShadow = true; scene.add(m); const rk = []; for (let i = 0; i < 22; i++) { const [x, z] = W(-12 + R() * 24, -5.2 + R() * 4); rk.push({ x, y: yAt(x, z) - .1, z, ry: R() * 6, s: .25 + R() * .3, v: i }); } poiProp('boulder_01', rk, { shadow: true, nocol: 1 }); }
+  { const pm = pbrMat('rocky_trail_02', 6, 1.2, { color: '#D8C7A8' }).clone(); pm.polygonOffset = true; pm.polygonOffsetFactor = -2; pm.polygonOffsetUnits = -2; /* sin esto el pasto del terreno lo tapaba */ const m = new THREE.Mesh(new THREE.PlaneGeometry(26, 5.2, 20, 8), pm); m.renderOrder = 1; const P = m.geometry.attributes.position; m.rotation.x = -Math.PI / 2; m.position.set(p.x, 0, p.z - 3.2); for (let i = 0; i < P.count; i++) { const x = p.x + P.getX(i), z = p.z - 3.2 - P.getY(i); P.setZ(i, yAt(x, z) + .07); } m.geometry.computeVertexNormals(); m.receiveShadow = true; scene.add(m); const rk = []; for (let i = 0; i < 22; i++) { const [x, z] = W(-12 + R() * 24, -5.2 + R() * 4); rk.push({ x, y: yAt(x, z) - .1, z, ry: R() * 6, s: .25 + R() * .3, v: i }); } poiProp('boulder_01', rk, { shadow: true, nocol: 1 }); }
   // entre espinos: matorral seco y arbustos que ahogan el trigo
   { const th = [], sh = []; for (let i = 0; i < 26; i++) { const [x, z] = W(-12 + R() * 24, 1 + R() * 3.6); (i % 3 ? th : sh).push({ x, y: yAt(x, z) - .02, z, ry: R() * 6, s: i % 3 ? 1.5 + R() * .6 : .45 + R() * .2, v: i }); } poiProp('dry_branches_medium_01', th, { shadow: true, nocol: 1 }); poiProp('shrub_02', sh, { shadow: true, wind: 2, nocol: 1 }); }
   // buena tierra: surcos arados y trigo alto y dorado
