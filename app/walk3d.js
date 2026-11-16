@@ -7277,8 +7277,56 @@ const VIVO = {
       'La última tentación fue desde lo alto: el diablo le ofreció todos los reinos del mundo a cambio de que lo adorara. Jesús respondió: «Adora al Señor tu Dios y sírvele solamente a él».'
     ]
   }
+  ,
+  3: {
+    talk: { at: 'Caná', off: [-6, -5], id: 'joel', name: 'Joel', sub: 'sirviente en la boda de Caná', voice: 'varon', look: { g: 'chico', age: 17, skin: '#C99A72', hair: '#2A1B14', outfit: '#8A6A3A' },
+      hi: ['¡Shalom! ¿Te contaron lo de la boda? Yo estaba sirviendo esa noche. Todavía me cuesta creerlo.'],
+      ask: '¿Qué querés saber?',
+      q: [
+        ['¿Qué pasó en la boda?', ['La fiesta iba por el tercer día y se terminó el vino. En una boda eso era una vergüenza enorme para la familia.', 'María, la madre de Jesús, se dio cuenta. Se acercó a nosotros, los sirvientes, y nos dijo: «Hagan todo lo que él les diga».'], 'pastor'],
+        ['¿Qué les pidió Jesús?', ['Había seis tinajas de piedra para los lavados, de unos cien litros cada una. Jesús nos dijo que las llenáramos de agua, y las llenamos hasta el borde.', 'Después nos dijo: «Saquen un poco y llévenselo al encargado de la fiesta». Cuando lo probó, era vino. ¡Y del mejor!'], 'evangelista'],
+        ['¿Qué dijo el encargado de la fiesta?', ['Llamó al novio y le dijo: «Todos sirven primero el mejor vino, y vos guardaste el mejor para el final». Él se quedó sin saber de dónde había salido.', 'Nosotros sí lo sabíamos. Fue la primera de sus señales, y sus discípulos creyeron en él.'], 'maestro']
+      ],
+      bye: ['Gracias, Joel', 'Ya sabés el secreto que nos enseñó María: hacé todo lo que él te diga.'] },
+    scrolls: [
+      ['Caná', [8, 8], 'Las tinajas de Caná se usaban para lavarse por fuera antes de comer. Jesús las llenó de vino nuevo: una señal de la alegría que venía a traer por dentro.'],
+      ['Caná', [-10, -10], 'Natanael era de Caná. Jesús le dijo que lo había visto debajo de la higuera antes de que Felipe lo llamara, y Natanael exclamó: «¡Tú eres el Hijo de Dios!».'],
+      ['Mar de Galilea', [-46, 18], 'El Mar de Galilea es un lago de agua dulce de unos veinte kilómetros de largo. Sus tormentas aparecen de golpe, cuando el viento baja de las montañas.'],
+      ['Mar de Galilea', [-40, -26], 'Jesús encontró a sus primeros discípulos trabajando a la orilla del lago, entre barcas y redes, y les dio un oficio nuevo: pescar personas.'],
+      ['Mar de Galilea', [-48, 0], 'Cuando vio la pesca milagrosa, Pedro cayó de rodillas: «Señor, apártate de mí, soy un hombre pecador». Jesús le respondió: «No tengas miedo».']
+    ],
+    fire: { at: 'Mar de Galilea', off: [-44, -14], steps: [
+      ['nar', 'Noche junto al Mar de Galilea. Se escuchan las olas y las barcas que vuelven. Eleazar y Asher se sientan con vos alrededor del fuego.'],
+      ['zel', 'Pedro dejó la barca, las redes, todo. Yo dudo que pudiera dejar todo de un día para el otro.'],
+      ['esc', 'Antes de llamarlo, Jesús le llenó las redes. Pedro entendió que tenía delante a alguien que valía más que cualquier pesca.']],
+      ask: ['zel', '¿Vos qué pensás? ¿Qué hace que alguien deje todo para seguirlo?'],
+      o: [
+        ['Conocerlo. Cuando ves quién es, todo lo demás queda chico.', 'evangelista', [['esc', 'Eso le pasó a Pedro: cayó de rodillas apenas vio quién tenía delante.']]],
+        ['Que Jesús lo llamó por su nombre. Lo eligió.', 'pastor', [['esc', 'Él siempre da el primer paso. Fue a buscarlos a la orilla, donde trabajaban.']]],
+        ['Confiar aunque todavía entiendas poco.', 'profeta', [['zel', 'Como Pedro: «Pasamos la noche entera sin pescar, pero si vos lo decís, echo las redes».'], ['esc', 'Y esa confianza le cambió la vida.']]]
+      ],
+      end: [['esc', 'Él también te llama a vos. Seguirlo empieza con un paso chico: hacer hoy lo que él te dice.']] },
+    quiz: { at: 'Mar de Galilea', off: [-42, 8], id: 'zebedeo', name: 'Zebedeo', sub: 'pescador, padre de Santiago y Juan', voice: 'past', look: { g: 'chico', age: 18, skin: '#A87A52', hair: '#BDBDBD', outfit: '#4A5A6A' },
+      hi: '¡Shalom! Mis hijos dejaron la barca para seguir al Maestro, así que ahora tengo tiempo para preguntas. ¿Te animás? Te pago con monedas.',
+      q: [
+        ['¿Qué milagro hizo Jesús en la boda de Caná?', ['Convirtió el agua en vino', 'Multiplicó los panes', 'Sanó a un ciego'], 'En Caná convirtió el agua en vino. Fue su primera señal.'],
+        ['¿Qué les dijo Jesús a Pedro y a Andrés cuando los llamó?', ['Vengan, síganme, y les enseñaré a pescar personas', 'Vendan sus barcas', 'Vuelvan a su casa'], 'Les dijo: «Vengan, síganme, ¡y yo les enseñaré cómo pescar personas!».'],
+        ['¿Qué hacían Santiago y Juan cuando Jesús los llamó?', ['Arreglaban las redes con su padre', 'Vendían pescado', 'Dormían en la barca'], 'Estaban en la barca conmigo, arreglando las redes. Dejaron todo y lo siguieron.'],
+        ['¿Qué pasó cuando Pedro echó las redes donde Jesús le dijo?', ['Sacaron tantos peces que las redes se rompían', 'Sacaron un solo pez', 'Se hundió la barca'], 'Habían pasado la noche sin pescar nada. Al obedecer, sacaron tantos peces que las redes empezaban a romperse.'],
+        ['¿Qué profeta leyó Jesús en la sinagoga de Nazaret?', ['Isaías', 'Jeremías', 'Daniel'], 'Leyó del profeta Isaías: «El Espíritu del Señor está sobre mí».'],
+        ['¿Cuántas tinajas de agua llenaron en la boda de Caná?', ['Seis', 'Doce', 'Tres'], 'Eran seis tinajas de piedra, y las llenaron de agua hasta el borde.']
+      ],
+      ok: '¡Así es!', no: 'Casi. ', bye: '¡Bien pescado! Mañana volvé, que tengo más preguntas.' },
+    narr: [
+      'Jesús volvió a Galilea con el poder del Espíritu. En la sinagoga de Nazaret leyó del profeta Isaías: «El Espíritu del Señor está sobre mí, porque me ha ungido para traer la Buena Noticia a los pobres».',
+      'Cuando terminó de leer dijo: «Hoy se cumplió esta Escritura». Los de su pueblo se enojaron tanto que quisieron tirarlo por un barranco. Jesús pasó entre ellos y siguió su camino.',
+      'Jesús se fue a vivir a Capernaúm, junto al lago. Desde ahí empezó a predicar: «Arrepiéntanse, porque el reino del cielo está cerca».',
+      'Caminando por la orilla, vio a Simón y a su hermano Andrés echando la red. «Vengan, síganme», les dijo. Y enseguida dejaron las redes y lo siguieron.',
+      'En Caná de Galilea, en una boda, Jesús hizo su primera señal: convirtió el agua en vino. Así mostró su gloria, y sus discípulos creyeron en él.'
+    ]
+  }
 };
-const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo', 2: 'El Jordán y el desierto' };
+const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo', 2: 'El Jordán y el desierto', 3: 'Galilea' };
 function vivoP() { const p = G().P(); p.vivo = p.vivo || {}; return p.vivo; }
 function vivoAt(at, off) { const q = (S.pois || []).find(o => o.name === at); if (!q) return null; return freeNear(q.x + off[0] * (q.side || 1), q.z + off[1], .35); }
 function vivoBuild(scene, hx) {
