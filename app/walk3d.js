@@ -566,8 +566,8 @@ function splitZ(scene, mesh, step) {
   if (mesh.parent) mesh.parent.remove(mesh); return out;
 }
 // escenarios de campo abierto: adentro el suelo es pasto (solo el camino es de tierra); radio de cada uno
-const GREEN_K = { feeding: 19, field: 19, garden: 22, pastores: 22 }; let GREENS = [];
-const greenK = (x, z) => { let k = 0; for (const q of GREENS) { const d = Math.hypot(x - q[0], z - q[1]); if (d < q[2] * 1.2) k = Math.max(k, 1 - sstep(q[2] * .75, q[2] * 1.2, d)); } return k; };
+const GREEN_K = { feeding: 26, field: 27, garden: 30, pastores: 30 }; /* hasta el borde de la zona plana, así no queda un anillo de tierra */ let GREENS = [];
+const greenK = (x, z) => { let k = 0; for (const q of GREENS) { const d = Math.hypot(x - q[0], z - q[1]); if (d < q[2] * 1.25) k = Math.max(k, 1 - sstep(q[2] * .8, q[2] * 1.25, d)); } return k; };
 function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
   // campo de distancias al camino (para dejarlo plano y ubicar la vegetación)
   const X0 = -XB - 40, X1 = XB + 40, Z0 = zMax - 50, Z1 = 50, CS = 1.5, NX = Math.ceil((X1 - X0) / CS) + 1, NZ = Math.ceil((Z1 - Z0) / CS) + 1, DF = new Float32Array(NX * NZ), DR = new Float32Array(NX * NZ); // DF: camino + zonas planas (aplanar, vegetación); DR: solo el camino (ubicar casas y gente)
@@ -1595,7 +1595,7 @@ function buildMissions(scene, g, hx, HW, rr) {
   MISSIONS.forEach((d, i) => {
     const R = rng(900 + i), ns = regNodes(d.r); if (ns.length < 3) return; const slot = per[d.r]++, side = slot % 2 ? 1 : -1;
     const a = ns[Math.min(ns.length - 1, 1 + slot)], b = ns[Math.min(ns.length - 1, 3 + slot)];
-    let gx = a.position.x + side * 8, gz = a.position.z - .6; const own = (d.id === 'taller' && S0.tallerJose) || (S0.templeSpots && S0.templeSpots[d.id]) || (S0.canaSpots && S0.canaSpots[d.id]) || (S0.lakeSpots && S0.lakeSpots[d.id]) || (S0.feedSpots && S0.feedSpots[d.id]) || (S0.capSpots && S0.capSpots[d.id]), sp = own ? null : hx ? spot(d.r, R, slot * 2, null, d.at) : null; if (own) { [gx, gz] = own; used.push([gx, gz]); } if (sp) [gx, gz] = sp; const giver = npc(d.giver.look, gx, gz, own ? own[2] : sp ? Math.atan2(a.position.x - gx, a.position.z - gz) : -side * Math.PI / 2);
+    let gx = a.position.x + side * 8, gz = a.position.z - .6; const own = (d.id === 'taller' && S0.tallerJose) || (S0.templeSpots && S0.templeSpots[d.id]) || (S0.canaSpots && S0.canaSpots[d.id]) || (S0.lakeSpots && S0.lakeSpots[d.id]) || (S0.feedSpots && S0.feedSpots[d.id]) || (S0.capSpots && S0.capSpots[d.id]) || (S0.innSpots && S0.innSpots[d.id]), sp = own ? null : hx ? spot(d.r, R, slot * 2, null, d.at) : null; if (own) { [gx, gz] = own; used.push([gx, gz]); } if (sp) [gx, gz] = sp; const giver = npc(d.giver.look, gx, gz, own ? own[2] : sp ? Math.atan2(a.position.x - gx, a.position.z - gz) : -side * Math.PI / 2);
     const bang = bangSprite(); bang.position.set(gx, yAt(gx, gz) + 2.35, gz); scene.add(bang);
     const m = { d, giver, bang, gp: [gx, gz] };
     if (d.kind === 'act') { const poi = (S0.pois || []).find(q => q.k === (d.place || 'temple')); let tx = poi ? poi.x : b.position.x - side * 8, tz = poi ? poi.z : b.position.z; if (poi && poi.k === 'river') { const q = poi.pts[Math.floor(poi.pts.length / 2)]; tx = q[0] - 3.3; tz = q[1]; } if (poi && poi.k === 'temple') { tx = poi.x - poi.side * 6.5; tz = poi.z; } if (poi && poi.k === 'lake') { tx = poi.x - poi.side * 33; tz = poi.z + 9; } if (poi && poi.k === 'shore') { tx = poi.x - poi.side * 6; tz = poi.z + 2; } if (poi && poi.k === 'golgota') { tx = poi.x - poi.side * 5; tz = poi.z + 3; } if (poi && poi.k === 'tomb') { tx = poi.x - poi.side * 5; tz = poi.z + 2; } if (poi && poi.k === 'garden') { tx = poi.x - poi.side * 2.5; tz = poi.z + 2.5; } if (poi && poi.k === 'inn') { tx = poi.x - poi.side * 6; tz = poi.z - 2; } if (poi && poi.k === 'roofhouse') { tx = poi.x - poi.side * 6; tz = poi.z + 1.5; } if (poi && poi.k === 'village') { tx = poi.x - poi.side * 1.6; tz = poi.z + 1.6; if (S0.belenStable && poi.name === 'Belén') [tx, tz] = S0.belenStable; }
@@ -1727,7 +1727,7 @@ function buildPois(scene, pois, hx, HW, R, ribbon) {
 // cajas de choque (paredes) y pisos elevados (plataforma del templo, muelle); se llenan al armar el mundo
 function rotXZ(lx, lz, r) { const c = Math.cos(r), s = Math.sin(r); return [lx * c + lz * s, -lx * s + lz * c]; }
 function wBox(x, z, r, lx0, lx1, lz0, lz1) { const P = [[lx0, lz0], [lx1, lz0], [lx0, lz1], [lx1, lz1]].map(([a, b]) => rotXZ(a, b, r)); return { x0: x + Math.min(...P.map(p => p[0])), x1: x + Math.max(...P.map(p => p[0])), z0: z + Math.min(...P.map(p => p[1])), z1: z + Math.max(...P.map(p => p[1])) }; }
-function blockedAt(x, z, only) { const L = only || (S && S.cols); if (!L) return false; if (WATER.canyon && S.W && canyonAt(x, z) > .45 && S.W.roadAt(x, z) > 6 && !inTrail(x, z)) return true; if (WATER.quarry && quarryAt(x, z) > .4) return true; const r = S.hx ? .34 : .28; for (const b of L) if (x > b.x0 - r && x < b.x1 + r && z > b.z0 - r && z < b.z1 + r) { if (b.oi != null && S.sv && S.sv.felled && S.sv.felled.has(b.oi)) continue; if (b.r == null || (x - b.cx) ** 2 + (z - b.cz) ** 2 < (b.r + r) ** 2) return true; } return false; }
+function blockedAt(x, z, only) { const L = only || (S && S.cols); if (!L) return false; if (WATER.canyon && S.W && canyonAt(x, z) > .45 && S.W.roadAt(x, z) > 6 && !inTrail(x, z)) return true; if (WATER.quarry && quarryAt(x, z) > .4) return true; const r = S.hx ? .34 : .28; for (const b of L) if (x > b.x0 - r && x < b.x1 + r && z > b.z0 - r && z < b.z1 + r) { if (b.oi != null && S.sv && S.sv.felled && S.sv.felled.has(b.oi)) continue; if (b.ymax != null && S.av && S.av.position.y > b.ymax) continue; /* muros de planta baja: arriba (en el primer piso) no frenan */ if (b.r == null || (x - b.cx) ** 2 + (z - b.cz) ** 2 < (b.r + r) ** 2) return true; } return false; }
 function floorH(x, z) { const L = S && S.floors; if (!L) return -1; let h = -1; for (const f of L) if (x > f.x0 && x < f.x1 && z > f.z0 && z < f.z1 && f.y > h) h = f.y; return h; }
 function cnvTex(w, h, fn, rep) { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]); } return t; }
 let TT = null; // texturas compartidas
@@ -2383,7 +2383,7 @@ function upperFloor(scene, x, z, rot, w, d, y0, lift) {
   S.ramps = S.ramps || []; S.ramps.push({ box: wBox(x, z, rot, sx - tw / 2, sx + tw / 2, -d / 2 - 1.2, d / 2 + 1.2), x, z, rot, a0: -d / 2 - 1.2, a1: d / 2 + 1.2, y0: y0, y1: y0 + lift });
   S.floors.push(Object.assign(wBox(x, z, rot, -w / 2 - tw - .2, w / 2 + tw + .2, d / 2, d / 2 + 2.4), { y: y0 + lift })); S.floors.push(Object.assign(wBox(x, z, rot, -w / 2, w / 2, -d / 2, d / 2), { y: y0 + lift }));
   // choque con la planta baja desde afuera (menos el frente de la escalera)
-  S.cols.push(wBox(x, z, rot, -w / 2 - .1, w / 2 + .1, -d / 2 - .1, d / 2 + .1));
+  S.cols.push(Object.assign(wBox(x, z, rot, -w / 2 - .1, w / 2 + .1, -d / 2 - .1, d / 2 + .1), { ymax: y0 + lift - .6 }));
 }
 // altura sobre una rampa/escalera continua (0 si no hay)
 function rampH(x, z) { const L = S && S.ramps; if (!L) return -1; let h = -1; for (const r of L) { if (x < r.box.x0 || x > r.box.x1 || z < r.box.z0 || z > r.box.z1) continue; const q = rotXZ(x - r.x, z - r.z, -r.rot), t = Math.max(0, Math.min(1, (q[1] - r.a0) / (r.a1 - r.a0))); h = Math.max(h, r.y0 + (r.y1 - r.y0) * t); } return h; }
@@ -2493,6 +2493,24 @@ function canaScene(scene, p, yAt, poiProp, hx, HW) {
 /* Belén con vida: la familia en la cueva-establo con el niño en el pesebre, la estrella sobre la aldea, el mesón lleno,
    el pozo de David, la profecía de Miqueas en la entrada y los campos de Booz donde Rut juntaba espigas.
    Todo con su lugar para tocar (Hero) o que se cuenta al acercarse (Kids). */
+// la posada: el samaritano junto a su burro, en la puerta; adentro, el aceite, el vino y las vendas con que curó al herido
+function innLife(scene, p, yAt) {
+  const rot = p.side > 0 ? -Math.PI / 2 : Math.PI / 2, c = Math.cos(rot), s = Math.sin(rot), W = (lx, lz) => [p.x + lx * c + lz * s, p.z - lx * s + lz * c], y0 = yAt(p.x, p.z);
+  { const [sx, sz] = freeNear(p.x - p.side * 7.6, p.z + 3); S.innSpots = { samaritano: [sx, sz, Math.atan2(p.x - sx, p.z - sz)] }; }
+  { const g = new THREE.Group(), clay = tm('clay', '#9A5A34', { roughness: .9 }); const j1 = cy(.12, .09, .32, clay, -.18, .16, 0, g, 10), j2 = cy(.1, .08, .26, tm('clay2', '#7A4A2C', { roughness: .9 }), .14, .13, .05, g, 10); void j1; void j2;
+    const roll = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, .3, 10), tm('linen', '#EFE6D2', { roughness: 1 })); roll.rotation.z = Math.PI / 2; roll.position.set(0, .07, .22); g.add(roll);
+    const [x, z] = W(-.9, -2.5); g.position.set(x, y0, z); g.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(g);
+    const [lx, lz] = W(-.4, -1.2); LEp(S, { x: lx, z: lz, r: 1.8, label: 'Mirar el aceite y el vino', dur: 5, go: () => sello('samaritano', 'El buen samaritano'), info: ['Se acercó y lo curó', 'Un hombre bajaba de Jerusalén a Jericó y unos ladrones lo dejaron medio muerto. Pasaron un sacerdote y un levita, y siguieron de largo. Un samaritano lo vio, sintió compasión, le vendó las heridas con aceite y vino, lo subió a su burro y lo trajo a esta posada. Jesús dijo: «Andá y hacé vos lo mismo».', 'Lucas 10:30-37'] }); }
+}
+// el aposento alto por dentro: la palangana y la toalla junto a la puerta, y el pan y la copa sobre la mesa
+function upperLife(scene, p, rot, fy) {
+  const c = Math.cos(rot), s = Math.sin(rot), W = (lx, lz) => [p.x + lx * c + lz * s, p.z - lx * s + lz * c];
+  /* el dueño de la casa espera al pie de la escalera (la escalera sube por el costado +x local, desde el fondo) */ { const [tx, tz] = freeNear(...W(6.4, -5.4)); S.tSpots = Object.assign(S.tSpots || {}, { cantaro2: [tx, tz, Math.atan2(p.x - tx, p.z - tz)] }); }
+  { const g = new THREE.Group(), brz = tm('brz', '#B07A3A', { metalness: .6, roughness: .4 }); const bs = new THREE.Mesh(new THREE.CylinderGeometry(.34, .24, .16, 18, 1, true), brz); bs.material.side = THREE.DoubleSide; bs.position.y = .08; g.add(bs); const wa = new THREE.Mesh(new THREE.CircleGeometry(.3, 18), tm('wa2', '#5A8A96', { roughness: .1 })); wa.rotation.x = -Math.PI / 2; wa.position.y = .12; g.add(wa); const tw = new THREE.Mesh(new THREE.BoxGeometry(.5, .05, .3), tm('linen', '#EFE6D2', { roughness: 1 })); tw.position.set(.5, .03, .1); tw.rotation.y = .4; g.add(tw); const jg = cy(.09, .12, .34, tm('clay', '#9A5A34', { roughness: .9 }), -.45, .17, -.15, g, 10); void jg;
+    const [x, z] = W(-2.7, 2.1); g.position.set(x, fy, z); g.rotation.y = rot; g.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(g);
+    const [lx, lz] = W(-2.1, 1.5); LEp(S, { x: lx, z: lz, r: 1.3, label: 'Mirar la palangana', info: ['Les lavó los pies', 'Durante la cena, Jesús se levantó, se ató una toalla a la cintura, echó agua en una palangana y empezó a lavarles los pies a sus discípulos. Después les dijo: «Les di el ejemplo, para que hagan lo mismo que yo hice con ustedes».', 'Juan 13:4-5, 14-15'] }); }
+  { const [lx, lz] = W(.6, 1.1); LEp(S, { x: lx, z: lz, r: 1.3, label: 'Recordar la cena', dur: 6, go: () => sello('cena', 'La Cena del Señor'), info: ['Hagan esto en memoria de mí', 'Jesús tomó el pan, dio gracias, lo partió y se lo dio diciendo: «Esto es mi cuerpo, que es entregado por ustedes». Después de cenar tomó la copa y dijo: «Esta copa es el nuevo pacto en mi sangre, que es derramada por ustedes».', 'Lucas 22:19-20'] }); }
+}
 // el punto libre más cercano (en espiral), fuera del agua: para ubicar carteles y personajes de misión dentro de escenas llenas
 function freeNear(x, z, rd) { for (let k = 0; k < 40; k++) { const a = k * 2.4, r = k * (rd || .3); const x2 = x + Math.cos(a) * r, z2 = z + Math.sin(a) * r; if (!blockedAt(x2, z2) && waterWet(x2, z2, null) < .3) return [x2, z2]; } return [x, z]; }
 function belenLife(scene, p, yAt, hx, HW, kx, kz, placed) {
@@ -3123,12 +3141,12 @@ function buildTowns(scene, g, hx, HW, pois) {
     if (p.k === 'temple') { try { templeLife(scene, p.x, p.z, p.side, hx, yAt); } catch (e) { console.warn('templo vida', e); } }
     if (p.k === 'temple') { try { const R = rng(3535); townLayout(scene, p, yAt, HW, { seed: 3434, n: 16, r: 44, plaza: 27, gap: 2, house: Rr => ({ upper: Rr() < .5, h: 3.2 + Rr() * .8 }) }); for (let i = 0; i < 4; i++) { const a = (p.side > 0 ? Math.PI : 0) + (i - 1.5) * .3, x = p.x + Math.cos(a) * 25, z = p.z + Math.sin(a) * 25; if (!blockedAt(x, z) && (!HW || HW.dAt(x, z) > 3)) stall(scene, x, z, Math.atan2(p.x - x, p.z - z), yAt(x, z), R, poiProp); } townFolk(scene, p, yAt, HW, 10, 30, 3636, [[p.x, p.z, 23]]); } catch (e) { console.warn('jerusalén', e); } }
     if (p.k === 'upper') { const H = bigHouse('cena', hx), rot = p.side > 0 ? -Math.PI / 2 : Math.PI / 2, y0 = yAt(p.x, p.z) - .02, LIFT = hx ? 3.1 : 0; placeHouse(scene, H, p.x, p.z, rot, y0 + LIFT);
-      if (LIFT) try { upperFloor(scene, p.x, p.z, rot, 7.4, 6.2, y0, LIFT); } catch (e) { console.warn('aposento', e); } try { upperScene(scene, p, yAt, poiProp, hx, HW); } catch (e) { console.warn('jerusalén', e); } }
+      if (LIFT) try { upperFloor(scene, p.x, p.z, rot, 7.4, 6.2, y0, LIFT); } catch (e) { console.warn('aposento', e); } try { upperScene(scene, p, yAt, poiProp, hx, HW); } catch (e) { console.warn('jerusalén', e); } try { upperLife(scene, p, rot, y0 + LIFT); } catch (e) { console.warn('aposento vida', e); } }
     if (p.k === 'shore') shoreScene(scene, p, yAt, poiProp, hx, HW);
     if (p.k === 'golgota') golgotaScene(scene, p, yAt, poiProp, hx, HW);
     if (p.k === 'tomb') tombScene(scene, p, yAt, poiProp, !!(G().isDone && G().isDone('resurreccion-n1')), hx, HW);
     if (p.k === 'garden') gardenScene(scene, p, yAt, poiProp, hx, HW);
-    if (p.k === 'inn') { const H = bigHouse('posada', hx); placeHouse(scene, H, p.x, p.z, p.side > 0 ? -Math.PI / 2 : Math.PI / 2, yAt(p.x, p.z) - .02); FLORA.donkeySpot = { x: p.x - p.side * 6, z: p.z + 5, ry: p.side > 0 ? -1.2 : 1.2 }; if (hx) try { const zq = [p.x - (p.side || 1) * 14, p.z - 11, 7]; townLayout(scene, p, yAt, HW, { seed: 2121, n: 9, r: 24, plaza: 9, gap: 2, avoid: [[p.x, p.z, 8.5], zq], house: (Rr) => ({ upper: Rr() < .3, h: 3 + Rr() * .7 }) }); const Rj = rng(2122); for (let i = 0; i < 2; i++) { const a = (p.side > 0 ? Math.PI : 0) + (i ? .7 : -.7), x = p.x + Math.cos(a) * 9, z = p.z + Math.sin(a) * 9; if (!blockedAt(x, z)) stall(scene, x, z, Math.atan2(p.x - x, p.z - z), yAt(x, z), Rj, poiProp); } townFolk(scene, p, yAt, HW, 9, 15, 2123, [[p.x, p.z, 6], zq]); } catch (e) { console.warn('jerico', e); } }
+    if (p.k === 'inn') { const H = bigHouse('posada', hx); placeHouse(scene, H, p.x, p.z, p.side > 0 ? -Math.PI / 2 : Math.PI / 2, yAt(p.x, p.z) - .02); FLORA.donkeySpot = { x: p.x - p.side * 6, z: p.z + 5, ry: p.side > 0 ? -1.2 : 1.2 }; try { innLife(scene, p, yAt); } catch (e) { console.warn('posada vida', e); } if (hx) try { const zq = [p.x - (p.side || 1) * 14, p.z - 11, 7]; townLayout(scene, p, yAt, HW, { seed: 2121, n: 9, r: 24, plaza: 9, gap: 2, avoid: [[p.x, p.z, 8.5], zq], house: (Rr) => ({ upper: Rr() < .3, h: 3 + Rr() * .7 }) }); const Rj = rng(2122); for (let i = 0; i < 2; i++) { const a = (p.side > 0 ? Math.PI : 0) + (i ? .7 : -.7), x = p.x + Math.cos(a) * 9, z = p.z + Math.sin(a) * 9; if (!blockedAt(x, z)) stall(scene, x, z, Math.atan2(p.x - x, p.z - z), yAt(x, z), Rj, poiProp); } townFolk(scene, p, yAt, HW, 9, 15, 2123, [[p.x, p.z, 6], zq]); } catch (e) { console.warn('jerico', e); } }
     if (p.k === 'field') fieldScene(scene, p, yAt, poiProp, hx, HW);
     if (p.k === 'roofhouse') { const H = bigHouse('techo', hx); placeHouse(scene, H, p.x, p.z, p.side > 0 ? -Math.PI / 2 : Math.PI / 2, yAt(p.x, p.z) - .02); try { capernaumScene(scene, p, yAt, poiProp, hx, HW); } catch (e) { console.warn('capernaum', e); } }
     if (p.k === 'village') { try { (/Caná/.test(p.name) ? canaScene : /Emaús/.test(p.name) ? emausScene : belenScene)(scene, p, yAt, poiProp, hx, HW); } catch (e) { console.warn('aldea', e); } }
@@ -5625,7 +5643,7 @@ async function pgBuild() {
 /* claros sin plantas que pide la escena (la arena de Éxodo, la calzada de Hechos, la pila de Génesis) */
 const PG_HOLE = [];
 /* escenarios abiertos (sin piso de piedra): ahí el pasto también cubre el centro; en las plazas empedradas, el templo y las ciudades queda el piso */
-const PG_OPEN = { pastores: 1, village: 1, feeding: 1, field: 1, garden: 1, shore: 1 };
+const PG_OPEN = { pastores: 1, village: 1, feeding: 1, garden: 1, shore: 1 }; /* el campo del sembrador no: sus franjas de tierra (piedras, espinos) tienen que verse */
 function pgOpen(x, z) { const L = S.pgOpenL || (S.pgOpenL = (S.pois || []).filter(q => PG_OPEN[q.k]).map(q => [q.x, q.z])); for (const q of L) if ((q[0] - x) ** 2 + (q[1] - z) ** 2 < 2025) return true; return false; }
 function pgCell(ix, iz) {
   const PK = S.pocket && S.pocket.pg ? S.pocket : null, key = (PK ? 'k' : '') + ix + ',' + iz; let L = PG.cache.get(key); if (L) return L; L = []; const W = S.W, R = rng((ix * 73856093) ^ (iz * 19349663) ^ 0x51ed);
