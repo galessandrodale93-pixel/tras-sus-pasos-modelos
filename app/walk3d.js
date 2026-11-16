@@ -7279,7 +7279,7 @@ const VIVO = {
   }
   ,
   3: {
-    talk: { at: 'Caná', off: [-6, -5], id: 'joel', name: 'Joel', sub: 'sirviente en la boda de Caná', voice: 'varon', look: { g: 'chico', age: 17, skin: '#C99A72', hair: '#2A1B14', outfit: '#8A6A3A' },
+    talk: { at: 'Caná', off: [1, -4], id: 'joel', name: 'Joel', sub: 'sirviente en la boda de Caná', voice: 'varon', look: { g: 'chico', age: 17, skin: '#C99A72', hair: '#2A1B14', outfit: '#8A6A3A' },
       hi: ['¡Shalom! ¿Te contaron lo de la boda? Yo estaba sirviendo esa noche. Todavía me cuesta creerlo.'],
       ask: '¿Qué querés saber?',
       q: [
