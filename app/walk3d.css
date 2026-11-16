@@ -1320,3 +1320,5 @@ body.v3on .v3surv .sv-stam{transform:translateY(calc(100% + 6px))}
 .mgnext{display:block;opacity:.8;font:700 12.5px/1.4 Nunito,system-ui,sans-serif;margin-top:4px}
 .ar-side.r .mgst{display:flex}
 @media (prefers-reduced-motion:reduce){#arCard .mgst.pop i.on{animation:none}}
+.mgline{display:flex;align-items:center;gap:10px;margin-top:8px}.mgline .mgst{margin:0}.mgline .mgst i{width:20px;height:20px}.mgline .mgnext{margin:0}
+#arCard h3+.mgst{display:flex;margin:2px auto 6px}#arCard h3+.mgst i{width:28px;height:28px}
