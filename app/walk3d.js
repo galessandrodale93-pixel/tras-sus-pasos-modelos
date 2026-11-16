@@ -7469,8 +7469,56 @@ const VIVO = {
       'Cuando llegaron a arrestarlo, Jesús salió a su encuentro: «¿A quién buscan?». «A Jesús de Nazaret», respondieron. «Yo soy», les dijo, y los soldados retrocedieron y cayeron al suelo.'
     ]
   }
+  ,
+  7: {
+    talk: { at: 'El Gólgota', off: [-12, -8], id: 'simon', name: 'Simón de Cirene', sub: 'el que cargó la cruz', voice: 'varon', look: { g: 'chico', age: 18, skin: '#8A5A3A', hair: '#1A120C', outfit: '#6A5A4A' },
+      hi: ['Shalom. Yo venía del campo, entrando a Jerusalén, y los soldados me obligaron a cargar la cruz de un condenado. Ese día me cambió la vida.'],
+      ask: '¿Qué querés saber?',
+      q: [
+        ['¿Cómo fue cargar la cruz?', ['Jesús estaba tan golpeado que ya no podía con el madero. Los soldados me agarraron a mí, que justo pasaba, y me lo pusieron en los hombros.', 'Caminé detrás de él hasta este lugar, el Gólgota. Mucha gente lo seguía, y algunas mujeres lloraban por él.'], 'pastor'],
+        ['¿Qué dijo Jesús en la cruz?', ['Lo que más me impresionó fue que pidió por los que lo crucificaban: «Padre, perdónalos, porque no saben lo que hacen».', 'A uno de los ladrones crucificados a su lado le prometió que ese mismo día iba a estar con él en el paraíso. Y al final gritó: «¡Todo ha terminado!».'], 'evangelista'],
+        ['¿Qué pasó cuando murió?', ['Desde el mediodía hasta las tres de la tarde, toda la tierra quedó a oscuras. Cuando murió, la tierra tembló y la cortina del templo se rasgó de arriba abajo.', 'El oficial romano que estaba frente a la cruz dijo: «¡Este hombre era verdaderamente el Hijo de Dios!». Yo pensé lo mismo.'], 'profeta']
+      ],
+      bye: ['Gracias, Simón', 'Yo cargué su cruz un rato. Él cargó la de todos. Nunca lo voy a olvidar.'] },
+    scrolls: [
+      ['El Gólgota', [-10, -14], 'Gólgota quiere decir «lugar de la calavera». Quedaba fuera de las murallas de Jerusalén, junto a un camino por donde pasaba mucha gente.'],
+      ['El Gólgota', [6, 10], 'Marcos cuenta que Simón de Cirene era el padre de Alejandro y de Rufo. Seguramente sus hijos eran conocidos entre los primeros cristianos, que contaban la historia de su papá.'],
+      ['La tumba del huerto', [-8, 6], 'Los guardias sellaron la piedra de la tumba y se quedaron a vigilarla. Ningún sello y ningún soldado pudieron frenar lo que pasó al tercer día.'],
+      ['La tumba del huerto', [-10, -7], 'María Magdalena lloraba junto a la tumba vacía y pensó que Jesús era el jardinero. Él la llamó por su nombre: «¡María!». Y ahí lo reconoció.'],
+      ['La tumba del huerto', [-4, 9], 'Cuando Pedro y Juan entraron a la tumba, encontraron los lienzos puestos y el sudario enrollado aparte. Juan vio, y creyó.']
+    ],
+    fire: { at: 'La tumba del huerto', off: [-24, 6], steps: [
+      ['nar', 'Amanece cerca de la tumba del huerto. El aire está quieto y fresco. Eleazar y Asher se sientan con vos junto a las brasas.'],
+      ['zel', 'Yo esperaba un Mesías que echara a los romanos. Y lo vi morir en una cruz. Pensé que todo se había terminado.'],
+      ['esc', 'Él había dicho que al tercer día iba a resucitar. Lo dijo varias veces, y ninguno lo terminaba de entender.']],
+      ask: ['zel', '¿Vos qué pensás? ¿Por qué tuvo que morir así?'],
+      o: [
+        ['Para pagar por nuestros pecados y abrirnos el camino a Dios.', 'evangelista', [['esc', 'Juan el Bautista lo dijo desde el principio: «¡Miren! El Cordero de Dios, que quita el pecado del mundo».']]],
+        ['Porque el amor más grande es dar la vida por los amigos.', 'pastor', [['esc', 'Eso mismo enseñó en la última cena. Y después lo cumplió.']]],
+        ['Para vencer a la muerte desde adentro.', 'profeta', [['zel', 'Entonces la cruz fue el camino…'], ['esc', 'Y la tumba vacía lo demuestra.']]]
+      ],
+      end: [['esc', 'La cruz muestra cuánto te ama Dios. La tumba vacía muestra que ese amor es más fuerte que la muerte.']] },
+    quiz: { at: 'La tumba del huerto', off: [-22, -6], id: 'juana', name: 'Juana', sub: 'una de las mujeres de la tumba', voice: 'mujer', look: { g: 'chica', age: 18, skin: '#C99A72', hair: '#2A1B14', outfit: '#5A4A6A' },
+      hi: 'Shalom. Yo fui con las otras mujeres a la tumba ese domingo, bien temprano. ¿Respondés unas preguntas? Te pago con monedas.',
+      q: [
+        ['¿Quién ayudó a Jesús a cargar la cruz?', ['Simón de Cirene', 'Pedro', 'José de Arimatea'], 'Los soldados obligaron a Simón de Cirene, que venía del campo, a cargar la cruz.'],
+        ['¿Qué quiere decir Gólgota?', ['Lugar de la calavera', 'Monte santo', 'Puerta del rey'], 'Gólgota quiere decir «lugar de la calavera».'],
+        ['¿Qué pidió Jesús por los que lo crucificaban?', ['Que el Padre los perdonara', 'Que los castigara', 'Que se fueran lejos'], 'Dijo: «Padre, perdónalos, porque no saben lo que hacen».'],
+        ['¿Qué le pasó a la cortina del templo cuando Jesús murió?', ['Se rasgó de arriba abajo', 'Se prendió fuego', 'Se cayó al piso'], 'La cortina del templo se rasgó en dos, de arriba abajo: el camino a Dios quedó abierto.'],
+        ['¿Quién puso el cuerpo de Jesús en su tumba nueva?', ['José de Arimatea', 'Pedro', 'Los soldados'], 'José de Arimatea pidió el cuerpo y lo puso en su tumba nueva, con la ayuda de Nicodemo.'],
+        ['¿A quién se le apareció Jesús primero, junto a la tumba?', ['A María Magdalena', 'A Pedro', 'A Pilato'], 'Se le apareció primero a María Magdalena, que lloraba junto a la tumba.']
+      ],
+      ok: '¡Así es!', no: 'Casi. ', bye: '¡Muy bien! Volvé mañana, que tengo más preguntas.' },
+    narr: [
+      'Esa noche llevaron a Jesús ante el sumo sacerdote. Afuera, en el patio, Pedro negó tres veces que lo conocía. Cuando cantó el gallo, se acordó de las palabras de Jesús y lloró amargamente.',
+      'Pilato reconoció que Jesús era inocente, pero la multitud gritaba: «¡Crucifícalo!». Para conformarlos, soltó a Barrabás y entregó a Jesús.',
+      'Sobre la cruz pusieron un cartel en hebreo, en latín y en griego: «Jesús de Nazaret, el Rey de los judíos». Sin quererlo, Pilato anunció la verdad en los tres idiomas de aquel mundo.',
+      'El domingo muy temprano, las mujeres fueron a la tumba con perfumes. La piedra estaba corrida, y un ángel les dijo: «¡No está aquí! ¡Ha resucitado tal como dijo que sucedería!».',
+      'La tumba vacía cambió todo. Los mismos discípulos que habían huido con miedo salieron a contarle a todo el mundo que Jesús estaba vivo.'
+    ]
+  }
 };
-const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo', 2: 'El Jordán y el desierto', 3: 'Galilea', 4: 'Capernaúm y la colina', 5: 'Las parábolas', 6: 'La última cena y Getsemaní' };
+const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo', 2: 'El Jordán y el desierto', 3: 'Galilea', 4: 'Capernaúm y la colina', 5: 'Las parábolas', 6: 'La última cena y Getsemaní', 7: 'La cruz y la tumba vacía' };
 function vivoP() { const p = G().P(); p.vivo = p.vivo || {}; return p.vivo; }
 function vivoAt(at, off) { const q = (S.pois || []).find(o => o.name === at); if (!q) return null; return freeNear(q.x + off[0] * (q.side || 1), q.z + off[1], .35); }
 function vivoBuild(scene, hx) {
