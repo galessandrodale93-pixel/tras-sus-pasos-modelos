@@ -60,6 +60,22 @@ function msg(t,ok){m.textContent=t||'';m.className='lg-msg'+(ok?' ok':'');}
 function busy(b,t){go.disabled=b;go.textContent=b?'Entrando…':(t||'Entrar al Campus');}
 (function(){var q=new URLSearchParams(location.search).get('ret');if(q&&/^\/[a-z0-9-]+\.html$/.test(q)){try{sessionStorage.setItem('habitat:ret',q);}catch(e){}window.__ret=q;}})();
 function ret(){var r=window.__ret||'/campus.html';try{r=sessionStorage.getItem('habitat:ret')||r;sessionStorage.removeItem('habitat:ret');}catch(e){}location.replace(r);}
+var FT=new URLSearchParams(location.search).get('forgotPasswordToken');
+if(FT){/* venimos del mail «Restablecer contraseña»: la persona crea su contraseña nueva acá */
+ history.replaceState(null,'','/ingresar.html');rec=false;
+ var hd=document.querySelector('.lg-card h1')||document.querySelector('h1');if(hd)hd.textContent='Creá tu contraseña nueva';
+ var sub=hd&&hd.nextElementSibling;if(sub)sub.textContent='Elegí una contraseña de al menos 6 caracteres. Después entrás directo al Campus.';
+ [document.getElementById('gBtn'),document.querySelector('.or'),fg,document.getElementById('lgEmail').parentNode].forEach(function(x){if(x)x.style.display='none';});
+ var p1=document.getElementById('lgPw');p1.autocomplete='new-password';p1.placeholder='Contraseña nueva';p1.previousElementSibling.textContent='Contraseña nueva';
+ var r2=document.createElement('div');r2.className='row';r2.innerHTML='<label for="lgPw2">Repetila</label><input id="lgPw2" type="password" autocomplete="new-password" placeholder="Repetí la contraseña" required>';pw.after(r2);
+ go.textContent='Guardar y entrar';
+ window.__np=async function(e){e.preventDefault();var a=p1.value,b=document.getElementById('lgPw2').value;
+  if(a.length<6){msg('Usá al menos 6 caracteres.');return;}if(a!==b){msg('Las dos contraseñas no coinciden.');return;}
+  go.disabled=true;go.textContent='Guardando…';msg('');
+  try{var st=await A.newPassword(FT,a);if(st&&st!=='SUCCESS'){msg('Listo, ya cambiaste tu contraseña. Ahora entrá con tu email y la contraseña nueva.',true);setTimeout(function(){location.replace('/ingresar.html');},2500);}}
+  catch(x){var t=JSON.stringify(x.body||{});msg(/expired|invalid|token/i.test(t)?'Este link ya venció o se usó. Pedí uno nuevo con «¿Olvidaste tu contraseña?».':/password/i.test(t)?'Esa contraseña no se puede usar. Probá con otra más larga.':'No pudimos guardar la contraseña. Probá de nuevo.');go.disabled=false;go.textContent='Guardar y entrar';if(/expired|invalid|token/i.test(t)){setTimeout(function(){location.replace('/ingresar.html');},4000);}}
+ };
+}else
 A.callback().then(function(done){if(done||A.loggedIn())ret();}).catch(function(x){msg('No pudimos completar el ingreso'+(x&&x.message&&x.message!=='state'?' ('+x.message+')':'')+'. Probá de nuevo.');});
 document.getElementById('gBtn').onclick=function(){msg('');A.loginGoogle().catch(function(){msg('No pudimos abrir Google. Probá de nuevo en un momento.');});};
 fg.onclick=function(){rec=!rec;pw.hidden=rec;go.textContent=rec?'Enviarme el link':'Entrar al Campus';fg.textContent=rec?'Volver a ingresar':'¿Olvidaste tu contraseña?';msg(rec?'Te mandamos un mail con un link para crear una contraseña nueva.':'',rec);};
@@ -71,6 +87,7 @@ f.onsubmit=async function(e){e.preventDefault();var em=document.getElementById('
  try{var st=await A.loginEmail(em,p);if(st==='REQUIRE_OWNER_APPROVAL')msg('Tu cuenta está esperando aprobación de Habitat.');else if(st==='REQUIRE_EMAIL_VERIFICATION')msg('Tenés que verificar tu email. Te mandamos un código.');else if(st)msg('No pudimos ingresar ('+st+').');busy(false);}
  catch(x){var t=JSON.stringify(x.body||{});msg(/password|credential|not.?found|-19976|-19999|19958/i.test(t)?'El email o la contraseña no coinciden.':'No pudimos ingresar. Probá de nuevo en un momento.');busy(false);}
 };
+if(FT)f.onsubmit=window.__np;
 })();
 </script>
 </body>
