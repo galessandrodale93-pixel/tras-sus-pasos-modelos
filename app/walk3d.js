@@ -3249,10 +3249,10 @@ function musLoop(url) {
 }
 /* si la pista no carga o se traba (señal floja), reintenta sola con espera creciente; recién al 5.º fallo queda la música sintetizada */
 function musFail(t) {
-  if (t.wait) return; t.err = (t.err || 0) + 1; t.ok = false; if (t.err > 5) return;
+  if (t.wait) return; t.err = (t.err || 0) + 1; t.ok = false; /* reintenta siempre, sin rendirse */
   t.wait = setTimeout(() => { t.wait = 0; [t.a, t.b].forEach(e => { if (e) { try { e.pause(); } catch (er) {} } });
-    const u = t.list[0] + (t.list[0].includes('?') ? '&' : '?') + 'r=' + Date.now(), a = auEl(u); auVol(a, 0); a.onerror = () => musFail(t); a.addEventListener('playing', () => { t.err = 0; });
-    t.a = a; t.b = null; t.cur = 'a'; t.xf = false; t.primed = false; t.lt = -1; t.ok = true; musGesture(); }, 2500 * t.err);
+    const u = t.err <= 2 ? t.list[0] : t.list[0] + (t.list[0].includes('?') ? '&' : '?') + 'r=' + Date.now(), a = auEl(u); /* los primeros reintentos aprovechan lo que ya bajó */ auVol(a, 0); a.onerror = () => musFail(t); a.addEventListener('playing', () => { t.err = 0; });
+    t.a = a; t.b = null; t.cur = 'a'; t.xf = false; t.primed = false; t.lt = -1; t.lc = 0; t.ok = true; musGesture(); }, Math.min(15000, 2500 * t.err));
 }
 const canPlay = t => t.primed || (!IOS && navigator.userActivation && navigator.userActivation.hasBeenActive);
 function musLoopTick(t) {
@@ -3265,7 +3265,7 @@ function musTrack(list) {
   if (list.length === 1) return musLoop(list[0]);
   const t = { list, i: Math.floor(Math.random() * list.length), el: auEl(), v: 0, ok: true, primed: false }; auVol(t.el, 0);
   t.el.src = list[t.i]; t.el.onended = () => { t.i = (t.i + 1) % list.length; t.el.src = list[t.i]; t.el.play().catch(() => {}); };
-  t.el.onerror = () => { t.err = (t.err || 0) + 1; if (t.err > 3) { t.ok = false; return; } t.i = (t.i + 1) % list.length; t.el.src = list[t.i]; };
+  t.el.onerror = () => { t.err = (t.err || 0) + 1; setTimeout(() => { t.i = (t.i + 1) % list.length; t.el.src = list[t.i]; }, Math.min(15000, 1500 * t.err)); };
   return t;
 }
 function musInit() {
@@ -3285,7 +3285,7 @@ function musTick() {
     if (!t.ok) continue; const step = t.want > t.v ? .045 : .07; t.v += Math.max(-step, Math.min(step, t.want - t.v));
     if (!t.xf) auVol(t.el, t.v * mixV('mus'));
     if (t.want > 0 && t.el.paused && canPlay(t)) { const q = t.el.play(); if (q) q.then(() => { t.primed = true; }).catch(() => {}); }
-    if (t.loop && t.want > 0 && !t.el.paused && !t.xf) { const ct = t.el.currentTime, nw = performance.now(); if (ct !== t.lt) { t.lt = ct; t.lc = nw; } else if (nw - (t.lc || nw) > 12000) { t.lc = nw; musFail(t); continue; } }
+    if (t.loop && t.want > 0 && !t.el.paused && !t.xf) { const ct = t.el.currentTime, nw = performance.now(); if (ct !== t.lt) { t.lt = ct; t.lc = nw; } else if (nw - (t.lc || nw) > 40000 && t.el.readyState < 3) { t.lc = nw; musFail(t); continue; } /* con señal floja la pista puede tardar: se espera bastante antes de volver a pedirla */ }
     if (t.want <= 0 && !t.el.paused && (t.v < .01 || IOS)) t.el.pause();
     if (t.loop) musLoopTick(t);
   }
@@ -3427,7 +3427,7 @@ function auTick() {
   const c = AU.ctx; if (!c || !S) return; try { sndTick(.09); } catch (e) { if (!AU.sndErr) { AU.sndErr = 1; console.warn('ambiente', e); } }
   const shown = !document.getElementById('view3d').hidden && document.getElementById('arcade').hidden;
   const pray = S.pose === 'pray' || S.solemn === 2, tm = c.currentTime + .35;
-  if (musTick()) { AU.master.gain.setTargetAtTime(0, c.currentTime, .2); AU.next = c.currentTime + .1; AU.snext = c.currentTime + .1; return; }
+  if (musTick() || true) { /* nunca música sintetizada: suenan las pistas elegidas por Gui o hay silencio mientras cargan */ AU.master.gain.setTargetAtTime(0, c.currentTime, .2); AU.next = c.currentTime + .1; AU.snext = c.currentTime + .1; return; }
   if (AU.mus && !AU.bank) Object.keys(SMP).forEach(loadInst); // si la música grabada falla, vuelve la orquesta sintetizada
   AU.master.gain.setTargetAtTime(AU.on && shown ? .9 * mixV('mus') : 0, c.currentTime, .4);
   AU.adv.gain.setTargetAtTime(pray ? 0 : (AU.speaking || AU.narr ? .45 : 1), c.currentTime, pray ? .8 : 1.6);
@@ -4461,11 +4461,13 @@ function doorTheme(scene, g, d, hx, HW) {
     { const bx = -7, bz = 11; if (0) { const w = V(bx, 0, bz); (FLORA.poiProps = FLORA.poiProps || []).push(['shrub_02', [{ x: w.x, y: yAt(w.x, w.z) - .04, z: w.z, ry: .4, s: 2.2, v: 0 }, { x: w.x + .9, y: yAt(w.x, w.z) - .04, z: w.z - .5, ry: 1.4, s: 1.6, v: 1 }], { shadow: true, far: 1 }]); } const w = V(bx, 0, bz);
       /* la zarza misma: una mata espesa y verde que no se quema, con llamas vivas entre las ramas y chispas que suben */
       { const B = new THREE.Group(); B.position.set(bx, yAt(w.x, w.z) - g.position.y, bz); B.scale.setScalar(1.45); g.add(B); const lm = new THREE.MeshStandardMaterial({ color: '#3E5A26', roughness: .9, flatShading: true, emissive: '#5A2A08', emissiveIntensity: .35 }), tw = new THREE.MeshStandardMaterial({ color: '#4A3420', roughness: 1 });
-        const paidB = !!grpBase(); /* la zarza es uno de los árboles comprados (el olivo), bajo y tupido; sin el pack, queda la mata hecha a mano */ if (paidB) { try { phOne('trp_olive', B, 0, -.05, 0, .6, .62, { v: 1, wind: 2 }); phOne('trp_olive', B, .5, -.05, -.35, 2.9, .44, { v: 2, wind: 2 }); } catch (e) {} }
+        const paidB = !!grpBase(); /* la zarza es uno de los árboles comprados (el olivo), bajo y tupido; sin el pack, queda la mata hecha a mano */ if (paidB) { try { phOne('trp_olive', B, 0, -.05, 0, .6, .62, { v: 1, wind: 2, done: g2 => { B.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(g2), c = B.worldToLocal(bb.getCenter(new THREE.Vector3())), sz = bb.getSize(new THREE.Vector3()).divideScalar(1.45), Rf = rng(77); T.bf = [];
+            for (let i = 0; i < 22; i++) { const o = new THREE.Group(), s0 = .55 + Rf() * .5, a1 = new THREE.Group(), a2 = new THREE.Group(), s1 = grotGlow(i % 3 ? '#FF7A1E' : '#FFB03A', 1, .8), s2 = grotGlow('#FFF0B0', 1, .85); s1.scale.set(.75 * s0, 1.7 * s0, 1); s1.position.y = .6 * s0; s2.scale.set(.38 * s0, 1 * s0, 1); s2.position.y = .42 * s0; a1.add(s1); a2.add(s2); o.add(a1, a2); o.position.set(c.x + (Rf() - .5) * sz.x * .62, c.y + (Rf() - .55) * sz.y * .55, c.z + (Rf() - .5) * sz.z * .62); B.add(o); T.bf.push({ f1: a1, f2: a2, p: i * .9 }); }
+            if (T.emb) { T.emb.position.x = c.x; T.emb.position.z = c.z; T.emb.position.y = c.y - sz.y * .3; } if (T.bushG) { const wc = bb.getCenter(new THREE.Vector3()); T.bushG.position.copy(wc); } } }); } catch (e) {} }
         for (let i = 0; i < 6 && !paidB; i++) { const a = i / 6 * 6.283, st = new THREE.Mesh(new THREE.CylinderGeometry(.05, .09, 1.5, 5), tw); st.position.set(Math.cos(a) * .35, .65, Math.sin(a) * .35); st.rotation.set(Math.sin(a) * .5, 0, -Math.cos(a) * .5); B.add(st); }
         const bl = []; for (let i = 0; i < 11; i++) { const a = i * 2.4, r = i ? .55 + (i % 3) * .3 : 0, m = new THREE.Mesh(new THREE.IcosahedronGeometry(.62 - (i % 3) * .1, 1), lm); m.position.set(Math.cos(a) * r, 1 + (i % 4) * .32 + (i ? 0 : .5), Math.sin(a) * r); m.scale.set(1, .78, 1); m.castShadow = true; if (!paidB) B.add(m); bl.push(m.position); }
         const fo = new THREE.MeshBasicMaterial({ color: '#FF8A2A', transparent: true, opacity: .92, blending: THREE.AdditiveBlending, depthWrite: false }), fi = new THREE.MeshBasicMaterial({ color: '#FFE9A0', transparent: true, opacity: .95, blending: THREE.AdditiveBlending, depthWrite: false }); T.bf = [];
-        for (let i = 0; i < 16; i++) { const p = bl[i % bl.length], o = new THREE.Group(), h = .7 + (i % 4) * .25, f1 = new THREE.Mesh(new THREE.ConeGeometry(.22, h, 8), fo), f2 = new THREE.Mesh(new THREE.ConeGeometry(.11, h * .6, 8), fi); f2.position.y = -h * .12; o.add(f1, f2); o.position.set(p.x + Math.sin(i * 3.1) * .3, p.y + h * .28, p.z + Math.cos(i * 2.3) * .3); B.add(o); T.bf.push({ f1, f2, p: i * .9 }); }
+        for (let i = 0; i < 16 && !paidB; i++) { const p = bl[i % bl.length], o = new THREE.Group(), h = .7 + (i % 4) * .25, f1 = new THREE.Mesh(new THREE.ConeGeometry(.22, h, 8), fo), f2 = new THREE.Mesh(new THREE.ConeGeometry(.11, h * .6, 8), fi); f2.position.y = -h * .12; o.add(f1, f2); o.position.set(p.x + Math.sin(i * 3.1) * .3, p.y + h * .28, p.z + Math.cos(i * 2.3) * .3); B.add(o); T.bf.push({ f1, f2, p: i * .9 }); }
         const em = new THREE.BufferGeometry(), ep = new Float32Array(60 * 3); for (let k = 0; k < 60; k++) { ep[k * 3] = (Math.random() - .5) * 1.6; ep[k * 3 + 1] = Math.random() * 4; ep[k * 3 + 2] = (Math.random() - .5) * 1.6; } em.setAttribute('position', new THREE.BufferAttribute(ep, 3));
         const pts = new THREE.Points(em, new THREE.PointsMaterial({ color: '#FFB24A', size: .09, transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false })); pts.position.y = 1.2; B.add(pts); T.emb = pts; }
       const gl = glowSpr('#FFC060', 8, .6); gl.position.copy(V(bx, 2.2, bz)); gl.position.y = yAt(w.x, w.z) + 2.2; scene.add(gl); T.bushG = gl; solid(bx, bz, 1.3);
