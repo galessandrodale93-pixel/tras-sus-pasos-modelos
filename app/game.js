@@ -355,6 +355,14 @@ const totalRaw=p=>p.trivia+gamesTotal(p)+Object.keys(p.items||{}).length*25+Obje
 const total=p=>{const t=totalRaw(p),c=khCap(p);return c==null?t:Math.min(t,c);};
 function shade(hex,amt){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const t=amt<0?0:255,k=Math.abs(amt);r=Math.round(r+(t-r)*k);g=Math.round(g+(t-g)*k);b=Math.round(b+(t-b)*k);return '#'+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);}
 const STAR=on=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z" fill="${on?'#F2B33D':'#DCE6F7'}" stroke="${on?'#FFE39A':'#C9D6EC'}" stroke-width="1"/></svg>`;
+/* estrellas de los minijuegos: 1, 2 o 3 según tu mejor marca. Kids pide menos. Cada estrella nueva suma puntos y, al juntar varias, llega un premio */
+const MG_ST={slide:[200,450,800],blocks:[150,350,600],run:[150,350,600],hop:[160,380,650]};
+const mgT=type=>{const b=MG_ST[type]||[100,220,350],k=branch==='ados'?1:.65;return b.map(v=>Math.round(v*k/5)*5);};
+const mgStars=(type,sc)=>{const t=mgT(type);return sc>=t[2]?3:sc>=t[1]?2:sc>=t[0]?1:0;};
+const mgNext=(type,sc)=>{const t=mgT(type);return t.find(v=>sc<v);};
+const mgStarRow=(n,cls)=>`<span class="mgst${cls?' '+cls:''}">${[1,2,3].map(k=>`<i class="${k<=n?'on':''}">${STAR(k<=n)}</i>`).join('')}</span>`;
+const MG_PRIZE=[10,25,50,80,120,160];
+function mgStarsTotal(p){let n=0;for(const id in (p.games||{})){const nd=NODES[id];if(nd&&nd.game)n+=mgStars(nd.game.type,p.games[id]);}return n;}
 const coin=(m,size=52)=>`<svg class="coin" width="${size}" height="${size}" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" fill="${m.c}"/><circle cx="26" cy="26" r="19" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2"/><path d="${m.g}" fill="${m.f?'#22407F':'none'}" stroke="#22407F" stroke-width="${m.w||0}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 let uid=0;
@@ -1022,7 +1030,7 @@ function arrive(id){
 let active=null,locked=false,video=null;
 function gameCard(n){
   const best=P().games[n.id]||0;
-  return `<div class="gamecard glass"><div class="top"><span class="gico" style="color:#22407F"><svg width="26" height="26" viewBox="-12 -12 24 24" aria-hidden="true">${GICON[n.game.type]}</svg></span><div class="gt"><span>Minijuego</span><b>${esc(n.game.title)}</b></div><div class="best">Mejor marca<b>${fmt(best)}</b></div></div><span>${esc(n.game.how)}</span></div>`;
+  return `<div class="gamecard glass"><div class="top"><span class="gico" style="color:#22407F"><svg width="26" height="26" viewBox="-12 -12 24 24" aria-hidden="true">${GICON[n.game.type]}</svg></span><div class="gt"><span>Minijuego</span><b>${esc(n.game.title)}</b></div><div class="best">Mejor marca<b>${fmt(best)}</b>${mgStarRow(mgStars(n.game.type,best))}</div></div><span>${esc(n.game.how)}</span>${mgNext(n.game.type,best)?`<small class="mgnext">Próxima estrella: ${fmt(mgNext(n.game.type,best))} puntos</small>`:'<small class="mgnext">¡Las tres estrellas! ⭐</small>'}</div>`;
 }
 function flowButtons(n){
   return isDone(n.id)?`<div class="actions two"><button class="primary" id="play">Jugar de nuevo</button><button class="ghost" id="back">Volver al mapa</button></div>`:`<div class="actions"><button class="primary" id="play">Jugar</button></div>`;
@@ -2543,7 +2551,7 @@ function showArCard(kind,data={}){
   if(kind==='intro'){const best=P().games[ar.n.id]||0;
     vo(th.how);card.classList.toggle('hcard',branch==='ados'&&!!HSHOTS);card.style.backgroundImage=branch==='ados'&&HSHOTS?`linear-gradient(180deg,rgba(8,6,4,.35),rgba(8,6,4,.88)),url(${HSHOTS[1]||HSHOTS[0]})`:'';card.innerHTML=`<div class="box glass"><span class="kicker">Minijuego</span><h3>${esc(th.title)}</h3><p>${esc(th.how)}</p><p>${['memo','maze','verso','herd','slide','order','words','diff','lantern','connect'].includes(th.type)?'Se juega contra reloj: cada ronda que superás te da más tiempo.':th.type==='simon'?'Tenés dos vidas. Cada secuencia es una luz más larga.':['pop','swarm','balance','tf'].includes(th.type)?'Tenés tres vidas.':th.type==='rhythm'?'Si se te pasan seis notas, se termina.':th.type==='stack'?'Se termina cuando una tabla cae afuera.':'Se juega hasta perder.'} Tu mejor marca suma puntos${best?` (ahora: ${fmt(best)})`:''}.</p><button class="primary" id="arGo">Jugar</button></div>`;
     $('#arGo').onclick=()=>{card.hidden=true;runGame();};}
-  else{card.innerHTML=`<div class="box glass"><span class="kicker">¡Se terminó!</span><div class="bigscore">${fmt(data.score)}</div>${data.gain>0?`<span class="newbest">Nueva mejor marca · +${fmt(data.gain)} puntos</span>`:`<p>Tu mejor marca sigue en ${fmt(data.best)}.</p>`}<button class="primary" id="arAgain">Jugar de nuevo</button><button class="ghost" id="arNext">${isDone(ar.n.id)?'Volver a la parada':'Ir al desafío'}</button></div>`;
+  else{const st=mgStars(th.type,data.best),nx=mgNext(th.type,data.best);card.innerHTML=`<div class="box glass"><span class="kicker">¡Se terminó!</span><div class="bigscore">${fmt(data.score)}</div>${mgStarRow(st,data.newSt?'pop':'')}${data.newSt?`<span class="newbest">${data.newSt>1?'¡'+data.newSt+' estrellas nuevas!':'¡Estrella nueva!'} · +${fmt(data.newSt*10)} puntos</span>`:''}<p class="mgnext">${nx?`Próxima estrella: ${fmt(nx)} puntos`:'¡Tenés las tres estrellas!'}</p>${data.gain>0?`<span class="newbest">Nueva mejor marca · +${fmt(data.gain)} puntos</span>`:`<p>Tu mejor marca sigue en ${fmt(data.best)}.</p>`}<button class="primary" id="arAgain">Jugar de nuevo</button><button class="ghost" id="arNext">${isDone(ar.n.id)?'Volver a la parada':'Ir al desafío'}</button></div>`;
     $('#arAgain').onclick=()=>{card.hidden=true;runGame();};$('#arNext').onclick=()=>endArcade(false);
     if(data.gain>0){const r=card.querySelector('.bigscore').getBoundingClientRect();sparks(r.left+r.width/2,r.top+r.height/2,50,1.6);}}
 }
@@ -2551,7 +2559,11 @@ function gameOver(){
   const p=P(),id=ar.n.id,sc=ar.game.score,best=p.games[id]||0,gain=Math.max(0,sc-best);
   if(gain>0)p.games[id]=sc;try{const al=branch==='ados'&&window.W3&&W3.fvOf?W3.fvOf('ale'):0;if(gain>0&&al>=20)p.bonus=(p.bonus||0)+Math.round(gain*(al>=50?.2:al>=30?.15:.1));}catch(e){}
   if(sc>=300)award('jugador');
-  save();showArCard('over',{score:sc,best:Math.max(best,sc),gain});
+  const ty=ar.th.type,s0=mgStars(ty,best),s1=mgStars(ty,Math.max(best,sc)),newSt=Math.max(0,s1-s0);
+  if(newSt){const t0=mgStarsTotal({...p,games:{...p.games,[id]:best}}),t1=mgStarsTotal(p);p.bonus=(p.bonus||0)+newSt*10;
+    const hit=MG_PRIZE.filter(m=>t0<m&&t1>=m);p.mgPrize=p.mgPrize||[];hit.forEach(m=>{if(p.mgPrize.includes(m))return;p.mgPrize.push(m);setTimeout(()=>{try{toast('⭐ ¡'+m+' estrellas! Ganaste un premio');window.W3&&W3.examPrize&&W3.examPrize('las '+m+' estrellas');}catch(e){}},1600);});
+    setTimeout(()=>{try{toast('⭐ Tenés '+t1+' estrellas en los minijuegos');}catch(e){}},900);}
+  save();showArCard('over',{score:sc,best:Math.max(best,sc),gain,newSt});
 }
 /* la pantalla del minijuego a lo ancho: de fondo, el escenario 3D donde estás (desenfocado); a la izquierda el lugar, cómo se juega
    y la cita; a la derecha el puntaje grande y tu mejor marca. Solo con pantalla apaisada y espacio a los costados. */
@@ -2561,7 +2573,7 @@ function arFrame(n,th,p){
   A.querySelectorAll('.ar-side').forEach(e=>e.remove());const ins=A.querySelector('.ar-in');if(!ins)return;
   const best=(p.games||{})[n.id]||0,ref=(n.ch&&n.ch.ref)||'',where=[n.place||n.label,n.title].filter(Boolean).join(' · ');
   const L=document.createElement('aside');L.className='ar-side l';L.innerHTML=`${where?`<span class="ar-where">${esc(where)}</span>`:''}<h4>Cómo se juega</h4><p>${esc(th.how||'')}</p>${ref?`<span class="ar-ref">📜 ${esc(ref)}</span>`:''}`;
-  const Rr=document.createElement('aside');Rr.className='ar-side r';Rr.innerHTML=`<small>Puntaje</small><b class="ar-big" id="arBig">0</b><small>Tu mejor marca</small><b class="ar-best">${fmt(best)}</b>`;
+  const Rr=document.createElement('aside');Rr.className='ar-side r';const ty=th.type,nx=mgNext(ty,best);Rr.innerHTML=`<small>Puntaje</small><b class="ar-big" id="arBig">0</b><small>Tu mejor marca</small><b class="ar-best">${fmt(best)}</b>${mgStarRow(mgStars(ty,best))}<small class="mgnext">${nx?'Próxima estrella: '+fmt(nx):'¡Tres estrellas!'}</small>`;
   ins.prepend(L);ins.append(Rr);
   if(!arFrame.obs){arFrame.obs=new MutationObserver(()=>{const b=document.getElementById('arBig'),s=document.getElementById('arScore');if(b&&s&&b.textContent!==s.textContent){b.textContent=s.textContent;b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');}});arFrame.obs.observe($('#arScore'),{childList:true,characterData:true,subtree:true});}
 }
