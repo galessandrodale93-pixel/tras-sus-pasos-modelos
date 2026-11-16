@@ -1304,7 +1304,7 @@ function hudLay() {
    o los botones de la derecha, se angosta para entrar en el hueco del medio; si igual no entra, baja (o sube) hasta quedar libre. */
 const BAN_TOP = ['.v3comp', '#v3timer', '#v3room', '.v3topics', '.v3mis', '.v3seas', '#v3vil', '.v3bagt', '.v3pop', '#toast'];
 const BAN_BOT = ['.v3place', '.v3say', '.v3hint'];
-const BAN_OBS = ['#v3crest', '.hud', '.v3surv', '.v3mapbtn', '.v3baghud', '.v3mmbox', '.v3cam', '.v3joy', '#v3joy', '.v3fan .fan-tg', '.v3fan.open .fan-items button', '#v3acts > button', '.v3surv .sv-do', '#v3go', '.v3go', '#v3go button', '#v3go .v3k', '.v3act', '#wixheadless-banner-container'];
+const BAN_OBS = ['#v3crest', '.hud', '.v3surv', '.v3mapbtn', '.v3baghud', '.v3mmbox', '.v3cam', '.v3joy', '#v3joy', '.v3fan .fan-tg', '.v3fan.open .fan-items button', '#v3acts > button', '.v3surv .sv-do', '#khPill', '#v3go', '.v3go', '#v3go button', '#v3go .v3k', '.v3act', '#wixheadless-banner-container'];
 const BAN_LEFT = new Set(['v3mis']);
 function topVis(e) { if (!e || e.hidden) return false; const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden' || cs.position !== 'fixed') return false; return +cs.opacity > .04 || e.classList.contains('on') || e.classList.contains('show'); }
 function banReset(e) { if (e.dataset.tsY == null) return; ['top', 'bottom', 'left', 'max-width'].forEach(k => e.style.removeProperty(k)); delete e.dataset.tsY; }
@@ -2479,7 +2479,7 @@ function belenLife(scene, p, yAt, hx, HW, kx, kz, placed) {
   // el mesón, lleno por el censo: la casa más cercana al establo, con un farol en la puerta
   { const h = (placed || []).slice().sort((a, b) => Math.hypot(a.x - kx, a.z - kz) - Math.hypot(b.x - kx, b.z - kz))[0];
     if (h) { const dx = p.x - h.x, dz = p.z - h.z, l = Math.hypot(dx, dz) || 1; let x = h.x + dx / l * (h.rr + .9), z = h.z + dz / l * (h.rr + .9); for (let k = 0; k < 6 && blockedAt(x, z); k++) { x += dx / l * .6; z += dz / l * .6; }
-      const lt = glowSpr('#FFB45A', 1.8, .75); lt.position.set(h.x + dx / l * (h.rr - .2), yAt(x, z) + 2.3, h.z + dz / l * (h.rr - .2)); scene.add(lt);
+      const lt = glowSpr('#FFB45A', 1.8, .75); lt.position.set(h.x + dx / l * (h.rr - .2), yAt(x, z) + 2.3, h.z + dz / l * (h.rr - .2)); scene.add(lt); { const lamp = new THREE.Mesh(new THREE.SphereGeometry(.09, 10, 8), tm('clay', '#9A5A34', { roughness: .9 })); lamp.scale.set(1.3, .7, 1); lamp.position.copy(lt.position); lamp.position.y -= .12; scene.add(lamp); const fl = new THREE.Mesh(new THREE.SphereGeometry(.035, 8, 6), new THREE.MeshBasicMaterial({ color: '#FFD08A' })); fl.position.copy(lt.position); scene.add(fl); }
       const lb = textSprite('Mesón', hx); lb.scale.multiplyScalar(.7); lb.position.set(h.x, yAt(h.x, h.z) + 4.6, h.z); scene.add(lb);
       LEp(S, { x, z, r: 2.4, label: 'Preguntar en el mesón', info: ['No había lugar', 'El emperador Augusto había mandado hacer un censo, y cada uno tuvo que ir a anotarse a su pueblo. José fue a Belén, la ciudad de David, con María. El alojamiento estaba lleno y no había lugar para ellos.', 'Lucas 2:1-7'] }); } }
   // el pozo de Belén, el que extrañaba David
@@ -2491,7 +2491,13 @@ function belenLife(scene, p, yAt, hx, HW, kx, kz, placed) {
   // los campos de Booz: gavillas de cebada y espigas sueltas para juntar, como Rut
   { let at = null; for (let t = 0; t < 80 && !at; t++) { const a = R() * 6.283, r = 27 + R() * 8, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (Math.cos(a) * sd < -.2) continue; let ok = free(x, z, 7); for (let k = 0; ok && k < 6; k++) { const b2 = k / 6 * 6.283; ok = free(x + Math.cos(b2) * 3.2, z + Math.sin(b2) * 3.2, 6); } if (ok && Math.abs(yAt(x + 2, z) - yAt(x - 2, z)) < 1 && Math.abs(yAt(x, z + 2) - yAt(x, z - 2)) < 1) at = [x, z]; }
     if (at) { const [cx, cz] = at, st = tm('barley', '#D8B866', { roughness: 1 }), tie = tm('barleytie', '#8A6A3A', { roughness: 1 });
-      for (let i = 0; i < 7; i++) { const a = i / 7 * 6.283 + R() * .4, r = 1.2 + R() * 1.8, x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r, g = new THREE.Group(); const sh = new THREE.Mesh(new THREE.CylinderGeometry(.16, .3, .95, 9, 1, true), st); sh.position.y = .47; g.add(sh); const top = new THREE.Mesh(new THREE.ConeGeometry(.3, .45, 9), st); top.position.y = 1.15; g.add(top); const band = new THREE.Mesh(new THREE.TorusGeometry(.17, .03, 5, 12), tie); band.rotation.x = Math.PI / 2; band.position.y = .72; g.add(band); g.rotation.set((R() - .5) * .15, R() * 6, (R() - .5) * .15); g.position.set(x, yAt(x, z) - .02, z); g.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(g); }
+      /* gavillas atadas en la cintura: tallos de cebada con la espiga arriba, abiertos abajo y arriba como un reloj de arena */
+      { const per = 38, n = 7 * per, im = new THREE.InstancedMesh(new THREE.CylinderGeometry(.011, .013, 1, 4), st, n), hd = new THREE.InstancedMesh(new THREE.CapsuleGeometry(.02, .09, 2, 5), tm('barleyh', '#E2C474', { roughness: 1 }), n), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), UP = new THREE.Vector3(0, 1, 0), D = new THREE.Vector3(), P = new THREE.Vector3(), SC = new THREE.Vector3(); let k = 0;
+        for (let i = 0; i < 7; i++) { const a0 = i / 7 * 6.283 + R() * .4, r0 = 1.2 + R() * 1.8, sx = cx + Math.cos(a0) * r0, sz = cz + Math.sin(a0) * r0, sy = yAt(sx, sz) - .02, H = 1.05 + R() * .15;
+          for (let j = 0; j < per; j++, k++) { const a = j / per * 6.283 + R() * .3, r = .06 + R() * .1, bx2 = sx + Math.cos(a) * r, bz2 = sz + Math.sin(a) * r, tx = sx - Math.cos(a) * r * 1.25, tz = sz - Math.sin(a) * r * 1.25, ty = sy + H * (.92 + R() * .12); D.set(tx - bx2, ty - sy, tz - bz2); const L = D.length(); D.normalize(); Q.setFromUnitVectors(UP, D); P.set((bx2 + tx) / 2, (sy + ty) / 2, (bz2 + tz) / 2); SC.set(1, L, 1); M4.compose(P, Q, SC); im.setMatrixAt(k, M4); P.set(tx + D.x * .05, ty + D.y * .05, tz + D.z * .05); SC.set(1, 1, 1); M4.compose(P, Q, SC); hd.setMatrixAt(k, M4); }
+          const band = new THREE.Mesh(new THREE.TorusGeometry(.05, .018, 5, 12), tie); band.rotation.x = Math.PI / 2; band.position.set(sx, sy + H * .46, sz); scene.add(band); S.cols.push({ x0: sx - .25, x1: sx + .25, z0: sz - .25, z1: sz + .25, cx: sx, cz: sz, r: .22 }); }
+        [im, hd].forEach(o => { o.instanceMatrix.needsUpdate = true; o.computeBoundingSphere(); o.castShadow = true; scene.add(o); }); }
+      S.avoidPts = (S.avoidPts || []).concat([[cx, cz]], [0, 1, 2, 3, 4, 5].map(k => [cx + Math.cos(k * 1.047) * 3, cz + Math.sin(k * 1.047) * 3]));
       { const n = 60, im = new THREE.InstancedMesh(new THREE.CylinderGeometry(.012, .012, .5, 4), st, n), M = new THREE.Matrix4(), Q = new THREE.Quaternion(); for (let i = 0; i < n; i++) { const a = R() * 6.283, r = R() * 3.6, x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r; Q.setFromEuler(new THREE.Euler(Math.PI / 2 - .05, R() * 6, 0)); M.compose(new THREE.Vector3(x, yAt(x, z) + .03, z), Q, new THREE.Vector3(1, 1, 1)); im.setMatrixAt(i, M); } im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); scene.add(im); }
       LEp(S, { x: cx, z: cz, r: 2.8, label: 'Juntar espigas como Rut', dur: 6, go: () => { if (S.hx) h3do(['M_Kneeling_Inspecting', 'M_Pick_Fruit'], 4); sello('rut', 'Los campos de Booz'); }, info: ['Los campos de Booz', 'En estos campos de Belén, Rut juntaba las espigas que quedaban detrás de los segadores. Booz la trató con bondad y se casó con ella. Su bisnieto fue el rey David… y de esa misma familia, siglos después, nació Jesús.', 'Rut 2:2-3 · Mateo 1:5-6'] }); } }
 }
@@ -3030,7 +3036,10 @@ function roomTick(dt) {
   for (const r of S.rooms) if (a.x > r.x0 && a.x < r.x1 && a.z > r.z0 && a.z < r.z1) { if (r.open) { if (!openR || (r.x1 - r.x0) < (openR.x1 - openR.x0)) openR = r; } else inR = r; }
   for (const r of S.rooms) { if (r.open) continue; const show = r !== inR; r.roof.forEach(m => { m.visible = show; }); }
   if (inR !== S.inRoom) { if (inR && !S.inRoom) S.camKeep = { d: S.camDist, p: S.camPitch }; if (!inR && S.camKeep) { S.camDist = S.camKeep.d; S.camPitch = S.camKeep.p; S.camKeep = null; } S.inRoom = inR; }
-  if (inR) { S.camDist += (Math.min(S.camKeep ? S.camKeep.d : 6, 5.2) - S.camDist) * Math.min(1, dt * 3); S.camPitch += (Math.max(S.camKeep ? S.camKeep.p : .4, .95) - S.camPitch) * Math.min(1, dt * 3); }
+  if (inR) { /* dentro de un taller o una casa la cámara no se sale por detrás de la pared: si quedaría afuera, se acerca y mira más desde arriba (si no, la pared tapaba al jugador) */
+    const C = S.yaw + S.camYaw, bx = -Math.sin(C), bz = -Math.cos(C), tx = bx < -1e-3 ? (inR.x0 - a.x) / bx : bx > 1e-3 ? (inR.x1 - a.x) / bx : 99, tz = bz < -1e-3 ? (inR.z0 - a.z) / bz : bz > 1e-3 ? (inR.z1 - a.z) / bz : 99, room = Math.max(.3, Math.min(tx, tz) - .3), pT = room < 2.6 ? 1.2 : .95;
+    const dT = Math.max(1.8, Math.min(S.camKeep ? S.camKeep.d : 6, 5.2, room / Math.max(.25, Math.cos(pT))));
+    S.camDist += (dT - S.camDist) * Math.min(1, dt * 3); S.camPitch += (Math.max(S.camKeep ? S.camKeep.p : .4, pT) - S.camPitch) * Math.min(1, dt * 3); }
   const here = inR || openR; if (here && here.trade && TRADE_INFO[here.trade]) { const p = G().P(); p.seen = p.seen || {}; if (!p.seen[here.trade]) { p.seen[here.trade] = 1; G().save(); placeCard(TRADE_INFO[here.trade]); } }
   try { poiLbTick(dt); } catch (e) {} if (S.lore && S.lore.length) loreTick(dt); if (S.desert) desertTick(dt); if (S.garden) gardenTick(dt); if (S.tomb) tombTick(dt); if (S.jordan) jordanTick(dt); if (S.golg) golgotaTick(dt); if (S.past) pastoresTick(dt);
   if (S.lake) { S.lake.uni.t.value += dt; S.lake.boats.forEach((b, i) => { b.position.y = b.userData.y0 + Math.sin(S.t * 1.2 + i) * .06; b.rotation.z = Math.sin(S.t * .9 + i * 2) * .04; }); (S.lake.fishers || []).forEach(f => { f.t -= dt; const n = f.net;
@@ -7171,7 +7180,7 @@ function matMesh(k) {
 }
 async function matBuild(scene, W) {
   if (!S.hx) return; const M = MAT.mod = await import('./story/material.js').catch(() => null); if (!M || !S) return; MAT.objs = []; MAT.npcs = []; const R = rng(8800), pm = matP();
-  const used = VIL.npcs.map(v => [v.x, v.z]).concat(SEC.list.map(e => [e.x, e.z]));
+  const used = VIL.npcs.map(v => [v.x, v.z]).concat(SEC.list.map(e => [e.x, e.z]), S.avoidPts || []);
   const ok = (x, z) => !blockedAt(x, z) && waterWet(x, z, null) < .05 && Math.abs(x) < XB * .9 && W.dAt(x, z) > 2.2 && !used.some(([a, b]) => (a - x) ** 2 + (b - z) ** 2 < 16);
   const spot = d => { const poi = (S.pois || []).find(q => q.r === d.r && q.k === d.near); if (!poi) return null; for (let t = 0; t < 220; t++) { const q = poi.k === 'river' ? poi.pts[Math.floor(R() * poi.pts.length)] : [poi.x, poi.z], a = R() * 6.283, rr = poi.k === 'lake' ? 33 + R() * 16 : (poi.k === 'river' ? 4 : 8) + R() * (t < 60 ? 12 : 26), x = q[0] + Math.cos(a) * rr, z = q[1] + Math.sin(a) * rr; if (ok(x, z)) { used.push([x, z]); return [x, z]; } } return null; };
   M.OBJS.forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, g = matMesh(d.k); g.position.set(x, Math.max(0, W.hAt(x, z)), z); g.rotation.y = R() * 6.28;
@@ -7316,7 +7325,7 @@ function jueBuild(scene, W, spot) {
   const M = MAT.mod, pm = matP(); pm.jue = pm.jue || {}; MAT.jue = [];
   (M.JUEGOS || []).forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, g = jueMesh('stand'); g.position.set(x, Math.max(0, W.hAt(x, z)), z); g.rotation.y = Math.atan2(S.av ? S.av.position.x - x : 0, 1);
     const ring = new THREE.Mesh(new THREE.RingGeometry(1, 1.1, 32), new THREE.MeshBasicMaterial({ color: '#FFD27A', transparent: true, opacity: .5, depthWrite: false, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .03; ring.visible = !pm.jue[d.type]; g.add(ring);
-    const lb = textSprite('🎲', true); lb.scale.multiplyScalar(.3); lb.position.set(0, 1.55, 0); g.add(lb); g.userData.keep = 1; scene.add(g); MAT.jue.push({ d, x, z, g, ring }); phCyl(x, z, .7); });
+    const lb = textSprite('🧩', true); lb.scale.multiplyScalar(.3); /* sin dados: el juego no es de azar */ lb.position.set(0, 1.55, 0); g.add(lb); g.userData.keep = 1; scene.add(g); MAT.jue.push({ d, x, z, g, ring }); phCyl(x, z, .7); });
 }
 function senBuild(scene, W, R, used) {
   const M = MAT.mod, g = G(), pm = matP(); pm.sen = pm.sen || {}; MAT.sen = []; if (!M.SENALES || g.REGIONS.length < 5) return; const [za, zb] = regionZ(g, 4);
