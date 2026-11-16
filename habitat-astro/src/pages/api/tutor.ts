@@ -153,7 +153,7 @@ export const POST: APIRoute = async ({ request }) => {
         const cur = (await q("KhJugadores").eq("_id", id).limit(1).find()).items[0] as Record<string, unknown> | undefined;
         if (!cur) return json({ error: "No encontramos ese jugador." }, 404);
         const it: Record<string, unknown> = { ...cur };
-        if ("tutores" in x) { if (!(me.rol === "director" || me.org)) return json({ error: "La pareja de tutores la asigna quien organiza." }, 403); it.tutores = s(x.tutores, 80); }
+        if ("tutores" in x) { if (!(me.rol === "director" || me.org)) return json({ error: "Los tutores de cada jugador los asigna quien organiza." }, 403); it.tutores = s(x.tutores, 80); }
         if ("whatsapp" in x) it.whatsapp = s(x.whatsapp, 30).replace(/[^\d+]/g, "");
         if ("contacto" in x) it.contacto = s(x.contacto, 60);
         if ("nota" in x) it.nota = s(x.nota, 1000);
