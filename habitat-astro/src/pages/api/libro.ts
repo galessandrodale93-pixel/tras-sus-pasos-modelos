@@ -5,7 +5,7 @@ import type { APIRoute } from "astro";
 import { auth, httpClient } from "@wix/essentials";
 import { items } from "@wix/data";
 import { emailDe, veLibro } from "../../lib/profe";
-import { kmDe, viaDe, VIA, CANALES, ENVIO, ESTADOS, PERFILES, PRECIO, PROVINCIAS, mailAviso, mailDespacho, mailPedido, mandar, marcarPagado, pesos, totalDe, type Pedido } from "../../lib/libro";
+import { kmDe, viaDe, VIA, CANALES, ENVIO, ENVIO_CERCA, ESTADOS, PERFILES, PRECIO, PROVINCIAS, mailAviso, mailDespacho, mailPedido, mandar, marcarPagado, pesos, totalDe, type Pedido } from "../../lib/libro";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
@@ -59,7 +59,7 @@ async function aLibros(ingId: string) {
 
 export const GET: APIRoute = async ({ request, url }) => {
   try {
-    if (url.searchParams.get("admin") !== "1") return json({ precio: PRECIO, envio: ENVIO, provincias: PROVINCIAS, canales: CANALES });
+    if (url.searchParams.get("admin") !== "1") return json({ precio: PRECIO, envio: ENVIO, envioCerca: ENVIO_CERCA, provincias: PROVINCIAS, canales: CANALES });
     const me = await emailDe(request);
     if (!(await veLibro(me.email))) return json({ error: "Esto lo ve la dirección de Habitat." }, 403);
     const [P, perfilDe] = await Promise.all([todos(), perfiles()]);
@@ -91,7 +91,7 @@ export const POST: APIRoute = async ({ request }) => {
         canal: CANALES.includes(s(x.canal, 40)) ? s(x.canal, 40) : "", origen: "web", clave: crypto.randomUUID().replace(/-/g, "").slice(0, 20),
       };
       // la casa marcada en el mapa: con eso sugerimos cómo mandarlo (Uber cerca, Andreani lejos)
-      { const la = Number(x.lat), lo = Number(x.lng); if (envio && isFinite(la) && isFinite(lo) && la < -21 && la > -56 && lo < -53 && lo > -74) { it.lat = Math.round(la * 1e5) / 1e5; it.lng = Math.round(lo * 1e5) / 1e5; it.km = kmDe(la, lo); } if (envio) it.via = viaDe(it); }
+      { const la = Number(x.lat), lo = Number(x.lng); if (envio && isFinite(la) && isFinite(lo) && la < -21 && la > -56 && lo < -53 && lo > -74) { it.lat = Math.round(la * 1e5) / 1e5; it.lng = Math.round(lo * 1e5) / 1e5; it.km = kmDe(la, lo); } if (envio) it.via = viaDe(it); it.total = totalDe(cant, envio, it.via); }
       it.title = (it.nombre + " " + it.apellido).trim();
       const falta: string[] = [];
       if (!it.nombre) falta.push("nombre");

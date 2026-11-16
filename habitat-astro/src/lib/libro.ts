@@ -4,7 +4,8 @@ import { esc } from "./vol";
 
 export const WEB = "https://www.habitat-cfm.org";
 export const PRECIO = 22000;
-export const ENVIO = 11000;
+export const ENVIO = 11000; // Andreani (más lejos)
+export const ENVIO_CERCA = 10000; // repartidor de Uber (CABA y alrededores)
 export const ALIAS = "habitatcfm";
 export const WA = "5491171637995";
 const marco = (k: string, t: string, c: string) => marco0(k, t, c, `<a href="${WEB}/libro.html" style="color:#b8904f">habitat-cfm.org/libro</a>`);
@@ -29,7 +30,8 @@ export const ESTADOS = ["Nuevo", "Pagado", "Despachado", "Entregado", "Cancelado
 export const PROVINCIAS = ["CABA", "Buenos Aires", "Catamarca", "Chaco", "Chubut", "Córdoba", "Corrientes", "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja", "Mendoza", "Misiones", "Neuquén", "Río Negro", "Salta", "San Juan", "San Luis", "Santa Cruz", "Santa Fe", "Santiago del Estero", "Tierra del Fuego", "Tucumán"];
 
 export const pesos = (n: number) => "$" + Math.round(n).toLocaleString("es-AR");
-export const totalDe = (cant: number, envio: boolean) => cant * PRECIO + (envio ? ENVIO : 0);
+export const envioDe = (via?: string) => (via === "uber" ? ENVIO_CERCA : ENVIO);
+export const totalDe = (cant: number, envio: boolean, via?: string) => cant * PRECIO + (envio ? envioDe(via) : 0);
 export const domicilio = (x: Pedido) => [[x.calle, x.numero].filter(Boolean).join(" "), x.piso ? "piso " + x.piso : "", x.depto ? "depto " + x.depto : ""].filter(Boolean).join(", ") + (x.localidad || x.provincia ? " · " + [x.localidad, x.provincia].filter(Boolean).join(", ") : "") + (x.cp ? " (CP " + x.cp + ")" : "");
 
 const nom = (x: Pedido) => esc(String(x.nombre || x.title || "").split(/\s+/)[0]);
@@ -37,7 +39,7 @@ const caja = (t: string) => `<div style="background:#fff;border:1px solid #e6dcc
 
 export function mailPedido(x: Pedido) {
   const envio = x.entrega === "envio", cant = x.cantidad || 1;
-  const det = `${cant} ${cant === 1 ? "ejemplar" : "ejemplares"} de <b>Asombro</b> × ${pesos(PRECIO)}${envio ? `<br>Envío a domicilio: ${pesos(ENVIO)}` : `<br>Retiro en Habitat: sin costo de envío`}<br><b style="font-size:18px">Total: ${pesos(x.total || totalDe(cant, envio))}</b>`;
+  const det = `${cant} ${cant === 1 ? "ejemplar" : "ejemplares"} de <b>Asombro</b> × ${pesos(PRECIO)}${envio ? `<br>Envío a domicilio${(x.via || viaDe(x)) === "uber" ? " (CABA y alrededores)" : " (Andreani)"}: ${pesos(envioDe(x.via || viaDe(x)))}` : `<br>Retiro en Habitat: sin costo de envío`}<br><b style="font-size:18px">Total: ${pesos(x.total || totalDe(cant, envio, x.via || viaDe(x)))}</b>`;
   return marco("Habitat · Libro Asombro", "¡Gracias por tu pedido! 📖", [
     p(`Hola ${nom(x)}! Recibimos tu pedido del libro <i>Asombro</i>. Te dejamos el detalle y cómo pagarlo.`),
     caja(det),
