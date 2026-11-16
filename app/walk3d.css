@@ -1260,3 +1260,5 @@ body:has(#arcade:not([hidden])) #khPill,body:has(#v3sheet:not([hidden])) #khPill
 .v3surv .sv-stam[hidden]{display:none}
 body.v3on .v3surv .sv-stam{transform:translateY(calc(100% + 6px))}
 .dy-leg{margin:14px 0 6px;font:800 12px Nunito,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#FFD86A}
+.v3grotx{position:fixed;z-index:7;top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));padding:9px 15px;border-radius:999px;border:1px solid #C9A04A;background:rgba(20,15,10,.82);color:#F3E6CC;font:800 13px Nunito,system-ui,sans-serif;cursor:pointer}
+.v3grotx[hidden],body:not(.v3on) .v3grotx{display:none}
