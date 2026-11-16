@@ -27,27 +27,58 @@ export async function agendaAlumno(carreras: string[], dias = 60) {
   return [...clases, ...esp].sort((a, b) => a.inicio.localeCompare(b.inicio));
 }
 
-// con la cuenta del alumno: su carrera sale de su ficha, y si además sirve, se suman sus turnos de servicio
-async function personal(request: Request) {
+// link personal del calendario (para suscribirse desde Google o el iPhone sin cuenta): ?u=<email en base64url>.<firma>
+const save = auth.elevate(items.save);
+const b64 = (t: string) => btoa(unescape(encodeURIComponent(t))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const de64 = (t: string) => { try { return decodeURIComponent(escape(atob(t.replace(/-/g, "+").replace(/_/g, "/")))); } catch { return ""; } };
+async function secreto() {
+  const r = (await q("TutConfig").eq("_id", "calSecret").limit(1).find()).items[0] as { valor?: string } | undefined;
+  if (r && r.valor) return r.valor;
+  const v = crypto.randomUUID() + crypto.randomUUID();
+  await save("TutConfig", { _id: "calSecret", title: "Clave de los calendarios personales", valor: v });
+  return v;
+}
+async function firma(email: string) {
+  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(email + "|" + (await secreto())));
+  return [...new Uint8Array(d)].slice(0, 9).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+export async function linkCal(email: string) { return "https://www.habitat-cfm.org/api/calendario.ics?u=" + b64(email) + "." + (await firma(email)); }
+export async function emailDeClave(u: string) {
+  const [a, f] = String(u || "").split(".");
+  const email = de64(a || "").toLowerCase();
+  return email && f && f === (await firma(email)) ? email : "";
+}
+
+// con la cuenta: la carrera sale de su ficha; el equipo (tutores y dirección) ve todas las cursadas; si además sirve, se suman sus turnos de servicio
+export async function personal(request: Request) {
   const me = await emailDe(request);
-  if (!me.email) return null;
-  const [al, vo] = await Promise.all([
+  return me.email ? personalDe(me.email) : null;
+}
+export async function personalDe(email: string) {
+  const me = { email };
+  const [al, vo, tu] = await Promise.all([
     q("TutAlumnos").eq("email", me.email).limit(1).find().then((r) => r.items[0] as { carreras?: string } | undefined),
     q("VolVoluntarios").contains("email", me.email).limit(1).find().then((r) => r.items[0] as { _id: string } | undefined),
+    q("TutTutores").eq("email", me.email).limit(1).find().then((r) => r.items[0] as { title?: string; rol?: string } | undefined),
   ]);
   const hoy = hoyAR();
   const turnos = vo ? ((await q("VolTurnos").eq("voluntarioId", vo._id).ge("fecha", hoy).le("fecha", mas(hoy, 60)).limit(200).find()).items as unknown as { fecha: string; tarea: string }[]) : [];
   const porDia: Record<string, string[]> = {};
   turnos.forEach((t) => (porDia[t.fecha] = porDia[t.fecha] || []).push(t.tarea));
   const servicio = Object.entries(porDia).map(([f, ts]) => { const h = horario(f).llegada; return { _id: "srv-" + f, tipo: "Tu servicio", curso: "", title: [...new Set(ts)].join(" · "), descripcion: "Llegá a las " + h, inicio: iso(f, h), fin: iso(f, h, 180), lugar: "Habitat CFM" }; });
-  return { carreras: al ? progsDe(al.carreras) : null, servicio };
+  return { carreras: tu ? [] : al ? progsDe(al.carreras) : null, equipo: !!tu, servicio };
 }
 
 export const GET: APIRoute = async ({ url, request }) => {
   try {
+    if (url.searchParams.get("link") === "1") {
+      const me = await emailDe(request);
+      if (!me.email) return new Response(JSON.stringify({ ok: false }), { status: 401, headers: { "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ ok: true, url: await linkCal(me.email) }), { headers: { "Content-Type": "application/json", "Cache-Control": "private, no-store" } });
+    }
     const yo = request.headers.get("x-habitat-auth") ? await personal(request).catch(() => null) : null;
     // la carrera de la ficha manda; si no hay ficha, la que diga el Campus
-    const c = yo && yo.carreras && yo.carreras.length ? yo.carreras : progsDe(url.searchParams.get("c") || "");
+    const c = yo && yo.equipo ? [] : yo && yo.carreras && yo.carreras.length ? yo.carreras : progsDe(url.searchParams.get("c") || "");
     const ev = await agendaAlumno(c);
     const todo = yo ? [...ev, ...yo.servicio].sort((a, b) => a.inicio.localeCompare(b.inicio)) : ev;
     return new Response(JSON.stringify({ ok: true, carreras: c, eventos: todo }), { headers: { "Content-Type": "application/json", "Cache-Control": yo ? "private, no-store" : "public, max-age=300" } });
