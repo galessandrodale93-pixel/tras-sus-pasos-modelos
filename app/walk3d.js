@@ -4919,9 +4919,9 @@ function h3pose(av, t, dt, st) {
   if (me) toolPose(av, B, t, dt, st);
   if (me && S && S.swimK > .05) { const k = Math.min(1, S.swimK * 2.2), L = (p, q, w) => p + (q - p) * w; S.strK = (S.strK || 0) + ((S.swimMv ? 1 : 0) - (S.strK || 0)) * Math.min(1, dt * 4); const sk = S.strK, ph0 = S.swimPh || 0;
     ['l', 'r'].forEach((sd, i) => { const ph = ph0 + i * Math.PI, sx = sd === 'l' ? 1 : -1, c = Math.cos(ph), sn = Math.sin(ph), up = Math.max(0, -sn), dn = Math.max(0, sn), kk = Math.sin(ph0 * (sk > .5 ? 2.1 : 1.2) + i * Math.PI);
-      h3aim(av, B, 'upperarm_' + sd, 'lowerarm_' + sd, L(sx * .75, sx * (.16 + .22 * up), sk), L(-.35 + .08 * c, c, sk), L(.4 + .14 * sn, .8 * dn - .85 * up, sk), k);
-      h3aim(av, B, 'lowerarm_' + sd, 'hand_' + sd, L(sx * .6, sx * .08, sk), L(-.1, c + .8 * up, sk), L(.7 + .2 * sn, .9 * dn + .15 * up, sk), k);
-      h3aim(av, B, 'thigh_' + sd, 'calf_' + sd, sx * L(.16, .08, sk), -1, L(.16, .22, sk) * kk, k); h3aim(av, B, 'calf_' + sd, 'foot_' + sd, sx * .05, -1, L(-.1, -.2, sk) + .25 * kk, k); }); h3aim(av, B, 'neck_01', 'head', 0, .78, -.62, k * sk * .9); /* la cabeza levantada, fuera del agua */ av.updateMatrixWorld(true); } /* brazada y patada al nadar */
+      h3aim(av, B, 'upperarm_' + sd, 'lowerarm_' + sd, L(sx * .75, sx * (.14 + .5 * up), sk), L(-.35 + .08 * c, c, sk), L(.4 + .14 * sn, .8 * dn - .42 * up, sk), k);
+      h3aim(av, B, 'lowerarm_' + sd, 'hand_' + sd, L(sx * .6, sx * (.08 - .25 * up), sk), L(-.1, c + .9 * up, sk), L(.7 + .2 * sn, .9 * dn + .35 * up, sk), k);
+      h3aim(av, B, 'thigh_' + sd, 'calf_' + sd, sx * L(.16, .08, sk), -1, L(.16, .22, sk) * kk, k); h3aim(av, B, 'calf_' + sd, 'foot_' + sd, sx * .05, -1, L(-.1, -.2, sk) + .25 * kk, k); }); h3aim(av, B, 'neck_01', 'head', 0, .62, -.78, k * sk * .9); /* la cabeza levantada, fuera del agua */ av.updateMatrixWorld(true); } /* brazada y patada al nadar */
   if (me && u.talkT > -.4 && u.talkAge != null) { talkLayer(av, u, dt, null); if (u.talkT <= -.4) u.talkAge = null; }
   if (u.lamp.visible && B.hand_l) { const busy = (u.tools && Object.values(u.tools).some(g2 => g2.visible)) || p > .3 || (me && S && S.swim) || /Swim|Sitting|Kneel|Fixing|Sleep|Lying|Fishing|Pick|Chop|Carry/i.test(u.cur || ''), ud = u.lamp.userData; const mov = /Jog|Run|Sprint/i.test(u.cur || '') ? .5 : /Walk/i.test(u.cur || '') ? .68 : .85; ud.w = (ud.w || 0) + ((busy ? 0 : 1) - (ud.w || 0)) * Math.min(1, dt * 8); ud.k = (ud.k ?? .85) + (mov - (ud.k ?? .85)) * Math.min(1, dt * 5); /* al caminar y correr el brazo conserva parte de su vaivén */
     /* el codo se dobla y el antebrazo va hacia adelante: el objeto queda agarrado en el puño, a la vista */
@@ -6191,9 +6191,9 @@ function svOn() { return !!(S && S.hx); }
 /* nadar: donde el agua es más honda que el pecho, el personaje se tiende y bracea. En Hero nadar cansa: la barra de aliento baja y, si se vacía, la corriente lo devuelve a la orilla */
 function swimTick(dt, a) {
   const av = S.av, deep = !!S.W && !S.pocket && S.W.hAt(a.x, a.z) < WATER.RL - 1.3 && S.gy < WATER.RL - .8 && !S.down, mov = !!(S.moving || S.freeMoving || S.walking);
-  S.swim = deep; S.swimMv = deep && mov; S.swimK = (S.swimK || 0) + ((deep ? (mov ? 1 : .3) : 0) - (S.swimK || 0)) * Math.min(1, dt * 3.5); S.swimUp = (S.swimUp || 0) + ((deep ? 1 : 0) - (S.swimUp || 0)) * Math.min(1, dt * 4); S.swimPh = (S.swimPh || 0) + dt * (mov ? 3.4 : 1.5);
+  S.swim = deep; S.swimMv = deep && mov; S.swimK = (S.swimK || 0) + ((deep ? (mov ? 1 : .3) : 0) - (S.swimK || 0)) * Math.min(1, dt * 3.5); S.swimUp = (S.swimUp || 0) + ((deep ? 1 : 0) - (S.swimUp || 0)) * Math.min(1, dt * 4); S.swimPh = (S.swimPh || 0) + dt * (mov ? 2.9 : 1.5);
   if (!deep && !S.pocket && S.gy > WATER.RL - .5 && !blockedAt(a.x, a.z)) S.land = [a.x, a.z];
-  av.rotation.order = 'YXZ'; av.rotation.x = S.swimK * 1.12; a.y += S.swimUp * (Math.max(0, S.swimK - .3) * 1.02 + Math.sin(performance.now() / 420) * .04);
+  av.rotation.order = 'YXZ'; av.rotation.x = S.swimK * 1.22; a.y += S.swimUp * (Math.max(0, S.swimK - .3) * .6 + Math.sin(performance.now() / 420) * .04);
   if (S.grot && !S.pocket && performance.now() > (S.grotT || 0) && (a.x - S.grot.x) ** 2 + (a.z - S.grot.z) ** 2 < 16) { try { grotEnter(); } catch (e) { S.grotT = performance.now() + 4000; console.warn('[gruta]', e); } return; }
   if (!S.hx) return; const full = 30 * agiMul() * (legOn('perla') ? 2 : 1);
   /* nadar gasta aliento; quedarse quieto flotando lo recupera, y en tierra vuelve más rápido */
