@@ -5946,7 +5946,7 @@ function freeWalk(dt) {
   const mag = Math.min(1, Math.hypot(jx, jy)); if (mag >= .12 && S.pose === 'pray') { S.pose = null; actUI(); } if (mag >= .12 && S.sit) { S.sit = false; actUI(); } if (mag >= .12 && S.poseK) poseEnd(); S.fullT = mag > .96 ? (S.fullT || 0) + dt : 0; if (S.sprint && S.hx) { AXS.run = (AXS.run || 0) + dt; if (AXS.run > 12) { AXS.run = 0; axGain('agi', 1); } } S.sprint = !!S.hx && (!!k.Shift || S.fullT > 1.2); if (mag < .12) { if (S.freeMoving) { S.freeMoving = false; snapToStop(); } return; }
   const C = S.yaw + S.camYaw, fx = Math.sin(C), fz = Math.cos(C), rx = -Math.cos(C), rz = Math.sin(C);
   let mx = fx * -jy + rx * jx, mz = fz * -jy + rz * jx; const ml = Math.hypot(mx, mz) || 1; mx /= ml; mz /= ml;
-  if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint && !S.swim ? 1.55 : 1) * (S.boostT > 0 ? 1.3 : 1) * (S.gy != null && S.gy < WATER.RL - .4 ? (S.swim ? (S.hx && (S.stam ?? 1) < .25 ? .34 : .5) : .6) : 1), /* en el agua se avanza más lento */ a = S.av.position, fr = frontier(), z0 = 6;
+  if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint && !S.swim ? 1.55 : 1) * (S.boostT > 0 ? 1.3 : 1) * (S.gy != null && S.gy < WATER.RL - .4 ? (S.swim ? (S.hx && (S.stam ?? 1) < .25 ? .34 : .5) * (legOn('perla') ? 1.3 : 1) : .6) : 1), /* en el agua se avanza más lento */ a = S.av.position, fr = frontier(), z0 = 6;
   const curG = groundAt(a.x, a.z, S.gy); // el suelo donde estás parado (no la altura suavizada de la cámara)
   const ok = (x, z) => S.pocket ? pocketOk(x, z) : (Math.abs(x) < XB || inTrail(x, z) || seaOk(x, z)) && z > fr && z < z0 && !blockedAt(x, z) && !solidAbove(x, z, S.gy) && !edgeDrop(x, z, curG) && !descUp(a.x, a.z, x, z);
   let nx = a.x + mx * sp, nz = a.z + mz * sp;
@@ -6254,7 +6254,7 @@ function axVerse(dt) {
   try { const g = G(), t = g.stageLine && g.stageLine(); if (t) g.vo(t, 'narrador', { queue: 1 }); } catch (e) {}
 }
 /* poderes de las prendas legendarias: valen solo mientras la llevás puesta */
-const LEG_POW = { evangelio: ['Pies ligeros', 'Caminás y corrés un 15% más rápido.'], jose: ['Graneros llenos', 'El hambre te baja un 30% más lento.'], sacerdote: ['Consagrado', 'Tus atributos crecen un 25% más rápido con cada cosa que hacés.'], perla: ['Aliento profundo', 'Tu aliento para nadar dura el doble.'] };
+const LEG_POW = { evangelio: ['Pies ligeros', 'Caminás y corrés un 15% más rápido.'], jose: ['Graneros llenos', 'El hambre te baja un 30% más lento.'], sacerdote: ['Consagrado', 'Tus atributos crecen un 25% más rápido con cada cosa que hacés.'], perla: ['Aliento profundo', 'Nadás un 30% más rápido y tu aliento dura el doble.'] };
 function legOn(id) { try { const e = gearState().eq; return Object.values(e).includes(id); } catch (e) { return false; } }
 function agiMul() { return (1 + atr('agi') * .06) * (legOn('evangelio') ? 1.15 : 1); }
 function lvlNow() { const g = G(); return g.level ? g.level() : 1; }
@@ -7478,7 +7478,7 @@ function grotEnter() {
     if (lx < TL) S.camDist = Math.min(S.camDist, 3.3); else S.camDist = Math.min(S.camDist, 16);
     if (P.lidT > 0) { P.lidT = Math.max(0, P.lidT - dt); const k = 1 - P.lidT / 1.6; lid.rotation.x = -1.9 * sstep(0, 1, k); chest.userData.hg.scale.setScalar(4.5 + Math.sin(k * Math.PI) * 8); }
     if (!gp.grotC && Math.hypot(lx - CH[0], lz - CH[1]) < 3.5) { gp.grotC = vday(); G().save(); P.lidT = 1.6; tone3d(); svToast('🗝️ ¡Abriste el cofre del tesoro escondido!'); try { h3do(['M_Kneeling_Inspecting', 'M_Cheering'], 2); } catch (e) {} if (S.hx) { try { svAdd('money', 40); } catch (e) {} } setTimeout(() => { try { gearGive(GEAR.find(q => q.id === 'perla'), 'Cofre de la gruta escondida'); } catch (e) {} }, 1500); }
-    if (!S.hx) { seenT -= dt; if (seenT <= 0) for (const it of items) if (!it.seen && (a.x - it.x) ** 2 + (a.z - it.z) ** 2 < 6) { it.seen = 1; seenT = 3; svToast(it.it[1] + ' ' + it.it[0] + ' · ' + it.it[3]); break; } }
+    if (!S.hx) { seenT -= dt; if (seenT <= 0) for (const it of items) if (!it.seen && (a.x - it.x) ** 2 + (a.z - it.z) ** 2 < 6) { it.seen = 1; seenT = 6; try { pocketItem({ it }); } catch (e) { svToast(it.it[1] + ' ' + it.it[0] + ' · ' + it.it[3]); } break; } }
     if (lx < .5) { S.grotT = performance.now() + 5000; pocketExit(); } };
   const onExit = () => { if (sky) sky.visible = true; const b = document.getElementById('v3grotx'); if (b) b.hidden = true; PG.cx = 1e9; PG.acc = 0; PH.near = 0; };
   S.pocket = { e: { d: { id: 'gruta', name: 'la gruta del tesoro escondido' } }, g, cx: gx, cz: gz, r: 0, y0, flr, items, cols: [], ex: [gx - 9, gz], back: [G0.bx, gz, -G0.side * Math.PI / 2], cam: [S.camDist, S.camPitch], fl, t: 0, ok: okL, pg: pgOk, hAt: (x, z) => y0 + hL(x - gx, z - gz), tick, onExit, lidT: 0 };
@@ -7493,7 +7493,7 @@ function pocketExit() {
 function pocketOk(x, z) { const P = S.pocket; if (P.ok) return P.ok(x - P.cx, z - P.cz); if (Math.hypot(x - P.cx, z - P.cz) > P.r) return false; for (const [a, b, r] of P.cols) if ((x - a) ** 2 + (z - b) ** 2 < (r + .3) ** 2) return false; return true; }
 function pocketNear() { const P = S && S.pocket; if (!P) return null; const a = S.av.position; if ((a.x - P.ex[0]) ** 2 + (a.z - P.ex[1]) ** 2 < 1.6 * 1.6) return { k: 'secx', label: 'Salir del lugar secreto' }; for (const it of P.items) if ((a.x - it.x) ** 2 + (a.z - it.z) ** 2 < 1.6 * 1.6) return { k: 'seci', it, label: 'Mirar · ' + it.it[0] }; return null; }
 function pocketTick(dt) { const P = S && S.pocket; if (!P) return; P.t += dt; P.fl.scale.y = 1 + Math.sin(P.t * 13) * .12 + Math.sin(P.t * 7.3) * .08; P.items.forEach((it, i) => { it.lb.position.y = 1.45 + Math.sin(P.t * 1.6 + i) * .06; }); if (P.tick) { P.tick(dt); return; } if (S.walking) pocketExit(); }
-function pocketItem(n) { const [nm, ic, ds, ref] = n.it.it; vilSheet(`<div class="inv-h"><b>${ic} ${esc(nm)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">Objeto único · ${esc(S.pocket ? S.pocket.e.d.name : '')}</small><p class="vil-p">${esc(ds)}</p><small class="vil-k">📖 ${esc(ref)}</small>`); h3do(['M_Kneeling_Inspecting', 'M_Looking'], 2); }
+function pocketItem(n) { const [nm, ic, ds, ref] = n.it.it; vilSheet(`<div class="inv-h"><b>${ic} ${esc(nm)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">${S.pocket && S.pocket.tick ? 'Para contemplar' : 'Objeto único'} · ${esc(S.pocket ? S.pocket.e.d.name : '')}</small><p class="vil-p">${esc(ds)}</p><small class="vil-k">📖 ${esc(ref)}</small>`); h3do(['M_Kneeling_Inspecting', 'M_Looking'], 2); }
 function secretHint() { const M = SEC.mod; if (!M || !SEC.list.length) return; const p = secP(), left = SEC.list.filter(e => !p.secrets[e.d.id]); if (!left.length) return; const e = left[Math.floor(Math.random() * left.length)], rn = G().REGIONS[e.r] ? G().REGIONS[e.r].name : '';
   svToast(`🧭 Te cuentan un secreto: en la etapa ${rn} hay ${e.d.hint}.`); behav('pistas'); }
 /* tienda */
