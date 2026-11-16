@@ -3224,13 +3224,16 @@ function timp(m, t, vol) {
   const n = c.createBufferSource(), nf = c.createBiquadFilter(), ng = c.createGain(); n.buffer = AU.noise; nf.type = 'lowpass'; nf.frequency.value = 700; ng.gain.setValueAtTime(vol * .6, t); ng.gain.exponentialRampToValueAtTime(.0001, t + .22); n.connect(nf); nf.connect(ng); ng.connect(AU.adv); n.start(t); n.stop(t + .25);
 }
 /* música grabada: pistas largas en partes de 15 minutos, una sigue a la otra; al orar, otra pista con fundido */
+/* la música se pide siempre de la misma dirección (la versión en la que se subieron las pistas), no de la de cada publicación:
+   así el celular la guarda una vez y no hay que bajar 5 MB de nuevo con cada versión del juego */
+const MUS_AT = import.meta.url.replace(/(tras-sus-pasos-modelos[\/@])[0-9a-f]{40}/, '$18486cfe4c000666f3fd90929600833d8034b6e58');
 const MUS = window.MUS_URLS || {
   // Hero, exploración: «The Road Beyond the Ruins» (elegida por Gui), en bucle con fundido de 3 s
-  hero: [new URL('./music/hero_exploracion.mp3', import.meta.url).href],
+  hero: [new URL('./music/hero_exploracion.mp3', MUS_AT).href],
   // Kids, exploración: «The Light Beyond the Crystals» (piano), en bucle con fundido de 3 s
-  kids: [new URL('./music/kids_exploracion.mp3', import.meta.url).href],
+  kids: [new URL('./music/kids_exploracion.mp3', MUS_AT).href],
   // Kids, minijuegos: «The Inn at the End of the Old Road» (cortada a 3:12 con fundido); Hero mantiene su música hasta que Gui elija
-  kidsMg: [new URL('./music/kids_minijuegos.mp3', import.meta.url).href],
+  kidsMg: [new URL('./music/kids_minijuegos.mp3', MUS_AT).href],
   orar: ['https://music.wixstatic.com/mp3/43ca3b_538f7365d7e248f1bf574404060d1d65.mp3', 'https://music.wixstatic.com/mp3/43ca3b_b29f4283091e41ebb259f0338ad83024.mp3', 'https://music.wixstatic.com/mp3/43ca3b_0ec4648425c24a579ef24a9a0b7caa81.mp3', 'https://music.wixstatic.com/mp3/43ca3b_c88f06c8392149c2a87c327e80823a50.mp3']
 };
 const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -3276,7 +3279,7 @@ function musGesture() { // en un toque del usuario: habilita la reproducción (i
 function musTick() {
   const m = AU.mus; if (!m) return false; if (S && (S.hx ? 'hero' : 'kids') !== m.br) { m.adv.el.pause(); m.adv = musTrack(MUS[S.hx ? 'hero' : 'kids']); m.br = S.hx ? 'hero' : 'kids'; m.adv.primed = false; }
   const arcOpen = !document.getElementById('arcade').hidden, shown = !document.getElementById('view3d').hidden && !arcOpen, pray = S && (S.pose === 'pray' || S.solemn === 2), on = AU.on && shown && !(S && S.solemn === 1), kidsMg = !!(m.mg && arcOpen && !(S && S.hx) && G().branch !== 'ados');
-  if (!(pray ? m.pray : m.adv).ok && on) { if (m.adv.loop && !m.adv.ok) musFail(m.adv); return false; }
+  if (!(pray ? m.pray : m.adv).ok && on) { if (m.adv.loop && !m.adv.ok) musFail(m.adv); return !pray && !!m.adv.loop && (m.adv.err || 0) <= 5; } /* mientras reintenta cargar la pista elegida queda en silencio; la música de reserva entra recién si falla del todo */
   m.adv.want = on && !pray ? (AU.speaking || AU.narr ? .22 : .55) : 0; m.pray.want = on && pray ? (AU.speaking || AU.narr ? .35 : .7) : 0; if (m.mg) m.mg.want = AU.on && kidsMg ? (AU.speaking || AU.narr ? .22 : .5) : 0;
   for (const t of [m.adv, m.pray, m.mg]) { if (!t) continue;
     if (!t.ok) continue; const step = t.want > t.v ? .045 : .07; t.v += Math.max(-step, Math.min(step, t.want - t.v));
