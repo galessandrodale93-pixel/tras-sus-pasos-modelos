@@ -5438,7 +5438,7 @@ function phCyl(x, z, r, oi) { if (!S || !S.cols) return; S.cols.push({ x0: x - r
 // registra un grupo de instancias; se construye cuando el jugador se acerca a su franja
 const PG_DROP = new Set(['grass_medium_01', 'grass_medium_02', 'grass_bermuda_01', 'celandine_01', 'dandelion_01', 'flower_heliophila', 'nettle_plant', 'wild_rooibos_bush', 'leipoldtia_schultzei', 'searsia_burchellii']);
 const PG_TSUB = { pine_sapling_small: 'tree_small_02', pine_sapling_medium: 'island_tree_03', quiver_tree_01: 'island_tree_01', quiver_tree_02: 'island_tree_03', jacaranda_tree: 'island_tree_01', searsia_lucida: 'tree_small_02' };
-function inSea(it) { return it.x != null && (it.y == null || it.y < WATER.WL + .45) && WATER.basins.some(B => Math.hypot(it.x - B.x, it.z - B.z) < B.r - 1.5); }
+function inSea(it) { return it.x != null && it.y != null && it.y < WATER.WL - .15 && WATER.basins.some(B => Math.hypot(it.x - B.x, it.z - B.z) < B.r - 1.5); } /* solo lo que quedó plantado bajo el agua: un olivar en tierra baja cerca del mar (Getsemaní) no se toca */
 function phPlace(id, items, o) {
   o = o || {}; if (FLORA.paidG && PG_DROP.has(id)) return; if (BARE && !o.force && /tree|palm|olive|pine|jacaranda|quiver|searsia|rooibos|shrub|bush|sapling/i.test(id)) return;
   /* ningún árbol ni palmera plantado encima de un sendero o del camino de luz que lleva a una escena */
