@@ -1273,3 +1273,10 @@ body.v3on .v3surv .sv-stam{transform:translateY(calc(100% + 6px))}
 
 /* etapas vivas: opciones de charla y preguntas en la hoja (Kids) */
 .vivo-o{display:flex;flex-direction:column;gap:8px;margin-top:12px}.vivo-o button{text-align:left;padding:11px 14px;border-radius:12px;border:1px solid rgba(233,195,122,.45);background:rgba(233,195,122,.12);color:inherit;font:inherit;font-weight:700;cursor:pointer}.vivo-o button.seen{opacity:.6}.vivo-o button:hover{background:rgba(233,195,122,.22)}
+
+/* diario de prendas: cuatro puertas por rareza */
+.dy-rar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}@media (max-width:560px){.dy-rar{grid-template-columns:repeat(2,1fr)}}
+.dy-rb{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px 12px;border-radius:16px;border:1.5px solid color-mix(in srgb,var(--rc) 60%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--rc) 22%,transparent),rgba(0,0,0,.08));color:inherit;font:inherit;cursor:pointer;transition:transform .15s}
+.dy-rb:hover{transform:translateY(-2px)}.dy-rb svg{width:46px;height:46px;filter:drop-shadow(0 3px 8px color-mix(in srgb,var(--rc) 55%,transparent))}.dy-rb b{font-size:15px}.dy-rb span{font-size:12px;opacity:.75}
+.dy-rb.nw::after{content:'';position:absolute;top:8px;right:10px;width:9px;height:9px;border-radius:50%;background:#FF5A4A}
+.dy-back{border:0;background:none;color:inherit;font:inherit;font-weight:800;opacity:.8;cursor:pointer;padding:2px 0 8px}

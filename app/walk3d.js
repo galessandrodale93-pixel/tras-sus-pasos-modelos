@@ -4208,8 +4208,14 @@ function invDiary(body) {
   const card = (key, got, ico, rc, title, sub, txt, extra) => `<button class="dy-c${got ? ' got' : ''}${got && isNew(key) ? ' nw' : ''}" data-key="${esc(key)}" style="--rc:${rc}"><span class="dy-i">${ico}${got ? '' : '<i>?</i>'}</span><span class="dy-t"><small>${sub}</small><b>${title}</b><span>${txt}</span>${extra || ''}</span></button>`;
   const draw = k => {
     body.querySelectorAll('.dy-tabs button').forEach(b => b.classList.toggle('on', b.dataset.k === k)); let h = '';
-    if (k === 'g') { const all = GEAR.filter(x => x.r !== 'u' || st.own.includes(x.id)), got = all.filter(x => st.own.includes(x.id)).length, ord = { l: 0, u: 1, e: 2, r: 3, c: 4 };
-      h = head(got, all.length, 'prendas de la época encontradas') + lock + '<div class="dy-g">' + all.slice().sort((a, b) => ord[a.r] - ord[b.r]).map(it => { const g2 = st.own.includes(it.id), R = RAR[it.r], sl = (SLOTS.find(q => q[0] === it.s) || [0, ''])[1];
+    if (k === 'g' && !draw.gr) { const all = GEAR.filter(x => x.r !== 'u' || st.own.includes(x.id)), got = all.filter(x => st.own.includes(x.id)).length;
+      /* cuatro puertas: comunes, raras, épicas y legendarias (las únicas van con las legendarias) */
+      const T = [['c', 'Comunes'], ['r', 'Raras'], ['e', 'Épicas'], ['l', 'Legendarias']], inR = (x, r) => r === 'l' ? (x.r === 'l' || x.r === 'u') : x.r === r;
+      const gem = c => `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 8h20l8 11-18 23L6 19z" fill="${c}" opacity=".9"/><path d="M14 8l4 11h12l4-11M6 19h36M18 19l6 23 6-23" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="1.6" stroke-linejoin="round"/><path d="M16 10l3 7" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".55"/></svg>`;
+      h = head(got, all.length, 'prendas de la época encontradas') + '<div class="dy-rar">' + T.map(([r, n]) => { const L = all.filter(x => inR(x, r)), g3 = L.filter(x => st.own.includes(x.id)).length, nw = L.some(x => st.own.includes(x.id) && isNew('g:' + x.id)); return `<button class="dy-rb${nw ? ' nw' : ''}" data-r="${r}" style="--rc:${RAR[r][1]}">${gem(RAR[r][1])}<b>${n}</b><span>${g3} de ${L.length}</span></button>`; }).join('') + '</div>';
+      bx.innerHTML = h; bx.scrollTop = 0; bx.querySelectorAll('.dy-rb').forEach(b2 => b2.onclick = () => { draw.gr = b2.dataset.r; draw('g'); }); return; }
+    if (k === 'g') { const gr = draw.gr, all = GEAR.filter(x => (x.r !== 'u' || st.own.includes(x.id)) && (gr === 'l' ? (x.r === 'l' || x.r === 'u') : x.r === gr)), got = all.filter(x => st.own.includes(x.id)).length, nm = { c: 'comunes', r: 'raras', e: 'épicas', l: 'legendarias' }[gr];
+      h = `<button class="dy-back">‹ Volver</button>` + head(got, all.length, 'prendas ' + nm + ' encontradas') + (gr === 'c' ? '' : lock) + '<div class="dy-g">' + all.slice().sort((a, b) => (st.own.includes(b.id) ? 1 : 0) - (st.own.includes(a.id) ? 1 : 0)).map(it => { const g2 = st.own.includes(it.id), R = RAR[it.r], sl = (SLOTS.find(q => q[0] === it.s) || [0, ''])[1];
         return card('g:' + it.id, g2, `<span class="dy-gi">${icoGear(it)}</span>`, R[1], g2 ? esc(it.name) : '???', `${R[0].split(' ·')[0]} · ${sl}`, esc(g2 ? it.desc : gearHint(it, clear))); }).join('') + '</div>'; }
     if (k === 'f') { const got = Object.keys(p.dfind).length;
       h = head(got, FINDS.length, 'hallazgos del campo, escondidos entre las paradas del camino') + lock + '<div class="dy-g">' + FINDS.map(([fk, , info]) => { const g2 = !!p.dfind[fk];
@@ -4221,9 +4227,9 @@ function invDiary(body) {
       h = head(L.length, 0, L.length === 1 ? 'historia leída' : 'historias leídas') + '<p class="dy-lock">Hay historias escondidas en ruinas, cuevas, cumbres, nidos y fogones. Cuando algo te llama la atención, acercate: a veces aparece un botón para mirar.</p><div class="dy-g">' + L.map(([t, ref]) => card('l:' + t, 1, '<span class="dy-e">📜</span>', '#E9C37A', esc(t), typeof ref === 'string' ? esc(ref) : '', '')).join('') + '</div>'; }
     bx.innerHTML = h; bx.scrollTop = 0;
     bx.querySelectorAll('.dy-c.got').forEach(c => { seen[c.dataset.key] = 1; }); G().save(); const tb = document.querySelector('#v3sheet .inv-tabs [data-t="di"]'); if (tb && !diaryNew()) tb.classList.remove('nw');
-    bx.querySelectorAll('.dy-c').forEach(c => c.onclick = () => c.classList.toggle('open'));
+    bx.querySelectorAll('.dy-c').forEach(c => c.onclick = () => c.classList.toggle('open')); const bk = bx.querySelector('.dy-back'); if (bk) bk.onclick = () => { draw.gr = null; draw('g'); };
   };
-  body.querySelectorAll('.dy-tabs button').forEach(b => b.onclick = () => draw(b.dataset.k)); draw('g');
+  body.querySelectorAll('.dy-tabs button').forEach(b => b.onclick = () => { draw.gr = null; draw(b.dataset.k); }); draw.gr = null; draw('g');
 }
 function gearGive(it, why) {
   if (!it) return; const st = gearState(); if (st.own.includes(it.id)) return; st.own.push(it.id); G().save();
