@@ -4917,6 +4917,8 @@ function h3pose(av, t, dt, st) {
     h3aim(av, B, 'upperarm_r', 'lowerarm_r', .18, -.88, .48, p); h3aim(av, B, 'lowerarm_r', 'hand_r', .38, .8, .45, p); h3aim(av, B, 'upperarm_l', 'lowerarm_l', -.18, -.88, .48, p); h3aim(av, B, 'lowerarm_l', 'hand_l', -.38, .8, .45, p); }
   if (q > .01 && !mxWave && u.cur !== 'M_Waving') { h3aim(av, B, 'upperarm_r', 'lowerarm_r', -.85, .38, .18, q); h3aim(av, B, 'lowerarm_r', 'hand_r', -.15 + Math.sin(t * 11) * .38, 1, .15, q); }
   if (me) toolPose(av, B, t, dt, st);
+  if (me && S) { /* la animación de correr no mueve todos los huesos: los que tocó el nado se devuelven a como estaban al salir del agua, sin esperar a frenar */ const on = S.swimK > .05, BN = ['spine_01', 'neck_01', 'upperarm_l', 'upperarm_r', 'lowerarm_l', 'lowerarm_r', 'thigh_l', 'thigh_r', 'calf_l', 'calf_r'];
+    if (on && !u.swSnap) u.swSnap = BN.map(n => B[n] ? B[n].quaternion.clone() : null); else if (!on && u.swSnap) { BN.forEach((n, i) => { if (B[n] && u.swSnap[i]) B[n].quaternion.copy(u.swSnap[i]); }); u.swSnap = null; av.updateMatrixWorld(true); } }
   if (me && S && S.swimK > .05) { const k = Math.min(1, S.swimK * (S.swim ? 2.2 : 1)), L = (p, q, w) => p + (q - p) * w; S.strK = (S.strK || 0) + ((S.swimMv ? 1 : 0) - (S.strK || 0)) * Math.min(1, dt * 4); const sk = S.strK, ph0 = S.swimPh || 0;
     h3aim(av, B, 'spine_01', 'neck_01', 0, .97, -.24, k * sk); /* la espalda derecha y apenas arqueada, corra o camine la animación de base */
     ['l', 'r'].forEach((sd, i) => { const ph = ph0 + i * Math.PI, sx = sd === 'l' ? 1 : -1, c = Math.cos(ph), sn = Math.sin(ph), up = Math.max(0, -sn), dn = Math.max(0, sn), kk = Math.sin(ph0 * (sk > .5 ? 2.1 : 1.2) + i * Math.PI);
