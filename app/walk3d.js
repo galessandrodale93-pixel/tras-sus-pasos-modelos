@@ -1677,7 +1677,7 @@ function tone3d() { try { const A = fxCtx(); [660, 880, 1100].forEach((f, i) => 
 function misTick(t) {
   if (!S.mis) return; const p = misState(), a = S.av.position, ui = misUI(), d2 = (q) => (q[0] - a.x) ** 2 + (q[1] - a.z) ** 2;
   if (document.getElementById('view3d').hidden) { ui.hidden = true; return; }
-  for (const id in S.mis) { const m = S.mis[id], open = misOpen(m, p), done = !!p.missions[id], act = p.mact && p.mact.id === id; m.bang.visible = open && !done && !act; if (m.d.after) { const vis = open || done || act; m.giver.visible = vis; } m.bang.position.y = m.giver.position.y + 2.35 + Math.sin(t * 3) * .08; m.giver.visible = m.target ? true : true; }
+  for (const id in S.mis) { const m = S.mis[id], open = misOpen(m, p), done = !!p.missions[id], act = p.mact && p.mact.id === id; m.bang.visible = open && !done && !act && !CINE.on; /* en las charlas no tapa las caras */ if (m.d.after) { const vis = open || done || act; m.giver.visible = vis; } m.bang.position.y = m.giver.position.y + 2.35 + Math.sin(t * 3) * .08; m.giver.visible = m.target ? true : true; }
   const act = p.mact && S.mis[p.mact.id];
   if (act) {
     const d = act.d, has = p.mact.has; let goal, txt;
