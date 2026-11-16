@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Juego · Habitat</title>
+<meta name="description" content="Estadísticas de Kids & Hero.">
+<meta property="og:title" content="Juego · Habitat">
+<meta property="og:description" content="Estadísticas de Kids & Hero.">
+<meta property="og:image" content="https://static.wixstatic.com/media/43ca3b_c6ce05ca60a14606ad9863e52d5d8e9d~mv2.jpg/v1/fill/w_1200,h_630,al_c,q_82,enc_auto/43ca3b_c6ce05ca60a14606ad9863e52d5d8e9d.jpg">
+<meta name="theme-color" content="#10251d">
+<link rel="icon" type="image/png" href="https://static.wixstatic.com/media/43ca3b_2d985f94c5e04a82b1434561cce4cc35~mv2.png"><link rel="apple-touch-icon" href="https://static.wixstatic.com/media/43ca3b_2d985f94c5e04a82b1434561cce4cc35~mv2.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Raleway:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/assets/site.css">
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="/assets/campus.css">
+<link rel="stylesheet" href="/assets/tutor.css">
+<style>
+.kj-bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:18px}
+.kj-seg{display:inline-flex;background:var(--soft);border-radius:999px;padding:3px}
+.kj-seg button{font:600 .85rem var(--sans);border:0;background:none;padding:7px 14px;border-radius:999px;cursor:pointer;color:var(--muted)}
+.kj-seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.kj-ck{display:flex;gap:6px;align-items:center;font-size:.88rem;color:var(--muted)}
+.kj-upd{margin-left:auto;font-size:.8rem;color:var(--muted)}
+.kj-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.kj-kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:grid;gap:2px}
+.kj-kpi b{font-family:var(--serif);font-size:1.7rem;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.1}
+.kj-kpi span{font-size:.84rem;color:var(--muted)}
+.kj-kpi small{font-size:.76rem;color:var(--muted)}
+.kj-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:14px}
+.kj-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;display:grid;gap:10px;align-content:start}
+.kj-card h3{margin:0;font-family:var(--serif);font-weight:500;font-size:1.25rem}
+.kj-card > p{margin:0;font-size:.85rem;color:var(--muted)}
+.kj-cols{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;align-items:end;height:130px;padding-top:6px}
+.kj-col{display:grid;align-content:end;justify-items:center;gap:4px;height:100%}
+.kj-col i{display:block;width:100%;min-height:2px;border-radius:4px 4px 1px 1px;background:var(--g,#2f6b4f)}
+.kj-col i.hi{background:#b58a3a}
+.kj-col small{font-size:.66rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.kj-rows{display:grid;gap:7px}
+.kj-row{display:grid;grid-template-columns:minmax(0,1.3fr) 2fr auto;gap:10px;align-items:center;font-size:.88rem}
+.kj-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kj-row div{height:10px;border-radius:999px;background:var(--soft);overflow:hidden}
+.kj-row div i{display:block;height:100%;border-radius:999px;background:var(--g,#2f6b4f)}
+.kj-row b{font-variant-numeric:tabular-nums;font-weight:600;min-width:2.5em;text-align:right}
+.kj-big{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.kj-big div{background:var(--soft);border-radius:14px;padding:12px 14px;display:grid;gap:2px}
+.kj-big b{font-family:var(--serif);font-size:1.5rem;font-weight:500}
+.kj-big span{font-size:.8rem;color:var(--muted)}
+.kj-none{color:var(--muted);font-size:.88rem;margin:0}
+</style>
+</head>
+<body data-solid="1" class="campus tutor">
+<header class="top"><div class="wrap">
+<a class="brand brand-top" href="/index.html" aria-label="Habitat · Centro de Formación Ministerial"><img src="https://static.wixstatic.com/media/43ca3b_dbb2ca1106804e9b9271ee3989f69c9f~mv2.jpg/v1/fill/w_120,h_120,al_c,q_82,enc_auto/43ca3b_dbb2ca1106804e9b9271ee3989f69c9f.jpg" alt="Habitat"></a>
+<button class="burger" aria-label="Menú" aria-expanded="false"><span></span><span></span><span></span></button>
+<nav class="nav" aria-label="Principal">
+<div class="nav-main"><a href="/index.html">Inicio</a><div class="dd"><a class="ddt" href="/institucional.html">Institucional</a><div class="dd-m"><a href="/institucional.html#historia">Nuestra historia</a><a href="/institucional.html#mision">Misión y visión</a><a href="/institucional.html#valores">Nuestros valores</a><a href="/institucional.html#fe">Declaración de fe</a><a href="/institucional.html#equipo">Equipo directivo</a><a href="/voluntarios.html">Sé parte del equipo</a></div></div><div class="dd"><a class="ddt" href="/formacion.html">Formación</a><div class="dd-m"><a href="/formacion.html#carreras">Carreras ministeriales</a><a href="/formacion.html#escuelas">Escuelas ministeriales</a><a href="/formacion.html#cursos">Cursos online</a></div></div><a href="/libro.html">Libro</a><a href="/sembradores.html">Sembradores</a><a href="/ubicacion.html">Ubicación</a></div>
+<div class="nav-side"><a class="kh" href="/kids-hero.html">Kids &amp; Hero</a><a class="in" href="/ingresar.html">Ingresar</a></div>
+</nav></div></header>
+<main>
+
+<section class="tt-top"><div class="wrap">
+  <div class="tt-hi"><p class="tt-k">Kids &amp; Hero · Dirección</p><h1 id="ttHola">Hola</h1><p id="ttWho">Cargando…</p></div>
+  <div class="tt-act"><a class="tt-ln" href="/kids-hero.html" target="_blank" rel="noopener">Página del juego</a><a class="tt-ln" href="/campus.html">Campus</a></div>
+</div></section>
+<div class="tt-main"><div class="wrap">
+  <div class="tt-bar kj-bar">
+    <div class="kj-seg" id="kDias" role="group" aria-label="Período"><button data-d="7">7 días</button><button data-d="30" class="on">30 días</button><button data-d="90">90 días</button><button data-d="0">Todo</button></div>
+    <label class="kj-ck"><input type="checkbox" id="kTester"> Incluir a los testers</label>
+    <span class="kj-upd" id="kUpd"></span>
+  </div>
+  <div id="kOut"><p class="tt-empty">Cargando…</p></div>
+  <p class="tt-tip">Cada sesión de juego se anota sola (sin nombres ni mails) y se actualiza cada minuto y medio. Una sesión es cada vez que alguien entra al juego y camina; los jugadores se cuentan por cuenta o, si no tienen, por aparato.</p>
+</div></div>
+<div class="tt-toast" id="ttToast" role="status" aria-live="polite"></div>
+</main>
+<footer class="foot"><div class="wrap">
+<div class="g">
+<div><a class="brand" href="/index.html"><img src="https://static.wixstatic.com/media/43ca3b_dbb2ca1106804e9b9271ee3989f69c9f~mv2.jpg/v1/fill/w_120,h_120,al_c,q_82,enc_auto/43ca3b_dbb2ca1106804e9b9271ee3989f69c9f.jpg" alt=""><span><b>HABITAT</b><small>CENTRO DE FORMACIÓN MINISTERIAL</small></span></a>
+<p class="ver">“Yo amo la habitación de tu casa y el lugar dónde habita tu gloria”<span>Salmo 26:8</span></p></div>
+<div><h4>Habitat</h4><a href="/institucional.html#historia">Nuestra historia</a><a href="/institucional.html#valores">Valores</a><a href="/institucional.html#fe">Declaración de fe</a><a href="/institucional.html#equipo">Equipo</a><a href="/voluntarios.html">Voluntarios</a></div>
+<div><h4>Formación</h4><a href="/formacion.html#carreras">Carreras</a><a href="/formacion.html#escuelas">Escuelas</a><a href="/formacion.html#cursos">Cursos online</a><a href="/libro.html">Libro Asombro</a><a href="/kids-hero.html">Kids &amp; Hero</a></div>
+<div><h4>Visitanos</h4><a href="/ubicacion.html">Av. Juan Bautista Justo 8177, CABA</a><a href="https://wa.me/5491171637995">+54 9 11 7163-7995</a><a href="https://www.instagram.com/habitat_cfm" target="_blank" rel="noopener">Instagram @habitat_cfm</a><a href="/ingresar.html">Campus de alumnos</a></div>
+</div>
+<div class="bt"><span>© <span id="yr">2026</span> Habitat · Centro de Formación Ministerial</span><span>Hecho con amor para Su presencia</span></div>
+</div></footer>
+<script src="/assets/site.js"></script>
+<script src="/assets/auth.js"></script>
+<script src="/assets/aliento.js"></script>
+<script src="/assets/panel-ui.js"></script>
+<script src="/assets/juego.js"></script>
+</body>
+</html>
