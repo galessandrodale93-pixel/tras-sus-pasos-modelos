@@ -7229,8 +7229,56 @@ const VIVO = {
       'De los años de Jesús en Nazaret sabemos muy poco. Los evangelios los resumen en una frase: crecía en sabiduría, en estatura y en gracia delante de Dios y de la gente.'
     ]
   }
+  ,
+  2: {
+    talk: { at: 'Río Jordán', off: [-14, 8], id: 'andres', name: 'Andrés', sub: 'discípulo de Juan', voice: 'past', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#3A2A1A', outfit: '#6A7A5A' },
+      hi: ['¡Shalom! Soy Andrés, de Betsaida. Vine a escuchar a Juan el Bautista y terminé encontrando mucho más.'],
+      ask: '¿Qué querés saber?',
+      q: [
+        ['¿Quién es Juan el Bautista?', ['Juan vive en el desierto, se viste con pelo de camello y come langostas y miel silvestre. Y la gente viene de todas partes a escucharlo.', 'Predica que cambiemos nuestra manera de vivir, porque el reino de Dios está cerca. A los que se arrepienten los bautiza acá, en el Jordán.'], 'profeta'],
+        ['¿Qué pasó cuando bautizó a Jesús?', ['Juan quería frenarlo. Le dijo: «Yo soy el que necesita que vos me bautices». Pero Jesús insistió, y Juan lo bautizó.', 'Cuando salió del agua, el cielo se abrió y el Espíritu de Dios bajó sobre él como una paloma. Y se oyó una voz: «Este es mi Hijo amado, que me da gran alegría».'], 'evangelista'],
+        ['¿Por qué ahora seguís a Jesús?', ['Un día Juan lo vio pasar y dijo: «¡Miren! Ahí está el Cordero de Dios». Otro discípulo y yo fuimos detrás de él.', 'Pasamos la tarde con él. Lo primero que hice después fue buscar a mi hermano Simón y decirle: «¡Encontramos al Mesías!».'], 'pastor']
+      ],
+      bye: ['Gracias, Andrés', 'Cuando encuentres algo tan bueno, contalo, como hice yo con mi hermano.'] },
+    scrolls: [
+      ['Río Jordán', [-16, 18], 'El Jordán ya era un río con historia: por acá el pueblo de Israel cruzó a la tierra prometida con Josué, y acá se lavó siete veces Naamán, el general sirio, y quedó sano.'],
+      ['Río Jordán', [-12, -22], 'En el bautismo de Jesús aparecen el Padre que habla desde el cielo, el Hijo en el agua y el Espíritu como una paloma. Los tres juntos, en un mismo momento.'],
+      ['Desierto de Judea', [10, -8], 'Jesús ayunó cuarenta días en el desierto. Israel había pasado cuarenta años en el desierto y había fallado una y otra vez; Jesús pasó la prueba en su lugar.'],
+      ['Desierto de Judea', [-4, 12], 'Las tres veces que fue tentado, Jesús respondió con la Escritura: «Escrito está». Las tres citas son del libro de Deuteronomio.'],
+      ['Desierto de Judea', [14, 6], 'Cuando terminaron las tentaciones, el diablo se alejó de Jesús hasta que llegara otra oportunidad. Y vinieron ángeles a cuidarlo.']
+    ],
+    fire: { at: 'Desierto de Judea', off: [6, 6], steps: [
+      ['nar', 'Noche fría en el desierto de Judea. Eleazar y Asher encienden un fuego chico entre las piedras.'],
+      ['zel', 'Si yo pasara cuarenta días sin comer y alguien me dijera que convierta las piedras en pan… lo hago sin pensarlo.'],
+      ['esc', 'Jesús tenía hambre de verdad. Y respondió: «La gente no vive solo de pan, sino de cada palabra que sale de la boca de Dios».']],
+      ask: ['zel', '¿Vos qué pensás? ¿Por qué se quedó con hambre?'],
+      o: [
+        ['Porque confiaba en que su Padre lo iba a cuidar.', 'pastor', [['esc', 'Confiar es eso: esperar que Dios provea, aun con hambre. Y los ángeles vinieron a cuidarlo.']]],
+        ['Porque su poder era para servir a otros, y usarlo para sí mismo era caer en la trampa.', 'maestro', [['esc', 'Más adelante multiplicó panes, pero para una multitud con hambre.']]],
+        ['Porque la Palabra de Dios lo sostenía más que la comida.', 'profeta', [['zel', 'Entonces la Escritura es un arma… Respondió tres veces con ella.'], ['esc', 'La espada del Espíritu, dice Pablo. Por eso vale la pena conocerla.']]]
+      ],
+      end: [['esc', 'Vas a tener tus propios desiertos. Acordate de cómo peleó Jesús: con la Palabra de Dios en la boca.']] },
+    quiz: { at: 'Río Jordán', off: [-13, -10], id: 'tobias', name: 'Tobías', sub: 'barquero del Jordán', voice: 'merc', look: { g: 'chico', age: 18, skin: '#A87A52', hair: '#2A1B14', outfit: '#5A4A3A' },
+      hi: '¡Hola, viajero! Cruzo gente de una orilla a la otra todo el día y escucho de todo. ¿Probamos unas preguntas? Te pago con monedas.',
+      q: [
+        ['¿Qué comía Juan el Bautista en el desierto?', ['Langostas y miel silvestre', 'Pan y pescado', 'Higos y dátiles'], 'Comía langostas y miel silvestre, y se vestía con pelo de camello.'],
+        ['¿En qué forma bajó el Espíritu sobre Jesús en el bautismo?', ['Como una paloma', 'Como fuego', 'Como una nube'], 'El Espíritu bajó sobre él como una paloma.'],
+        ['¿Cuántos días ayunó Jesús en el desierto?', ['Cuarenta', 'Siete', 'Doce'], 'Fueron cuarenta días, como los cuarenta años de Israel en el desierto.'],
+        ['¿Cómo llamó Juan a Jesús cuando lo vio pasar?', ['El Cordero de Dios', 'El León de Judá', 'El Buen Pastor'], 'Juan dijo: «¡Miren! Ahí está el Cordero de Dios, que quita el pecado del mundo».'],
+        ['¿Con qué respondía Jesús a cada tentación?', ['Con la Escritura', 'Con un milagro', 'Con silencio'], 'Las tres veces respondió «Escrito está», con la Palabra de Dios.'],
+        ['¿Qué dijo la voz del cielo en el bautismo?', ['Este es mi Hijo amado', 'Este es el rey de Israel', 'Este es un gran profeta'], 'La voz dijo: «Este es mi Hijo amado, que me da gran alegría».']
+      ],
+      ok: '¡Bien ahí!', no: 'Casi. ', bye: '¡Muy bien! Mañana volvé, que en el río siempre aparecen preguntas nuevas.' },
+    narr: [
+      'Juan era el hijo de Zacarías y Elisabet. Desde antes de nacer tenía una misión: preparar el camino del Señor, como había anunciado el profeta Isaías.',
+      'Multitudes bajaban de Jerusalén y de toda Judea al río Jordán. Confesaban sus pecados y Juan los bautizaba. A los soldados les pedía que trataran bien a la gente, y a los cobradores de impuestos, que cobraran lo justo.',
+      'Jesús tenía unos treinta años cuando llegó desde Galilea al Jordán. Era el único sin pecado que confesar, y aun así se puso en la fila con todos.',
+      'Enseguida después del bautismo, el Espíritu llevó a Jesús al desierto. La voz del cielo había dicho «Este es mi Hijo amado», y el tentador vino justo a sembrar la duda: «Si eres el Hijo de Dios…».',
+      'La última tentación fue desde lo alto: el diablo le ofreció todos los reinos del mundo a cambio de que lo adorara. Jesús respondió: «Adora al Señor tu Dios y sírvele solamente a él».'
+    ]
+  }
 };
-const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo' };
+const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo', 2: 'El Jordán y el desierto' };
 function vivoP() { const p = G().P(); p.vivo = p.vivo || {}; return p.vivo; }
 function vivoAt(at, off) { const q = (S.pois || []).find(o => o.name === at); if (!q) return null; return freeNear(q.x + off[0] * (q.side || 1), q.z + off[1], .35); }
 function vivoBuild(scene, hx) {
