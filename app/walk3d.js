@@ -565,6 +565,9 @@ function splitZ(scene, mesh, step) {
     const m = new THREE.Mesh(sg, mesh.material); m.receiveShadow = mesh.receiveShadow; m.castShadow = mesh.castShadow; m.userData.terrain = 1; m.matrixAutoUpdate = false; m.updateMatrix(); scene.add(m); out.push(m); });
   if (mesh.parent) mesh.parent.remove(mesh); return out;
 }
+// escenarios de campo abierto: adentro el suelo es pasto (solo el camino es de tierra); radio de cada uno
+const GREEN_K = { feeding: 19, field: 19, garden: 22, pastores: 22 }; let GREENS = [];
+const greenK = (x, z) => { let k = 0; for (const q of GREENS) { const d = Math.hypot(x - q[0], z - q[1]); if (d < q[2] * 1.2) k = Math.max(k, 1 - sstep(q[2] * .75, q[2] * 1.2, d)); } return k; };
 function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
   // campo de distancias al camino (para dejarlo plano y ubicar la vegetación)
   const X0 = -XB - 40, X1 = XB + 40, Z0 = zMax - 50, Z1 = 50, CS = 1.5, NX = Math.ceil((X1 - X0) / CS) + 1, NZ = Math.ceil((Z1 - Z0) / CS) + 1, DF = new Float32Array(NX * NZ), DR = new Float32Array(NX * NZ); // DF: camino + zonas planas (aplanar, vegetación); DR: solo el camino (ubicar casas y gente)
@@ -601,7 +604,7 @@ function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
   const P = geo.attributes.position, col = new Float32Array(P.count * 3), spl = new Float32Array(P.count * 4);
   for (let i = 0; i < P.count; i++) { const x = P.getX(i), z = P.getZ(i), d = dAt(x, z), h = hAt(x, z); P.setY(i, h); const n = fbm(x * .15, z * .15), n2 = vnoise(x * .04 + 7, z * .04);
     const sl = Math.hypot(hAt(x + .8, z) - hAt(x - .8, z), hAt(x, z + .8) - hAt(x, z - .8)) / 1.6;
-    let wd = Math.max(1 - sstep(1.1, 2.8, roadAt(x, z)), 1 - sstep(.8, 4.6, dNz(x, z))), wr = Math.max(sstep(5, 11, h) * .8, sstep(.6, 1.1, sl)), wy = sstep(.55, .85, n2) * .65 * (1 - wd), wg = 1;
+    const wdR = 1 - sstep(1.1, 2.8, roadAt(x, z)), gk = greenK(x, z); let wd = Math.max(wdR, (1 - sstep(.8, 4.6, dNz(x, z))) * (1 - gk)), wr = Math.max(sstep(5, 11, h) * .8, sstep(.6, 1.1, sl)), wy = sstep(.55, .85, n2) * .65 * (1 - wd), wg = 1;
     wg *= (1 - wd) * (1 - wr) * (1 - wy * .9); wy *= (1 - wr); wd *= (1 - wr * .6); const tt = wg + wy + wd + wr || 1;
     { const sp = spDist(x, z); if (sp < 2.2) { const k = (1 - sstep(.45, 1.7, sp)) * .9; wd = Math.max(wd, k); wg *= 1 - k; wy *= 1 - k; } }
     { const dk = desertK(x, z); if (dk > .01) { wg *= 1 - dk; wy *= 1 - dk * .6; wd += dk * .8; wr += dk * .35 * sstep(.2, .6, sl + dk * .4); } }
@@ -735,7 +738,7 @@ const KL = {};
   const allPts = Object.values(edgePts).flat(), near = (x, z, d) => allPts.some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < d * d) || (S_poiPts || []).some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < (d + 4) * (d + 4));
   const zMax = -totalY * SC;
   let HW = null, uGrass = null;
-  const pois = planPois(g), doors = planDoors(g), poiPts = pois.flatMap(q => q.flat).concat(doors.flatMap(q => q.flat)); waterPlan(pois); MAPT.tiles.clear();
+  const pois = planPois(g), doors = planDoors(g), poiPts = pois.flatMap(q => q.flat).concat(doors.flatMap(q => q.flat)); waterPlan(pois); GREENS = pois.filter(q => GREEN_K[q.k]).map(q => [q.x, q.z, GREEN_K[q.k]]); MAPT.tiles.clear();
   buildStep('vegetación'); { let ok = null; try { ok = await withTO(grpInit(), 9000, 'r2'); } catch (e) {} FLORA.paidG = !!(ok && GRP.man['grass/']); FLORA.paidT = !!(ok && GRP.man['trees/']); }
   buildStep('mundo y flora'); { const flat = g.VIGN.map(([r, x, y]) => toV(x, g.TOP + r * g.RH + y)).concat(poiPts); FLORA.kids = !hx; FLORA.chunks = []; HW = heroWorld(scene, g, allPts, flat, zMax, QL, hx ? null : KL); uGrass = heroFlora(scene, HW, allPts, zMax, R, hx ? QL : Object.assign({}, QL, { grass: QL.grass * .8, trees: QL.trees * .8 })); if (!FLORA.paidG) realFlora(scene, HW, allPts, QL, uGrass); if (!hx) { ground.visible = false; KL.sun.position.set(-14, 26, 12); } }
   const spots = { tree: [], bush: [], rock: [] };
@@ -3043,10 +3046,10 @@ function lakeLife(scene, p, hx2, hz, yAt, hx) {
   const [zx, zz] = near(hx2 + sd * 6, hz - 2.6), [jx, jz] = near(hx2 + sd * 6, hz + 3.4), face = Math.atan2(-sd, 0);
   S.lakeSpots = { peces: [zx, zz, face], lago: [jx, jz, face] };
   // redes tendidas en el suelo entre los dos, con flotadores de corcho
-  { const [nx, nz] = near(hx2 + sd * 7.6, hz + .4), g = new THREE.Group(), nm = new THREE.MeshStandardMaterial({ color: '#C8B48A', roughness: 1, wireframe: true, side: THREE.DoubleSide }); const net = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.8, 14, 10), nm); const P = net.geometry.attributes.position; for (let i = 0; i < P.count; i++) P.setZ(i, Math.abs(Math.sin(P.getX(i) * 2.1 + P.getY(i))) * .12); net.rotation.x = -Math.PI / 2; net.position.y = .05; g.add(net);
+  { const [nx, nz] = near(hx2 + sd * 9.4, hz + .4), g = new THREE.Group(), nm = new THREE.MeshStandardMaterial({ color: '#C8B48A', roughness: 1, wireframe: true, side: THREE.DoubleSide }); const net = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.8, 14, 10), nm); const P = net.geometry.attributes.position; for (let i = 0; i < P.count; i++) P.setZ(i, Math.abs(Math.sin(P.getX(i) * 2.1 + P.getY(i))) * .12); net.rotation.x = -Math.PI / 2; net.position.y = .05; g.add(net);
     const ck = tm('cork', '#8A5A34', { roughness: 1 }); for (let i = 0; i < 7; i++) { const c = new THREE.Mesh(new THREE.SphereGeometry(.07, 8, 6), ck); c.scale.y = .6; c.position.set(-1.25 + i * .42, .06, .92); g.add(c); }
     g.position.set(nx, yAt(nx, nz), nz); g.rotation.y = sd > 0 ? Math.PI / 2 : -Math.PI / 2; scene.add(g);
-    LEp(S, { x: nx - sd * 1.6, z: nz, r: 2.4, label: 'Remendar las redes', dur: 5, go: () => { if (S.hx) h3do(['M_Kneeling_Inspecting'], 4); }, info: ['Dejaron las redes', 'Jesús caminaba por la orilla y vio a Santiago y a su hermano Juan en la barca con su padre Zebedeo, remendando las redes. Los llamó, y ellos dejaron enseguida la barca y a su padre, y lo siguieron.', 'Mateo 4:21-22'] }); }
+    LEp(S, { x: nx + sd * 1.8, z: nz, r: 2.4, label: 'Revisar la red', dur: 5, go: () => { if (S.hx) h3do(['M_Kneeling_Inspecting'], 4); }, info: ['Una red con peces de toda clase', 'Jesús contó que el reino de los cielos es como una red que se echa al mar y recoge peces de toda clase. Cuando se llena, los pescadores la sacan a la orilla, se sientan y separan los buenos de los que no sirven.', 'Mateo 13:47-48'] }); }
   // la punta del muelle: «rema mar adentro»
   { const dx = p.x - sd * 26.5, ex = dx + sd * 5.2, ez = p.z + 4; LEp(S, { x: ex, z: ez, r: 2.2, label: 'Echar la red', dur: 6, go: () => sello('red', 'Rema mar adentro'), info: ['Rema mar adentro', 'Pedro había pescado toda la noche sin sacar nada. Jesús le dijo: «Lleva la barca adonde el agua es más honda y echen las redes». Lo hizo, y sacaron tantos peces que las redes se rompían. Jesús le dijo: «Desde ahora vas a pescar personas». Y dejándolo todo, lo siguieron.', 'Lucas 5:4-11'] }); }
 }
