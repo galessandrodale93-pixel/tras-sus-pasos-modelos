@@ -3226,7 +3226,9 @@ function timp(m, t, vol) {
 /* música grabada: pistas largas en partes de 15 minutos, una sigue a la otra; al orar, otra pista con fundido */
 /* la música se pide siempre de la misma dirección (la versión en la que se subieron las pistas), no de la de cada publicación:
    así el celular la guarda una vez y no hay que bajar 5 MB de nuevo con cada versión del juego */
-const MUS_AT = import.meta.url.replace(/(tras-sus-pasos-modelos[\/@])[0-9a-f]{40}/, '$18486cfe4c000666f3fd90929600833d8034b6e58');
+/* el iPhone solo reproduce audio de servidores que entregan el archivo por partes (pedidos «Range»). El servidor del código no lo hace
+   y por eso la pista fallaba en iOS; jsDelivr sí, así que la música se pide de ahí */
+const MUS_AT = 'https://cdn.jsdelivr.net/gh/galessandrodale93-pixel/tras-sus-pasos-modelos@8486cfe4c000666f3fd90929600833d8034b6e58/app/walk3d.js';
 const MUS = window.MUS_URLS || {
   // Hero, exploración: «The Road Beyond the Ruins» (elegida por Gui), en bucle con fundido de 3 s
   hero: [new URL('./music/hero_exploracion.mp3', MUS_AT).href],
