@@ -1,3 +1,5 @@
+/* El mail de Wix para cambiar la contraseña trae ?forgotPasswordToken=… a cualquier página: lo llevamos a Ingresar para crear la nueva. */
+(function(){try{var q=new URLSearchParams(location.search),t=q.get('forgotPasswordToken');if(t&&!/ingresar\.html$/.test(location.pathname))location.replace('/ingresar.html?forgotPasswordToken='+encodeURIComponent(t));}catch(e){}})();
 (function(){
   var top=document.querySelector('.top'),nav=document.querySelector('.nav'),bg=document.querySelector('.burger');
   function onS(){if(top)top.classList.toggle('solid',window.scrollY>40||document.body.classList.contains('menu')||document.body.dataset.solid==='1');}

@@ -61,6 +61,11 @@
     async recover(email) {
       await post('/_api/iam/recovery/v1/send-email', { email: email, redirect: { url: CB, clientId: CLIENT } }, await visitor());
     },
+    async newPassword(token, password) {
+      var r = await post('/_api/iam/recovery/v1/recover', { recoveryToken: token, password: password }, await visitor());
+      if (r.state === 'SUCCESS' && r.sessionToken) return redirect({ sessionToken: r.sessionToken });
+      return r.state || 'OK';
+    },
     async callback() {
       var q = new URLSearchParams(location.hash.slice(1));
       if (!q.get('code') && !q.get('error')) return false;
