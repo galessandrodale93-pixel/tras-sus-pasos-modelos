@@ -77,6 +77,16 @@ async function recuperar(socio: string, t: string) {
   return v.activo;
 }
 
+// cancela una suscripción del plan de PRUEBA ($50). Solo sirve para cerrar las pruebas: las del plan real no se tocan desde acá.
+export async function cancelarPrueba(pid: string) {
+  if (!/^[\w-]{8,64}$/.test(pid)) throw new Error("pid");
+  const t = await tk(), s = await mp("/preapproval/" + encodeURIComponent(pid), t), test = await plan(t, true);
+  if (String(s.preapproval_plan_id || "") !== test.id) throw new Error("Solo se pueden cancelar suscripciones del plan de prueba.");
+  const r = String(s.status || "") === "cancelled" ? s : await mp("/preapproval/" + encodeURIComponent(pid), t, { method: "PUT", body: JSON.stringify({ status: "cancelled" }) });
+  const prev = (await q(COL).eq("_id", pid).limit(1).find()).items[0] as Pase | undefined;
+  if (prev) await guardar(COL, { ...prev, estado: String(r.status || "cancelled"), revisado: new Date().toISOString() });
+  return { estado: String(r.status || "cancelled") };
+}
 export async function estado(socio: string) {
   if (!socio) return { activo: false };
   const ps = ((await q(COL).eq("title", socio).limit(20).find()).items as Pase[]);

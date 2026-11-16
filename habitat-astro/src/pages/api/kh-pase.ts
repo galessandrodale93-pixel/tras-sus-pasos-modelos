@@ -2,8 +2,9 @@
 // GET  ?u=<socio>                         → { activo }
 // POST { accion: "iniciar", u, prueba }   → { url } del checkout de Mercado Pago (prueba: plan de $50)
 // POST { accion: "vincular", u, e, pid, rama } al volver del checkout → { activo }
+// POST { accion: "cancelar-prueba", pid }  → cancela una suscripción del plan de prueba ($50); las del plan real no
 import type { APIRoute } from "astro";
-import { iniciar, vincular, estado } from "../../lib/kh";
+import { iniciar, vincular, estado, cancelarPrueba } from "../../lib/kh";
 
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" };
 const res = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...CORS } });
@@ -18,6 +19,7 @@ export const POST: APIRoute = async ({ request }) => {
   try { b = await request.json(); } catch { /* vacío */ }
   try {
     if (b.accion === "iniciar") return res(await iniciar(String(b.u || "").slice(0, 80), b.prueba === true));
+    if (b.accion === "cancelar-prueba") return res(await cancelarPrueba(String(b.pid || "")));
     if (b.accion === "vincular") return res(await vincular(String(b.u || "").slice(0, 80), String(b.e || "").slice(0, 120), String(b.pid || ""), String(b.rama || "")));
     return res({ error: "accion" }, 400);
   } catch (e) { console.error("kh", e); return res({ error: String((e as Error).message || e) }, 400); }
