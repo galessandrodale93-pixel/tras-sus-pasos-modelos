@@ -65,7 +65,7 @@
 <form class="lp-f" id="lpF" novalidate>
 <div class="w lp-op" role="radiogroup" aria-label="Entrega">
 <button type="button" class="on" data-e="retiro" role="radio" aria-checked="true"><i>$22.000</i><b>Retiro en Habitat</b><span>Av. Juan Bautista Justo 8177, CABA</span></button>
-<button type="button" data-e="envio" role="radio" aria-checked="false"><i>$33.000</i><b>Envío a domicilio</b><span>A todo el país (+$11.000)</span></button>
+<button type="button" data-e="envio" role="radio" aria-checked="false"><i>desde $32.000</i><b>Envío a domicilio</b><span>CABA y alrededores +$10.000 · resto del país +$11.000</span></button>
 </div>
 <label>Nombre<input name="nombre" autocomplete="given-name" required></label>
 <label>Apellido<input name="apellido" autocomplete="family-name" required></label>
@@ -106,23 +106,25 @@
 <script src="/assets/site.js"></script>
 <script>
 (function(){
-var P=22000,E=11000,PROV=["CABA","Buenos Aires","Catamarca","Chaco","Chubut","Córdoba","Corrientes","Entre Ríos","Formosa","Jujuy","La Pampa","La Rioja","Mendoza","Misiones","Neuquén","Río Negro","Salta","San Juan","San Luis","Santa Cruz","Santa Fe","Santiago del Estero","Tierra del Fuego","Tucumán"];
+var P=22000,E=11000,EC=10000,EL=11000,HAB={lat:-34.6332,lng:-58.5037},RAD=25,PROV=["CABA","Buenos Aires","Catamarca","Chaco","Chubut","Córdoba","Corrientes","Entre Ríos","Formosa","Jujuy","La Pampa","La Rioja","Mendoza","Misiones","Neuquén","Río Negro","Salta","San Juan","San Luis","Santa Cruz","Santa Fe","Santiago del Estero","Tierra del Fuego","Tucumán"];
 var f=document.getElementById('lpF'),q=1,ent='retiro',$=function(s){return f.querySelector(s);};
 var sel=$('[name=provincia]');PROV.forEach(function(p){var o=document.createElement('option');o.textContent=p;sel.appendChild(o);});
 function ps(n){return '$'+n.toLocaleString('es-AR');}
+function kmA(p){var R=6371,r=Math.PI/180,a=Math.pow(Math.sin((p.lat-HAB.lat)*r/2),2)+Math.cos(HAB.lat*r)*Math.cos(p.lat*r)*Math.pow(Math.sin((p.lng-HAB.lng)*r/2),2);return 2*R*Math.asin(Math.sqrt(a));}
+function zona(){if(!PT){E=EL;upd();return;}var k=kmA(PT);E=k<=RAD?EC:EL;document.getElementById('lpMt').innerHTML=(k<=RAD?'🛵 Estás en la zona cercana: el envío es de <b>$10.000</b> y te lo lleva un repartidor.':'📦 Te lo mandamos por Andreani: el envío es de <b>$11.000</b>.')+' Si el punto no quedó justo en tu casa, tocá el lugar correcto o arrastrá el marcador.';upd();}
 function upd(){var t=q*P+(ent==='envio'?E:0);document.getElementById('lpQ').textContent=q;document.getElementById('lpT').textContent=ps(t);document.getElementById('lpDet').textContent=q+(q===1?' ejemplar':' ejemplares')+(ent==='envio'?' · envío a domicilio':' · retiro en Habitat');document.getElementById('lpEnv').hidden=ent!=='envio';return t;}
 /* mapa: la persona marca su casa; con eso, el equipo decide si lo lleva un repartidor de Uber (CABA y alrededores) o va por Andreani */
 var PT=null,MAP=null,MK=null;
 function leaflet(){return new Promise(function(ok,ko){if(window.L)return ok();var c=document.createElement('link');c.rel='stylesheet';c.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(c);var j=document.createElement('script');j.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';j.onload=ok;j.onerror=ko;document.head.appendChild(j);});}
-function pin(la,lo,zoom){PT={lat:la,lng:lo};var m=document.getElementById('lpMap');m.hidden=false;if(!MAP){MAP=L.map(m,{scrollWheelZoom:false}).setView([la,lo],zoom||16);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(MAP);MAP.on('click',function(e){pin(e.latlng.lat,e.latlng.lng);});}else MAP.setView([la,lo],zoom||MAP.getZoom());if(!MK){MK=L.marker([la,lo],{draggable:true}).addTo(MAP);MK.on('dragend',function(){var g=MK.getLatLng();PT={lat:g.lat,lng:g.lng};});}else MK.setLatLng([la,lo]);setTimeout(function(){MAP.invalidateSize();},60);document.getElementById('lpMt').textContent='¡Listo! Si el punto no quedó justo en tu casa, tocá el lugar correcto o arrastrá el marcador.';}
+function pin(la,lo,zoom){PT={lat:la,lng:lo};var m=document.getElementById('lpMap');m.hidden=false;if(!MAP){MAP=L.map(m,{scrollWheelZoom:false}).setView([la,lo],zoom||16);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(MAP);MAP.on('click',function(e){pin(e.latlng.lat,e.latlng.lng);});}else MAP.setView([la,lo],zoom||MAP.getZoom());if(!MK){MK=L.marker([la,lo],{draggable:true}).addTo(MAP);MK.on('dragend',function(){var g=MK.getLatLng();PT={lat:g.lat,lng:g.lng};zona();});}else MK.setLatLng([la,lo]);setTimeout(function(){MAP.invalidateSize();},60);zona();}
 function limpiaCalle(c){return String(c||'').replace(/\b(gral|grl)\.?\s*/ig,'General ').replace(/\b(av|avda)\.?\s+/ig,'Avenida ').replace(/\bpte\.?\s*/ig,'Presidente ').replace(/\bdr\.?\s*/ig,'Doctor ').replace(/\s+/g,' ').trim();}
 async function buscar(silent){var g=function(k){return ($('[name='+k+']').value||'').trim();},pv=g('provincia')==='CABA'?'Ciudad Autónoma de Buenos Aires':g('provincia'),Q=[[g('calle')+' '+g('numero'),g('localidad'),pv],[limpiaCalle(g('calle'))+' '+g('numero'),g('localidad'),pv],[g('calle').replace(/^[^ ]+\.\s*/,'')+' '+g('numero'),g('localidad'),pv]];
  if(!g('calle')||!g('localidad')){if(!silent)err('Cargá calle, número y localidad para buscarte en el mapa.');return false;}
  var b=document.getElementById('lpMb');b.disabled=true;b.textContent='Buscando…';
  try{await leaflet();var vis={};for(var i=0;i<Q.length;i++){var dir=Q[i].filter(function(v){return String(v||'').trim();}).concat('Argentina').join(', ');if(vis[dir])continue;vis[dir]=1;var r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ar&q='+encodeURIComponent(dir),{headers:{'Accept-Language':'es'}});var a=await r.json();
   if(a&&a[0]){pin(+a[0].lat,+a[0].lon,17);err('');return true;}}
-  try{var r2=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ar&q='+encodeURIComponent([g('localidad'),pv,'Argentina'].filter(Boolean).join(', ')));var a2=await r2.json();if(a2&&a2[0]){pin(+a2[0].lat,+a2[0].lon,14);PT=null;document.getElementById('lpMt').textContent='Encontramos tu localidad pero no la calle exacta. Tocá en el mapa el lugar de tu casa.';return false;}}catch(e){}
-  var p0=g('provincia')==='CABA'||!g('provincia')?[-34.61,-58.44]:[-34.6,-58.6];pin(p0[0],p0[1],11);PT=null;document.getElementById('lpMt').textContent='No encontramos la dirección exacta. Tocá en el mapa el lugar de tu casa.';return false;}
+  try{var r2=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ar&q='+encodeURIComponent([g('localidad'),pv,'Argentina'].filter(Boolean).join(', ')));var a2=await r2.json();if(a2&&a2[0]){pin(+a2[0].lat,+a2[0].lon,14);PT=null;zona();document.getElementById('lpMt').textContent='Encontramos tu localidad pero no la calle exacta. Tocá en el mapa el lugar de tu casa.';return false;}}catch(e){}
+  var p0=g('provincia')==='CABA'||!g('provincia')?[-34.61,-58.44]:[-34.6,-58.6];pin(p0[0],p0[1],11);PT=null;zona();document.getElementById('lpMt').textContent='No encontramos la dirección exacta. Tocá en el mapa el lugar de tu casa.';return false;}
  catch(e){if(!silent)err('No pudimos abrir el mapa. Probá de nuevo en un ratito.');return false;}
  finally{b.disabled=false;b.textContent='📍 Buscar en el mapa';}}
 document.getElementById('lpMb').onclick=function(){buscar(false);};
