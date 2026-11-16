@@ -7243,11 +7243,11 @@ const VIVO = {
     scrolls: [
       ['Río Jordán', [-16, 18], 'El Jordán ya era un río con historia: por acá el pueblo de Israel cruzó a la tierra prometida con Josué, y acá se lavó siete veces Naamán, el general sirio, y quedó sano.'],
       ['Río Jordán', [-12, -22], 'En el bautismo de Jesús aparecen el Padre que habla desde el cielo, el Hijo en el agua y el Espíritu como una paloma. Los tres juntos, en un mismo momento.'],
-      ['Desierto de Judea', [10, -8], 'Jesús ayunó cuarenta días en el desierto. Israel había pasado cuarenta años en el desierto y había fallado una y otra vez; Jesús pasó la prueba en su lugar.'],
+      ['Desierto de Judea', [-10, -8], 'Jesús ayunó cuarenta días en el desierto. Israel había pasado cuarenta años en el desierto y había fallado una y otra vez; Jesús pasó la prueba en su lugar.'],
       ['Desierto de Judea', [-4, 12], 'Las tres veces que fue tentado, Jesús respondió con la Escritura: «Escrito está». Las tres citas son del libro de Deuteronomio.'],
-      ['Desierto de Judea', [14, 6], 'Cuando terminaron las tentaciones, el diablo se alejó de Jesús hasta que llegara otra oportunidad. Y vinieron ángeles a cuidarlo.']
+      ['Desierto de Judea', [-12, 10], 'Cuando terminaron las tentaciones, el diablo se alejó de Jesús hasta que llegara otra oportunidad. Y vinieron ángeles a cuidarlo.']
     ],
-    fire: { at: 'Desierto de Judea', off: [6, 6], steps: [
+    fire: { at: 'Desierto de Judea', off: [-15, 1], steps: [
       ['nar', 'Noche fría en el desierto de Judea. Eleazar y Asher encienden un fuego chico entre las piedras.'],
       ['zel', 'Si yo pasara cuarenta días sin comer y alguien me dijera que convierta las piedras en pan… lo hago sin pensarlo.'],
       ['esc', 'Jesús tenía hambre de verdad. Y respondió: «La gente no vive solo de pan, sino de cada palabra que sale de la boca de Dios».']],
