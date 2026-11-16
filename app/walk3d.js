@@ -6189,7 +6189,7 @@ function swimTick(dt, a) {
   if (!deep && !S.pocket && S.gy > WATER.RL - .5 && !blockedAt(a.x, a.z)) S.land = [a.x, a.z];
   av.rotation.order = 'YXZ'; av.rotation.x = S.swimK * 1.3; a.y += S.swimUp * (Math.max(0, S.swimK - .3) * .72 + Math.sin(performance.now() / 420) * .04);
   if (S.grot && !S.pocket && performance.now() > (S.grotT || 0) && (a.x - S.grot.x) ** 2 + (a.z - S.grot.z) ** 2 < 16) { try { grotEnter(); } catch (e) { S.grotT = performance.now() + 4000; console.warn('[gruta]', e); } return; }
-  if (!S.hx) return; const full = 40 * agiMul() * (legOn('perla') ? 2 : 1);
+  if (!S.hx) return; const full = 30 * agiMul() * (legOn('perla') ? 2 : 1);
   /* nadar gasta aliento; quedarse quieto flotando lo recupera, y en tierra vuelve más rápido */
   if (deep && mov) S.stam = Math.max(0, (S.stam ?? 1) - dt / full); else S.stam = Math.min(1, (S.stam ?? 1) + dt / (deep ? 20 : 14));
   if (deep && S.stam <= 0 && S.land) { a.x = S.land[0]; a.z = S.land[1]; S.gy = null; S.walking = null; S.stam = .2; S.swimK = 0; S.swimUp = 0; try { const p = svP(); p.sat = Math.max(120, p.sat - 300); G().toast('🌊 Te quedaste sin aliento y el agua te devolvió a la orilla. La próxima, frená y flotá para recuperarlo.'); } catch (e) {} }
@@ -7365,9 +7365,9 @@ function grotMouth(scene, x, z, side) {
 function grotEnter() {
   if (!S || S.pocket || !S.grot) return; const G0 = S.grot, a = S.av.position, gx = G0.x, gz = G0.z, y0 = 240, g = new THREE.Group(), R = rng(4471), items = [], cols = [], gp = G().P();
   g.position.set(gx, y0, gz); g.userData.keep = 1;
-  const CX = 64, RC = 23, PX = 78, PZ = 2, PR = 6.6, zc = x => 2.2 * Math.sin(x * .21) * sstep(0, 6, x) * (1 - sstep(33, 41, x));
+  const CX = 64, RC = 23, PX = 78, PZ = 2, PR = 6.6, zc = x => 1.6 * Math.sin(x * .17) * sstep(0, 6, x) * (1 - sstep(33, 41, x));
   const hL = (x, z) => { const r = Math.hypot(x - CX, z); if (x < 41 && r > RC - .5) return 0; if (r < 15.5) return -9; return -9 * sstep(.85, 2.55, Math.PI - Math.abs(Math.atan2(z, x - CX))); };
-  const okL = (x, z) => { if (x >= -1.8 && x <= 44 && Math.abs(z - zc(x)) < 1.25) return true; if (Math.hypot(x - CX, z) > RC - 1.2 || Math.hypot(x - PX, z - PZ) < PR + .2) return false; if (Math.abs(hL(x, z) - (S.gy - y0)) > 1) return false; for (const [cx2, cz2, cr] of cols) if ((x - cx2) ** 2 + (z - cz2) ** 2 < cr * cr) return false; return true; };
+  const okL = (x, z) => { if (x >= -1.8 && x <= 44 && Math.abs(z - zc(x)) < 1.75) return true; if (Math.hypot(x - CX, z) > RC - 1.2 || Math.hypot(x - PX, z - PZ) < PR + .2) return false; if (Math.abs(hL(x, z) - (S.gy - y0)) > 1) return false; for (const [cx2, cz2, cr] of cols) if ((x - cx2) ** 2 + (z - cz2) ** 2 < cr * cr) return false; return true; };
   const rt = texL('rock.jpg', 4), M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .9 }, o || {}));
   // la noche de la montaña alrededor: desde adentro no se ve el mundo de afuera
   { const sh = new THREE.Mesh(new THREE.SphereGeometry(70, 24, 16), new THREE.MeshBasicMaterial({ color: '#04070A', side: THREE.BackSide, fog: false })); sh.position.set(44, 0, 0); g.add(sh); }
