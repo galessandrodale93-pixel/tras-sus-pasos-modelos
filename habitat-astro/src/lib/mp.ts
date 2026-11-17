@@ -50,7 +50,11 @@ export function banco(pg: Pago) {
   if (!nombre && !doc && !email && !mismo) return null;
   return { nombre: nombre.toLowerCase().replace(/(^|\s)\S/g, (x) => x.toUpperCase()), doc, email, mismo };
 }
+// transferencia de banco al alias/CVU: MP no siempre dice quién la mandó (payer = la propia cuenta)
+export const esBanco = (pg: Pago) => String((pg || {}).payment_type_id || "") === "bank_transfer" || String((pg || {}).payment_method_id || "") === "cvu";
+const anonima = (pg: Pago) => esBanco(pg) && !banco(pg);
 export function clavePagador(pg: Pago) {
+  if (anonima(pg)) return "";
   const bk = banco(pg);
   if (bk && (bk.doc || bk.nombre)) return bk.doc ? "d-" + bk.doc : "n-" + slug(bk.nombre);
   const py = pg.payer || {};
@@ -61,8 +65,8 @@ export function clavePagador(pg: Pago) {
   const n = [py.first_name, py.last_name].filter(Boolean).join(" ");
   return n ? "n-" + slug(n) : "";
 }
-const nombrePagador = (pg: Pago) => { const bk = banco(pg); if (bk && bk.nombre) return bk.nombre; const py = pg.payer || {}; return [py.first_name, py.last_name].filter(Boolean).join(" ") || String(py.email || "") || "Sin nombre"; };
-const emailPagador = (pg: Pago) => { const bk = banco(pg); if (bk) return bk.email; return String((pg.payer || {}).email || "").toLowerCase(); };
+const nombrePagador = (pg: Pago) => { if (anonima(pg)) return "Transferencia bancaria"; const bk = banco(pg); if (bk && bk.nombre) return bk.nombre; const py = pg.payer || {}; return [py.first_name, py.last_name].filter(Boolean).join(" ") || String(py.email || "") || "Sin nombre"; };
+const emailPagador = (pg: Pago) => { if (anonima(pg)) return ""; const bk = banco(pg); if (bk) return bk.email; return String((pg.payer || {}).email || "").toLowerCase(); };
 // mismo nombre aunque el banco lo ponga al revés o con el segundo apellido («PEREZ GOMEZ ANA» = «Ana Pérez»)
 export const mismoNombre = (a: unknown, b: unknown) => {
   const A = nrm(a).split(" ").filter((t) => t.length > 1), B = nrm(b).split(" ").filter((t) => t.length > 1);
@@ -75,7 +79,7 @@ const esSuscripcion = (pg: Pago) => pg.operation_type === "recurring_payment" ||
 export async function clasificar(pg: Pago, ctx?: { pag: Pagador[]; al: Alumno[] }) {
   const pag = ctx ? ctx.pag : await todos<Pagador>("FinPagadores"), al = ctx ? ctx.al : await todos<Alumno>("TutAlumnos");
   const key = clavePagador(pg), nom = nombrePagador(pg), email = emailPagador(pg);
-  const rec = pag.find((x) => x._id === key);
+  const rec = key ? pag.find((x) => x._id === key) : undefined;
   if (rec) return { tipo: rec.tipo, alumnoId: rec.alumnoId || "", key };
   // el Pase Kids & Hero se reconoce por su descripción (el motivo del plan de MP)
   if (/kids\s*&\s*hero/i.test(String(pg.description || "") + " " + String(pg.reason || ""))) return { tipo: "Kids & Hero", alumnoId: "", key };
@@ -97,6 +101,8 @@ async function yo(tk: string, c = 1) { if (!YO[c]) { const u = await mp("/users/
 const propias = () => Object.values(YO).map(({ id, email }) => ({ id, email }));
 // ¿la mandó una de nuestras cuentas? En transferencias de banco se mira al que manda de verdad, no al «payer».
 function deCuentaPropia(pg: Pago) {
+  // sin remitente no se puede saber: queda por clasificar (y si coincide con un libro, se avisa)
+  if (anonima(pg)) return false;
   const bk = banco(pg);
   if (bk) return bk.mismo || Object.values(YO).some((u) => !!u.nombre && mismoNombre(u.nombre, bk.nombre));
   const py = pg.payer || {};
@@ -114,12 +120,12 @@ export async function registrarPago(pg: Pago, ctx?: { pag: Pagador[]; al: Alumno
   const prev = (await q("FinIngresos").eq("_id", _id).limit(1).find()).items[0] as Ingreso | undefined;
   const deOtra = deCuentaPropia(pg);
   // una transferencia de banco que antes se tomó sola como «entre cuentas propias» se vuelve a mirar con el remitente real
-  const revisar = !!prev && prev.tipo === "Transferencia entre cuentas propias" && prev.por === "Mercado Pago" && !!banco(pg) && !deOtra;
+  const revisar = !!prev && prev.tipo === "Transferencia entre cuentas propias" && prev.por === "Mercado Pago" && esBanco(pg) && !deOtra;
   // pago desde el link de la cuota (external_reference «cuota|alumno|mes»): ya sabemos de quién y de qué mes es
   const ref = /^cuota\|([^|]+)\|(\d{4}-\d{2})$/.exec(String(pg.external_reference || ""));
   const c = ref && (!prev || prev.tipo === "Por clasificar") ? { tipo: "Cuota de alumno (MP)", alumnoId: ref[1], key: clavePagador(pg) } : prev && prev.tipo !== "Por clasificar" && !revisar ? { tipo: prev.tipo, alumnoId: prev.alumnoId || "", key: prev.pagador || clavePagador(pg) } : deOtra ? { tipo: "Transferencia entre cuentas propias", alumnoId: "", key: clavePagador(pg) } : await clasificar(pg, ctx);
   const fecha = fechaAR(pg.date_approved || pg.date_created || new Date().toISOString());
-  const it: Ingreso = { _id, title: nombrePagador(pg), email: emailPagador(pg), fecha, mes: fecha.slice(0, 7), monto: Number(pg.transaction_amount) || 0, neto: Number((pg.transaction_details || {}).net_received_amount) || 0, tipo: c.tipo, origen: c0 === 1 ? "Mercado Pago" : "Mercado Pago (cuenta " + c0 + ")", alumnoId: c.alumnoId, pagador: c.key, descripcion: ((esSuscripcion(pg) ? "Suscripción · " : "") + String(pg.description || "")).slice(0, 300), estado: pg.status, nota: (prev && prev.nota) || "", por: prev && prev.por && !revisar ? prev.por : "Mercado Pago" };
+  const it: Ingreso = { _id, title: anonima(pg) && prev && prev.title && !/@|^sin nombre$/i.test(prev.title) ? prev.title : nombrePagador(pg), email: emailPagador(pg), fecha, mes: fecha.slice(0, 7), monto: Number(pg.transaction_amount) || 0, neto: Number((pg.transaction_details || {}).net_received_amount) || 0, tipo: c.tipo, origen: c0 === 1 ? "Mercado Pago" : "Mercado Pago (cuenta " + c0 + ")", alumnoId: c.alumnoId, pagador: c.key, descripcion: ((esSuscripcion(pg) ? "Suscripción · " : "") + String(pg.description || "")).slice(0, 300), estado: pg.status, nota: (prev && prev.nota) || "", por: prev && prev.por && !revisar ? prev.por : "Mercado Pago" };
   await guardar("FinIngresos", it as unknown as Record<string, unknown>);
   if (!prev || revisar) {
     const lb = await libroDesdeIngreso(it).catch((e) => { console.error("libro mp", e); return null; });
