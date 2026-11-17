@@ -10,7 +10,7 @@ import { animo, esc, grupos, type Ev, type Grupo } from "../../lib/vol";
 import { avisarProfes } from "../../lib/profeAviso";
 import { sembradoresDiario } from "../../lib/sem";
 import { testimoniosDiario } from "../../lib/tes";
-import { finanzasDiario } from "../../lib/mp";
+import { finanzasDiario, traer } from "../../lib/mp";
 import { debiDiario } from "../../lib/debi";
 import { edicionDiario } from "../../lib/edicion";
 import { oracionAviso } from "../../lib/oracion";
@@ -102,6 +102,11 @@ export const GET: APIRoute = async ({ url }) => {
     const hoy = url.searchParams.get("fecha") || new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
     const dry = url.searchParams.get("dry") === "1";
     const remitente = C.remitente || "galessandrodale.93@gmail.com";
+    // traer ya los pagos de Mercado Pago de los últimos días (sin esperar al resumen diario): ?traer=<días>&k=<cronKey>
+    if (url.searchParams.has("traer")) {
+      if (!C.cronKey || url.searchParams.get("k") !== C.cronKey) return json({ error: "no" }, 401);
+      return json({ ok: true, hoy, traer: await traer(Math.min(30, Math.max(1, Number(url.searchParams.get("traer")) || 2))) });
+    }
     // mail puntual de cuota (lo pide la dirección): ?reabre=<hasta, ej. «viernes 20 de noviembre»>&k=<cronKey>
     if (url.searchParams.has("reabre")) {
       if (!C.cronKey || url.searchParams.get("k") !== C.cronKey) return json({ error: "no" }, 401);
