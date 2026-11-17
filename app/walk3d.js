@@ -6609,7 +6609,7 @@ function freeWalk(dt) {
   const mag = Math.min(1, Math.hypot(jx, jy)); if (mag >= .12 && S.pose === 'pray') { S.pose = null; actUI(); } if (mag >= .12 && S.sit) { S.sit = false; actUI(); } if (mag >= .12 && S.poseK) poseEnd(); S.fullT = mag > .96 ? (S.fullT || 0) + dt : 0; if (S.sprint && S.hx) { AXS.run = (AXS.run || 0) + dt; if (AXS.run > 12) { AXS.run = 0; axGain('agi', 1); } } S.sprint = !!S.hx && (!!k.Shift || S.fullT > 1.2); if (mag < .12) { if (S.freeMoving) { S.freeMoving = false; snapToStop(); } return; }
   const C = S.yaw + S.camYaw, fx = Math.sin(C), fz = Math.cos(C), rx = -Math.cos(C), rz = Math.sin(C);
   let mx = fx * -jy + rx * jx, mz = fz * -jy + rz * jx; const ml = Math.hypot(mx, mz) || 1; mx /= ml; mz /= ml;
-  if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint && !S.swim ? 1.55 * (legOn('cuarenta') ? 1.2 : 1) : 1) * (S.boostT > 0 ? 1.3 : 1) * (S.gy != null && S.gy < WATER.RL - .4 ? (S.swim ? (S.hx && (S.stam ?? 1) < .25 ? .34 : .5) * (perlaOn() ? 1.5 : 1) : .6) : 1), /* en el agua se avanza más lento */ a = S.av.position, fr = frontier(), z0 = 6;
+  if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint && !S.swim ? 1.55 * (legOn('cuarenta') ? 1.2 : 1) : 1) * (S.boostT > 0 ? 1.3 : 1) * (S.gy != null && S.gy < WATER.RL - .4 ? (S.swim ? (S.hx && (S.stam ?? 1) < .25 ? .34 : .5) * (legOn('perla') ? 1.3 : 1) : .6) : 1), /* en el agua se avanza más lento */ a = S.av.position, fr = frontier(), z0 = 6;
   const curG = groundAt(a.x, a.z, S.gy); // el suelo donde estás parado (no la altura suavizada de la cámara)
   const ok = (x, z) => S.pocket ? pocketOk(x, z) : (Math.abs(x) < XW - 12 || inTrail(x, z) || seaOk(x, z)) && z > fr && z < z0 && !blockedAt(x, z) && !solidAbove(x, z, S.gy) && !edgeDrop(x, z, curG) && !descUp(a.x, a.z, x, z);
   let nx = a.x + mx * sp, nz = a.z + mz * sp;
@@ -7046,7 +7046,7 @@ function swimTick(dt, a) {
   if (!deep && !S.pocket && S.gy > WATER.RL - .5 && !blockedAt(a.x, a.z)) S.land = [a.x, a.z];
   av.rotation.order = 'YXZ'; av.rotation.x = S.swimK * 1.22; if (S.swimUp > .01) { const tg = WATER.RL - 1.3 + Math.max(0, Math.min(1, (S.swimK - .3) / .7)) * 1.02 + Math.sin(performance.now() / 420) * .04; a.y += (tg - a.y) * S.swimUp; } /* nadando, el cuerpo queda a ras del agua con la cabeza afuera; flotando, con el agua al cuello */
   if (S.grot && !S.pocket && performance.now() > (S.grotT || 0) && (a.x - S.grot.x) ** 2 + (a.z - S.grot.z) ** 2 < 16) { try { grotEnter(); } catch (e) { S.grotT = performance.now() + 4000; console.warn('[gruta]', e); } return; }
-  if (!S.hx) return; const full = 30 * agiMul() * (perlaOn() ? 2 : 1);
+  if (!S.hx) return; const full = 30 * agiMul() * (legOn('perla') ? 2 : 1);
   /* nadar gasta aliento; quedarse quieto flotando lo recupera, y en tierra vuelve más rápido */
   if (deep && mov) S.stam = Math.max(0, (S.stam ?? 1) - dt / full); else S.stam = Math.min(1, (S.stam ?? 1) + dt / (deep ? 20 : 14));
   if (deep && S.stam <= 0 && S.land) { a.x = S.land[0]; a.z = S.land[1]; S.gy = null; S.walking = null; S.stam = .2; S.swimK = 0; S.swimUp = 0; try { const p = svP(); p.sat = Math.max(120, p.sat - 300); G().toast('🌊 Te quedaste sin aliento y el agua te devolvió a la orilla. La próxima, frená y flotá para recuperarlo.'); } catch (e) {} }
@@ -7092,7 +7092,7 @@ function axVerse(dt) {
   try { const g = G(), t = g.stageLine && g.stageLine(); if (t) g.vo(t, 'narrador', { queue: 1 }); } catch (e) {}
 }
 /* poderes de las prendas legendarias: valen solo mientras la llevás puesta */
-const LEG_POW = { coronavida: ['Perseverancia', 'Ganás un 25% más de experiencia con todo lo que hacés.'], samuel: ['Fiel en lo poco', 'Ganás un 25% más de denarios.'], lampnoche: ['Luz en la noche', 'En los lugares de noche ves mucho más lejos y más claro.'], cuarenta: ['Cuarenta años', 'Corriendo vas un 20% más rápido.'], pescahombres: ['Red llena', 'Al pescar, pica el doble.'], bezalel: ['Manos sabias', 'Construir y fabricar te cuesta la mitad de materiales.'], evangelio: ['Pies ligeros', 'Caminás y corrés un 15% más rápido.'], jose: ['Graneros llenos', 'El hambre te baja un 30% más lento.'], sacerdote: ['Consagrado', 'Tus atributos crecen un 25% más rápido con cada cosa que hacés.'], perla: ['Aliento profundo', 'Con solo tenerla, nadás un 50% más rápido y tu aliento dura el doble.'] };
+const LEG_POW = { coronavida: ['Perseverancia', 'Ganás un 25% más de experiencia con todo lo que hacés.'], samuel: ['Fiel en lo poco', 'Ganás un 25% más de denarios.'], lampnoche: ['Luz en la noche', 'En los lugares de noche ves mucho más lejos y más claro.'], cuarenta: ['Cuarenta años', 'Corriendo vas un 20% más rápido.'], pescahombres: ['Red llena', 'Al pescar, pica el doble.'], bezalel: ['Manos sabias', 'Construir y fabricar te cuesta la mitad de materiales.'], evangelio: ['Pies ligeros', 'Caminás y corrés un 15% más rápido.'], jose: ['Graneros llenos', 'El hambre te baja un 30% más lento.'], sacerdote: ['Consagrado', 'Tus atributos crecen un 25% más rápido con cada cosa que hacés.'], perla: ['Aliento profundo', 'Nadás un 30% más rápido y tu aliento dura el doble.'] };
 /* las legendarias por logros: se revisa cada tanto y se entregan una sola vez */
 const SELLO_IDS = ['bajada', 'brasas', 'cana', 'carrera', 'cena', 'cruz', 'emaus', 'estrella', 'gloria', 'jordan', 'maestros', 'oveja', 'panes', 'pesebre', 'red', 'rut', 'samaritano', 'tumba', 'viuda'];
 function legCheck() { try { if (!S || !S.hx || !G() || !G().P) return; const p = G().P(), own = gearState().own, give = (id, why) => { if (GBY[id] && !own.includes(id)) gearGive(GBY[id], why); };
@@ -7103,8 +7103,6 @@ function legCheck() { try { if (!S || !S.hx || !G() || !G().P) return; const p =
   if (s.house && RECIPES.filter(r => r.furn).every(r => (s.furn || []).includes(r.id))) return give('bezalel', 'Terminaste tu casa con tus propias manos');
 } catch (e) {} }
 setInterval(() => { if (!document.hidden) legCheck(); }, 5000);
-/* la Perla de gran precio vale con solo tenerla: en la mano puede ir otra cosa */
-function perlaOn() { try { return gearState().own.includes('perla') || legOn('perla'); } catch (e) { return false; } }
 function legOn(id) { try { const e = gearState().eq; return Object.values(e).includes(id); } catch (e) { return false; } }
 function agiMul() { return (1 + atr('agi') * .06) * (legOn('evangelio') ? 1.15 : 1); }
 function lvlNow() { const g = G(); return g.level ? g.level() : 1; }
