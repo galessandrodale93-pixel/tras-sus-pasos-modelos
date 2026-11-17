@@ -3,12 +3,12 @@ function tspGate(){let q=null;try{q=new URLSearchParams(location.search).get('te
 const TSP_OK=tspGate();
 // Tras Sus Pasos: lógica del juego (servida desde el repositorio; el sitio de Wix solo carga este archivo)
 // guarda los archivos del juego en el aparato (service worker propio; Wix usa /sw.js)
-try{if('serviceWorker' in navigator&&location.protocol==='https:'&&!/localhost|127\.0\.0\.1/.test(location.hostname)){const reg=()=>navigator.serviceWorker.register('/tsp-sw.js').catch(()=>{});if(document.readyState==='complete')reg();else window.addEventListener('load',reg);}}catch(e){}
+try{if('serviceWorker' in navigator&&location.protocol==='https:'&&!/localhost|127\.0\.0\.1/.test(location.hostname)){const reg=()=>navigator.serviceWorker.register('/tsp-sw.js',window.TSP_SW_SCOPE?{scope:window.TSP_SW_SCOPE}:undefined).catch(()=>{});if(document.readyState==='complete')reg();else window.addEventListener('load',reg);}}catch(e){}
 { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = new URL('./walk3d.css', import.meta.url).href; document.head.appendChild(l); }
-const { subscribeMember, getMemberState, login, register, verifyEmail, logout, refreshMember } = await import(location.origin + "/js/wix/member-store.js");
-const { wixRequest, mintTokens, setTokens } = await import(location.origin + "/js/wix/client.js");
-const { WIX_CLIENT_ID } = await import(location.origin + "/js/wix/config.js");
-const { queryItems, insertItem, patchItemFields } = await import(location.origin + "/js/wix/items.js");
+const { subscribeMember, getMemberState, login, register, verifyEmail, logout, refreshMember } = await import((window.TSP_WIX || location.origin + "/js/wix") + "/member-store.js");
+const { wixRequest, mintTokens, setTokens } = await import((window.TSP_WIX || location.origin + "/js/wix") + "/client.js");
+const { WIX_CLIENT_ID } = await import((window.TSP_WIX || location.origin + "/js/wix") + "/config.js");
+const { queryItems, insertItem, patchItemFields } = await import((window.TSP_WIX || location.origin + "/js/wix") + "/items.js");
 const REGIONS=[{id:'nacimiento',name:'Nacimiento'},{id:'infancia',name:'Infancia'},{id:'bautismo',name:'Bautismo'},{id:'galilea',name:'Galilea'},{id:'milagros',name:'Milagros'},{id:'parabolas',name:'Parábolas'},{id:'jerusalen',name:'Jerusalén'},{id:'cruz',name:'La cruz'},{id:'resurreccion',name:'Resurrección'}];
 const SOON=['Hechos · próximo curso'];
 const LOCAL={n1:[96,180],n2:[262,276],n3:[152,376],fA:[66,486],fB:[292,486],n4:[180,596],n5:[92,690]};
@@ -2961,7 +2961,7 @@ async function socialStart(kind){
   try{
     const verifier=b64u(crypto.getRandomValues(new Uint8Array(32))),state=b64u(crypto.getRandomValues(new Uint8Array(16)));
     const challenge=b64u(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier))));
-    const redirectUri=location.origin+'/';
+    const redirectUri=location.origin+location.pathname;
     sessionStorage.setItem('tsp:oauth',JSON.stringify({verifier,state,redirectUri,back:branch?'#'+(branch==='ados'?'hero':'kids'):'',consent:teen()&&su}));
     const r=await wixRequest('/headless/v1/redirect-session',{body:{auth:{authRequest:{redirectUri,clientId:WIX_CLIENT_ID,codeChallenge:challenge,codeChallengeMethod:'S256',responseMode:'fragment',responseType:'code',scope:'offline_access',state,idp:IDP[kind]}}}});
     const url=r&&r.redirectSession&&r.redirectSession.fullUrl;if(!url)throw new Error('sin url');
