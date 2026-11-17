@@ -6137,7 +6137,7 @@ const DRY_BASE = SEASON === 'seco' ? .62 : 0; // cuánto dorado hay de base, ade
 const PG_H = .8; // altura del pasto respecto del original (1 = como viene)
 const BARE = true; // etapa de prueba: campo sin árboles, solo la cobertura del suelo
 const PG_ONLY = /^(knotweed_0[23]|ezepnik_02)$/i; // las 3 plantas elegidas por Gui para cubrir todo el piso
-const PG_CELL = 16, PG_R = [15, 22, 32, 42], PG_TRI = [4.2e5, 1.1e6, 2.4e6, 4e6];
+const PG_CELL = 16, PG_R = [19, 25, 32, 42], PG_TRI = [6.7e5, 1.42e6, 2.4e6, 4e6]; // radio más grande en Bajo y Medio con la misma densidad: al correr se ve el pasto de adelante
 const PG_S = { grass_bermuda_01: [4, 5.4], grass_medium_01: [2.8, 3.9], grass_medium_02: [3, 4.1], dandelion_01: [2.2, 3.1], celandine_01: [2.4, 3.2], flower_heliophila: [1.3, 1.9] };
 const PG_W = { grass_bermuda_01: .44, grass_medium_01: .24, grass_medium_02: .18, dandelion_01: .05, celandine_01: .05, flower_heliophila: .04 };
 const pgH = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
