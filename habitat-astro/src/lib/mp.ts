@@ -84,7 +84,9 @@ export async function registrarPago(pg: Pago, ctx?: { pag: Pagador[]; al: Alumno
   const _id = P + pg.id;
   const prev = (await q("FinIngresos").eq("_id", _id).limit(1).find()).items[0] as Ingreso | undefined;
   const py = pg.payer || {}, deOtra = propias().some((u) => (u.id && String(py.id || "") === u.id) || (u.email && String(py.email || "").toLowerCase() === u.email));
-  const c = prev && prev.tipo !== "Por clasificar" ? { tipo: prev.tipo, alumnoId: prev.alumnoId || "", key: prev.pagador || clavePagador(pg) } : deOtra ? { tipo: "Transferencia entre cuentas propias", alumnoId: "", key: clavePagador(pg) } : await clasificar(pg, ctx);
+  // pago desde el link de la cuota (external_reference «cuota|alumno|mes»): ya sabemos de quién y de qué mes es
+  const ref = /^cuota\|([^|]+)\|(\d{4}-\d{2})$/.exec(String(pg.external_reference || ""));
+  const c = ref && (!prev || prev.tipo === "Por clasificar") ? { tipo: "Cuota de alumno (MP)", alumnoId: ref[1], key: clavePagador(pg) } : prev && prev.tipo !== "Por clasificar" ? { tipo: prev.tipo, alumnoId: prev.alumnoId || "", key: prev.pagador || clavePagador(pg) } : deOtra ? { tipo: "Transferencia entre cuentas propias", alumnoId: "", key: clavePagador(pg) } : await clasificar(pg, ctx);
   const fecha = fechaAR(pg.date_approved || pg.date_created || new Date().toISOString());
   const it: Ingreso = { _id, title: nombrePagador(pg), email: String((pg.payer || {}).email || "").toLowerCase(), fecha, mes: fecha.slice(0, 7), monto: Number(pg.transaction_amount) || 0, neto: Number((pg.transaction_details || {}).net_received_amount) || 0, tipo: c.tipo, origen: c0 === 1 ? "Mercado Pago" : "Mercado Pago (cuenta " + c0 + ")", alumnoId: c.alumnoId, pagador: c.key, descripcion: ((esSuscripcion(pg) ? "Suscripción · " : "") + String(pg.description || "")).slice(0, 300), estado: pg.status, nota: (prev && prev.nota) || "", por: "Mercado Pago" };
   await guardar("FinIngresos", it as unknown as Record<string, unknown>);
@@ -92,7 +94,7 @@ export async function registrarPago(pg: Pago, ctx?: { pag: Pagador[]; al: Alumno
     const lb = await libroDesdeIngreso(it).catch((e) => { console.error("libro mp", e); return null; });
     if (lb && lb.auto && it.tipo !== "Libros") { it.tipo = "Libros"; it.alumnoId = ""; await guardar("FinIngresos", it as unknown as Record<string, unknown>); }
   }
-  await cuotaDesdeIngreso(it).catch((e) => console.error("cuota mp", e));
+  await cuotaDesdeIngreso(it, ref ? ref[2] : "").catch((e) => console.error("cuota mp", e));
   if (!prev && SIEMBRA.includes(it.tipo) && it.email) await desdePago({ email: it.email, nombre: it.title || "", monto: it.monto, recurrente: it.tipo === "Siembra automática", fecha });
   return it;
 }
@@ -134,17 +136,28 @@ async function traerCuenta(dias: number, tk: string, ctx: { pag: Pagador[]; al: 
 
 // Un pago de Mercado Pago clasificado como cuota de un alumno cuenta como cobro en Finanzas (y el alumno lo ve en «Mi cuota»).
 // Se aplica al mes impago más viejo; si está todo pago, al mes del pago. Con varias escuelas lo asigna Finanzas a mano.
-export async function cuotaDesdeIngreso(it: Ingreso) {
+export async function cuotaDesdeIngreso(it: Ingreso, mesRef = "") {
   if (it.tipo !== "Cuota de alumno (MP)" || !it.alumnoId) return "";
   const _id = "mp-" + it._id;
   if ((await q("FinCobros").eq("_id", _id).limit(1).find()).items.length) return _id;
   const ps = (await q("FinPlanes").eq("alumnoId", it.alumnoId).limit(5).find()).items as unknown as Plan[];
-  if (ps.length !== 1) return "";
+  if (!ps.length || (ps.length > 1 && !mesRef)) return "";
   const cobros = (await q("FinCobros").eq("alumnoId", it.alumnoId).limit(500).find()).items as unknown as Cobro[];
   const hoyMes = it.fecha.slice(0, 7);
-  let mes = hoyMes;
-  for (let m = 1; m <= 12; m++) { const mm = hoyMes.slice(0, 4) + "-" + String(m).padStart(2, "0"); if (mm > hoyMes) break; const e = estadoMes(ps[0], cobros, mm, hoyMes); if (e === "debe" || e === "pendiente") { mes = mm; break; } }
-  await guardar("FinCobros", { _id, title: it.title || "", alumnoId: it.alumnoId, escuela: ps[0].escuela, compartido: "", fecha: it.fecha, mes, montoTotal: it.monto, monto: it.monto, estado: "Aprobado", medio: "Transferencia", concepto: "Cuota", respuesta: "Mercado Pago", nota: "Cargado solo desde Mercado Pago", por: "Mercado Pago" });
+  let mes = mesRef || hoyMes;
+  if (!mesRef) for (let m = 1; m <= 12; m++) { const mm = hoyMes.slice(0, 4) + "-" + String(m).padStart(2, "0"); if (mm > hoyMes) break; const e = estadoMes(ps[0], cobros, mm, hoyMes); if (e === "debe" || e === "pendiente") { mes = mm; break; } }
+  // cuota compartida: el pago de uno cubre también a su pareja (mitad y mitad)
+  const yo = (await q("TutAlumnos").eq("_id", it.alumnoId).limit(1).find()).items[0] as { title?: string; cuotaCon?: string } | undefined;
+  let pareja: { _id: string; title?: string } | undefined;
+  if (yo && yo.cuotaCon) { const al = await todos<{ _id: string; title?: string; activo?: boolean }>("TutAlumnos"); pareja = al.find((a) => a._id !== it.alumnoId && a.activo !== false && nrm(a.title).startsWith(nrm(yo.cuotaCon).split(" ")[0]) && nrm(a.title).includes(nrm(yo.cuotaCon).split(" ").slice(-1)[0])); }
+  const partes = pareja ? 2 : 1;
+  const base = { fecha: it.fecha, mes, montoTotal: it.monto, estado: "Aprobado", medio: "Transferencia", concepto: "Cuota", respuesta: "Mercado Pago", por: "Mercado Pago" };
+  // con varias escuelas (y link de un mes), el pago se reparte entre sus escuelas
+  for (let i = 0; i < ps.length; i++) await guardar("FinCobros", { ...base, _id: _id + (i ? "-" + i : ""), title: it.title || "", alumnoId: it.alumnoId, escuela: ps[i].escuela, compartido: pareja ? pareja.title || "" : "", monto: Math.round(it.monto / partes / ps.length), nota: "Cargado solo desde Mercado Pago" });
+  if (pareja) {
+    const pp = (await q("FinPlanes").eq("alumnoId", pareja._id).limit(5).find()).items as unknown as Plan[];
+    for (let i = 0; i < pp.length; i++) await guardar("FinCobros", { ...base, _id: _id + "-p" + i, title: pareja.title || "", alumnoId: pareja._id, escuela: pp[i].escuela, compartido: yo?.title || "", monto: Math.round(it.monto / partes / pp.length), nota: "Cuota compartida: pagó " + (yo?.title || "su pareja") });
+  }
   return _id;
 }
 

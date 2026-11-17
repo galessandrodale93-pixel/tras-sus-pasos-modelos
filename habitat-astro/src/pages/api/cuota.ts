@@ -9,6 +9,7 @@ import { estadoMes, type Plan, type Cobro } from "../../lib/fin";
 import { activa, VENCE } from "../../lib/cobranza";
 import { mandar, marco, p } from "../../lib/sem";
 import { esc } from "../../lib/vol";
+import { preferencia } from "../../lib/pagoCuota";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
@@ -64,6 +65,11 @@ export const POST: APIRoute = async ({ request }) => {
     if (!al) return json({ error: "Entrá con tu cuenta de alumno." }, 401);
     let x: Record<string, unknown> = {};
     try { x = await request.json(); } catch { /* vacío */ }
+    if (x.op === "pagar") {
+      const mes = /^\d{4}-\d{2}$/.test(s(x.mes, 7)) ? s(x.mes, 7) : new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 7);
+      try { return json({ ok: true, url: await preferencia(al as unknown as Parameters<typeof preferencia>[0], mes) }); }
+      catch (e) { return json({ error: String((e as Error).message || e) }, 400); }
+    }
     if (x.op === "subir") {
       const r = await fetchAuth("https://www.wixapis.com/site-media/v1/files/generate-upload-url", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mimeType: s(x.mime, 120) || "application/octet-stream", fileName: s(x.nombre, 160) || "comprobante" }) });
       const j = await r.json();

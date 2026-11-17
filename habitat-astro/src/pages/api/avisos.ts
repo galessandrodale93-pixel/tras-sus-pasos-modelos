@@ -16,7 +16,7 @@ import { edicionDiario } from "../../lib/edicion";
 import { oracionAviso } from "../../lib/oracion";
 import { zarzaDiario } from "../../lib/zarza";
 import { especialesSemana, materialDiario } from "../../lib/material";
-import { cobranzaDiario } from "../../lib/cobranza";
+import { cobranzaDiario, cobranzaReabre } from "../../lib/cobranza";
 import { equipoDiario } from "../../lib/equipoFin";
 
 const q = auth.elevate(items.query);
@@ -102,6 +102,11 @@ export const GET: APIRoute = async ({ url }) => {
     const hoy = url.searchParams.get("fecha") || new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
     const dry = url.searchParams.get("dry") === "1";
     const remitente = C.remitente || "galessandrodale.93@gmail.com";
+    // mail puntual de cuota (lo pide la dirección): ?reabre=<hasta, ej. «viernes 20 de noviembre»>&k=<cronKey>
+    if (url.searchParams.has("reabre")) {
+      if (!C.cronKey || url.searchParams.get("k") !== C.cronKey) return json({ error: "no" }, 401);
+      return json({ ok: true, hoy, ...(await cobranzaReabre(hoy, url.searchParams.get("reabre") || "", dry, remitente)) });
+    }
     if (url.searchParams.get("semana") === "1") {
       // el resumen semanal sale el domingo (hora de Argentina) y cubre del lunes siguiente al domingo
       if (new Date(hoy + "T12:00:00Z").getUTCDay() !== 0) return json({ ok: true, hoy, semana: "solo los domingos", enviados: [] });
