@@ -4710,13 +4710,13 @@ function buildDoors(scene, doors, hx, HW) {
 let S_stair = null;
 /* ---------- Maranata: «Sube acá» (Apocalipsis 4:1). Una placa al pie, trompeta al acercarse, escalones que se encienden al subir y versículos que aparecen en el camino ---------- */
 function marPlaque(lines, w, h, opt) {
-  const c = document.createElement('canvas'), W = 1024, H = Math.round(W * h / w); c.width = W; c.height = H; const x = c.getContext('2d'), o = opt || {};
-  const gr = x.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, o.bg0 || 'rgba(255,250,236,.97)'); gr.addColorStop(1, o.bg1 || 'rgba(244,230,196,.97)'); x.fillStyle = gr; x.beginPath(); x.roundRect ? x.roundRect(8, 8, W - 16, H - 16, 36) : x.rect(8, 8, W - 16, H - 16); x.fill();
-  x.lineWidth = 14; x.strokeStyle = '#D9A93A'; x.stroke(); x.lineWidth = 3; x.strokeStyle = '#8A6418'; x.beginPath(); x.roundRect ? x.roundRect(30, 30, W - 60, H - 60, 24) : x.rect(30, 30, W - 60, H - 60); x.stroke();
-  x.textAlign = 'center'; x.textBaseline = 'middle'; let y = H * (o.y0 || .2);
+  const c = document.createElement('canvas'), W = 2048, H = Math.round(W * h / w); c.width = W; c.height = H; const x = c.getContext('2d'), o = opt || {}; x.scale(2, 2); const Hh = H / 2;
+  const gr = x.createLinearGradient(0, 0, 0, Hh); gr.addColorStop(0, o.bg0 || 'rgba(255,250,236,.97)'); gr.addColorStop(1, o.bg1 || 'rgba(244,230,196,.97)'); x.fillStyle = gr; x.beginPath(); x.roundRect ? x.roundRect(8, 8, 1008, Hh - 16, 36) : x.rect(8, 8, 1008, Hh - 16); x.fill();
+  x.lineWidth = 14; x.strokeStyle = '#D9A93A'; x.stroke(); x.lineWidth = 3; x.strokeStyle = '#8A6418'; x.beginPath(); x.roundRect ? x.roundRect(30, 30, 964, Hh - 60, 24) : x.rect(30, 30, 964, Hh - 60); x.stroke();
+  x.textAlign = 'center'; x.textBaseline = 'middle'; let y = Hh * (o.y0 || .2);
   lines.forEach(([t, sz, col, fam]) => { x.fillStyle = col || '#3A2A12'; x.font = `${fam || '700'} ${sz}px Georgia, 'Times New Roman', serif`;
-    const words = t.split(' '), out = []; let ln = ''; words.forEach(wd => { const tt = ln ? ln + ' ' + wd : wd; if (x.measureText(tt).width > W - 120 && ln) { out.push(ln); ln = wd; } else ln = tt; }); if (ln) out.push(ln);
-    out.forEach(l => { x.fillText(l, W / 2, y); y += sz * 1.18; }); y += sz * .25; });
+    const words = t.split(' '), out = []; let ln = ''; words.forEach(wd => { const tt = ln ? ln + ' ' + wd : wd; if (x.measureText(tt).width > 904 && ln) { out.push(ln); ln = wd; } else ln = tt; }); if (ln) out.push(ln);
+    out.forEach(l => { x.fillText(l, 512, y); y += sz * 1.18; }); y += sz * .25; });
   const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 4;
   return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tx, transparent: true, toneMapped: false, side: THREE.DoubleSide }));
 }
@@ -4727,9 +4727,9 @@ function marBuild(g, hx) {
   const pw = ST.W + 1.1, ph = 6.4, gz = -1.4, arch = new THREE.Group(); arch.position.set(0, 0, gz); g.add(arch);
   [-1, 1].forEach(sd => { const b = new THREE.Mesh(bevBox(1.3, .8, 1.3, .06), marble); b.position.set(sd * pw, .4, 0); arch.add(b); const c = new THREE.Mesh(columnGeo(ph - .8, .34, 16), marble); c.position.set(sd * pw, .8, 0); arch.add(c); const cap = new THREE.Mesh(new THREE.CylinderGeometry(.62, .44, .45, 16), gold); cap.position.set(sd * pw, ph + .2, 0); arch.add(cap); });
   const lin = new THREE.Mesh(bevBox(pw * 2 + 1.8, .55, 1.1, .06), gold); lin.position.set(0, ph + .7, 0); arch.add(lin);
-  const pl = marPlaque([['SUBE ACÁ', 170, '#9A6A10'], ['«Vi una puerta abierta en el cielo, y la voz como de trompeta me dijo: Sube acá, y te mostraré las cosas que tienen que suceder.»', 46, '#3A2A12', 'italic 600'], ['Apocalipsis 4:1', 50, '#8A5A10']], pw * 2 + 1.2, 3.4, { y0: .2 });
-  pl.position.set(0, ph + 2.75, -.05); pl.rotation.y = Math.PI; arch.add(pl); M.plaque = pl;
-  const crown = new THREE.Mesh(new THREE.OctahedronGeometry(.45, 0), new THREE.MeshStandardMaterial({ color: '#FFE08A', emissive: '#FFC94A', emissiveIntensity: 1.4, metalness: .4, roughness: .2 })); crown.position.set(0, ph + 4.85, 0); arch.add(crown); M.crown = crown;
+  const pl = marPlaque([['SUBE ACÁ', 130, '#9A6A10'], ['«Vi una puerta abierta en el cielo, y la voz como de trompeta me dijo: Sube acá, y te mostraré las cosas que tienen que suceder.»', 36, '#3A2A12', 'italic 600'], ['Apocalipsis 4:1', 36, '#8A5A10']], pw * 2 + 1.2, 3.9, { y0: .2 });
+  pl.position.set(0, ph + 3.0, -.05); pl.rotation.y = Math.PI; arch.add(pl); M.plaque = pl;
+  const crown = new THREE.Mesh(new THREE.OctahedronGeometry(.45, 0), new THREE.MeshStandardMaterial({ color: '#FFE08A', emissive: '#FFC94A', emissiveIntensity: 1.4, metalness: .4, roughness: .2 })); crown.position.set(0, ph + 5.4, 0); arch.add(crown); M.crown = crown;
   // círculo de luz en el piso, donde empieza la subida
   const ring = new THREE.Mesh(new THREE.RingGeometry(2.3, 2.6, 64), new THREE.MeshBasicMaterial({ color: '#FFE39A', transparent: true, opacity: .6, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.set(0, .05, -2.2); g.add(ring); M.ring = ring;
   // escalones que se encienden: una franja de luz por escalón
@@ -4740,7 +4740,7 @@ function marBuild(g, hx) {
   const VV = [[.24, 'He aquí que viene con las nubes, y todo ojo lo verá.', 'Apocalipsis 1:7'], [.5, 'Santo, santo, santo es el Señor Dios Todopoderoso, el que era, el que es y el que ha de venir.', 'Apocalipsis 4:8'], [.76, 'Yo hago nuevas todas las cosas.', 'Apocalipsis 21:5']];
   VV.forEach(([u, t, r], i) => { const p = marPlaque([[t, 58, '#3A2A12', 'italic 600'], [r, 46, '#8A5A10']], 4.2, 1.7, { y0: .3 }); const sd = i % 2 ? 1 : -1; p.position.set(sd * (ST.W + 3.1), u * ST.H + 2.6, u * ST.L); p.rotation.y = Math.PI + sd * -.5; p.material.opacity = 0; p.scale.setScalar(.85); g.add(p); M.verses.push({ p, u }); });
   // arriba: el grito de la iglesia
-  const fin = marPlaque([['¡MARANATA!', 120, '#9A6A10'], ['«Sí, vengo pronto.» Amén. ¡Ven, Señor Jesús!', 56, '#3A2A12', 'italic 600'], ['Apocalipsis 22:20', 44, '#8A5A10']], 5.2, 2.2, { y0: .24 }); fin.position.set(0, ST.H + 13.6, ST.L + ST.P - 1.2); fin.rotation.y = Math.PI; fin.material.opacity = 0; g.add(fin); M.fin = fin;
+  const fin = marPlaque([['¡MARANATA!', 120, '#9A6A10'], ['«Sí, vengo pronto.» Amén. ¡Ven, Señor Jesús!', 56, '#3A2A12', 'italic 600'], ['Apocalipsis 22:20', 44, '#8A5A10']], 5.2, 2.7, { y0: .2 }); fin.position.set(0, ST.H + 13.6, ST.L + ST.P - 1.2); fin.rotation.y = Math.PI; fin.material.opacity = 0; g.add(fin); M.fin = fin;
   return M;
 }
 function marHorn() { try { const A = fxCtx(), t0 = A.currentTime + .05, out = A.createGain(), lp = A.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1700; out.gain.value = .22; lp.connect(out); out.connect(A.destination);
@@ -4912,7 +4912,8 @@ function fieldFinds(scene, hx, HW) {
 function doorSheet(d) {
   const el = document.getElementById('v3sheet'); if (!el || sheetUp()) return; S.joy.x = 0; S.joy.y = 0; S.keys = {}; const p = G().P(), want = (p.want || {})[d.id];
   el.innerHTML = `<div class="bag-in mis-in door-in" style="--dc:${d.c}"><div class="bag-h"><b>${esc(d.name)}</b><span>${esc(d.sub)}</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
-    <p class="mis-ask">${esc(d.txt)}</p>
+    ${d.id === 'maranata' ? `<div class="mar-top"><b>¡Maranata!</b><span>«Sí, vengo pronto.» Amén. ¡Ven, Señor Jesús! · Apocalipsis 22:20</span></div>` : ''}<p class="mis-ask">${esc(d.txt)}</p>
+    ${d.id === 'maranata' ? `<div class="mar-chips"><span>📯 Las trompetas y las señales</span><span>👑 El trono y el Cordero</span><span>🏙️ La Nueva Jerusalén</span></div>` : ''}
     <p class="door-lock">🔒 Para entrar a este curso hay que inscribirse. ${S && S.hx ? 'Inscribite en Habitat.' : 'Pedile a un adulto que te anote en Habitat.'}</p>
     <div class="mis-btns"><button class="mis-yes d-want">${want ? '✓ Ya avisaste que te interesa' : 'Quiero inscribirme'}</button><button class="mis-no d-no">Seguir explorando</button></div>
     <p class="cap-note">Todo lo que ganes acá (puntos y nivel) también te acompaña en ese curso.</p></div>`;

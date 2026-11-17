@@ -1337,3 +1337,11 @@ body.v3on .v3surv .sv-btn[data-a="eat"]::after{content:"Comer"}body.v3on .v3surv
 body.v3on .v3surv .sv-btn:active{transform:translateY(2px)}
 body.v3cine .v3surv .sv-btn,body.v3talk .v3surv .sv-btn,body:has(#v3sheet:not([hidden])) .v3surv .sv-btn{display:none!important}
 @media (max-width:760px){body.v3on .v3surv .sv-btn{height:42px;padding:0 11px}body.v3on .v3surv .sv-btn::after{display:none}body.v3on .v3surv .sv-btn[data-a="eat"]{right:calc(var(--fanR) + 186px)}}
+
+/* Maranata: arriba de la escalera, la puerta abierta en el cielo */
+.door-in .mar-top{margin:4px 0 10px;padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,rgba(255,226,140,.22),rgba(255,248,220,.06));border:1px solid rgba(242,193,78,.55);text-align:center;animation:marGlow 2.6s ease-in-out infinite}
+.door-in .mar-top b{display:block;font:900 24px/1.1 Georgia,serif;letter-spacing:.06em;color:#F2C14E}
+.door-in .mar-top span{display:block;margin-top:4px;font-size:12.5px;font-style:italic;opacity:.9}
+.door-in .mar-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.door-in .mar-chips span{padding:6px 10px;border-radius:999px;background:rgba(242,193,78,.14);border:1px solid rgba(242,193,78,.4);font-size:12px;font-weight:700}
+@keyframes marGlow{0%,100%{box-shadow:0 0 0 rgba(242,193,78,0)}50%{box-shadow:0 0 22px rgba(242,193,78,.35)}}
