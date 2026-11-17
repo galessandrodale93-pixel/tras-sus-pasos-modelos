@@ -1267,7 +1267,7 @@ async function lobby() {
 }
 /* ---------- perfilador (?prof=1): milisegundos por sistema, promedio de los últimos cuadros ---------- */
 const PROF = { on: /[?&#]prof=1/.test(location.href), acc: {}, n: 0, el: null,
-  add(o) { for (const k in o) this.acc[k] = (this.acc[k] || 0) + o[k]; if (++this.n < 60) return; const t = Object.entries(this.acc).map(([k, v]) => `${k} ${(v / this.n).toFixed(1)}`).join(' · '); this.acc = {}; this.n = 0;
+  add(o) { const MX = this.mx || (this.mx = {}); for (const k in o) { this.acc[k] = (this.acc[k] || 0) + o[k]; if (!k.startsWith('z_') && o[k] > (MX[k] || 0)) MX[k] = o[k]; } if (++this.n < 60) return; const t = Object.entries(this.acc).map(([k, v]) => `${k} ${(v / this.n).toFixed(1)}`).join(' · '); this.acc = {}; this.n = 0;
     if (!this.el) { this.el = document.createElement('div'); this.el.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);top:calc(22px + env(safe-area-inset-top,0px));z-index:99999;font:10px/1.3 ui-monospace,monospace;color:#fff;background:rgba(0,0,0,.6);padding:2px 6px;border-radius:5px;pointer-events:none;white-space:nowrap'; document.body.appendChild(this.el); }
     const i = S.renderer.info; this.el.textContent = `ms: ${t} · ${QUAL.lastCalls || 0} dib · ${((QUAL.lastTris || 0) / 1e6).toFixed(2)}M tri · ${i.memory.textures} tex · ${i.programs ? i.programs.length : 0} prog`; this.last = t; } };
 /* ---------- calidad gráfica: Auto (detecta la placa de video y mide los cuadros), Ultra, Alto, Medio, Bajo; contador con ?fps=1 ---------- */
@@ -6281,7 +6281,7 @@ function pgFill() {
   const cells = []; for (let ix = c0x; ix <= c1x; ix++) for (let iz = c0z; iz <= c1z; iz++) { const dx = (ix + .5) * PG_CELL - a.x, dz = (iz + .5) * PG_CELL - a.z; cells.push([dx * dx + dz * dz, ix, iz]); } cells.sort((p, q) => p[0] - q[0]);
   // primero se junta todo lo que entra en el círculo y recién después se decide cuánto dibujar: si el presupuesto no alcanza,
   // se ralea parejo (cada planta tiene su número fijo it.r), así nunca quedan parcelas llenas al lado de parcelas vacías
-  const near = [], farL = [], pkp = S.pocket && S.pocket.pg ? 'k' : ''; let made = 0; PG.pend = 0; for (const [, ix, iz] of cells) { if (!PG.cache.has(pkp + ix + ',' + iz)) { if (made >= 2 && PG.ready2) { PG.pend = 1; continue; } made++; } for (const it of pgCell(ix, iz)) { const dd = Math.hypot(it.x - a.x, it.z - a.z); if (dd > R2) continue; (dd > Rr ? farL : near).push([it, dd]); } } PG.ready2 = 1; /* las celdas nuevas se arman de a dos por vez (cada una lleva ~20 ms): sin trabas al caminar */
+  const near = [], farL = [], pkp = S.pocket && S.pocket.pg ? 'k' : ''; let made = 0; PG.pend = 0; for (const [, ix, iz] of cells) { if (!PG.cache.has(pkp + ix + ',' + iz)) { if (made >= 1 && PG.ready2) { PG.pend = 1; continue; } made++; } for (const it of pgCell(ix, iz)) { const dd = Math.hypot(it.x - a.x, it.z - a.z); if (dd > R2) continue; (dd > Rr ? farL : near).push([it, dd]); } } PG.ready2 = 1; /* las celdas nuevas se arman de a dos por vez (cada una lleva ~20 ms): sin trabas al caminar */
   const kN = Math.min(1, lim * .72 / Math.max(1, near.length)), kF = Math.min(.34, lim * .28 / Math.max(1, farL.length)), bN = Math.min(1.6, Math.pow(1 / Math.max(.2, kN), .35));
   for (const [it, dd] of near.concat(farL)) { if (used >= lim) break; const far = dd > Rr; if (it.r >= (far ? kF : kN)) continue;
       const ims = PG.groups[it.gi].ims[it.vi]; let full = false; for (const im of ims) if (cnt[idx.get(im)] >= im.userData.cap) full = true; if (full) continue;
