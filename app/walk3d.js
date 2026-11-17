@@ -7540,7 +7540,7 @@ const ALB = [
   ['per', 'andres', '🐟', 'Andrés', 'El hermano de Pedro. Fue a buscarlo para que conociera a Jesús (Juan 1:41).'],
   ['per', 'juanap', '📜', 'Juan', 'El discípulo amado. Escribió que Dios es amor (1 Juan 4:8).'],
   ['per', 'mateo', '🪙', 'Mateo', 'Cobraba impuestos, y dejó todo para seguir a Jesús (Mateo 9:9).'],
-  ['per', 'zaqueo', '🧗', 'Zaqueo', 'Era bajito y se subió a un árbol para ver pasar a Jesús (Lucas 19:4).'],
+  ['per', 'zaqueo', '🙋‍♂️', 'Zaqueo', 'Era bajito y se subió a un árbol para ver pasar a Jesús (Lucas 19:4).'],
   ['per', 'marta', '🍲', 'Marta', 'Recibió a Jesús en su casa de Betania (Lucas 10:38).'],
   ['per', 'lazaro', '💫', 'Lázaro', 'Jesús lo llamó por su nombre y salió vivo de la tumba (Juan 11:43-44).'],
   ['per', 'samaritana', '🫙', 'La mujer samaritana', 'Habló con Jesús junto al pozo y corrió a contarle a todo su pueblo (Juan 4:28-29).'],
