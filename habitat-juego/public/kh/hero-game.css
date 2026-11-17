@@ -1,0 +1,53 @@
+/* Hero (12 a 18) dentro del juego: noche de expedición, piedra, dorado y Cinzel. */
+body[data-branch="ados"]{--sky-a:#0B110C;--sky-b:#10140E;--sky-c:#17120B;--ink:#EFE6D6;--ink-2:#A99C88;--deep:#F1D7A2;--blue:#E9C37A;--card:rgba(22,19,14,.86);--line:rgba(233,195,122,.18);--gold:#E2AC55;--gold-2:#FFE3A6;--gold-soft:rgba(233,195,122,.12);--coral:#FF7A5C;--mint:#5FD39A;--shadow:0 14px 34px rgba(0,0,0,.5);--f-display:"Cinzel",Georgia,serif;color-scheme:dark;background:radial-gradient(80% 50% at 50% 0%,rgba(233,170,90,.14),transparent 70%),linear-gradient(180deg,#0B110C,#10140E 55%,#17120B) fixed;background-color:#0B0907}
+body[data-branch="ados"] .glass{border-color:rgba(233,195,122,.16)}
+body[data-branch="ados"] .icon-btn{background:rgba(255,255,255,.06);border-color:rgba(233,195,122,.22);box-shadow:none}
+body[data-branch="ados"] .icon-btn path{stroke:#F1D7A2}
+body[data-branch="ados"] .ghost{background:rgba(255,255,255,.04);border-color:var(--line)}
+body[data-branch="ados"] .primary{border-radius:10px;letter-spacing:.06em;text-transform:uppercase;font-size:14.5px}
+body[data-branch="ados"] .pcard svg,body[data-branch="ados"] .rank svg,body[data-branch="ados"] .hud-av{background:linear-gradient(180deg,#2A2418,#14110D)}
+body[data-branch="ados"] .pcard .go{background:linear-gradient(180deg,#FFE3A6,#E2AC55);color:#1B1206}
+body[data-branch="ados"] .empty{background:var(--card);color:var(--ink-2)}
+/* creador de personaje */
+body[data-branch="ados"] .preview{background:radial-gradient(circle at 50% 80%,rgba(233,195,122,.22),rgba(20,17,12,.6) 55%,rgba(20,17,12,0))}
+body[data-branch="ados"] .field input[type=text],body[data-branch="ados"] .seg button,body[data-branch="ados"] .age output{background:#14110D;color:var(--ink);border-color:var(--line)}
+body[data-branch="ados"] .seg button[aria-pressed="true"],body[data-branch="ados"] .seg button.on{border-color:var(--gold);color:var(--deep)}
+body[data-branch="ados"] .sw{border-color:#14110D}
+/* mapa */
+body[data-branch="ados"] .pill{background:#17130E;border-color:var(--line);color:var(--ink)}
+body[data-branch="ados"] .bar{background:rgba(233,195,122,.12)}
+body[data-branch="ados"] .trail-glow{stroke:#E9C37A;opacity:.08}
+body[data-branch="ados"] .node .base{fill:#1A1712;stroke:#B98A43}
+body[data-branch="ados"] .node.ok .base{fill:url(#goldG);stroke:#2A1E0E}
+body[data-branch="ados"] .node.bad .base{fill:#1A1712}
+body[data-branch="ados"] .node .ico{color:#E9C37A}
+body[data-branch="ados"] .node.ok .ico{color:#1B1206}
+body[data-branch="ados"] .node .lbl rect{fill:rgba(14,12,9,.88)}
+body[data-branch="ados"] .node .lbl text{fill:#EFE6D6}
+body[data-branch="ados"] #world .ff{animation:hgFly 3.2s ease-in-out infinite alternate}
+@keyframes hgFly{0%{opacity:.15;transform:translateY(0)}100%{opacity:.95;transform:translateY(-6px)}}
+/* hojas de parada, preguntas y menú */
+body[data-branch="ados"] .sheet{background:rgba(0,0,0,.55)}
+body[data-branch="ados"] .sheet-in{background:linear-gradient(180deg,#17140F,#0E0C09 45%)}
+body[data-branch="ados"] .gamecard .gico,body[data-branch="ados"] .quote,body[data-branch="ados"] .opt,body[data-branch="ados"] .verse,body[data-branch="ados"] .chip,body[data-branch="ados"] .feedback,body[data-branch="ados"] .mchip,body[data-branch="ados"] .menu-in .item,body[data-branch="ados"] .toast,body[data-branch="ados"] .ar-ctrl button{background:#17140F;color:var(--ink);border-color:var(--line);box-shadow:none}
+body[data-branch="ados"] .gamecard .best,body[data-branch="ados"] .gamecard .best b,body[data-branch="ados"] .ar-card .bigscore{color:#E9C37A}
+body[data-branch="ados"] .opt.correct{border-color:var(--mint);background:rgba(95,211,154,.12)}
+body[data-branch="ados"] .opt.wrong{border-color:var(--coral);background:rgba(255,122,92,.12)}
+body[data-branch="ados"] .dot .ring{fill:#17140F}
+body[data-branch="ados"] .dot text{stroke:#0B0907}
+body[data-branch="ados"] .menu-in{background:#120F0B;border-top:1px solid var(--line)}
+body[data-branch="ados"] .float{color:#FFD27A;text-shadow:0 2px 10px rgba(0,0,0,.8)}
+/* minijuegos y festejo */
+body[data-branch="ados"] #arcade{background:linear-gradient(180deg,#0E140F,#17120B)}
+body[data-branch="ados"] .ar-ctrl button path{stroke:#F1D7A2}
+body[data-branch="ados"] #dim{background:radial-gradient(circle at 50% 45%,rgba(60,44,20,.96),rgba(8,7,5,.96))}
+body[data-branch="ados"] .bar-fly{background:rgba(233,195,122,.14)}
+body[data-branch="ados"] .video svg{filter:sepia(.28) saturate(.85) brightness(.8) contrast(1.08)}
+body[data-branch="ados"] .video::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 45%,transparent 55%,rgba(5,4,2,.55))}
+/* tipografía: sin negritas ni cursivas sintéticas (en Windows se ven como sombreadas) */
+body{font-synthesis:none;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body[data-branch="ados"] .quote{font-family:"Fraunces",Georgia,serif;font-style:italic;font-weight:600}
+body[data-branch="kids"] .quote{font-style:normal}
+/* Cinzel convierte la ñ en versalita con una tilde casi invisible: se reserva para títulos de etapa y se usa Fraunces en el resto */
+body[data-branch="ados"]{--f-display:"Fraunces",Georgia,serif}
+body[data-branch="ados"] .hud-title b,body[data-branch="ados"] .hx-word{font-family:"Cinzel",Georgia,serif}

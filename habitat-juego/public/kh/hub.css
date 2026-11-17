@@ -1,0 +1,206 @@
+/* Portada Habitat CFM Training: oscura, con Hero y Kids juntos, valores, pulso semanal y familia. */
+#hubView.hub3{--h-bg:#0A0E1A;--h-s1:#111729;--h-s2:#18203A;--h-line:rgba(255,255,255,.09);--h-ink:#EEF1F8;--h-mute:#9AA3B8;--h-gold:#E9C37A;--h-kids:#FFB547;background:var(--h-bg);color:var(--h-ink)}
+.hub3 .wrap{max-width:1120px}
+.hub3 .top{display:flex;align-items:center;justify-content:center;padding-block:max(26px,env(safe-area-inset-top,0px)) 4px}
+.hub3 .mark{font:800 clamp(15px,4.2vw,22px)/1 "Unbounded","Archivo",sans-serif;letter-spacing:.16em;margin-right:-.16em;text-transform:uppercase;color:#fff;text-shadow:0 0 30px rgba(255,210,140,.25);animation:up2 1s backwards}
+.hub3 .stage{position:relative;isolation:isolate;overflow:hidden}
+.hub3 .stage::before,.hub3 .stage::after{content:"";position:absolute;z-index:-2;width:70vmax;height:70vmax;border-radius:50%;filter:blur(60px);opacity:.5;pointer-events:none}
+.hub3 .stage::before{left:-30vmax;top:-20vmax;background:radial-gradient(circle,rgba(233,170,90,.55),transparent 65%);animation:hubDrift 18s ease-in-out infinite alternate}
+.hub3 .stage::after{right:-30vmax;top:5vmax;background:radial-gradient(circle,rgba(90,110,230,.5),transparent 65%);animation:hubDrift 22s ease-in-out infinite alternate-reverse}
+@keyframes hubDrift{to{transform:translate(12vmax,8vmax) scale(1.15)}}
+.hub3 #hubSky{-webkit-mask-image:linear-gradient(#000 60%,transparent);mask-image:linear-gradient(#000 60%,transparent)}
+@media (prefers-reduced-motion:reduce){.hub3 .stage::before,.hub3 .stage::after{animation:none}}
+.hub3 .head{text-align:center;padding-block:clamp(56px,10vw,100px) clamp(56px,8vw,88px);display:grid;justify-items:center;gap:clamp(24px,3.2vw,34px)}
+.hub3 .head h1{margin:0;font:800 clamp(32px,8.6vw,64px)/1.04 "Archivo","Nunito",sans-serif;letter-spacing:-.01em;text-wrap:balance;max-width:16ch}
+.hub3 .head h1 em{font-style:normal;background:linear-gradient(90deg,var(--h-gold),#FFD9A0 45%,var(--h-kids));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hub3 .head p{margin:0;color:var(--h-mute);font-weight:700;font-size:16px;max-width:42ch}
+.hub3 .duo{display:grid;gap:14px;padding-bottom:10px}
+.hub3 .duo .pt{min-height:300px;border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.45);animation:up2 1s .2s backwards}
+.hub3 .duo .pt.kids{animation-delay:.3s}
+.hub3 .duo .pt .txt{padding:60px 20px 20px;gap:4px}
+.hub3 .duo .pt.kids .txt{background:linear-gradient(transparent,rgba(18,14,40,.85) 72%)}
+.hub3 .duo .pt b{font-size:46px}
+.hub3 .duo .pt.kids b{color:#FFD25E;text-shadow:0 2px 0 #C26A12,0 10px 30px rgba(0,0,0,.4)}
+.hub3 .duo .pt .d{font-size:14.5px}
+.hub3 .duo .pt.kids .go{background:#fff;color:#1D1A3A;box-shadow:none}
+.hub3 .duo .pt.ados .go{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.7);box-shadow:none}
+.hub3 .vals{list-style:none;margin:0;padding:26px 0 8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px}
+.hub3 .vals li{display:grid;justify-items:center;text-align:center;gap:6px}
+.hub3 .vals .ic{width:54px;height:54px;border-radius:50%;display:grid;place-items:center}
+.hub3 .vals .ic svg{width:26px;height:26px}
+.hub3 .vals b{font:800 15px "Archivo","Nunito",sans-serif}
+.hub3 .vals span{font-size:13px;font-weight:700;color:var(--h-mute);max-width:22ch}
+.hub3 .sec{padding-block:44px 10px}
+.hub3 .sec h2{margin:0 0 6px;font:800 clamp(26px,7vw,40px)/1.1 "Archivo","Nunito",sans-serif}
+.hub3 .sec .lede{margin:0 0 20px;color:var(--h-mute);font-weight:700;font-size:15px;max-width:48ch}
+.hub3 .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.hub3 .stat{border-radius:16px;padding:14px 12px;background:var(--h-s1);border:1px solid var(--h-line);display:grid;gap:2px;min-width:0}
+.hub3 .stat b{color:var(--h-ink);font:800 clamp(22px,6.4vw,32px)/1 "Archivo","Nunito",sans-serif;font-variant-numeric:tabular-nums}
+.hub3 .stat span{font-size:12px;font-weight:800;color:var(--h-mute);letter-spacing:.02em}
+.hub3 .stat .live{display:inline-flex;align-items:center;gap:6px}
+.hub3 .stat .live::before{content:"";width:7px;height:7px;border-radius:50%;background:#3DDC97;box-shadow:0 0 0 0 rgba(61,220,151,.6);animation:hxPing 2s infinite}
+.hub3 .pulse{display:grid;gap:12px}
+.hub3 .card{display:block;animation:none;border-radius:20px;padding:20px;background:var(--h-s1);border:1px solid var(--h-line);min-width:0}
+.hub3 .card .tag{display:inline-block!important;width:auto!important;margin-bottom:10px;font:900 10.5px "Nunito",sans-serif;letter-spacing:.18em;text-transform:uppercase;border-radius:6px;padding:5px 9px;background:rgba(233,195,122,.14);color:var(--h-gold)}
+.hub3 .reto h3{color:var(--h-ink);margin:0 0 14px;font:800 20px/1.3 "Archivo","Nunito",sans-serif}
+.hub3 .reto .opts{display:grid;gap:8px}
+.hub3 .reto .opts button{text-align:left;border-radius:12px;padding:13px 14px;background:var(--h-s2);border:1px solid var(--h-line);color:var(--h-ink);font:700 15px "Nunito",sans-serif}
+.hub3 .reto .opts button:hover{border-color:rgba(255,255,255,.3)}
+.hub3 .reto .opts button.ok{background:rgba(61,220,151,.16);border-color:#3DDC97}
+.hub3 .reto .opts button.no{background:rgba(255,107,107,.14);border-color:#FF6B6B}
+.hub3 .reto .opts button:disabled{cursor:default}
+.hub3 .reto .res{margin-top:14px;display:grid;gap:10px}
+.hub3 .reto .res p{margin:0;color:#C9CFDD;font-weight:600;font-size:14.5px;line-height:1.5}
+.hub3 .reto .res .cta{justify-self:start;border:0;border-radius:99px;padding:11px 18px;font:900 14px "Nunito",sans-serif;background:#fff;color:#141A2E}
+.hub3 .lead h3{color:var(--h-ink);margin:0 0 12px;font:800 18px "Archivo","Nunito",sans-serif}
+.hub3 .lead ol{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.hub3 .lead li{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--h-s2)}
+.hub3 .lead li .pos{font:900 14px "Archivo",sans-serif;color:var(--h-mute);text-align:center}
+.hub3 .lead li:first-child .pos{color:var(--h-gold)}
+.hub3 .lead li .nm{font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hub3 .lead li .nm small{display:block;font-size:11.5px;color:var(--h-mute);font-weight:800}
+.hub3 .lead li .pts{font:800 14px "Archivo",sans-serif;font-variant-numeric:tabular-nums}
+.hub3 .lead .none{margin:0;color:var(--h-mute);font-weight:700;font-size:14px}
+.hub3 .hub-fam{background:transparent;padding-block:44px 30px;border-radius:0}
+.hub3 .hub-fam h2{color:var(--h-ink);font:800 clamp(26px,7vw,40px)/1.1 "Archivo","Nunito",sans-serif;margin:26px 0 6px}
+.hub3 .hub-fam .lede{color:var(--h-mute)}
+.hub3 .hub-fam .session{margin:0;max-width:none;background:var(--h-s1);color:var(--h-ink);border:1px solid var(--h-line);box-shadow:none}
+.hub3 .hub-fam .session .linkbtn{color:var(--h-gold)}
+.hub3 .fam-card{background:var(--h-s1);box-shadow:none;border:1px solid var(--h-line)}
+.hub3 .fam-card b{color:var(--h-ink)}
+.hub3 .fam-cta{background:linear-gradient(135deg,#1D2748,#2C3B6E)}
+.hub3 .fam-empty{background:var(--h-s1);border-color:var(--h-line);color:var(--h-mute)}
+#hubView.hub3 .home-foot{background:#070A13;color:#6F7890;border-top:1px solid var(--h-line)}
+#hubView.hub3 .home-foot b{color:var(--h-ink)}
+@media (min-width:760px){
+  .hub3 .vals{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .hub3 .pulse{grid-template-columns:1.25fr 1fr}
+}
+@media (min-width:860px){
+  .hub3 .duo{position:relative;grid-template-columns:1fr;gap:0;border-radius:26px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  .hub3 .duo .pt{grid-area:1/1;width:auto;min-height:500px;border-radius:0;box-shadow:none}
+  .hub3 .duo .pt.ados{clip-path:polygon(0 0,56% 0,48% 100%,0 100%)}
+  .hub3 .duo .pt.kids{clip-path:polygon(56.3% 0,100% 0,100% 100%,48.3% 100%)}
+  .hub3 .duo .pt.ados .art{right:44%}
+  .hub3 .duo .pt.kids .art{left:48%}
+  .hub3 .duo .pt.ados .txt{padding:80px 56% 34px 36px}
+  .hub3 .duo .pt.kids .txt{padding:80px 36px 34px 58%;text-align:right;justify-items:end}
+  .hub3 .duo .pt.kids .go{justify-self:end}
+  .hub3 .duo .pt b{font-size:60px}
+  .hub3 .duo .pt:hover{filter:brightness(1.08)}
+}
+
+/* aire: más espacio en toda la portada */
+.hub3 .mark{font-size:clamp(12px,3.4vw,22px)}
+.hub3 .top{padding-top:max(30px,env(safe-area-inset-top,0px))}
+.hub3 .head{padding-block:clamp(72px,14vw,124px) clamp(72px,11vw,112px);gap:clamp(30px,4vw,42px)}
+.hub3 .head h1{line-height:1.14}
+.hub3 .head p{line-height:1.6}
+.hub3 .duo{gap:22px}
+.hub3 .vals{padding:clamp(64px,9vw,96px) 0 0;gap:44px 22px}
+.hub3 .vals li{gap:10px}
+.hub3 .vals span{line-height:1.5}
+.hub3 .sec{padding-block:clamp(88px,12vw,128px) 0}
+.hub3 .sec h2{margin-bottom:12px}
+.hub3 .sec .lede{margin-bottom:36px}
+.hub3 .stats{gap:14px;margin-bottom:22px}
+.hub3 .stat{padding:18px 14px;gap:6px}
+.hub3 .pulse{gap:22px}
+.hub3 .card{padding:26px 22px}
+.hub3 .reto h3{margin-bottom:20px}
+.hub3 .reto .opts{gap:10px}
+.hub3 .hub-fam{padding-block:clamp(88px,12vw,128px) 56px}
+.hub3 .hub-fam h2{margin:56px 0 12px}
+.hub3 .hub-fam .lede{margin-bottom:32px}
+#hubView.hub3 .home-foot{margin-top:40px}
+.hub3 .mark{font-family:"Montserrat","Archivo",sans-serif;font-weight:700;letter-spacing:.32em;margin-right:-.32em}
+
+/* valores con fondo, Kids a la izquierda, "Esta semana" como columna lateral */
+.hub3 .vals{margin-top:clamp(56px,8vw,88px);padding:30px 18px;border-radius:24px;background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.02));border:1px solid var(--h-line);box-shadow:0 20px 50px rgba(0,0,0,.35);gap:34px 14px}
+.hub3 .below{padding-block:clamp(88px,12vw,128px) 40px}
+.hub3 .cols{display:grid;gap:72px;align-items:start}
+.hub3 .main.hub-fam{padding:0}
+.hub3 .main.hub-fam h2{margin-top:44px}
+.hub3 .side h2{margin:0 0 10px;font:800 clamp(24px,6vw,30px)/1.1 "Archivo","Nunito",sans-serif}
+.hub3 .side .lede{margin:0 0 22px;color:var(--h-mute);font-weight:700;font-size:14.5px}
+.hub3 .side{display:grid;gap:18px;align-content:start}
+.hub3 .side .lede{margin:0}
+.hub3 .side .stats{margin:0}
+.hub3 .side .stat b{font-size:clamp(20px,5.6vw,26px)}
+.hub3 .side .stat span{font-size:11.5px}
+@media (min-width:980px){
+  .hub3 .vals{padding:34px 26px}
+  .hub3 .vals li{padding-inline:8px;border-right:1px solid var(--h-line)}
+  .hub3 .vals li:last-child{border-right:0}
+  .hub3 .cols{grid-template-columns:minmax(0,1fr) 360px;gap:56px}
+  .hub3 .side{position:sticky;top:24px;padding:24px;border-radius:24px;background:rgba(255,255,255,.03);border:1px solid var(--h-line)}
+  .hub3 .side .card{padding:20px 18px}
+  .hub3 .main .fam-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))}
+}
+@media (min-width:860px){
+  .hub3 .duo .pt.kids{clip-path:polygon(0 0,56% 0,48% 100%,0 100%)}
+  .hub3 .duo .pt.ados{clip-path:polygon(56.3% 0,100% 0,100% 100%,48.3% 100%)}
+  .hub3 .duo .pt.kids .art{left:0;right:44%}
+  .hub3 .duo .pt.ados .art{left:48%;right:0}
+  .hub3 .duo .pt.kids .txt{padding:80px 56% 34px 36px;text-align:left;justify-items:start}
+  .hub3 .duo .pt.kids .go{justify-self:start}
+  .hub3 .duo .pt.ados .txt{padding:80px 36px 34px 58%;text-align:right;justify-items:end}
+  .hub3 .duo .pt.ados .go{justify-self:end}
+}
+
+/* propósito y diagonal a favor de Hero */
+.hub3 .why{position:relative;isolation:isolate;text-align:center;padding-block:clamp(96px,13vw,150px) 0}
+.hub3 .why::before{content:"";position:absolute;left:50%;top:58%;width:min(900px,120vw);height:420px;transform:translate(-50%,-50%);z-index:-1;background:radial-gradient(closest-side,rgba(233,195,122,.13),transparent);pointer-events:none}
+.hub3 .why .wrap{display:grid;justify-items:center;gap:24px;max-width:760px}
+.hub3 .why-k{font:800 11px "Nunito",sans-serif;letter-spacing:.3em;text-transform:uppercase;color:var(--h-gold)}
+.hub3 .why h2{margin:0;font:800 clamp(28px,7.4vw,50px)/1.15 "Archivo","Nunito",sans-serif;text-wrap:balance;max-width:18ch}
+.hub3 .why h2 em{font-style:normal;color:var(--h-gold)}
+.hub3 .why p{margin:0;color:#C3CADA;font-weight:600;font-size:clamp(16px,4.2vw,19px);line-height:1.7;max-width:56ch}
+.hub3 .why-s{margin-top:6px;display:inline-flex;align-items:center;gap:12px;font:800 13px "Nunito",sans-serif;letter-spacing:.06em;color:var(--h-mute)}
+.hub3 .why-s::before,.hub3 .why-s::after{content:"";width:32px;height:1px;background:linear-gradient(90deg,transparent,var(--h-gold))}
+.hub3 .why-s::after{transform:scaleX(-1)}
+@media (min-width:860px){
+  .hub3 .duo .pt.kids{clip-path:polygon(0 0,40% 0,48% 100%,0 100%)}
+  .hub3 .duo .pt.ados{clip-path:polygon(40.3% 0,100% 0,100% 100%,48.3% 100%)}
+  .hub3 .duo .pt.kids .art{left:0;right:52%}
+  .hub3 .duo .pt.ados .art{left:40%;right:0}
+  .hub3 .duo .pt.kids .txt{padding:80px 60% 34px 36px}
+  .hub3 .duo .pt.ados .txt{padding:80px 36px 34px 54%}
+}
+
+/* "Esta semana" arriba al costado, propósito con fondo */
+.hub3 .mid{padding-block:clamp(56px,8vw,88px) 0}
+.hub3 .mid .cols{gap:56px}
+.hub3 .mid .side{order:-1}
+.hub3 .left{display:grid;gap:clamp(40px,6vw,56px);min-width:0}
+.hub3 .left .vals{margin-top:0}
+.hub3 .why{position:relative;isolation:isolate;overflow:hidden;text-align:center;display:grid;justify-items:center;gap:22px;padding:clamp(44px,7vw,72px) clamp(22px,5vw,56px);border-radius:28px;border:1px solid rgba(233,195,122,.22);box-shadow:0 24px 60px rgba(0,0,0,.4);background:radial-gradient(80% 55% at 50% 0%,rgba(233,195,122,.24),transparent 70%),radial-gradient(60% 50% at 100% 100%,rgba(90,110,230,.22),transparent 70%),linear-gradient(160deg,#1A2140,#0E1326)}
+.hub3 .why::before{display:none}
+.hub3 .why::after{content:"";position:absolute;inset:0;z-index:-1;background:var(--hx-img) center 30%/cover no-repeat;opacity:.12;filter:grayscale(1) contrast(1.1);mix-blend-mode:luminosity;pointer-events:none}
+.hub3 .why h2{font-size:clamp(26px,6.2vw,42px)}
+.hub3 .why p{font-size:clamp(15.5px,4vw,18px)}
+.hub3 .fam2{padding-block:clamp(88px,12vw,128px) 40px}
+.hub3 .fam2 .hub-fam{padding:0}
+.hub3 .fam2 .hub-fam h2{margin:44px 0 12px}
+@media (min-width:980px){
+  .hub3 .mid .side{order:0}
+  .hub3 .left .vals{grid-template-columns:repeat(2,minmax(0,1fr));gap:30px 0}
+  .hub3 .left .vals li:nth-child(2n){border-right:0}
+  .hub3 .left .vals li:nth-child(odd){border-right:1px solid var(--h-line)}
+}
+
+/* Ingreso con la paleta oscura de la portada */
+#authView{position:relative;color:#EEF1F8}
+#authView::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(70% 45% at 15% 0%,rgba(233,170,90,.22),transparent 70%),radial-gradient(60% 45% at 100% 25%,rgba(90,110,230,.24),transparent 70%),#0A0E1A}
+#authView .panel-head h2{color:#fff;font-family:"Archivo","Nunito",sans-serif}
+#authView .icon-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);box-shadow:none}
+#authView .icon-btn path{stroke:#fff}
+#authView .auth{max-width:440px;margin:6px auto 0;padding:24px 20px;border-radius:24px;background:rgba(17,23,41,.88);border:1px solid rgba(255,255,255,.09);box-shadow:0 30px 70px rgba(0,0,0,.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+#authView .tabs{background:rgba(255,255,255,.06)}
+#authView .tabs button{color:#9AA3B8}
+#authView .tabs button[aria-selected="true"]{background:rgba(255,255,255,.12);color:#fff;box-shadow:none}
+#authView .auth input{background:#0E1426;border:1px solid rgba(255,255,255,.14);color:#fff}
+#authView .auth input::placeholder{color:#6F7890}
+#authView .auth input:focus{outline:none;border-color:#E9C37A;box-shadow:0 0 0 3px rgba(233,195,122,.18)}
+#authView .auth .help{background:rgba(233,195,122,.1);border:1px solid rgba(233,195,122,.22);color:#D8CCB8}
+#authView .auth .msg{color:#FF8A8A}
