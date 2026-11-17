@@ -1072,7 +1072,7 @@ const KL = {};
   S.fill = new THREE.DirectionalLight(hx ? '#FFD9B0' : '#FFFFFF', hx ? .5 : .5); scene.add(S.fill); scene.add(S.fill.target);
   wireInput(); wireJoy(); if (!window.__acts) { window.__acts = 1; wireActs(); auButtons(); } resize(); addEventListener('resize', resize);
   buildStep('efectos'); renderer.info.autoReset = false; qInit(); fxInit(); buildStep('primer cuadro');
-  cv.addEventListener('webglcontextlost', e => { e.preventDefault(); r2log('contexto WebGL perdido'); posSave(true); try { QUAL.mode = 'bajo'; localStorage.setItem('tsp:q', 'bajo'); } catch (er) {} let auto = true; try { const t0 = +(sessionStorage.getItem('tsp:glr') || 0); auto = Date.now() - t0 > 90000; sessionStorage.setItem('tsp:glr', String(Date.now())); } catch (er) {} v3fail(auto ? 'El celular se quedó sin memoria gráfica. Volvemos a abrir el mundo en calidad Baja, en el mismo lugar donde estabas…' : 'El celular se quedó sin memoria gráfica otra vez. Cerrá otras pestañas o apps y tocá «Probar de nuevo»: volvés al mismo lugar.'); if (auto) setTimeout(() => location.reload(), 2500); }, { once: true }); if (hx) svBuild(scene, HW, R); try { roadLife(scene, HW, hx); } catch (e) { console.warn('vida del camino', e); } try { phWorld(scene, HW, allPts, zMax, hx, R); } catch (e) { console.warn('ph', e); } PG.ready = false; PG.ims.forEach(im => im.parent && im.parent.remove(im)); PG.ims = []; PG.cache.clear(); GT.done = 0; GT.pdone = 0; GT.rdone = 0; GT.zaq = 0; GT.ims.forEach(im => im.parent && im.parent.remove(im)); GT.ims = []; setTimeout(() => { galTrees().catch(e => r2log('árboles: ' + ((e && e.message) || e))).then(() => pgBuild()).catch(e => r2log('pasto nuevo falló: ' + ((e && e.message) || e))).then(() => galPalms()).then(() => galRocks()).catch(e => r2log('árboles fallaron: ' + ((e && e.message) || e))); }, 1500); try { ambWorld(scene, HW, allPts, zMax, hx); } catch (e) { console.warn('amb', e); } try { mergeHouses(scene); } catch (e) { console.warn('merge', e); } [1200, 9000, 25000].forEach(ms => setTimeout(() => { try { if (!/[?&]nomerge/.test(location.search) && S && S.scene === scene) worldMerge(scene); } catch (e) { console.warn('wmerge', e); } }, ms)); setTimeout(() => { try { if (S && S.renderer.compileAsync) S.renderer.compileAsync(S.scene, S.camera); } catch (e) {} }, 300);
+  cv.addEventListener('webglcontextlost', e => { e.preventDefault(); r2log('contexto WebGL perdido'); posSave(true); try { QUAL.mode = 'bajo'; localStorage.setItem('tsp:q', 'bajo'); } catch (er) {} let auto = true; try { const t0 = +(sessionStorage.getItem('tsp:glr') || 0); auto = Date.now() - t0 > 90000; sessionStorage.setItem('tsp:glr', String(Date.now())); } catch (er) {} v3fail(auto ? 'El celular se quedó sin memoria gráfica. Volvemos a abrir el mundo en calidad Baja, en el mismo lugar donde estabas…' : 'El celular se quedó sin memoria gráfica otra vez. Cerrá otras pestañas o apps y tocá «Probar de nuevo»: volvés al mismo lugar.'); if (auto) setTimeout(() => location.reload(), 2500); }, { once: true }); if (hx) svBuild(scene, HW, R); try { roadLife(scene, HW, hx); } catch (e) { console.warn('vida del camino', e); } if (hx) try { clayBuild(scene, HW); } catch (e) { console.warn('barriales', e); } try { phWorld(scene, HW, allPts, zMax, hx, R); } catch (e) { console.warn('ph', e); } PG.ready = false; PG.ims.forEach(im => im.parent && im.parent.remove(im)); PG.ims = []; PG.cache.clear(); GT.done = 0; GT.pdone = 0; GT.rdone = 0; GT.zaq = 0; GT.ims.forEach(im => im.parent && im.parent.remove(im)); GT.ims = []; setTimeout(() => { galTrees().catch(e => r2log('árboles: ' + ((e && e.message) || e))).then(() => pgBuild()).catch(e => r2log('pasto nuevo falló: ' + ((e && e.message) || e))).then(() => galPalms()).then(() => galRocks()).catch(e => r2log('árboles fallaron: ' + ((e && e.message) || e))); }, 1500); try { ambWorld(scene, HW, allPts, zMax, hx); } catch (e) { console.warn('amb', e); } try { mergeHouses(scene); } catch (e) { console.warn('merge', e); } [1200, 9000, 25000].forEach(ms => setTimeout(() => { try { if (!/[?&]nomerge/.test(location.search) && S && S.scene === scene) worldMerge(scene); } catch (e) { console.warn('wmerge', e); } }, ms)); setTimeout(() => { try { if (S && S.renderer.compileAsync) S.renderer.compileAsync(S.scene, S.camera); } catch (e) {} }, 300);
   const me = S, run = n => { if (S !== me) return; requestAnimationFrame(run); try { loop(n); if (!run.k) { run.k = 1; buildStep('cuadro dibujado'); } } catch (e) { if (!run.err || run.err !== e.message) { run.err = e.message; r2log('error en el bucle: ' + e.message); console.error(e); } } }; requestAnimationFrame(run);
 }
 // tres formas de pantalla, cada una con su propio CSS: pc, movil-v (celular parado) y movil-h (celular acostado)
@@ -6806,9 +6806,10 @@ const TOOL_ORDER = ['flint', 'axe', 'rod', 'pick', 'net'];
 const RES = {
   wood: ['Madera', '🪵'], stone: ['Piedra', '🪨'], plank: ['Tablones', '🟫'], block: ['Bloques de piedra', '🧱'], viga: ['Vigas', '📏'], losa: ['Losas', '⬜'],
   fruit: ['Granadas', '🍎'], lemon: ['Limones', '🍋'], fish: ['Pescado crudo', '🐟'], cooked: ['Pescado asado', '🍢'],
-  salado: ['Pescado salado', '🐠'], banquito: ['Banquitos', '🪑'], yugo: ['Yugos', '🪵'], arado: ['Arados', '⚒️'], piedramoler: ['Piedras de moler', '⚪'], tinaja: ['Tinajas de piedra', '🏺'], dintel: ['Dinteles tallados', '🏛️']
+  salado: ['Pescado salado', '🐠'], banquito: ['Banquitos', '🪑'], yugo: ['Yugos', '🪵'], arado: ['Arados', '⚒️'], piedramoler: ['Piedras de moler', '⚪'], tinaja: ['Tinajas de piedra', '🏺'], dintel: ['Dinteles tallados', '🏛️'],
+  barro: ['Barro', '🟤'], plato: ['Platos de barro', '🥣'], vasija: ['Vasijas de barro', '🏺'], cantaro: ['Cántaros', '🫙'], adobe: ['Adobes', '🟧'], vpint: ['Vasijas pintadas', '🎨'], anfora: ['Ánforas', '⚱️']
 };
-const RES_PROD = new Set(['salado', 'banquito', 'yugo', 'arado', 'piedramoler', 'tinaja', 'dintel']); /* productos de oficio: solo se muestran cuando tenés */
+const RES_PROD = new Set(['salado', 'banquito', 'yugo', 'arado', 'piedramoler', 'tinaja', 'dintel', 'plato', 'vasija', 'cantaro', 'adobe', 'vpint', 'anfora']); /* productos de oficio: solo se muestran cuando tenés */
 const FOOD = { cooked: 25 * 60, fruit: 10 * 60, lemon: 5 * 60 };
 // Kids: atributos de siempre. Hero: frutos del Espíritu (Gálatas 5:22-23, NTV) + Cuerpo. Las claves viejas se reusan (nadie pierde puntos):
 // dom→Control propio, pac→Paciencia, gen→Bondad, sab→Alegría; fue y agi pasan a Cuerpo; amor, paz, gent y fid son nuevos. Humildad sigue igual (hum).
@@ -6855,6 +6856,12 @@ const RECIPES = [
   { id: 'arado', name: 'Arado', out: { arado: 1 }, need: { plank: 4, block: 1 }, tool: 'axe', ofi: ['car', 26], desc: 'De madera con punta de piedra (Lucas 9:62).' },
   { id: 'piedramoler', name: 'Piedra de moler', out: { piedramoler: 1 }, need: { block: 2 }, tool: 'pick', ofi: ['can', 8], desc: 'Para moler el grano y hacer harina.' },
   { id: 'tinaja', name: 'Tinaja de piedra', out: { tinaja: 1 }, need: { block: 3 }, tool: 'pick', ofi: ['can', 18], desc: 'Como las seis tinajas de Caná (Juan 2:6).' },
+  { id: 'plato', name: 'Plato de barro', out: { plato: 1 }, need: { barro: 1 }, fire: 1, ofi: ['alf', 1], desc: 'Un plato hondo, modelado a mano y cocido al fuego.' },
+  { id: 'vasija', name: 'Vasija de barro', out: { vasija: 1 }, need: { barro: 2 }, fire: 1, ofi: ['alf', 1], desc: 'Para guardar agua, aceite o grano.' },
+  { id: 'cantaro', name: 'Cántaro', out: { cantaro: 1 }, need: { barro: 3 }, fire: 1, ofi: ['alf', 8], desc: 'Alto y con asa, para llevar el agua del pozo, como el de la samaritana (Juan 4:28).' },
+  { id: 'adobe', name: 'Adobe', out: { adobe: 2 }, need: { barro: 2, wood: 1 }, ofi: ['alf', 12], desc: 'Barro con paja, moldeado en ladrillos y secado al sol. Sirve para construir paredes.' },
+  { id: 'vpint', name: 'Vasija pintada', out: { vpint: 1 }, need: { barro: 2, fruit: 1 }, fire: 1, ofi: ['alf', 20], desc: 'Con dibujos rojos hechos con jugo de granada. Las compran las familias para las fiestas.' },
+  { id: 'anfora', name: 'Ánfora', out: { anfora: 1 }, need: { barro: 4 }, fire: 1, ofi: ['alf', 26], desc: 'Grande, de dos asas y punta abajo: así viajaban el vino y el aceite en los barcos.' },
   { id: 'dintel', name: 'Dintel tallado', out: { dintel: 1 }, need: { block: 4 }, tool: 'pick', ofi: ['can', 26], desc: 'La piedra grande que va sobre la puerta, con un borde liso como el del templo.' }
 ];
 /* ===================== OFICIOS (Hero): oficios de la época con niveles, de Aprendiz a Maestro. Cada uno tiene un maestro en una aldea que enseña
@@ -6889,7 +6896,17 @@ const OFI = {
       ['Las familias usaban tinajas y vasos de piedra porque, según la ley, la piedra no se volvía impura. Las seis tinajas de la boda de Caná eran de piedra.', 'Juan 2:6'],
       ['La piedra que los constructores rechazaron llegó a ser la piedra principal. Jesús es esa piedra, y nosotros somos piedras vivas con las que Dios construye su casa.', '1 Pedro 2:5']],
     dia: [[{ stone: 6 }, 5, 'Hoy hay que rellenar un camino. Traeme seis piedras.'], [{ block: 2 }, 5, 'Se cayó una parte del muro de un corral. Necesito dos bloques.'], [{ block: 3 }, 7, 'Un vecino arma un horno nuevo. ¿Me traés tres bloques?']],
-    enc: [[{ block: 4 }, 8, 'Traeme cuatro bloques de piedra para reparar el muro.'], [{ piedramoler: 2 }, 18, 'El molino del pueblo necesita dos piedras de moler nuevas.'], [{ tinaja: 1 }, 30, 'Una familia de Caná me encargó una tinaja de piedra para su casa.']] }
+    enc: [[{ block: 4 }, 8, 'Traeme cuatro bloques de piedra para reparar el muro.'], [{ piedramoler: 2 }, 18, 'El molino del pueblo necesita dos piedras de moler nuevas.'], [{ tinaja: 1 }, 30, 'Una familia de Caná me encargó una tinaja de piedra para su casa.']] },
+  alf: { name: 'Alfarero', ic: '🏺', how: 'Juntá barro en los barriales, junto al río, al lago y en la alfarería, y modelá tus piezas junto al fuego.',
+    m: { at: 'La alfarería', donde: 'la alfarería, en el campo cerca de Nazaret', off: [3, 4], name: 'Miriam', sub: 'maestra alfarera', voice: 'mujer', look: { g: 'chica', age: 18, skin: '#B98A62', hair: '#2A1B14', outfit: '#9A5A3A' } },
+    perks: [[4, 'Sacás un barro más en cada barrial'], [8, 'Aprendés a hacer cántaros'], [12, 'Aprendés a hacer adobe para construir'], [16, 'A veces te sale una pieza de más'], [20, 'Aprendés a pintar vasijas'], [24, 'Sacás otro barro más en cada barrial'], [26, 'Aprendés a hacer ánforas'], [30, 'Sos maestra o maestro alfarero: la mitad de las veces sale una pieza de más']],
+    les: [
+      ['Dios le dijo a Jeremías: «Bajá a la casa del alfarero». Lo vio trabajando en el torno, y cuando la vasija se le arruinó en las manos, la volvió a hacer de nuevo. Así es Dios con nosotros: no nos tira, nos vuelve a formar.', 'Jeremías 18:3-6'],
+      ['El barro se saca de la orilla de los ríos. Se deja en agua, se le sacan las piedritas y después se pisa con los pies descalzos, horas y horas, hasta que queda suave y sin aire. Si queda aire, la pieza revienta en el horno.', 'Isaías 41:25'],
+      ['Las vasijas de barro valían muy poco, pero en ellas se guardaba lo más valioso: aceite, vino, grano, y hasta los rollos de la Biblia que se encontraron en las cuevas de Qumrán. Pablo dijo: «Tenemos este tesoro en vasijas de barro».', '2 Corintios 4:7'],
+      ['«Señor, tú eres nuestro Padre; nosotros somos el barro y tú el alfarero. Todos somos obra de tus manos.» Cada vez que modelés una pieza, acordate de que Dios te está formando a vos con el mismo cuidado.', 'Isaías 64:8']],
+    dia: [[{ barro: 4 }, 4, 'Hoy necesito cuatro de barro para la tanda de la mañana.'], [{ plato: 2 }, 6, 'Una familia de Gat-hefer vino a buscar dos platos de barro.'], [{ vasija: 2 }, 9, 'Se rompieron dos vasijas del aceite. ¿Me hacés dos nuevas?']],
+    enc: [[{ barro: 5 }, 8, 'Para empezar, traeme cinco de barro de los barriales. Elegí el más fino.'], [{ cantaro: 2 }, 22, 'Las mujeres del pozo me encargaron dos cántaros. Hacelos con buena asa, que van llenos de agua.'], [{ anfora: 1 }, 34, 'Un comerciante de Tiberíades quiere un ánfora grande para mandar aceite en barco. Es tu obra de maestra.']] }
 };
 const OFI_MAX = 30, OFI_T = Array.from({ length: OFI_MAX }, (_, i) => i + 1 >= 30 ? 'Maestro' : i + 1 >= 20 ? 'Artesano' : i + 1 >= 10 ? 'Oficial' : 'Aprendiz'); /* los oficios duran varios cursos: en Tras sus pasos se llega a Oficial en uno o dos; Maestro llega más adelante */
 const ofiCum = n => 15 * n * (n + 1); /* experiencia total para llegar al nivel n+1 */
@@ -6899,7 +6916,7 @@ function ofiXP(k, n) { if (!svOn() || !OFI[k] || n <= 0) return; const o = ofiP(
     misPop(O.ic + ' ' + O.name + ' · nivel ' + after, OFI_T[after - 1] + (pk.length ? ' · ' + pk.join(' · ') : '')); try { tone3d(); } catch (e) {} glowAdd(after === OFI_MAX ? 10 : 3, 'oficio'); if (after === 10 || after === 20 || after === 30) setTimeout(() => svToast('👨‍🏫 ' + O.m.name + ' te espera: tiene algo nuevo para enseñarte.'), 2500); } }
 const ofiBand = lv => lv >= 30 ? 3 : lv >= 20 ? 2 : lv >= 10 ? 1 : 0;
 function ofiBuild(scene) { if (!svOn()) return; S.ofi = []; const yAt = (x, z) => { const t = Math.max(0, S.W ? S.W.hAt(x, z) : 0); try { return Math.max(t, groundAt(x, z, t + 1.5)); } catch (e) { return t; } };
-  for (const k in OFI) { const M = OFI[k].m, pos = vivoAt(M.at, M.off); if (!pos) continue; const [x, z] = pos, o = buildHeroAvatar(Object.assign({}, M.look)); o.userData.stay = 1; o.position.set(x, yAt(x, z), z); const q = (S.pois || []).find(o2 => o2.name === M.at); o.rotation.y = q ? Math.atan2(q.x - x, q.z - z) : 0; o.traverse(m => { if (m.isMesh) m.castShadow = true; if (m.isPointLight) m.intensity = 0; }); scene.add(o); S.cols.push({ x0: x - .35, x1: x + .35, z0: z - .35, z1: z + .35, cx: x, cz: z, r: .3 });
+  for (const k in OFI) { const M = OFI[k].m, pos = vivoAt(M.at, M.off); if (!pos) continue; const [x, z] = pos, o = buildHeroAvatar(Object.assign({}, M.look)); o.userData.stay = 1; o.position.set(x, yAt(x, z), z); const q = (S.pois || []).find(o2 => o2.name === M.at) || (S.olSites || []).find(o2 => o2.name === M.at); o.rotation.y = q ? Math.atan2(q.x - x, q.z - z) : 0; o.traverse(m => { if (m.isMesh) m.castShadow = true; if (m.isPointLight) m.intensity = 0; }); scene.add(o); S.cols.push({ x0: x - .35, x1: x + .35, z0: z - .35, z1: z + .35, cx: x, cz: z, r: .3 });
     S.lore.push({ x: x + Math.sin(o.rotation.y) * 1.2, z: z + Math.cos(o.rotation.y) * 1.2, r: 2, label: 'Hablar con ' + M.name + ', ' + OFI[k].name.toLowerCase(), act: () => ofiTalk(k, o) }); S.ofi.push({ k, o }); } }
 function ofiTalk(k, o) { const O = OFI[k], M = O.m, st = ofiP()[k], lv = ofiLv(k), band = ofiBand(lv), s = svP(), cast = { m: { o, name: M.name, sub: M.sub, voice: M.voice } }, L = t => ({ who: 'm', t });
   const steps = []; const first = !st.l.length;
@@ -7060,6 +7077,23 @@ function svToolMesh(t) {
 }
 
 /* ---------- qué hay cerca para hacer ---------- */
+/* barriales: montículos de barro húmedo junto al río, al lago y en la alfarería (oficio del alfarero) */
+const CLAY = { list: [], im: null, T: 240 };
+function clayBuild(scene, W) {
+  CLAY.list = []; if (CLAY.im && CLAY.im.parent) CLAY.im.parent.remove(CLAY.im); CLAY.im = null; const R = rng(777), L = CLAY.list, dry = (x, z) => { try { return waterWet(x, z, null) < .04; } catch (e) { return true; } };
+  const add = (x, z) => { if (!dry(x, z)) return false; if (L.some(c => (c.x - x) ** 2 + (c.z - z) ** 2 < 36)) return false; L.push({ x, z, y: W.hAt(x, z), s: .8 + R() * .5, ry: R() * 6, t: 0 }); return true; };
+  const al = (S.olSites || []).find(o => o.id === 'alfareria'); if (al) for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283 + .4, r = 9 + R() * 4; add(al.x + Math.cos(a) * r, al.z + Math.sin(a) * r); }
+  for (const p of (S.pois || [])) {
+    if (p.k === 'river' && p.pts && p.pts.length > 4) { const st = Math.max(2, Math.floor(p.pts.length / 12)); for (let i = 1; i < p.pts.length - 1; i += st) { const a = p.pts[i - 1], b = p.pts[i + 1], dx = b[0] - a[0], dz = b[1] - a[1], l = Math.hypot(dx, dz) || 1, nx = -dz / l, nz = dx / l, sd = R() < .5 ? -1 : 1; for (const o of [5, 6.5, 8, 10]) if (add(p.pts[i][0] + nx * o * sd, p.pts[i][1] + nz * o * sd)) break; } }
+    if (p.k === 'lake') { for (let i = 0; i < 9; i++) { const a = i / 9 * 6.283; for (const r of [33, 35, 38, 41]) if (add(p.x + Math.cos(a) * r, p.z + Math.sin(a) * r)) break; } }
+  }
+  if (!L.length) return; const geo = new THREE.SphereGeometry(1, 12, 7, 0, 6.283, 0, Math.PI / 2), mat = tm('claymud', '#6E4A30', { roughness: .45 }), im = new THREE.InstancedMesh(geo, mat, L.length), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3();
+  L.forEach((c, i) => { q.setFromEuler(e.set(0, c.ry, 0)); im.setMatrixAt(i, m.compose(v.set(c.x, c.y - .05, c.z), q, sc.set(1.3 * c.s, .38 * c.s, 1 * c.s))); }); im.receiveShadow = true; im.userData.keep = 1; scene.add(im); CLAY.im = im;
+}
+function clayNear() { const a = S.av.position; let b = null, bd = 2.4 * 2.4; CLAY.list.forEach((c, i) => { if (c.t > 0) return; const d = (c.x - a.x) ** 2 + (c.z - a.z) ** 2; if (d < bd + c.s) { bd = d; b = i; } }); return b; }
+function clayDig(i) { const c = CLAY.list[i]; if (!c) return; h3do(['M_Kneeling_Idle', 'PickUp_Table'], 1.8, .5); const lv = ofiLv('alf'), n = 2 + (lv >= 4 ? 1 : 0) + (lv >= 24 ? 1 : 0); svAdd('barro', n); svXP(1); ofiXP('alf', 4); c.t = CLAY.T; svHide(CLAY.im, i, false); G().save(); svToast('🟤 Sacaste ' + n + ' de barro. El barrial se vuelve a llenar en unos minutos. Modelalo en el Taller, junto al fuego.'); svUI(); }
+function clayTick(dt) { if (!CLAY.im) return; CLAY.list.forEach((c, i) => { if (c.t > 0) { c.t -= dt; if (c.t <= 0) { c.t = 0; svHide(CLAY.im, i, true); } } }); }
+function clayKilnNear() { const a = S.av.position, al = (S.olSites || []).find(o => o.id === 'alfareria'); return !!(al && (al.x - a.x) ** 2 + (al.z - a.z) ** 2 < 25 * 25); }
 function svNear() {
   if (!svOn() || !S.sv) return null; const a = S.av.position, st = S.sv, s = svP(), d2 = (x, z) => (x - a.x) ** 2 + (z - a.z) ** 2;
   if (st.fishing) return { k: 'fishing' };
@@ -7080,6 +7114,7 @@ function svNear() {
   (FLORA.olive || []).forEach((o, i) => { if (st.felled.has(i)) return; const d = d2(o.x, o.z); if (d < bd) { bd = d; best = { k: 'tree', i, label: svTool('axe') ? 'Talar' : 'Necesitás un hacha', need: !svTool('axe') }; } });
   (FLORA.rock || []).forEach((o, i) => { if (st.mined.has(i)) return; const r = .6 + (.35 + o.v * .7) * o.s, d = d2(o.x, o.z); if (d < (r + 1.4) ** 2 && d < bd + 2) { bd = d; best = { k: 'rock', i, label: svTool('pick') ? 'Picar piedra' : 'Necesitás un pico', need: !svTool('pick') }; } });
   if (best) return best;
+  { const c = clayNear(); if (c != null) return { k: 'clay', i: c, label: 'Sacar barro' }; }
   if (svWaterNear()) return { k: 'fish', label: svTool('rod') ? 'Pescar con caña' : svTool('net') ? 'Tirar la red' : 'Necesitás caña o red', need: !svTool('rod') && !svTool('net') };
   return null;
 }
@@ -7126,6 +7161,7 @@ function svAct() {
   if (n.k === 'shop') { svShop(n.shop); return; }
   if (n.k === 'beg') { svGive(n.b); return; }
   if (n.k === 'bag') { svPickBag(); return; }
+  if (n.k === 'clay') { clayDig(n.i); return; }
   if (n.k === 'fruit') { const o = st.fruit.trees[n.i], c = o.n, res = o.kind === 'lemon' ? 'lemon' : 'fruit'; svFruitShow(o, n.i, false); o.n = 0; o.t = SV.FRUIT; h3do([['M_Pick_Fruit', 'M_Pick_Fruit_1', 'M_Pick_Fruit_2'][Math.floor(Math.random() * 3)], 'PickUp_Table'], 2.4, .4); svAdd(res, c); svXP(1); axGain('dom', 1); G().save(); svToast(res === 'lemon' ? '🍋 Recogiste ' + c + ' limones.' : '🍎 Recogiste ' + c + ' granadas.'); svUI(); return; }
   if (n.k === 'tree' || n.k === 'rock') { const key = n.k + n.i; st.hits = st.hitKey === key ? st.hits + 1 : 1; st.hitKey = key; svSwing(n.k); const need = Math.max(1, Math.max(2, 5 - Math.floor(atr('fue') / 1.5)) - (ofiLv(n.k === 'tree' ? 'car' : 'can') >= 12 ? 1 : 0)); axGain('fue', 1); AXS.workT = 6;
     if (st.hits < need) { svToast((n.k === 'tree' ? '🪓 ' : '⛏️ ') + 'Golpe ' + st.hits + ' de ' + need); return; } st.hits = 0;
@@ -7192,14 +7228,15 @@ const BP = {
   ventana: { n: 'Ventana', s: 'Ventana', ic: '🪟', cost: { block: 1 }, h: 1, col: 1, d: 'Un bloque con una abertura para que entre la luz.' },
   puerta: { n: 'Puerta', s: 'Puerta', ic: '🚪', cost: { plank: 2 }, h: 2, col: 0, d: 'Una puerta abierta con su marco de madera. Se pasa caminando.' },
   arco: { n: 'Arco de piedra', s: 'Arco', ic: '⛩️', cost: { block: 2 }, h: 2, col: 0, d: 'Para entradas grandes. Se pasa por abajo.' },
+  adobe: { n: 'Pared de adobe', s: 'Adobe', ic: '🟧', cost: { adobe: 2 }, h: 1, col: 1, d: 'Ladrillos de barro y paja secados al sol: así eran casi todas las casas de Galilea.' },
   cerco: { n: 'Cerco', s: 'Cerco', ic: '🚧', cost: { wood: 1 }, h: .9, col: 1, thin: 1, d: 'Un cerco de palos para un corral o una huerta.' },
   antorcha: { n: 'Antorcha', s: 'Antorcha', ic: '🔥', cost: { wood: 1 }, h: 1.7, col: 0, d: 'Ilumina de noche. Se clava en el piso o arriba de un muro.' }
 };
-const BP_ORDER = ['piedra', 'madera', 'escalon', 'losa', 'techo', 'columna', 'ventana', 'puerta', 'arco', 'cerco', 'antorcha'];
+const BP_ORDER = ['piedra', 'madera', 'adobe', 'escalon', 'losa', 'techo', 'columna', 'ventana', 'puerta', 'arco', 'cerco', 'antorcha'];
 function bldMats() { if (BLD.mats) return BLD.mats; const kd = !S.hx; return (BLD.mats = {
   stone: pbrMat('white_sandstone_bricks', 1, 1, { color: kd ? '#FFFFFF' : '#F6EEDC' }), wood: pbrMat('brown_planks_05', 1, 1, { color: kd ? '#F0CFA6' : '#E2C29C' }),
   marble: pbrMat('marble_01', 1, 1, { color: '#FFFFFF' }), floor: pbrMat('old_sandstone_02', 1, 1, { color: '#EFE2C8' }),
-  beam: tm('bldbeam', '#7A5232'), thatch: tm('bldth', '#B89A62'), dark: tm('blddk', '#4A3020'), flame: new THREE.MeshBasicMaterial({ color: '#FFB347', toneMapped: false }) }); }
+  beam: tm('bldbeam', '#7A5232'), adobe: tm('bldadb', kd ? '#E0A070' : '#C98E5E'), mud: tm('bldmud', '#9C7352'), thatch: tm('bldth', '#B89A62'), dark: tm('blddk', '#4A3020'), flame: new THREE.MeshBasicMaterial({ color: '#FFB347', toneMapped: false }) }); }
 function bldMerge(list) {
   const P = [], N = [], U = []; list.forEach(g0 => { const g = g0.index ? g0.toNonIndexed() : g0; P.push(g.attributes.position.array); N.push(g.attributes.normal.array); U.push(g.attributes.uv ? g.attributes.uv.array : new Float32Array(g.attributes.position.count * 2)); });
   const cat = A => { const o = new Float32Array(A.reduce((s, a) => s + a.length, 0)); let k = 0; A.forEach(a => { o.set(a, k); k += a.length; }); return o; };
@@ -7210,6 +7247,7 @@ const bC = (rt, rb, h, x, y, z, seg) => new THREE.CylinderGeometry(rt, rb, h, se
 function bldShape(t) {
   if (t === 'piedra') return [[bldMerge([bB(1, 1, 1, 0, .5, 0)]), 'stone']];
   if (t === 'madera') return [[bldMerge([bB(1, 1, 1, 0, .5, 0)]), 'wood'], [bldMerge([bB(1.02, .08, 1.02, 0, .04, 0), bB(1.02, .08, 1.02, 0, .96, 0)]), 'beam']];
+  if (t === 'adobe') { const b = []; for (let r = 0; r < 4; r++) { const y = .125 + r * .25; if (r % 2) { b.push(bB(.48, .23, .98, 0, y, 0), bB(.23, .23, .98, -.375, y, 0), bB(.23, .23, .98, .375, y, 0)); } else b.push(bB(.48, .23, .98, -.25, y, 0), bB(.48, .23, .98, .25, y, 0)); } return [[bldMerge([bB(.96, 1, .9, 0, .5, 0)]), 'mud'], [bldMerge(b), 'adobe']]; }
   if (t === 'escalon') return [[bldMerge([bB(1, .5, 1, 0, .25, 0)]), 'stone']];
   if (t === 'losa') return [[bldMerge([bB(1, .18, 1, 0, .09, 0)]), 'floor']];
   if (t === 'techo') { const b = []; for (let i = 0; i < 4; i++) b.push(bB(.12, .12, 1.04, -.375 + i * .25, .06, 0)); return [[bldMerge(b), 'beam'], [bldMerge([bB(1.02, .16, 1.02, 0, .2, 0)]), 'thatch']]; }
@@ -7323,7 +7361,7 @@ function bldKidsBtn() {
 }
 
 /* ===================== TALLER: mesa de trabajo para combinar materiales, libro de recetas, construir libre y tu casa ===================== */
-const RES_HOW = { wood: 'Se consigue talando árboles con el hacha.', stone: 'Se consigue picando rocas con el pico.', plank: 'Se hace en la mesa: dos de madera, con el hacha.', block: 'Se hace en la mesa: dos de piedra, con el pico.', viga: 'Se hace en la mesa con tablones y madera.', losa: 'Se hace en la mesa con un bloque y una piedra.', fruit: 'Se juntan de los granados.', lemon: 'Se juntan de los limoneros.', fish: 'Se pesca con la caña o la red.', cooked: 'Se asa el pescado en una fogata.' };
+const RES_HOW = { barro: 'Se junta en los barriales: junto al río Jordán, en la orilla del lago y en la alfarería.', wood: 'Se consigue talando árboles con el hacha.', stone: 'Se consigue picando rocas con el pico.', plank: 'Se hace en la mesa: dos de madera, con el hacha.', block: 'Se hace en la mesa: dos de piedra, con el pico.', viga: 'Se hace en la mesa con tablones y madera.', losa: 'Se hace en la mesa con un bloque y una piedra.', fruit: 'Se juntan de los granados.', lemon: 'Se juntan de los limoneros.', fish: 'Se pesca con la caña o la red.', cooked: 'Se asa el pescado en una fogata.' };
 const COMBOS = [
   { id: 'plank', out: { plank: 1 }, need: { wood: 2 }, tool: 'axe', hint: 'Madera, cortada con el hacha.', desc: 'Para construir: bloques de madera, puertas y muebles.' },
   { id: 'block', out: { block: 1 }, need: { stone: 2 }, tool: 'pick', hint: 'Piedra, tallada con el pico.', desc: 'Para construir muros, columnas, escalones y arcos.' },
@@ -7332,7 +7370,7 @@ const COMBOS = [
   { id: 'fire', place: 'fire', need: { wood: 3 }, tool: 'flint', hint: 'Tres de madera y una chispa del pedernal.', desc: 'Para cocinar el pescado. Dura unos minutos.' },
   { id: 'axe', mk: 'axe', need: { wood: 2, stone: 1 }, hint: 'Un mango de madera y una piedra afilada.', desc: 'Tu propia hacha, para talar.' },
   { id: 'pick', mk: 'pick', need: { wood: 2, stone: 2 }, hint: 'Parecido al hacha, pero con más piedra.', desc: 'Tu propio pico, para picar rocas.' }
-].concat(RECIPES.filter(r => r.ofi).map(r => ({ id: r.id, out: r.out, need: r.need, tool: r.tool, ofi: r.ofi, hint: 'Lo enseña el maestro de ' + OFI[r.ofi[0]].name.toLowerCase() + ' (nivel ' + r.ofi[1] + ').', desc: r.desc })));
+].concat(RECIPES.filter(r => r.ofi).map(r => ({ id: r.id, out: r.out, need: r.need, tool: r.tool, ofi: r.ofi, fire: r.fire, hint: 'Lo enseña el maestro de ' + OFI[r.ofi[0]].name.toLowerCase() + ' (nivel ' + r.ofi[1] + ').', desc: r.desc })));
 const TL = { tab: 'mesa', slots: {} };
 function comboName(c) { return c.place === 'fire' ? 'Fogata' : c.mk ? TOOLS[c.mk][0] : RES[Object.keys(c.out)[0]][0]; }
 function comboIc(c) { return c.place === 'fire' ? '🔥' : c.mk ? TOOLS[c.mk][1] : RES[Object.keys(c.out)[0]][1]; }
@@ -7392,10 +7430,11 @@ function tlMix(draw) {
   if (m.ofi && ofiLv(m.ofi[0]) < m.ofi[1]) return say(`Esto se aprende con ${OFI[m.ofi[0]].name.toLowerCase()} nivel ${m.ofi[1]} (tenés ${ofiLv(m.ofi[0])}).`, 'no');
   if (m.tool && !svTool(m.tool)) return say(`Para esto necesitás ${TOOLS[m.tool][1]} ${TOOLS[m.tool][0].toLowerCase()}. ${m.tool === 'flint' ? 'Se consigue en los mercados.' : 'Se compra en cualquier mercado, o podés hacerla vos en la mesa.'}`, 'no');
   if (m.mk && svTool(m.mk)) return say(`Ya tenés ${TOOLS[m.mk][0].toLowerCase()}.`, 'no');
+  if (m.fire && !svFireNear() && !clayKilnNear()) return say('Las piezas de barro se cuecen al fuego: hacelas junto a una fogata, un fogón del camino, tu horno o el horno de la alfarería.', 'no');
   const first = !comboDisc().includes(m.id); svPay(m.need);
   if (m.place === 'fire') { S.toolK = 'flint'; S.toolT = 2.2; h3do(['M_Kneeling_Idle', 'PickUp_Table'], 2.6); svFire(undefined, undefined, true); }
   else if (m.mk) { svGiveTool(m.mk, 'Lo hiciste vos'); }
-  else { Object.entries(m.out).forEach(([k, n]) => svAdd(k, n)); const ok2 = m.id === 'plank' || m.id === 'viga' ? 'car' : m.id === 'block' || m.id === 'losa' ? 'can' : null, lv2 = ok2 ? ofiLv(ok2) : 0; if ((m.id === 'plank' || m.id === 'block') && Math.random() < (lv2 >= 30 ? .5 : lv2 >= 15 ? .25 : 0)) { svAdd(m.id, 1); svToast('✨ Te salió uno de más: ' + RES[m.id][0].toLowerCase() + '.'); } h3do(['M_Pull_Heavy_Object', 'Interact'], 1.4); svXP(1); if (ok2) ofiXP(ok2, 2); if (m.ofi) ofiXP(m.ofi[0], 6); }
+  else { Object.entries(m.out).forEach(([k, n]) => svAdd(k, n)); const ok2 = m.id === 'plank' || m.id === 'viga' ? 'car' : m.id === 'block' || m.id === 'losa' ? 'can' : null, lv2 = ok2 ? ofiLv(ok2) : 0; if ((m.id === 'plank' || m.id === 'block') && Math.random() < (lv2 >= 30 ? .5 : lv2 >= 15 ? .25 : 0)) { svAdd(m.id, 1); svToast('✨ Te salió uno de más: ' + RES[m.id][0].toLowerCase() + '.'); } h3do(['M_Pull_Heavy_Object', 'Interact'], 1.4); svXP(1); if (ok2) ofiXP(ok2, 2); if (m.ofi) ofiXP(m.ofi[0], 6); if (m.ofi && m.ofi[0] === 'alf') { const la = ofiLv('alf'); if (Math.random() < (la >= 30 ? .5 : la >= 16 ? .25 : 0)) { Object.entries(m.out).forEach(([k, n]) => svAdd(k, n)); svToast('✨ Te salió una pieza de más.'); } } }
   if (first) { comboDisc().push(m.id); svXP(10); try { sello('receta-' + m.id, 'Receta: ' + comboName(m)); } catch (e) {} }
   tone3d(); G().save(); svUI();
   if (m.place === 'fire') { document.getElementById('v3sheet').hidden = true; return; }
@@ -7453,6 +7492,7 @@ function survTick(dt, t) {
   const tgt = S.down && !(S.av.userData.h3 && H3.clips.Death01) ? -1.45 : 0; S.av.rotation.x += (tgt - S.av.rotation.x) * Math.min(1, dt * 4);
   // regenerar árboles, rocas y frutos
   for (const [i, left] of st.felled) { if (left - dt <= 0) { st.felled.delete(i); svHide(FLORA.oT, i, true); for (let j = 0; j < 6; j++) svHide(FLORA.oB, i * 6 + j, true); } else st.felled.set(i, left - dt); }
+  clayTick(dt);
   for (const [i, left] of st.mined) { if (left - dt <= 0) { st.mined.delete(i); svHide(FLORA.rI, i, true); } else st.mined.set(i, left - dt); }
   st.fruit.trees.forEach((o, i) => { if (o.n > 0) return; o.t -= dt; if (o.t <= 0) { o.n = o.n0 || 5; svFruitShow(o, i, true); } });
   // fogatas
@@ -7716,15 +7756,15 @@ function prayTogetherTick(dt) {
    - Servicio: atributo único que solo crece haciendo obras para los demás.
    ===================================================================== */
 RES.money = ['Denarios', '🪙']; RES.bread = ['Pan', '🥖']; FOOD.bread = 15 * 60;
-const SELL = { wood: 1, stone: 1, plank: 3, block: 3, fruit: 1, lemon: 1, fish: 2, cooked: 3, bread: 1, salado: 6, banquito: 9, yugo: 16, arado: 28, piedramoler: 9, tinaja: 16, dintel: 28 };
+const SELL = { wood: 1, stone: 1, plank: 3, block: 3, fruit: 1, lemon: 1, fish: 2, cooked: 3, bread: 1, salado: 6, banquito: 9, yugo: 16, arado: 28, piedramoler: 9, tinaja: 16, dintel: 28, barro: 1, plato: 3, vasija: 5, cantaro: 8, adobe: 2, vpint: 14, anfora: 18 };
 const SHOPS = {
   carpintero: { name: 'La carpintería', buy: [['t', 'axe', 15], ['t', 'pick', 18], ['r', 'plank', 4]], sell: ['wood', 'plank', 'banquito', 'yugo', 'arado'] },
-  alfarero: { name: 'El alfarero', buy: [['r', 'block', 4], ['t', 'flint', 6]], sell: ['stone', 'block', 'piedramoler', 'tinaja', 'dintel'] },
+  alfarero: { name: 'El alfarero', buy: [['r', 'barro', 2], ['r', 'block', 4], ['t', 'flint', 6]], sell: ['barro', 'plato', 'vasija', 'cantaro', 'adobe', 'vpint', 'anfora', 'stone', 'block', 'piedramoler', 'tinaja', 'dintel'] },
   panadero: { name: 'La panadería', buy: [['r', 'bread', 2]], sell: ['fruit', 'lemon'] },
   pescador: { name: 'La casa del pescador', buy: [['t', 'rod', 12], ['t', 'net', 20], ['r', 'cooked', 4]], sell: ['fish', 'cooked', 'salado'] },
   tejedora: { name: 'La tejedora', buy: [['g', 'c', 10], ['g', 'r', 30]], sell: [] },
   posada: { name: 'La posada', buy: [['r', 'bread', 2], ['r', 'cooked', 4]], sell: ['fruit', 'fish'] },
-  mercado: { name: 'Puesto del mercado', buy: [['r', 'bread', 2], ['r', 'fruit', 2], ['t', 'flint', 6]], sell: ['wood', 'stone', 'plank', 'block', 'fruit', 'lemon', 'fish', 'cooked', 'salado', 'banquito', 'yugo', 'arado', 'piedramoler', 'tinaja', 'dintel'] }
+  mercado: { name: 'Puesto del mercado', buy: [['r', 'bread', 2], ['r', 'fruit', 2], ['t', 'flint', 6]], sell: ['wood', 'stone', 'plank', 'block', 'fruit', 'lemon', 'fish', 'cooked', 'salado', 'banquito', 'yugo', 'arado', 'piedramoler', 'tinaja', 'dintel', 'barro', 'plato', 'vasija', 'cantaro', 'adobe', 'vpint', 'anfora'] }
 };
 /* en todos los mercados se consiguen las herramientas básicas (caña, hacha y pico); y algunas prendas comunes según el oficio de cada lugar */
 const SHOP_WEAR = { carpintero: ['carpintero', 'vendcuero'], alfarero: ['alfarero', 'alfarerog'], panadero: ['segadorhat', 'trigo'], pescador: ['red', 'pescadorb', 'bastonpesc'], tejedora: ['lino', 'indigo', 'tejedora', 'turbante'], posada: ['capucha', 'cuero', 'viajet'], mercado: ['gorromerc', 'juncos', 'tierra'] };
@@ -8206,7 +8246,7 @@ const VIVO = {
 };
 const VIVO_NAMES = { 0: 'Belén', 1: 'Nazaret y el templo', 2: 'El Jordán y el desierto', 3: 'Galilea', 4: 'Capernaúm y la colina', 5: 'Las parábolas', 6: 'La última cena y Getsemaní', 7: 'La cruz y la tumba vacía', 8: 'Emaús y la orilla' };
 function vivoP() { const p = G().P(); p.vivo = p.vivo || {}; return p.vivo; }
-function vivoAt(at, off) { const q = (S.pois || []).find(o => o.name === at); if (!q) return null; return freeNear(q.x + off[0] * (q.side || 1), q.z + off[1], .35); }
+function vivoAt(at, off) { const q = (S.pois || []).find(o => o.name === at) || (S.olSites || []).find(o => o.name === at); if (!q) return null; return freeNear(q.x + off[0] * (q.side || 1), q.z + off[1], .35); }
 function vivoBuild(scene, hx) {
   S.vivo = { scrolls: [], t: 0, narT: 0 }; const yAt = (x, z) => { const t = Math.max(0, S.W ? S.W.hAt(x, z) : 0); try { return Math.max(t, groundAt(x, z, t + 1.5)); } catch (e) { return t; } }; /* sobre los pisos (el patio del templo), no hundidos en el terreno */
   for (const r in VIVO) { const E = VIVO[r];
