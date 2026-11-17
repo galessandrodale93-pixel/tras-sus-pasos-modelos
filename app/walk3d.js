@@ -6929,7 +6929,7 @@ function bldShape(t) {
   if (t === 'antorcha') return [[bldMerge([bC(.04, .05, 1.4, 0, .7, 0, 6), bC(.09, .06, .18, 0, 1.45, 0, 8)]), 'dark'], [bldMerge([new THREE.ConeGeometry(.1, .3, 7).translate(0, 1.66, 0)]), 'flame']];
   return [];
 }
-function bldP() { const p = G().P(); p.bld = p.bld || []; return p.bld; }
+function bldP() { const p = G().P(), k = S && S.hx ? 'bldH' : 'bldK'; p[k] = p[k] || []; return p[k]; } /* Hero y Kids construyen por separado */
 function bldBuild(scene) {
   BLD.scene = scene; BLD.parts = {}; BLD.mats = null; BLD.pops = []; BLD.on = false; const M = bldMats();
   BP_ORDER.forEach(t => { BLD.parts[t] = bldShape(t).map(([geo, mk]) => { const im = new THREE.InstancedMesh(geo, M[mk], BLD.cap); im.count = 0; im.frustumCulled = false; im.castShadow = !!S.hx; im.receiveShadow = true; im.userData.keep = 1; scene.add(im); return im; }); });
@@ -6982,7 +6982,7 @@ function bldRemove() {
   if (S.hx) { Object.entries(BP[e[0]].cost).forEach(([k, n]) => svAdd(k, n)); svUI(); } bldSync(); bldSfx(2); G().save(); bldHud();
 }
 function bldMilestone() {
-  const p = G().P(); p.bldN = (p.bldN || 0) + 1; const n = p.bldN;
+  const p = G().P(), nk = S.hx ? 'bldNH' : 'bldNK'; p[nk] = (p[nk] || 0) + 1; const n = p[nk];
   if (n === 1) { sello('obra-1', 'La primera piedra'); bldMsg('🧱 ¡Pusiste tu primera piedra! Seguí apilando: lo que construyas queda en el mundo.'); }
   else if (n === 25) { sello('obra-25', 'Constructor'); if (S.hx) svXP(25); G().toast('🏗️ ¡25 piezas! Ya sos Constructor. «Todo el que oye estas palabras y las pone en práctica es como el que edificó su casa sobre la roca» (Mateo 7:24).'); }
   else if (n === 100) { sello('obra-100', 'Maestro de obras'); if (S.hx) { svXP(60); svAdd('money', 30); } G().toast('🏛️ ¡100 piezas! Sos Maestro de obras' + (S.hx ? ': ganaste 30 denarios.' : '.') + ' Como Nehemías, que reconstruyó los muros de Jerusalén (Nehemías 6:15).'); }
