@@ -26,8 +26,9 @@ loader = ('<script>window.TSP_WIX=location.origin+"/kh/wix";window.TSP_SW_SCOPE=
           '(function(){var R="https://rawcdn.githack.com/galessandrodale93-pixel/tras-sus-pasos-modelos/",F="https://raw.githack.com/galessandrodale93-pixel/tras-sus-pasos-modelos/",PIN="' + pin + '";'
           'function go(v){if(window.__tspGo)return;window.__tspGo=1;var s=document.createElement("script");s.type="module";s.src=R+v+"/app/game.js";'
           's.onerror=function(){var t=document.createElement("script");t.type="module";t.src=F+v+"/app/game.js";document.body.appendChild(t);};document.body.appendChild(s);}'
-          'var to=setTimeout(function(){go(PIN);},2500);'
-          'fetch("/api/kh-version",{cache:"no-store"}).then(function(r){return r.json();}).then(function(j){clearTimeout(to);go(/^[0-9a-f]{40}$/.test(j&&j.hash||"")?j.hash:PIN);}).catch(function(){clearTimeout(to);go(PIN);});'
+          'var L="";try{L=localStorage.getItem("tsp:ver")||"";}catch(e){}if(!/^[0-9a-f]{40}$/.test(L))L=PIN;'
+          'var to=setTimeout(function(){go(L);},9000);'
+          'fetch("/api/kh-version",{cache:"no-store"}).then(function(r){return r.json();}).then(function(j){clearTimeout(to);var v=/^[0-9a-f]{40}$/.test(j&&j.hash||"")?j.hash:L;try{localStorage.setItem("tsp:ver",v);}catch(e){}go(v);}).catch(function(){clearTimeout(to);go(L);});'
           '})();</script>')
 h = h.replace(m.group(0), loader)
 # manifest: arranca en /jugar.html
