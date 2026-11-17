@@ -13,7 +13,9 @@ export const GET: APIRoute = async ({ url }) => {
     if (!a || !/^\d{4}-\d{2}$/.test(m) || s !== (await firma(a, m))) return pagina("Este link de pago no es válido. Entrá al Campus para pagar tu cuota.");
     const al = (await q("TutAlumnos").eq("_id", a).limit(1).find()).items[0] as (AlumnoPago & { activo?: boolean }) | undefined;
     if (!al || al.activo === false) return pagina("No encontramos tu cuota. Escribinos y lo vemos.");
-    return Response.redirect(await preferencia(al, m), 302);
+    const link = await preferencia(al, m);
+    if (url.searchParams.get("ver") === "1") return new Response(JSON.stringify({ ok: true, link }), { headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
+    return Response.redirect(link, 302);
   } catch (e) {
     console.error("pagar", e);
     return pagina(String((e as Error).message || "No pudimos abrir Mercado Pago. Probá de nuevo en un ratito."));
