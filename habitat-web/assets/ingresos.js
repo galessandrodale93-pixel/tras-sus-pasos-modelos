@@ -8,9 +8,9 @@
   var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'], MC = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
   var T = new Date(), HOY = T.getFullYear() + '-' + ('0' + (T.getMonth() + 1)).slice(-2) + '-' + ('0' + T.getDate()).slice(-2), MES = HOY.slice(0, 7);
   function addM(m, n) { var y = +m.slice(0, 4), k = +m.slice(5, 7) - 1 + n; y += Math.floor(k / 12); k = ((k % 12) + 12) % 12; return y + '-' + ('0' + (k + 1)).slice(-2); }
-  var COL = { 'Siembra automática': '#2f6b4f', 'Siembra puntual': '#6fa585', 'Libros': '#b8904f', 'Efectivo': '#8a6a2f', 'Cuota de alumno (MP)': '#3e6690', 'Otro': '#9aa3a0', 'Transferencia entre cuentas propias': '#d9d2c3', 'Aporte de la familia': '#a07cc5', 'Por clasificar': '#c96a5a', 'Cuotas (Debi/Payway)': '#cfd8d3' };
+  var COL = { 'Siembra automática': '#2f6b4f', 'Siembra puntual': '#6fa585', 'Libros': '#b8904f', 'Efectivo': '#8a6a2f', 'Cuota de alumno (MP)': '#3e6690', 'Otro': '#9aa3a0', 'Transferencia entre cuentas propias': '#d9d2c3', 'Aporte de la familia': '#a07cc5', 'Devolución (no es ingreso)': '#c9c2b4', 'Por clasificar': '#c96a5a', 'Cuotas (Debi/Payway)': '#cfd8d3' };
   var I = null, cargando = null;
-  var NO_SUMA = ['Transferencia entre cuentas propias', 'Aporte de la familia'];
+  var NO_SUMA = ['Transferencia entre cuentas propias', 'Aporte de la familia', 'Devolución (no es ingreso)'];
   function suma(x) { return NO_SUMA.indexOf(x.tipo) < 0; }
   var GUIA = {
     'Siembra automática': 'Un sembrador que aporta todos los meses con suscripción de Mercado Pago.',
@@ -20,6 +20,7 @@
     'Cuota de alumno (MP)': 'Cuotas y suscripciones a clases pagadas por Mercado Pago en lugar de Debi. Si el alumno está en la lista, elegilo; si es una cuota de un curso, registrala también en Cobros.',
     'Transferencia entre cuentas propias': 'Plata que pasa de la cuenta de Agustina (donde caen Debi y Payway) a esta cuenta. Ya está contada en Cobros, así que acá no suma.',
     'Aporte de la familia': 'Lo que la familia siembra para cubrir lo que falta (por ejemplo, el alquiler en efectivo). Se muestra aparte, en el balance del mes.',
+    'Devolución (no es ingreso)': 'Plata que vuelve: un préstamo que nos devolvieron, un reintegro o una compra que pagó alguien por nosotros. No suma como ingreso.',
     'Otro': 'Un ingreso de Habitat que no entra en ningún tipo anterior. Anotá en la nota qué fue.',
     'Por clasificar': 'Todavía sin revisar.'
   };

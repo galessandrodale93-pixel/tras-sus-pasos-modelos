@@ -12,9 +12,9 @@ import { libroDesdeIngreso } from "./libro";
 
 const getSecret = auth.elevate(secrets.getSecretValue);
 const rem = auth.elevate(items.remove);
-export const TIPOS_ING = ["Siembra automática", "Siembra puntual", "Kids & Hero", "Libros", "Efectivo", "Cuota de alumno (MP)", "Transferencia entre cuentas propias", "Aporte de la familia", "Otro", "Por clasificar"];
+export const TIPOS_ING = ["Siembra automática", "Siembra puntual", "Kids & Hero", "Libros", "Efectivo", "Cuota de alumno (MP)", "Transferencia entre cuentas propias", "Aporte de la familia", "Devolución (no es ingreso)", "Otro", "Por clasificar"];
 // No son ingresos nuevos: se ven en la lista pero no suman en los totales ni en el gráfico.
-export const NO_SUMA = ["Transferencia entre cuentas propias"];
+export const NO_SUMA = ["Transferencia entre cuentas propias", "Devolución (no es ingreso)"];
 const SIEMBRA = ["Siembra automática", "Siembra puntual"];
 
 export type Ingreso = { _id: string; title?: string; email?: string; fecha: string; mes: string; monto: number; neto?: number; tipo: string; origen: string; alumnoId?: string; pagador?: string; descripcion?: string; estado?: string; nota?: string; por?: string };
