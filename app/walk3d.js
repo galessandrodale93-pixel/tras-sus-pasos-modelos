@@ -5,7 +5,8 @@ const G = () => window.GAME;
 const PREF = 'tsp-view';
 const WS = 3; // escala del mundo: todo tres veces más grande y espaciado
 const SC = 0.06 * WS; // píxeles del mapa → unidades 3D
-const toV = (x, y) => [(x - 180) * SC, -y * SC];
+const KZ = 2.85; // el camino se estira a lo largo: unos 8 minutos corriendo de punta a punta (pedido de Gui)
+const toV = (x, y) => [(x - 180) * SC, -y * SC * KZ];
 
 function pref() { try { return localStorage.getItem(PREF) || '3d'; } catch (e) { return '3d'; } }
 function setPref(v) { try { localStorage.setItem(PREF, v); } catch (e) {} }
@@ -636,7 +637,7 @@ async function realFlora(scene, W, allPts, Q, uT) {
     const tex = new THREE.TextureLoader().load(FLB + base + '.webp'); tex.flipY = false; tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
     const mat = new THREE.MeshStandardMaterial({ map: tex, alphaTest: .45, roughness: .92, metalness: 0 });
     mat.onBeforeCompile = sh => { sh.uniforms.uT = uT; sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <project_vertex>', 'vec4 mvPosition=vec4(transformed,1.);\n#ifdef USE_INSTANCING\nmvPosition=instanceMatrix*mvPosition;\n#endif\nfloat k=clamp(position.y*4.,0.,1.);k*=k;mvPosition.x+=sin(uT*1.9+mvPosition.x*.4+mvPosition.z*.3)*.07*k;mvPosition.z+=cos(uT*1.4+mvPosition.x*.25)*.04*k;\nmvPosition=modelViewMatrix*mvPosition;gl_Position=projectionMatrix*mvPosition;'); };
-    seasonMat(mat); const per = Math.ceil(cfg.n / meshes.length);
+    seasonMat(mat); const per = Math.ceil(cfg.n * KZ / meshes.length);
     meshes.forEach(mm => { let o = mm.off; const P = new Float32Array(buf, o, mm.nv * 3); o += mm.nv * 12; const N = new Int8Array(buf, o, mm.nv * 3); o += mm.nv * 3; o = (o + 3) & ~3; const U = new Float32Array(buf, o, mm.nv * 2); o += mm.nv * 8; const I = new Uint16Array(buf, o, mm.ni);
       const g = new THREE.BufferGeometry(), NU = new Float32Array(mm.nv * 3), I2 = new Uint16Array(mm.ni * 2); for (let k = 0; k < mm.nv; k++) { NU[k * 3] = N[k * 3] / 127 * .35; NU[k * 3 + 1] = .9; NU[k * 3 + 2] = N[k * 3 + 2] / 127 * .35; } I2.set(I); for (let k = 0; k < mm.ni; k += 3) { I2[mm.ni + k] = I[k]; I2[mm.ni + k + 1] = I[k + 2]; I2[mm.ni + k + 2] = I[k + 1]; }
       g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.BufferAttribute(NU, 3)); g.setAttribute('uv', new THREE.BufferAttribute(U, 2)); g.setIndex(new THREE.BufferAttribute(I2, 1));
@@ -666,7 +667,7 @@ function heroFlora(scene, W, allPts, zMax, R, Q) {
       im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; im.computeBoundingSphere(); im.castShadow = !!shadow; im.receiveShadow = true; im.userData.n = L.length; im.userData.zc = (k + .5) * 72; im.userData.tree = 1; scene.add(im); FLORA.chunks.push(im); chunks.push(im); });
     return { uuid: THREE.MathUtils.generateUUID(), chunks, isChunked: true, getMatrixAt(i, M) { const r = map[i]; if (r) r[0].getMatrixAt(r[1], M); return M; }, setMatrixAt(i, M) { const r = map[i]; if (r) { r[0].setMatrixAt(r[1], M); r[0].instanceMatrix.needsUpdate = true; } }, instanceMatrix: { set needsUpdate(v) {} }, set visible(v) { chunks.forEach(c => { c.visible = v; c.userData.off = !v; }); } }; };
   const olive = [], cyp = [], bush = [], rock = [];
-  for (let i = 0; i < Q.trees; i++) { const x = (R() - .5) * (XB * 2 + 50), z = 40 + R() * (zMax - 70); const d = W.dAt(x, z); if (d < 2.6 + R() * 2) continue; const y = W.hAt(x, z), r = R(), o = { x, y, z, s: .75 + R() * .6, rot: R() * 6.28, v: R() };
+  for (let i = 0; i < Q.trees * KZ; i++) { const x = (R() - .5) * (XB * 2 + 50), z = 40 + R() * (zMax - 70); const d = W.dAt(x, z); if (d < 2.6 + R() * 2) continue; const y = W.hAt(x, z), r = R(), o = { x, y, z, s: .75 + R() * .6, rot: R() * 6.28, v: R() };
     if (Math.abs(x) > XB * .8 && r < .5) continue; (r < .42 ? olive : r < .62 ? cyp : r < .9 ? bush : rock).push(o); }
   const trunkM = new THREE.MeshStandardMaterial({ color: '#8A7058', roughness: 1, map: texL('rock.jpg', 4) });
   const leafM = new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: .9, map: texL('leaves.jpg', 4) }); leafM.map.repeat.set(1.6, 1.6);
@@ -689,7 +690,7 @@ function heroFlora(scene, W, allPts, zMax, R, Q) {
   const gm = new THREE.MeshLambertMaterial({ map: texL('grasscard.png', 4), alphaTest: .42 }), uT = { value: 0 };
   gm.onBeforeCompile = sh => { sh.uniforms.uT = uT; sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <project_vertex>', 'vec4 mvPosition=vec4(transformed,1.);\n#ifdef USE_INSTANCING\nmvPosition=instanceMatrix*mvPosition;\n#endif\nfloat k=position.y*position.y;mvPosition.x+=sin(uT*1.8+mvPosition.x*.35+mvPosition.z*.28)*.12*k;mvPosition.z+=cos(uT*1.3+mvPosition.x*.22)*.06*k;\nmvPosition=modelViewMatrix*mvPosition;gl_Position=projectionMatrix*mvPosition;'); };
   seasonMat(gm);
-  const gl = []; for (let i = 0; i < Q.grass / 3.6; i++) { const p = allPts[Math.floor(R() * allPts.length)], a = R() * 6.28, wide = R() < .45, r = 1.2 + Math.pow(R(), 1.5) * 15, x = wide ? (R() - .5) * XB * 2.2 : p[0] + Math.cos(a) * r, z = wide ? p[1] + (R() - .5) * 10 : p[1] + Math.sin(a) * r; if (W.dAt(x, z) < 1.3 || W.hAt(x, z) > 7) continue; gl.push({ x, z, h: .32 + R() * .5, w: .6 + R() * .7, rot: R() * 6.28, c: R() }); }
+  const gl = []; for (let i = 0; i < Q.grass / 3.6 * KZ; i++) { const p = allPts[Math.floor(R() * allPts.length)], a = R() * 6.28, wide = R() < .45, r = 1.2 + Math.pow(R(), 1.5) * 15, x = wide ? (R() - .5) * XB * 2.2 : p[0] + Math.cos(a) * r, z = wide ? p[1] + (R() - .5) * 10 : p[1] + Math.sin(a) * r; if (W.dAt(x, z) < 1.3 || W.hAt(x, z) > 7) continue; gl.push({ x, z, h: .32 + R() * .5, w: .6 + R() * .7, rot: R() * 6.28, c: R() }); }
   if (!FLORA.paidG) try { flowerField(scene, W, allPts, R, put, M4, CL, Q); } catch (e) { console.warn('flores', e); }
   if (!FLORA.paidG) chunkInst(scene, cg, gm, gl, (o, i, im) => { put(o.x, W.hAt(o.x, o.z) - .03, o.z, 0, o.rot, 0, o.w, o.h, o.w); im.setMatrixAt(i, M4); im.setColorAt(i, FLORA.kids ? CL.setRGB(1.15 + o.c * .25, 1.35 + o.c * .2, .8 + o.c * .15) : CL.setRGB(1.05 + o.c * .3, 1.1 + o.c * .25, .85 + o.c * .2)); }, { recv: true });
   return uT;
@@ -727,16 +728,16 @@ const KL = {};
   const sun = new THREE.DirectionalLight(hx ? '#FFD9A0' : '#FFF4DC', hx ? .55 : 1.6); sun.position.set(-6, 12, 6); if (!hx) scene.add(sun); KL.sun = sun;
   const W = g.WIDTH, totalY = g.TOP + g.REGIONS.length * g.RH + 200, R = rng(7);
   // suelo
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(XB * 2 + 200, totalY * SC + 160), mat(hx ? '#2A2417' : '#A9D98E'));
-  ground.rotation.x = -Math.PI / 2; ground.position.set(0, 0, -(totalY * SC) / 2); if (!hx) scene.add(ground);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(XB * 2 + 200, totalY * SC * KZ + 160), mat(hx ? '#2A2417' : '#A9D98E'));
+  ground.rotation.x = -Math.PI / 2; ground.position.set(0, 0, -(totalY * SC * KZ) / 2); if (!hx) scene.add(ground);
   // camino
   const pathM = mat(hx ? '#5E4A32' : '#F1D9A4'), edgeM = mat(hx ? '#3F3221' : '#E2C287');
   const ribbon = (pts, w, m, y) => { const pos = [], idx = []; for (let i = 0; i < pts.length; i++) { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)]; let dx = b[0] - a[0], dz = b[1] - a[1]; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l; const nx = -dz * w / 2, nz = dx * w / 2; pos.push(pts[i][0] + nx, y, pts[i][1] + nz, pts[i][0] - nx, y, pts[i][1] - nz); if (i) { const o = (i - 1) * 2; idx.push(o, o + 1, o + 2, o + 1, o + 3, o + 2); } } const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setIndex(idx); geo.computeVertexNormals(); const me = new THREE.Mesh(geo, m); me.material.side = THREE.DoubleSide; return me; };
   const edgePts = {};
-  g.EDGES.forEach(([a, b]) => { const A = g.NODES[a], B = g.NODES[b], pts = []; for (let i = 0; i <= 100; i++) { const p = bez(A, B, i / 100); pts.push(toV(p.x, p.y)); } edgePts[a + '>' + b] = pts; if (!hx) { scene.add(stonePath(pts, 2.5, 0, .012)); scene.add(stonePath(pts, 1.8, 1, .03)); } });
+  g.EDGES.forEach(([a, b]) => { const A = g.NODES[a], B = g.NODES[b], pts = []; const NE = Math.round(100 * KZ); for (let i = 0; i <= NE; i++) { const p = bez(A, B, i / NE); pts.push(toV(p.x, p.y)); } edgePts[a + '>' + b] = pts; if (!hx) { scene.add(stonePath(pts, 2.5, 0, .012)); scene.add(stonePath(pts, 1.8, 1, .03)); } });
   // vegetación y rocas, lejos del camino (instanciadas para que ande fluido en el celular)
   const allPts = Object.values(edgePts).flat(), near = (x, z, d) => allPts.some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < d * d) || (S_poiPts || []).some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < (d + 4) * (d + 4));
-  const zMax = -totalY * SC;
+  const zMax = -totalY * SC * KZ;
   let HW = null, uGrass = null;
   const pois = planPois(g), doors = planDoors(g), poiPts = pois.flatMap(q => q.flat).concat(doors.flatMap(q => q.flat)); waterPlan(pois); GREENS = pois.filter(q => GREEN_K[q.k]).map(q => [q.x, q.z, GREEN_K[q.k]]); MAPT.tiles.clear();
   buildStep('vegetación'); { let ok = null; try { ok = await withTO(grpInit(), 9000, 'r2'); } catch (e) {} FLORA.paidG = !!(ok && GRP.man['grass/']); FLORA.paidT = !!(ok && GRP.man['trees/']); }
@@ -772,7 +773,7 @@ const KL = {};
   g.VIGN.forEach(([r, x, y, k]) => { const [vx, vz] = toV(x, g.TOP + r * g.RH + y); if (k === 'house' || k === 'stable' || k === 'temple') { for (let i = 0; i < 3; i++) { const h = house(R, hx), hx0 = vx + (i - 1) * 7.2, hz0 = vz + (R() - .5) * 3, ry = (R() - .5) * .6; if (HW && HW.dAt(hx0, hz0) < 5.5) continue; h.position.set(hx0, 0, hz0); h.rotation.y = ry; addV(h); HCOLS.push(wBox(hx0, hz0, ry, ...h.userData.box)); } } if (k === 'palms' || k === 'tree') { for (let i = 0; i < 3; i++) { const q = R(), x = vx + (R() - .5) * 3, z = vz + (R() - .5) * 2, s = .8 + q * .35, id = ['tree_small_02', 'island_tree_03', 'tree_small_02'][i]; if (HW) (DPALM.spots = DPALM.spots || []).push({ x, y: HW.hAt(x, z) - .05, z, ry: q * 40, s: s * (i === 1 ? 1.12 : 1) }); void id; } } });
   // nubes (Kids) o luciérnagas (Hero)
   let flies = null;
-  if (hx) { const n = 900, pos = new Float32Array(n * 3); for (let i = 0; i < n; i++) { pos[i * 3] = (R() - .5) * 30 * WS; pos[i * 3 + 1] = .4 + R() * 3; pos[i * 3 + 2] = R() * zMax; } const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); flies = new THREE.Points(geo, new THREE.PointsMaterial({ color: '#FFD27A', size: .09, transparent: true, opacity: .9, depthWrite: false, blending: THREE.AdditiveBlending })); scene.add(flies); }
+  if (hx) { const n = Math.round(900 * KZ), pos = new Float32Array(n * 3); for (let i = 0; i < n; i++) { pos[i * 3] = (R() - .5) * 30 * WS; pos[i * 3 + 1] = .4 + R() * 3; pos[i * 3 + 2] = R() * zMax; } const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); flies = new THREE.Points(geo, new THREE.PointsMaterial({ color: '#FFD27A', size: .09, transparent: true, opacity: .9, depthWrite: false, blending: THREE.AdditiveBlending })); scene.add(flies); }
   else { const cm = new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 1, emissive: '#FFFFFF', emissiveIntensity: .25 }), parts = []; for (let i = 0; i < 40; i++) { const cx = (R() - .5) * 60, cy = 9 + R() * 6, cz = R() * zMax; for (let j = 0; j < 4; j++) parts.push({ x: cx + j * 1.1 - 1.6, y: cy + R() * .5, z: cz + R() * .6, r: .8 + R() * .8 }); } inst(new THREE.IcosahedronGeometry(1, 1), cm, parts, o => put(o.x, o.y, o.z, 0, 0, 0, o.r)); }
   // objetos para juntar, un poco fuera del camino
   const items = {}, have = g.P().items || {};
@@ -1147,7 +1148,7 @@ function findPath0(x0, z0, x1, z1) {
 function walkPoly(pts) {
   return new Promise(res => {
     if (!pts || pts.length < 2) { res(); return; } let len = 0; for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
-    if (len < .01) { res(); return; } const dur = len / 5 * 1000, t0 = performance.now(), cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])); S.moving = true;
+    if (len < .01) { res(); return; } const dur = len / (len > 40 ? 7.5 : 5) * 1000, /* los tramos largos se hacen a paso de carrera */ t0 = performance.now(), cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])); S.moving = true;
     const step = now => { const k = Math.min(1, (now - t0) / dur), dd = k * len; let i = 0; while (i < pts.length - 2 && cum[i + 1] < dd) i++; const L = cum[i + 1] - cum[i] || 1, u = Math.min(1, (dd - cum[i]) / L);
       const x = pts[i][0] + (pts[i + 1][0] - pts[i][0]) * u, z = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * u, ty = Math.atan2(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]);
       let d = ty - S.yaw; while (d > Math.PI) d -= 6.283; while (d < -Math.PI) d += 6.283; S.yaw += d * .2; S.av.position.set(x, 0, z); S.av.rotation.y = S.yaw;
@@ -5952,7 +5953,7 @@ async function galTrees() {
 }
 async function galRocks() {
   if (!S || GT.rdone) return; GT.rdone = 1; const W = S.W, Rn = rng(9090), zEnd = S.zEnd || 600, ids = ['namaqualand_boulder_02', 'namaqualand_boulder_03', 'rock_07', 'stone_01', 'namaqualand_stones_01'], P = {}; ids.forEach(i => P[i] = []);
-  for (let i = 0; i < 2600; i++) { const x = (Rn() - .5) * (XB * 2 + 40), z = 20 + Rn() * (zEnd - 40), h = W.hAt(x, z); if (h < 4.2) continue; const sl = Math.abs(W.hAt(x + 1.5, z) - W.hAt(x - 1.5, z)) + Math.abs(W.hAt(x, z + 1.5) - W.hAt(x, z - 1.5));
+  for (let i = 0; i < 2600 * KZ; i++) { const x = (Rn() - .5) * (XB * 2 + 40), z = 20 + Rn() * (zEnd - 40), h = W.hAt(x, z); if (h < 4.2) continue; const sl = Math.abs(W.hAt(x + 1.5, z) - W.hAt(x - 1.5, z)) + Math.abs(W.hAt(x, z + 1.5) - W.hAt(x, z - 1.5));
     if (Rn() > Math.min(1, (h - 4.2) / 6 + sl * .5)) continue; if (W.dAt(x, z) < 3 || blockedAt(x, z)) continue; const id = ids[Math.floor(Rn() * ids.length)]; P[id].push({ x, y: h - .15 - Rn() * .25, z, ry: Rn() * 6.283, s: .7 + Rn() * 1.3, v: Math.floor(Rn() * 4) }); }
   let n = 0; for (const id of ids) if (P[id].length) { n += P[id].length; phPlace(id, P[id], { shadow: true, far: 1 }); } r2log('roca caliza: ' + n + ' piedras en las lomas');
 }
@@ -5996,7 +5997,7 @@ function phTick(dt) {
 }
 function phWorld(scene, W, allPts, zMax, hx, R0) { try { if (grpBase()) setTimeout(() => { anBuild().catch(e => console.warn('animales', e)); }, 4000); } catch (e) {}
   SEAS.base = null; SEAS.rain = null; SEAS.olB = null; SEAS.acc = 9;
-  const R = rng(9091), coarse = matchMedia('(pointer: coarse)').matches, k = (hx ? 1 : .8) * (coarse ? .7 : 1); PH.kids = !hx; PH.bands = []; FLORA.trp = 0; FLORA.trpP = 0;
+  const R = rng(9091), coarse = matchMedia('(pointer: coarse)').matches, k = (hx ? 1 : .8) * (coarse ? .7 : 1) * KZ; /* el mundo es más largo: más árboles para la misma densidad */ PH.kids = !hx; PH.bands = []; FLORA.trp = 0; FLORA.trpP = 0;
   (FLORA.poiProps || []).forEach(([id, list, o]) => { try { phPlace(id, list, Object.assign({ force: 1 }, o || {})); } catch (e) {} /* para la cámara: árboles de los escenarios (olivos de Getsemaní, etc.) */ try { if (o && o.wind && !o.nocol && (o.far || /tree|olive|palm/i.test(id))) list.forEach(it => { const r = (o.col ?? .3) * (it.s || 1); (S.camTrees = S.camTrees || []).push({ cx: it.x, cz: it.z, r }); }); } catch (e) {} });
   try { grpInit(); if (grpBase() && FLORA.olive && FLORA.olive.length) phPlace('trp_olive', FLORA.olive.map((o, i) => ({ x: o.x, y: o.y - .05, z: o.z, ry: o.rot, s: o.s, oi: i, v: i })), { shadow: true, wind: 3, far: 1, olive: 1, imp: 1 }); } catch (e) {}
   const yAt = (x, z) => W.hAt(x, z), Z0 = zMax + 30, Z1 = 25;
@@ -6440,7 +6441,7 @@ function idle(dt) {
 }
 
 // dónde quedó el jugador: se guarda cada pocos segundos para volver al mismo lugar si el celular recarga la página (falta de memoria, cierre de pestaña)
-function posKey() { const g = G(); return 'tsp:pos:' + (g.branch || '') + ':' + ((g.P() || {}).id || 'p'); }
+function posKey() { const g = G(); return 'tsp:pos2:' + (g.branch || '') + ':' + ((g.P() || {}).id || 'p'); } /* pos2: el mundo se estiró, las posiciones viejas ya no sirven */
 function posSave(force) { if (!S || !S.av || S.walking || S.pocket || S.inRoom) return; try { const g = G(), a = S.av.position; localStorage.setItem(posKey(), JSON.stringify({ n: g.P().pos, x: +a.x.toFixed(2), z: +a.z.toFixed(2), yaw: +S.yaw.toFixed(3), t: Date.now() })); } catch (e) {} }
 function posLoad() { try { const q = JSON.parse(localStorage.getItem(posKey()) || 'null'); if (!q || q.n !== G().P().pos || Date.now() - q.t > 3 * 864e5 || !(Math.abs(q.x) < XB) || !isFinite(q.z) || blockedAt(q.x, q.z)) return null; return q; } catch (e) { return null; } }
 function posTick(dt) { S.posT = (S.posT || 0) - dt; if (S.posT > 0) return; S.posT = 3; posSave(); }
