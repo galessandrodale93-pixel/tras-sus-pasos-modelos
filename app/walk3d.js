@@ -3534,7 +3534,7 @@ function drawMap(cv) {
   // los cuatro rincones visibles en coordenadas del mundo
   const cs = [[0, 0], [cw, 0], [0, ch], [cw, ch]].map(([a, b]) => cv._toWorld(a, b)), vx0 = Math.max(E.x0, Math.min(...cs.map(q => q[0]))), vx1 = Math.min(E.x1, Math.max(...cs.map(q => q[0]))), vzT = Math.min(E.zTop, Math.max(...cs.map(q => q[1]))), vzB = Math.max(E.zBot, Math.min(...cs.map(q => q[1])));
   const want = V.s * dpr, L = Math.max(-3, Math.min(4, Math.ceil(Math.log2(want / .5)))), ppm = Math.pow(2, L) * .5, Tm = 256 / ppm;
-  let made = 0, pend = false; x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+  let made = 0, pend = false; x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.save(); wld(); x.beginPath(); x.rect(E.x0, E.zBot, ww, wh); x.clip(); /* nada fuera del mundo */
   for (let tz = Math.ceil(vzT / Tm); tz * Tm > vzB - Tm; tz--) for (let tx = Math.floor(vx0 / Tm); tx * Tm < vx1; tx++) {
     let t = MAPT.tiles.get(L + ':' + tx + ':' + tz); if (!t && made < 4) { t = mapTile(L, tx, tz); made++; }
     if (t) img(t.cv, t.x0, t.z0, t.size / 256, [256, 256]); else { pend = true; const L2 = Math.max(-3, L - 2), T2 = 256 / (Math.pow(2, L2) * .5), t2 = MAPT.tiles.get(L2 + ':' + Math.floor(tx * Tm / T2) + ':' + Math.ceil(tz * Tm / T2)); if (t2) img(t2.cv, t2.x0, t2.z0, t2.size / 256, [256, 256]); } }
@@ -3548,11 +3548,11 @@ function drawMap(cv) {
   x.strokeStyle = hx ? 'rgba(201,164,110,.75)' : 'rgba(150,110,60,.6)'; x.lineWidth = Math.max(1.2, 1.4 * V.s) / V.s; x.setLineDash([4 / V.s, 3 / V.s]); (OL.trails || []).forEach(t => { x.beginPath(); t.pts.forEach((pt, i) => i % 4 ? 0 : i ? x.lineTo(pt[0], pt[1]) : x.moveTo(pt[0], pt[1])); x.stroke(); }); x.setLineDash([]);
   // niebla sobre lo que todavía no recorriste
   img(fogCanvas(hx), FOG.x0, FOG.z0, FOG.c, [FOG.nx, FOG.nz]);
-  scr();
+  x.restore(); scr();
   // etapas
   g.REGIONS.forEach((Rg, r) => { const [a] = regionZ(g, r), top = r === 0 ? E.zTop : (a + regionZ(g, r - 1)[1]) / 2, [l1x, l1y] = P(E.x0, top), [l2x, l2y] = P(E.x1, top);
     if (r) { x.strokeStyle = hx ? 'rgba(241,215,162,.45)' : 'rgba(34,64,127,.35)'; x.setLineDash([10, 8]); x.lineWidth = 1.5; x.beginPath(); x.moveTo(l1x, l1y); x.lineTo(l2x, l2y); x.stroke(); x.setLineDash([]); }
-    const bx = rot ? Math.min(Math.max(l1x, l2x), cw) + 6 : 8, by = rot ? 8 : l1y + 6; if (rot ? (bx < -200 || bx > cw - 20) : (by < -50 || by > ch)) return; const bw = Math.min(200, rot ? Math.max(120, (regionZ(g, r)[0] - regionZ(g, r)[1]) * V.s - 12) : 220);
+    const bx = rot ? Math.min(Math.max(l1x, l2x), cw) + 6 : 8, by = rot ? (ch > 420 ? 70 : 52) : l1y + 6; if (rot ? (bx < -200 || bx > cw - 20) : (by < -50 || by > ch)) return; const bw = Math.min(200, rot ? Math.max(120, (regionZ(g, r)[0] - regionZ(g, r)[1]) * V.s - 12) : 220);
     x.fillStyle = hx ? 'rgba(14,12,8,.72)' : 'rgba(255,255,255,.82)'; x.beginPath(); x.roundRect(bx, by, bw, 40, 10); x.fill(); x.fillStyle = C.ink2; x.font = '900 10px Nunito, sans-serif'; x.fillText('ETAPA ' + (r + 1) + (regionOpen(r) ? '' : ' · 🔒'), bx + 8, by + 14); x.fillStyle = C.ink; x.font = `700 ${bw < 150 ? 13 : 16}px ${hx ? 'Cinzel, Georgia' : 'Fraunces, Georgia'}, serif`; x.fillText(Rg.name, bx + 8, by + 33); });
   const label = (t, px, py, big) => { x.font = (big ? '800 13px' : '800 11px') + ' Nunito, sans-serif'; x.textAlign = 'center'; x.lineWidth = 3.5; x.strokeStyle = hx ? 'rgba(10,8,4,.9)' : 'rgba(255,255,255,.95)'; x.strokeText(t, px, py); x.fillStyle = C.ink; x.fillText(t, px, py); x.textAlign = 'left'; };
   const big = V.s > fit * 1.8; // de lejos, solo lo importante: menos letras encimadas
