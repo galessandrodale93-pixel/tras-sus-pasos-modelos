@@ -26,7 +26,7 @@ game = 'kids-hero-guia-completa.pdf'
 has_game = os.path.exists(os.path.join(DST, game))
 it = lambda L, o: ''.join(f'<a class="mt-it" href="/materiales/{f}" target="_blank" rel="noopener"><span class="mt-n">{i+1+o}</span><span><b>{t}</b><small>{d}</small></span><span class="mt-go">PDF</span></a>' for i,(f,t,d) in enumerate(L))
 items = it(docs, 0); items2 = it(docs2, len(docs))
-gitem = f'<a class="mt-it mt-g" href="/materiales/{game}" target="_blank" rel="noopener"><span class="mt-n">★</span><span><b>Kids &amp; Hero · guía completa del juego</b><small>Todo el juego en detalle: etapas vivas, minijuegos y estrellas, prendas, lugares secretos, desafíos y cuánto dura la cursada. Actualizada el 16 de noviembre.</small></span><span class="mt-go">PDF</span></a>' if has_game else ''
+gitem = f'<a class="mt-it mt-g" href="/materiales/{game}" target="_blank" rel="noopener"><span class="mt-n">★</span><span><b>Kids &amp; Hero · guía completa del juego</b><small>Todo el juego en detalle: tierras de afuera, oficios y maestros, construcción, álbum y huerta de Kids, etapas vivas, estrellas, prendas, lugares secretos, desafíos y cuánto dura la cursada. Actualizada el 17 de noviembre.</small></span><span class="mt-go">PDF</span></a>' if has_game else ''
 body = f'''
 <section class="mt"><div class="wrap">
 <p class="mt-k">Materiales del equipo</p>
