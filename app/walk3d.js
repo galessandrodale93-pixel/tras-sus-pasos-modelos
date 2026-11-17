@@ -4723,12 +4723,13 @@ function marPlaque(lines, w, h, opt) {
 function marBuild(g, hx) {
   const gold = new THREE.MeshStandardMaterial({ color: '#F2C14E', metalness: 1, roughness: .25, emissive: '#6A4410', emissiveIntensity: .4 }), marble = pbrMat('marble_01', 1, 1, { color: '#FFFFFF' });
   const M = { lit: 0, best: -1, horn: 0, verses: [], t0: 0 };
-  // placa al pie de la escalera, sobre un atril de mármol y oro
-  const stand = new THREE.Group(); stand.position.set(-ST.W - 2.6, 0, -1.2); stand.rotation.y = Math.PI + .35; g.add(stand);
-  const ped = new THREE.Mesh(bevBox(3.6, .5, 1.2, .06), marble); ped.position.y = .25; stand.add(ped);
-  [-1, 1].forEach(sd => { const c = new THREE.Mesh(columnGeo(3.1, .16, 12), marble); c.position.set(sd * 1.55, .5, 0); stand.add(c); const cap = new THREE.Mesh(new THREE.SphereGeometry(.24, 14, 10), gold); cap.position.set(sd * 1.55, 3.75, 0); stand.add(cap); });
-  const pl = marPlaque([['SUBE ACÁ', 150, '#9A6A10'], ['«Después de esto miré, y vi una puerta abierta en el cielo. Y la voz que había oído, como de trompeta, me dijo: Sube acá, y te mostraré las cosas que tienen que suceder.»', 44, '#3A2A12', 'italic 600'], ['Apocalipsis 4:1', 46, '#8A5A10']], 3.0, 2.6, { y0: .2 });
-  pl.position.set(0, 2.15, .02); stand.add(pl); M.plaque = pl;
+  // portal al pie de la escalera: dos columnas de mármol, dintel de oro y la placa «Sube acá» bien arriba, donde se ve desde lejos
+  const pw = ST.W + 1.1, ph = 6.4, gz = -1.4, arch = new THREE.Group(); arch.position.set(0, 0, gz); g.add(arch);
+  [-1, 1].forEach(sd => { const b = new THREE.Mesh(bevBox(1.3, .8, 1.3, .06), marble); b.position.set(sd * pw, .4, 0); arch.add(b); const c = new THREE.Mesh(columnGeo(ph - .8, .34, 16), marble); c.position.set(sd * pw, .8, 0); arch.add(c); const cap = new THREE.Mesh(new THREE.CylinderGeometry(.62, .44, .45, 16), gold); cap.position.set(sd * pw, ph + .2, 0); arch.add(cap); });
+  const lin = new THREE.Mesh(bevBox(pw * 2 + 1.8, .55, 1.1, .06), gold); lin.position.set(0, ph + .7, 0); arch.add(lin);
+  const pl = marPlaque([['SUBE ACÁ', 170, '#9A6A10'], ['«Vi una puerta abierta en el cielo, y la voz como de trompeta me dijo: Sube acá, y te mostraré las cosas que tienen que suceder.»', 46, '#3A2A12', 'italic 600'], ['Apocalipsis 4:1', 50, '#8A5A10']], pw * 2 + 1.2, 3.4, { y0: .2 });
+  pl.position.set(0, ph + 2.75, -.05); pl.rotation.y = Math.PI; arch.add(pl); M.plaque = pl;
+  const crown = new THREE.Mesh(new THREE.OctahedronGeometry(.45, 0), new THREE.MeshStandardMaterial({ color: '#FFE08A', emissive: '#FFC94A', emissiveIntensity: 1.4, metalness: .4, roughness: .2 })); crown.position.set(0, ph + 4.85, 0); arch.add(crown); M.crown = crown;
   // círculo de luz en el piso, donde empieza la subida
   const ring = new THREE.Mesh(new THREE.RingGeometry(2.3, 2.6, 64), new THREE.MeshBasicMaterial({ color: '#FFE39A', transparent: true, opacity: .6, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.set(0, .05, -2.2); g.add(ring); M.ring = ring;
   // escalones que se encienden: una franja de luz por escalón
@@ -4749,7 +4750,7 @@ function marHorn() { try { const A = fxCtx(), t0 = A.currentTime + .05, out = A.
 function marTick(o, t) {
   const M = o.mar, d = o.d, a = S.av.position, u = (a.x - d.x) * d.side, v = Math.abs(a.z - d.z), near = u > -16 && u < ST.L + ST.P + 4 && v < 14;
   if (!near) { if (M.best >= 0 && u < -30) { M.best = -1; M.horn = 0; } if (M.lit) { M.lv.fill(0); M.lit = 0; for (let i = 0; i < ST.N; i++) M.steps.setColorAt(i, new THREE.Color(0, 0, 0)); M.steps.instanceColor.needsUpdate = true; } return; }
-  M.ring.material.opacity = .35 + .25 * Math.sin(t * 2.2); M.ring.scale.setScalar(1 + .04 * Math.sin(t * 2.2));
+  if (M.crown) M.crown.rotation.y = t * 1.2; M.ring.material.opacity = .35 + .25 * Math.sin(t * 2.2); M.ring.scale.setScalar(1 + .04 * Math.sin(t * 2.2));
   if (!M.horn && u > -10 && v < 6) { M.horn = 1; marHorn(); }
   const k = u >= 0 && u <= ST.L && v <= ST.W + .4 ? Math.min(ST.N - 1, Math.floor(u / ST.L * ST.N)) : (u > ST.L ? ST.N - 1 : -1); if (k > M.best) M.best = k;
   const C = new THREE.Color(); let ch = false;
@@ -5030,7 +5031,7 @@ const h3mat = (o) => { const m = new THREE.MeshStandardMaterial(Object.assign({ 
 function h3tunic(body, B, o) {
   const { I, P, fy, H, lat, fwd } = B, yTop = P.pelvis.y + H * .2, yBot = fy + H * (o.len ?? .34), NR = 14, NS = 24, pos = [], si = [], sw = [], col = [];
   const base = new THREE.Color(o.c), c2 = new THREE.Color(o.c2 || o.c), belt = new THREE.Color(o.belt || '#3A2A1C'), RB = ['#C0392B', '#E6B04A', '#3E8A4A', '#3E5A9A', '#7A3E8A'].map(q => new THREE.Color(q));
-  for (let r = 0; r <= NR; r++) { const t = r / NR, y = yTop + (yBot - yTop) * t, rad = H * (.212 + .02 * t + (o.len < .15 ? .015 * t * t : 0)) * (t < .14 ? .8 + .2 * Math.sin(t / .14 * Math.PI / 2) : 1); /* ceñida en la cintura */ /* recta, apenas abierta abajo: túnica, no vestido */
+  for (let r = 0; r <= NR; r++) { const t = r / NR, y = yTop + (yBot - yTop) * t, rad = H * .212 * (t < .25 ? .5 + .17 * Math.sin(t / .25 * Math.PI / 2) : .67 + .11 * (t - .25) / .75) + H * (o.len < .15 ? .015 * t * t : 0); /* pegada a la cintura, cae por la cadera y apenas se abre abajo: así no queda como una bolsa */
     for (let k = 0; k <= NS; k++) { const a = k / NS * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a), lx = ca * rad, lz = sa * rad * .84, wob = 1 + .025 * Math.sin(a * 9 + t * 4) * t;
       pos.push(P.pelvis.x + (lat.x * lx + fwd.x * lz) * wob, y, P.pelvis.z + (lat.z * lx + fwd.z * lz) * wob);
       const wl = THREE.MathUtils.smoothstep(ca, -.55, .55), L = Math.min(1, Math.max(0, (t - .12) / .4)), cw = Math.min(1, Math.max(0, (t - .5) / .4)) * .92; /* la falda sigue del todo a la pierna: al correr, la rodilla ya no la atraviesa */
