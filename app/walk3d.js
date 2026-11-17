@@ -808,7 +808,7 @@ const KL = {};
   buildStep('lugares'); buildPois(scene, pois, hx, HW, rng(77), ribbon); buildStep('pueblos'); S.pois = pois; buildTowns(scene, g, hx, HW, pois); buildStep('puertas y misiones'); ambReset(); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; setTimeout(() => tutOpen(), 1500); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); }, 0);
   buildStep('hitos'); try { scatterNodes(g, HW); if (S.npos[g.P().pos]) { const q = S.npos[g.P().pos]; av.position.set(q[0], 0, q[1]); } } catch (e) { console.warn('hitos', e); } S.spawn = [av.position.x, av.position.z];
   try { fieldFinds(scene, hx, HW); } catch (e) { console.warn('hallazgos', e); }
-  S0 = S; try { attrMigrate(); } catch (e) { console.warn('migración de atributos', e); } insMigrate(); setTimeout(glowUI, 400); S.mis = buildMissions(scene, g, hx, HW); try { vivoBuild(scene, hx); } catch (e) { console.warn('etapa viva', e); } if (hx) try { ofiBuild(scene); } catch (e) { console.warn('oficios', e); } if (!hx && HW) setTimeout(() => { if (S) secBuild(scene, HW).catch(e => console.warn('sec', e)); }, 1500); /* en Kids también hay lugares secretos */ { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
+  S0 = S; try { attrMigrate(); } catch (e) { console.warn('migración de atributos', e); } insMigrate(); setTimeout(glowUI, 400); S.mis = buildMissions(scene, g, hx, HW); try { vivoBuild(scene, hx); } catch (e) { console.warn('etapa viva', e); } if (hx) try { ofiBuild(scene); } catch (e) { console.warn('oficios', e); } if (!hx && HW) setTimeout(() => { if (S) secBuild(scene, HW).catch(e => console.warn('sec', e)); }, 1500); try { bldBuild(scene); } catch (e) { console.warn('construir', e); } /* en Kids también hay lugares secretos */ { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
   const nx = nextList()[0]; if (nx) { const N = g.NODES[nx], [bx, bz] = toV(N.x, N.y); S.yaw = Math.atan2(bx - ax, bz - az); }
   av.rotation.y = S.yaw;
   try { const sv = posLoad(); if (sv) { av.position.set(sv.x, 0, sv.z); S.yaw = sv.yaw; av.rotation.y = sv.yaw; } } catch (e) {}
@@ -1114,7 +1114,7 @@ function groundAt(x, z, cur) {
   return g;
 }
 // barandas invisibles: estando arriba de una escalera o terraza no se puede salir por el costado al vacío (se baja por los escalones)
-function edgeDrop(x, z, cur) { if (cur == null) return false; const t = S.W ? Math.max(0, S.W.hAt(x, z)) : 0; if (cur - t < STEP) return false; return groundAt(x, z, cur) < cur - STEP; }
+function edgeDrop(x, z, cur) { if (cur == null || BLD.onTop) return false; /* arriba de lo que construiste se puede bajar saltando */ const t = S.W ? Math.max(0, S.W.hAt(x, z)) : 0; if (cur - t < STEP) return false; return groundAt(x, z, cur) < cur - STEP; }
 // escalones y rampas son macizos: desde abajo no se atraviesan (las terrazas sí tienen hueco debajo)
 function solidAbove(x, z, cur) { const c = cur == null ? 0 : cur; return stairH(x, z) > c + STEP || rampH(x, z) > c + STEP; }
 
@@ -1762,7 +1762,7 @@ function buildPois(scene, pois, hx, HW, R, ribbon) {
 // cajas de choque (paredes) y pisos elevados (plataforma del templo, muelle); se llenan al armar el mundo
 function rotXZ(lx, lz, r) { const c = Math.cos(r), s = Math.sin(r); return [lx * c + lz * s, -lx * s + lz * c]; }
 function wBox(x, z, r, lx0, lx1, lz0, lz1) { const P = [[lx0, lz0], [lx1, lz0], [lx0, lz1], [lx1, lz1]].map(([a, b]) => rotXZ(a, b, r)); return { x0: x + Math.min(...P.map(p => p[0])), x1: x + Math.max(...P.map(p => p[0])), z0: z + Math.min(...P.map(p => p[1])), z1: z + Math.max(...P.map(p => p[1])) }; }
-function blockedAt(x, z, only) { const L = only || (S && S.cols); if (!L) return false; if (WATER.canyon && S.W && canyonAt(x, z) > .45 && S.W.roadAt(x, z) > 6 && !inTrail(x, z)) return true; if (WATER.quarry && quarryAt(x, z) > .4) return true; const r = S.hx ? .34 : .28; for (const b of L) if (x > b.x0 - r && x < b.x1 + r && z > b.z0 - r && z < b.z1 + r) { if (b.oi != null && S.sv && S.sv.felled && S.sv.felled.has(b.oi)) continue; if (b.ymax != null && S.av && S.av.position.y > b.ymax) continue; /* muros de planta baja: arriba (en el primer piso) no frenan */ if (b.r == null || (x - b.cx) ** 2 + (z - b.cz) ** 2 < (b.r + r) ** 2) return true; } return false; }
+function blockedAt(x, z, only) { const L = only || (S && S.cols); if (!L) return false; if (WATER.canyon && S.W && canyonAt(x, z) > .45 && S.W.roadAt(x, z) > 6 && !inTrail(x, z)) return true; if (WATER.quarry && quarryAt(x, z) > .4) return true; const r = S.hx ? .34 : .28; for (const b of L) if (x > b.x0 - r && x < b.x1 + r && z > b.z0 - r && z < b.z1 + r) { if (b.oi != null && S.sv && S.sv.felled && S.sv.felled.has(b.oi)) continue; if (b.ymax != null && S.av && S.av.position.y > b.ymax) continue; if (b.ymin != null && S.av && S.av.position.y + 1.5 < b.ymin) continue; /* lo construido en alto (techos) no frena por abajo */ /* muros de planta baja: arriba (en el primer piso) no frenan */ if (b.r == null || (x - b.cx) ** 2 + (z - b.cz) ** 2 < (b.r + r) ** 2) return true; } return false; }
 function floorH(x, z) { const L = S && S.floors; if (!L) return -1; let h = -1; for (const f of L) if (x > f.x0 && x < f.x1 && z > f.z0 && z < f.z1 && f.y > h) h = f.y; return h; }
 function cnvTex(w, h, fn, rep) { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]); } return t; }
 let TT = null; // texturas compartidas
@@ -3317,7 +3317,7 @@ function wireActs() {
   if (!box) { box = document.createElement('div'); box.id = 'v3acts'; box.className = 'v3acts';
     box.innerHTML = '<button data-a="jump" aria-label="Saltar" title="Saltar (barra espaciadora)"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 4l7 7h-4v6H9v-6H5Z" fill="currentColor"/><path d="M6 21h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><button data-a="pray" aria-label="Arrodillarse a orar" title="Orar (tecla O)">🙏</button><button data-a="wave" aria-label="Saludar" title="Saludar (tecla H)">👋</button><button data-a="glow" aria-label="Resplandor" title="Resplandor (tecla P)">🌟</button><button data-a="room" aria-label="Jugar con amigos" title="Jugar con amigos">👥</button><button data-a="help" aria-label="Cómo se juega" title="Cómo se juega">❔</button>';
     document.body.appendChild(box); box.querySelectorAll('button').forEach(b => b.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); ({ jump: doJump, pray: doPray, wave: doWave, sit: doSit, glow: () => S && (S.hx ? poseMenu() : kidsShine()), room: mpPanel, help: () => tutOpen(true) })[b.dataset.a](); }); }
-  addEventListener('keydown', e => { if (!S || document.getElementById('view3d').hidden || e.repeat || /INPUT|TEXTAREA/.test((e.target || {}).tagName || '')) return; const k = e.key.toLowerCase(); if (k === ' ') { e.preventDefault(); doJump(); } else if (k === 'o') doPray(); else if (k === 'h') doWave(); else if (k === 't' && MP.code) talkStart(); else if (k === 'e') axHold(true); else if (k === 'c') svEat(); else if (k === 'b') svCraft(); else if (k === 'p' && S) (S.hx ? poseMenu() : kidsShine()); });
+  addEventListener('keydown', e => { if (!S || document.getElementById('view3d').hidden || e.repeat || /INPUT|TEXTAREA/.test((e.target || {}).tagName || '')) return; const k = e.key.toLowerCase(); if (BLD.on && bldKey(k)) { e.preventDefault(); return; } if (k === ' ') { e.preventDefault(); doJump(); } else if (k === 'o') doPray(); else if (k === 'h') doWave(); else if (k === 't' && MP.code) talkStart(); else if (k === 'e') axHold(true); else if (k === 'c') svEat(); else if (k === 'b') svCraft(); else if (k === 'p' && S) (S.hx ? poseMenu() : kidsShine()); });
   addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 't') talkStop(); }); addEventListener('blur', () => talkStop());
 }
 function lerpR(o, k, v, w) { o[k] += (v - o[k]) * w; }
@@ -6369,14 +6369,14 @@ function loop(now) {
   // con un minijuego abierto el mundo 3D no se dibuja: toda la máquina queda para el minijuego
   const arc = S.arcEl || (S.arcEl = document.getElementById('arcade')); if (arc && !arc.hidden) { S.last = 0; return; }
   const raw = now - (S.last || now), t = now / 1000, dt = Math.min(.05, raw / 1000); S.last = now; S.t = t; S.renderer.info.reset(); if (raw > 0 && raw < 1500) qFrame(Math.min(raw, 250));
-  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); try { pgTick(dt); } catch (e) {} floraTick(dt); miniTick(dt); compassTick(dt); pocketTick(dt); posTick(dt); vilTick(dt); foamTick(t); dawnTick(dt); try { anTick(dt); } catch (e) {} const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
+  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); try { pgTick(dt); } catch (e) {} floraTick(dt); miniTick(dt); compassTick(dt); pocketTick(dt); posTick(dt); vilTick(dt); try { bldTick(dt, t); } catch (e) {} foamTick(t); dawnTick(dt); try { anTick(dt); } catch (e) {} const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
   for (const id in S.items) { const m = S.items[id];
     if (m.userData.gone) { m.userData.gone += dt; const k = m.userData.gone / .5; m.scale.setScalar(1 + k); m.position.y += dt * 2; m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = Math.max(0, 1 - k); } }); if (k >= 1) { S.scene.remove(m); delete S.items[id]; } continue; }
     m.rotation.y = t * 1.6; m.position.y = (m.userData.by || 0) + .85 + Math.sin(t * 2.4 + id.length) * .12;
     if ((m.position.x - S.av.position.x) ** 2 + (m.position.z - S.av.position.z) ** 2 < 2.6) collect(id, m);
   }
   camFollow(dt); const yaw = S.yaw + S.camYaw, a = S.av.position, ph = S.camPitch ?? .4, back = camSafeBack(a, yaw, S.camDist * Math.cos(ph)), up = (S.hx ? 1.3 : 1.02) + S.camDist * Math.sin(ph);
-  { const gnd = groundAt(a.x, a.z, S.gy); if (S.gy != null && gnd < S.gy - 1.1) { S.fallV = (S.fallV || 0) + 22 * dt; S.gy = Math.max(gnd, S.gy - S.fallV * dt); } else { S.fallV = 0; S.gy = (S.gy ?? gnd) + (gnd - (S.gy ?? gnd)) * Math.min(1, dt * 12); } if (S.jy > 0) { S.jv -= 17 * dt; S.jy = Math.max(0, S.jy + S.jv * dt); } a.y = S.gy + (S.jy || 0); try { swimTick(dt, a); } catch (e) {} }
+  { const gnd = groundAt(a.x, a.z, S.gy == null ? null : S.gy + (S.jy || 0)); /* saltando se sube a un bloque */ if (S.gy != null && gnd < S.gy - 1.1) { S.fallV = (S.fallV || 0) + 22 * dt; S.gy = Math.max(gnd, S.gy - S.fallV * dt); } else { S.fallV = 0; S.gy = (S.gy ?? gnd) + (gnd - (S.gy ?? gnd)) * Math.min(1, dt * 12); } if (S.jy > 0) { S.jv -= 17 * dt; S.jy = Math.max(0, S.jy + S.jv * dt); } a.y = S.gy + (S.jy || 0); try { swimTick(dt, a); } catch (e) {} }
   if (S.W) { S.W.sunL.position.set(a.x + S.W.sunDir.x * 40, a.y + 11, a.z + S.W.sunDir.z * 40); S.W.sunL.target.position.copy(a); S.uGrass.value = t; S.W.sky.material.uniforms.t.value = t; }
   const cx = a.x - Math.sin(yaw) * back, cz = a.z - Math.cos(yaw) * back;
   S.camera.position.x += (cx - S.camera.position.x) * .08; S.camera.position.z += (cz - S.camera.position.z) * .08;
@@ -6512,7 +6512,7 @@ const TOOLS = {
 };
 const TOOL_ORDER = ['flint', 'axe', 'rod', 'pick', 'net'];
 const RES = {
-  wood: ['Madera', '🪵'], stone: ['Piedra', '🪨'], plank: ['Tablones', '🟫'], block: ['Bloques de piedra', '🧱'],
+  wood: ['Madera', '🪵'], stone: ['Piedra', '🪨'], plank: ['Tablones', '🟫'], block: ['Bloques de piedra', '🧱'], viga: ['Vigas', '📏'], losa: ['Losas', '⬜'],
   fruit: ['Granadas', '🍎'], lemon: ['Limones', '🍋'], fish: ['Pescado crudo', '🐟'], cooked: ['Pescado asado', '🍢'],
   salado: ['Pescado salado', '🐠'], banquito: ['Banquitos', '🪑'], yugo: ['Yugos', '🪵'], arado: ['Arados', '⚒️'], piedramoler: ['Piedras de moler', '⚪'], tinaja: ['Tinajas de piedra', '🏺'], dintel: ['Dinteles tallados', '🏛️']
 };
@@ -6852,24 +6852,6 @@ function svEat() {
 }
 
 /* ---------- fabricar y construir ---------- */
-function svCraft() {
-  if (!svOn() || S.down) return; const el = document.getElementById('v3sheet'); if (!el) return; S.joy.x = 0; S.joy.y = 0; const s = svP();
-  const draw = () => {
-    const have = Object.entries(RES).map(([k, [n, i]]) => `<span class="sv-chip">${i} ${s.inv[k] || 0}</span>`).join('');
-    const rows = RECIPES.filter(r => !r.furn || s.house).map(r => { const done = r.furn && s.furn.includes(r.id), built = r.id === 'house' && s.house, lockO = r.ofi && ofiLv(r.ofi[0]) < r.ofi[1], can = !lockO && !done && !built && svHas(r.need) && (!r.tool || svTool(r.tool));
-      const need = Object.entries(r.need).filter(([, n]) => n > 0).map(([k, n]) => `<i class="${(s.inv[k] || 0) >= n ? 'ok' : ''}">${RES[k][1]} ${n}</i>`).join(' ') + (r.tool ? ` <i class="${svTool(r.tool) ? 'ok' : ''}">${TOOLS[r.tool][1]} ${TOOLS[r.tool][0]}</i>` : '');
-      return `<div class="sv-rec${can ? '' : ' off'}"><div><b>${r.ofi ? OFI[r.ofi[0]].ic + ' ' : ''}${esc(r.name)}</b><small>${esc(r.desc)}${lockO ? ' · Se aprende con ' + OFI[r.ofi[0]].name.toLowerCase() + ' nivel ' + r.ofi[1] : ''}</small><span class="sv-need">${need}</span></div><button data-r="${r.id}" ${can ? '' : 'disabled'}>${done || built ? 'Hecho' : r.place || r.furn ? 'Construir' : 'Fabricar'}</button></div>`; }).join('');
-    el.innerHTML = `<div class="inv hx sv-sheet"><div class="inv-h"><b>Fabricar y construir</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="sv-have">${have}</div><p class="sv-tip">Talá árboles y picá piedras. Con la madera hacé tablones y con la piedra, bloques. Con eso construís tu casa y después los muebles.</p>${rows}${s.house ? '' : '<p class="sv-tip">Cuando tengas tu casa, vas a poder hacer muebles: cama, mesa, banco, horno, cofre y lámpara.</p>'}</div>`;
-    el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
-    el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { const r = RECIPES.find(x => x.id === b.dataset.r); if (!svHas(r.need)) return;
-      if (r.place === 'fire') { svPay(r.need); S.toolK = 'flint'; S.toolT = 2.2; h3do(['M_Kneeling_Idle', 'PickUp_Table'], 2.6); svFire(undefined, undefined, true); el.hidden = true; }
-      else if (r.place === 'house') { const spot = svHouseSpot(); if (!spot) { svToast('Acá no se puede construir. Alejate del camino y de otras construcciones.'); return; } svPay(r.need); s.house = spot; svPlaceHouse(S.scene, spot); ofiXP('car', 20); ofiXP('can', 20); h3do(['M_Lifting_Object', 'PickUp_Table'], 3, .8, 1.2); svXP(30); svToast('🏠 ¡Construiste tu casa! Ahora podés hacerle muebles.'); el.hidden = true; }
-      else if (r.furn) { svPay(r.need); s.furn.push(r.id); svFurnish(r.id); ofiXP(r.id === 'horno' || r.id === 'lampara' ? 'can' : 'car', 8); h3do(['M_Box_Idle', 'PickUp_Table'], 2); svXP(8); svToast('Agregaste: ' + r.name + '.'); draw(); }
-      else { if (r.ofi && ofiLv(r.ofi[0]) < r.ofi[1]) return; Object.entries(r.out).forEach(([k, n]) => svAdd(k, n)); const ok2 = r.id === 'plank' ? 'car' : r.id === 'block' ? 'can' : null, lv2 = ok2 ? ofiLv(ok2) : 0; if (ok2 && Math.random() < (lv2 >= 30 ? .5 : lv2 >= 15 ? .25 : 0)) { svAdd(r.id, 1); svToast('✨ Te salió uno de más: ' + RES[r.id][0].toLowerCase() + '.'); } svPay(r.need); h3do(['M_Pull_Heavy_Object', 'Interact'], 1.4); svXP(1); if (ok2) ofiXP(ok2, 2); if (r.ofi) ofiXP(r.ofi[0], 6); draw(); }
-      G().save(); svUI(); });
-  };
-  el.hidden = false; el.onclick = e => { if (e.target === el) el.hidden = true; }; draw();
-}
 function svFire(x, z, slow) {
   const a = S.av.position; x = x ?? a.x + Math.sin(S.yaw) * 1.6; z = z ?? a.z + Math.cos(S.yaw) * 1.6; const y = S.W.hAt(x, z), g = new THREE.Group();
   for (let i = 0; i < 5; i++) { const l = cy(.06, .07, .8, tm('wd', '#6A4A2E'), 0, .1, 0, g); l.rotation.z = Math.PI / 2 - .25; l.rotation.y = i / 5 * 6.28; }
@@ -6902,6 +6884,231 @@ function svFurnish(id, silent) {
   g.position.set(fx, 0, fz); g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); H.g.add(g);
   if (id === 'horno') { const w = new THREE.Vector3(); H.g.updateMatrixWorld(true); g.getWorldPosition(w); S.sv.oven = { x: w.x, z: w.z }; }
   if (id === 'cama') { const w = new THREE.Vector3(); H.g.updateMatrixWorld(true); g.getWorldPosition(w); S.sv.bed = { x: w.x, z: w.z + 0 }; }
+}
+
+
+/* ===================== CONSTRUIR LIBRE (Hero y Kids): piezas que se apilan en una grilla de 1 m, como bloques.
+   En Hero cuestan materiales (y se devuelven al sacarlas); en Kids son gratis. Lo construido se guarda y queda en el mundo. ===================== */
+const BLD = { list: [], parts: null, fl: [], on: false, t: 'piedra', r: 0, dy: 0, maxDy: 0, ghost: null, gt: null, pops: [], del: false, cap: 400, max: 600, mats: null, hudT: 0, tgt: null };
+const BP = {
+  piedra: { n: 'Bloque de piedra', s: 'Piedra', ic: '🧱', cost: { block: 1 }, h: 1, col: 1, d: 'Un cubo de piedra tallada. Apilalos para hacer muros y torres.' },
+  madera: { n: 'Bloque de madera', s: 'Madera', ic: '🟫', cost: { plank: 1 }, h: 1, col: 1, d: 'Tablones bien clavados: liviano y cálido.' },
+  escalon: { n: 'Escalón', s: 'Escalón', ic: '🪜', cost: { block: 1 }, h: .5, col: 1, d: 'Medio bloque: sirve para subir a lo alto de tus muros.' },
+  losa: { n: 'Piso de losas', s: 'Losas', ic: '⬜', cost: { losa: 1 }, h: .18, col: 0, d: 'Un piso parejo de piedra, como el del patio del templo.' },
+  techo: { n: 'Techo de vigas', s: 'Techo', ic: '🛖', cost: { viga: 1 }, h: .3, col: 1, d: 'Vigas con ramas y barro encima, como los techos de Capernaúm (Marcos 2:4).' },
+  columna: { n: 'Columna', s: 'Columna', ic: '🏛️', cost: { block: 1 }, h: 1, col: 1, d: 'Una columna redonda: apilá varias para armar un pórtico.' },
+  ventana: { n: 'Ventana', s: 'Ventana', ic: '🪟', cost: { block: 1 }, h: 1, col: 1, d: 'Un bloque con una abertura para que entre la luz.' },
+  puerta: { n: 'Puerta', s: 'Puerta', ic: '🚪', cost: { plank: 2 }, h: 2, col: 0, d: 'Una puerta abierta con su marco de madera. Se pasa caminando.' },
+  arco: { n: 'Arco de piedra', s: 'Arco', ic: '⛩️', cost: { block: 2 }, h: 2, col: 0, d: 'Para entradas grandes. Se pasa por abajo.' },
+  cerco: { n: 'Cerco', s: 'Cerco', ic: '🚧', cost: { wood: 1 }, h: .9, col: 1, thin: 1, d: 'Un cerco de palos para un corral o una huerta.' },
+  antorcha: { n: 'Antorcha', s: 'Antorcha', ic: '🔥', cost: { wood: 1 }, h: 1.7, col: 0, d: 'Ilumina de noche. Se clava en el piso o arriba de un muro.' }
+};
+const BP_ORDER = ['piedra', 'madera', 'escalon', 'losa', 'techo', 'columna', 'ventana', 'puerta', 'arco', 'cerco', 'antorcha'];
+function bldMats() { if (BLD.mats) return BLD.mats; const kd = !S.hx; return (BLD.mats = {
+  stone: pbrMat('large_sandstone_blocks', 1, 1, { color: kd ? '#FFF6E6' : '#F2E6CC' }), wood: pbrMat('brown_planks_05', 1, 1, { color: kd ? '#F0CFA6' : '#E2C29C' }),
+  marble: pbrMat('marble_01', 1, 1, { color: '#FFFFFF' }), floor: pbrMat('old_sandstone_02', 1, 1, { color: '#EFE2C8' }),
+  beam: tm('bldbeam', '#7A5232'), thatch: tm('bldth', '#B89A62'), dark: tm('blddk', '#4A3020'), flame: new THREE.MeshBasicMaterial({ color: '#FFB347', toneMapped: false }) }); }
+function bldMerge(list) {
+  const P = [], N = [], U = []; list.forEach(g0 => { const g = g0.index ? g0.toNonIndexed() : g0; P.push(g.attributes.position.array); N.push(g.attributes.normal.array); U.push(g.attributes.uv ? g.attributes.uv.array : new Float32Array(g.attributes.position.count * 2)); });
+  const cat = A => { const o = new Float32Array(A.reduce((s, a) => s + a.length, 0)); let k = 0; A.forEach(a => { o.set(a, k); k += a.length; }); return o; };
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(cat(P), 3)); geo.setAttribute('normal', new THREE.BufferAttribute(cat(N), 3)); geo.setAttribute('uv', new THREE.BufferAttribute(cat(U), 2)); geo.computeBoundingSphere(); return geo;
+}
+const bB = (w, h, d, x, y, z) => new THREE.BoxGeometry(w, h, d).translate(x, y, z);
+const bC = (rt, rb, h, x, y, z, seg) => new THREE.CylinderGeometry(rt, rb, h, seg || 12).translate(x, y, z);
+function bldShape(t) {
+  if (t === 'piedra') return [[bldMerge([bB(1, 1, 1, 0, .5, 0)]), 'stone']];
+  if (t === 'madera') return [[bldMerge([bB(1, 1, 1, 0, .5, 0)]), 'wood'], [bldMerge([bB(1.02, .08, 1.02, 0, .04, 0), bB(1.02, .08, 1.02, 0, .96, 0)]), 'beam']];
+  if (t === 'escalon') return [[bldMerge([bB(1, .5, 1, 0, .25, 0)]), 'stone']];
+  if (t === 'losa') return [[bldMerge([bB(1, .18, 1, 0, .09, 0)]), 'floor']];
+  if (t === 'techo') { const b = []; for (let i = 0; i < 4; i++) b.push(bB(.12, .12, 1.04, -.375 + i * .25, .06, 0)); return [[bldMerge(b), 'beam'], [bldMerge([bB(1.02, .16, 1.02, 0, .2, 0)]), 'thatch']]; }
+  if (t === 'columna') return [[bldMerge([bC(.24, .28, .84, 0, .5, 0, 16), bB(.66, .08, .66, 0, .04, 0), bB(.66, .08, .66, 0, .96, 0)]), 'marble']];
+  if (t === 'ventana') return [[bldMerge([bB(1, .3, 1, 0, .15, 0), bB(1, .2, 1, 0, .9, 0), bB(.25, .5, 1, -.375, .55, 0), bB(.25, .5, 1, .375, .55, 0)]), 'stone'], [bldMerge([bB(.52, .05, 1.04, 0, .32, 0)]), 'beam']];
+  if (t === 'puerta') return [[bldMerge([bB(.12, 2, .3, -.44, 1, 0), bB(.12, 2, .3, .44, 1, 0), bB(1, .16, .32, 0, 1.92, 0)]), 'beam'], [bldMerge([bB(.06, 1.82, .74, -.35, .93, .4)]), 'wood']];
+  if (t === 'arco') { const a = new THREE.TorusGeometry(.42, .08, 6, 12, Math.PI); a.scale(1, 1, 3); a.translate(0, 1.5, 0); return [[bldMerge([bB(.16, 1.5, .48, -.42, .75, 0), bB(.16, 1.5, .48, .42, .75, 0), a, bB(1, .2, .48, 0, 1.9, 0)]), 'stone']]; }
+  if (t === 'cerco') return [[bldMerge([bC(.05, .05, .9, -.45, .45, 0, 6), bC(.05, .05, .9, .45, .45, 0, 6), bC(.05, .05, .9, 0, .45, 0, 6), bB(1, .07, .05, 0, .7, 0), bB(1, .07, .05, 0, .35, 0)]), 'beam']];
+  if (t === 'antorcha') return [[bldMerge([bC(.04, .05, 1.4, 0, .7, 0, 6), bC(.09, .06, .18, 0, 1.45, 0, 8)]), 'dark'], [bldMerge([new THREE.ConeGeometry(.1, .3, 7).translate(0, 1.66, 0)]), 'flame']];
+  return [];
+}
+function bldP() { const p = G().P(); p.bld = p.bld || []; return p.bld; }
+function bldBuild(scene) {
+  BLD.scene = scene; BLD.parts = {}; BLD.mats = null; BLD.pops = []; BLD.on = false; const M = bldMats();
+  BP_ORDER.forEach(t => { BLD.parts[t] = bldShape(t).map(([geo, mk]) => { const im = new THREE.InstancedMesh(geo, M[mk], BLD.cap); im.count = 0; im.frustumCulled = false; im.castShadow = !!S.hx; im.receiveShadow = true; im.userData.keep = 1; scene.add(im); return im; }); });
+  BLD.list = bldP().slice(); bldSync(); if (!S.hx) bldKidsBtn();
+}
+const _bm = {}; function bldMat(e, k) { const M = _bm.M || (_bm.M = new THREE.Matrix4()), Q = _bm.Q || (_bm.Q = new THREE.Quaternion()), A = _bm.A || (_bm.A = new THREE.Vector3(0, 1, 0)), V = _bm.V || (_bm.V = new THREE.Vector3()), Sc = _bm.S || (_bm.S = new THREE.Vector3()); Q.setFromAxisAngle(A, (e[4] || 0) * Math.PI / 2); return M.compose(V.set(e[1], e[3], e[2]), Q, Sc.set(k, k, k)); }
+function bldSync() {
+  if (!BLD.parts) return; const cnt = {}; BP_ORDER.forEach(t => { cnt[t] = 0; });
+  BLD.list.forEach(e => { const ps = BLD.parts[e[0]]; if (!ps) return; const k = cnt[e[0]]++; if (k >= BLD.cap) return; e.k = k; const pop = BLD.pops.find(p => p.e === e), m = bldMat(e, pop ? pop.sc : 1); ps.forEach(im => im.setMatrixAt(k, m)); });
+  BP_ORDER.forEach(t => (BLD.parts[t] || []).forEach(im => { im.count = Math.min(BLD.cap, cnt[t]); im.instanceMatrix.needsUpdate = true; }));
+  bldPhys();
+}
+function bldPhys() {
+  if (S.cols) for (let i = S.cols.length - 1; i >= 0; i--) if (S.cols[i].bld) S.cols.splice(i, 1);
+  if (S.floors) for (let i = S.floors.length - 1; i >= 0; i--) if (S.floors[i].bld) S.floors.splice(i, 1);
+  BLD.fl = []; BLD.list.forEach(e => { const b = BP[e[0]]; if (!b) return; const x = e[1], z = e[2], y = e[3], top = y + b.h, th = b.thin ? (e[4] % 2 ? [.12, .5] : [.5, .12]) : [.5, .5];
+    if (b.col && S.cols) S.cols.push({ x0: x - th[0], x1: x + th[0], z0: z - th[1], z1: z + th[1], ymax: top - .08, ymin: y, bld: 1 });
+    if (!b.thin && e[0] !== 'antorcha' && S.floors) { const f = { x0: x - .5, x1: x + .5, z0: z - .5, z1: z + .5, y: top, bld: 1 }; S.floors.push(f); BLD.fl.push(f); } });
+}
+function bldCellTop(x, z) { let t = null; for (const e of BLD.list) if (e[1] === x && e[2] === z) { const top = e[3] + BP[e[0]].h; if (t == null || top > t) t = top; } return t; }
+function bldGround(x, z) { if (!S.W) return 0; let m = 1e9; for (const [u, v] of [[-.45, -.45], [.45, -.45], [-.45, .45], [.45, .45], [0, 0]]) m = Math.min(m, Math.max(0, S.W.hAt(x + u, z + v))); return Math.round(m * 100) / 100; }
+function bldTarget() {
+  const a = S.av.position, x = Math.round(a.x + Math.sin(S.yaw) * 1.75), z = Math.round(a.z + Math.cos(S.yaw) * 1.75), T = { x, z, err: null, rem: null };
+  if (BLD.del) { const L = bldP(); let best = -1, by = -1e9; L.forEach((e, i) => { if (e[1] === x && e[2] === z && e[3] > by) { by = e[3]; best = i; } }); if (best >= 0) { T.rem = best; T.y = L[best][3]; T.t = L[best][0]; T.r = L[best][4]; } else { T.y = bldGround(x, z); T.err = 'Acá no hay nada tuyo para sacar.'; } return T; }
+  const top = bldCellTop(x, z), base = top ?? bldGround(x, z); let nb = base; for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const q = bldCellTop(x + i, z + j); if (q != null && q > nb) nb = q; }
+  BLD.maxDy = Math.max(0, Math.round((nb - base) * 2) / 2); if (BLD.dy > BLD.maxDy) BLD.dy = BLD.maxDy; T.y = Math.round((base + BLD.dy) * 100) / 100; T.t = BLD.t; T.r = BLD.r;
+  const b = BP[BLD.t];
+  if (bldP().length >= BLD.max) T.err = 'Llegaste al máximo de ' + BLD.max + ' piezas. Sacá alguna para poner otra.';
+  else if (Math.abs(x) > XB - 2) T.err = 'Muy cerca del borde del mundo.';
+  else if (S.W && S.W.dAt && S.W.dAt(x, z) < 1.4) T.err = 'Sobre el camino no se puede construir: correte a un costado.';
+  else if (typeof waterWet === 'function' && waterWet(x, z, null) > .3) T.err = 'En el agua no se puede construir.';
+  else if (top == null && BLD.dy === 0 && blockedAt(x, z, (S.cols || []).filter(c => !c.bld && Math.abs(c.x0 - x) < 30 && Math.abs(c.z0 - z) < 30))) T.err = 'Hay algo en el medio: probá un poco más allá.';
+  else if (b.col && Math.hypot(x - a.x, z - a.z) < .8 && T.y < a.y + 1.6 && T.y + b.h > a.y + .15) T.err = 'Estás parado ahí: correte un paso.';
+  else if (S.hx && !svHas(b.cost)) T.err = 'Te falta: ' + Object.entries(b.cost).filter(([k, n]) => (svP().inv[k] || 0) < n).map(([k, n]) => RES[k][1] + ' ' + RES[k][0].toLowerCase() + ' (' + (svP().inv[k] || 0) + '/' + n + ')').join(', ') + '. Hacelo en el Taller.';
+  return T;
+}
+function bldGhost(t) {
+  if (BLD.ghost) BLD.scene.remove(BLD.ghost); const g = new THREE.Group(); BLD.gm = BLD.gm || new THREE.MeshBasicMaterial({ color: '#7CFF9A', transparent: true, opacity: .45, depthWrite: false });
+  bldShape(t).forEach(([geo]) => g.add(new THREE.Mesh(geo, BLD.gm))); const ed = new THREE.Mesh(new THREE.BoxGeometry(1.06, .04, 1.06), BLD.gm); ed.position.y = .02; g.add(ed); g.traverse(o => { o.renderOrder = 9; }); BLD.scene.add(g); BLD.ghost = g; BLD.gt = t;
+}
+function bldSfx(k) { try { const A = fxCtx(), t0 = A.currentTime, o = A.createOscillator(), gn = A.createGain(); o.type = k === 0 ? 'square' : 'triangle'; const f = k === 0 ? [140, 110] : k === 2 ? [320, 160] : [200, 80]; o.frequency.setValueAtTime(f[0], t0); o.frequency.exponentialRampToValueAtTime(f[1], t0 + .14); gn.gain.setValueAtTime(.0001, t0); gn.gain.exponentialRampToValueAtTime(k === 0 ? .06 : .22, t0 + .01); gn.gain.exponentialRampToValueAtTime(.0001, t0 + .2); o.connect(gn); gn.connect(A.destination); o.start(t0); o.stop(t0 + .22); } catch (e) {} }
+function bldPlace() {
+  const T = bldTarget(); if (T.err) { bldMsg(T.err, 1); bldSfx(0); return; } const b = BP[BLD.t]; if (S.hx) svPay(b.cost);
+  const e = [BLD.t, T.x, T.z, T.y, BLD.r]; bldP().push(e); BLD.list = bldP().slice(); BLD.pops.push({ e, s: 0, sc: .2 }); bldSync(); bldSfx(1);
+  try { if (typeof fireSparks === 'function') fireSparks(T.x, T.y + .1, T.z, 8); } catch (er) {} h3do(['M_Box_Idle', 'Interact', 'PickUp_Table'], .8, 0, 1.6);
+  if (S.hx) { svXP(1); ofiXP(b.cost.block || b.cost.losa ? 'can' : 'car', 1); svUI(); } bldMilestone(); G().save(); bldHud();
+}
+function bldRemove() {
+  const T = bldTarget(); if (T.rem == null) { bldMsg('Acá no hay nada tuyo para sacar.', 1); bldSfx(0); return; } const L = bldP(), e = L[T.rem]; L.splice(T.rem, 1); BLD.list = L.slice();
+  if (S.hx) { Object.entries(BP[e[0]].cost).forEach(([k, n]) => svAdd(k, n)); svUI(); } bldSync(); bldSfx(2); G().save(); bldHud();
+}
+function bldMilestone() {
+  const p = G().P(); p.bldN = (p.bldN || 0) + 1; const n = p.bldN;
+  if (n === 1) { sello('obra-1', 'La primera piedra'); bldMsg('🧱 ¡Pusiste tu primera piedra! Seguí apilando: lo que construyas queda en el mundo.'); }
+  else if (n === 25) { sello('obra-25', 'Constructor'); if (S.hx) svXP(25); G().toast('🏗️ ¡25 piezas! Ya sos Constructor. «Todo el que oye estas palabras y las pone en práctica es como el que edificó su casa sobre la roca» (Mateo 7:24).'); }
+  else if (n === 100) { sello('obra-100', 'Maestro de obras'); if (S.hx) { svXP(60); svAdd('money', 30); } G().toast('🏛️ ¡100 piezas! Sos Maestro de obras' + (S.hx ? ': ganaste 30 denarios.' : '.') + ' Como Nehemías, que reconstruyó los muros de Jerusalén (Nehemías 6:15).'); }
+  else if (n === 300) { sello('obra-300', 'Arquitecto de la ciudad'); if (S.hx) svAdd('money', 80); G().toast('👑 ¡300 piezas! Arquitecto de la ciudad. Abraham esperaba la ciudad cuyo arquitecto y constructor es Dios (Hebreos 11:10).'); }
+}
+function bldMsg(t, bad) { const m = document.getElementById('v3bldmsg'); if (m) { m.textContent = t; m.className = bad ? 'no' : 'ok'; clearTimeout(bldMsg.T); bldMsg.T = setTimeout(() => { if (m) m.textContent = ''; }, 3200); } else G().toast(t); }
+function bldStart(t) {
+  if (!BLD.parts) return; const el = document.getElementById('v3sheet'); if (el) el.hidden = true; if (t) BLD.t = t; BLD.on = true; BLD.del = false; BLD.dy = 0;
+  BLD.cam = [S.camDist, S.camPitch]; S.camDist = Math.max(S.camDist, 6.5); S.camPitch = Math.max(S.camPitch ?? .4, .62); bldGhost(BLD.t); bldHud();
+  const p = G().P(); if (!p.bldTip) { p.bldTip = 1; setTimeout(() => bldMsg('Caminá y girá para elegir el lugar. Las piezas se apilan solas, como bloques. Con ⬆ subís para hacer techos.'), 300); }
+}
+function bldStop() { BLD.on = false; if (BLD.ghost) BLD.ghost.visible = false; if (BLD.cam) { S.camDist = BLD.cam[0]; S.camPitch = BLD.cam[1]; BLD.cam = null; } bldHud(); }
+function bldAct(a) {
+  if (a.startsWith('t:')) { BLD.t = a.slice(2); BLD.del = false; BLD.dy = 0; }
+  else if (a === 'rot') BLD.r = (BLD.r + 1) % 4;
+  else if (a === 'up') { if (BLD.dy + .5 > BLD.maxDy) { bldMsg('Para subir más, poné primero algo al lado: un muro o una columna que lo sostenga.', 1); return; } BLD.dy += .5; }
+  else if (a === 'dn') BLD.dy = Math.max(0, BLD.dy - .5);
+  else if (a === 'del') BLD.del = !BLD.del;
+  else if (a === 'ok') { BLD.del ? bldRemove() : bldPlace(); return; }
+  else if (a === 'x') { bldStop(); return; }
+  else if (a === 'menu') { bldStop(); svCraft('obra'); return; }
+  bldHud();
+}
+function bldKey(k) { if (!BLD.on) return false; if (k === 'r') bldAct('rot'); else if (k === 'u') bldAct('up'); else if (k === 'j') bldAct('dn'); else if (k === 'x') bldAct('del'); else if (k === 'enter' || k === 'f') bldAct('ok'); else if (k === 'escape' || k === 'b') bldAct('x'); else if (/^[1-9]$/.test(k) && BP_ORDER[+k - 1]) bldAct('t:' + BP_ORDER[+k - 1]); else return false; return true; }
+function bldHud() {
+  let el = document.getElementById('v3bld'); document.body.classList.toggle('v3bldon', BLD.on); if (!BLD.on) { if (el) el.hidden = true; return; }
+  if (!el) { el = document.createElement('div'); el.id = 'v3bld'; el.className = 'v3bld'; document.body.appendChild(el); el.onclick = e => { const b = e.target.closest('[data-b]'); if (!b) return; e.stopPropagation(); bldAct(b.dataset.b); }; el.onpointerdown = e => e.stopPropagation(); }
+  el.hidden = false; el.classList.toggle('kd', !S.hx); const b = BP[BLD.t], s = S.hx ? svP() : null, pc = !matchMedia('(pointer: coarse)').matches;
+  const cost = S.hx ? Object.entries(b.cost).map(([k, n]) => `<i class="${(s.inv[k] || 0) >= n ? 'ok' : 'no'}">${RES[k][1]} ${RES[k][0]}: ${s.inv[k] || 0}/${n}</i>`).join('') : '<i class="ok">✨ Gratis</i>';
+  const pal = BP_ORDER.map((t, i) => { const ok = !S.hx || svHas(BP[t].cost); return `<button data-b="t:${t}" class="${t === BLD.t && !BLD.del ? 'on' : ''}${ok ? '' : ' poor'}" title="${BP[t].n}${pc ? ' (' + (i + 1) + ')' : ''}"><span>${BP[t].ic}</span><small>${BP[t].s}</small></button>`; }).join('');
+  el.innerHTML = `<div class="bl-pal">${pal}</div><div class="bl-info"><b>${BLD.del ? '🗑 Sacar piezas' : b.ic + ' ' + b.n}</b><span>${BLD.del ? 'Apuntá a una pieza tuya y tocá Sacar' + (S.hx ? ': te devuelve los materiales.' : '.') : esc(b.d)}</span><span class="bl-cost">${BLD.del ? '' : cost}</span><em id="v3bldmsg"></em></div>
+    <div class="bl-bar"><button data-b="rot" title="Girar${pc ? ' (R)' : ''}">↻<small>Girar</small></button><button data-b="up" title="Subir${pc ? ' (U)' : ''}">⬆<small>Subir</small></button><button data-b="dn" title="Bajar${pc ? ' (J)' : ''}">⬇<small>Bajar</small></button><button data-b="del" class="${BLD.del ? 'on' : ''}" title="Sacar${pc ? ' (X)' : ''}">🗑<small>Sacar</small></button><button data-b="ok" class="bl-go">${BLD.del ? '🗑' : '✓'}<small>${BLD.del ? 'Sacar' : 'Poner'}${pc ? ' · Enter' : ''}</small></button><button data-b="x" title="Terminar${pc ? ' (Esc)' : ''}">✕<small>Listo</small></button></div>`;
+}
+function bldTick(dt, t) {
+  if (!BLD.parts || !S || !S.av) return; const a = S.av.position;
+  let on = false; for (const f of BLD.fl) if (a.x > f.x0 && a.x < f.x1 && a.z > f.z0 && a.z < f.z1 && Math.abs(f.y - (S.gy ?? a.y)) < .2) { on = true; break; } BLD.onTop = on;
+  if (BLD.pops.length) { BLD.pops.forEach(p => { p.s = Math.min(1, p.s + dt * 4.5); const u = 1 - p.s; p.sc = 1 + Math.sin(p.s * Math.PI) * .12 - u * u * u * .8; const ps = BLD.parts[p.e[0]]; if (ps && p.e.k != null) ps.forEach(im => { im.setMatrixAt(p.e.k, bldMat(p.e, p.s >= 1 ? 1 : p.sc)); im.instanceMatrix.needsUpdate = true; }); }); BLD.pops = BLD.pops.filter(p => p.s < 1); }
+  if (!BLD.on) return; if (sheetUp() && !document.getElementById('v3sheet').hidden) { if (BLD.ghost) BLD.ghost.visible = false; return; }
+  const T = bldTarget(); BLD.tgt = T; const gt = T.t || BLD.t; if (BLD.gt !== gt) bldGhost(gt);
+  const g = BLD.ghost; g.visible = true; g.position.set(T.x, T.y + (BLD.del ? .01 : 0), T.z); g.rotation.y = (T.r || 0) * Math.PI / 2; const k = BLD.del && T.rem != null ? 1.05 : 1; g.scale.setScalar(k);
+  BLD.gm.color.set(BLD.del ? (T.rem != null ? '#FF5A4A' : '#9A9A9A') : T.err ? '#FF6A5A' : '#7CFF9A'); BLD.gm.opacity = .32 + .16 * Math.sin(t * 5);
+  BLD.hudT -= dt; if (BLD.hudT <= 0) { BLD.hudT = .5; const m = document.querySelector('#v3bld .bl-go'); if (m) m.classList.toggle('bad', !!T.err); }
+}
+function bldKidsBtn() {
+  let b = document.getElementById('v3kbld'); if (!b) { b = document.createElement('button'); b.id = 'v3kbld'; b.className = 'v3kbld'; b.innerHTML = '🧱<span>Construir</span>'; b.title = 'Construir (B)'; b.onclick = e => { e.stopPropagation(); svCraft('obra'); }; b.onpointerdown = e => e.stopPropagation(); document.body.appendChild(b); }
+}
+
+/* ===================== TALLER: mesa de trabajo para combinar materiales, libro de recetas, construir libre y tu casa ===================== */
+const RES_HOW = { wood: 'Se consigue talando árboles con el hacha.', stone: 'Se consigue picando rocas con el pico.', plank: 'Se hace en la mesa: dos de madera, con el hacha.', block: 'Se hace en la mesa: dos de piedra, con el pico.', viga: 'Se hace en la mesa con tablones y madera.', losa: 'Se hace en la mesa con un bloque y una piedra.', fruit: 'Se juntan de los granados.', lemon: 'Se juntan de los limoneros.', fish: 'Se pesca con la caña o la red.', cooked: 'Se asa el pescado en una fogata.' };
+const COMBOS = [
+  { id: 'plank', out: { plank: 1 }, need: { wood: 2 }, tool: 'axe', hint: 'Madera, cortada con el hacha.', desc: 'Para construir: bloques de madera, puertas y muebles.' },
+  { id: 'block', out: { block: 1 }, need: { stone: 2 }, tool: 'pick', hint: 'Piedra, tallada con el pico.', desc: 'Para construir muros, columnas, escalones y arcos.' },
+  { id: 'viga', out: { viga: 1 }, need: { plank: 2, wood: 1 }, tool: 'axe', hint: 'Lo que sostiene un techo: tablones y un tronco.', desc: 'Vigas para los techos.' },
+  { id: 'losa', out: { losa: 2 }, need: { block: 1, stone: 1 }, tool: 'pick', hint: 'Para un piso parejo: un bloque y una piedra.', desc: 'Dos losas para hacer pisos.' },
+  { id: 'fire', place: 'fire', need: { wood: 3 }, tool: 'flint', hint: 'Tres de madera y una chispa del pedernal.', desc: 'Para cocinar el pescado. Dura unos minutos.' },
+  { id: 'axe', mk: 'axe', need: { wood: 2, stone: 1 }, hint: 'Un mango de madera y una piedra afilada.', desc: 'Tu propia hacha, para talar.' },
+  { id: 'pick', mk: 'pick', need: { wood: 2, stone: 2 }, hint: 'Parecido al hacha, pero con más piedra.', desc: 'Tu propio pico, para picar rocas.' }
+].concat(RECIPES.filter(r => r.ofi).map(r => ({ id: r.id, out: r.out, need: r.need, tool: r.tool, ofi: r.ofi, hint: 'Lo enseña el maestro de ' + OFI[r.ofi[0]].name.toLowerCase() + ' (nivel ' + r.ofi[1] + ').', desc: r.desc })));
+const TL = { tab: 'mesa', slots: {} };
+function comboName(c) { return c.place === 'fire' ? 'Fogata' : c.mk ? TOOLS[c.mk][0] : RES[Object.keys(c.out)[0]][0]; }
+function comboIc(c) { return c.place === 'fire' ? '🔥' : c.mk ? TOOLS[c.mk][1] : RES[Object.keys(c.out)[0]][1]; }
+function comboDisc() { const s = svP(); s.disc = s.disc || ['plank', 'block']; return s.disc; }
+const sameNeed = (a, b) => { const ka = Object.keys(a).filter(k => a[k] > 0), kb = Object.keys(b).filter(k => b[k] > 0); return ka.length === kb.length && ka.every(k => a[k] === b[k]); };
+function svCraft(tab) {
+  if (typeof tab !== 'string') tab = null; if (!S || S.down || !S.av) return; if (BLD.on) bldStop(); const el = document.getElementById('v3sheet'); if (!el) return; S.joy.x = 0; S.joy.y = 0; const hx = svOn();
+  if (!hx) tab = 'obra'; else if (tab) TL.tab = tab; else if (!TL.tab) TL.tab = 'mesa'; if (hx) tab = TL.tab;
+  const s = hx ? svP() : null, inv = s ? s.inv : {};
+  const slotN = () => Object.values(TL.slots).reduce((a, b) => a + b, 0);
+  const draw = (fx) => {
+    const tabs = hx ? `<div class="tl-tabs">${[['mesa', '🧪 Combinar'], ['obra', '🧱 Construir'], ['casa', '🏠 Tu casa'], ['libro', '📖 Recetas ' + comboDisc().filter(id => COMBOS.some(c => c.id === id)).length + '/' + COMBOS.length]].map(([k, n]) => `<button data-tab="${k}" class="${tab === k ? 'on' : ''}">${n}</button>`).join('')}</div>` : '';
+    let body = '';
+    if (tab === 'mesa') {
+      const keys = Object.keys(TL.slots).filter(k => TL.slots[k] > 0), m = COMBOS.find(c => sameNeed(c.need, TL.slots)), known = m && comboDisc().includes(m.id);
+      const slots = [0, 1, 2].map(i => { const k = keys[i]; return k ? `<button class="tl-slot full" data-rm="${k}"><span>${RES[k][1]}</span><b>${RES[k][0]}</b><em>×${TL.slots[k]}</em></button>` : `<div class="tl-slot"><span>＋</span></div>`; }).join('');
+      const out = !keys.length ? `<div class="tl-out"><span>✦</span><small>¿Qué saldrá?</small></div>` : m && known ? `<div class="tl-out ok"><span>${comboIc(m)}</span><small>${esc(comboName(m))}</small></div>` : m ? `<div class="tl-out myst"><span>❔</span><small>¡Algo va a salir!</small></div>` : `<div class="tl-out"><span>…</span><small>Probá</small></div>`;
+      const cards = Object.keys(RES).filter(k => !RES_PROD.has(k) || (inv[k] || 0) > 0).map(k => { const n = inv[k] || 0, left = n - (TL.slots[k] || 0); return `<button class="tl-it${left > 0 ? '' : ' none'}" data-add="${k}"><span>${RES[k][1]}</span><b>${RES[k][0]}</b><small>${n}</small></button>`; }).join('');
+      const tools = TOOL_ORDER.map(t => `<span class="tl-tool${svTool(t) ? ' ok' : ''}" title="${esc(TOOLS[t][2])}">${TOOLS[t][1]} ${TOOLS[t][0]}${svTool(t) ? '' : ' ✗'}</span>`).join('');
+      body = `<p class="sv-tip">Tocá tus materiales para ponerlos en la mesa y combiná. Lo que descubras queda anotado en tus recetas.</p>
+        <div class="tl-bench${fx === 'ok' ? ' boom' : fx === 'no' ? ' shake' : ''}"><div class="tl-slots">${slots}</div><div class="tl-arrow">➜</div>${out}</div>
+        <div class="tl-acts"><button class="tl-mix" data-do="mix" ${keys.length ? '' : 'disabled'}>✨ Combinar</button>${keys.length ? '<button class="tl-clr" data-do="clr">Vaciar</button>' : ''}</div><p class="tl-msg" id="tlmsg">${TL.msg || ''}</p>
+        <h4 class="x-h">Tus materiales</h4><div class="tl-inv">${cards}</div><h4 class="x-h">Tus herramientas</h4><div class="tl-tools">${tools}</div>`;
+    } else if (tab === 'libro') {
+      const D = comboDisc(); body = `<p class="sv-tip">Las recetas que ya descubriste se ponen solas en la mesa. Las que faltan tienen una pista.</p><div class="tl-book">${COMBOS.map(c => { const k = D.includes(c.id), lock = c.ofi && ofiLv(c.ofi[0]) < c.ofi[1];
+        const need = Object.entries(c.need).map(([r, n]) => `${RES[r][1]} ${RES[r][0]} ×${n}`).join(' + ') + (c.tool ? ` · con ${TOOLS[c.tool][1]} ${TOOLS[c.tool][0].toLowerCase()}` : '');
+        return k ? `<div class="tl-rec"><span class="tl-ri">${comboIc(c)}</span><div><b>${esc(comboName(c))}</b><small>${esc(need)}</small><small class="tl-rd">${esc(c.desc || '')}</small></div><button data-use="${c.id}">Usar</button></div>` : `<div class="tl-rec off"><span class="tl-ri">❔</span><div><b>???</b><small>${esc(c.hint)}${lock ? ' 🔒' : ''}</small></div></div>`; }).join('')}</div>`;
+    } else if (tab === 'obra') {
+      const n = bldP().length; body = `<p class="sv-tip">${hx ? 'Construí lo que quieras: una casa, una torre, un pórtico. Cada pieza cuesta materiales; si la sacás, te los devuelve.' : '¡Construí lo que quieras! Casas, torres, un templo, un corral… Las piezas son gratis.'} Se apilan solas, como bloques.</p>
+        <div class="tl-pcs">${BP_ORDER.map(t => { const b = BP[t], ok = !hx || svHas(b.cost); return `<button class="tl-pc${ok ? '' : ' poor'}" data-bp="${t}"><span>${b.ic}</span><b>${esc(b.n)}</b>${hx ? `<small>${Object.entries(b.cost).map(([k, c]) => `<i class="${(inv[k] || 0) >= c ? 'ok' : 'no'}">${RES[k][1]} ${RES[k][0]} ${inv[k] || 0}/${c}</i>`).join(' ')}</small>` : ''}</button>`; }).join('')}</div>
+        <div class="tl-acts"><button class="tl-mix" data-bp="${BLD.t}">🧱 Empezar a construir</button></div><p class="sv-tip">Piezas puestas: <b>${n}</b> de ${BLD.max}. Premios a las 25, 100 y 300 piezas.</p>`;
+    } else if (tab === 'casa') {
+      const rows = RECIPES.filter(r => (r.place === 'house' || r.furn) && (!r.furn || s.house)).map(r => { const done = r.furn && s.furn.includes(r.id), built = r.id === 'house' && s.house, can = !done && !built && svHas(r.need);
+        const need = Object.entries(r.need).filter(([, n]) => n > 0).map(([k, n]) => `<i class="${(inv[k] || 0) >= n ? 'ok' : ''}">${RES[k][1]} ${RES[k][0]} ${n}</i>`).join(' ');
+        return `<div class="sv-rec${can ? '' : ' off'}"><div><b>${esc(r.name)}</b><small>${esc(r.desc)}</small><span class="sv-need">${need}</span></div><button data-r="${r.id}" ${can ? '' : 'disabled'}>${done || built ? 'Hecho' : 'Construir'}</button></div>`; }).join('');
+      body = `<p class="sv-tip">Tu casa ya armada, de una sola vez. Si preferís hacerla pieza por pieza, usá Construir.</p>${rows}${s.house ? '' : '<p class="sv-tip">Cuando tengas tu casa, vas a poder hacer muebles: cama, mesa, banco, horno, cofre y lámpara.</p>'}`;
+    }
+    el.innerHTML = `<div class="inv${hx ? ' hx' : ' kd'} sv-sheet tl"><div class="inv-h"><b>${hx ? '🔨 Taller' : '🧱 Construir'}</b><button class="bag-x" aria-label="Cerrar">✕</button></div>${tabs}${body}</div>`;
+    el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
+    el.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = TL.tab = b.dataset.tab; TL.msg = ''; draw(); });
+    el.querySelectorAll('[data-bp]').forEach(b => b.onclick = () => bldStart(b.dataset.bp));
+    el.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { const k = b.dataset.add, n = inv[k] || 0; if (n - (TL.slots[k] || 0) <= 0) { TL.msg = `${RES[k][1]} ${RES[k][0]}: no tenés. ${RES_HOW[k] || ''}`; draw(); return; } if (!TL.slots[k] && Object.keys(TL.slots).filter(q => TL.slots[q] > 0).length >= 3) { TL.msg = 'La mesa tiene lugar para tres materiales distintos.'; draw(); return; } if (slotN() >= 8) { TL.msg = 'La mesa ya está llena.'; draw(); return; } TL.slots[k] = (TL.slots[k] || 0) + 1; TL.msg = ''; tone3d(); draw(); });
+    el.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { const k = b.dataset.rm; TL.slots[k]--; if (TL.slots[k] <= 0) delete TL.slots[k]; draw(); });
+    el.querySelectorAll('[data-use]').forEach(b => b.onclick = () => { const c = COMBOS.find(x => x.id === b.dataset.use); TL.slots = { ...c.need }; tab = TL.tab = 'mesa'; TL.msg = Object.entries(c.need).some(([k, n]) => (inv[k] || 0) < n) ? 'Te faltan materiales para esta receta.' : ''; draw(); });
+    el.querySelectorAll('[data-do]').forEach(b => b.onclick = () => { if (b.dataset.do === 'clr') { TL.slots = {}; TL.msg = ''; draw(); return; } tlMix(draw); });
+    el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { const r = RECIPES.find(x => x.id === b.dataset.r); if (!svHas(r.need)) return;
+      if (r.place === 'house') { const spot = svHouseSpot(); if (!spot) { svToast('Acá no se puede construir. Alejate del camino y de otras construcciones.'); return; } svPay(r.need); s.house = spot; svPlaceHouse(S.scene, spot); ofiXP('car', 20); ofiXP('can', 20); h3do(['M_Lifting_Object', 'PickUp_Table'], 3, .8, 1.2); svXP(30); svToast('🏠 ¡Construiste tu casa! Ahora podés hacerle muebles.'); el.hidden = true; }
+      else if (r.furn) { svPay(r.need); s.furn.push(r.id); svFurnish(r.id); ofiXP(r.id === 'horno' || r.id === 'lampara' ? 'can' : 'car', 8); h3do(['M_Box_Idle', 'PickUp_Table'], 2); svXP(8); svToast('Agregaste: ' + r.name + '.'); draw(); }
+      G().save(); svUI(); });
+  };
+  el.hidden = false; el.onclick = e => { if (e.target === el) el.hidden = true; }; TL.msg = ''; draw();
+}
+function tlMix(draw) {
+  const s = svP(), inv = s.inv, m = COMBOS.find(c => sameNeed(c.need, TL.slots)), say = (t, fx) => { TL.msg = t; draw(fx); };
+  if (Object.entries(TL.slots).some(([k, n]) => (inv[k] || 0) < n)) return say('No te alcanzan los materiales que pusiste.', 'no');
+  if (!m) { let best = null, bs = 0; COMBOS.forEach(c => { let sc = 0; Object.entries(c.need).forEach(([k, n]) => { if (TL.slots[k]) sc += Math.min(n, TL.slots[k]) + 1; }); Object.keys(TL.slots).forEach(k => { if (!c.need[k]) sc -= 1.5; }); if (sc > bs) { bs = sc; best = c; } }); bldSfx(0); return say('Así no sale nada.' + (best ? ' Pista: ' + best.hint : ' Probá con otra cosa.'), 'no'); }
+  if (m.ofi && ofiLv(m.ofi[0]) < m.ofi[1]) return say(`Esto se aprende con ${OFI[m.ofi[0]].name.toLowerCase()} nivel ${m.ofi[1]} (tenés ${ofiLv(m.ofi[0])}).`, 'no');
+  if (m.tool && !svTool(m.tool)) return say(`Para esto necesitás ${TOOLS[m.tool][1]} ${TOOLS[m.tool][0].toLowerCase()}. ${m.tool === 'flint' ? 'Se consigue en los mercados.' : 'Se compra en cualquier mercado, o podés hacerla vos en la mesa.'}`, 'no');
+  if (m.mk && svTool(m.mk)) return say(`Ya tenés ${TOOLS[m.mk][0].toLowerCase()}.`, 'no');
+  const first = !comboDisc().includes(m.id); svPay(m.need);
+  if (m.place === 'fire') { S.toolK = 'flint'; S.toolT = 2.2; h3do(['M_Kneeling_Idle', 'PickUp_Table'], 2.6); svFire(undefined, undefined, true); }
+  else if (m.mk) { svGiveTool(m.mk, 'Lo hiciste vos'); }
+  else { Object.entries(m.out).forEach(([k, n]) => svAdd(k, n)); const ok2 = m.id === 'plank' || m.id === 'viga' ? 'car' : m.id === 'block' || m.id === 'losa' ? 'can' : null, lv2 = ok2 ? ofiLv(ok2) : 0; if ((m.id === 'plank' || m.id === 'block') && Math.random() < (lv2 >= 30 ? .5 : lv2 >= 15 ? .25 : 0)) { svAdd(m.id, 1); svToast('✨ Te salió uno de más: ' + RES[m.id][0].toLowerCase() + '.'); } h3do(['M_Pull_Heavy_Object', 'Interact'], 1.4); svXP(1); if (ok2) ofiXP(ok2, 2); if (m.ofi) ofiXP(m.ofi[0], 6); }
+  if (first) { comboDisc().push(m.id); svXP(10); try { sello('receta-' + m.id, 'Receta: ' + comboName(m)); } catch (e) {} }
+  tone3d(); G().save(); svUI();
+  if (m.place === 'fire') { document.getElementById('v3sheet').hidden = true; return; }
+  if (Object.entries(TL.slots).some(([k, n]) => (inv[k] || 0) < n)) TL.slots = {};
+  say(first ? `✨ ¡Descubriste una receta nueva: ${comboIc(m)} ${comboName(m)}! Quedó en tu libro.` : `${comboIc(m)} ¡Listo! Hiciste ${comboName(m).toLowerCase()}.${Object.keys(TL.slots).length ? ' Tocá Combinar otra vez para hacer más.' : ''}`, 'ok');
 }
 
 /* ---------- hambre, desmayo y la bolsa en el piso ---------- */
