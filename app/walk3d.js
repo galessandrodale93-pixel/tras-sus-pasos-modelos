@@ -847,7 +847,7 @@ function roadLife(scene, W, hx) {
   for (let i = 2; i < main.length - 2; i++) { const a = main[i - 1], b = main[i], d = Math.hypot(b[0] - a[0], b[1] - a[1]); if (d > 12) continue; acc += d; accP += d;
     const tx = main[i + 1][0] - main[i - 1][0], tz = main[i + 1][1] - main[i - 1][1], tl = Math.hypot(tx, tz) || 1, nx = tz / tl, nz = -tx / tl;
     // cosas sueltas cada ~24 m
-    if (accP > 24) { accP = 0; const sd = R() < .5 ? 1 : -1, o = 3 + R() * 4, x = b[0] + nx * sd * o, z = b[1] + nz * sd * o; if (W.dAt(x, z) > 2.2 && waterWet(x, z, null) < .02 && !blockedAt(x, z)) { const r = R(), kd = hx ? (r < .38 ? 'rama' : r < .7 ? 'piedra' : r < .92 ? 'granada' : 'moneda') : (r < .7 ? 'estrella' : 'granada'); LIFE.pk.push({ id: 'pk' + LIFE.pk.length, k: kd, x, z, y: yAt(x, z) }); } }
+    if (accP > 24) { accP = 0; const sd = R() < .5 ? 1 : -1, o = 3 + R() * 4, x = b[0] + nx * sd * o, z = b[1] + nz * sd * o; if (W.dAt(x, z) > 2.2 && waterWet(x, z, null) < .02 && !blockedAt(x, z)) { const r = R(), kd = hx ? (r < .38 ? 'rama' : r < .7 ? 'piedra' : r < .92 ? 'granada' : 'moneda') : (r < .035 ? 'sobre' : r < .7 ? 'estrella' : 'granada'); LIFE.pk.push({ id: 'pk' + LIFE.pk.length, k: kd, x, z, y: yAt(x, z) }); } }
     if (acc < 56 || !far(b[0], b[1])) continue; acc = 0; const kind = KINDS[k % KINDS.length], sd = k % 2 ? 1 : -1; k++;
     const off = kind === 'mojon' ? 3.4 : kind === 'mercado' ? 6.5 : 8 + R() * 3, x = b[0] + nx * sd * off, z = b[1] + nz * sd * off, face = Math.atan2(b[0] - x, b[1] - z);
     if (!okAt(x, z, kind === 'mojon' ? .6 : 2)) continue;
@@ -877,13 +877,13 @@ function lifeOne(scene, kind, x, z, face, yAt, R, hx, W, b) {
 }
 const LIFE_SAY = ['«¿Vas para la ciudad? Dicen que el Maestro anda por esta zona.»', '«¡Shalom! Que el Señor te guarde en el camino.»', '«Venimos de la fiesta en Jerusalén. Todavía nos falta un buen trecho.»', '«¿Escuchaste lo del ciego que ahora ve? ¡Todo el pueblo habla de eso!»', '«El camino es largo, pero acompañados se hace corto.»', '«Mi abuelo decía: "Lámpara es a mis pies tu palabra" (Salmo 119:105).»', '«Si tenés hambre, en el mercado de adelante venden pan.»', '«Cuidá el agua: hasta el próximo pozo hay un rato.»'];
 const LIFE_PAST = ['«Conozco a cada oveja por su nombre. Si una se pierde, dejo a las otras y la busco hasta encontrarla» (Lucas 15:4).', '«El Señor es mi pastor, nada me faltará» (Salmo 23:1). Lo canto de noche, cuando cuido el rebaño.', '«Mis ovejas oyen mi voz» (Juan 10:27). Escuchá: si las llamo, vienen.', '«De día el calor y de noche el frío, pero las ovejas están primero.»'];
-const PK = { rama: ['wood', '🪵', 'Rama'], piedra: ['stone', '🪨', 'Piedra'], granada: ['fruit', '🍎', 'Granada'], moneda: ['money', '🪙', 'Denario'], estrella: [null, '⭐', 'Estrellita'] };
+const PK = { rama: ['wood', '🪵', 'Rama'], piedra: ['stone', '🪨', 'Piedra'], granada: ['fruit', '🍎', 'Granada'], moneda: ['money', '🪙', 'Denario'], estrella: [null, '⭐', 'Estrellita'], sobre: [null, '🎴', 'Sobre de figuritas'] };
 function lifePk(scene, hx) {
   const p = G().P(), day = vday(); p.pk = p.pk && p.pk.d === day ? p.pk : { d: day, got: [] }; const got = new Set(p.pk.got), by = {};
   LIFE.pk.forEach(it => { it.got = got.has(it.id); (by[it.k] || (by[it.k] = [])).push(it); });
-  const G0 = { rama: [new THREE.CylinderGeometry(.04, .06, .9, 5).rotateZ(Math.PI / 2), '#6A4A2C'], piedra: [new THREE.DodecahedronGeometry(.2, 0), '#8E8674'], granada: [new THREE.SphereGeometry(.13, 10, 8), '#C0392B'], moneda: [new THREE.CylinderGeometry(.13, .13, .03, 14), '#E2B43C'], estrella: [new THREE.OctahedronGeometry(.28, 0), '#FFD24A'] };
-  Object.entries(by).forEach(([k, L]) => { const [g, c] = G0[k], mt = new THREE.MeshStandardMaterial({ color: c, roughness: .5, metalness: k === 'moneda' ? .8 : 0, emissive: k === 'estrella' || k === 'moneda' ? c : '#000000', emissiveIntensity: .45 }), im = new THREE.InstancedMesh(g, mt, L.length), M = new THREE.Matrix4();
-    L.forEach((it, i) => { it.i = i; M.makeRotationY(i * 1.7).setPosition(it.x, it.y + (k === 'estrella' ? .55 : .12), it.z); if (it.got) M.makeScale(0, 0, 0); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.castShadow = false; im.frustumCulled = false; scene.add(im); LIFE.ims[k] = im; });
+  const G0 = { rama: [new THREE.CylinderGeometry(.04, .06, .9, 5).rotateZ(Math.PI / 2), '#6A4A2C'], piedra: [new THREE.DodecahedronGeometry(.2, 0), '#8E8674'], granada: [new THREE.SphereGeometry(.13, 10, 8), '#C0392B'], moneda: [new THREE.CylinderGeometry(.13, .13, .03, 14), '#E2B43C'], estrella: [new THREE.OctahedronGeometry(.28, 0), '#FFD24A'], sobre: [new THREE.BoxGeometry(.42, .05, .3).rotateX(-.9), '#E2574C'] };
+  Object.entries(by).forEach(([k, L]) => { const [g, c] = G0[k], mt = new THREE.MeshStandardMaterial({ color: c, roughness: .5, metalness: k === 'moneda' ? .8 : 0, emissive: k === 'estrella' || k === 'moneda' || k === 'sobre' ? c : '#000000', emissiveIntensity: .45 }), im = new THREE.InstancedMesh(g, mt, L.length), M = new THREE.Matrix4();
+    L.forEach((it, i) => { it.i = i; M.makeRotationY(i * 1.7).setPosition(it.x, it.y + (k === 'estrella' ? .55 : k === 'sobre' ? .6 : .12), it.z); if (it.got) M.makeScale(0, 0, 0); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.castShadow = false; im.frustumCulled = false; scene.add(im); LIFE.ims[k] = im; });
   // brillitos para verlos de lejos
   const pos = new Float32Array(LIFE.pk.length * 3); LIFE.pk.forEach((it, i) => pos.set(it.got ? [0, -999, 0] : [it.x, it.y + .5, it.z], i * 3)); const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   const tx = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,240,190,1)'); gr.addColorStop(.35, 'rgba(255,220,140,.5)'); gr.addColorStop(1, 'rgba(255,220,140,0)'); x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
@@ -896,7 +896,7 @@ function lifeTick(dt, t) {
   for (let i = lo; i < L.length && L[i].z < a.z + 1.6; i++) { const it = L[i]; if (it.got || Math.hypot(it.x - a.x, it.z - a.z) > 1.5) continue;
     it.got = true; const p = G().P(); if (!p.pk || p.pk.d !== vday()) p.pk = { d: vday(), got: [] }; p.pk.got.push(it.id); const im = LIFE.ims[it.k]; if (im) { im.setMatrixAt(it.i, new THREE.Matrix4().makeScale(0, 0, 0)); im.instanceMatrix.needsUpdate = true; }
     const pa = LIFE.pts.geometry.attributes.position; pa.setXYZ(LIFE.pk.indexOf(it), 0, -999, 0); pa.needsUpdate = true; const d = PK[it.k];
-    if (S.hx && d[0] && svOn()) { svAdd(d[0], 1); svUI(); } else svXP(it.k === 'estrella' ? 3 : 1); pkPop('+1 ' + d[1] + ' ' + d[2]); try { tone3d(); } catch (e) {} }
+    if (it.k === 'sobre') { try { albGetSobre(1); } catch (e) {} continue; } if (S.hx && d[0] && svOn()) { svAdd(d[0], 1); svUI(); } else svXP(it.k === 'estrella' ? 3 : 1); pkPop('+1 ' + d[1] + ' ' + d[2]); try { tone3d(); } catch (e) {} }
 }
 function pkPop(t) { const el = document.createElement('div'); el.className = 'pkpop'; el.textContent = t; document.body.appendChild(el); setTimeout(() => el.remove(), 1400); }
 
@@ -1926,6 +1926,7 @@ function misDone(m) {
   misPop('¡Misión cumplida! +' + MIS_PTS, d.done); tone3d(); try { const who = d.target || d.giver; G().vo(d.done, who.look && who.look.g === 'chica' ? 'mujer' : 'varon'); } catch (e) {} glowAdd(10, 'mision'); h3npcPlay(m.target || m.giver, ['M_Thankful', 'M_Cheering'], 3); if (m.target && m.giver) setTimeout(() => h3npcPlay(m.giver, ['M_Clapping', 'M_Thankful'], 2.5), 600);
   if (Math.random() < .5) setTimeout(() => gearGive(gearRoll(), 'Recompensa de la misión'), 3400);
   if (S && S.hx) setTimeout(() => svMissionReward(d), 1800);
+  if (S && !S.hx) setTimeout(() => { try { albGetSobre(1, '¡Te ganaste un sobre de figuritas!'); } catch (e) {} }, 2800);
 }
 /* un solo contexto de audio para todos los efectos: abrir uno nuevo por cada sonido (campanita, revelación de prenda) los iba acumulando, y en el celular eso distorsiona la música */
 function fxCtx() { let A = (typeof AU !== 'undefined' && AU.ctx) || fxCtx.A; if (!A) A = fxCtx.A = new (window.AudioContext || window.webkitAudioContext)(); if (A.state === 'suspended') { try { A.resume(); } catch (e) {} } return A; }
@@ -6661,7 +6662,7 @@ function loop(now) {
   // con un minijuego abierto el mundo 3D no se dibuja: toda la máquina queda para el minijuego
   const arc = S.arcEl || (S.arcEl = document.getElementById('arcade')); if (arc && !arc.hidden) { S.last = 0; return; }
   const raw = now - (S.last || now), t = now / 1000, dt = Math.min(.05, raw / 1000); S.last = now; S.t = t; S.renderer.info.reset(); if (raw > 0 && raw < 1500) qFrame(Math.min(raw, 250));
-  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); try { pgTick(dt); } catch (e) {} try { olTick(dt); } catch (e) {} try { fogTick(dt); } catch (e) {} try { lifeTick(dt, t); } catch (e) {} floraTick(dt); miniTick(dt); compassTick(dt); pocketTick(dt); posTick(dt); vilTick(dt); try { bldTick(dt, t); } catch (e) {} foamTick(t); dawnTick(dt); try { anTick(dt); } catch (e) {} const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
+  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); try { pgTick(dt); } catch (e) {} try { olTick(dt); } catch (e) {} try { albTick(dt); } catch (e) {} try { fogTick(dt); } catch (e) {} try { lifeTick(dt, t); } catch (e) {} floraTick(dt); miniTick(dt); compassTick(dt); pocketTick(dt); posTick(dt); vilTick(dt); try { bldTick(dt, t); } catch (e) {} foamTick(t); dawnTick(dt); try { anTick(dt); } catch (e) {} const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
   for (const id in S.items) { const m = S.items[id];
     if (m.userData.gone) { m.userData.gone += dt; const k = m.userData.gone / .5; m.scale.setScalar(1 + k); m.position.y += dt * 2; m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = Math.max(0, 1 - k); } }); if (k >= 1) { S.scene.remove(m); delete S.items[id]; } continue; }
     m.rotation.y = t * 1.6; m.position.y = (m.userData.by || 0) + .85 + Math.sin(t * 2.4 + id.length) * .12;
@@ -7429,7 +7430,7 @@ function bldP() { const p = G().P(), k = S && S.hx ? 'bldH' : 'bldK'; p[k] = p[k
 function bldBuild(scene) {
   BLD.scene = scene; BLD.parts = {}; BLD.mats = null; BLD.pops = []; BLD.on = false; const M = bldMats();
   BP_ORDER.forEach(t => { BLD.parts[t] = bldShape(t).map(([geo, mk]) => { const im = new THREE.InstancedMesh(geo, M[mk], BLD.cap); im.count = 0; im.frustumCulled = false; im.castShadow = !!S.hx; im.receiveShadow = true; im.userData.keep = 1; scene.add(im); return im; }); });
-  BLD.list = bldP().slice(); bldSync(); if (!S.hx) bldKidsBtn();
+  BLD.list = bldP().slice(); bldSync(); if (!S.hx) bldKidsBtn(); try { albInit(); } catch (e) { console.warn('álbum', e); }
 }
 const _bm = {}; function bldMat(e, k) { const M = _bm.M || (_bm.M = new THREE.Matrix4()), Q = _bm.Q || (_bm.Q = new THREE.Quaternion()), A = _bm.A || (_bm.A = new THREE.Vector3(0, 1, 0)), V = _bm.V || (_bm.V = new THREE.Vector3()), Sc = _bm.S || (_bm.S = new THREE.Vector3()); Q.setFromAxisAngle(A, (e[4] || 0) * Math.PI / 2); return M.compose(V.set(e[1], e[3], e[2]), Q, Sc.set(k, k, k)); }
 function bldSync() {
@@ -7525,6 +7526,129 @@ function bldTick(dt, t) {
 function bldKidsBtn() {
   let b = document.getElementById('v3kbld'); if (!b) { b = document.createElement('button'); b.id = 'v3kbld'; b.className = 'v3kbld'; b.innerHTML = '🧱<span>Construir</span>'; b.title = 'Construir (B)'; b.onclick = e => { e.stopPropagation(); svCraft('obra'); }; b.onpointerdown = e => e.stopPropagation(); document.body.appendChild(b); }
 }
+
+/* ===================== ÁLBUM DE FIGURITAS (Kids): sobres en el camino y por cada misión, lugares que se consiguen visitándolos, repetidas que se cambian ===================== */
+const ALB_PAGES = [
+  ['per', '👥', 'Personas', '#E8A04A'], ['ani', '🐾', 'Animales', '#6FA86A'], ['obj', '🧺', 'Objetos', '#5A8FD0'],
+  ['par', '📖', 'Parábolas', '#B07ACC'], ['pla', '🌿', 'Plantas', '#8FB04A'], ['lug', '🗺️', 'Lugares', '#D07A5A']
+];
+const ALB = [
+  ['per', 'maria', '👩', 'María', 'La mamá de Jesús. Le dijo a Dios: «Que se haga en mí lo que dijiste» (Lucas 1:38).'],
+  ['per', 'jose', '🪚', 'José', 'El carpintero de Nazaret que cuidó a Jesús como un papá (Mateo 1:24).'],
+  ['per', 'juanbau', '🏞️', 'Juan el Bautista', 'Bautizaba en el río Jordán y preparó el camino para Jesús (Marcos 1:4).'],
+  ['per', 'pedro', '🎣', 'Pedro', 'Era pescador. Jesús le dijo: «Vengan, y los haré pescadores de personas» (Marcos 1:17).'],
+  ['per', 'andres', '🐟', 'Andrés', 'El hermano de Pedro. Fue a buscarlo para que conociera a Jesús (Juan 1:41).'],
+  ['per', 'juanap', '📜', 'Juan', 'El discípulo amado. Escribió que Dios es amor (1 Juan 4:8).'],
+  ['per', 'mateo', '🪙', 'Mateo', 'Cobraba impuestos, y dejó todo para seguir a Jesús (Mateo 9:9).'],
+  ['per', 'zaqueo', '🧗', 'Zaqueo', 'Era bajito y se subió a un árbol para ver pasar a Jesús (Lucas 19:4).'],
+  ['per', 'marta', '🍲', 'Marta', 'Recibió a Jesús en su casa de Betania (Lucas 10:38).'],
+  ['per', 'lazaro', '💫', 'Lázaro', 'Jesús lo llamó por su nombre y salió vivo de la tumba (Juan 11:43-44).'],
+  ['per', 'samaritana', '🫙', 'La mujer samaritana', 'Habló con Jesús junto al pozo y corrió a contarle a todo su pueblo (Juan 4:28-29).'],
+  ['per', 'ninopanes', '🧺', 'El niño de los panes', 'Compartió sus cinco panes y dos pescados, y alcanzó para miles (Juan 6:9).', 1],
+  ['ani', 'oveja', '🐑', 'La oveja', 'Jesús es el buen pastor que conoce a cada una de sus ovejas (Juan 10:14).'],
+  ['ani', 'burro', '🐴', 'El burrito', 'Jesús entró a Jerusalén montado en un burrito, y la gente cantaba (Mateo 21:7-9).'],
+  ['ani', 'camello', '🐫', 'El camello', 'Los camellos cruzaban el desierto cargados con mercaderías (Génesis 37:25).'],
+  ['ani', 'paloma', '🕊️', 'La paloma', 'Cuando Jesús se bautizó, el Espíritu bajó sobre él como una paloma (Mateo 3:16).', 1],
+  ['ani', 'pez', '🐟', 'Los peces', 'Los discípulos pescaron ciento cincuenta y tres peces grandes (Juan 21:11).'],
+  ['ani', 'gorrion', '🐦', 'El gorrión', 'Ni un gorrioncito cae al suelo sin que el Padre lo sepa (Mateo 10:29).'],
+  ['ani', 'gallo', '🐓', 'El gallo', 'Cantó la noche en que Pedro dijo que no conocía a Jesús (Lucas 22:60-61).'],
+  ['ani', 'cabra', '🐐', 'La cabra', 'Las cabras y las ovejas pastaban juntas en los campos (Mateo 25:32).'],
+  ['ani', 'buey', '🐂', 'El buey', 'Jesús dijo: «Mi yugo es suave y mi carga es liviana» (Mateo 11:30).'],
+  ['ani', 'gallina', '🐔', 'La gallina', 'Jesús quería cuidar a su pueblo como la gallina junta a sus pollitos (Mateo 23:37).'],
+  ['ani', 'zorro', '🦊', 'El zorro', 'Los zorros tienen cuevas, pero Jesús no tenía dónde recostar la cabeza (Mateo 8:20).'],
+  ['ani', 'cordero', '🐏', 'El cordero', 'Juan el Bautista dijo: «¡Miren! Ahí está el Cordero de Dios» (Juan 1:29).'],
+  ['obj', 'lampara', '🪔', 'La lámpara', 'Nadie enciende una lámpara para esconderla debajo de un cajón (Mateo 5:15).'],
+  ['obj', 'red', '🕸️', 'La red', 'Tiraron la red a la derecha de la barca y se llenó de peces (Juan 21:6).'],
+  ['obj', 'cantaro', '🏺', 'El cántaro', 'La samaritana dejó su cántaro junto al pozo y corrió al pueblo (Juan 4:28).'],
+  ['obj', 'moneda', '🪙', 'La moneda perdida', 'Una mujer barrió toda la casa hasta encontrar su moneda (Lucas 15:8).'],
+  ['obj', 'pan', '🍞', 'El pan', 'Jesús dijo: «Yo soy el pan de vida» (Juan 6:35).'],
+  ['obj', 'sandalias', '🩴', 'Las sandalias', 'Juan dijo que no merecía ni desatar las sandalias de Jesús (Marcos 1:7).'],
+  ['obj', 'estrella', '⭐', 'La estrella', 'Los sabios siguieron la estrella hasta Belén (Mateo 2:9).', 1],
+  ['obj', 'barca', '⛵', 'La barca', 'Desde la barca, Jesús calmó la tormenta con su palabra (Marcos 4:39).'],
+  ['obj', 'perfume', '🧴', 'El perfume', 'María derramó perfume sobre los pies de Jesús y toda la casa se llenó de olor (Juan 12:3).'],
+  ['obj', 'corona', '👑', 'La corona', 'Jesús es el Rey que vino a servir (Marcos 10:45).'],
+  ['obj', 'pesebre', '🛖', 'El pesebre', 'María acostó a su bebé en un pesebre (Lucas 2:7).'],
+  ['obj', 'piedra', '🪨', 'La piedra corrida', 'La piedra de la tumba estaba corrida: ¡Jesús resucitó! (Marcos 16:4).'],
+  ['par', 'sembrador', '🌱', 'El sembrador', 'La semilla que cayó en buena tierra dio mucho fruto (Marcos 4:8).'],
+  ['par', 'ovejaperdida', '🔦', 'La oveja perdida', 'El pastor dejó a las noventa y nueve para buscar a la que se perdió (Lucas 15:4).'],
+  ['par', 'prodigo', '🏡', 'El hijo que volvió', 'El papá salió corriendo a abrazar a su hijo que volvía a casa (Lucas 15:20).', 1],
+  ['par', 'samaritano', '🩹', 'El buen samaritano', 'Se detuvo y cuidó al hombre herido del camino (Lucas 10:34).'],
+  ['par', 'mostaza', '🌳', 'El grano de mostaza', 'Una semillita chiquita que se hace un árbol grande (Mateo 13:31-32).'],
+  ['par', 'perla', '🦪', 'La perla preciosa', 'Un comerciante vendió todo lo que tenía para comprar una perla (Mateo 13:46).'],
+  ['par', 'roca', '🏔️', 'La casa sobre la roca', 'Vino la tormenta, pero la casa no se cayó (Mateo 7:24-25).'],
+  ['par', 'levadura', '🥖', 'La levadura', 'Un poquito de levadura hace crecer toda la masa (Mateo 13:33).'],
+  ['par', 'talentos', '💰', 'Los talentos', 'Al que cuidó bien lo que recibió, el señor le dijo: «¡Bien hecho!» (Mateo 25:21).'],
+  ['par', 'virgenes', '🕯️', 'Las lámparas listas', 'Las jóvenes que tenían aceite estaban listas cuando llegó el novio (Mateo 25:10).'],
+  ['par', 'tesoro', '💎', 'El tesoro escondido', 'Un hombre encontró un tesoro en un campo y vendió todo para comprarlo (Mateo 13:44).'],
+  ['par', 'fiesta', '🎉', 'La gran fiesta', 'El rey mandó invitar a todos a su fiesta (Lucas 14:23).'],
+  ['pla', 'olivo', '🫒', 'El olivo', 'En el monte de los Olivos, Jesús iba a orar (Lucas 22:39).'],
+  ['pla', 'higuera', '🌳', 'La higuera', 'Jesús vio a Natanael sentado debajo de una higuera (Juan 1:48).'],
+  ['pla', 'vid', '🍇', 'La vid', 'Jesús dijo: «Yo soy la vid y ustedes son las ramas» (Juan 15:5).'],
+  ['pla', 'trigo', '🌾', 'El trigo', 'El grano de trigo que cae en la tierra da mucho fruto (Juan 12:24).'],
+  ['pla', 'lirio', '🌸', 'Los lirios', 'Miren los lirios del campo: Dios los viste más lindo que a un rey (Mateo 6:28-29).', 1],
+  ['pla', 'palmera', '🌴', 'La palmera', 'La gente agitaba ramas de palmera y gritaba «¡Hosanna!» (Juan 12:13).'],
+  ['pla', 'sicomoro', '🌲', 'El sicómoro', 'El árbol al que se subió Zaqueo (Lucas 19:4).'],
+  ['pla', 'cedro', '🪵', 'El cedro', 'El justo crece fuerte como un cedro del Líbano (Salmo 92:12).'],
+  ['pla', 'lino', '🌼', 'El lino', 'En la tumba vacía quedaron las telas de lino (Juan 20:5).'],
+  ['pla', 'granado', '🍎', 'El granado', 'En el templo había granadas talladas en las columnas (1 Reyes 7:18).'],
+  ['pla', 'espinos', '🌵', 'Los espinos', 'Parte de la semilla cayó entre espinos (Marcos 4:7).'],
+  ['pla', 'flores', '🌺', 'Las flores del campo', 'Las flores se secan, pero la Palabra de Dios permanece para siempre (Isaías 40:8).'],
+  ['lug', 'belen', '🏘️', 'Belén', 'En Belén nació Jesús (Lucas 2:4-7).', 0, 'Belén'],
+  ['lug', 'nazaret', '🔨', 'Nazaret', 'Jesús creció en Nazaret, en la casa de José y María (Lucas 2:51).', 0, 'Taller de José'],
+  ['lug', 'templo', '🏛️', 'El templo', 'Jesús, a los doce años, se quedó en el templo escuchando y preguntando (Lucas 2:46).', 0, 'Templo de Jerusalén'],
+  ['lug', 'jordan', '💧', 'El río Jordán', 'Jesús fue bautizado en el Jordán (Mateo 3:13).', 0, 'Río Jordán'],
+  ['lug', 'desierto', '🏜️', 'El desierto', 'Jesús estuvo cuarenta días en el desierto (Mateo 4:1-2).', 0, 'Desierto de Judea'],
+  ['lug', 'galilea', '🌊', 'El mar de Galilea', 'Jesús caminó sobre el agua (Mateo 14:25).', 0, 'Mar de Galilea'],
+  ['lug', 'cana', '💒', 'Caná', 'En una boda en Caná Jesús hizo su primer milagro (Juan 2:11).', 0, 'Caná'],
+  ['lug', 'capernaum', '🛏️', 'Capernaúm', 'Bajaron a un paralítico por el techo para que Jesús lo sanara (Marcos 2:4).', 0, 'Casa en Capernaúm'],
+  ['lug', 'colina', '⛰️', 'La colina de los cinco mil', 'Jesús les dio de comer a miles de personas (Juan 6:10).', 0, 'La colina de los cinco mil'],
+  ['lug', 'getsemani', '🌙', 'Getsemaní', 'Jesús oró en el huerto de Getsemaní (Mateo 26:36).', 0, 'Getsemaní'],
+  ['lug', 'tumba', '🌅', 'La tumba vacía', '¡No está aquí: resucitó! (Lucas 24:6).', 1, 'La tumba del huerto'],
+  ['lug', 'emaus', '🚶', 'Emaús', 'Dos amigos caminaron con Jesús resucitado sin darse cuenta (Lucas 24:15).', 0, 'Emaús']
+].map(([pg, id, ic, n, t, sh, poi]) => ({ pg, id, ic, n, t, sh: !!sh, poi }));
+const ALB_BY = Object.fromEntries(ALB.map((c, i) => [c.id, Object.assign(c, { no: i + 1 })]));
+const ALBS = { acc: 0, el: null, pg: 'per' };
+function albP() { const p = G().P(); p.album = p.album || { have: {}, sob: 0, seen: 0 }; return p.album; }
+function albOn() { return !!(S && !S.hx); }
+function albMissing(pgOk) { const a = albP(); return ALB.filter(c => !a.have[c.id] && (!pgOk || pgOk(c))); }
+function albRoll() { const a = albP(), pool = ALB.filter(c => c.pg !== 'lug'), miss = pool.filter(c => !a.have[c.id]), pick = L => { const w = L.map(c => c.sh ? .35 : 1), s = w.reduce((x, y) => x + y, 0); let r = Math.random() * s; for (let i = 0; i < L.length; i++) { r -= w[i]; if (r <= 0) return L[i]; } return L[L.length - 1]; };
+  const out = []; for (let i = 0; i < 3; i++) { const fresh = miss.filter(c => !out.includes(c)); out.push(fresh.length && (i === 0 || Math.random() < .45) ? pick(fresh) : pick(pool)); } return out; }
+function albAdd(c) { const a = albP(), isNew = !a.have[c.id]; a.have[c.id] = (a.have[c.id] || 0) + 1; if (isNew) albPageCheck(c.pg); return isNew; }
+function albPageCheck(pg) { const a = albP(), L = ALB.filter(c => c.pg === pg); if (!L.every(c => a.have[c.id])) return; const P = ALB_PAGES.find(x => x[0] === pg); setTimeout(() => { try { sello('album-' + pg, 'Álbum: ' + P[2]); } catch (e) {} misPop('¡Completaste la página ' + P[2] + '!', 'Tu álbum está cada vez más lleno'); try { tone3d(); kidsShine(); } catch (e) {} svXP(25); a.sob = (a.sob || 0) + 1; G().save(); albBtn(); }, 900); if (ALB.every(c => a.have[c.id])) setTimeout(() => { try { sello('album-lleno', '¡Álbum completo!'); } catch (e) {} misPop('¡Llenaste el álbum entero!', 'En el próximo curso viene un álbum nuevo'); }, 4200); }
+function albGetSobre(n, why) { const a = albP(); a.sob = (a.sob || 0) + (n || 1); G().save(); albBtn(true); pkPop('🎴 ' + (why || '¡Un sobre de figuritas!')); }
+function albTick(dt) { if (!albOn()) return; ALBS.acc -= dt; if (ALBS.acc > 0) return; ALBS.acc = 1; const a = S.av.position, A = albP();
+  for (const c of ALB) { if (!c.poi || A.have[c.id]) continue; const q = (S.pois || []).find(o => o.name === c.poi); if (q && (q.x - a.x) ** 2 + (q.z - a.z) ** 2 < 26 * 26) { albAdd(c); G().save(); albBtn(true); albToast(c); break; } } }
+function albToast(c) { const el = document.createElement('div'); el.className = 'alb-got'; el.innerHTML = `<div class="alb-card pg-${c.pg}${c.sh ? ' sh' : ''}" style="--pc:${ALB_PAGES.find(p => p[0] === c.pg)[3]}"><i>${c.no}</i><span>${c.ic}</span><b>${esc(c.n)}</b></div><p>¡Figurita nueva para tu álbum!</p>`; document.body.appendChild(el); try { tone3d(); } catch (e) {} setTimeout(() => el.classList.add('out'), 2600); setTimeout(() => el.remove(), 3200); }
+function albBtn(pulse) { if (!albOn()) { const o = document.getElementById('v3kalb'); if (o) o.remove(); return; } let b = document.getElementById('v3kalb'); if (!b) { b = document.createElement('button'); b.id = 'v3kalb'; b.className = 'v3kalb'; b.title = 'Álbum de figuritas'; b.onclick = e => { e.stopPropagation(); albOpen(); }; b.onpointerdown = e => e.stopPropagation(); document.body.appendChild(b); }
+  const a = albP(); b.innerHTML = '📒' + (a.sob > 0 ? `<em>${a.sob}</em>` : ''); if (pulse) { b.classList.remove('pl'); void b.offsetWidth; b.classList.add('pl'); } }
+function albCard(c, have, big) { const pc = ALB_PAGES.find(p => p[0] === c.pg)[3]; if (!have) return `<div class="alb-card off" style="--pc:${pc}"><i>${c.no}</i><span>${c.ic}</span><b>${c.pg === 'lug' ? 'Visitá el lugar' : ''}</b></div>`; return `<button class="alb-card${c.sh ? ' sh' : ''}${big ? ' big' : ''}" data-c="${c.id}" style="--pc:${pc}"><i>${c.no}</i><span>${c.ic}</span><b>${esc(c.n)}</b>${have > 1 && !big ? `<u>x${have}</u>` : ''}${big ? `<p>${esc(c.t)}</p>` : ''}</button>`; }
+function albDups() { const a = albP(); return Object.values(a.have).reduce((s, n) => s + Math.max(0, n - 1), 0); }
+function albOpen(pg) { if (!albOn()) return; S.joy.x = 0; S.joy.y = 0; ALBS.pg = pg || ALBS.pg; let el = document.getElementById('v3alb'); if (!el) { el = document.createElement('div'); el.id = 'v3alb'; el.className = 'alb'; document.body.appendChild(el); } el.hidden = false; document.body.classList.add('v3albon');
+  const a = albP(), tot = ALB.filter(c => a.have[c.id]).length, dups = albDups();
+  const tabs = ALB_PAGES.map(([k, ic, n, col]) => { const L = ALB.filter(c => c.pg === k), h = L.filter(c => a.have[c.id]).length; return `<button data-p="${k}" class="${k === ALBS.pg ? 'on' : ''}${h === L.length ? ' full' : ''}" style="--pc:${col}"><span>${ic}</span><small>${n}</small><em>${h}/${L.length}</em></button>`; }).join('');
+  const L = ALB.filter(c => c.pg === ALBS.pg), P = ALB_PAGES.find(p => p[0] === ALBS.pg);
+  el.innerHTML = `<div class="alb-in"><div class="alb-h"><div><b>📒 Mi álbum de figuritas</b><small>${tot} de ${ALB.length} figuritas</small></div><button class="alb-x" aria-label="Cerrar">✕</button></div>
+    <div class="alb-bar"><i style="width:${Math.round(tot / ALB.length * 100)}%"></i></div>
+    <div class="alb-tabs">${tabs}</div>
+    <div class="alb-pg" style="--pc:${P[3]}"><h4>${P[1]} ${P[2]}</h4>${ALBS.pg === 'lug' ? '<p class="alb-tip">Estas figuritas no vienen en los sobres: se consiguen llegando a cada lugar del camino.</p>' : ''}<div class="alb-grid">${L.map(c => albCard(c, a.have[c.id])).join('')}</div></div>
+    <div class="alb-f"><button class="alb-sob${a.sob > 0 ? ' go' : ''}" ${a.sob > 0 ? '' : 'disabled'}>🎴 ${a.sob > 0 ? 'Abrir sobre (' + a.sob + ')' : 'No tenés sobres'}</button><button class="alb-dup" ${dups >= 3 ? '' : 'disabled'}>🔄 Cambiar 3 repetidas por un sobre <small>(tenés ${dups})</small></button></div>
+    <p class="alb-tip">Los sobres aparecen en el camino y te los dan al cumplir misiones.</p></div>`;
+  const close = () => { el.hidden = true; document.body.classList.remove('v3albon'); };
+  el.querySelector('.alb-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
+  el.querySelectorAll('.alb-tabs button').forEach(b => b.onclick = () => albOpen(b.dataset.p));
+  el.querySelectorAll('.alb-grid [data-c]').forEach(b => b.onclick = () => albShow(ALB_BY[b.dataset.c]));
+  el.querySelector('.alb-sob').onclick = () => { if (albP().sob > 0) albPack(); };
+  el.querySelector('.alb-dup').onclick = () => { if (albDups() < 3) return; let need = 3; const h = albP().have; for (const id of Object.keys(h).sort((x, y) => h[y] - h[x])) { while (need > 0 && h[id] > 1) { h[id]--; need--; } if (!need) break; } albGetSobre(1, 'Cambiaste 3 repetidas por un sobre'); albOpen(); };
+}
+function albShow(c) { const el = document.getElementById('v3alb'); if (!el) return; const d = document.createElement('div'); d.className = 'alb-zoom'; d.innerHTML = albCard(c, 1, true) + '<button class="alb-ok">Listo</button>'; el.appendChild(d); try { G().vo(c.n + '. ' + c.t, 'narrador'); } catch (e) {} d.onclick = e => { if (e.target === d || e.target.classList.contains('alb-ok')) { d.remove(); try { G().voStop && G().voStop(); } catch (er) {} } }; }
+function albPack() { const a = albP(); if (!(a.sob > 0)) return; a.sob--; const cards = albRoll(), res = cards.map(c => albAdd(c)); G().save(); albBtn();
+  const el = document.getElementById('v3alb'); el.querySelector('.alb-in').classList.add('dim'); const d = document.createElement('div'); d.className = 'alb-pack'; d.innerHTML = `<div class="alb-env"><span>🎴</span><b>Sobre de figuritas</b><small>Tocá para abrir</small></div><div class="alb-row"></div><button class="alb-ok" hidden>¡Pegar en el álbum!</button>`; el.appendChild(d);
+  const env = d.querySelector('.alb-env'), row = d.querySelector('.alb-row'), ok = d.querySelector('.alb-ok'); let opened = false;
+  const open = () => { if (opened) return; opened = true; env.classList.add('rip'); try { tone3d(); } catch (e) {} setTimeout(() => { env.remove(); cards.forEach((c, i) => { const w = document.createElement('div'); w.className = 'alb-flip'; w.innerHTML = `<div class="fb">🎴</div><div class="ff">${albCard(c, 1)}<em class="${res[i] ? 'nw' : 'rp'}">${res[i] ? '¡NUEVA!' : 'Repetida'}</em></div>`; row.appendChild(w); setTimeout(() => { w.classList.add('on'); if (res[i]) { try { tone3d(); } catch (e) {} } }, 350 + i * 650); }); setTimeout(() => { ok.hidden = false; const nn = res.filter(Boolean).length; if (nn) try { G().vo(nn === 1 ? '¡Una figurita nueva!' : '¡' + nn + ' figuritas nuevas!', 'narrador'); } catch (e) {} }, 350 + cards.length * 650); }, 450); };
+  env.onclick = open; setTimeout(open, 2500);
+  ok.onclick = () => { d.remove(); const fresh = cards.find((c, i) => res[i]); albOpen(fresh ? fresh.pg : ALBS.pg); if (fresh) setTimeout(() => { const b = document.querySelector(`#v3alb .alb-grid [data-c="${fresh.id}"]`); if (b) b.classList.add('glow'); }, 50); };
+}
+function albInit() { if (!albOn()) { albBtn(); return; } albP(); albBtn(); }
 
 /* ===================== TALLER: mesa de trabajo para combinar materiales, libro de recetas, construir libre y tu casa ===================== */
 const RES_HOW = { lana: 'Se esquila de las ovejas de los pastores, en el camino y en las afueras.', lino: 'Se arranca de las matas de lino del taller de carpas.', aceitunas: 'Se varean de los olivos que rodean la prensa de aceite, cerca de Getsemaní.', aceite: 'Se muele en la prensa de aceite, o se compra en el mercado.', uvas: 'Se cortan de las vides cargadas en la viña.', mosto: 'Se pisa en el lagar de la viña.', trigo: 'Se espiga en los bordes del trigal de Booz, se cosecha en sus parcelas o se compra en la panadería.', semilla: 'Se compran en el mercado o la panadería, o se separan del trigo en el Taller.', barro: 'Se junta en los barriales: junto al río Jordán, en la orilla del lago y en la alfarería.', wood: 'Se consigue talando árboles con el hacha.', stone: 'Se consigue picando rocas con el pico.', plank: 'Se hace en la mesa: dos de madera, con el hacha.', block: 'Se hace en la mesa: dos de piedra, con el pico.', viga: 'Se hace en la mesa con tablones y madera.', losa: 'Se hace en la mesa con un bloque y una piedra.', fruit: 'Se juntan de los granados.', lemon: 'Se juntan de los limoneros.', fish: 'Se pesca con la caña o la red.', cooked: 'Se asa el pescado en una fogata.' };
@@ -9199,7 +9323,7 @@ function examReq(r, kids) { try { if (!S || !S.pois) return []; const pz = S.poi
   return L.filter(x => x.need > 0); } catch (e) { return []; } }
 /* premio por aprobar una etapa por primera vez: una prenda asegurada de rara para arriba y un poco de Resplandor */
 function examPrize(name) { try { const st = gearState(), left = GEAR.filter(x => !st.own.includes(x.id) && x.r !== 'u' && !x.x && x.r !== 'c'); if (left.length) { const u = Math.random() * 30, k = u < 3 ? 'l' : u < 10 ? 'e' : 'r'; let L = left.filter(x => x.r === k); if (!L.length) L = left.filter(x => x.r === 'r'); if (!L.length) L = left; gearGive(L[Math.floor(Math.random() * L.length)], 'Por superar el desafío de ' + (name || 'la etapa')); } glowAdd(5, 'Desafío superado'); } catch (e) {} }
-window.W3 = { BARR, FARM, ORCH, WOOL, LIFE, examReq, examPrize, ofi: () => ({ lv: Object.fromEntries(Object.keys(OFI).map(k => [k, ofiLv(k)])), st: ofiP(), m: (S.ofi || []).map(x => [x.k, Math.round(x.o.position.x), Math.round(x.o.position.z)]) }), sec: () => ({ why: SEC.why, L: SEC.list.map(e => [e.d.id, Math.round(e.x), Math.round(e.z)]) }), misNames: () => Object.fromEntries(MISSIONS.map(d => [d.id, d.title || ((d.giver && d.giver.name ? d.giver.name + ': ' : '') + (d.item && d.item.name ? d.item.name : d.id))])), grot: () => grotEnter(), phDbg: () => { const o = { near: PH.near, lv: QUAL.lv, see: QT.see[QUAL.lv], ema: QUAL.ema, slow: PH.slow, n: PH.bands.length, unb: PH.bands.filter(b => !b.built).length }; PH.near = 0; try { phTick(.016); o.tick = 'ok'; } catch (e) { o.tick = String(e && e.stack || e).slice(0, 400); } o.unb2 = PH.bands.filter(b => !b.built).length; return o; }, ph: id => PH.bands.filter(b => b.id === id).map(b => [b.list.length, b.built, !!b.ok, b.zc, !!(b.g && b.g.visible), b.ims.length, JSON.stringify(b.o)]), poiProps: () => (FLORA.poiProps || []).map(q => [q[0], q[1].length]), trails: () => TRL, side: () => SP, path: (x, z) => findPath(S.av.position.x, S.av.position.z, x, z), walk: (x, z) => walkLine(x, z), ground: (x, z) => groundAt(x, z, S.gy), merge: f => worldMerge(S.scene, f || 2), scene: () => S && S.scene, S: () => S, pois: () => S && S.pois.map(p => ({ k: p.k, id: p.id, x: Math.round(p.x), z: Math.round(p.z) })), tp: (x, z) => { S.av.position.set(x, S.W ? S.W.hAt(x, z) : 0, z); S.sig = ""; S.quiet = false; }, state: () => S, sceneStats: () => { const by = {}; try { S.scene.traverse(o => { if (!o.isMesh && !o.isSprite && !o.isPoints && !o.isLine) return; let lab = ''; for (let p = o; p && p !== S.scene; p = p.parent) { const k = Object.keys(p.userData || {}).filter(k => typeof p.userData[k] !== 'object').slice(0, 2).join(','); if (k) { lab = k; break; } if (p.name) { lab = p.name; break; } } const key = (o.isInstancedMesh ? 'inst:' : o.isSprite ? 'sprite:' : o.isSkinnedMesh ? 'skin:' : 'mesh:') + (o.material && (o.material.name || o.material.type) || '?') + ' [' + lab + ']'; by[key] = (by[key] || 0) + 1; }); } catch (e) {} return Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 40); }, renderInfo: () => { try { const i = S.renderer.info; return { calls: i.render.calls, tris: i.render.triangles, tex: i.memory.textures, geo: i.memory.geometries, ms: QUAL.ema, lv: QUAL.lv, gpu: QUAL.gpu }; } catch (e) { return null; } }, dbgHero: () => ({ VIL, SEC, MAT, AU, SND, MIX, GRP, PH, AN, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineOk2, cineBusy, crossScene, dawnScene, dawnBuild, diaryOpen, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
+window.W3 = { albOpen: p => albOpen(p), albGetSobre: n => albGetSobre(n), albP: () => albP(), ALB, BARR, FARM, ORCH, WOOL, LIFE, examReq, examPrize, ofi: () => ({ lv: Object.fromEntries(Object.keys(OFI).map(k => [k, ofiLv(k)])), st: ofiP(), m: (S.ofi || []).map(x => [x.k, Math.round(x.o.position.x), Math.round(x.o.position.z)]) }), sec: () => ({ why: SEC.why, L: SEC.list.map(e => [e.d.id, Math.round(e.x), Math.round(e.z)]) }), misNames: () => Object.fromEntries(MISSIONS.map(d => [d.id, d.title || ((d.giver && d.giver.name ? d.giver.name + ': ' : '') + (d.item && d.item.name ? d.item.name : d.id))])), grot: () => grotEnter(), phDbg: () => { const o = { near: PH.near, lv: QUAL.lv, see: QT.see[QUAL.lv], ema: QUAL.ema, slow: PH.slow, n: PH.bands.length, unb: PH.bands.filter(b => !b.built).length }; PH.near = 0; try { phTick(.016); o.tick = 'ok'; } catch (e) { o.tick = String(e && e.stack || e).slice(0, 400); } o.unb2 = PH.bands.filter(b => !b.built).length; return o; }, ph: id => PH.bands.filter(b => b.id === id).map(b => [b.list.length, b.built, !!b.ok, b.zc, !!(b.g && b.g.visible), b.ims.length, JSON.stringify(b.o)]), poiProps: () => (FLORA.poiProps || []).map(q => [q[0], q[1].length]), trails: () => TRL, side: () => SP, path: (x, z) => findPath(S.av.position.x, S.av.position.z, x, z), walk: (x, z) => walkLine(x, z), ground: (x, z) => groundAt(x, z, S.gy), merge: f => worldMerge(S.scene, f || 2), scene: () => S && S.scene, S: () => S, pois: () => S && S.pois.map(p => ({ k: p.k, id: p.id, x: Math.round(p.x), z: Math.round(p.z) })), tp: (x, z) => { S.av.position.set(x, S.W ? S.W.hAt(x, z) : 0, z); S.sig = ""; S.quiet = false; }, state: () => S, sceneStats: () => { const by = {}; try { S.scene.traverse(o => { if (!o.isMesh && !o.isSprite && !o.isPoints && !o.isLine) return; let lab = ''; for (let p = o; p && p !== S.scene; p = p.parent) { const k = Object.keys(p.userData || {}).filter(k => typeof p.userData[k] !== 'object').slice(0, 2).join(','); if (k) { lab = k; break; } if (p.name) { lab = p.name; break; } } const key = (o.isInstancedMesh ? 'inst:' : o.isSprite ? 'sprite:' : o.isSkinnedMesh ? 'skin:' : 'mesh:') + (o.material && (o.material.name || o.material.type) || '?') + ' [' + lab + ']'; by[key] = (by[key] || 0) + 1; }); } catch (e) {} return Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 40); }, renderInfo: () => { try { const i = S.renderer.info; return { calls: i.render.calls, tris: i.render.triangles, tex: i.memory.textures, geo: i.memory.geometries, ms: QUAL.ema, lv: QUAL.lv, gpu: QUAL.gpu }; } catch (e) { return null; } }, dbgHero: () => ({ VIL, SEC, MAT, AU, SND, MIX, GRP, PH, AN, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineOk2, cineBusy, crossScene, dawnScene, dawnBuild, diaryOpen, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf, axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
 
 /* En el celular se juega solo apaisado: si está en vertical, un cartel pide girarlo (en Android, al pasar a pantalla completa, además se traba en horizontal). */
 (() => {
