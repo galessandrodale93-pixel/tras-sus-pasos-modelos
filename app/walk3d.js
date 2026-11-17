@@ -5249,7 +5249,7 @@ function tutSteps() {
     ['#v3joy', 'Caminar', pc ? 'Caminá con las flechas o con W A S D. Podés ir a donde quieras y explorar todo el escenario.' : 'Arrastrá este círculo para caminar. Podés ir a donde quieras y explorar todo el escenario.'],
     ['.v3cam', 'La cámara', pc ? 'Arrastrá con el mouse para mirar para cualquier lado, también arriba y abajo. Con la rueda (o + y −) acercás y alejás. Q y E giran; ⌖ la vuelve atrás tuyo.' : 'Arrastrá con un dedo para mirar para cualquier lado, también arriba y abajo. Pellizcá con dos dedos para acercar o alejar. ⌖ la vuelve atrás tuyo.'],
     [null, 'Los hitos del camino', 'Los círculos dorados que brillan en el piso son los hitos. Cuando pisás uno, entrás a un juego o a un desafío. Completalos para pasar a la etapa siguiente.'],
-    ['#mapView .hud-in', 'Tu nivel', 'Acá ves tu nivel, la etapa en la que estás y tus puntos. Todo lo que ganás se suma para siempre, también en los próximos cursos.'],
+    ['#mapView .hud-in', 'Tu nivel', 'Acá ves tu nivel, la etapa en la que estás y tus puntos. Cada curso tiene su propio nivel; tu perfil, tus medallas y el Cinturón de la verdad te acompañan a todos.'],
     [null, 'Misiones ⭐', 'Algunos personajes tienen una estrella arriba: te piden ayuda para llevar algo, buscar algo, orar o grabar un salmo. Acercate y aceptá. La misión activa aparece arriba y cada una suma 50 puntos.'],
     ['#v3bag', 'La mochila', 'Guarda lo que encontrás, tus grabaciones, tus fotos y la ropa de la época. Desde acá elegís sombrero, camiseta, pantalones, botas y guantes.'],
     [null, 'Ropa de la época ✨', 'Muy de vez en cuando aparece un paquete brillante cerca del camino, y a veces llega ropa como premio de una misión. ¡Es difícil de conseguir!'],
