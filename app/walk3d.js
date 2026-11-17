@@ -579,7 +579,7 @@ function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
   const dAt = dOf(DF), roadAt = dOf(DR);
   const dNz = (x, z) => { const d = dAt(x, z); return d + ((vnoise(x * .11 + 11, z * .11 - 5) - .5) * 6 + (vnoise(x * .37, z * .37) - .5) * 1.6) * sstep(1.2, 3.5, d); }; /* borde organico: los escenarios se funden con el campo */
   const h0r = (x, z) => { const d = dNz(x, z), m = sstep(2.6, 10, d), side = sstep(16 * WS, 44 * WS, Math.abs(x)), cy0 = (WATER.canyon ? canyonH(x, z) * sstep(4, 9, roadAt(x, z)) * sstep(1.5, 5, dAt(x, z)) * (KK ? .75 : 1) : 0) + (WATER.quarry ? quarryH(x, z) * sstep(4, 9, roadAt(x, z)) * (KK ? .8 : 1) : 0) + (WATER.hill ? hillH(x, z) * sstep(3, 8, roadAt(x, z)) : 0); return cy0 + m * (fbm(x * .07 + 3, z * .07) * 3.4 - .9 + side * (4 + fbm(x * .025, z * .025) * 14)) * (KK ? .5 : 1); };
-  trailBuild(h0r); const h0 = (x, z) => trailBlend(x, z, h0r(x, z)); // el sendero del Monte de la Tentación se talla en la ladera
+  buildStep('distancias al camino'); trailBuild(h0r); const h0 = (x, z) => trailBlend(x, z, h0r(x, z)); // el sendero del Monte de la Tentación se talla en la ladera
   // cauce del Jordán: distancia al río en la misma grilla
   let RF = null; if (WATER.river) { RF = new Float32Array(NX * NZ); const rb = new Map(); WATER.river.forEach(p => { const k = bk(p[1]); if (!rb.has(k)) rb.set(k, []); rb.get(k).push(p); });
     for (let j = 0; j < NZ; j++) { const z = Z0 + j * CS, b0 = bk(z); for (let i = 0; i < NX; i++) { const x = X0 + i * CS; let d = 400; for (let b = b0 - 2; b <= b0 + 2; b++) { const L = rb.get(b); if (!L) continue; for (const p of L) { const q = (p[0] - x) ** 2 + (p[1] - z) ** 2; if (q < d) d = q; } } RF[j * NX + i] = Math.min(20, Math.sqrt(d)); } } }
@@ -612,7 +612,7 @@ function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
     const wet = waterWet(x, z, RF ? rAt(x, z) : null); if (wet > 0) { const k2 = wet * .9; wg *= 1 - k2; wy *= 1 - k2; wr *= 1 - k2; wd = wd * (1 - k2) + k2; }
     { const t2 = wg + wy + wd + wr || 1; spl.set([wg / t2, wy / t2, wd / t2, wr / t2], i * 4); } const v = (.86 + n * .26) * (1 - wet * .22); col.set([v, v * (1 - wet * .02), v * (1 - wet * .05)], i * 3); }
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.setAttribute('splat', new THREE.BufferAttribute(spl, 4)); geo.computeVertexNormals();
-  const terrain = new THREE.Mesh(geo, groundMat(Q, !!KK)); terrain.receiveShadow = true; scene.add(terrain); splitZ(scene, terrain, 64);
+  buildStep('suelo calculado'); const terrain = new THREE.Mesh(geo, groundMat(Q, !!KK)); terrain.receiveShadow = true; scene.add(terrain); splitZ(scene, terrain, 64);
   // (las montañas del borde ahora están en las tierras de afuera, al final del mundo ancho: ver olH)
   return { hAt, dAt, dNz, roadAt, sunL, sunDir, sky, terrain, hemi, mtnH: null, X1, Z0, Z1, dz: L / Math.round(L / Q.tg) };
 }
@@ -808,7 +808,7 @@ const KL = {};
   let HW = null, uGrass = null;
   const pois = planPois(g), doors = planDoors(g), poiPts = pois.flatMap(q => q.flat).concat(doors.flatMap(q => q.flat)); waterPlan(pois); GREENS = pois.filter(q => GREEN_K[q.k]).map(q => [q.x, q.z, GREEN_K[q.k]]); MAPT.tiles.clear();
   buildStep('vegetación'); { let ok = null; try { ok = await withTO(grpInit(), 9000, 'r2'); } catch (e) {} FLORA.paidG = !!(ok && GRP.man['grass/']); FLORA.paidT = !!(ok && GRP.man['trees/']); }
-  buildStep('mundo y flora'); { const flat = g.VIGN.map(([r, x, y]) => toV(x, g.TOP + r * g.RH + y)).concat(poiPts); FLORA.kids = !hx; FLORA.chunks = []; HW = heroWorld(scene, g, allPts, flat, zMax, QL, hx ? null : KL); olInit(HW, QL, hx); uGrass = heroFlora(scene, HW, allPts, zMax, R, hx ? QL : Object.assign({}, QL, { grass: QL.grass * .8, trees: QL.trees * .8 })); if (!FLORA.paidG) realFlora(scene, HW, allPts, QL, uGrass); if (!hx) { ground.visible = false; KL.sun.position.set(-14, 26, 12); } }
+  buildStep('mundo y flora'); { const flat = g.VIGN.map(([r, x, y]) => toV(x, g.TOP + r * g.RH + y)).concat(poiPts); FLORA.kids = !hx; FLORA.chunks = []; HW = heroWorld(scene, g, allPts, flat, zMax, QL, hx ? null : KL); olInit(HW, QL, hx); buildStep('relieve listo'); uGrass = heroFlora(scene, HW, allPts, zMax, R, hx ? QL : Object.assign({}, QL, { grass: QL.grass * .8, trees: QL.trees * .8 })); if (!FLORA.paidG) realFlora(scene, HW, allPts, QL, uGrass); if (!hx) { ground.visible = false; KL.sun.position.set(-14, 26, 12); } }
   const spots = { tree: [], bush: [], rock: [] };
   for (let i = 0; i < (HW ? 0 : 1500); i++) {
     const x = (R() - .5) * (XB * 2 + 40), z = R() * zMax - 6; if (near(x, z, 2.2)) continue;
