@@ -675,7 +675,7 @@ function olVegList(B, s, i, j) {
   const ok = (x, z) => !olSiteAt(x, z) && waterWet(x, z, null) < .02 && !(WATER.canyon && desertK(x, z) > .3) && Math.abs(x) < XW + 30;
   const grove = (x, z) => vnoise(x * .011 + 3, z * .011 - 7);
   // olivares: hileras cada 7 m donde el campo es de cultivo
-  const sp = 7, ox = ((s * 13 + j * 3) % 7), oz = ((i * 5) % 7); for (let x = B.x0 + ox; x < B.x1; x += sp) for (let z = B.z0 + oz; z < B.z1; z += sp) { if (grove(x, z) < .63 || mt(x) > .3) continue; const xx = x + (R() - .5) * 1.4, zz = z + (R() - .5) * 1.4; if (!ok(xx, zz) || R() < .12) continue; const h = W.hAt(xx, zz); out.tree.push({ x: xx, y: h - .05, z: zz, ry: R() * 6.28, s: .85 + R() * .35, v: Math.floor(R() * 9) }); }
+  const sp = 7, ox = ((s * 13 + j * 3) % 7), oz = ((i * 5) % 7); for (let x = B.x0 + ox; x < B.x1; x += sp) for (let z = B.z0 + oz; z < B.z1; z += sp) { if (grove(x, z) < .57 || mt(x) > .3) continue; const xx = x + (R() - .5) * 1.4, zz = z + (R() - .5) * 1.4; if (!ok(xx, zz) || R() < .12) continue; const h = W.hAt(xx, zz); out.tree.push({ x: xx, y: h - .05, z: zz, ry: R() * 6.28, s: .85 + R() * .35, v: Math.floor(R() * 9) }); }
   const n = 10 + Math.floor(R() * 8); for (let k = 0; k < n; k++) { const x = B.x0 + R() * OL.T, z = B.z0 + R() * OL.TZ; if (!ok(x, z)) continue; const h = W.hAt(x, z), r = R(), sl = Math.abs(W.hAt(x + 1.5, z) - W.hAt(x - 1.5, z)) / 3, m = mt(x);
     if (m > .6) { if (r < .5) out.rock.push({ x, y: h - .4, z, ry: R() * 6.28, s: 1 + R() * 1.4, v: Math.floor(R() * 9) }); continue; }
     if (sl > .45 || r < .2) out.rock.push({ x, y: h - .25, z, ry: R() * 6.28, s: .6 + R() * .9, v: Math.floor(R() * 9) });
@@ -684,7 +684,7 @@ function olVegList(B, s, i, j) {
     else out.stone.push({ x, y: h - .06, z, ry: R() * 6.28, s: .7 + R() * .5, v: Math.floor(R() * 9) }); }
   return out;
 }
-const OL_SP = { tree: ['trp_olive', 'island_tree_01'], tree2: ['island_tree_03', 'island_tree_02'], bush: ['searsia_lucida', 'shrub_02'], rock: ['namaqualand_boulder_03', 'rock_07'], stone: ['namaqualand_rocks_01', 'stone_01'] };
+const OL_SP = { tree: ['trp_olive', 'island_tree_01'], tree2: ['island_tree_01', 'island_tree_03'], bush: ['searsia_lucida', 'shrub_02'], rock: ['namaqualand_boulder_03', 'rock_07'], stone: ['namaqualand_rocks_01', 'stone_01'] };
 const OL_O = { tree: { shadow: true, wind: 3 }, tree2: { shadow: true, wind: 3 }, bush: { wind: 3, shadow: true }, rock: { shadow: true }, stone: {} };
 async function olVeg(T) {
   const L = olVegList(T.B, T.s, T.i, T.j); T.veg = []; T.imp = []; T.cols = [];
@@ -5946,7 +5946,7 @@ function pgCell(ix, iz) {
     if (!PG_ONLY) { const cl = pgNoise(x * .06, z * .06) * .75 + pgNoise(x * .21 + 40, z * .21) * .35; if (r1 > cl * 1.15 + .1) continue; } // matas y claros
     let lawn = 0, rdd = W.roadAt ? W.roadAt(x, z) + .9 : 99, d = W.dNz ? Math.min(W.dNz(x, z), rdd) : W.dAt(x, z);
     if (d < 3.2 && rdd >= 3.2 && pgOpen(x, z)) { if (r2 > .82) continue; d = 9; } /* en los escenarios abiertos el pasto llega hasta las casas y los fuegos (pedido de Gui: que no se vea el piso pelado en ninguna parte, salvo el camino) */ if (d < 3.2 && S.lawns) for (const L of S.lawns) if ((x - L.x) ** 2 + (z - L.z) ** 2 < L.r * L.r && pathDist(L.samp, x, z) > 1.3 && !(L.no && (x - L.no[0]) ** 2 + (z - L.no[1]) ** 2 < L.no[2] * L.no[2])) { d = 9; lawn = 1; break; } /* jardines con pasto de verdad */ if (d < 1.5 || (d < 3.2 && r2 > (d - 1.5) / 1.7)) continue; // el camino queda libre, con borde natural
-    const h = W.hAt(x, z); if (h > 9 || (h > 5.5 && r2 > (9 - h) / 3.5)) continue;
+    const h = W.hAt(x, z), outer = Math.abs(x) > OL.X1; if (outer ? Math.abs(x) > XW - 10 : (h > 9 || (h > 5.5 && r2 > (9 - h) / 3.5))) continue; /* en las tierras de afuera las lomas son altas pero verdes: el pasto sube hasta la montaña */
     if (desertK(x, z) > .25) continue; // en el desierto de Judea y en el monte no crece pasto
     { const sp = spDist(x, z); if (sp < .7 || (sp < 1.6 && r2 > (sp - .7) / .9)) continue; } // los senderitos quedan pisados
     if (waterWet(x, z, null) > .04 || blockedAt(x, z) || PG_HOLE.some(q => (x - q.x) ** 2 + (z - q.z) ** 2 < q.r * q.r) || (!lawn && poi.some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < 14))) continue;
