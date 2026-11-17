@@ -7078,9 +7078,9 @@ function svToolMesh(t) {
 
 /* ---------- qué hay cerca para hacer ---------- */
 /* barriales: montículos de barro húmedo junto al río, al lago y en la alfarería (oficio del alfarero) */
-const CLAY = { list: [], im: null, T: 240 };
+const BARR = { list: [], im: null, T: 240 };
 function clayBuild(scene, W) {
-  CLAY.list = []; if (CLAY.im && CLAY.im.parent) CLAY.im.parent.remove(CLAY.im); CLAY.im = null; const R = rng(777), L = CLAY.list, dry = (x, z) => { try { return waterWet(x, z, null) < .04; } catch (e) { return true; } };
+  BARR.list = []; if (BARR.im && BARR.im.parent) BARR.im.parent.remove(BARR.im); BARR.im = null; const R = rng(777), L = BARR.list, dry = (x, z) => { try { return waterWet(x, z, null) < .04; } catch (e) { return true; } };
   const add = (x, z) => { if (!dry(x, z)) return false; if (L.some(c => (c.x - x) ** 2 + (c.z - z) ** 2 < 36)) return false; L.push({ x, z, y: W.hAt(x, z), s: .8 + R() * .5, ry: R() * 6, t: 0 }); return true; };
   const al = (S.olSites || []).find(o => o.id === 'alfareria'); if (al) for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283 + .4, r = 9 + R() * 4; add(al.x + Math.cos(a) * r, al.z + Math.sin(a) * r); }
   for (const p of (S.pois || [])) {
@@ -7088,11 +7088,11 @@ function clayBuild(scene, W) {
     if (p.k === 'lake') { for (let i = 0; i < 9; i++) { const a = i / 9 * 6.283; for (const r of [33, 35, 38, 41]) if (add(p.x + Math.cos(a) * r, p.z + Math.sin(a) * r)) break; } }
   }
   if (!L.length) return; const geo = new THREE.SphereGeometry(1, 12, 7, 0, 6.283, 0, Math.PI / 2), mat = tm('claymud', '#6E4A30', { roughness: .45 }), im = new THREE.InstancedMesh(geo, mat, L.length), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3();
-  L.forEach((c, i) => { q.setFromEuler(e.set(0, c.ry, 0)); im.setMatrixAt(i, m.compose(v.set(c.x, c.y - .05, c.z), q, sc.set(1.3 * c.s, .38 * c.s, 1 * c.s))); }); im.receiveShadow = true; im.userData.keep = 1; scene.add(im); CLAY.im = im;
+  L.forEach((c, i) => { q.setFromEuler(e.set(0, c.ry, 0)); im.setMatrixAt(i, m.compose(v.set(c.x, c.y - .05, c.z), q, sc.set(1.3 * c.s, .38 * c.s, 1 * c.s))); }); im.receiveShadow = true; im.userData.keep = 1; scene.add(im); BARR.im = im;
 }
-function clayNear() { const a = S.av.position; let b = null, bd = 2.4 * 2.4; CLAY.list.forEach((c, i) => { if (c.t > 0) return; const d = (c.x - a.x) ** 2 + (c.z - a.z) ** 2; if (d < bd + c.s) { bd = d; b = i; } }); return b; }
-function clayDig(i) { const c = CLAY.list[i]; if (!c) return; h3do(['M_Kneeling_Idle', 'PickUp_Table'], 1.8, .5); const lv = ofiLv('alf'), n = 2 + (lv >= 4 ? 1 : 0) + (lv >= 24 ? 1 : 0); svAdd('barro', n); svXP(1); ofiXP('alf', 4); c.t = CLAY.T; svHide(CLAY.im, i, false); G().save(); svToast('🟤 Sacaste ' + n + ' de barro. El barrial se vuelve a llenar en unos minutos. Modelalo en el Taller, junto al fuego.'); svUI(); }
-function clayTick(dt) { if (!CLAY.im) return; CLAY.list.forEach((c, i) => { if (c.t > 0) { c.t -= dt; if (c.t <= 0) { c.t = 0; svHide(CLAY.im, i, true); } } }); }
+function clayNear() { const a = S.av.position; let b = null, bd = 2.4 * 2.4; BARR.list.forEach((c, i) => { if (c.t > 0) return; const d = (c.x - a.x) ** 2 + (c.z - a.z) ** 2; if (d < bd + c.s) { bd = d; b = i; } }); return b; }
+function clayDig(i) { const c = BARR.list[i]; if (!c) return; h3do(['M_Kneeling_Idle', 'PickUp_Table'], 1.8, .5); const lv = ofiLv('alf'), n = 2 + (lv >= 4 ? 1 : 0) + (lv >= 24 ? 1 : 0); svAdd('barro', n); svXP(1); ofiXP('alf', 4); c.t = BARR.T; svHide(BARR.im, i, false); G().save(); svToast('🟤 Sacaste ' + n + ' de barro. El barrial se vuelve a llenar en unos minutos. Modelalo en el Taller, junto al fuego.'); svUI(); }
+function clayTick(dt) { if (!BARR.im) return; BARR.list.forEach((c, i) => { if (c.t > 0) { c.t -= dt; if (c.t <= 0) { c.t = 0; svHide(BARR.im, i, true); } } }); }
 function clayKilnNear() { const a = S.av.position, al = (S.olSites || []).find(o => o.id === 'alfareria'); return !!(al && (al.x - a.x) ** 2 + (al.z - a.z) ** 2 < 25 * 25); }
 function svNear() {
   if (!svOn() || !S.sv) return null; const a = S.av.position, st = S.sv, s = svP(), d2 = (x, z) => (x - a.x) ** 2 + (z - a.z) ** 2;
