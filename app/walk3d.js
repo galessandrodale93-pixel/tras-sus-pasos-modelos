@@ -842,7 +842,7 @@ function roadLife(scene, W, hx) {
   LIFE.pk = []; LIFE.camps = []; LIFE.ims = {}; LIFE.sheep = []; LIFE.flocks = []; LIFE.sorted = null; LIFE.pts = null;
   const pts = S.allPts; if (!pts || pts.length < 10) return; const R = rng(6161), yAt = (x, z) => W.hAt(x, z), P = S.pois || [];
   const KINDS = ['gente', 'mercado', 'pastor', 'gente', 'fogon', 'mojon', 'pozo', 'gente', 'pastor', 'mercado', 'fogon', 'mojon'];
-  const far = (x, z) => !P.some(q => Math.hypot(q.x - x, q.z - z) < 38) && !(OL.trails || []).some(t => Math.hypot(t.x0 - x, t.z0 - z) < 10) && !Object.values(S.markers || {}).some(m => Math.hypot(m.position.x - x, m.position.z - z) < 9);
+  const far = (x, z) => !P.some(q => Math.hypot(q.x - x, q.z - z) < 38) && !(OL.trails || []).some(t => Math.hypot(t.x0 - x, t.z0 - z) < 18) /* lejos de los carteles de los senderos, para que no se pisen (Sicar y El mercado) */ && !Object.values(S.markers || {}).some(m => Math.hypot(m.position.x - x, m.position.z - z) < 9);
   const okAt = (x, z, r) => W.dAt(x, z) > 3.4 && waterWet(x, z, null) < .02 && !blockedAt(x, z) && ![0, 1, 2, 3].some(q => blockedAt(x + Math.cos(q * 1.57) * r, z + Math.sin(q * 1.57) * r));
   // recorrer el camino principal (de arriba hacia abajo, sin repetir ramales)
   const main = pts.slice().sort((a, b) => b[1] - a[1]); let acc = 0, k = 0, lastE = null, accP = 0;
