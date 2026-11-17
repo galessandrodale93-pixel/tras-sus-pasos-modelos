@@ -6905,7 +6905,7 @@ const BP = {
 };
 const BP_ORDER = ['piedra', 'madera', 'escalon', 'losa', 'techo', 'columna', 'ventana', 'puerta', 'arco', 'cerco', 'antorcha'];
 function bldMats() { if (BLD.mats) return BLD.mats; const kd = !S.hx; return (BLD.mats = {
-  stone: pbrMat('large_sandstone_blocks', 1, 1, { color: kd ? '#FFF6E6' : '#F2E6CC' }), wood: pbrMat('brown_planks_05', 1, 1, { color: kd ? '#F0CFA6' : '#E2C29C' }),
+  stone: pbrMat('white_sandstone_bricks', 1, 1, { color: kd ? '#FFFFFF' : '#F6EEDC' }), wood: pbrMat('brown_planks_05', 1, 1, { color: kd ? '#F0CFA6' : '#E2C29C' }),
   marble: pbrMat('marble_01', 1, 1, { color: '#FFFFFF' }), floor: pbrMat('old_sandstone_02', 1, 1, { color: '#EFE2C8' }),
   beam: tm('bldbeam', '#7A5232'), thatch: tm('bldth', '#B89A62'), dark: tm('blddk', '#4A3020'), flame: new THREE.MeshBasicMaterial({ color: '#FFB347', toneMapped: false }) }); }
 function bldMerge(list) {
@@ -7058,7 +7058,7 @@ function svCraft(tab) {
       const keys = Object.keys(TL.slots).filter(k => TL.slots[k] > 0), m = COMBOS.find(c => sameNeed(c.need, TL.slots)), known = m && comboDisc().includes(m.id);
       const slots = [0, 1, 2].map(i => { const k = keys[i]; return k ? `<button class="tl-slot full" data-rm="${k}"><span>${RES[k][1]}</span><b>${RES[k][0]}</b><em>×${TL.slots[k]}</em></button>` : `<div class="tl-slot"><span>＋</span></div>`; }).join('');
       const out = !keys.length ? `<div class="tl-out"><span>✦</span><small>¿Qué saldrá?</small></div>` : m && known ? `<div class="tl-out ok"><span>${comboIc(m)}</span><small>${esc(comboName(m))}</small></div>` : m ? `<div class="tl-out myst"><span>❔</span><small>¡Algo va a salir!</small></div>` : `<div class="tl-out"><span>…</span><small>Probá</small></div>`;
-      const cards = Object.keys(RES).filter(k => !RES_PROD.has(k) || (inv[k] || 0) > 0).map(k => { const n = inv[k] || 0, left = n - (TL.slots[k] || 0); return `<button class="tl-it${left > 0 ? '' : ' none'}" data-add="${k}"><span>${RES[k][1]}</span><b>${RES[k][0]}</b><small>${n}</small></button>`; }).join('');
+      const cards = Object.keys(RES).filter(k => k !== 'money' && (!RES_PROD.has(k) || (inv[k] || 0) > 0)).map(k => { const n = inv[k] || 0, left = n - (TL.slots[k] || 0); return `<button class="tl-it${left > 0 ? '' : ' none'}" data-add="${k}"><span>${RES[k][1]}</span><b>${RES[k][0]}</b><small>${n}</small></button>`; }).join('');
       const tools = TOOL_ORDER.map(t => `<span class="tl-tool${svTool(t) ? ' ok' : ''}" title="${esc(TOOLS[t][2])}">${TOOLS[t][1]} ${TOOLS[t][0]}${svTool(t) ? '' : ' ✗'}</span>`).join('');
       body = `<p class="sv-tip">Tocá tus materiales para ponerlos en la mesa y combiná. Lo que descubras queda anotado en tus recetas.</p>
         <div class="tl-bench${fx === 'ok' ? ' boom' : fx === 'no' ? ' shake' : ''}"><div class="tl-slots">${slots}</div><div class="tl-arrow">➜</div>${out}</div>
