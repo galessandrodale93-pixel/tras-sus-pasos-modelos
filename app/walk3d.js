@@ -6137,7 +6137,7 @@ const DRY_BASE = SEASON === 'seco' ? .62 : 0; // cuánto dorado hay de base, ade
 const PG_H = .8; // altura del pasto respecto del original (1 = como viene)
 const BARE = true; // etapa de prueba: campo sin árboles, solo la cobertura del suelo
 const PG_ONLY = /^(knotweed_0[23]|ezepnik_02)$/i; // las 3 plantas elegidas por Gui para cubrir todo el piso
-const PG_CELL = 16, PG_R = [15, 22, 32, 42], PG_TRI = [2.6e5, 8e5, 2.4e6, 4e6];
+const PG_CELL = 16, PG_R = [15, 22, 32, 42], PG_TRI = [4.2e5, 1.1e6, 2.4e6, 4e6];
 const PG_S = { grass_bermuda_01: [4, 5.4], grass_medium_01: [2.8, 3.9], grass_medium_02: [3, 4.1], dandelion_01: [2.2, 3.1], celandine_01: [2.4, 3.2], flower_heliophila: [1.3, 1.9] };
 const PG_W = { grass_bermuda_01: .44, grass_medium_01: .24, grass_medium_02: .18, dandelion_01: .05, celandine_01: .05, flower_heliophila: .04 };
 const pgH = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
@@ -6172,20 +6172,24 @@ function pgCellMake(ix, iz, PK, key) { let L = []; const W = S.W, R = rng((ix * 
       const g = G2[gi], sr = PG_S[g.id] || [2.6, 3.6]; L.push({ x, y: PK.hAt(x, z) - .04, z, ry: R() * 6.283, s: PG_ONLY ? 3.8 + R() * 1.1 : sr[0] + R() * (sr[1] - sr[0]), gi, vi: Math.floor(R() * g.vars.length), r: R(), c: .92 + R() * .18, dry: 0 }); }
     PG.cache.set(key, L); return L; }
   if (Math.abs(cx) > XW + 60) { PG.cache.set(key, L); return L; }
+  /* rejilla de 1 m con lo caro (altura, distancia al camino, desierto, senderos, agua): se calcula 289 veces por celda en vez de una por planta */
+  const NL = 17, LH = new Float32Array(NL * NL), LD = new Float32Array(NL * NL), LR = new Float32Array(NL * NL), LK = new Float32Array(NL * NL), LS = new Float32Array(NL * NL), LW = new Float32Array(NL * NL);
+  for (let j = 0; j < NL; j++) for (let i = 0; i < NL; i++) { const x = x0 + i * PG_CELL / (NL - 1), z = z0 + j * PG_CELL / (NL - 1), k = j * NL + i; LH[k] = W.hAt(x, z); LR[k] = W.roadAt ? W.roadAt(x, z) : 99; LD[k] = W.dNz ? W.dNz(x, z) : W.dAt(x, z); LK[k] = desertK(x, z); LS[k] = spDist(x, z); LW[k] = waterWet(x, z, null); }
+  const lat = (A, x, z) => { const fx = (x - x0) * (NL - 1) / PG_CELL, fz = (z - z0) * (NL - 1) / PG_CELL, i = Math.min(NL - 2, Math.max(0, Math.floor(fx))), j = Math.min(NL - 2, Math.max(0, Math.floor(fz))), tx = fx - i, tz = fz - j, k = j * NL + i; return (A[k] * (1 - tx) + A[k + 1] * tx) * (1 - tz) + (A[k + NL] * (1 - tx) + A[k + NL + 1] * tx) * tz; };
   const poi = (S_poiPts || []).filter(p => Math.abs(p[0] - cx) < PG_CELL && Math.abs(p[1] - cz) < PG_CELL), trees = (FLORA.treesUsed || []).filter(o => Math.abs(o.x - cx) < PG_CELL && Math.abs(o.z - cz) < PG_CELL);
   const lvm = Math.min(3, QUAL.lv), dens = Math.min(6, PG_TRI[lvm] / PG.avgTri / (Math.PI * PG_R[lvm] * PG_R[lvm] * .8)), n = Math.round(dens * PG_CELL * PG_CELL * 1.1);
   const st = { i: 0 }; L._more = bud => { const end = Math.min(n, st.i + bud); for (; st.i < end; st.i++) { const x = x0 + R() * PG_CELL, z = z0 + R() * PG_CELL, r1 = R(), r2 = R();
     if (!PG_ONLY) { const cl = pgNoise(x * .06, z * .06) * .75 + pgNoise(x * .21 + 40, z * .21) * .35; if (r1 > cl * 1.15 + .1) continue; } // matas y claros
-    let lawn = 0, rdd = W.roadAt ? W.roadAt(x, z) + .9 : 99, d = W.dNz ? Math.min(W.dNz(x, z), rdd) : W.dAt(x, z);
+    let lawn = 0, rdd = W.roadAt ? lat(LR, x, z) + .9 : 99, d = W.dNz ? Math.min(lat(LD, x, z), rdd) : lat(LD, x, z);
     if (d < 3.2 && rdd >= 3.2 && pgOpen(x, z)) { if (r2 > .82) continue; d = 9; } /* en los escenarios abiertos el pasto llega hasta las casas y los fuegos (pedido de Gui: que no se vea el piso pelado en ninguna parte, salvo el camino) */ if (d < 3.2 && S.lawns) for (const L of S.lawns) if ((x - L.x) ** 2 + (z - L.z) ** 2 < L.r * L.r && pathDist(L.samp, x, z) > 1.3 && !(L.no && (x - L.no[0]) ** 2 + (z - L.no[1]) ** 2 < L.no[2] * L.no[2])) { d = 9; lawn = 1; break; } /* jardines con pasto de verdad */ if (d < 1.5 || (d < 3.2 && r2 > (d - 1.5) / 1.7)) continue; // el camino queda libre, con borde natural
-    const h = W.hAt(x, z), outer = Math.abs(x) > Math.min(OL.X1, XB * .85); if (outer ? Math.abs(x) > XW - 10 : (h > 9 || (h > 5.5 && r2 > (9 - h) / 3.5))) continue; /* en las tierras de afuera las lomas son altas pero verdes: el pasto sube hasta la montaña */
-    if (desertK(x, z) > .25) continue; // en el desierto de Judea y en el monte no crece pasto
-    { const sp = spDist(x, z); if (sp < .7 || (sp < 1.6 && r2 > (sp - .7) / .9)) continue; } // los senderitos quedan pisados
-    if (waterWet(x, z, null) > .04 || blockedAt(x, z) || PG_HOLE.some(q => (x - q.x) ** 2 + (z - q.z) ** 2 < q.r * q.r) || (!lawn && poi.some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < 14))) continue;
+    const h = lat(LH, x, z), outer = Math.abs(x) > Math.min(OL.X1, XB * .85); if (outer ? Math.abs(x) > XW - 10 : (h > 9 || (h > 5.5 && r2 > (9 - h) / 3.5))) continue; /* en las tierras de afuera las lomas son altas pero verdes: el pasto sube hasta la montaña */
+    if (lat(LK, x, z) > .25) continue; // en el desierto de Judea y en el monte no crece pasto
+    { const sp = lat(LS, x, z); if (sp < .7 || (sp < 1.6 && r2 > (sp - .7) / .9)) continue; } // los senderitos quedan pisados
+    if (lat(LW, x, z) > .04 || blockedAt(x, z) || PG_HOLE.some(q => (x - q.x) ** 2 + (z - q.z) ** 2 < q.r * q.r) || (!lawn && poi.some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < 14))) continue;
     // qué planta: flores donde el ruido lo marca (manchones), el resto pasto
     const G = PG.groups, fz = pgNoise(x * .045 + 90, z * .045 - 30) > .66, wantF = fz && R() < .55, pool = G.map((g, k) => k).filter(k => G[k].fl === wantF), P = pool.length ? pool : G.map((g, k) => k);
     let pick = R() * P.reduce((t, k) => t + G[k].w, 0), gi = P[P.length - 1]; for (const k of P) { pick -= G[k].w; if (pick <= 0) { gi = k; break; } }
-    const g = G[gi], sr = PG_S[g.id] || [2.6, 3.6], wet = waterWet(x, z, null), dn = pgNoise(x * .031 + 7, z * .031 - 3) * .7 + pgNoise(x * .09 + 50, z * .09) * .3, dry = Math.max(0, Math.min(1, DRY_BASE + (dn - .5) / .22)) * (1 - Math.min(1, wet * 10)) * (h > 2.2 ? 1 : .35 + Math.max(0, h - .6) / 1.6 * .65); const shade = trees.some(o => (o.x - x) ** 2 + (o.z - z) ** 2 < 30); L.push({ x, y: h - .04, z, ry: R() * 6.283, s: PG_ONLY ? 3.8 + R() * 1.1 : sr[0] + R() * (sr[1] - sr[0]), gi, vi: Math.floor(R() * g.vars.length), r: R(), c: .88 + R() * .2, dry: shade ? dry * .2 : dry }); } if (st.i >= n) L._more = null; }; L._more(PG.ready2 ? 400 : n);
+    const g = G[gi], sr = PG_S[g.id] || [2.6, 3.6], wet = lat(LW, x, z), dn = pgNoise(x * .031 + 7, z * .031 - 3) * .7 + pgNoise(x * .09 + 50, z * .09) * .3, dry = Math.max(0, Math.min(1, DRY_BASE + (dn - .5) / .22)) * (1 - Math.min(1, wet * 10)) * (h > 2.2 ? 1 : .35 + Math.max(0, h - .6) / 1.6 * .65); const shade = trees.some(o => (o.x - x) ** 2 + (o.z - z) ** 2 < 30); L.push({ x, y: h - .04, z, ry: R() * 6.283, s: PG_ONLY ? 3.8 + R() * 1.1 : sr[0] + R() * (sr[1] - sr[0]), gi, vi: Math.floor(R() * g.vars.length), r: R(), c: .88 + R() * .2, dry: shade ? dry * .2 : dry }); } if (st.i >= n) L._more = null; }; L._more(n);
   PG.cache.set(key, L); if (PG.cache.size > 2600) { const it = PG.cache.keys(); for (let k = 0; k < 600; k++) PG.cache.delete(it.next().value); } return L;
 }
 // textura del suelo horneada desde las plantas: un mosaico de 7 m visto desde arriba, que se repite sin costuras (las plantas que
@@ -6281,7 +6285,7 @@ function pgFill() {
   const cells = []; for (let ix = c0x; ix <= c1x; ix++) for (let iz = c0z; iz <= c1z; iz++) { const dx = (ix + .5) * PG_CELL - a.x, dz = (iz + .5) * PG_CELL - a.z; cells.push([dx * dx + dz * dz, ix, iz]); } cells.sort((p, q) => p[0] - q[0]);
   // primero se junta todo lo que entra en el círculo y recién después se decide cuánto dibujar: si el presupuesto no alcanza,
   // se ralea parejo (cada planta tiene su número fijo it.r), así nunca quedan parcelas llenas al lado de parcelas vacías
-  const near = [], farL = [], pkp = S.pocket && S.pocket.pg ? 'k' : ''; let sl = 2; PG.pend = 0; for (const [, ix, iz] of cells) { let Lc = PG.cache.get(pkp + ix + ',' + iz); if (!Lc) { if (sl <= 0 && PG.ready2) { PG.pend = 1; continue; } sl--; Lc = pgCell(ix, iz); } else if (Lc._more && sl > 0) { sl--; Lc._more(400); } if (Lc._more) PG.pend = 1; for (const it of Lc) { const dd = Math.hypot(it.x - a.x, it.z - a.z); if (dd > R2) continue; (dd > Rr ? farL : near).push([it, dd]); } } PG.ready2 = 1; /* las celdas nuevas se arman de a dos por vez (cada una lleva ~20 ms): sin trabas al caminar */
+  const near = [], farL = [], pkp = S.pocket && S.pocket.pg ? 'k' : ''; let sl = 3; PG.pend = 0; for (const [, ix, iz] of cells) { let Lc = PG.cache.get(pkp + ix + ',' + iz); if (!Lc) { if (sl <= 0 && PG.ready2) { PG.pend = 1; continue; } sl--; Lc = pgCell(ix, iz); } else if (Lc._more && sl > 0) { sl--; Lc._more(400); } if (Lc._more) PG.pend = 1; for (const it of Lc) { const dd = Math.hypot(it.x - a.x, it.z - a.z); if (dd > R2) continue; (dd > Rr ? farL : near).push([it, dd]); } } PG.ready2 = 1; /* las celdas nuevas se arman de a dos por vez (cada una lleva ~20 ms): sin trabas al caminar */
   const kN = Math.min(1, lim * .72 / Math.max(1, near.length)), kF = Math.min(.34, lim * .28 / Math.max(1, farL.length)), bN = Math.min(1.6, Math.pow(1 / Math.max(.2, kN), .35));
   for (const [it, dd] of near.concat(farL)) { if (used >= lim) break; const far = dd > Rr; if (it.r >= (far ? kF : kN)) continue;
       const ims = PG.groups[it.gi].ims[it.vi]; let full = false; for (const im of ims) if (cnt[idx.get(im)] >= im.userData.cap) full = true; if (full) continue;
