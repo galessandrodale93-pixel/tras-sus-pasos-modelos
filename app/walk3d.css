@@ -1330,10 +1330,10 @@ body.v3on .v3surv .sv-stam{transform:translateY(calc(100% + 6px))}
 .ofi-c details{margin-top:6px;font-size:12.5px}.ofi-c summary{cursor:pointer;color:var(--gd,#E9C37A);font-weight:700}.ofi-c details p{margin:6px 0;line-height:1.45}.ofi-c details em{opacity:.7;font-style:normal;font-size:11.5px}
 /* comer y construir siempre a mano (Hero): dos botones abajo a la derecha, al lado del abanico */
 body.v3on .v3surv .sv-btn{display:flex!important;position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));width:auto;height:46px;padding:0 15px 0 12px;gap:7px;align-items:center;border-radius:999px;border:1px solid #E9C37A;background:rgba(24,18,11,.88);color:#F3E6CC;font:800 13px Nunito,system-ui,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.45);z-index:7}
-body.v3on .v3surv .sv-btn[data-a="eat"]{right:calc(max(14px,env(safe-area-inset-right,0px) + 8px) + 214px)}
-body.v3on .v3surv .sv-btn[data-a="craft"]{right:calc(max(14px,env(safe-area-inset-right,0px) + 8px) + 70px)}
+body.v3on .v3surv .sv-btn[data-a="eat"]{right:calc(var(--fanR) + 252px);bottom:calc(var(--fanB) + 3px)}
+body.v3on .v3surv .sv-btn[data-a="craft"]{right:calc(var(--fanR) + 128px);bottom:calc(var(--fanB) + 3px)}
 body.v3on .v3surv .sv-btn::after{font-size:13px}
 body.v3on .v3surv .sv-btn[data-a="eat"]::after{content:"Comer"}body.v3on .v3surv .sv-btn[data-a="craft"]::after{content:"Construir"}
 body.v3on .v3surv .sv-btn:active{transform:translateY(2px)}
 body.v3cine .v3surv .sv-btn,body.v3talk .v3surv .sv-btn,body:has(#v3sheet:not([hidden])) .v3surv .sv-btn{display:none!important}
-@media (max-width:760px){body.v3on .v3surv .sv-btn{height:42px;padding:0 11px}body.v3on .v3surv .sv-btn::after{display:none}body.v3on .v3surv .sv-btn[data-a="eat"]{right:calc(max(14px,env(safe-area-inset-right,0px) + 8px) + 120px)}}
+@media (max-width:760px){body.v3on .v3surv .sv-btn{height:42px;padding:0 11px}body.v3on .v3surv .sv-btn::after{display:none}body.v3on .v3surv .sv-btn[data-a="eat"]{right:calc(var(--fanR) + 186px)}}

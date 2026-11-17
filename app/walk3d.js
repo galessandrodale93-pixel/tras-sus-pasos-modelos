@@ -1972,7 +1972,7 @@ function bigTemple0(scene, x, z, side, hx, yAt) {
   const st = pbrMat('white_sandstone_bricks', 1, 2.5, { color: '#FFFFFF' }), stD = pbrMat('white_sandstone_bricks', 4, 1, { color: hx ? '#EEE2CC' : '#FFF8EC' }), gold = tm('gold', '#E6B84A', { metalness: .85, roughness: .3, emissive: '#5A3A08', emissiveIntensity: .25 });
   const W = 36, D = 32, P = .9; // plataforma (x local = ancho, z local: +z mira al camino)
   const plat = new THREE.Mesh(new THREE.BoxGeometry(W, P + 5, D), [stD, stD, pbrMat('monastery_stone_floor', 9, 8, { color: '#FFFFFF' }), stD, stD, stD]); plat.position.y = P / 2 - 2.5; plat.receiveShadow = true; plat.castShadow = true; g.add(plat);
-  for (let i = 0; i < 3; i++) bx(12, .3, .8, stD, 0, .15 + i * .3 - .0, D / 2 + 2.4 - i * .8, g);
+  for (let i = 0; i < 3; i++) { const dd = 2.8 - i * .8; bx(12, .3 + i * .3, dd, stD, 0, (.3 + i * .3) / 2, D / 2 + dd / 2 - .05, g); } /* escalones macizos, pegados a la plataforma: se sube sin trabarse */
   // pórticos (columnatas) en los costados y al fondo, con techo
   const colM = st, colsL = [];
   const portico = (ax, az, len, alongX) => { const n = Math.round(len / 3); for (let i = 0; i <= n; i++) { const u = -len / 2 + i * len / n, px = alongX ? ax + u : ax, pz = alongX ? az : az + u; cy(.32, .36, 5.2, colM, px, P + 2.6, pz, g, 14); bx(.9, .3, .9, stD, px, P + 5.3, pz, g); } const rf = bx(alongX ? len + 2 : 3.2, .35, alongX ? 3.2 : len + 2, stD, ax + (alongX ? 0 : (ax > 0 ? 1.2 : -1.2)), P + 5.6, az + (alongX ? (az > 0 ? 1.2 : -1.2) : 0), g); return rf; };
@@ -2014,7 +2014,7 @@ function bigTemple0(scene, x, z, side, hx, yAt) {
   C(-5.5 - 1.9, -5.5 + 1.9, 7.5 - 1.9, 7.5 + 1.9); C(5.5 - 1.2, 5.5 + 1.2, 7.5 - 1.2, 7.5 + 1.2);
   C(-2.6 - .5, -2.6 + .5, sz + veilZ + 2.5, sz + veilZ + 3.5); C(2.6 - .9, 2.6 + .9, sz + veilZ + 2.5, sz + veilZ + 3.5); C(-.45, .45, sz + veilZ + 1.05, sz + veilZ + 1.95);
   const fl = wBox(x, z, rot, -W / 2, W / 2, -D / 2, D / 2); fl.y = y0 + P; S.floors.push(fl);
-  for (let i = 0; i < 3; i++) { const f2 = wBox(x, z, rot, -6, 6, D / 2 + 2 - i * .8, D / 2 + 2.8 - i * .8); f2.y = y0 + .3 + i * .3; S.floors.push(f2); }
+  for (let i = 0; i < 3; i++) { const f2 = wBox(x, z, rot, -6, 6, D / 2 - .2, D / 2 + 2.8 - i * .8); f2.y = y0 + .3 + i * .3; S.floors.push(f2); }
   const room = wBox(x, z, rot, sx - sw / 2 + .3, sx + sw / 2 - .3, sz + veilZ, sz + sd / 2); room.roof = roofS; room.trade = 'santo'; room.y = y0 + P; S.rooms.push(room);
   const court = wBox(x, z, rot, -W / 2 + 1, W / 2 - 1, -D / 2 + 1, D / 2 - 1); court.trade = 'atrio'; court.roof = []; court.y = y0 + P; court.open = true; S.rooms.push(court);
   const veilBox = wBox(x, z, rot, sx - sw / 2, sx + sw / 2, sz + veilZ - 1.2, sz + veilZ + 1.4); veilBox.trade = 'velo'; veilBox.roof = []; veilBox.open = true; S.rooms.push(veilBox);
@@ -4577,8 +4577,10 @@ function pearlGate(d, hx) {
   const gold = new THREE.MeshStandardMaterial({ color: '#F2C14E', metalness: 1, roughness: .2, emissive: '#6A4410', emissiveIntensity: .35 }), marble = pbrMat('marble_01', 1, 2, { color: '#FFFFFF' });
   const add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); g.add(o); o.castShadow = true; o.receiveShadow = true; return o; };
   const gems = ['#5E9C6E', '#3A5FCD', '#7ACFC0', '#2E8B57', '#C8A27A', '#B22222', '#F2D06B', '#7FC8A9', '#E0B85A', '#9ACD32', '#6A5ACD', '#9370DB'];
-  gems.forEach((c, i) => add(bevBox(R * 2 + 5 - i * .1, .16, 3.2 - i * .04, .03), new THREE.MeshStandardMaterial({ color: c, roughness: .15, metalness: .1, emissive: c, emissiveIntensity: .25 }), 0, .08 + i * .16, 0));
+  /* base de mármol con borde de oro; las doce piedras de los cimientos (Apocalipsis 21:19-20) van engarzadas en las columnas */
+  add(bevBox(R * 2 + 5, 1.86, 3.2, .05), marble, 0, .93, 0); add(bevBox(R * 2 + 5.15, .14, 3.35, .03), gold, 0, 1.86, 0);
   const top = 12 * .16;
+  gems.forEach((c, i) => { const s = i % 2 ? 1 : -1, k = Math.floor(i / 2); const gm = add(new THREE.OctahedronGeometry(.2, 0), new THREE.MeshStandardMaterial({ color: c, roughness: .15, metalness: .1, emissive: c, emissiveIntensity: .7 }), s * (R + .9), top + 1.2 + k * 1.25, .62); gm.scale.set(1, 1.3, .5); });
   [-1, 1].forEach(s => { add(columnGeo(h, .55, seg), marble, s * (R + .9), top, 0); });
   add(archGeo(R - .1, R + 1, 1.8, seg), pearl, 0, top + h - .35, 0);
   add(archGeo(R + 1, R + 1.25, 2, seg), gold, 0, top + h - .35, 0);
@@ -4698,17 +4700,67 @@ function buildDoors(scene, doors, hx, HW) {
     const y0 = yAt(d.x, d.z), g = new THREE.Group(); g.position.set(d.x, y0, d.z); g.rotation.y = d.side > 0 ? Math.PI / 2 : -Math.PI / 2; scene.add(g);
     const st = heavenStair(g, hx);
     const pt = pearlGate(d, hx); pt.position.set(0, ST.H, ST.L + ST.P - 1.6); pt.rotation.y = Math.PI; pt.scale.setScalar(.8); g.add(pt);
-    const up = textSprite('☁️ Subí acá', hx); up.scale.multiplyScalar(2.2); up.position.set(0, 3.6, -1.5); g.add(up);
-    const ar = new THREE.Mesh(new THREE.ConeGeometry(.6, 1.2, 4), new THREE.MeshBasicMaterial({ color: '#FFD25E' })); ar.rotation.x = Math.PI; ar.position.set(0, 2.2, -1.5); g.add(ar); up.userData.ar = ar;
+    const ar = new THREE.Mesh(new THREE.ConeGeometry(.6, 1.2, 4), new THREE.MeshBasicMaterial({ color: '#FFD25E' })); ar.rotation.x = Math.PI; ar.position.set(0, 4.6, -.6); g.add(ar);
+    let mar = null; try { mar = marBuild(g, hx); } catch (e) { console.warn('maranata', e); }
     if (hx && qEarly() >= 2) { const pl = new THREE.PointLight('#FFE7A0', 30, 26, 1.4); pl.position.set(0, ST.H + 4, ST.L + 2); g.add(pl); }
-    S_stair = { x: d.x, z: d.z, side: d.side, y0 }; out.push({ d, g, top: true, ar, stair: st, anim: pt.userData.anim, fx: d.x + d.side * (ST.L + ST.P * .6), fz: d.z });
+    S_stair = { x: d.x, z: d.z, side: d.side, y0 }; out.push({ d, g, top: true, ar, mar, stair: st, anim: pt.userData.anim, fx: d.x + d.side * (ST.L + ST.P * .6), fz: d.z });
   }
   return out;
 }
 let S_stair = null;
+/* ---------- Maranata: «Sube acá» (Apocalipsis 4:1). Una placa al pie, trompeta al acercarse, escalones que se encienden al subir y versículos que aparecen en el camino ---------- */
+function marPlaque(lines, w, h, opt) {
+  const c = document.createElement('canvas'), W = 1024, H = Math.round(W * h / w); c.width = W; c.height = H; const x = c.getContext('2d'), o = opt || {};
+  const gr = x.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, o.bg0 || 'rgba(255,250,236,.97)'); gr.addColorStop(1, o.bg1 || 'rgba(244,230,196,.97)'); x.fillStyle = gr; x.beginPath(); x.roundRect ? x.roundRect(8, 8, W - 16, H - 16, 36) : x.rect(8, 8, W - 16, H - 16); x.fill();
+  x.lineWidth = 14; x.strokeStyle = '#D9A93A'; x.stroke(); x.lineWidth = 3; x.strokeStyle = '#8A6418'; x.beginPath(); x.roundRect ? x.roundRect(30, 30, W - 60, H - 60, 24) : x.rect(30, 30, W - 60, H - 60); x.stroke();
+  x.textAlign = 'center'; x.textBaseline = 'middle'; let y = H * (o.y0 || .2);
+  lines.forEach(([t, sz, col, fam]) => { x.fillStyle = col || '#3A2A12'; x.font = `${fam || '700'} ${sz}px Georgia, 'Times New Roman', serif`;
+    const words = t.split(' '), out = []; let ln = ''; words.forEach(wd => { const tt = ln ? ln + ' ' + wd : wd; if (x.measureText(tt).width > W - 120 && ln) { out.push(ln); ln = wd; } else ln = tt; }); if (ln) out.push(ln);
+    out.forEach(l => { x.fillText(l, W / 2, y); y += sz * 1.18; }); y += sz * .25; });
+  const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 4;
+  return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tx, transparent: true, toneMapped: false, side: THREE.DoubleSide }));
+}
+function marBuild(g, hx) {
+  const gold = new THREE.MeshStandardMaterial({ color: '#F2C14E', metalness: 1, roughness: .25, emissive: '#6A4410', emissiveIntensity: .4 }), marble = pbrMat('marble_01', 1, 1, { color: '#FFFFFF' });
+  const M = { lit: 0, best: -1, horn: 0, verses: [], t0: 0 };
+  // placa al pie de la escalera, sobre un atril de mármol y oro
+  const stand = new THREE.Group(); stand.position.set(-ST.W - 2.6, 0, -1.2); stand.rotation.y = Math.PI + .35; g.add(stand);
+  const ped = new THREE.Mesh(bevBox(3.6, .5, 1.2, .06), marble); ped.position.y = .25; stand.add(ped);
+  [-1, 1].forEach(sd => { const c = new THREE.Mesh(columnGeo(3.1, .16, 12), marble); c.position.set(sd * 1.55, .5, 0); stand.add(c); const cap = new THREE.Mesh(new THREE.SphereGeometry(.24, 14, 10), gold); cap.position.set(sd * 1.55, 3.75, 0); stand.add(cap); });
+  const pl = marPlaque([['SUBE ACÁ', 150, '#9A6A10'], ['«Después de esto miré, y vi una puerta abierta en el cielo. Y la voz que había oído, como de trompeta, me dijo: Sube acá, y te mostraré las cosas que tienen que suceder.»', 44, '#3A2A12', 'italic 600'], ['Apocalipsis 4:1', 46, '#8A5A10']], 3.0, 2.6, { y0: .2 });
+  pl.position.set(0, 2.15, .02); stand.add(pl); M.plaque = pl;
+  // círculo de luz en el piso, donde empieza la subida
+  const ring = new THREE.Mesh(new THREE.RingGeometry(2.3, 2.6, 64), new THREE.MeshBasicMaterial({ color: '#FFE39A', transparent: true, opacity: .6, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.set(0, .05, -2.2); g.add(ring); M.ring = ring;
+  // escalones que se encienden: una franja de luz por escalón
+  const dep = ST.L / ST.N, sg = new THREE.PlaneGeometry(ST.W * 2 - .2, dep * .86); sg.rotateX(-Math.PI / 2);
+  const im = new THREE.InstancedMesh(sg, new THREE.MeshBasicMaterial({ color: '#FFFFFF', transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }), ST.N), M4 = new THREE.Matrix4(), blk = new THREE.Color(0, 0, 0);
+  for (let i = 0; i < ST.N; i++) { M4.makeTranslation(0, (i + 1) * ST.H / ST.N + .02, (i + .5) * dep); im.setMatrixAt(i, M4); im.setColorAt(i, blk); } im.instanceColor.needsUpdate = true; im.frustumCulled = false; g.add(im); M.steps = im; M.lv = new Float32Array(ST.N);
+  // versículos que aparecen al subir
+  const VV = [[.24, 'He aquí que viene con las nubes, y todo ojo lo verá.', 'Apocalipsis 1:7'], [.5, 'Santo, santo, santo es el Señor Dios Todopoderoso, el que era, el que es y el que ha de venir.', 'Apocalipsis 4:8'], [.76, 'Yo hago nuevas todas las cosas.', 'Apocalipsis 21:5']];
+  VV.forEach(([u, t, r], i) => { const p = marPlaque([[t, 58, '#3A2A12', 'italic 600'], [r, 46, '#8A5A10']], 4.2, 1.7, { y0: .3 }); const sd = i % 2 ? 1 : -1; p.position.set(sd * (ST.W + 3.1), u * ST.H + 2.6, u * ST.L); p.rotation.y = Math.PI + sd * -.5; p.material.opacity = 0; p.scale.setScalar(.85); g.add(p); M.verses.push({ p, u }); });
+  // arriba: el grito de la iglesia
+  const fin = marPlaque([['¡MARANATA!', 120, '#9A6A10'], ['«Sí, vengo pronto.» Amén. ¡Ven, Señor Jesús!', 56, '#3A2A12', 'italic 600'], ['Apocalipsis 22:20', 44, '#8A5A10']], 5.2, 2.2, { y0: .24 }); fin.position.set(0, ST.H + 13.6, ST.L + ST.P - 1.2); fin.rotation.y = Math.PI; fin.material.opacity = 0; g.add(fin); M.fin = fin;
+  return M;
+}
+function marHorn() { try { const A = fxCtx(), t0 = A.currentTime + .05, out = A.createGain(), lp = A.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1700; out.gain.value = .22; lp.connect(out); out.connect(A.destination);
+  /* llamada de trompeta: quinta y octava, con un poco de vibrato */
+  [[392, 0, .38], [392, .42, .18], [523.25, .64, .38], [659.25, 1.06, .38], [783.99, 1.48, 1.5]].forEach(([f, d, l]) => { [1, 1.004].forEach(dt => { const o = A.createOscillator(), gn = A.createGain(), vb = A.createOscillator(), vg = A.createGain(); o.type = 'sawtooth'; o.frequency.value = f * dt; vb.frequency.value = 5.5; vg.gain.value = l > 1 ? 4 : 0; vb.connect(vg); vg.connect(o.frequency);
+    gn.gain.setValueAtTime(.0001, t0 + d); gn.gain.exponentialRampToValueAtTime(.5, t0 + d + .05); gn.gain.setValueAtTime(.42, t0 + d + l - .08); gn.gain.exponentialRampToValueAtTime(.0001, t0 + d + l + .12); o.connect(gn); gn.connect(lp); o.start(t0 + d); vb.start(t0 + d); o.stop(t0 + d + l + .15); vb.stop(t0 + d + l + .15); }); }); } catch (e) {} }
+function marTick(o, t) {
+  const M = o.mar, d = o.d, a = S.av.position, u = (a.x - d.x) * d.side, v = Math.abs(a.z - d.z), near = u > -16 && u < ST.L + ST.P + 4 && v < 14;
+  if (!near) { if (M.best >= 0 && u < -30) { M.best = -1; M.horn = 0; } if (M.lit) { M.lv.fill(0); M.lit = 0; for (let i = 0; i < ST.N; i++) M.steps.setColorAt(i, new THREE.Color(0, 0, 0)); M.steps.instanceColor.needsUpdate = true; } return; }
+  M.ring.material.opacity = .35 + .25 * Math.sin(t * 2.2); M.ring.scale.setScalar(1 + .04 * Math.sin(t * 2.2));
+  if (!M.horn && u > -10 && v < 6) { M.horn = 1; marHorn(); }
+  const k = u >= 0 && u <= ST.L && v <= ST.W + .4 ? Math.min(ST.N - 1, Math.floor(u / ST.L * ST.N)) : (u > ST.L ? ST.N - 1 : -1); if (k > M.best) M.best = k;
+  const C = new THREE.Color(); let ch = false;
+  for (let i = 0; i < ST.N; i++) { const want = i <= M.best ? (i === k ? 1.6 : .75 + .25 * Math.sin(t * 2 - i * .35)) : 0; const cur = M.lv[i], nx = cur + (want - cur) * .12; if (Math.abs(nx - cur) > .002) { M.lv[i] = nx; C.setRGB(1 * nx, .78 * nx, .36 * nx); M.steps.setColorAt(i, C); ch = true; } }
+  if (ch) { M.steps.instanceColor.needsUpdate = true; M.lit = 1; }
+  M.verses.forEach(q => { const du = Math.abs(u - q.u * ST.L), w = u > 0 ? Math.max(0, Math.min(1, (12 - du) / 6)) : 0; q.p.material.opacity += (w - q.p.material.opacity) * .08; q.p.visible = q.p.material.opacity > .01; });
+  const wf = u > ST.L - 6 ? 1 : 0; M.fin.material.opacity += (wf - M.fin.material.opacity) * .05; M.fin.visible = M.fin.material.opacity > .01;
+}
 function doorTick(t) {
   if (!S || !S.doors || document.getElementById('view3d').hidden) return; gateTick(t); const a = S.av.position;
-  for (const o of S.doors) { if (o.ar) o.ar.position.y = 2.2 + Math.sin(t * 3) * .3;
+  for (const o of S.doors) { if (o.ar) o.ar.position.y = (o.mar ? 4.6 : 2.2) + Math.sin(t * 3) * .3; if (o.mar) { try { marTick(o, t); } catch (e) {} }
     const A = o.anim; if (A && (a.x - o.d.x) ** 2 + (a.z - o.d.z) ** 2 < 14400) { const tt = t + A.t0;
       A.fire.forEach((f, k) => { const fl = .85 + Math.sin(tt * 13 + k) * .1 + Math.sin(tt * 7.3 + k * 2) * .08; f.f1.scale.set(1, fl, 1); f.f2.scale.set(1, fl * 1.1, 1); f.pl.intensity = (S.hx ? 26 : 10) * (.8 + fl * .25); });
       if (A.gem) { A.gem.rotation.y = tt * 1.2; A.gem.material.emissiveIntensity = 1.3 + Math.sin(tt * 2.4) * .5; }
@@ -7173,6 +7225,9 @@ const SHOPS = {
   posada: { name: 'La posada', buy: [['r', 'bread', 2], ['r', 'cooked', 4]], sell: ['fruit', 'fish'] },
   mercado: { name: 'Puesto del mercado', buy: [['r', 'bread', 2], ['r', 'fruit', 2], ['t', 'flint', 6]], sell: ['wood', 'stone', 'plank', 'block', 'fruit', 'lemon', 'fish', 'cooked', 'salado', 'banquito', 'yugo', 'arado', 'piedramoler', 'tinaja', 'dintel'] }
 };
+/* en todos los mercados se consiguen las herramientas básicas (caña, hacha y pico); y algunas prendas comunes según el oficio de cada lugar */
+const SHOP_WEAR = { carpintero: ['carpintero', 'vendcuero'], alfarero: ['alfarero', 'alfarerog'], panadero: ['segadorhat', 'trigo'], pescador: ['red', 'pescadorb', 'bastonpesc'], tejedora: ['lino', 'indigo', 'tejedora', 'turbante'], posada: ['capucha', 'cuero', 'viajet'], mercado: ['gorromerc', 'juncos', 'tierra'] };
+Object.entries(SHOPS).forEach(([k, sh]) => { const tl = [['t', 'rod', 12], ['t', 'axe', 15], ['t', 'pick', 18]].filter(q => !sh.buy.some(b => b[0] === 't' && b[1] === q[1])); sh.buy = tl.concat(sh.buy, (SHOP_WEAR[k] || []).map(id => ['p', id, 12])); });
 const SERV_PERKS = [
   [3, 'Te conocen en el mercado', 'Los comerciantes te hacen precio: todo cuesta un 10% menos.'],
   [8, 'Manos abiertas', 'Cada misión cumplida te deja 5 denarios más.'],
@@ -7989,7 +8044,7 @@ function matMesh(k) {
   else if (k === 'boat') { const b = boatMesh({ L: 4.2, B: 1.5, D: .7, old: 1 }); b.position.y = -.38; b.rotation.set(.04, 0, -.1); g.add(b); const mud = add(new THREE.CircleGeometry(2.6, 24), M('#4E4030', 1), 0, .02, 0); mud.rotation.x = -Math.PI / 2; mud.scale.set(.75, 1.25, 1); mud.castShadow = false; }
   else if (k === 'nets') { [-.6, .6].forEach(x => add(new THREE.CylinderGeometry(.04, .04, 1.5, 6), wd, x, .75, 0)); const n = add(new THREE.PlaneGeometry(1.2, 1.1, 8, 8), new THREE.MeshStandardMaterial({ color: '#C9B48A', wireframe: true }), 0, .85, 0); n.material.side = THREE.DoubleSide; }
   else if (k === 'jars') { for (let i = 0; i < 6; i++) { const j = add(new THREE.CylinderGeometry(.22, .17, .75, 12), st, (i % 3 - 1) * .55, .38, (i < 3 ? -.3 : .3)); add(new THREE.TorusGeometry(.2, .03, 6, 14), st, j.position.x, .76, j.position.z).rotation.x = Math.PI / 2; } }
-  else if (k === 'roof') { add(new THREE.BoxGeometry(2.2, .14, 2.2), M('#8A6A44'), 0, 2.2, 0); add(new THREE.CylinderGeometry(.42, .42, .18, 12), M('#2A1E14'), .2, 2.22, 0); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([x, z]) => add(new THREE.BoxGeometry(.18, 2.2, .18), M('#9A8A70'), x, 1.1, z)); }
+  else if (k === 'roof') { /* la camilla que bajaron por el techo: queda adentro de la casa, justo debajo del hueco, con las cuatro sogas subiendo hasta el agujero */ add(new THREE.BoxGeometry(1.9, .08, .72), M('#B8A070'), 0, .32, 0); [-.33, .33].forEach(z => add(new THREE.CylinderGeometry(.035, .035, 2.3, 8), M('#7A5A3A'), 0, .36, z).rotation.z = Math.PI / 2); add(new THREE.BoxGeometry(1.3, .1, .6), M('#C9B48A'), .15, .4, 0); add(new THREE.BoxGeometry(.32, .12, .42), M('#EEE6D6'), -.72, .42, 0); [[-1.05, -.33], [1.05, -.33], [-1.05, .33], [1.05, .33]].forEach(([x, z]) => { const r = add(new THREE.CylinderGeometry(.018, .018, 2.95, 6), M('#C9B07A'), x * .6, .36 + 1.47, z * .6); r.rotation.z = x * -.12; r.rotation.x = z * .25; }); }
   else if (k === 'baskets') { for (let i = 0; i < 12; i++) { const a = i / 12 * 6.28; add(new THREE.CylinderGeometry(.18, .13, .22, 10, 1, true), M('#A8864E'), Math.cos(a) * .9, .11, Math.sin(a) * .9); add(new THREE.SphereGeometry(.1, 8, 6), M('#C8A060'), Math.cos(a) * .9, .2, Math.sin(a) * .9, [1, .6, 1]); } }
   else if (k === 'soils') { [['#B8A486', .1], ['#8E877A', .2], ['#5E6A3A', .25], ['#5A4030', .1]].forEach(([c, h], i) => { add(new THREE.BoxGeometry(.9, h, 1.1), M(c), (i - 1.5) * .95, h / 2, 0); }); for (let i = 0; i < 6; i++) add(new THREE.ConeGeometry(.05, .35, 5), M('#7A9A3A'), 1.2 + (i % 3) * .2 - .2, .4, (i < 3 ? -.25 : .25)); }
   else if (k === 'tree') { /* el sicómoro es el árbol grande de Zaqueo (galTrees): acá solo queda el anillo para mirar */ }
@@ -8006,9 +8061,9 @@ async function matBuild(scene, W) {
   const used = VIL.npcs.map(v => [v.x, v.z]).concat(SEC.list.map(e => [e.x, e.z]), S.avoidPts || []);
   const ok = (x, z) => !blockedAt(x, z) && waterWet(x, z, null) < .05 && Math.abs(x) < XB * .9 && W.dAt(x, z) > 2.2 && !used.some(([a, b]) => (a - x) ** 2 + (b - z) ** 2 < 16);
   const spot = d => { const poi = (S.pois || []).find(q => q.r === d.r && q.k === d.near); if (!poi) return null; for (let t = 0; t < 220; t++) { const q = poi.k === 'river' ? poi.pts[Math.floor(R() * poi.pts.length)] : [poi.x, poi.z], a = R() * 6.283, rr = poi.k === 'lake' ? 33 + R() * 16 : (poi.k === 'river' ? 4 : 8) + R() * (t < 60 ? 12 : 26), x = q[0] + Math.cos(a) * rr, z = q[1] + Math.sin(a) * rr; if (ok(x, z)) { used.push([x, z]); return [x, z]; } } return null; };
-  M.OBJS.forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, g = matMesh(d.k); g.position.set(x, Math.max(0, W.hAt(x, z)), z); g.rotation.y = R() * 6.28;
+  M.OBJS.forEach(d => { const hp = d.k === 'roof' && (S.pois || []).find(q => q.k === 'roofhouse'); const p = hp ? [hp.x, hp.z] : spot(d); if (!p) return; const [x, z] = p, g = matMesh(d.k); g.position.set(x, Math.max(0, W.hAt(x, z)), z); g.rotation.y = d.k === 'roof' ? (hp.side > 0 ? -Math.PI / 2 : Math.PI / 2) + Math.PI / 2 : R() * 6.28;
     const ring = new THREE.Mesh(new THREE.RingGeometry(.8, .9, 32), new THREE.MeshBasicMaterial({ color: '#FFE39A', transparent: true, opacity: .45, depthWrite: false, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .03; ring.visible = !pm.seen[d.id]; g.add(ring);
-    g.userData.keep = 1; scene.add(g); MAT.objs.push({ d, x, z, g, ring }); if (d.k !== 'tree') phCyl(x, z, d.k === 'boat' ? 1.1 : .45); }); matZaq();
+    g.userData.keep = 1; scene.add(g); MAT.objs.push({ d, x, z, g, ring }); if (d.k !== 'tree' && d.k !== 'roof') phCyl(x, z, d.k === 'boat' ? 1.1 : .45); }); matZaq();
   try { teoBuild(scene, W, R, ok, used); } catch (e) { console.warn('teofilo', e); }
   try { pergBuild(scene, W, rng(8811), used); } catch (e) { console.warn('pergaminos', e); }
   try { memBuild(scene, W, rng(8822), ok, used); } catch (e) { console.warn('versículos', e); }
@@ -8387,6 +8442,7 @@ function svShop(kind) {
     const rows = sh.buy.map(([t, k, p], i) => { const cost = price(p); let label = '', ico = '', owned = false;
       if (t === 't') { label = TOOLS[k][0]; ico = TOOLS[k][1]; owned = s.tools.includes(k); }
       else if (t === 'r') { label = RES[k][0]; ico = RES[k][1]; }
+      else if (t === 'p') { const gi = GBY[k]; if (!gi) return ''; label = gi.name; ico = '🧵'; owned = gearState().own.includes(k); }
       else { const left = GEAR.filter(x => x.r === k && !x.x && !gearState().own.includes(x.id)); owned = !left.length; label = 'Prenda ' + RAR[k][0].toLowerCase() + (left.length ? ' (al azar)' : ''); ico = '🧵'; }
       return `<div class="sv-rec${owned || money() < cost ? ' off' : ''}"><div><b>${ico} ${esc(label)}</b><small>${owned ? 'Ya lo tenés' : cost + ' denarios'}</small></div><button data-b="${i}" ${owned || money() < cost ? 'disabled' : ''}>Comprar</button></div>`; }).join('');
     const sells = sh.sell.filter(k => (s.inv[k] || 0) > 0).map(k => `<div class="sv-rec"><div><b>${RES[k][1]} ${RES[k][0]}</b><small>Tenés ${s.inv[k]} · ${SELL[k]} denario${SELL[k] > 1 ? 's' : ''} cada uno</small></div><button data-s="${k}">Vender 1</button><button data-sa="${k}">Todo</button></div>`).join('');
@@ -8397,6 +8453,7 @@ function svShop(kind) {
     el.querySelectorAll('[data-b]').forEach(b => b.onclick = () => { const [t, k, p] = sh.buy[+b.dataset.b], cost = price(p); if (money() < cost) return; if (S.hx && kind === 'mercado') { const vv = vilNearest(60); if (S.haggle) { if (vv) repAdd(vv.name, -1); behav('regateos'); } else { if (vv) repAdd(vv.name, 1); axGain('gent', 1); behav('pagoJusto'); } }
       if (t === 't') { if (s.tools.includes(k)) return; svAdd('money', -cost); svGiveTool(k, 'Compraste'); }
       else if (t === 'r') { svAdd('money', -cost); svAdd(k, 1); }
+      else if (t === 'p') { const gi = GBY[k]; if (!gi || gearState().own.includes(k)) return; svAdd('money', -cost); gearGive(gi, 'Compraste'); }
       else { const left = GEAR.filter(x => x.r === k && !x.x && !gearState().own.includes(x.id)); if (!left.length) return; svAdd('money', -cost); gearGive(left[Math.floor(Math.random() * left.length)], 'Compraste'); }
       tone3d(); G().save(); svUI(); draw(); });
     const sell = (k, n) => { n = Math.min(n, s.inv[k] || 0); if (!n) return; svAdd(k, -n); svAdd('money', n * SELL[k]); G().save(); svUI(); draw(); };
