@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kids &amp; Hero</title>
+<meta property="og:title" content="Kids &amp; Hero">
+<meta property="og:site_name" content="Kids &amp; Hero">
+<meta name="application-name" content="Kids &amp; Hero">
+<meta name="apple-mobile-web-app-title" content="Kids &amp; Hero">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="La Biblia para jugar. Kids y Hero recorren cada libro con escenas, minijuegos y desafíos. Un proyecto de Habitat CFM.">
+<meta name="theme-color" content="#CFE6FF">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Nunito:wght@500;700;800;900&family=Baloo+2:wght@600;700;800&family=Cinzel:wght@600;700;800&family=Archivo:wght@600;800;900&family=Montserrat:wght@600;700&display=swap">
+<style>
+/* Layout: columna de app (máx 520px) sobre un cielo. Mapa vertical entre nubes; HUD de vidrio fijo arriba; escenas, juegos y preguntas en hojas a pantalla completa. Mundo único, claro. */
+:root{
+  --sky-a:#BFDDFF; --sky-b:#E8F3FF; --sky-c:#FFF3E0;
+  --ink:#1A2B57; --ink-2:#51618C; --deep:#22407F; --blue:#3C7BE0;
+  --card:rgba(255,255,255,.74); --line:rgba(34,64,127,.12);
+  --gold:#E9A52C; --gold-2:#FFCF5C; --gold-soft:#FFF1C9; --coral:#EF6F61; --mint:#2FAE7C;
+  --shadow:0 12px 32px rgba(34,64,127,.14);
+  --f-display:"Fraunces",Georgia,"Times New Roman",serif;
+  --f-body:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+}
+body[data-branch="kids"]{--gold:#FF9636;--gold-2:#FFC05C;--gold-soft:#FFEBD2;--deep:#2E4CB0;--coral:#FF6B8A;--mint:#24B37E;--f-display:"Baloo 2","Nunito",system-ui,sans-serif}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:linear-gradient(180deg,var(--sky-a) 0%,var(--sky-b) 55%,var(--sky-c) 100%) fixed;background-color:var(--sky-b);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,.node:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+[hidden]{display:none!important}
+.app{max-width:520px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:max(18px,env(safe-area-inset-top,0px)) calc(32px + env(safe-area-inset-bottom,0px))}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;text-wrap:balance;margin:0;letter-spacing:-.01em}
+.kicker{font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.muted{color:var(--ink-2)}
+.glass{background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.9);box-shadow:var(--shadow)}
+.primary{width:100%;border:0;border-radius:18px;padding:16px;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#2B1D00;font:900 16px var(--f-body);letter-spacing:.01em;box-shadow:0 8px 20px rgba(233,165,44,.35),inset 0 1px 0 rgba(255,255,255,.6);transition:transform .12s,opacity .2s}
+.primary:active{transform:scale(.98)}
+.primary:disabled{opacity:.4;cursor:default}
+.ghost{width:100%;border:1.5px solid var(--line);border-radius:18px;padding:14px;background:rgba(255,255,255,.6);color:var(--deep);font:800 15px var(--f-body)}
+.icon-btn{width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.95);box-shadow:0 4px 12px rgba(34,64,127,.1);display:grid;place-items:center;flex:none}
+.hero{position:relative;display:grid;gap:10px;padding-block:20px 24px}
+.hero .mark{width:56px;height:56px}
+.hero h1{font-size:clamp(40px,12vw,56px);line-height:.98;color:var(--deep)}
+.hero h1 em{font-style:italic;color:var(--gold)}
+.hero p{margin:0;color:var(--ink-2);max-width:36ch;font-size:17px}
+.players{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:10px}
+.pcard{display:flex;align-items:center;gap:14px;width:100%;border-radius:22px;padding:10px 14px 10px 10px;text-align:left}
+.pcard svg{flex:none;background:linear-gradient(180deg,#DDEBFF,#FFFFFF);border-radius:16px}
+.pcard .info{flex:1;min-width:0}
+.pcard b{display:block;font:700 18px var(--f-display);color:var(--deep);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcard span{font-size:13px;color:var(--ink-2);font-weight:700}
+.pcard .go{font:900 12px var(--f-body);background:var(--deep);color:#fff;border-radius:99px;padding:7px 14px}
+.sec-title{font-size:20px;margin:4px 0 12px;color:var(--deep)}
+.doors{display:grid;gap:12px}
+.door{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;text-align:left;border-radius:26px;padding:16px;border:0}
+.door svg{width:74px;height:74px;border-radius:22px}
+.door b{display:block;font:800 26px/1 "Baloo 2","Nunito",sans-serif;color:#2E4CB0}
+.door.ados b{font:700 26px/1 "Fraunces",Georgia,serif;color:#22407F}
+.door span{display:block;font-size:14px;color:var(--ink-2);font-weight:700;margin-top:4px}
+.door .age-tag{display:inline-block;margin-top:8px;font:900 11px var(--f-body);letter-spacing:.1em;text-transform:uppercase;border-radius:99px;padding:4px 10px;background:#fff;color:var(--deep)}
+.door.kids{background:linear-gradient(135deg,#FFE7C9,#FFF6E8)}
+.door.ados{background:linear-gradient(135deg,#D9E8FF,#F1F7FF)}
+.session{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-top:16px;border-radius:18px;padding:12px 14px;font-weight:800;color:var(--deep);font-size:14px}
+.linkbtn{background:none;border:0;color:var(--blue);font:900 14px var(--f-body);padding:4px}
+.auth{display:grid;gap:16px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:rgba(34,64,127,.06);padding:5px;border-radius:16px}
+.tabs button{border:0;border-radius:12px;padding:11px;background:transparent;font-weight:900;color:var(--ink-2)}
+.tabs button[aria-selected="true"]{background:#fff;color:var(--deep);box-shadow:0 2px 8px rgba(34,64,127,.12)}
+.auth form{display:grid;gap:12px}
+.auth input{background:#fff;border:1.5px solid var(--line);border-radius:16px;color:var(--ink);font:800 17px var(--f-body);padding:13px 14px;width:100%}
+.auth .help{font-size:14px;color:var(--ink-2);font-weight:700;margin:0;border-radius:16px;padding:12px 14px;background:var(--gold-soft)}
+.auth .msg{font-size:14px;font-weight:800;color:var(--coral);margin:0;min-height:1em}
+.social{display:grid;gap:10px}
+/* examen de etapa */
+.exam{position:fixed;inset:0;z-index:90;overflow-y:auto;background:radial-gradient(120% 80% at 50% 0%,#24305A,#0E1224 70%);color:#EEF1F8;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.exam.hx{background:radial-gradient(120% 80% at 50% 0%,#3A2A16,#100C07 70%);color:#F3E6CC}
+.ex-top{max-width:560px;margin:0 auto 12px;display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center}
+.ex-top small{grid-column:1/3;font:900 11px var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:#FFD25E}
+.ex-bar{height:6px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}.ex-bar i{display:block;height:100%;background:linear-gradient(90deg,#FFE79A,#E8A23A);transition:width .4s}
+.ex-top span{font:900 12px var(--f-body);opacity:.75}
+.ex-card{max-width:560px;margin:0 auto;padding:22px 20px;border-radius:22px;background:rgba(255,255,255,.06);border:1px solid rgba(255,210,94,.28);box-shadow:0 20px 50px rgba(0,0,0,.45);animation:exin .35s ease}
+@keyframes exin{from{opacity:0;transform:translateY(10px)}}
+.ex-card h2{margin:6px 0 12px;font:800 30px/1.15 var(--f-display);text-wrap:balance}.ex-card h2 em{font-style:normal;color:#FFD25E}
+.ex-card h3{margin:10px 0 16px;font:800 21px/1.3 var(--f-display);text-wrap:balance}
+.ex-card p{font:600 15.5px/1.55 var(--f-body);opacity:.9}
+.ex-intro,.ex-end{text-align:center;margin-top:8vh}
+.ex-seal{width:74px;height:74px;margin:0 auto 10px;border-radius:50%;display:grid;place-items:center;font-size:36px;color:#2B1D00;background:radial-gradient(circle at 35% 30%,#FFF3C4,#E8A23A 70%);box-shadow:0 0 0 6px rgba(255,210,94,.18),0 0 40px rgba(255,210,94,.45)}
+.ex-intro small,.ex-end small{font:900 11px var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:#FFD25E}
+.ex-note{font-size:13.5px!important;opacity:.75!important}
+.ex-tag{display:inline-block;padding:5px 10px;border-radius:99px;font:900 10.5px var(--f-body);letter-spacing:.12em;text-transform:uppercase;background:rgba(255,210,94,.14);color:#FFD25E}
+.ex-tag.t-app{background:rgba(95,211,154,.16);color:#7FE3B0}.ex-tag.t-reflect{background:rgba(160,150,255,.18);color:#C9C2FF}
+.ex-opts{display:grid;gap:10px}
+.ex-opts button,.ex-bank button,.ex-btns button,.ex-check,.ex-next{font:800 15.5px/1.35 var(--f-body);border-radius:14px;padding:14px 16px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:inherit;text-align:left}
+.ex-tf{grid-template-columns:1fr 1fr}.ex-tf button{text-align:center}
+.ex-opts button.ok,.ex-match label.ok,.ex-order li.ok,.ex-blank.ok{border-color:#5FD39A;background:rgba(95,211,154,.16)}
+.ex-opts button.no,.ex-match label.no,.ex-order li.no,.ex-blank.no{border-color:#FF7A6A;background:rgba(255,122,106,.14)}
+.ex-check,.ex-next,.ex-btns .ex-go{width:100%;margin-top:14px;text-align:center!important;border:0!important;color:#2B1D00!important;background:linear-gradient(180deg,#FFE79A,#E8A23A)!important;font-weight:900!important}
+.ex-check:disabled{opacity:.4}
+.ex-btns{display:grid;gap:10px;margin-top:18px}.ex-btns .ex-later{text-align:center}
+.ex-match{display:grid;gap:10px}.ex-match label{display:grid;gap:6px;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04)}
+.ex-match b{font:800 15px var(--f-body)}.ex-match select{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:#1A1E30;color:#EEF1F8;font:700 14px var(--f-body)}
+.exam.hx .ex-match select{background:#1E1710;color:#F3E6CC}
+.ex-match em{font:700 12.5px var(--f-body);color:#7FE3B0;font-style:normal}
+.ex-verse{font:600 19px/1.9 var(--f-display)!important}
+.ex-blank{display:inline-block;min-width:96px;margin:0 3px;padding:2px 10px;border-radius:10px;border:1.5px dashed rgba(255,210,94,.6);background:rgba(255,210,94,.08);color:#FFD25E;font:800 16px var(--f-body)}
+.ex-blank.on{border-style:solid}
+.ex-bank{display:flex;flex-wrap:wrap;gap:8px}.ex-bank button{padding:10px 14px;text-align:center}.ex-bank button.used{opacity:.3}
+.ex-order{list-style:none;margin:0;padding:0;display:grid;gap:8px;counter-reset:o}
+.ex-order li{counter-increment:o;display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;padding:10px 10px 10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);font:700 14.5px/1.35 var(--f-body)}
+.ex-order li::before{content:counter(o);width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:rgba(255,210,94,.2);color:#FFD25E;font:900 12px var(--f-body)}
+.ex-order button{width:34px;height:34px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:inherit}
+.ex-order button:disabled{opacity:.25}
+.ex-ta{width:100%;padding:14px;border-radius:14px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.25);color:inherit;font:600 16px/1.5 var(--f-body);resize:vertical}
+.ex-ref{display:block;margin-top:14px;font:900 11px var(--f-body);letter-spacing:.08em;color:#FFD25E;opacity:.8}
+.ex-fb{margin-top:16px;padding:14px 16px;border-radius:16px;border:1px solid}.ex-fb.ok{border-color:#5FD39A;background:rgba(95,211,154,.1)}.ex-fb.no{border-color:#FF7A6A;background:rgba(255,122,106,.08)}
+.ex-fb b{font:900 17px var(--f-body)}.ex-fb.ok b{color:#7FE3B0}.ex-fb.no b{color:#FF9A85}.ex-fb p{margin:6px 0}.ex-fb small{font:900 11px var(--f-body);color:#FFD25E}
+.ex-score{display:flex;align-items:baseline;justify-content:center;gap:8px;margin:6px 0 4px}.ex-score b{font:800 64px/1 var(--f-display);color:#FFD25E}.ex-score span{font:800 16px var(--f-body);opacity:.8}
+.ex-rev{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:8px;text-align:left}.ex-rev li{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05);display:grid;gap:2px}.ex-rev b{font:800 14px var(--f-body)}.ex-rev small{font:900 11px var(--f-body);color:#FFD25E;letter-spacing:.04em}
+.sbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:1.5px solid var(--line);border-radius:16px;padding:13px;background:#fff;color:#1F2433;font:800 15px var(--f-body)}
+.sbtn:disabled{opacity:.5}
+.consent{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:16px;background:var(--gold-soft);font:700 14px/1.4 var(--f-body);color:var(--ink)}
+.consent input{width:20px;height:20px;flex:none;margin-top:1px;accent-color:#E8913A}
+.or{display:flex;align-items:center;gap:10px;font:800 12px var(--f-body);color:var(--ink-2);letter-spacing:.06em;text-transform:uppercase}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+#social .msg:empty{display:none}
+.loading{padding:22px;text-align:center;color:var(--ink-2);font-weight:800}
+.creator{display:grid;gap:18px}
+.preview{border-radius:28px;display:grid;place-items:center;padding:12px;background:radial-gradient(circle at 50% 80%,#FFF6DD 0%,rgba(255,255,255,.6) 45%,rgba(255,255,255,0) 70%),linear-gradient(180deg,#CFE5FF,#F3F9FF)}
+.preview svg{width:180px;height:200px}
+.field{display:grid;gap:8px}
+.field>span{font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.field input[type=text]{background:#fff;border:1.5px solid var(--line);border-radius:16px;color:var(--ink);font:800 18px var(--f-body);padding:12px 14px;width:100%}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{background:#fff;border:2px solid var(--line);border-radius:16px;padding:12px;font-weight:800;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{border-color:var(--blue);background:#EAF2FF;color:var(--deep)}
+.age{display:flex;align-items:center;gap:14px}
+.age input{flex:1;accent-color:var(--blue);height:28px;min-width:0}
+.age output{min-width:76px;text-align:center;font:700 20px var(--f-display);color:var(--deep);background:#fff;border-radius:14px;padding:4px 8px;border:1.5px solid var(--line)}
+.age-note{font-size:13px;color:var(--ink-2);margin:-2px 0 0;font-weight:700}
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.sw{width:42px;height:42px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px var(--line),0 3px 8px rgba(34,64,127,.15)}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 3px var(--blue),0 3px 8px rgba(34,64,127,.15)}
+.err{color:var(--coral);font-size:14px;margin:-8px 0 0;font-weight:800}
+#mapView{padding-top:0}
+.hud{position:sticky;top:0;z-index:20;padding-block:max(10px,env(safe-area-inset-top,0px)) 10px;margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-inline:max(12px,env(safe-area-inset-left,0px))}
+.hud-in{border-radius:22px;padding:10px 10px 12px}
+.hud-row{display:flex;align-items:center;gap:8px}
+.hud-av{width:42px;height:42px;border-radius:14px;background:linear-gradient(180deg,#DDEBFF,#fff);flex:none}
+.hud-title{flex:1;min-width:0}
+.hud-title small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hud-title b{display:block;font:700 18px/1.1 var(--f-display);color:var(--deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{display:flex;align-items:center;gap:5px;height:36px;padding:0 11px;border-radius:99px;background:#fff;border:1px solid var(--line);font:900 14px var(--f-body);font-variant-numeric:tabular-nums;flex:none;color:var(--ink-2)}
+.pill.score{color:#9A6A0A;background:var(--gold-soft);border-color:rgba(233,165,44,.4)}
+.pill.streak.hot{color:var(--coral);border-color:var(--coral);animation:throb 1s ease-in-out infinite}
+.pill .x{font-size:11px}
+@keyframes throb{50%{box-shadow:0 0 0 4px rgba(239,111,97,.16)}}
+.bar-wrap{display:flex;align-items:center;gap:10px;margin-top:10px}
+.bar{flex:1;height:10px;border-radius:99px;background:rgba(34,64,127,.1);overflow:hidden}
+.bar i,.bar-fly i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--gold-2),var(--gold) 55%,var(--coral));transition:width .5s cubic-bezier(.3,1.4,.5,1)}
+.count{font:900 12px var(--f-body);color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.worldbox{margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));margin-top:-74px}
+#world{display:block;width:100%;height:auto;touch-action:pan-y}
+.trail-glow{fill:none;stroke:#fff;stroke-width:16;stroke-linecap:round;opacity:.55}
+.trail{fill:none;stroke:var(--gold);stroke-width:4.5;stroke-dasharray:1.5 10;stroke-linecap:round;opacity:.55;transition:opacity .4s,stroke .4s}
+.trail.open{opacity:1}
+.trail.done{stroke-dasharray:none;opacity:1;stroke:url(#trailG)}
+.node{cursor:pointer}
+.node .halo{fill:none;stroke:var(--gold);stroke-width:3;opacity:0;transform-box:fill-box;transform-origin:center}
+.node.next .halo{opacity:1;animation:halo 1.6s ease-out infinite}
+@keyframes halo{from{transform:scale(.85);opacity:.9}to{transform:scale(1.6);opacity:0}}
+.node .base{fill:#fff;stroke:#F2C56A;stroke-width:3;filter:url(#nshadow);transition:fill .3s,stroke .3s}
+.node.next .base{stroke:var(--gold)}
+.node.ok .base{fill:url(#goldG);stroke:#fff}
+.node.bad .base{fill:#fff;stroke:var(--coral)}
+.node.locked{opacity:.55;cursor:default}
+.node.locked .base{stroke:#C9D6EC}
+.node .ico{color:var(--deep)}
+.node.ok .ico{color:#fff}
+.node.bad .ico{color:var(--coral)}
+.node .lbl rect{fill:rgba(255,255,255,.92)}
+.node .lbl text{font:800 10.5px var(--f-body);fill:var(--deep);text-anchor:middle}
+.node .bonus{font:900 7.5px var(--f-body);fill:var(--coral);letter-spacing:.12em;text-anchor:middle}
+.av .leg,.av .arm{transform-box:fill-box;transform-origin:50% 0}
+.walking .leg.l,.walking .arm.r{animation:swing .34s ease-in-out infinite alternate}
+.walking .leg.r,.walking .arm.l{animation:swing .34s ease-in-out infinite alternate-reverse}
+.walking .bob{animation:bob .17s ease-in-out infinite alternate}
+@keyframes swing{from{transform:rotate(-22deg)}to{transform:rotate(22deg)}}
+@keyframes bob{to{transform:translateY(-1.6px)}}
+.idle .bob{animation:breathe 2.6s ease-in-out infinite}
+@keyframes breathe{50%{transform:translateY(-.8px)}}
+.tag rect{fill:var(--deep)}
+.tag text{font:900 9px var(--f-body);fill:#fff;text-anchor:middle}
+.map-hint{text-align:center;font-size:14px;color:var(--ink-2);font-weight:700;margin:10px 0 0}
+.sheet{position:fixed;inset:0;z-index:40;background:rgba(26,43,87,.28);overflow-y:auto;-webkit-overflow-scrolling:touch;animation:fade .25s}
+@keyframes fade{from{opacity:0}}
+.sheet-in{max-width:520px;margin:0 auto;min-height:100%;background:linear-gradient(180deg,#F3F8FF,#FFFFFF 40%);display:grid;align-content:start;animation:up .4s cubic-bezier(.2,.9,.3,1.05)}
+@keyframes up{from{transform:translateY(40px);opacity:.001}}
+.video{position:relative;background:#0E1B3D;overflow:hidden;aspect-ratio:16/9;max-width:100%}
+.video svg{display:block;width:100%;height:100%}
+.video .cap{position:absolute;left:0;right:0;bottom:0;padding:28px 16px 16px;background:linear-gradient(transparent,rgba(14,27,61,.72));color:#fff;font:800 15px/1.35 var(--f-body);text-shadow:0 1px 6px rgba(0,0,0,.35);min-height:60px;transition:opacity .3s}
+.video .cap.fade{opacity:0}
+.video .prog{position:absolute;left:0;bottom:0;height:3px;background:var(--gold-2);width:0}
+.video .vbtn{position:absolute;top:max(10px,env(safe-area-inset-top,0px));right:max(10px,env(safe-area-inset-right,0px));border:0;border-radius:99px;padding:7px 14px;background:rgba(255,255,255,.85);color:var(--deep);font:900 13px var(--f-body);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.video .close{position:absolute;top:max(10px,env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px));width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.85);display:grid;place-items:center}
+.sheet-body{padding:18px max(18px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));display:grid;gap:14px}
+.sheet-body h2{font-size:clamp(26px,7vw,30px);line-height:1.1;color:var(--deep)}
+.story{margin:0;font-size:17px;line-height:1.55;color:var(--ink)}
+.gamecard{border-radius:22px;padding:16px;display:grid;gap:12px}
+.gamecard .top{display:flex;gap:12px;align-items:center}
+.gamecard .gico{width:50px;height:50px;border-radius:16px;background:#fff;display:grid;place-items:center;flex:none;box-shadow:0 4px 10px rgba(34,64,127,.1)}
+.gamecard .gt{flex:1;min-width:0}
+.gamecard .gt b{display:block;font:700 19px/1.15 var(--f-display);color:var(--deep)}
+.gamecard span{font-size:14px;color:var(--ink-2);font-weight:700}
+.gamecard .best{text-align:right;font:900 12px var(--f-body);color:#9A6A0A}
+.gamecard .best b{display:block;font:700 22px var(--f-display);color:#9A6A0A}
+.actions{display:grid;gap:10px}
+.actions.two{grid-template-columns:1fr 1fr}
+.card{display:grid;gap:16px;animation:enter .35s ease-out}
+@keyframes enter{from{opacity:.001;transform:translateY(10px)}}
+.card h3{font-size:clamp(20px,5.4vw,23px);line-height:1.25;color:var(--deep)}
+.kind{display:inline-flex;align-items:center;gap:8px}
+.kind svg{width:18px;height:18px}
+.quote{position:relative;background:#fff;border:1px solid var(--line);border-radius:22px;padding:28px 20px 20px;font:italic 600 20px/1.4 var(--f-display);color:var(--deep);margin-top:10px;box-shadow:var(--shadow)}
+.quote::before{content:"“";position:absolute;top:-22px;left:14px;font:700 70px/1 var(--f-display);color:var(--gold)}
+.opts{display:grid;gap:10px}
+.opt{width:100%;text-align:left;background:#fff;border:2px solid var(--line);border-radius:18px;padding:14px 16px;font-weight:800;font-size:16px;color:var(--ink);display:flex;align-items:center;gap:12px;box-shadow:0 3px 8px rgba(34,64,127,.06);transition:transform .12s,border-color .2s,background .2s}
+.opt:active{transform:scale(.98)}
+.opt .k{flex:none;width:30px;height:30px;border-radius:10px;background:#EEF4FF;display:grid;place-items:center;font:900 13px var(--f-body);color:var(--deep)}
+.opt.correct{border-color:var(--mint);background:#E7F8F0}
+.opt.correct .k{background:var(--mint);color:#fff}
+.opt.wrong{border-color:var(--coral);background:#FDEDEB;animation:shake .35s}
+.opt.wrong .k{background:var(--coral);color:#fff}
+.opt:disabled{cursor:default}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.order .opt.picked{border-color:var(--blue);background:#F1F6FF}
+.order .opt.picked .k{background:var(--blue);color:#fff}
+.hint{font-size:14px;color:var(--ink-2);margin:-6px 0 0;font-weight:700}
+.verse{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px;font:600 19px/2.1 var(--f-display);color:var(--deep);box-shadow:var(--shadow)}
+.blank{display:inline-block;min-width:92px;height:36px;line-height:32px;vertical-align:middle;margin:0 2px;padding:0 10px;border-radius:12px;border:2px dashed var(--gold);background:var(--gold-soft);font:800 16px var(--f-body);color:#7A5200;text-align:center}
+.blank.filled{border-style:solid}
+.blank.correct{border-color:var(--mint);color:#17724F;background:#E7F8F0}
+.blank.wrong{border-color:var(--coral);color:#B5392C;background:#FDEDEB}
+.bank{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--line);background:#fff;border-radius:99px;padding:9px 16px;font-weight:800;font-size:15px;color:var(--deep);box-shadow:0 3px 8px rgba(34,64,127,.06)}
+.chip.used{opacity:.3;cursor:default}
+.mapbox{background:#9FCBF2;border-radius:22px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}
+.mapbox svg{display:block;width:100%;height:auto;max-height:56vh}
+.dot{cursor:pointer}
+.dot .ring{fill:#fff;stroke:var(--deep);stroke-width:3}
+.dot .hit{fill:transparent}
+.dot:hover .ring,.dot:focus .ring{fill:var(--gold-2)}
+.dot.correct .ring{fill:var(--mint);stroke:#fff}
+.dot.wrong .ring{fill:var(--coral);stroke:#fff}
+.dot text{font:800 10px var(--f-body);fill:var(--deep);opacity:0;transition:opacity .3s;paint-order:stroke;stroke:#fff;stroke-width:3px}
+.revealed .dot text{opacity:1}
+.feedback{display:grid;gap:12px;background:#fff;border:1px solid var(--line);border-radius:22px;padding:16px;box-shadow:var(--shadow);animation:enter .35s ease-out}
+.res{display:flex;align-items:center;gap:12px}
+.res .badge{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;flex:none;color:#fff}
+.res.ok .badge{background:var(--mint)}
+.res.bad .badge{background:var(--coral)}
+.res h3{font-size:20px;color:var(--deep)}
+.res .pts{margin-left:auto;font:700 22px var(--f-display);color:#9A6A0A;font-variant-numeric:tabular-nums}
+.answer{font-weight:900;color:var(--deep)}
+.feedback p{margin:0}
+.ref{display:inline-flex;align-items:center;gap:6px;font:900 12px var(--f-body);letter-spacing:.04em;color:#7A5200;background:var(--gold-soft);border-radius:10px;padding:6px 10px;justify-self:start}
+.ordered{margin:0;padding-left:20px;display:grid;gap:4px;font-size:15px}
+#arcade{position:fixed;inset:0;z-index:50;background:linear-gradient(180deg,#CFE5FF,#F4F9FF);display:flex;justify-content:center;animation:fade .2s;touch-action:none}
+.ar-in{width:100%;max-width:520px;display:flex;flex-direction:column;padding:max(10px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));gap:10px;min-height:0}
+.ar-top{display:flex;align-items:center;gap:10px}
+.ar-top div{flex:1;min-width:0}
+.ar-top small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);font-weight:900}
+.ar-top b{display:block;font:700 18px/1.1 var(--f-display);color:var(--deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ar-stage{position:relative;flex:1;min-height:0;display:grid;place-items:center}
+#arc{display:block;border-radius:22px;box-shadow:var(--shadow);background:#DDEBFF;touch-action:none;max-width:100%}
+.ar-card{position:absolute;inset:0;display:grid;place-items:center;padding:20px}
+.ar-card .box{width:100%;max-width:330px;border-radius:24px;padding:20px;display:grid;gap:12px;text-align:center}
+.ar-card h3{font-size:26px;color:var(--deep)}
+.ar-card p{margin:0;color:var(--ink-2);font-weight:700}
+.ar-card .bigscore{font:700 56px/1 var(--f-display);color:#9A6A0A;font-variant-numeric:tabular-nums}
+.ar-card .newbest{display:inline-block;justify-self:center;background:var(--mint);color:#fff;font:900 13px var(--f-body);border-radius:99px;padding:5px 12px}
+.ar-ctrl{display:flex;gap:10px;justify-content:center}
+.ar-ctrl button{flex:1;max-width:120px;height:60px;border-radius:20px;border:0;background:#fff;box-shadow:0 6px 16px rgba(34,64,127,.14);display:grid;place-items:center;touch-action:manipulation}
+.ar-ctrl button:active{transform:scale(.95);background:#EAF2FF}
+.ar-ctrl .tapbar{max-width:none;font:900 15px var(--f-body);color:var(--deep)}
+.float{position:fixed;z-index:61;font:700 22px var(--f-display);color:#C88A12;pointer-events:none;text-shadow:0 2px 10px rgba(255,255,255,.9);animation:rise 1s ease-out forwards}
+@keyframes rise{to{transform:translateY(-46px) scale(1.15);opacity:0}}
+.toast{position:fixed;z-index:62;left:50%;top:calc(104px + env(safe-area-inset-top,0px));transform:translate(-50%,-20px);opacity:0;transition:.35s;background:#fff;border:1px solid rgba(233,165,44,.5);border-radius:99px;padding:9px 16px;display:flex;align-items:center;gap:10px;font-weight:800;font-size:14px;color:var(--deep);max-width:calc(100vw - 32px);box-shadow:var(--shadow);pointer-events:none}
+.toast.on{transform:translate(-50%,0);opacity:1}
+#dim{position:fixed;inset:0;z-index:44;background:radial-gradient(circle at 50% 45%,rgba(255,247,222,.96),rgba(191,221,255,.94));opacity:0;pointer-events:none;transition:opacity .5s}
+#dim.on{opacity:1;pointer-events:auto}
+.bar-fly{position:fixed;z-index:45;border-radius:99px;background:rgba(34,64,127,.12);overflow:hidden;pointer-events:none}
+.bar-fly i{width:100%}
+.bar-fly.glow{box-shadow:0 0 0 6px rgba(255,207,92,.35),0 0 60px 14px rgba(255,207,92,.7);transition:box-shadow .3s}
+.bar-fly.out{opacity:0;transform:scale(1.4);transition:opacity .5s,transform .5s}
+#levelup{position:fixed;inset:0;z-index:47;display:grid;place-items:center;padding:max(24px,env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));overflow-y:auto}
+.lu{width:100%;max-width:420px;display:grid;gap:16px;text-align:center;animation:pop .55s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{from{transform:scale(.7);opacity:.001}}
+.lu h2{font-size:clamp(30px,9vw,40px);line-height:1.05;color:var(--deep)}
+.lu .big{font:700 clamp(54px,16vw,72px)/1 var(--f-display);color:#C88A12;font-variant-numeric:tabular-nums}
+.lu .stars{display:flex;justify-content:center;gap:8px}
+.lu .stars svg{width:48px;height:48px;animation:starin .5s backwards cubic-bezier(.2,1.6,.4,1)}
+.lu .stars svg:nth-child(2){animation-delay:.15s}
+.lu .stars svg:nth-child(3){animation-delay:.3s}
+@keyframes starin{from{transform:scale(0) rotate(-90deg)}}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{border-radius:18px;padding:10px 6px}
+.stat b{display:block;font:700 22px var(--f-display);color:var(--deep);font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--ink-2);font-weight:800}
+.new-medals{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.mchip{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid rgba(233,165,44,.5);border-radius:99px;padding:5px 12px 5px 5px;font-size:13px;font-weight:800;color:var(--deep)}
+.btns{display:grid;gap:10px}
+#menu{position:fixed;inset:0;z-index:35;background:rgba(26,43,87,.25);display:flex;align-items:flex-end;justify-content:center}
+.menu-in{width:100%;max-width:520px;background:#F6FAFF;border-radius:28px 28px 0 0;padding:18px max(18px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));display:grid;gap:8px;animation:up .3s;box-shadow:0 -10px 40px rgba(34,64,127,.2)}
+.menu-in .item{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;text-align:left;font-weight:800;color:var(--deep)}
+.panel-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.panel-head h2{font-size:28px;color:var(--deep)}
+.medals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.medal{border-radius:22px;padding:16px 14px;display:grid;gap:8px;justify-items:start}
+.medal b{font:700 16px var(--f-display);color:var(--deep)}
+.medal span{font-size:13px;color:var(--ink-2);line-height:1.35;font-weight:700}
+.medal.off .coin{filter:grayscale(1);opacity:.35}
+.medal.off b{color:var(--ink-2)}
+.rank{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.rank li{display:flex;align-items:center;gap:12px;border-radius:20px;padding:10px 14px 10px 10px}
+.rank .pos{width:24px;font:700 20px var(--f-display);color:var(--ink-2);font-variant-numeric:tabular-nums;text-align:center}
+.rank li:nth-child(1) .pos{color:var(--gold)}
+.rank svg{flex:none;background:linear-gradient(180deg,#DDEBFF,#fff);border-radius:12px}
+.rank .nm{flex:1;min-width:0;font-weight:900;color:var(--deep);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank .nm small{display:block;font-weight:700;color:var(--ink-2);font-size:12px}
+.rank .sc{font:700 18px var(--f-display);color:#9A6A0A;font-variant-numeric:tabular-nums}
+.rank li.me{outline:2px solid var(--gold)}
+.empty{border-radius:20px;padding:22px;text-align:center;color:var(--ink-2);font-weight:700}
+.note{font-size:13px;color:var(--ink-2);margin-top:14px;font-weight:700}
+.foot{margin-top:24px;font-size:12px;color:var(--ink-2);text-align:center;font-weight:700}
+#fx{position:fixed;inset:0;z-index:60;pointer-events:none}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0E0C08">
+<link rel="apple-touch-icon" href="https://rawcdn.githack.com/galessandrodale93-pixel/tras-sus-pasos-modelos/862e1dcfdfe192dc3b202495a711ed60b2de0706/app/icons/icon-192.png">
+<link rel="stylesheet" href="/home.css">
+<link rel="stylesheet" href="/portal.css">
+<link rel="stylesheet" href="/hero.css">
+<link rel="stylesheet" href="/hub.css">
+<link rel="stylesheet" href="/hero-game.css">
+<script id="wix-site-script" src="https://manage.wix.com/_api/headless-business-setup/v1/headless-business/site-script.js" data-client-id="eed75abd-a421-4b88-b6e3-18dc82c8731a" async></script></head>
+<body>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div id="dim"></div>
+<div id="levelup" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<main class="portal-page hub3" id="hubView" hidden>
+  <section class="stage"><canvas id="hubSky" aria-hidden="true"></canvas><div class="wrap">
+    <header class="top"><span class="mark">Habitat CFM</span></header>
+    <section class="head">
+      <h1>Conocé el plan de Dios y cuál es <em>tu propósito</em> dentro de él</h1>
+      <p>Entrenamiento bíblico jugando, para niños y adolescentes de 6 a 18 años.</p>
+    </section>
+    <section class="duo">
+      <button class="pt kids" data-go="kids"><div class="art"></div><div class="txt"><span class="k">de 6 a 11 años</span><b>Kids</b><span class="d">Historias, juegos y aventuras en el cielo.</span><span class="go">Explorar Kids →</span></div></button>
+      <button class="pt ados" data-go="hero"><div class="art"></div><div class="txt"><span class="k">de 12 a 18 años</span><b>Hero</b><span class="d">Expediciones, desafíos y secretos por descubrir.</span><span class="go">Explorar Hero →</span></div></button>
+    </section>
+  </div></section>
+
+
+  <section class="mid"><div class="wrap cols">
+    <div class="left">
+      <ul class="vals">
+        <li><span class="ic" style="background:rgba(91,141,239,.18)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5C4.7 19 4 18.3 4 17.5Z M13 4h5.5c.8 0 1.5.7 1.5 1.5v12c0 .8-.7 1.5-1.5 1.5H13Z" fill="none" stroke="#8FB0FF" stroke-width="1.8" stroke-linejoin="round"/></svg></span><b>Historias que inspiran</b><span>De Génesis a Apocalipsis, libro por libro.</span></li>
+        <li><span class="ic" style="background:rgba(255,210,94,.16)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="11" rx="5" fill="none" stroke="#FFD25E" stroke-width="1.8"/><path d="M8 10.5v4M6 12.5h4" stroke="#FFD25E" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="11.5" r="1.2" fill="#FFD25E"/><circle cx="17.5" cy="13.8" r="1.2" fill="#FFD25E"/></svg></span><b>Juegos que enseñan</b><span>Minijuegos y desafíos con propósito.</span></li>
+        <li><span class="ic" style="background:rgba(61,220,151,.15)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8Z" fill="none" stroke="#3DDC97" stroke-width="1.8" stroke-linejoin="round"/></svg></span><b>Valores para la vida</b><span>Cada respuesta trae su pasaje bíblico.</span></li>
+        <li><span class="ic" style="background:rgba(255,120,160,.15)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" fill="none" stroke="#FF8FB4" stroke-width="1.8" stroke-linejoin="round"/></svg></span><b>Para cada edad</b><span>Kids de 6 a 11, Hero de 12 a 18.</span></li>
+      </ul>
+      <div class="why">
+      <span class="why-k">Por qué hacemos esto</span>
+      <h2>Que una nueva generación <em>ame la Palabra</em></h2>
+      <p>En Habitat CFM soñamos con niños y adolescentes que conozcan a Dios en profundidad y que su Palabra sea la lámpara de su camino. Ese es nuestro anhelo más profundo, y es la razón de todo lo que hacemos.</p>
+      <p>Este espacio es una forma más de acompañarlos: jugando, descubriendo y creciendo, una historia a la vez.</p>
+      <span class="why-s">Equipo de Habitat CFM</span>
+      </div>
+    </div>
+    <aside class="side">
+      <h2>Esta semana</h2>
+      <p class="lede">Lo que está pasando en el entrenamiento.</p>
+      <div class="stats" id="hubStats"></div>
+      <div class="card reto" id="hubReto"></div>
+      <div class="card lead" id="hubLead"></div>
+    </aside>
+  </div></section>
+
+  <section class="fam2"><div class="wrap">
+    <div class="hub-fam">
+      <div class="session" data-session><span>Cargando tu cuenta…</span></div>
+      <h2>Tu familia</h2>
+      <p class="lede">Una cuenta para toda la familia, con un personaje para cada chico. La crea una persona adulta y en el ranking solo se ve el apodo.</p>
+      <div class="family" id="family"></div>
+    </div>
+  </div></section>
+  <footer class="home-foot">Un proyecto de <b>Habitat CFM</b> · Citas bíblicas: Nueva Traducción Viviente (NTV) · Versión de prueba</footer>
+</main>
+
+<main class="home" id="homeView" hidden>
+  <section class="hero-epic">
+    <canvas id="heroSky" aria-hidden="true"></canvas>
+    <button class="back-hub" data-hub><svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 3L5 9l6 6" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Inicio</button>
+    <div class="wrap">
+      <span class="badge"><i></i>Habitat · de 6 a 11 años</span>
+      <h1 class="epic"><em>Kids</em></h1>
+      <p class="tag">La Biblia como nunca la jugaste. Creá tu personaje, cruzá el cielo y viví cada historia desde adentro.</p>
+      <div class="hero-cta"><button class="btn-epic" id="heroGo" data-play="kids">Empezar la aventura</button></div>
+      <div class="session glass" data-session><span>Cargando tu cuenta…</span></div>
+    </div>
+    <span class="scroll-cue" aria-hidden="true"></span>
+  </section>
+
+  <section class="worlds-sec"><div class="wrap">
+    <h2 class="sec">Un mundo por cada libro</h2>
+    <p class="lede">Cada libro de la Biblia es un mundo para recorrer. El primero ya está abierto y los demás se van sumando.</p>
+    <div class="worlds" id="worlds"></div>
+  </div></section>
+
+  <section class="how-sec"><div class="wrap">
+    <h2 class="sec">Así se juega</h2>
+    <p class="lede">Cada parada del camino tiene tres momentos.</p>
+    <ol class="steps">
+      <li><span class="n">1</span><b>Mirá la escena</b><span>Tu personaje entra en la historia y la ves suceder, con subtítulos.</span></li>
+      <li><span class="n">2</span><b>Jugá el desafío</b><span>Un minijuego que dura hasta que perdés. Tu mejor marca suma puntos.</span></li>
+      <li><span class="n">3</span><b>Respondé y avanzá</b><span>Una pregunta con su versículo. Sumá rachas, medallas y subí en el ranking.</span></li>
+    </ol>
+  </div></section>
+
+  <section class="how-sec" style="padding-top:0"><div class="wrap"><div class="fam-cta"><p>Creá tu personaje, elegí su edad y empezá a caminar por el cielo.</p><button class="primary" data-play="kids">Jugar ahora</button></div></div></section>
+
+  <footer class="home-foot">Un proyecto de <b>Habitat CFM</b> · Citas bíblicas: Nueva Traducción Viviente (NTV), © Tyndale House Foundation · Versión de prueba</footer>
+</main>
+
+<main class="portal-page" id="adosView" hidden>
+  <section class="hx-hero">
+    <div class="hx-photo" aria-hidden="true"></div>
+    <div class="hx-shafts" aria-hidden="true"></div>
+    <div class="hx-grade" aria-hidden="true"></div>
+    <canvas id="heroFx" aria-hidden="true"></canvas>
+    <button class="back-hub" data-hub><svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 3L5 9l6 6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Inicio</button>
+    <div class="wrap">
+      <span class="hx-loc"><i></i>Expedición I · 31°46′N 35°13′E</span>
+      <h1 class="hx-word">Hero</h1>
+      <p class="hx-line">Hay un tesoro escondido. Te toca encontrarlo.</p>
+      <p class="hx-sub">Cada libro de la Biblia es una expedición a lugares reales. Pruebas que te exigen, códigos para descifrar y un ranking con tu grupo de Habitat. De 12 a 18 años.</p>
+      <div class="hx-cta"><button class="hx-btn" data-play="ados">Comenzar la expedición</button><button class="hx-ghost" data-scroll="hxExp">Ver el mapa</button></div>
+      <div class="session" data-session><span>Cargando tu cuenta…</span></div>
+    </div>
+  </section>
+
+  <section class="hx-sec" id="hxExp"><div class="wrap">
+    <span class="hx-label">El mapa</span>
+    <h2>Siete <em>expediciones</em></h2>
+    <p class="lede">La primera ya está abierta. Las demás siguen selladas y se abren de a una.</p>
+    <div class="hx-exp" id="heroExp"></div>
+  </div></section>
+
+  <section class="hx-sec"><div class="wrap">
+    <span class="hx-label">Cómo se juega</span>
+    <h2>Tu <em>misión</em></h2>
+    <p class="lede">Cada parada del camino tiene tres momentos.</p>
+    <ol class="hx-steps">
+      <li data-n="I"><svg class="ic" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16.5" fill="none" stroke="#E9C37A" stroke-width="1.2" opacity=".6"/><circle cx="18" cy="18" r="6" fill="none" stroke="#E9C37A" stroke-width="2"/><circle cx="18" cy="18" r="2" fill="#E9C37A"/></svg><b>Explorá</b><span>Entrás en la escena y la ves suceder frente a vos.</span></li>
+      <li data-n="II"><svg class="ic" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16.5" fill="none" stroke="#E9C37A" stroke-width="1.2" opacity=".6"/><path d="M11 24 L18 10 L25 24Z" fill="none" stroke="#E9C37A" stroke-width="2" stroke-linejoin="round"/><path d="M18 16v4" stroke="#E9C37A" stroke-width="2" stroke-linecap="round"/></svg><b>Superá la prueba</b><span>Un desafío que dura hasta que caés. Tu mejor marca queda registrada.</span></li>
+      <li data-n="III"><svg class="ic" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16.5" fill="none" stroke="#E9C37A" stroke-width="1.2" opacity=".6"/><rect x="11" y="15" width="14" height="10" rx="2" fill="none" stroke="#E9C37A" stroke-width="2"/><path d="M14 15v-3a4 4 0 0 1 8 0" stroke="#E9C37A" stroke-width="2" fill="none"/></svg><b>Descifrá</b><span>Una pregunta con su pasaje. Acertá, encadená rachas y ganá insignias.</span></li>
+    </ol>
+  </div></section>
+
+  <section class="hx-sec"><div class="wrap">
+    <span class="hx-label">Lo que te espera</span>
+    <h2>Subí de <em>nivel</em></h2>
+    <ul class="hx-feats">
+      <li><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 7 L23.5 16 L33 16 L25.5 21.8 L28.3 31 L20 25.4 L11.7 31 L14.5 21.8 L7 16 L16.5 16Z" fill="none" stroke="#E9C37A" stroke-width="2" stroke-linejoin="round"/></svg><div><b>Ranking</b><span>Competí con tu grupo de Habitat.</span></div></li>
+      <li><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 6 C13 15 26 18 20 33 C31 27 29 15 20 6Z" fill="#E2873A"/><path d="M20 20 C17 24 22 26 20 32 C25 28 24 23 20 20Z" fill="#FFD27A"/></svg><div><b>Rachas</b><span>Encadená aciertos y mantené la llama.</span></div></li>
+      <li><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="17" r="8" fill="none" stroke="#E9C37A" stroke-width="2"/><path d="M14.5 23 L12 34 L20 30 L28 34 L25.5 23" fill="none" stroke="#E9C37A" stroke-width="2" stroke-linejoin="round"/></svg><div><b>Insignias</b><span>Ocho insignias para desbloquear.</span></div></li>
+      <li><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="14" r="6" fill="none" stroke="#E9C37A" stroke-width="2"/><path d="M9 34 C10 25 30 25 31 34" fill="none" stroke="#E9C37A" stroke-width="2" stroke-linecap="round"/></svg><div><b>Tu personaje</b><span>Con tu nombre y tu edad.</span></div></li>
+    </ul>
+  </div></section>
+
+  <section class="hx-final">
+    <span class="hx-label">Expedición I abierta</span>
+    <h2>El camino empieza acá</h2>
+    <p>Creá tu personaje y entrá a la primera expedición.</p>
+    <button class="hx-btn" data-play="ados">Comenzar la expedición</button>
+  </section>
+  <footer class="hx-foot">Un proyecto de <b>Habitat CFM</b> · Citas bíblicas: Nueva Traducción Viviente (NTV) · Versión de prueba</footer>
+</main>
+
+
+<main class="app" id="authView" hidden>
+  <div class="panel-head"><button class="icon-btn" id="authBack" aria-label="Volver"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 3L5 9l6 6" stroke="#22407F" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2>Tu cuenta</h2></div>
+  <div class="auth">
+    <div class="tabs" role="tablist"><button role="tab" aria-selected="true" data-tab="login">Ingresar</button><button role="tab" aria-selected="false" data-tab="signup">Crear cuenta</button></div>
+    <div class="social" id="social">
+      <label class="consent" id="teenConsent" hidden><input type="checkbox" id="sConsent"><span>Mis papás (o quien está a cargo) saben que me estoy creando una cuenta.</span></label>
+      <button class="sbtn" type="button" data-idp="google"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>Seguir con Google</span></button>
+      <button class="sbtn" type="button" data-idp="facebook"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#1877F2" d="M24 12a12 12 0 1 0-13.9 11.9v-8.4H7.1V12h3V9.4c0-3 1.8-4.7 4.5-4.7 1.3 0 2.7.2 2.7.2v2.9h-1.5c-1.5 0-2 .9-2 1.9V12h3.4l-.5 3.5h-2.9v8.4A12 12 0 0 0 24 12z"/></svg><span>Seguir con Facebook</span></button>
+      <p class="msg" id="socialMsg"></p>
+      <div class="or"><span>o con tu email</span></div>
+    </div>
+    <form id="fLogin" novalidate>
+      <input type="email" id="lEmail" name="email" autocomplete="email" placeholder="Email" required>
+      <input type="password" id="lPass" name="password" autocomplete="current-password" placeholder="Contraseña" required>
+      <p class="msg" data-msg></p>
+      <button class="primary" type="submit">Ingresar</button>
+    </form>
+    <form id="fSignup" novalidate hidden>
+      <p class="help" id="signupHelp">La cuenta la crea una persona adulta: mamá, papá o quien esté a cargo. Adentro van a poder crear un personaje para cada chico de la familia.</p>
+      <input type="text" id="sFirst" name="first" autocomplete="given-name" placeholder="Tu nombre (adulto)" required>
+      <input type="email" id="sEmail" name="email" autocomplete="email" placeholder="Email" required>
+      <input type="password" id="sPass" name="password" autocomplete="new-password" placeholder="Contraseña (mínimo 6 caracteres)" minlength="6" required>
+      <p class="msg" data-msg></p>
+      <button class="primary" type="submit">Crear cuenta</button>
+    </form>
+    <form id="fVerify" novalidate hidden>
+      <p class="help">Te enviamos un código por email. Escribilo acá para activar la cuenta.</p>
+      <input type="text" id="vCode" name="code" inputmode="numeric" autocomplete="one-time-code" placeholder="Código" required>
+      <p class="msg" data-msg></p>
+      <button class="primary" type="submit">Confirmar</button>
+    </form>
+    <button class="ghost" id="demoBtn" type="button">Probar sin cuenta</button>
+    <p class="help" id="approval" hidden>Tu cuenta quedó pendiente de aprobación. Te avisamos por email cuando esté lista.</p>
+  </div>
+</main>
+
+<main class="app" id="profilesView" hidden>
+  <div class="panel-head"><button class="icon-btn" id="profBack" aria-label="Volver al inicio"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 3L5 9l6 6" stroke="#22407F" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2 id="profTitle">¿Quién juega?</h2></div>
+  <ul class="players" id="players"></ul>
+  <button class="primary" id="newPlayer">Crear personaje nuevo</button>
+  <p class="note" id="profNote"></p>
+</main>
+
+<main class="app" id="createView" hidden>
+  <div class="panel-head">
+    <button class="icon-btn" id="createBack" aria-label="Volver"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 3L5 9l6 6" stroke="#22407F" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <h2 id="createTitle">Tu personaje</h2>
+  </div>
+  <div class="creator">
+    <div class="preview"><svg id="preview" viewBox="-36 -82 72 88" aria-label="Vista previa del personaje"></svg></div>
+    <label class="field"><span>Nombre</span><input type="text" id="cName" maxlength="18" autocomplete="nickname" placeholder="¿Cómo te llamás?"></label>
+    <p class="err" id="cErr" hidden></p>
+    <div class="field"><span>Soy</span><div class="seg" data-k="g"><button data-v="chico">Chico</button><button data-v="chica">Chica</button></div></div>
+    <div class="field"><span>Edad</span><div class="age"><input type="range" id="cAge" min="6" max="18" step="1" aria-label="Edad"><output id="cAgeOut">14</output></div><p class="age-note" id="cAgeNote"></p></div>
+    <div class="field"><span>Piel</span><div class="swatches" data-k="skin"></div></div>
+    <div class="field"><span>Pelo</span><div class="swatches" data-k="hair"></div></div>
+    <div class="field"><span>Ropa</span><div class="swatches" data-k="outfit"></div></div>
+    <button class="primary" id="cGo">Empezar el camino</button>
+  </div>
+</main>
+
+<main class="app" id="mapView" hidden>
+  <div class="hud"><div class="hud-in glass">
+    <div class="hud-row">
+      <button class="hud-lv" id="hudLv" title="Mi progreso" aria-label="Ver mi progreso"><svg class="hud-av" id="hudAv" viewBox="-22 -84 44 44" aria-hidden="true"></svg><img class="hud-ph" id="hudPh" alt="" hidden referrerpolicy="no-referrer"><b id="lvN">1</b></button>
+      <button class="hud-title" id="hudTitle" aria-label="Ver mi progreso"><small id="hudStage" hidden>Etapa 1</small><b id="hudName">Nivel 1</b><span class="lv-t" id="lvT">Peregrino</span></button>
+      <div class="pill streak" id="streak" title="Racha"><svg width="13" height="15" viewBox="0 0 14 16" aria-hidden="true"><path d="M7 0c1 3 5 5 5 9.5A5 5 0 0 1 2 9.5C2 7 3.5 6 4 4c1 1.2 1.2 2.4 1 3.6C6.6 6 7.4 3.6 7 0z" fill="currentColor"/></svg><span id="streakN">0</span><span class="x" id="mult"></span></div>
+      <div class="pill score"><span id="score">0</span></div>
+      <button class="icon-btn" id="menuBtn" aria-label="Menú"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 5h12M3 9h12M3 13h12" stroke="#22407F" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="bar-wrap" hidden><div class="bar" id="bar"><i id="barFill"></i></div><span class="count" id="count">0/6</span></div>
+  </div></div>
+  <div class="worldbox"><svg id="world" role="application" aria-label="Mapa del camino"></svg></div>
+  <p class="map-hint">Tocá una parada que brilla para caminar hasta ahí.</p>
+  <div id="view3d" hidden><canvas id="c3d" aria-label="Vista 3D del camino"></canvas><div class="v3ui" id="v3go"></div><div class="v3joy" id="v3joy" aria-label="Joystick para caminar"><i></i></div><button class="v3bag" id="v3bag" aria-label="Mochila"></button><div class="v3pop" id="v3pop" hidden></div><div class="v3sheet" id="v3sheet" hidden></div></div>
+  <button class="view-toggle" id="viewToggle" hidden></button>
+</main>
+
+<main class="app" id="medalsView" hidden>
+  <div class="panel-head"><button class="icon-btn back" aria-label="Volver al mapa"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 3L5 9l6 6" stroke="#22407F" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2>Medallas</h2></div>
+  <div class="medals" id="medals"></div>
+</main>
+
+<main class="app" id="rankView" hidden>
+  <div class="panel-head"><button class="icon-btn back" aria-label="Volver al mapa"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 3L5 9l6 6" stroke="#22407F" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button><h2>Ranking</h2></div>
+  <ol class="rank" id="rank"></ol>
+  <p class="note" id="rankNote">El ranking reúne a todos los jugadores de esta rama. Solo se muestra el apodo y el personaje.</p>
+</main>
+
+<div id="menu" hidden><div class="menu-in">
+  <button class="item" data-a="prog">Mi progreso</button>
+  <button class="item" data-a="medals">Medallas</button>
+  <button class="item" data-a="rank">Ranking</button>
+  <button class="item" data-a="edit">Editar mi personaje</button>
+  <button class="item" data-a="who">Cambiar de jugador</button>
+  <button class="item" data-a="home">Ir al inicio</button>
+  <button class="item" data-a="logout">Cerrar sesión</button>
+  <button class="ghost" data-a="close">Cerrar</button>
+</div></div>
+
+<div id="stop" class="sheet" hidden></div>
+
+<div id="arcade" hidden><div class="ar-in">
+  <div class="ar-top">
+    <button class="icon-btn" id="arClose" aria-label="Salir del juego"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="#22407F" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+    <div><small>Minijuego</small><b id="arTitle">Juego</b></div>
+    <div class="pill score"><span id="arScore">0</span></div>
+  </div>
+  <div class="ar-stage" id="arStage"><canvas id="arc" width="360" height="520"></canvas><div class="ar-card" id="arCard"></div></div>
+  <div class="ar-ctrl" id="arCtrl"></div>
+</div></div>
+
+<script type="module" src="https://rawcdn.githack.com/galessandrodale93-pixel/tras-sus-pasos-modelos/862e1dcfdfe192dc3b202495a711ed60b2de0706/app/game.js" onerror="var s=document.createElement('script');s.type='module';s.src='https://raw.githack.com/galessandrodale93-pixel/tras-sus-pasos-modelos/862e1dcfdfe192dc3b202495a711ed60b2de0706/app/game.js';document.body.appendChild(s)"></script>
+<script src="/home.js" defer></script>
+<script src="/portal.js" defer></script>
+<script src="/hero.js" defer></script>
+</body>
+</html>
