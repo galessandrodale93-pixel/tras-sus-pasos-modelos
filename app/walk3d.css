@@ -1426,3 +1426,4 @@ body.v3on .v3surv .sv-btn[data-a="eat"]{right:calc(var(--fanR) + 190px)!importan
 .pkpop{position:fixed;left:50%;bottom:28%;transform:translateX(-50%);z-index:30;pointer-events:none;padding:6px 14px;border-radius:999px;background:rgba(20,15,10,.82);color:#FFE39A;font:900 15px Nunito,system-ui,sans-serif;animation:pkUp 1.4s ease forwards}
 body:not([data-branch="ados"]) .pkpop{background:rgba(255,255,255,.95);color:#22407F}
 @keyframes pkUp{0%{opacity:0;transform:translate(-50%,10px)}15%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-40px)}}
+.v3map[hidden]{display:none!important}
