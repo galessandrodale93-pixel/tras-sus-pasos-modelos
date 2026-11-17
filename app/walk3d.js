@@ -613,19 +613,8 @@ function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
     { const t2 = wg + wy + wd + wr || 1; spl.set([wg / t2, wy / t2, wd / t2, wr / t2], i * 4); } const v = (.86 + n * .26) * (1 - wet * .22); col.set([v, v * (1 - wet * .02), v * (1 - wet * .05)], i * 3); }
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.setAttribute('splat', new THREE.BufferAttribute(spl, 4)); geo.computeVertexNormals();
   const terrain = new THREE.Mesh(geo, groundMat(Q, !!KK)); terrain.receiveShadow = true; scene.add(terrain); splitZ(scene, terrain, 64);
-  // montañas: el mismo terreno sigue y se levanta en cordones continuos (sin piedras sueltas), con roca según la pendiente
-  const MW = 140, mtnH = (x, z) => { const ax = Math.abs(x), u = Math.max(0, (ax - X1) / MW), e = hAt(Math.sign(x) * X1, z), r = 1 - Math.abs(vnoise(x * .018 + 11, z * .014) * 2 - 1), n = fbm(x * .011 + 5, z * .009), rr = 1 - Math.abs(vnoise(x * .05 - 3, z * .045) * 2 - 1);
-    let fj = 0; for (const b of WATER.basins) { if (!b.sea || Math.sign(b.x) !== Math.sign(x)) continue; const w = b.r * .8 * (1 - sstep(.15, .7, u)) + 4, dz = Math.abs(z - b.z + Math.sin(u * 7) * 9); fj = Math.max(fj, 1 - sstep(w * .35, w * 1.45, dz)); } /* el mar entra entre los cerros como un caudal */
-    return e + sstep(0, .55, u) * (10 + n * 34 + r * r * 30 + rr * 6) * (KK ? .55 : 1) * (1 - fj) - sstep(.85, 1, u) * 4 * (1 - fj); };
-  [-1, 1].forEach(sd => { const mg = new THREE.PlaneGeometry(MW, L, Math.round(MW / 3.5), Math.round(L / 3.5)); mg.rotateX(-Math.PI / 2); mg.translate(sd * (X1 + MW / 2), 0, (Z0 + Z1) / 2);
-    const mp = mg.attributes.position, mc = new Float32Array(mp.count * 3), ms = new Float32Array(mp.count * 4);
-    for (let i = 0; i < mp.count; i++) { const x = mp.getX(i), z = mp.getZ(i), xx = Math.abs(x - sd * X1) < .01 ? sd * X1 : x, h = Math.abs(x - sd * X1) < .01 ? hAt(sd * X1, z) : mtnH(xx, z); mp.setY(i, h);
-      const sl = Math.hypot(mtnH(x + 1.5, z) - mtnH(x - 1.5, z), mtnH(x, z + 1.5) - mtnH(x, z - 1.5)) / 3, n2 = vnoise(x * .04 + 7, z * .04);
-      let wr = Math.max(sstep(.5, 1.05, sl), sstep(40, 70, h) * .5), wy = Math.max(sstep(.5, .8, n2) * .6, sstep(12, 30, h) * .75), wg = (1 - wr) * (1 - wy * .8); wy *= 1 - wr; const tt = wr + wy + wg || 1; ms.set([wg / tt, wy / tt, 0, wr / tt], i * 4);
-      const v = .82 + fbm(x * .15, z * .15) * .26 + sstep(30, 60, h) * .12; mc.set([v, v, v], i * 3); }
-    mg.setAttribute('color', new THREE.BufferAttribute(mc, 3)); mg.setAttribute('splat', new THREE.BufferAttribute(ms, 4)); mg.computeVertexNormals();
-    const m = new THREE.Mesh(mg, terrain.material); m.receiveShadow = true; scene.add(m); splitZ(scene, m, 96); });
-  return { hAt, dAt, dNz, roadAt, sunL, sunDir, sky, terrain, hemi, mtnH, X1 };
+  // (las montañas del borde ahora están en las tierras de afuera, al final del mundo ancho: ver olH)
+  return { hAt, dAt, dNz, roadAt, sunL, sunDir, sky, terrain, hemi, mtnH: null, X1, Z0, Z1, dz: L / Math.round(L / Q.tg) };
 }
 /* plantas reales escaneadas (Poly Haven, CC0): pasto, pasto bermuda y flores amarillas, con viento */
 const FLB = new URL('./flora/', import.meta.url).href;
@@ -645,6 +634,84 @@ async function realFlora(scene, W, allPts, Q, uT) {
       chunkInst(scene, g, mat, list, ([x, z], i, im) => { const s2 = cfg.s[0] + R() * (cfg.s[1] - cfg.s[0]); e.set((R() - .5) * .15, R() * 6.28, (R() - .5) * .15); q.setFromEuler(e); M4.compose(v.set(x, W.hAt(x, z) - .02, z), q, sc.set(s2, s2 * (.85 + R() * .3), s2)); im.setMatrixAt(i, M4); im.setColorAt(i, C.setRGB(.9 + R() * .2, .9 + R() * .2, .85 + R() * .2)); }, { recv: true, xz: 1 }); });
   }
 }
+
+/* ===================== TIERRAS DE AFUERA: el mundo se abre a lo ancho (unos 4 minutos corriendo de borde a borde).
+   El valle del camino queda como estaba; a los costados el campo sigue en parcelas de 64 m que se arman y se desarman
+   alrededor del jugador, así el celular solo dibuja lo que está cerca. En los bordes, el cordón de montañas. ===================== */
+const XW = 930, OL = { T: 64, tiles: new Map(), R: 300, RV: 115, acc: 0, busy: false, sites: [], sg: new Map(), X1: 1e9, on: false, kk: 1, mat: null, made: 0 };
+function olSiteAdd(s) { OL.sites.push(s); const k = Math.floor(s.x / 128) + ':' + Math.floor(s.z / 128); for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const kk = (Math.floor(s.x / 128) + i) + ':' + (Math.floor(s.z / 128) + j); if (!OL.sg.has(kk)) OL.sg.set(kk, []); OL.sg.get(kk).push(s); } }
+/* relieve de afuera: lomas y valles amplios que nacen del borde del valle sin escalón, lugares aplanados para pueblos y campos, y la montaña al final */
+function olH(h1, x, z) {
+  const ax = Math.abs(x); let h = h1(x, z); if (ax <= OL.X1) return h; const kk = OL.kk;
+  if (h > -.5) { const b = sstep(OL.X1, OL.X1 + 90, ax), v = fbm(x * .0032 + 17, z * .0032 - 9), w = vnoise(x * .009 - 4, z * .009 + 2); h = h * (1 - b) + b * (h * (.3 + .85 * v) + (v * 9 - 3 + w * 4) * kk); }
+  const L = OL.sg.get(Math.floor(x / 128) + ':' + Math.floor(z / 128)); if (L) for (const s of L) { const d = Math.hypot(x - s.x, z - s.z); if (d < s.r * 1.7) { const k = 1 - sstep(s.r, s.r * 1.7, d); h += (s.y - h) * k; } }
+  const u = (ax - XW) / 150; if (u > -.25) { const r = 1 - Math.abs(vnoise(x * .018 + 11, z * .014) * 2 - 1), n = fbm(x * .011 + 5, z * .009), rr = 1 - Math.abs(vnoise(x * .05 - 3, z * .05) * 2 - 1); h += sstep(-.25, .6, u) * (12 + n * 38 + r * r * 34 + rr * 7) * (kk < 1 ? .6 : 1); }
+  return h;
+}
+function olInit(HW, Q, hx) {
+  OL.X1 = HW.X1; OL.kk = hx ? 1 : .5; OL.Z1 = HW.Z1; OL.Z0 = HW.Z0; OL.dz = HW.dz; OL.TZ = 32 * HW.dz; OL.mat = HW.terrain.material; OL.seg = Q.tg > 1.8 ? 22 : 28; OL.on = true; OL.tiles.clear(); OL.hx = hx; OL.R = hx ? 300 : 230;
+  const h1 = HW.hAt; HW.hAt0 = h1; HW.hAt = (x, z) => olH(h1, x, z); HW.mtnH = null;
+}
+function olKey(s, i, j) { return s + ':' + i + ':' + j; }
+function olTileBox(s, i, j) { const x0 = s > 0 ? OL.X1 + i * OL.T : -OL.X1 - (i + 1) * OL.T, z1 = OL.Z1 - j * OL.TZ; return { x0, x1: x0 + OL.T, z0: z1 - OL.TZ, z1 }; }
+function olGeo(B) {
+  const W = S.W, NX = OL.seg, NZ = 32, dx = OL.T / NX, dz = OL.TZ / NZ, GX = NX + 3, GZ = NZ + 3, H = new Float32Array(GX * GZ);
+  for (let j = 0; j < GZ; j++) for (let i = 0; i < GX; i++) H[j * GX + i] = W.hAt(B.x0 + (i - 1) * dx, B.z1 - (j - 1) * dz);
+  const n = (NX + 1) * (NZ + 1), P = new Float32Array(n * 3), N = new Float32Array(n * 3), C = new Float32Array(n * 3), SP = new Float32Array(n * 4), U = new Float32Array(n * 2), I = [];
+  for (let j = 0; j <= NZ; j++) for (let i = 0; i <= NX; i++) { const k = j * (NX + 1) + i, x = B.x0 + i * dx, z = B.z1 - j * dz, gi = (j + 1) * GX + i + 1, h = H[gi];
+    const hx1 = H[gi + 1] - H[gi - 1], hz1 = H[gi - GX] - H[gi + GX], nx = -hx1 / (2 * dx), nz = -hz1 / (2 * dz), nl = Math.hypot(nx, 1, nz); P.set([x, h, z], k * 3); N.set([nx / nl, 1 / nl, nz / nl], k * 3); U.set([i / NX, j / NZ], k * 2);
+    const sl = Math.hypot(nx, nz), no = fbm(x * .15, z * .15), n2 = vnoise(x * .04 + 7, z * .04), mt = sstep(XW - 40, XW + 60, Math.abs(x)), wet = typeof waterWet === 'function' ? waterWet(x, z, null) : 0;
+    let wr = Math.max(sstep(.55, 1.05, sl), mt * sstep(8, 30, h) * .8), wy = Math.max(sstep(.55, .85, n2) * .65, mt * .5), wd = 0, wg = 1; const st = olSiteAt(x, z); if (st) wd = Math.max(wd, st.dirt * (1 - sstep(st.r * .55, st.r * 1.05, Math.hypot(x - st.x, z - st.z))));
+    { const dk = typeof desertK === 'function' ? desertK(x, z) : 0; if (dk > .01) { wg *= 1 - dk; wy *= 1 - dk * .6; wd += dk * .8; } }
+    if (wet > 0) { const k2 = wet * .9; wg *= 1 - k2; wy *= 1 - k2; wr *= 1 - k2; wd = wd * (1 - k2) + k2; }
+    wg *= (1 - wr) * (1 - wy * .9) * (1 - wd); wy *= (1 - wr); const tt = wg + wy + wd + wr || 1; SP.set([wg / tt, wy / tt, wd / tt, wr / tt], k * 4); const v = (.86 + no * .26) * (1 - wet * .22); C.set([v, v, v], k * 3);
+    if (i < NX && j < NZ) { const a = k, b = k + 1, c = k + NX + 1, d = c + 1; I.push(a, b, c, b, d, c); } }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.BufferAttribute(N, 3)); g.setAttribute('color', new THREE.BufferAttribute(C, 3)); g.setAttribute('splat', new THREE.BufferAttribute(SP, 4)); g.setAttribute('uv', new THREE.BufferAttribute(U, 2)); g.setIndex(I); g.computeBoundingSphere(); g.computeBoundingBox(); return g;
+}
+function olSiteAt(x, z) { const L = OL.sg.get(Math.floor(x / 128) + ':' + Math.floor(z / 128)); if (!L) return null; for (const s of L) if (Math.hypot(x - s.x, z - s.z) < s.r * 1.1) return s; return null; }
+/* lo que crece en cada parcela: olivares en hileras, árboles sueltos, matas y piedras. Siempre lo mismo en el mismo lugar (semilla por parcela) */
+function olVegList(B, s, i, j) {
+  const R = rng((s * 7919 + i * 104729 + j * 1299709) ^ 0x2f1), W = S.W, out = { tree: [], tree2: [], bush: [], rock: [], stone: [] }, mt = x => sstep(XW - 30, XW + 40, Math.abs(x));
+  const ok = (x, z) => !olSiteAt(x, z) && waterWet(x, z, null) < .02 && !(WATER.canyon && desertK(x, z) > .3) && Math.abs(x) < XW + 30;
+  const grove = (x, z) => vnoise(x * .011 + 3, z * .011 - 7);
+  // olivares: hileras cada 7 m donde el campo es de cultivo
+  const sp = 7, ox = ((s * 13 + j * 3) % 7), oz = ((i * 5) % 7); for (let x = B.x0 + ox; x < B.x1; x += sp) for (let z = B.z0 + oz; z < B.z1; z += sp) { if (grove(x, z) < .63 || mt(x) > .3) continue; const xx = x + (R() - .5) * 1.4, zz = z + (R() - .5) * 1.4; if (!ok(xx, zz) || R() < .12) continue; const h = W.hAt(xx, zz); out.tree.push({ x: xx, y: h - .05, z: zz, ry: R() * 6.28, s: .85 + R() * .35, v: Math.floor(R() * 9) }); }
+  const n = 10 + Math.floor(R() * 8); for (let k = 0; k < n; k++) { const x = B.x0 + R() * OL.T, z = B.z0 + R() * OL.TZ; if (!ok(x, z)) continue; const h = W.hAt(x, z), r = R(), sl = Math.abs(W.hAt(x + 1.5, z) - W.hAt(x - 1.5, z)) / 3, m = mt(x);
+    if (m > .6) { if (r < .5) out.rock.push({ x, y: h - .4, z, ry: R() * 6.28, s: 1 + R() * 1.4, v: Math.floor(R() * 9) }); continue; }
+    if (sl > .45 || r < .2) out.rock.push({ x, y: h - .25, z, ry: R() * 6.28, s: .6 + R() * .9, v: Math.floor(R() * 9) });
+    else if (r < .42) out.tree2.push({ x, y: h - .05, z, ry: R() * 6.28, s: .75 + R() * .5, v: Math.floor(R() * 9) });
+    else if (r < .8) out.bush.push({ x, y: h - .05, z, ry: R() * 6.28, s: .8 + R() * .5, v: Math.floor(R() * 9) });
+    else out.stone.push({ x, y: h - .06, z, ry: R() * 6.28, s: .7 + R() * .5, v: Math.floor(R() * 9) }); }
+  return out;
+}
+const OL_SP = { tree: ['trp_olive', 'island_tree_01'], tree2: ['island_tree_03', 'island_tree_02'], bush: ['searsia_lucida', 'shrub_02'], rock: ['namaqualand_boulder_03', 'rock_07'], stone: ['namaqualand_rocks_01', 'stone_01'] };
+const OL_O = { tree: { shadow: true, wind: 3 }, tree2: { shadow: true, wind: 3 }, bush: { wind: 3, shadow: true }, rock: { shadow: true }, stone: {} };
+async function olVeg(T) {
+  const L = olVegList(T.B, T.s, T.i, T.j); T.veg = []; T.imp = []; T.cols = [];
+  for (const [kind, list] of Object.entries(L)) { if (!list.length) continue; let id = OL_SP[kind][0]; if (kind === 'tree' && !grpBase()) id = OL_SP.tree[1]; if (FLORA.paidT && PG_TSUB[id]) id = PG_TSUB[id];
+    let vars = null; try { vars = await phGet(id); } catch (e) {} if (T.dead || !S) return; if (!vars || !vars.length) continue; const o = OL_O[kind], per = vars.map(() => []); list.forEach((it, k) => per[it.v % vars.length].push(it));
+    const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
+    vars.forEach((ms, vi) => { const LL = per[vi]; if (!LL.length) return;
+      ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, o), LL.length); LL.forEach((it, k) => { E.set(0, it.ry, 0, 'YXZ'); Q.setFromEuler(E); SC.set(it.s, it.s, it.s); M.compose(V.set(it.x, it.y, it.z), Q, SC).multiply(mm.m); im.setMatrixAt(k, M); }); im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.castShadow = !!o.shadow && QUAL.lv > 0; im.receiveShadow = true; im.userData.ol = 1; T.g.add(im); T.veg.push(im); });
+      if (ms.imp) { const I = ms.imp, im = new THREE.InstancedMesh(I.geo, I.mat, LL.length); LL.forEach((it, k) => { E.set(0, it.ry, 0, 'YXZ'); Q.setFromEuler(E); SC.set(it.s, it.s, it.s); M.compose(V.set(it.x, it.y, it.z), Q, SC).multiply(I.m); im.setMatrixAt(k, M); }); im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.visible = false; T.g.add(im); T.imp.push(im); } });
+    if (kind === 'tree' || kind === 'tree2' || kind === 'rock') list.forEach(it => { const r = (kind === 'rock' ? .55 : .35) * it.s; T.cols.push({ x0: it.x - r, x1: it.x + r, z0: it.z - r, z1: it.z + r, cx: it.x, cz: it.z, r, ol: 1 }); }); }
+  T.vegOk = true; T.lod = -1;
+}
+function olBuildTile(s, i, j) {
+  const B = olTileBox(s, i, j), k = olKey(s, i, j); if (B.z0 < OL.Z0 - OL.TZ || B.z1 > OL.Z1 + 1) return; const g = new THREE.Group(), m = new THREE.Mesh(olGeo(B), OL.mat); m.receiveShadow = true; m.userData.terrain = 1; g.add(m); S.scene.add(g);
+  const T = { s, i, j, B, g, m, veg: [], imp: [], cols: [], colsOn: false, vegOk: false, cx: (B.x0 + B.x1) / 2, cz: (B.z0 + B.z1) / 2 }; OL.tiles.set(k, T); OL.made++; olVeg(T).catch(e => console.warn('ol veg', e));
+}
+function olDrop(T) { T.dead = true; if (T.colsOn) olCols(T, false); S.scene.remove(T.g); T.m.geometry.dispose(); T.veg.concat(T.imp).forEach(im => { try { im.dispose(); } catch (e) {} }); OL.tiles.delete(olKey(T.s, T.i, T.j)); }
+function olCols(T, on) { if (on === T.colsOn) return; T.colsOn = on; if (on) T.cols.forEach(c => S.cols.push(c)); else { const st = new Set(T.cols); for (let k = S.cols.length - 1; k >= 0; k--) if (st.has(S.cols[k])) S.cols.splice(k, 1); } }
+function olTick(dt) {
+  if (!OL.on || !S || !S.av || S.pocket) return; OL.acc -= dt; if (OL.acc > 0) return; OL.acc = .2; const a = S.av.position, R = OL.R, want = [];
+  for (const s of [-1, 1]) { const ax0 = OL.X1, nI = Math.ceil((XW + 170 - OL.X1) / OL.T); for (let i = 0; i < nI; i++) { const xc = s * (ax0 + (i + .5) * OL.T); if (Math.abs(xc - a.x) > R + OL.T) continue;
+      const j0 = Math.max(0, Math.floor((OL.Z1 - (a.z + R)) / OL.TZ)), j1 = Math.floor((OL.Z1 - (a.z - R)) / OL.TZ); for (let j = j0; j <= j1; j++) { const zc = OL.Z1 - (j + .5) * OL.TZ, d = Math.hypot(xc - a.x, zc - a.z); if (d < R) want.push([d, s, i, j]); } } }
+  want.sort((p, q) => p[0] - q[0]); let built = 0; for (const [d, s, i, j] of want) { if (OL.tiles.has(olKey(s, i, j))) continue; if (built >= (QUAL.ema && QUAL.ema > 30 ? 1 : 2)) break; olBuildTile(s, i, j); built++; }
+  for (const T of [...OL.tiles.values()]) { const d = Math.hypot(T.cx - a.x, T.cz - a.z); if (d > R + 110) { olDrop(T); continue; }
+    if (T.vegOk) { const lod = d < OL.RV ? 0 : d < R ? 1 : 2; if (lod !== T.lod) { T.lod = lod; T.veg.forEach(im => { im.visible = lod === 0; }); T.imp.forEach(im => { im.visible = lod === 1; }); olCols(T, d < 70); } else olCols(T, d < 70); } }
+}
+
 const FLORA = { chunks: [] };
 // pasto en parcelas de 36 m: cada parcela se recorta sola fuera de cámara y se apaga lejos del jugador
 function chunkInst(scene, geo, mat, list, fn, o) {
@@ -728,7 +795,7 @@ const KL = {};
   const sun = new THREE.DirectionalLight(hx ? '#FFD9A0' : '#FFF4DC', hx ? .55 : 1.6); sun.position.set(-6, 12, 6); if (!hx) scene.add(sun); KL.sun = sun;
   const W = g.WIDTH, totalY = g.TOP + g.REGIONS.length * g.RH + 200, R = rng(7);
   // suelo
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(XB * 2 + 200, totalY * SC * KZ + 160), mat(hx ? '#2A2417' : '#A9D98E'));
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(XW * 2 + 400, totalY * SC * KZ + 160), mat(hx ? '#2A2417' : '#A9D98E'));
   ground.rotation.x = -Math.PI / 2; ground.position.set(0, 0, -(totalY * SC * KZ) / 2); if (!hx) scene.add(ground);
   // camino
   const pathM = mat(hx ? '#5E4A32' : '#F1D9A4'), edgeM = mat(hx ? '#3F3221' : '#E2C287');
@@ -741,7 +808,7 @@ const KL = {};
   let HW = null, uGrass = null;
   const pois = planPois(g), doors = planDoors(g), poiPts = pois.flatMap(q => q.flat).concat(doors.flatMap(q => q.flat)); waterPlan(pois); GREENS = pois.filter(q => GREEN_K[q.k]).map(q => [q.x, q.z, GREEN_K[q.k]]); MAPT.tiles.clear();
   buildStep('vegetación'); { let ok = null; try { ok = await withTO(grpInit(), 9000, 'r2'); } catch (e) {} FLORA.paidG = !!(ok && GRP.man['grass/']); FLORA.paidT = !!(ok && GRP.man['trees/']); }
-  buildStep('mundo y flora'); { const flat = g.VIGN.map(([r, x, y]) => toV(x, g.TOP + r * g.RH + y)).concat(poiPts); FLORA.kids = !hx; FLORA.chunks = []; HW = heroWorld(scene, g, allPts, flat, zMax, QL, hx ? null : KL); uGrass = heroFlora(scene, HW, allPts, zMax, R, hx ? QL : Object.assign({}, QL, { grass: QL.grass * .8, trees: QL.trees * .8 })); if (!FLORA.paidG) realFlora(scene, HW, allPts, QL, uGrass); if (!hx) { ground.visible = false; KL.sun.position.set(-14, 26, 12); } }
+  buildStep('mundo y flora'); { const flat = g.VIGN.map(([r, x, y]) => toV(x, g.TOP + r * g.RH + y)).concat(poiPts); FLORA.kids = !hx; FLORA.chunks = []; HW = heroWorld(scene, g, allPts, flat, zMax, QL, hx ? null : KL); olInit(HW, QL, hx); uGrass = heroFlora(scene, HW, allPts, zMax, R, hx ? QL : Object.assign({}, QL, { grass: QL.grass * .8, trees: QL.trees * .8 })); if (!FLORA.paidG) realFlora(scene, HW, allPts, QL, uGrass); if (!hx) { ground.visible = false; KL.sun.position.set(-14, 26, 12); } }
   const spots = { tree: [], bush: [], rock: [] };
   for (let i = 0; i < (HW ? 0 : 1500); i++) {
     const x = (R() - .5) * (XB * 2 + 40), z = R() * zMax - 6; if (near(x, z, 2.2)) continue;
@@ -1121,7 +1188,7 @@ function solidAbove(x, z, cur) { const c = cur == null ? 0 : cur; return stairH(
 
 /* ---------- caminar solo sin atravesar nada: busca un camino libre alrededor de casas, muros y escaleras ---------- */
 let WF_COLS = null; // mientras se busca un camino, solo los obstáculos de esa zona (hay más de mil en el mundo)
-function walkFree(x, z, cur) { return !blockedAt(x, z, WF_COLS) && !solidAbove(x, z, cur) && (Math.abs(x) < XB || inTrail(x, z)); }
+function walkFree(x, z, cur) { return !blockedAt(x, z, WF_COLS) && !solidAbove(x, z, cur) && (Math.abs(x) < XW - 12 || inTrail(x, z)); }
 function colsNear(x0, z0, x1, z1, m) { const a = Math.min(x0, x1) - m, b = Math.max(x0, x1) + m, c = Math.min(z0, z1) - m, d = Math.max(z0, z1) + m; return (S.cols || []).filter(q => q.x1 > a && q.x0 < b && q.z1 > c && q.z0 < d); }
 function findPath(x0, z0, x1, z1) { WF_COLS = colsNear(x0, z0, x1, z1, 18); try { return findPath0(x0, z0, x1, z1); } finally { WF_COLS = null; } }
 function findPath0(x0, z0, x1, z1) {
@@ -5872,7 +5939,7 @@ function pgCell(ix, iz) {
     for (let i = 0; i < n2; i++) { const x = x0 + R() * PG_CELL, z = z0 + R() * PG_CELL; if (!PK.pg(x - PK.cx, z - PK.cz)) continue; const wantF = pgNoise(x * .09 + 90, z * .09 - 30) > .52 && R() < .6, pool = G2.map((g, k) => k).filter(k => G2[k].fl === wantF), P2 = pool.length ? pool : G2.map((g, k) => k); let pick = R() * P2.reduce((t, k) => t + G2[k].w, 0), gi = P2[P2.length - 1]; for (const k of P2) { pick -= G2[k].w; if (pick <= 0) { gi = k; break; } }
       const g = G2[gi], sr = PG_S[g.id] || [2.6, 3.6]; L.push({ x, y: PK.hAt(x, z) - .04, z, ry: R() * 6.283, s: PG_ONLY ? 3.8 + R() * 1.1 : sr[0] + R() * (sr[1] - sr[0]), gi, vi: Math.floor(R() * g.vars.length), r: R(), c: .92 + R() * .18, dry: 0 }); }
     PG.cache.set(key, L); return L; }
-  if (Math.abs(cx) > XB + 60) { PG.cache.set(key, L); return L; }
+  if (Math.abs(cx) > XW + 60) { PG.cache.set(key, L); return L; }
   const poi = (S_poiPts || []).filter(p => Math.abs(p[0] - cx) < PG_CELL && Math.abs(p[1] - cz) < PG_CELL), trees = (FLORA.treesUsed || []).filter(o => Math.abs(o.x - cx) < PG_CELL && Math.abs(o.z - cz) < PG_CELL);
   const lvm = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), dens = Math.min(6, PG_TRI[lvm] / PG.avgTri / (Math.PI * PG_R[lvm] * PG_R[lvm] * .8)), n = Math.round(dens * PG_CELL * PG_CELL * 1.1);
   for (let i = 0; i < n; i++) { const x = x0 + R() * PG_CELL, z = z0 + R() * PG_CELL, r1 = R(), r2 = R();
@@ -6080,7 +6147,7 @@ function phWorld(scene, W, allPts, zMax, hx, R0) { try { if (grpBase()) setTimeo
   ['boulder_01', 'namaqualand_boulder_03', 'namaqualand_boulder_04', 'namaqualand_boulder_05', 'rock_07', 'rock_09'].forEach(id => phPlace(id, scatter(18 * k, (x, z, d) => d > 4 && S2(.6, 1.2)).map(o => sink(o, .25)), { shadow: true }));
   ['namaqualand_rocks_01', 'namaqualand_stones_01', 'stone_01'].forEach(id => phPlace(id, scatter(24 * k, (x, z, d) => d > 2.4 && S2(.7, 1.1)).map(o => sink(o, .08)), {}));
   phPlace('namaqualand_boulders_01', scatter(14 * k, (x, z, d, h) => d > 8 && h > 1.5 && S2(.8, 1.3)).map(o => sink(o, .4)), { shadow: true });
-  ['namaqualand_cliff_01', 'namaqualand_cliff_02'].forEach((id, i) => { const L = []; for (let z = Z1 - 40 - i * 90; z > Z0; z -= 180) [-1, 1].forEach(sd => { const x = sd * (W.X1 - 4 - R() * 6); L.push({ x, z: z + (R() - .5) * 40, y: yAt(x, z) - 2.5, ry: (sd > 0 ? -1 : 1) * Math.PI / 2 + (R() - .5) * .5, s: 1.4 + R() * .6 }); }); phPlace(id, L, { shadow: true, far: 1 }); });
+  // (los acantilados del borde del valle se quitaron: el mundo sigue a los costados)
   ['shrub_01', 'shrub_02', 'shrub_03', 'shrub_04'].forEach(id => phPlace(id, nearPath(90 * k, 3, 16, .8, 1.3), { wind: 1, near: 1, shadow: true }));
   phPlace('dry_branches_medium_01', scatter(20 * k, (x, z, d) => d > 3 && S2(.8, 1.2)), {});
   phPlace('searsia_lucida', scatter(40 * k, (x, z, d) => d > 6 && Math.abs(x) < XB + 6 && S2(.8, 1.2)), { shadow: true, wind: 3 });
@@ -6303,7 +6370,7 @@ function freeWalk(dt) {
   let mx = fx * -jy + rx * jx, mz = fz * -jy + rz * jx; const ml = Math.hypot(mx, mz) || 1; mx /= ml; mz /= ml;
   if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint && !S.swim ? 1.55 * (legOn('cuarenta') ? 1.2 : 1) : 1) * (S.boostT > 0 ? 1.3 : 1) * (S.gy != null && S.gy < WATER.RL - .4 ? (S.swim ? (S.hx && (S.stam ?? 1) < .25 ? .34 : .5) * (legOn('perla') ? 1.3 : 1) : .6) : 1), /* en el agua se avanza más lento */ a = S.av.position, fr = frontier(), z0 = 6;
   const curG = groundAt(a.x, a.z, S.gy); // el suelo donde estás parado (no la altura suavizada de la cámara)
-  const ok = (x, z) => S.pocket ? pocketOk(x, z) : (Math.abs(x) < XB || inTrail(x, z) || seaOk(x, z)) && z > fr && z < z0 && !blockedAt(x, z) && !solidAbove(x, z, S.gy) && !edgeDrop(x, z, curG) && !descUp(a.x, a.z, x, z);
+  const ok = (x, z) => S.pocket ? pocketOk(x, z) : (Math.abs(x) < XW - 12 || inTrail(x, z) || seaOk(x, z)) && z > fr && z < z0 && !blockedAt(x, z) && !solidAbove(x, z, S.gy) && !edgeDrop(x, z, curG) && !descUp(a.x, a.z, x, z);
   let nx = a.x + mx * sp, nz = a.z + mz * sp;
   if (!ok(nx, nz)) { if (nz <= fr && performance.now() - (S.wallT || 0) > 6000) { S.wallT = performance.now(); G().toast('Hasta acá llega el camino por ahora.'); } if (ok(nx, a.z)) nz = a.z; else if (ok(a.x, nz)) nx = a.x; else { nx = a.x; nz = a.z; } }
   a.x = nx; a.z = nz; S.freeMoving = true; S.quiet = true; wake(); autoEnter(); if (!S.freeMoving) return;
@@ -6370,7 +6437,7 @@ function loop(now) {
   // con un minijuego abierto el mundo 3D no se dibuja: toda la máquina queda para el minijuego
   const arc = S.arcEl || (S.arcEl = document.getElementById('arcade')); if (arc && !arc.hidden) { S.last = 0; return; }
   const raw = now - (S.last || now), t = now / 1000, dt = Math.min(.05, raw / 1000); S.last = now; S.t = t; S.renderer.info.reset(); if (raw > 0 && raw < 1500) qFrame(Math.min(raw, 250));
-  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); try { pgTick(dt); } catch (e) {} floraTick(dt); miniTick(dt); compassTick(dt); pocketTick(dt); posTick(dt); vilTick(dt); try { bldTick(dt, t); } catch (e) {} foamTick(t); dawnTick(dt); try { anTick(dt); } catch (e) {} const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
+  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); try { pgTick(dt); } catch (e) {} try { olTick(dt); } catch (e) {} floraTick(dt); miniTick(dt); compassTick(dt); pocketTick(dt); posTick(dt); vilTick(dt); try { bldTick(dt, t); } catch (e) {} foamTick(t); dawnTick(dt); try { anTick(dt); } catch (e) {} const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
   for (const id in S.items) { const m = S.items[id];
     if (m.userData.gone) { m.userData.gone += dt; const k = m.userData.gone / .5; m.scale.setScalar(1 + k); m.position.y += dt * 2; m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = Math.max(0, 1 - k); } }); if (k >= 1) { S.scene.remove(m); delete S.items[id]; } continue; }
     m.rotation.y = t * 1.6; m.position.y = (m.userData.by || 0) + .85 + Math.sin(t * 2.4 + id.length) * .12;
@@ -6959,7 +7026,7 @@ function bldTarget() {
   BLD.maxDy = Math.max(0, Math.round((nb - base) * 2) / 2); if (BLD.dy > BLD.maxDy) BLD.dy = BLD.maxDy; T.y = Math.round((base + BLD.dy) * 100) / 100; T.t = BLD.t; T.r = BLD.r;
   const b = BP[BLD.t];
   if (bldP().length >= BLD.max) T.err = 'Llegaste al máximo de ' + BLD.max + ' piezas. Sacá alguna para poner otra.';
-  else if (Math.abs(x) > XB - 2) T.err = 'Muy cerca del borde del mundo.';
+  else if (Math.abs(x) > XW - 14) T.err = 'Muy cerca del borde del mundo.';
   else if (S.W && S.W.dAt && S.W.dAt(x, z) < 1.4) T.err = 'Sobre el camino no se puede construir: correte a un costado.';
   else if (typeof waterWet === 'function' && waterWet(x, z, null) > .3) T.err = 'En el agua no se puede construir.';
   else if (top == null && BLD.dy === 0 && blockedAt(x, z, (S.cols || []).filter(c => !c.bld && Math.abs(c.x0 - x) < 30 && Math.abs(c.z0 - z) < 30))) T.err = 'Hay algo en el medio: probá un poco más allá.';
