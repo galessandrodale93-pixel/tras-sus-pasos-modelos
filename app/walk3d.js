@@ -605,7 +605,7 @@ function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
   const P = geo.attributes.position, col = new Float32Array(P.count * 3), spl = new Float32Array(P.count * 4);
   for (let i = 0; i < P.count; i++) { const x = P.getX(i), z = P.getZ(i), d = dAt(x, z), h = hAt(x, z); P.setY(i, h); const n = fbm(x * .15, z * .15), n2 = vnoise(x * .04 + 7, z * .04);
     const sl = Math.hypot(hAt(x + .8, z) - hAt(x - .8, z), hAt(x, z + .8) - hAt(x, z - .8)) / 1.6;
-    const wdR = 1 - sstep(1.1, 2.8, roadAt(x, z)), gk = greenK(x, z); let wd = Math.max(wdR, (1 - sstep(.8, 4.6, dNz(x, z))) * (1 - gk)), wr = Math.max(sstep(5, 11, h) * .8, sstep(.6, 1.1, sl)), wy = sstep(.55, .85, n2) * .65 * (1 - wd), wg = 1;
+    const wdR = 1 - sstep(1.1, 2.8, roadAt(x, z)), gk = greenK(x, z); let wd = Math.max(wdR, (1 - sstep(.8, 4.6, dNz(x, z))) * (1 - gk)), wr = Math.max(sstep(5, 11, h) * .8 * (1 - sstep(XB * .8, X1, Math.abs(x))), sstep(.6, 1.1, sl)) /* hacia el borde del valle las lomas siguen verdes, como el campo de afuera */, wy = sstep(.55, .85, n2) * .65 * (1 - wd), wg = 1;
     wg *= (1 - wd) * (1 - wr) * (1 - wy * .9); wy *= (1 - wr); wd *= (1 - wr * .6); const tt = wg + wy + wd + wr || 1;
     { const sp = spDist(x, z); if (sp < 2.2) { const k = (1 - sstep(.45, 1.7, sp)) * .9; wd = Math.max(wd, k); wg *= 1 - k; wy *= 1 - k; } }
     { const dk = desertK(x, z); if (dk > .01) { wg *= 1 - dk; wy *= 1 - dk * .6; wd += dk * .8; wr += dk * .35 * sstep(.2, .6, sl + dk * .4); } }
@@ -5946,7 +5946,7 @@ function pgCell(ix, iz) {
     if (!PG_ONLY) { const cl = pgNoise(x * .06, z * .06) * .75 + pgNoise(x * .21 + 40, z * .21) * .35; if (r1 > cl * 1.15 + .1) continue; } // matas y claros
     let lawn = 0, rdd = W.roadAt ? W.roadAt(x, z) + .9 : 99, d = W.dNz ? Math.min(W.dNz(x, z), rdd) : W.dAt(x, z);
     if (d < 3.2 && rdd >= 3.2 && pgOpen(x, z)) { if (r2 > .82) continue; d = 9; } /* en los escenarios abiertos el pasto llega hasta las casas y los fuegos (pedido de Gui: que no se vea el piso pelado en ninguna parte, salvo el camino) */ if (d < 3.2 && S.lawns) for (const L of S.lawns) if ((x - L.x) ** 2 + (z - L.z) ** 2 < L.r * L.r && pathDist(L.samp, x, z) > 1.3 && !(L.no && (x - L.no[0]) ** 2 + (z - L.no[1]) ** 2 < L.no[2] * L.no[2])) { d = 9; lawn = 1; break; } /* jardines con pasto de verdad */ if (d < 1.5 || (d < 3.2 && r2 > (d - 1.5) / 1.7)) continue; // el camino queda libre, con borde natural
-    const h = W.hAt(x, z), outer = Math.abs(x) > OL.X1; if (outer ? Math.abs(x) > XW - 10 : (h > 9 || (h > 5.5 && r2 > (9 - h) / 3.5))) continue; /* en las tierras de afuera las lomas son altas pero verdes: el pasto sube hasta la montaña */
+    const h = W.hAt(x, z), outer = Math.abs(x) > Math.min(OL.X1, XB * .85); if (outer ? Math.abs(x) > XW - 10 : (h > 9 || (h > 5.5 && r2 > (9 - h) / 3.5))) continue; /* en las tierras de afuera las lomas son altas pero verdes: el pasto sube hasta la montaña */
     if (desertK(x, z) > .25) continue; // en el desierto de Judea y en el monte no crece pasto
     { const sp = spDist(x, z); if (sp < .7 || (sp < 1.6 && r2 > (sp - .7) / .9)) continue; } // los senderitos quedan pisados
     if (waterWet(x, z, null) > .04 || blockedAt(x, z) || PG_HOLE.some(q => (x - q.x) ** 2 + (z - q.z) ** 2 < q.r * q.r) || (!lawn && poi.some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < 14))) continue;
