@@ -5328,7 +5328,7 @@ const h3mat = (o) => { const m = new THREE.MeshStandardMaterial(Object.assign({ 
 function h3tunic(body, B, o) {
   const { I, P, fy, H, lat, fwd } = B, yTop = P.pelvis.y + H * .2, yBot = fy + H * (o.len ?? .34), NR = 14, NS = 24, pos = [], si = [], sw = [], col = [];
   const base = new THREE.Color(o.c), c2 = new THREE.Color(o.c2 || o.c), belt = new THREE.Color(o.belt || '#3A2A1C'), RB = ['#C0392B', '#E6B04A', '#3E8A4A', '#3E5A9A', '#7A3E8A'].map(q => new THREE.Color(q));
-  for (let r = 0; r <= NR; r++) { const t = r / NR, y = yTop + (yBot - yTop) * t, rad = H * .212 * (t < .25 ? .5 + .17 * Math.sin(t / .25 * Math.PI / 2) : .67 + .11 * (t - .25) / .75) + H * (o.len < .15 ? .015 * t * t : 0); /* pegada a la cintura, cae por la cadera y apenas se abre abajo: así no queda como una bolsa */
+  for (let r = 0; r <= NR; r++) { const t = r / NR, y = yTop + (yBot - yTop) * t, rad = H * .212 * (t < .2 ? .76 + .2 * Math.sin(t / .2 * Math.PI / 2) : .96 + .1 * (t - .2) / .8) + H * (o.len < .15 ? .015 * t * t : 0); /* pegada a la cintura, cae por la cadera y apenas se abre abajo: así no queda como una bolsa */
     for (let k = 0; k <= NS; k++) { const a = k / NS * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a), lx = ca * rad, lz = sa * rad * .84, wob = 1 + .025 * Math.sin(a * 9 + t * 4) * t;
       pos.push(P.pelvis.x + (lat.x * lx + fwd.x * lz) * wob, y, P.pelvis.z + (lat.z * lx + fwd.z * lz) * wob);
       const wl = THREE.MathUtils.smoothstep(ca, -.55, .55), L = Math.min(1, Math.max(0, (t - .12) / .4)), cw = Math.min(1, Math.max(0, (t - .5) / .4)) * .92; /* la falda sigue del todo a la pierna: al correr, la rodilla ya no la atraviesa */
@@ -6609,7 +6609,7 @@ function freeWalk(dt) {
   const mag = Math.min(1, Math.hypot(jx, jy)); if (mag >= .12 && S.pose === 'pray') { S.pose = null; actUI(); } if (mag >= .12 && S.sit) { S.sit = false; actUI(); } if (mag >= .12 && S.poseK) poseEnd(); S.fullT = mag > .96 ? (S.fullT || 0) + dt : 0; if (S.sprint && S.hx) { AXS.run = (AXS.run || 0) + dt; if (AXS.run > 12) { AXS.run = 0; axGain('agi', 1); } } S.sprint = !!S.hx && (!!k.Shift || S.fullT > 1.2); if (mag < .12) { if (S.freeMoving) { S.freeMoving = false; snapToStop(); } return; }
   const C = S.yaw + S.camYaw, fx = Math.sin(C), fz = Math.cos(C), rx = -Math.cos(C), rz = Math.sin(C);
   let mx = fx * -jy + rx * jx, mz = fz * -jy + rz * jx; const ml = Math.hypot(mx, mz) || 1; mx /= ml; mz /= ml;
-  if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint && !S.swim ? 1.55 * (legOn('cuarenta') ? 1.2 : 1) : 1) * (S.boostT > 0 ? 1.3 : 1) * (S.gy != null && S.gy < WATER.RL - .4 ? (S.swim ? (S.hx && (S.stam ?? 1) < .25 ? .34 : .5) * (legOn('perla') ? 1.3 : 1) : .6) : 1), /* en el agua se avanza más lento */ a = S.av.position, fr = frontier(), z0 = 6;
+  if (S.boostT > 0) S.boostT -= dt; const sp = 5 * mag * dt * agiMul() * (S.sprint && !S.swim ? 1.55 * (legOn('cuarenta') ? 1.2 : 1) : 1) * (S.boostT > 0 ? 1.3 : 1) * (S.gy != null && S.gy < WATER.RL - .4 ? (S.swim ? (S.hx && (S.stam ?? 1) < .25 ? .34 : .5) * (perlaOn() ? 1.5 : 1) : .6) : 1), /* en el agua se avanza más lento */ a = S.av.position, fr = frontier(), z0 = 6;
   const curG = groundAt(a.x, a.z, S.gy); // el suelo donde estás parado (no la altura suavizada de la cámara)
   const ok = (x, z) => S.pocket ? pocketOk(x, z) : (Math.abs(x) < XW - 12 || inTrail(x, z) || seaOk(x, z)) && z > fr && z < z0 && !blockedAt(x, z) && !solidAbove(x, z, S.gy) && !edgeDrop(x, z, curG) && !descUp(a.x, a.z, x, z);
   let nx = a.x + mx * sp, nz = a.z + mz * sp;
@@ -7046,7 +7046,7 @@ function swimTick(dt, a) {
   if (!deep && !S.pocket && S.gy > WATER.RL - .5 && !blockedAt(a.x, a.z)) S.land = [a.x, a.z];
   av.rotation.order = 'YXZ'; av.rotation.x = S.swimK * 1.22; if (S.swimUp > .01) { const tg = WATER.RL - 1.3 + Math.max(0, Math.min(1, (S.swimK - .3) / .7)) * 1.02 + Math.sin(performance.now() / 420) * .04; a.y += (tg - a.y) * S.swimUp; } /* nadando, el cuerpo queda a ras del agua con la cabeza afuera; flotando, con el agua al cuello */
   if (S.grot && !S.pocket && performance.now() > (S.grotT || 0) && (a.x - S.grot.x) ** 2 + (a.z - S.grot.z) ** 2 < 16) { try { grotEnter(); } catch (e) { S.grotT = performance.now() + 4000; console.warn('[gruta]', e); } return; }
-  if (!S.hx) return; const full = 30 * agiMul() * (legOn('perla') ? 2 : 1);
+  if (!S.hx) return; const full = 30 * agiMul() * (perlaOn() ? 2 : 1);
   /* nadar gasta aliento; quedarse quieto flotando lo recupera, y en tierra vuelve más rápido */
   if (deep && mov) S.stam = Math.max(0, (S.stam ?? 1) - dt / full); else S.stam = Math.min(1, (S.stam ?? 1) + dt / (deep ? 20 : 14));
   if (deep && S.stam <= 0 && S.land) { a.x = S.land[0]; a.z = S.land[1]; S.gy = null; S.walking = null; S.stam = .2; S.swimK = 0; S.swimUp = 0; try { const p = svP(); p.sat = Math.max(120, p.sat - 300); G().toast('🌊 Te quedaste sin aliento y el agua te devolvió a la orilla. La próxima, frená y flotá para recuperarlo.'); } catch (e) {} }
@@ -7092,7 +7092,7 @@ function axVerse(dt) {
   try { const g = G(), t = g.stageLine && g.stageLine(); if (t) g.vo(t, 'narrador', { queue: 1 }); } catch (e) {}
 }
 /* poderes de las prendas legendarias: valen solo mientras la llevás puesta */
-const LEG_POW = { coronavida: ['Perseverancia', 'Ganás un 25% más de experiencia con todo lo que hacés.'], samuel: ['Fiel en lo poco', 'Ganás un 25% más de denarios.'], lampnoche: ['Luz en la noche', 'En los lugares de noche ves mucho más lejos y más claro.'], cuarenta: ['Cuarenta años', 'Corriendo vas un 20% más rápido.'], pescahombres: ['Red llena', 'Al pescar, pica el doble.'], bezalel: ['Manos sabias', 'Construir y fabricar te cuesta la mitad de materiales.'], evangelio: ['Pies ligeros', 'Caminás y corrés un 15% más rápido.'], jose: ['Graneros llenos', 'El hambre te baja un 30% más lento.'], sacerdote: ['Consagrado', 'Tus atributos crecen un 25% más rápido con cada cosa que hacés.'], perla: ['Aliento profundo', 'Nadás un 30% más rápido y tu aliento dura el doble.'] };
+const LEG_POW = { coronavida: ['Perseverancia', 'Ganás un 25% más de experiencia con todo lo que hacés.'], samuel: ['Fiel en lo poco', 'Ganás un 25% más de denarios.'], lampnoche: ['Luz en la noche', 'En los lugares de noche ves mucho más lejos y más claro.'], cuarenta: ['Cuarenta años', 'Corriendo vas un 20% más rápido.'], pescahombres: ['Red llena', 'Al pescar, pica el doble.'], bezalel: ['Manos sabias', 'Construir y fabricar te cuesta la mitad de materiales.'], evangelio: ['Pies ligeros', 'Caminás y corrés un 15% más rápido.'], jose: ['Graneros llenos', 'El hambre te baja un 30% más lento.'], sacerdote: ['Consagrado', 'Tus atributos crecen un 25% más rápido con cada cosa que hacés.'], perla: ['Aliento profundo', 'Con solo tenerla, nadás un 50% más rápido y tu aliento dura el doble.'] };
 /* las legendarias por logros: se revisa cada tanto y se entregan una sola vez */
 const SELLO_IDS = ['bajada', 'brasas', 'cana', 'carrera', 'cena', 'cruz', 'emaus', 'estrella', 'gloria', 'jordan', 'maestros', 'oveja', 'panes', 'pesebre', 'red', 'rut', 'samaritano', 'tumba', 'viuda'];
 function legCheck() { try { if (!S || !S.hx || !G() || !G().P) return; const p = G().P(), own = gearState().own, give = (id, why) => { if (GBY[id] && !own.includes(id)) gearGive(GBY[id], why); };
@@ -7103,6 +7103,8 @@ function legCheck() { try { if (!S || !S.hx || !G() || !G().P) return; const p =
   if (s.house && RECIPES.filter(r => r.furn).every(r => (s.furn || []).includes(r.id))) return give('bezalel', 'Terminaste tu casa con tus propias manos');
 } catch (e) {} }
 setInterval(() => { if (!document.hidden) legCheck(); }, 5000);
+/* la Perla de gran precio vale con solo tenerla: en la mano puede ir otra cosa */
+function perlaOn() { try { return gearState().own.includes('perla') || legOn('perla'); } catch (e) { return false; } }
 function legOn(id) { try { const e = gearState().eq; return Object.values(e).includes(id); } catch (e) { return false; } }
 function agiMul() { return (1 + atr('agi') * .06) * (legOn('evangelio') ? 1.15 : 1); }
 function lvlNow() { const g = G(); return g.level ? g.level() : 1; }
@@ -9229,7 +9231,7 @@ function grotEnter() {
   const hL = (x, z) => { const r = Math.hypot(x - CX, z); if (x < TL + 1 && r > RC - .5) return 0; if (r < GR + 1 && x < CX - GR + 10 && Math.abs(z) < 3.4 - sstep(CX - GR + 4, CX - GR + 10, x) * 1.6) return 0; /* el mirador: una lengua de roca que se asoma sobre el jardín */ if (r < GR) return -DROP; return -DROP * sstep(.6, 2.2, Math.PI - Math.abs(Math.atan2(z, x - CX))); };
   const bed = (x, z) => { const h = hL(x, z); return h < -DROP + .2 ? h - sstep(PR + 1.5, PR - 4, Math.hypot(x - LX, z - LZ)) * 1.5 : h; };
   const okL = (x, z) => { if (x >= -1.8 && x <= TL + 3 && Math.abs(z - zc(x)) < 1.75) return true; if (Math.hypot(x - CX, z) > RC - 1.6 || Math.hypot(x - LX, z - LZ) < PR - .4) return false; if (Math.abs(hL(x, z) - (S.gy - y0)) > 1) return false; for (const [cx2, cz2, cr] of cols) if ((x - cx2) ** 2 + (z - cz2) ** 2 < cr * cr) return false; return true; };
-  const pgOk = (x, z) => { const r = Math.hypot(x - CX, z), h = hL(x, z); if (r > RC - 2.5 || x < TL + 2) return false; if (h > -DROP + .3) return h < -1 ? pgH(x, z) < .5 : pgH(x, z) < .16; return Math.hypot(x - LX, z - LZ) > PR + .7 && r > 3.4; };
+  const pgOk = (x, z) => { const r = Math.hypot(x - CX, z), h = hL(x, z); if (r > RC - 2.5 || x < TL + 2) return false; if (h > -DROP + .3) return h < -1 ? pgH(x, z) < .85 : pgH(x, z) < .7; /* arriba y en las rampas también tupido (pedido de Gui) */ return Math.hypot(x - LX, z - LZ) > PR + .7 && r > 3.4; };
   const rt = texL('rock.jpg', 4), M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .9 }, o || {})), TM = S.W && S.W.terrain ? S.W.terrain.material : null;
   { const sh = new THREE.Mesh(new THREE.SphereGeometry(125, 24, 16), new THREE.MeshBasicMaterial({ color: '#04070A', side: THREE.BackSide, fog: false })); sh.position.set(88, 10, 0); g.add(sh); }
   // el suelo, con el mismo material del mundo: pasto en el jardín, tierra en el mirador y las rampas, roca en el acantilado
