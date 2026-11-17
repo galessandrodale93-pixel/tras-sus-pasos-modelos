@@ -484,6 +484,7 @@ function sidePaths(allPts, hAt, roadAt, dAt) {
   let acc = 0, next = 30 + R() * 30;
   for (let i = 1; i < allPts.length - 1; i++) { const a = allPts[i - 1], b = allPts[i]; acc += Math.hypot(b[0] - a[0], b[1] - a[1]); if (acc < next) continue; acc = 0; next = 35 + R() * 45;
     const tg = Math.atan2(b[0] - a[0], b[1] - a[1]), sd = R() < .5 ? -1 : 1, hd = tg + sd * (Math.PI / 2 + (R() - .5) * 1.1); grow(b[0] + Math.sin(hd) * 2.5, b[1] + Math.cos(hd) * 2.5, hd, 26 + R() * 50, 0); }
+  try { olTrails(allPts, hAt); } catch (e) { console.warn('senderos de afuera', e); }
   SP.S.forEach(q => { const k = trlKey(Math.floor(q[0] / SPC), Math.floor(q[1] / SPC)); if (!SP.B.has(k)) SP.B.set(k, []); SP.B.get(k).push(q); });
 }
 function spDist(x, z) { if (!SP.S.length) return 99; const i0 = Math.floor(x / SPC), j0 = Math.floor(z / SPC); let bd = 1e9; for (let i = i0 - 1; i <= i0 + 1; i++) for (let j = j0 - 1; j <= j0 + 1; j++) { const L = SP.B.get(trlKey(i, j)); if (!L) continue; for (const q of L) { const d = (q[0] - x) ** 2 + (q[1] - z) ** 2; if (d < bd) bd = d; } } return Math.sqrt(bd); }
@@ -654,6 +655,7 @@ function olH(h1, x, z) {
 function olInit(HW, Q, hx) {
   OL.X1 = HW.X1; OL.kk = hx ? 1 : .5; OL.Z1 = HW.Z1; OL.Z0 = HW.Z0; OL.dz = HW.dz; OL.TZ = 32 * HW.dz; OL.mat = HW.terrain.material; OL.seg = Q.tg > 1.8 ? 22 : 28; OL.on = true; OL.tiles.clear(); OL.hx = hx; OL.R = hx ? 300 : 230;
   const h1 = HW.hAt; HW.hAt0 = h1; HW.hAt = (x, z) => olH(h1, x, z); HW.mtnH = null;
+  OL.sg.clear(); OL.sites = []; const PL = OL.plan || []; PL.forEach(p => { p.y = HW.hAt(p.x, p.z); }); PL.forEach(p => olSiteAdd({ x: p.x, z: p.z, r: p.r, y: p.y, dirt: p.dirt, id: p.id }));
 }
 function olKey(s, i, j) { return s + ':' + i + ':' + j; }
 function olTileBox(s, i, j) { const x0 = s > 0 ? OL.X1 + i * OL.T : -OL.X1 - (i + 1) * OL.T, z1 = OL.Z1 - j * OL.TZ; return { x0, x1: x0 + OL.T, z0: z1 - OL.TZ, z1 }; }
@@ -664,7 +666,7 @@ function olGeo(B) {
   for (let j = 0; j <= NZ; j++) for (let i = 0; i <= NX; i++) { const k = j * (NX + 1) + i, x = B.x0 + i * dx, z = B.z1 - j * dz, gi = (j + 1) * GX + i + 1, h = H[gi];
     const hx1 = H[gi + 1] - H[gi - 1], hz1 = H[gi - GX] - H[gi + GX], nx = -hx1 / (2 * dx), nz = -hz1 / (2 * dz), nl = Math.hypot(nx, 1, nz); P.set([x, h, z], k * 3); N.set([nx / nl, 1 / nl, nz / nl], k * 3); U.set([i / NX, j / NZ], k * 2);
     const sl = Math.hypot(nx, nz), no = fbm(x * .15, z * .15), n2 = vnoise(x * .04 + 7, z * .04), mt = sstep(XW - 40, XW + 60, Math.abs(x)), wet = typeof waterWet === 'function' ? waterWet(x, z, null) : 0;
-    let wr = Math.max(sstep(.55, 1.05, sl), mt * sstep(8, 30, h) * .8), wy = Math.max(sstep(.55, .85, n2) * .65, mt * .5), wd = 0, wg = 1; const st = olSiteAt(x, z); if (st) wd = Math.max(wd, st.dirt * (1 - sstep(st.r * .55, st.r * 1.05, Math.hypot(x - st.x, z - st.z))));
+    let wr = Math.max(sstep(.55, 1.05, sl), mt * sstep(8, 30, h) * .8), wy = Math.max(sstep(.55, .85, n2) * .65, mt * .5), wd = 0, wg = 1; const st = olSiteAt(x, z); if (st) wd = Math.max(wd, st.dirt * (1 - sstep(st.r * .55, st.r * 1.05, Math.hypot(x - st.x, z - st.z)))); { const sp = spDist(x, z); if (sp < 2.2) wd = Math.max(wd, (1 - sstep(.45, 1.7, sp)) * .9); }
     { const dk = typeof desertK === 'function' ? desertK(x, z) : 0; if (dk > .01) { wg *= 1 - dk; wy *= 1 - dk * .6; wd += dk * .8; } }
     if (wet > 0) { const k2 = wet * .9; wg *= 1 - k2; wy *= 1 - k2; wr *= 1 - k2; wd = wd * (1 - k2) + k2; }
     wg *= (1 - wr) * (1 - wy * .9) * (1 - wd); wy *= (1 - wr); const tt = wg + wy + wd + wr || 1; SP.set([wg / tt, wy / tt, wd / tt, wr / tt], k * 4); const v = (.86 + no * .26) * (1 - wet * .22); C.set([v, v, v], k * 3);
@@ -675,7 +677,7 @@ function olSiteAt(x, z) { const L = OL.sg.get(Math.floor(x / 128) + ':' + Math.f
 /* lo que crece en cada parcela: olivares en hileras, árboles sueltos, matas y piedras. Siempre lo mismo en el mismo lugar (semilla por parcela) */
 function olVegList(B, s, i, j) {
   const R = rng((s * 7919 + i * 104729 + j * 1299709) ^ 0x2f1), W = S.W, out = { tree: [], tree2: [], bush: [], rock: [], stone: [] }, mt = x => sstep(XW - 30, XW + 40, Math.abs(x));
-  const ok = (x, z) => !olSiteAt(x, z) && waterWet(x, z, null) < .02 && !(WATER.canyon && desertK(x, z) > .3) && Math.abs(x) < XW + 30;
+  const ok = (x, z) => !olSiteAt(x, z) && spDist(x, z) > 1.8 && waterWet(x, z, null) < .02 && !(WATER.canyon && desertK(x, z) > .3) && Math.abs(x) < XW + 30;
   const grove = (x, z) => vnoise(x * .011 + 3, z * .011 - 7);
   // olivares: hileras cada 7 m donde el campo es de cultivo
   const sp = 7, ox = ((s * 13 + j * 3) % 7), oz = ((i * 5) % 7); for (let x = B.x0 + ox; x < B.x1; x += sp) for (let z = B.z0 + oz; z < B.z1; z += sp) { if (grove(x, z) < .57 || mt(x) > .3) continue; const xx = x + (R() - .5) * 1.4, zz = z + (R() - .5) * 1.4; if (!ok(xx, zz) || R() < .12) continue; const h = W.hAt(xx, zz); out.tree.push({ x: xx, y: h - .05, z: zz, ry: R() * 6.28, s: .85 + R() * .35, v: Math.floor(R() * 9) }); }
@@ -707,12 +709,126 @@ function olBuildTile(s, i, j) {
 function olDrop(T) { T.dead = true; if (T.colsOn) olCols(T, false); S.scene.remove(T.g); T.m.geometry.dispose(); T.veg.concat(T.imp).forEach(im => { try { im.dispose(); } catch (e) {} }); OL.tiles.delete(olKey(T.s, T.i, T.j)); }
 function olCols(T, on) { if (on === T.colsOn) return; T.colsOn = on; if (on) T.cols.forEach(c => S.cols.push(c)); else { const st = new Set(T.cols); for (let k = S.cols.length - 1; k >= 0; k--) if (st.has(S.cols[k])) S.cols.splice(k, 1); } }
 function olTick(dt) {
-  if (!OL.on || !S || !S.av || S.pocket) return; OL.acc -= dt; if (OL.acc > 0) return; OL.acc = .2; const a = S.av.position, R = OL.R, want = [];
+  if (!OL.on || !S || !S.av || S.pocket) return; OL.acc -= dt; if (OL.acc > 0) return; OL.acc = .2; try { olDiscover(); } catch (e) {} const a = S.av.position, R = OL.R, want = [];
   for (const s of [-1, 1]) { const ax0 = OL.X1, nI = Math.ceil((XW + 170 - OL.X1) / OL.T); for (let i = 0; i < nI; i++) { const xc = s * (ax0 + (i + .5) * OL.T); if (Math.abs(xc - a.x) > R + OL.T) continue;
       const j0 = Math.max(0, Math.floor((OL.Z1 - (a.z + R)) / OL.TZ)), j1 = Math.floor((OL.Z1 - (a.z - R)) / OL.TZ); for (let j = j0; j <= j1; j++) { const zc = OL.Z1 - (j + .5) * OL.TZ, d = Math.hypot(xc - a.x, zc - a.z); if (d < R) want.push([d, s, i, j]); } } }
   want.sort((p, q) => p[0] - q[0]); let built = 0; for (const [d, s, i, j] of want) { if (OL.tiles.has(olKey(s, i, j))) continue; if (built >= (QUAL.ema && QUAL.ema > 30 ? 1 : 2)) break; olBuildTile(s, i, j); built++; }
   for (const T of [...OL.tiles.values()]) { const d = Math.hypot(T.cx - a.x, T.cz - a.z); if (d > R + 110) { olDrop(T); continue; }
     if (T.vegOk) { const lod = d < OL.RV ? 0 : d < R ? 1 : 2; if (lod !== T.lod) { T.lod = lod; T.veg.forEach(im => { im.visible = lod === 0; }); T.imp.forEach(im => { im.visible = lod === 1; }); olCols(T, d < 70); } else olCols(T, d < 70); } }
+}
+
+
+/* ===================== LUGARES DE AFUERA: aldeas, campos y talleres de oficios, rincones para descubrir y los senderos que llevan a cada uno ===================== */
+/* x, z en metros (z negativo hacia adelante); k: aldea | oficio | rincon; r: radio aplanado */
+const OL_PLAN = [
+  { id: 'tecoa', k: 'aldea', name: 'Tecoa', x: -380, z: -300, r: 28, n: 7, ref: 'Amós 1:1', txt: 'En Tecoa vivía Amós, un pastor que cuidaba ovejas y higueras. Dios lo llamó a ser profeta mientras andaba con su rebaño.', extra: 'redil' },
+  { id: 'booz', k: 'oficio', of: 'trigo', name: 'El trigal de Booz', x: 300, z: -250, r: 34, ref: 'Rut 2:3', txt: 'En los campos de Belén, Rut juntaba las espigas que quedaban detrás de los segadores de Booz. Acá se siega el trigo y se trilla en la era.' },
+  { id: 'atalaya', k: 'rincon', name: 'La atalaya', x: 610, z: -150, r: 10, ref: 'Habacuc 2:1', txt: 'Desde la torre del vigía se ve todo el valle. Habacuc subió a su atalaya a esperar lo que Dios le iba a decir.', mk: 'tower' },
+  { id: 'gathefer', k: 'aldea', name: 'Gat-hefer', x: 360, z: -700, r: 26, n: 6, ref: '2 Reyes 14:25', txt: 'De Gat-hefer, muy cerca de Nazaret, era Jonás, el profeta que terminó en el vientre de un gran pez.' },
+  { id: 'alfareria', k: 'oficio', of: 'barro', name: 'La alfarería', x: -330, z: -630, r: 22, ref: 'Jeremías 18:6', txt: 'Jeremías bajó a la casa del alfarero y lo vio rehacer una vasija en el torno. «Como el barro en la mano del alfarero, así son ustedes en mi mano», dice el Señor.' },
+  { id: 'betel', k: 'rincon', name: 'La piedra de Betel', x: -650, z: -520, r: 9, ref: 'Génesis 28:18-19', txt: 'Jacob durmió con la cabeza sobre una piedra y soñó con una escalera que llegaba al cielo. Al despertar la levantó como señal y llamó al lugar Betel, «casa de Dios».', mk: 'stone' },
+  { id: 'jerico', k: 'aldea', name: 'Jericó', x: 330, z: -1150, r: 30, n: 8, ref: 'Lucas 19:1-10', txt: 'En Jericó vivía Zaqueo, un cobrador de impuestos muy bajito. Para ver pasar a Jesús se subió a un sicómoro, y Jesús lo llamó por su nombre: «Hoy me quedo en tu casa».', extra: 'sicomoro' },
+  { id: 'mamre', k: 'rincon', name: 'La encina de Mamre', x: -520, z: -1000, r: 12, ref: 'Génesis 18:1', txt: 'Junto a las encinas de Mamre, Abraham recibió a tres visitantes a la hora del calor y les sirvió pan y leche bajo la sombra del árbol.', mk: 'oak' },
+  { id: 'betsaida', k: 'aldea', name: 'Betsaida', x: 290, z: -1570, r: 26, n: 7, ref: 'Juan 1:44', txt: 'Betsaida, junto al lago, era el pueblo de Felipe, Andrés y Pedro. Acá Jesús le devolvió la vista a un ciego (Marcos 8:22).' },
+  { id: 'manantial', k: 'rincon', name: 'El manantial', x: -640, z: -1460, r: 10, ref: 'Salmo 42:1', txt: 'Un agua fresca que nace entre las piedras. «Como el ciervo anhela las corrientes de agua, así te anhela a ti mi alma, oh Dios.»', mk: 'spring' },
+  { id: 'cumbre', k: 'rincon', name: 'La cumbre del este', x: 850, z: -1300, r: 9, ref: 'Isaías 52:7', txt: 'Desde lo alto de los montes se ve llegar a los mensajeros. «¡Qué hermosos son sobre los montes los pies del que trae buenas noticias!»', mk: 'cairn' },
+  { id: 'nain', k: 'aldea', name: 'Naín', x: -360, z: -1900, r: 26, n: 7, ref: 'Lucas 7:11-15', txt: 'En la puerta de Naín, Jesús se encontró con una viuda que llevaba a enterrar a su único hijo. Tuvo compasión de ella, tocó el féretro y el muchacho se levantó.' },
+  { id: 'carpas', k: 'oficio', of: 'carpas', name: 'El taller de carpas', x: 340, z: -1960, r: 22, ref: 'Hechos 18:3', txt: 'Pablo, Aquila y Priscila hacían carpas de lona y cuero para ganarse la vida mientras anunciaban a Jesús. Acá se teje y se cose.' },
+  { id: 'cisterna', k: 'rincon', name: 'La cisterna de José', x: 650, z: -1800, r: 9, ref: 'Génesis 37:24', txt: 'Sus hermanos tiraron a José a una cisterna vacía y después lo vendieron. Pero Dios estaba con él, y lo malo terminó convertido en bien.', mk: 'cistern' },
+  { id: 'vina', k: 'oficio', of: 'vina', name: 'La viña', x: -330, z: -2250, r: 30, ref: 'Juan 15:5', txt: 'Una viña con su torre y su lagar, como la de la parábola. «Yo soy la vid y ustedes son las ramas. El que permanece en mí da mucho fruto.»' },
+  { id: 'sicar', k: 'aldea', name: 'Sicar', x: 380, z: -2300, r: 26, n: 6, ref: 'Juan 4:5-14', txt: 'Junto al pozo de Jacob, en Sicar, Jesús le pidió agua a una mujer samaritana y le habló del agua viva: «El que beba del agua que yo le daré no volverá a tener sed».', extra: 'pozo' },
+  { id: 'miliario', k: 'rincon', name: 'El miliario romano', x: 230, z: -2120, r: 7, ref: 'Mateo 5:41', txt: 'Una columna que marca las millas del camino romano. Un soldado podía obligarte a cargar su equipo una milla. Jesús dijo: «Si te obligan a ir una milla, andá dos».', mk: 'mile' },
+  { id: 'prensa', k: 'oficio', of: 'aceite', name: 'La prensa de aceite', x: -300, z: -2800, r: 22, ref: 'Mateo 26:36', txt: 'Getsemaní quiere decir «prensa de aceite». En la piedra grande se muelen las aceitunas y el aceite corre por la canaleta hasta las vasijas.' },
+  { id: 'betania', k: 'aldea', name: 'Betania', x: 340, z: -2640, r: 26, n: 7, ref: 'Juan 11:43-44', txt: 'En Betania vivían Marta, María y Lázaro, amigos de Jesús. Cuando Lázaro murió, Jesús lloró, y después gritó frente a la tumba: «¡Lázaro, sal fuera!».', extra: 'lazaro' },
+  { id: 'higuera', k: 'rincon', name: 'La higuera', x: 620, z: -2500, r: 9, ref: 'Lucas 13:6-9', txt: 'Un hombre tenía una higuera que no daba fruto. El viñador le pidió un año más para cuidarla: Dios es paciente y espera que demos fruto.', mk: 'fig' },
+  { id: 'arimatea', k: 'aldea', name: 'Arimatea', x: -380, z: -3100, r: 26, n: 6, ref: 'Lucas 23:50-53', txt: 'De Arimatea era José, un hombre bueno que esperaba el reino de Dios. Pidió el cuerpo de Jesús y lo puso en su propia tumba nueva.' },
+  { id: 'mirador', k: 'rincon', name: 'El mirador de los montes', x: -860, z: -3000, r: 9, ref: 'Salmo 121:1-2', txt: '«Levanto mis ojos a los montes: ¿de dónde vendrá mi ayuda? Mi ayuda viene del Señor, que hizo los cielos y la tierra.»', mk: 'cairn' },
+  { id: 'ebenezer', k: 'rincon', name: 'La piedra Ebenezer', x: -600, z: -3500, r: 9, ref: '1 Samuel 7:12', txt: 'Samuel levantó una piedra y la llamó Ebenezer, porque dijo: «Hasta aquí nos ayudó el Señor».', mk: 'stone' },
+  { id: 'tiberiades', k: 'aldea', name: 'Tiberíades', x: 330, z: -3560, r: 26, n: 7, ref: 'Juan 6:23', txt: 'Una ciudad a la orilla del lago, que también se llamaba mar de Tiberíades. Desde acá llegaron barcas buscando a Jesús después de que multiplicó los panes.' }
+];
+function olPlan() {
+  OL.plan = OL_PLAN.map(p => Object.assign({}, p, { dirt: p.k === 'aldea' ? .55 : p.k === 'oficio' ? .35 : .2 })).filter(p => waterWet(p.x, p.z, null) < .01);
+}
+/* senderos: de cada lugar al camino, con alguna curva; se suman a los senderitos (tierra pisada, sin pasto ni árboles encima) */
+function olTrails(allPts, hAt) {
+  if (!OL.plan) return; const R = rng(5151); OL.trails = [];
+  OL.plan.forEach(p => { let best = null, bd = 1e9; for (let i = 0; i < allPts.length; i += 3) { const q = allPts[i], d = (q[0] - p.x) ** 2 + (q[1] - p.z) ** 2; if (d < bd) { bd = d; best = q; } } if (!best) return;
+    const sd = Math.sign(p.x - best[0]) || 1, x0 = best[0] + sd * 3, z0 = best[1], L = Math.hypot(p.x - x0, p.z - z0) - p.r * .6, hd0 = Math.atan2(p.x - x0, p.z - z0), pts = [], ph = R() * 6.28;
+    for (let s = 0; s < L; s += 1.2) { const u = s / L, hd = hd0 + Math.sin(u * 5.5 + ph) * .22 * (1 - u), x = x0 + Math.sin(hd0) * s + Math.cos(hd0) * Math.sin(u * 3.1 + ph) * 18 * Math.sin(u * Math.PI), z = z0 + Math.cos(hd0) * s - Math.sin(hd0) * Math.sin(u * 3.1 + ph) * 18 * Math.sin(u * Math.PI); pts.push([x, z]); SP.S.push([x, z]); }
+    OL.trails.push({ p, pts, x0, z0 }); });
+}
+function olSitesBuild(scene, HW, hx) {
+  if (!OL.plan) return; const yAt = (x, z) => HW.hAt(x, z), M = (k, c) => tm('ol' + k, c), R0 = rng(4242); S.olSites = [];
+  const props = (id, list, o) => (FLORA.poiProps = FLORA.poiProps || []).push([id, list, Object.assign({ shadow: true }, o || {})]);
+  const lore = (p, x, z, label, extra) => S.lore.push(Object.assign({ x, z, r: 3, label, dur: 5, info: [p.name, p.txt + ' (' + p.ref + ')'] }, extra || {}));
+  OL.plan.forEach((p, idx) => { try { const R = rng(9000 + idx * 31); S.olSites.push({ id: p.id, name: p.name, x: p.x, z: p.z, k: p.k, r: p.r });
+    if (p.k === 'aldea') { const placed = townLayout(scene, p, yAt, HW, { seed: 7100 + idx * 13, n: p.n || 7, r: p.r - 4, plaza: 8, gap: 2.2 }); const w = well(hx); w.position.set(p.x, yAt(p.x, p.z), p.z); scene.add(w); S.cols.push({ x0: p.x - 1, x1: p.x + 1, z0: p.z - 1, z1: p.z + 1, cx: p.x, cz: p.z, r: 1 });
+      try { townFolk(scene, p, yAt, HW, hx ? 6 : 5, p.r * .6, 300 + idx, placed.map(q => [q.x, q.z, q.rr])); } catch (e) {} lore(p, p.x + 2.4, p.z + 1.2, 'Conocer ' + p.name);
+      if (p.extra === 'sicomoro') { const x = p.x + 9, z = p.z - 4; props('island_tree_01', [{ x, y: yAt(x, z) - .05, z, ry: 1.2, s: 2.3, v: 0 }], { wind: 3, far: 1 }); S.cols.push({ x0: x - .9, x1: x + .9, z0: z - .9, z1: z + .9, cx: x, cz: z, r: .9 }); S.lore.push({ x: x + 2.2, z, r: 3, label: 'Mirar el sicómoro', dur: 6, go: () => sello('sicomoro', 'El sicómoro de Zaqueo'), info: ['El sicómoro de Zaqueo', 'Zaqueo era tan bajito que no veía nada entre la gente. Se subió a este árbol, y Jesús se detuvo justo abajo: «Zaqueo, bajá enseguida, que hoy tengo que quedarme en tu casa» (Lucas 19:5).'] }); }
+      if (p.extra === 'pozo') { const x = p.x - 8, z = p.z + 6, w2 = well(hx); w2.scale.setScalar(1.25); w2.position.set(x, yAt(x, z), z); scene.add(w2); S.cols.push({ x0: x - 1.2, x1: x + 1.2, z0: z - 1.2, z1: z + 1.2, cx: x, cz: z, r: 1.2 }); S.lore.push({ x: x + 2, z, r: 3, label: 'Sacar agua del pozo de Jacob', dur: 6, go: () => sello('pozo-jacob', 'El pozo de Jacob'), info: ['El pozo de Jacob', 'Un pozo hondo que cavó Jacob hace mucho tiempo. Acá Jesús, cansado del viaje, le pidió agua a la samaritana y le ofreció agua viva (Juan 4:6-10).'] }); }
+      if (p.extra === 'lazaro') { const x = p.x - 12, z = p.z - 8, g = new THREE.Group(); bx(4.4, 2.6, 2.6, M('lzr', '#BFB39A'), 0, 1.3, 0, g); bx(1.1, 1.5, .4, M('lzd', '#2A2218'), 0, .75, 1.32, g); const st = cy(.85, .85, .3, M('lzs', '#A89C84'), 1.3, .85, 1.45, g, 18); st.rotation.x = Math.PI / 2; g.position.set(x, yAt(x, z) - .1, z); scene.add(g); S.cols.push({ x0: x - 2.2, x1: x + 2.2, z0: z - 1.3, z1: z + 1.3 }); S.lore.push({ x, z: z + 3, r: 3, label: 'Mirar la tumba de Lázaro', dur: 6, go: () => sello('tumba-lazaro', 'La tumba de Lázaro'), info: ['«¡Lázaro, sal fuera!»', 'Lázaro llevaba cuatro días en esta tumba. Jesús mandó sacar la piedra, oró, y gritó con voz fuerte. Y el que había muerto salió (Juan 11:41-44).'] }); }
+      if (p.extra === 'redil') { const cx = p.x + 16, cz = p.z + 10, g = new THREE.Group(); for (let a = 0; a < 26; a++) { const an = a / 26 * 6.283; if (a === 0) continue; bx(.9, .7 + R() * .2, .5, M('rdl', '#8E8270'), Math.cos(an) * 6, .35, Math.sin(an) * 6, g).rotation.y = -an; } g.position.set(cx, yAt(cx, cz) - .05, cz); scene.add(g); for (let a = 1; a < 26; a++) { const an = a / 26 * 6.283, x = cx + Math.cos(an) * 6, z = cz + Math.sin(an) * 6; S.cols.push({ x0: x - .45, x1: x + .45, z0: z - .45, z1: z + .45, cx: x, cz: z, r: .4 }); }
+        for (let i = 0; i < 7; i++) { const sh = misMesh({ k: 'sheep' }), a = R() * 6.28, r = R() * 4; sh.position.set(cx + Math.cos(a) * r, yAt(cx + Math.cos(a) * r, cz + Math.sin(a) * r), cz + Math.sin(a) * r); sh.rotation.y = R() * 6.28; scene.add(sh); }
+        S.lore.push({ x: cx + 7, z: cz, r: 3, label: 'Mirar el redil', dur: 5, info: ['El redil', 'De noche las ovejas duermen en el corral de piedra y el pastor se acuesta en la entrada. Jesús dijo: «Yo soy la puerta de las ovejas… Yo soy el buen pastor» (Juan 10:7-11).'] }); }
+    } else if (p.k === 'oficio') olOficio(scene, p, yAt, M, R, props, hx);
+    else olRincon(scene, p, yAt, M, R, props, hx);
+    } catch (e) { console.warn('lugar ' + p.id, e); } });
+  // carteles al comienzo de cada sendero, junto al camino
+  (OL.trails || []).forEach(t => { const p = t.p, x = t.x0 + Math.sign(p.x - t.x0) * 1.2, z = t.z0 + 2.2, s = new THREE.Group(), post = cy(.05, .06, 1.9, M('sgp', '#6A4A2C'), 0, .95, 0, s, 6); const ar = bx(1.3, .32, .06, M('sga', '#9A6A3E'), Math.sign(p.x - t.x0) * .5, 1.65, 0, s); const lb = poiLb(textSprite((p.x > t.x0 ? '' : '← ') + p.name + (p.x > t.x0 ? ' →' : ''), hx)); lb.position.y = 2.35; lb.scale.multiplyScalar(.85); s.add(lb); s.position.set(x, yAt(x, z), z); scene.add(s); });
+}
+function olOficio(scene, p, yAt, M, R, props, hx) {
+  const g = new THREE.Group(), y0 = yAt(p.x, p.z) - .02, cols = (x, z, r) => S.cols.push({ x0: p.x + x - r, x1: p.x + x + r, z0: p.z + z - r, z1: p.z + z + r, cx: p.x + x, cz: p.z + z, r });
+  if (p.of === 'trigo') { // trigal en hileras y una era redonda para trillar
+    const sp = new THREE.ConeGeometry(.16, 1.1, 5); sp.translate(0, .55, 0); const L = []; for (let i = -12; i <= 12; i++) for (let j = -9; j <= 9; j++) { if (Math.hypot(i * 1.1, j * 1.3) < 9) continue; if (R() < .1) continue; L.push([i * 1.1 + (R() - .5) * .3, j * 1.3 + (R() - .5) * .3]); }
+    const im = new THREE.InstancedMesh(sp, M('wheat', '#D9B45A'), L.length), M4 = new THREE.Matrix4(); L.forEach(([x, z], k) => { M4.makeScale(1, .8 + R() * .5, 1).setPosition(x, yAt(p.x + x, p.z + z) - y0, z); im.setMatrixAt(k, M4); }); im.receiveShadow = true; g.add(im);
+    const era = cy(6.5, 6.6, .12, M('era', '#C8B48E'), 0, .06, 0, g, 40); era.receiveShadow = true; for (let k = 0; k < 6; k++) { const a = k / 6 * 6.28; const sh = cy(.35, .5, 1.1, M('shf', '#C9A24C'), Math.cos(a) * 4.2, .55, Math.sin(a) * 4.2, g, 7); sh.rotation.z = (R() - .5) * .3; }
+    props('wicker_basket_01', [{ x: p.x + 2, y: y0, z: p.z + 1, ry: .3, s: 1.3 }], { nocol: 1 }); props('wooden_bucket_02', [{ x: p.x - 2.4, y: y0, z: p.z - 1.2, ry: 0, s: 1 }], { nocol: 1 });
+    lore(p, 0, 0, 'Mirar la era'); }
+  else if (p.of === 'barro') { // horno de barro, torno y vasijas secándose
+    const k1 = new THREE.Mesh(new THREE.SphereGeometry(2.2, 16, 10, 0, 6.283, 0, Math.PI / 2), M('kiln', '#A0603A')); k1.position.set(-4, 0, -3); k1.castShadow = true; g.add(k1); bx(.9, 1, .3, M('kd', '#2A1A10'), -4, .5, -1.0, g); cols(-4, -3, 2.2);
+    const sh = new THREE.Group(); [[-1.6, -1], [1.6, -1], [-1.6, 1], [1.6, 1]].forEach(([a, b]) => cy(.07, .08, 2.3, M('shp', '#6A4A2C'), a, 1.15, b, sh, 6)); bx(3.8, .1, 2.6, M('shr', '#B89A62'), 0, 2.3, 0, sh); sh.position.set(3, 0, 1); g.add(sh);
+    cy(.45, .5, .55, M('whl', '#7A5232'), 3, .28, 1, g, 16); const pot = new THREE.Mesh(new THREE.SphereGeometry(.24, 12, 8), M('clay', '#B5653A')); pot.position.set(3, .7, 1); pot.scale.y = 1.2; g.add(pot);
+    props('antique_ceramic_vase_01', [0, 1, 2, 3, 4].map(i => ({ x: p.x - 1 + i * .9, y: y0, z: p.z + 4, ry: R() * 6, s: .9 + R() * .3 })), { nocol: 1 }); props('planter_pot_clay', [0, 1, 2].map(i => ({ x: p.x + 5 + i * .8, y: y0, z: p.z - 3, ry: R() * 6, s: 1 })), { nocol: 1 });
+    lore(p, 1.5, 3, 'Mirar al alfarero'); }
+  else if (p.of === 'carpas') { // carpas de lona, un telar y rollos de tela
+    const tent = (x, z, ry, c) => { const t = new THREE.Group(); const cn = new THREE.Mesh(new THREE.ConeGeometry(2.6, 2.8, 4, 1, true), M('tn' + c, c)); cn.material.side = THREE.DoubleSide; cn.position.y = 1.4; cn.rotation.y = Math.PI / 4; t.add(cn); t.position.set(x, 0, z); t.rotation.y = ry; g.add(t); cols(x, z, 1.7); };
+    tent(-5, -4, .2, '#C9B48A'); tent(5, -3, -.3, '#8E5A3A'); tent(0, -8, 0, '#E3D6B8');
+    const loom = new THREE.Group(); cy(.06, .06, 2, M('lm', '#6A4A2C'), -1, 1, 0, loom, 6); cy(.06, .06, 2, M('lm', '#6A4A2C'), 1, 1, 0, loom, 6); bx(2.2, .08, .08, M('lm', '#6A4A2C'), 0, 1.95, 0, loom); const cl = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.4), M('lmc', '#B03A2E')); cl.material.side = THREE.DoubleSide; cl.position.y = 1.15; loom.add(cl); loom.position.set(1, 0, 3); g.add(loom); cols(1, 3, 1);
+    for (let i = 0; i < 4; i++) { const r = cy(.22, .22, 1.3, M('rl' + i, ['#D9C9A0', '#8E5A3A', '#3E5A8A', '#B03A2E'][i]), -3 + i * .6, .22, 3.5, g, 12); r.rotation.z = Math.PI / 2; }
+    lore(p, 0, 1, 'Mirar el telar'); }
+  else if (p.of === 'vina') { // hileras de vides, la torre del viñador y el lagar
+    const L = []; for (let i = -10; i <= 10; i++) for (let j = -7; j <= 7; j++) { if (Math.hypot(i * 2.2, j * 2.6) < 8) continue; L.push([i * 2.2, j * 2.6]); }
+    const post = new THREE.CylinderGeometry(.04, .05, 1.4, 5); post.translate(0, .7, 0); const leaf = new THREE.IcosahedronGeometry(.55, 0); leaf.scale(1.1, .7, .8); leaf.translate(0, 1.15, 0);
+    const im1 = new THREE.InstancedMesh(post, M('vp', '#5A3E26'), L.length), im2 = new THREE.InstancedMesh(leaf, M('vl', '#5F7A34'), L.length), M4 = new THREE.Matrix4(); L.forEach(([x, z], k) => { M4.makeRotationY(R() * 6).setPosition(x, yAt(p.x + x, p.z + z) - y0, z); im1.setMatrixAt(k, M4); im2.setMatrixAt(k, M4); }); im2.castShadow = true; g.add(im1, im2);
+    const tw = new THREE.Group(); cy(1.6, 1.9, 4.6, M('twr', '#B8AA8C'), 0, 2.3, 0, tw, 10); cy(1.9, 1.9, .3, M('twt', '#A2967A'), 0, 4.75, 0, tw, 10); tw.position.set(-3, 0, -3); g.add(tw); cols(-3, -3, 1.9);
+    const lg = new THREE.Group(); bx(3, .5, 3, M('lag', '#A89C84'), 0, .25, 0, lg); bx(2.6, .52, 2.6, M('lagi', '#5E2A3A'), 0, .26, 0, lg); lg.position.set(3.5, 0, 2); g.add(lg); cols(3.5, 2, 1.5);
+    lore(p, 1, -1, 'Mirar la viña'); }
+  else if (p.of === 'aceite') { // la piedra de moler aceitunas, la viga de prensa y las vasijas
+    const b = cy(2, 2.1, .9, M('prb', '#A89C84'), 0, .45, 0, g, 24); b.castShadow = true; const wh = cy(1, 1, .5, M('prw', '#8E8270'), .6, 1.4, 0, g, 20); wh.rotation.x = Math.PI / 2; cy(.12, .12, 2.2, M('pra', '#6A4A2C'), 0, 1.6, 0, g, 6).rotation.z = Math.PI / 2; cols(0, 0, 2.1);
+    bx(5, .3, .3, M('prv', '#6A4A2C'), 4.5, 1.8, -3, g); cy(.2, .2, 2, M('prp', '#6A4A2C'), 2.2, 1, -3, g, 6); bx(1.3, .8, 1.3, M('prs', '#8E8270'), 6.6, .4, -3, g); cols(6.6, -3, .8);
+    props('antique_ceramic_vase_01', [0, 1, 2, 3].map(i => ({ x: p.x - 4 + i * .9, y: y0, z: p.z + 3, ry: R() * 6, s: 1.1 })), { nocol: 1 });
+    const T = []; for (let i = 0; i < 14; i++) { const a = i / 14 * 6.283, r = 11 + R() * 5, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; T.push({ x, y: yAt(x, z) - .05, z, ry: R() * 6, s: 1 + R() * .3, v: i }); S.cols.push({ x0: x - .4, x1: x + .4, z0: z - .4, z1: z + .4, cx: x, cz: z, r: .4 }); } props(grpBase() ? 'trp_olive' : 'island_tree_01', T, { wind: 3, far: 1 });
+    lore(p, 2.6, 2, 'Mirar la prensa'); }
+  g.position.set(p.x, y0, p.z); g.traverse(o => { if (o.isMesh) { o.castShadow = o.castShadow || false; o.receiveShadow = true; } }); scene.add(g);
+  function lore(p, ox, oz, label) { S.lore.push({ x: p.x + ox, z: p.z + oz, r: 3.2, label, dur: 5, info: [p.name, p.txt + ' (' + p.ref + ')'] }); }
+}
+function olRincon(scene, p, yAt, M, R, props, hx) {
+  const g = new THREE.Group(), y0 = yAt(p.x, p.z) - .05, cl = (x, z, r) => S.cols.push({ x0: p.x + x - r, x1: p.x + x + r, z0: p.z + z - r, z1: p.z + z + r, cx: p.x + x, cz: p.z + z, r }); let lx = 2.6, lz = 0;
+  if (p.mk === 'tower') { const t = cy(2.2, 2.6, 7, M('atl', '#B8AA8C'), 0, 3.5, 0, g, 12); t.castShadow = true; for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283; bx(.6, .6, .4, M('atl2', '#A89C84'), Math.cos(a) * 2.1, 7.3, Math.sin(a) * 2.1, g).rotation.y = -a; } bx(1, 1.8, .3, M('atd', '#2A2218'), 0, .9, 2.55, g); cl(0, 0, 2.6); lz = 4; lx = 0; }
+  else if (p.mk === 'stone') { const s = new THREE.Mesh(new THREE.DodecahedronGeometry(.9, 0), M('bst', '#A39A88')); s.scale.set(.7, 1.9, .55); s.position.y = 1.4; s.castShadow = true; g.add(s); for (let i = 0; i < 6; i++) { const r = new THREE.Mesh(new THREE.DodecahedronGeometry(.3 + R() * .2, 0), M('bst2', '#8E8674')); r.position.set((R() - .5) * 2.2, .15, (R() - .5) * 2.2); g.add(r); } cl(0, 0, .9); }
+  else if (p.mk === 'oak') { props('island_tree_01', [{ x: p.x, y: y0, z: p.z, ry: R() * 6, s: 2.6, v: 1 }], { wind: 3, far: 1 }); cl(0, 0, 1.1); bx(1.6, .45, .5, M('bnc', '#7A5232'), 2.4, .25, 1.4, g); lx = 3.4; }
+  else if (p.mk === 'spring') { const rim = new THREE.Mesh(new THREE.TorusGeometry(2.4, .35, 6, 24), M('spr', '#9A9282')); rim.rotation.x = Math.PI / 2; rim.position.y = .3; g.add(rim); const w = new THREE.Mesh(new THREE.CircleGeometry(2.3, 28), new THREE.MeshStandardMaterial({ color: '#3E7A86', roughness: .08, metalness: .2, transparent: true, opacity: .85 })); w.rotation.x = -Math.PI / 2; w.position.y = .32; g.add(w); for (let i = 0; i < 7; i++) { const a = -1 + i * .3, r = new THREE.Mesh(new THREE.DodecahedronGeometry(.6 + R() * .5, 0), M('sprr', '#8E8674')); r.position.set(Math.cos(a) * 3.2, .4 + (i === 3 ? 1.2 : 0), Math.sin(a) * 3.2); g.add(r); } cl(0, 0, 2.6); lx = 3.6; }
+  else if (p.mk === 'cairn') { for (let i = 0; i < 7; i++) { const s = new THREE.Mesh(new THREE.DodecahedronGeometry(.55 - i * .06, 0), M('crn', '#B8B0A0')); s.position.set((R() - .5) * .2, .35 + i * .5, (R() - .5) * .2); s.scale.y = .7; s.castShadow = true; g.add(s); } cl(0, 0, .7); }
+  else if (p.mk === 'cistern') { const rim = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.6, .6, 18, 1, true), M('cis', '#9A9282')); rim.material.side = THREE.DoubleSide; rim.position.y = .3; g.add(rim); const hole = new THREE.Mesh(new THREE.CircleGeometry(1.45, 18), M('cish', '#14110C')); hole.rotation.x = -Math.PI / 2; hole.position.y = .05; g.add(hole); cl(0, 0, 1.6); }
+  else if (p.mk === 'mile') { const c = cy(.35, .4, 2, M('mil', '#D8CCB0'), 0, 1, 0, g, 14); c.castShadow = true; bx(.9, .2, .9, M('mil2', '#C4B79A'), 0, .1, 0, g); cl(0, 0, .5); }
+  else if (p.mk === 'fig') { props('tree_small_02', [{ x: p.x, y: y0, z: p.z, ry: R() * 6, s: 1.8, v: 0 }], { wind: 3, far: 1 }); cl(0, 0, .8); }
+  g.position.set(p.x, y0, p.z); scene.add(g);
+  S.lore.push({ x: p.x + lx, z: p.z + lz, r: 3.2, label: 'Mirar ' + p.name.toLowerCase(), dur: 5, info: [p.name, p.txt + ' (' + p.ref + ')'] });
+}
+/* descubrir un lugar: premio visible la primera vez (sello, puntos y un cartel) */
+function olDiscover() {
+  if (!S || !S.olSites || !S.av) return; const a = S.av.position, p = G().P(); p.olSeen = p.olSeen || []; for (const s of S.olSites) { if (p.olSeen.includes(s.id)) continue; if (Math.hypot(a.x - s.x, a.z - s.z) > s.r * .75 + 4) continue;
+    p.olSeen.push(s.id); svXP(20); sello('lugar-' + s.id, s.name); misPop('¡Descubriste ' + s.name + '!', '+20 · ' + p.olSeen.length + ' de ' + S.olSites.length + ' lugares'); try { tone3d(); } catch (e) {} G().save(); break; }
 }
 
 const FLORA = { chunks: [] };
@@ -809,7 +925,7 @@ const KL = {};
   const allPts = Object.values(edgePts).flat(), near = (x, z, d) => allPts.some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < d * d) || (S_poiPts || []).some(p => (p[0] - x) ** 2 + (p[1] - z) ** 2 < (d + 4) * (d + 4));
   const zMax = -totalY * SC * KZ;
   let HW = null, uGrass = null;
-  const pois = planPois(g), doors = planDoors(g), poiPts = pois.flatMap(q => q.flat).concat(doors.flatMap(q => q.flat)); waterPlan(pois); GREENS = pois.filter(q => GREEN_K[q.k]).map(q => [q.x, q.z, GREEN_K[q.k]]); MAPT.tiles.clear();
+  const pois = planPois(g), doors = planDoors(g), poiPts = pois.flatMap(q => q.flat).concat(doors.flatMap(q => q.flat)); waterPlan(pois); try { olPlan(); } catch (e) { console.warn('plan de afuera', e); } GREENS = pois.filter(q => GREEN_K[q.k]).map(q => [q.x, q.z, GREEN_K[q.k]]); MAPT.tiles.clear();
   buildStep('vegetación'); { let ok = null; try { ok = await withTO(grpInit(), 9000, 'r2'); } catch (e) {} FLORA.paidG = !!(ok && GRP.man['grass/']); FLORA.paidT = !!(ok && GRP.man['trees/']); }
   buildStep('mundo y flora'); { const flat = g.VIGN.map(([r, x, y]) => toV(x, g.TOP + r * g.RH + y)).concat(poiPts); FLORA.kids = !hx; FLORA.chunks = []; HW = heroWorld(scene, g, allPts, flat, zMax, QL, hx ? null : KL); olInit(HW, QL, hx); buildStep('relieve listo'); uGrass = heroFlora(scene, HW, allPts, zMax, R, hx ? QL : Object.assign({}, QL, { grass: QL.grass * .8, trees: QL.trees * .8 })); if (!FLORA.paidG) realFlora(scene, HW, allPts, QL, uGrass); if (!hx) { ground.visible = false; KL.sun.position.set(-14, 26, 12); } }
   const spots = { tree: [], bush: [], rock: [] };
@@ -876,7 +992,7 @@ const KL = {};
   const n0 = g.NODES[g.P().pos], [ax, az] = toV(n0.x, n0.y); av.position.set(ax, 0, az); buildStep('estado');
   S = { renderer, scene, camera, hx, av, markers, edgePts, allPts, items, joy: { x: 0, y: 0 }, keys: {}, flies, ground, yaw: Math.PI, camYaw: 0, camDist: 2.4, camPitch: .4, walking: false, moving: false, t: 0, root, cv, sig: '', onStop: g.P().pos, W: HW, uGrass, KL, zEnd: zMax };
   // orientar al personaje hacia la próxima parada
-  buildStep('lugares'); buildPois(scene, pois, hx, HW, rng(77), ribbon); buildStep('pueblos'); S.pois = pois; buildTowns(scene, g, hx, HW, pois); buildStep('puertas y misiones'); ambReset(); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; setTimeout(() => tutOpen(), 1500); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); }, 0);
+  buildStep('lugares'); buildPois(scene, pois, hx, HW, rng(77), ribbon); buildStep('pueblos'); S.pois = pois; buildTowns(scene, g, hx, HW, pois); buildStep('lugares de afuera'); try { olSitesBuild(scene, HW, hx); } catch (e) { console.warn('afuera', e); } buildStep('puertas y misiones'); ambReset(); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; setTimeout(() => tutOpen(), 1500); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); }, 0);
   buildStep('hitos'); try { scatterNodes(g, HW); if (S.npos[g.P().pos]) { const q = S.npos[g.P().pos]; av.position.set(q[0], 0, q[1]); } } catch (e) { console.warn('hitos', e); } S.spawn = [av.position.x, av.position.z];
   try { fieldFinds(scene, hx, HW); } catch (e) { console.warn('hallazgos', e); }
   S0 = S; try { attrMigrate(); } catch (e) { console.warn('migración de atributos', e); } insMigrate(); setTimeout(glowUI, 400); S.mis = buildMissions(scene, g, hx, HW); try { vivoBuild(scene, hx); } catch (e) { console.warn('etapa viva', e); } if (hx) try { ofiBuild(scene); } catch (e) { console.warn('oficios', e); } if (!hx && HW) setTimeout(() => { if (S) secBuild(scene, HW).catch(e => console.warn('sec', e)); }, 1500); try { bldBuild(scene); } catch (e) { console.warn('construir', e); } /* en Kids también hay lugares secretos */ { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
@@ -3308,7 +3424,7 @@ function mapTile(L, tx, tz) {
     const n = .95 + hsh(Math.floor(wx * 3), Math.floor(wz * 3)) * .08, k = (j * N + i) * 4; D[k] = r * n; D[k + 1] = g * n; D[k + 2] = b * n; D[k + 3] = 255; }
   c.putImageData(im, 0, 0); t = { cv, x0, z0, size: N * m }; MAPT.tiles.set(k, t); if (MAPT.tiles.size > 260) MAPT.tiles.delete(MAPT.tiles.keys().next().value); return t;
 }
-function mapExt() { const g = G(); let zTop = 30, zBot = 0; for (const id in S.markers) zBot = Math.min(zBot, S.markers[id].position.z); return { x0: -(XB + 110), x1: XB + 110, zTop, zBot: zBot - 30, g }; }
+function mapExt() { const g = G(); let zTop = 30, zBot = 0; for (const id in S.markers) zBot = Math.min(zBot, S.markers[id].position.z); return { x0: -(XW + 60), x1: XW + 60, zTop, zBot: zBot - 30, g }; } /* el mapa abarca todo el ancho, hasta las montañas */
 function drawMap(cv) {
   const g = G(), p = g.P(), hx = S.hx, C = mapColors(hx), dpr = Math.min(2, devicePixelRatio || 1), sc = cv.parentElement, cw = sc.clientWidth, ch = sc.clientHeight, E = mapExt();
   if (MAPT.hx !== hx) { MAPT.tiles.clear(); MAPT.hx = hx; }
@@ -3339,6 +3455,7 @@ function drawMap(cv) {
   const label = (t, px, py, big) => { x.font = (big ? '800 13px' : '800 11px') + ' Nunito, sans-serif'; x.textAlign = 'center'; x.lineWidth = 3.5; x.strokeStyle = hx ? 'rgba(10,8,4,.9)' : 'rgba(255,255,255,.95)'; x.strokeText(t, px, py); x.fillStyle = C.ink; x.fillText(t, px, py); x.textAlign = 'left'; };
   // lugares
   for (const q of S.pois || []) { const open = regionOpen(q.r), qx = q.k === 'river' ? q.pts[Math.floor(q.pts.length / 2)][0] : q.x, px = X(qx), py = Y(q.z); x.globalAlpha = open ? 1 : .5; x.fillStyle = hx ? '#E9C37A' : '#FF9636'; x.strokeStyle = hx ? '#1A1610' : '#FFFFFF'; x.lineWidth = 2; x.beginPath(); x.moveTo(px, py - 8); x.lineTo(px + 7, py); x.lineTo(px, py + 8); x.lineTo(px - 7, py); x.closePath(); x.fill(); x.stroke(); label(q.name, px, py + 21, true); x.globalAlpha = 1; }
+  { const seen = (p.olSeen || []); for (const q of S.olSites || []) { const px = X(q.x), py = Y(q.z), k = seen.includes(q.id); x.globalAlpha = k ? 1 : .45; x.font = '15px sans-serif'; x.textAlign = 'center'; x.fillText(q.k === 'aldea' ? '🏘️' : q.k === 'oficio' ? '🛠️' : '✨', px, py + 5); x.textAlign = 'left'; if (k) label(q.name, px, py + 20, false); x.globalAlpha = 1; } } /* lugares de afuera: con nombre cuando ya los descubriste */
   // paradas de cada etapa
   for (const id in S.markers) { const m = S.markers[id], n = g.NODES[id], done = n.kind === 'ch' && g.isDone(id), reach = g.reachable(id), px = X(m.position.x), py = Y(m.position.z); x.fillStyle = done ? '#3FBF7F' : reach ? (hx ? '#FFD873' : '#FFC23D') : 'rgba(140,138,132,.8)'; x.strokeStyle = hx ? '#1A1610' : '#FFFFFF'; x.lineWidth = 2.5; x.beginPath(); x.arc(px, py, 6.5, 0, 7); x.fill(); x.stroke(); if (V.s > 2.2 && n.label) label(n.label, px, py - 11); }
   { const ai = nodeActive(), am = ai && S.markers[ai]; if (am) { const px = X(am.position.x), py = Y(am.position.z), k = .5 + .5 * Math.sin(performance.now() / 260); x.strokeStyle = '#FF7A3D'; x.lineWidth = 3; x.beginPath(); x.arc(px, py, 12 + k * 4, 0, 7); x.stroke(); } }
