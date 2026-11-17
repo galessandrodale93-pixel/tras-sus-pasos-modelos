@@ -1494,3 +1494,6 @@ body.v3on .v3kalb{display:flex}body.v3cine .v3kalb,body.v3talk .v3kalb,body.v3bl
 .hue-cr button span{font-size:34px}.hue-cr button b{font-weight:900;font-size:14px}.hue-cr button small{font-weight:800;font-size:12px;opacity:.75}
 .hue-cr button.off{border-style:dashed;border-color:#C9B48A;background:#F4E8CF;cursor:default}.hue-cr button.off span{filter:grayscale(1) brightness(0);opacity:.18}
 .hue-x{border:0;border-radius:999px;padding:10px 22px;font:900 15px Nunito,sans-serif;background:#F2E2C0;color:#4A2E12;cursor:pointer}
+
+/* ningún cartel se pisa: con la tarjeta de un lugar abierta, el pensamiento y la ayuda de teclas se esconden */
+body:has(#v3place:not([hidden])) .v3think,body:has(#v3place:not([hidden])) .v3hint{display:none!important}
