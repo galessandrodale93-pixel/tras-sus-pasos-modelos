@@ -6131,7 +6131,7 @@ const DRY_BASE = SEASON === 'seco' ? .62 : 0; // cuánto dorado hay de base, ade
 const PG_H = .8; // altura del pasto respecto del original (1 = como viene)
 const BARE = true; // etapa de prueba: campo sin árboles, solo la cobertura del suelo
 const PG_ONLY = /^(knotweed_0[23]|ezepnik_02)$/i; // las 3 plantas elegidas por Gui para cubrir todo el piso
-const PG_CELL = 16, PG_R = [15, 22, 32, 42], PG_TRI = [4.2e5, 1.1e6, 2.4e6, 4e6];
+const PG_CELL = 16, PG_R = [15, 22, 32, 42], PG_TRI = [2.6e5, 8e5, 2.4e6, 4e6];
 const PG_S = { grass_bermuda_01: [4, 5.4], grass_medium_01: [2.8, 3.9], grass_medium_02: [3, 4.1], dandelion_01: [2.2, 3.1], celandine_01: [2.4, 3.2], flower_heliophila: [1.3, 1.9] };
 const PG_W = { grass_bermuda_01: .44, grass_medium_01: .24, grass_medium_02: .18, dandelion_01: .05, celandine_01: .05, flower_heliophila: .04 };
 const pgH = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
@@ -6221,9 +6221,9 @@ async function galTrees() {
   const Rn = rng(777), spots = FLORA.treeSpots.filter(() => Rn() < .4); FLORA.treesUsed = spots; // Galilea: arboleda rala, más seca
   spots.forEach(o => { let pick = Rn(), m = models[models.length - 1]; for (const c of models) { pick -= c.w; if (pick <= 0) { m = c; break; } } m.list.push(o); });
   const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
-  models.forEach(m => { if (!m.list.length) return; m.ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 3 }), m.list.length);
-    m.list.forEach((o, i) => { E.set(0, o.rot || 0, 0); M.compose(V.set(o.x, o.y - .05, o.z), Q.setFromEuler(E), SC.setScalar(.85 + hsh(o.x, o.z) * .35)).multiply(mm.m); im.setMatrixAt(i, M); });
-    im.instanceMatrix.needsUpdate = true; im.castShadow = QUAL.lv > 0; im.receiveShadow = true; im.frustumCulled = true; im.computeBoundingSphere(); S.scene.add(im); GT.ims.push(im); }); });
+  models.forEach(m => { if (!m.list.length) return; gtBands(m.list).forEach(B => m.ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 3 }), B.L.length);
+    B.L.forEach((o, i) => { E.set(0, o.rot || 0, 0); M.compose(V.set(o.x, o.y - .05, o.z), Q.setFromEuler(E), SC.setScalar(.85 + hsh(o.x, o.z) * .35)).multiply(mm.m); im.setMatrixAt(i, M); });
+    im.instanceMatrix.needsUpdate = true; im.castShadow = QUAL.lv > 0; im.receiveShadow = true; im.frustumCulled = true; im.computeBoundingSphere(); S.scene.add(im); GT.ims.push(im); gtbAdd(im, B.cz); })); });
   spots.forEach(o => phCyl(o.x, o.z, .3));
   r2log('árboles: ' + spots.length + ' (' + models.map(m => m.nm + ' ' + m.list.length).join(', ') + ')');
   try { const inn = (S.pois || []).find(q => q.k === 'inn'); if (inn && !GT.zaq) { GT.zaq = 1; let big = null, bigTop = 0; models.forEach(m => { const bb = new THREE.Box3(); m.ms.forEach(mm => { mm.geo.computeBoundingBox(); bb.union(mm.geo.boundingBox.clone().applyMatrix4(mm.m)); }); if (bb.max.y > bigTop) { bigTop = bb.max.y; big = { m, bb }; } });
@@ -6239,7 +6239,7 @@ async function galTrees() {
         for (let k = 0; k < 7; k++) { const an = Rf() * 6.283, rr = rad * sc * (.45 + Rf() * .4), y = o.y + top * sc * (.55 + Rf() * .28); fm.push(new THREE.Matrix4().compose(new THREE.Vector3(o.x + Math.cos(an) * rr, y, o.z + Math.sin(an) * rr), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Rf() * 6.283, 0)), new THREE.Vector3(1.25, 1.25, 1.25))); }
         FT.push({ x: o.x, z: o.z, y: o.y, s: sc, n: 7, n0: 7, t: 0, fm, kind, ims: [], base: 0 }); });
       for (const kind of ['fruit', 'lemon']) { const L = FT.filter(f => f.kind === kind); if (!L.length) continue; const vars = await phGet(kind === 'fruit' ? 'food_pomegranate_01' : 'lemon'); const ms = (vars && vars[0]) || []; if (!ms.length) continue;
-        ms.forEach(mm => { let geo = mm.geo; if (QUAL.lv < 3 && geo.index && geo.index.count > 6000) { if (!geo.boundingSphere) geo.computeBoundingSphere(); const bs = geo.boundingSphere, lo = new THREE.SphereGeometry(bs.radius * .92, 10, 8); lo.translate(bs.center.x, bs.center.y, bs.center.z); geo = lo; } const im = new THREE.InstancedMesh(geo, mm.mat, L.length * 7); im.userData.m = mm.m; L.forEach((f, i) => { f.base = i * 7; f.ims.push(im); f.fm.forEach((m, k) => im.setMatrixAt(i * 7 + k, m.clone().multiply(mm.m))); }); im.instanceMatrix.needsUpdate = true; im.castShadow = QUAL.lv > 1; im.computeBoundingSphere(); S.scene.add(im); GT.ims.push(im); }); }
+        ms.forEach(mm => { let geo = mm.geo; if (QUAL.lv < 3 && geo.index && geo.index.count > 300) { if (!geo.boundingSphere) geo.computeBoundingSphere(); const bs = geo.boundingSphere, lo = new THREE.SphereGeometry(bs.radius * .92, 8, 6); lo.translate(bs.center.x, bs.center.y, bs.center.z); geo = lo; } gtBands(L).forEach(B => { const im = new THREE.InstancedMesh(geo, mm.mat, B.L.length * 7); im.userData.m = mm.m; B.L.forEach((f, i) => { f.base = i * 7; f.ims.push(im); f.fm.forEach((m, k) => im.setMatrixAt(i * 7 + k, m.clone().multiply(mm.m))); }); im.instanceMatrix.needsUpdate = true; im.castShadow = QUAL.lv > 1; im.computeBoundingSphere(); S.scene.add(im); GT.ims.push(im); gtbAdd(im, B.cz); }); }); }
       if (S.sv) S.sv.fruit.trees = FT.filter(f => f.ims.length); FLORA.fruitTrees = FT;
       r2log('frutales: ' + FT.filter(f => f.kind === 'fruit').length + ' granados y ' + FT.filter(f => f.kind === 'lemon').length + ' limoneros'); } } catch (e) { r2log('frutos: ' + e.message); }
 }
@@ -6249,6 +6249,11 @@ async function galRocks() {
     if (Rn() > Math.min(1, (h - 4.2) / 6 + sl * .5)) continue; if (W.dAt(x, z) < 3 || blockedAt(x, z)) continue; const id = ids[Math.floor(Rn() * ids.length)]; P[id].push({ x, y: h - .15 - Rn() * .25, z, ry: Rn() * 6.283, s: .7 + Rn() * 1.3, v: Math.floor(Rn() * 4) }); }
   let n = 0; for (const id of ids) if (P[id].length) { n += P[id].length; phPlace(id, P[id], { shadow: true, far: 1 }); } r2log('roca caliza: ' + n + ' piedras en las lomas');
 }
+/* árboles, palmeras y frutales por franjas de 96 m: así se descartan los que quedan fuera de cámara o lejos (antes se dibujaba todo el mundo en cada cuadro) */
+const GTB = { list: [], acc: 0, FAR: [190, 250, 340, 440] };
+function gtBands(list, BZ) { const m = new Map(); list.forEach(o => { const k = Math.floor(o.z / (BZ || 96)); if (!m.has(k)) m.set(k, []); m.get(k).push(o); }); return [...m.entries()].map(([k, L]) => ({ cz: (k + .5) * (BZ || 96), L })); }
+function gtbAdd(im, cz) { GTB.list.push({ im, cz }); }
+function gtbTick(dt) { if (!S || !S.camera) return; GTB.acc -= dt; if (GTB.acc > 0) return; GTB.acc = .35; GTB.list = GTB.list.filter(b => b.im.parent); const cz = S.camera.position.z, far = GTB.FAR[QUAL.lv] || 250; for (const b of GTB.list) b.im.visible = Math.abs(b.cz - cz) < far + 48; }
 const GT = { done: 0, ims: [], pdone: 0, rdone: 0 }, GP_W = { palm_6: .5, palm_1: .125, palm_2: .125, palm_3: .125, palm_4: .125 };
 async function galPalms() {
   if (!S || GT.pdone || !FLORA.palmSpots || !FLORA.palmSpots.length) return; const pm = GRP.man['palms/']; if (!pm) return; GT.pdone = 1;
@@ -6256,9 +6261,9 @@ async function galPalms() {
   if (!models.length) { r2log('palmeras: no encontré palm_1..6 en el pack'); return; } const wsum = models.reduce((t, m) => t + m.w, 0), Rn = rng(515);
   FLORA.palmSpots.forEach(o => { let pick = Rn() * wsum, m = models[models.length - 1]; for (const c of models) { pick -= c.w; if (pick <= 0) { m = c; break; } } m.list.push(o); });
   const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
-  models.forEach(m => { if (!m.list.length) return; m.ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 3 }), m.list.length);
-    m.list.forEach((o, i) => { E.set(0, o.ry || 0, 0); M.compose(V.set(o.x, o.y - .05, o.z), Q.setFromEuler(E), SC.setScalar(.9 + hsh(o.x, o.z) * .3)).multiply(mm.m); im.setMatrixAt(i, M); });
-    im.instanceMatrix.needsUpdate = true; im.castShadow = QUAL.lv > 0; im.receiveShadow = true; im.computeBoundingSphere(); S.scene.add(im); GT.ims.push(im); }); });
+  models.forEach(m => { if (!m.list.length) return; gtBands(m.list).forEach(B => m.ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 3 }), B.L.length);
+    B.L.forEach((o, i) => { E.set(0, o.ry || 0, 0); M.compose(V.set(o.x, o.y - .05, o.z), Q.setFromEuler(E), SC.setScalar(.9 + hsh(o.x, o.z) * .3)).multiply(mm.m); im.setMatrixAt(i, M); });
+    im.instanceMatrix.needsUpdate = true; im.castShadow = QUAL.lv > 0; im.receiveShadow = true; im.computeBoundingSphere(); S.scene.add(im); GT.ims.push(im); gtbAdd(im, B.cz); })); });
   r2log('palmeras: ' + FLORA.palmSpots.length + ' (' + models.map(m => m.nm + ' ' + m.list.length).join(', ') + ')');
 }
 let _pgM, _pgQ, _pgE, _pgV, _pgS, _pgC;
@@ -6662,7 +6667,7 @@ function loop(now) {
   // con un minijuego abierto el mundo 3D no se dibuja: toda la máquina queda para el minijuego
   const arc = S.arcEl || (S.arcEl = document.getElementById('arcade')); if (arc && !arc.hidden) { S.last = 0; return; }
   const raw = now - (S.last || now), t = now / 1000, dt = Math.min(.05, raw / 1000); S.last = now; S.t = t; S.renderer.info.reset(); if (raw > 0 && raw < 1500) qFrame(Math.min(raw, 250));
-  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); try { pgTick(dt); } catch (e) {} try { olTick(dt); } catch (e) {} try { albTick(dt); } catch (e) {} try { hueTick(dt); } catch (e) {} try { fogTick(dt); } catch (e) {} try { lifeTick(dt, t); } catch (e) {} floraTick(dt); miniTick(dt); compassTick(dt); pocketTick(dt); posTick(dt); vilTick(dt); try { bldTick(dt, t); } catch (e) {} foamTick(t); dawnTick(dt); try { anTick(dt); } catch (e) {} const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
+  const PF = PROF.on, p0 = PF ? performance.now() : 0; freeWalk(dt); refresh(); const p1 = PF ? performance.now() : 0; phTick(dt); try { pgTick(dt); } catch (e) {} try { olTick(dt); } catch (e) {} try { gtbTick(dt); } catch (e) {} try { albTick(dt); } catch (e) {} try { hueTick(dt); } catch (e) {} try { fogTick(dt); } catch (e) {} try { lifeTick(dt, t); } catch (e) {} floraTick(dt); miniTick(dt); compassTick(dt); pocketTick(dt); posTick(dt); vilTick(dt); try { bldTick(dt, t); } catch (e) {} foamTick(t); dawnTick(dt); try { anTick(dt); } catch (e) {} const p2 = PF ? performance.now() : 0; waterTick(dt, t); ambTick(dt, t); const p3 = PF ? performance.now() : 0; animAvatar(S.av, t, (S.moving || S.freeMoving) && !(S.jy > .02), dt); applyPose(S.av, t, dt); poseTick(dt); const p4 = PF ? performance.now() : 0;
   for (const id in S.items) { const m = S.items[id];
     if (m.userData.gone) { m.userData.gone += dt; const k = m.userData.gone / .5; m.scale.setScalar(1 + k); m.position.y += dt * 2; m.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = Math.max(0, 1 - k); } }); if (k >= 1) { S.scene.remove(m); delete S.items[id]; } continue; }
     m.rotation.y = t * 1.6; m.position.y = (m.userData.by || 0) + .85 + Math.sin(t * 2.4 + id.length) * .12;
