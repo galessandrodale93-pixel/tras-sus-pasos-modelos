@@ -1404,3 +1404,25 @@ body.v3on .v3kbld{display:flex}body.v3cine .v3kbld,body.v3talk .v3kbld,body:has(
 
 /* recetas sin descubrir: la silueta en sombra, sin signos de pregunta */
 .tl-ri.sil,.tl-out .sil{filter:brightness(0) invert(1) drop-shadow(0 0 5px rgba(255,216,106,.8)) opacity(.4)}
+
+/* mapa a pantalla completa: se ve todo el mundo de una; lo no recorrido queda bajo la niebla */
+.v3map{padding:0!important;background:#0E0C08!important;display:block!important}
+.v3map-in{position:relative;width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;display:block!important;padding:0!important;border-radius:0!important;box-shadow:none!important;border:0!important}
+.v3map-sc{position:absolute!important;inset:0;border-radius:0!important}
+.v3map-h{position:absolute;z-index:2;top:max(8px,env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));pointer-events:none;padding:8px 10px 8px 14px;border-radius:16px;background:rgba(247,243,232,.88);backdrop-filter:blur(6px)}
+.v3map.hx .v3map-h{background:rgba(18,16,12,.82)}
+.v3map-h>*{pointer-events:auto}
+.v3map-f{position:absolute;z-index:2;left:max(10px,env(safe-area-inset-left,0px));bottom:max(8px,env(safe-area-inset-bottom,0px));padding:6px 12px;border-radius:12px;background:rgba(247,243,232,.85);font-size:11px!important}
+.v3map.hx .v3map-f{background:rgba(18,16,12,.78)}
+@media (max-height:520px){.v3map-h b{font-size:17px}.v3map-h span{display:none}.v3map-h{right:auto;padding:6px 8px 6px 12px;display:flex!important;gap:10px}.v3map-z{width:34px;height:34px;font-size:17px}.v3map-f{display:none!important}}
+/* comer y construir: solo el ícono, redondos como el de amigos, para que ocupen poco */
+body.v3on .v3surv .sv-btn{width:52px!important;height:52px!important;padding:0!important;justify-content:center;border-radius:50%!important;font-size:22px!important}
+body.v3on .v3surv .sv-btn::after{display:none!important;content:none!important}
+body.v3on .v3surv .sv-btn[data-a="craft"]{right:calc(var(--fanR) + 128px)!important}
+body.v3on .v3surv .sv-btn[data-a="eat"]{right:calc(var(--fanR) + 190px)!important}
+.v3kbld{width:52px;padding:0!important;justify-content:center;font-size:22px!important}.v3kbld span{display:none!important}
+
+/* +1 al juntar algo del camino */
+.pkpop{position:fixed;left:50%;bottom:28%;transform:translateX(-50%);z-index:30;pointer-events:none;padding:6px 14px;border-radius:999px;background:rgba(20,15,10,.82);color:#FFE39A;font:900 15px Nunito,system-ui,sans-serif;animation:pkUp 1.4s ease forwards}
+body:not([data-branch="ados"]) .pkpop{background:rgba(255,255,255,.95);color:#22407F}
+@keyframes pkUp{0%{opacity:0;transform:translate(-50%,10px)}15%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-40px)}}
