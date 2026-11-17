@@ -973,7 +973,8 @@ async function build() {
   // pasto y flores más densos en Alto/Ultra (se decide antes de armar el mundo)
   { const lv0 = qEarly(); QL.dens = [.75, 1, 1.35, 1.7][lv0]; QL.grass = Math.round(QL.grass * QL.dens); }
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.setPixelRatio(Math.min(coarse ? 1.75 : 2, devicePixelRatio || 1));
-  const scene = new THREE.Scene();
+  const scene = new THREE.Scene(); scene.matrixAutoUpdate = false; /* la escena no se mueve: así Three no recalcula cada cuadro las matrices de las decenas de miles de objetos ocultos (gente lejana, huesos) */
+  { const umw = scene.updateMatrixWorld; scene.updateMatrixWorld = function (force) { const ch = this.children; for (let i = 0; i < ch.length; i++) ch[i].matrixWorldAutoUpdate = ch[i].visible; return umw.call(this, force); }; }
   const skyTop = hx ? '#0A100B' : '#7FB6FF', skyBot = hx ? '#2A2216' : '#FFE6C9';
 const KL = {};
   if (!hx) { const c = document.createElement('canvas'); c.width = 4; c.height = 256; const x = c.getContext('2d'), gr = x.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, skyTop); gr.addColorStop(.62, skyBot); gr.addColorStop(1, skyBot); x.fillStyle = gr; x.fillRect(0, 0, 4, 256); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; scene.background = t; KL.cv = c; KL.tex = t; }
@@ -2180,7 +2181,7 @@ function worldMerge(scene, frames) {
       const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(cat(P), 3)); geo.setAttribute('normal', new THREE.BufferAttribute(cat(N), 3)); if (G2.hasU) geo.setAttribute('uv', new THREE.BufferAttribute(cat(U), 2)); if (G2.hasC) geo.setAttribute('color', new THREE.BufferAttribute(cat(C), 3)); geo.computeBoundingSphere(); geo.computeBoundingBox();
       const mesh = new THREE.Mesh(geo, G2.m); mesh.castShadow = G2.cast; mesh.receiveShadow = G2.recv; mesh.matrixAutoUpdate = false; mesh.userData.merged = 1; if (G2.root) { geo.applyMatrix4(new THREE.Matrix4().copy(G2.root.matrixWorld).invert()); geo.computeBoundingSphere(); geo.computeBoundingBox(); G2.root.add(mesh); } else out.add(mesh); saved += G2.list.length - 1; });
     drop.forEach(o => { if (o.parent) o.parent.remove(o); }); saved = drop.size - out.children.length;
-    out.children.forEach(m => m.updateMatrix()); scene.add(out); S.wmSaved = saved; S.wmMeshes = out.children.length; S.wmDbg = { cand: cand.length, ok: ok.length, refs: refs.size, tops: scene.children.length, why };
+    out.children.forEach(m => m.updateMatrix()); scene.add(out); out.children.forEach(m => { if (m.parent !== out || !m.geometry) return; m.geometry.computeBoundingSphere(); const bs = m.geometry.boundingSphere; if (bs.radius < 90) gtbAdd(m, bs.center.z, 110); }); S.wmSaved = saved; S.wmMeshes = out.children.length; S.wmDbg = { cand: cand.length, ok: ok.length, refs: refs.size, tops: scene.children.length, why };
     try { if (S.renderer.compileAsync) S.renderer.compileAsync(out, S.camera); } catch (e) {} r2log('fusión: ' + drop.size + ' mallas sueltas → ' + out.children.length + ' (' + cand.length + ' candidatas, ' + refs.size + ' reservadas)'); if (S.wmDone) S.wmDone();
   };
   requestAnimationFrame(tick);
@@ -6252,8 +6253,8 @@ async function galRocks() {
 /* árboles, palmeras y frutales por franjas de 96 m: así se descartan los que quedan fuera de cámara o lejos (antes se dibujaba todo el mundo en cada cuadro) */
 const GTB = { list: [], acc: 0, FAR: [190, 250, 340, 440] };
 function gtBands(list, BZ) { const m = new Map(); list.forEach(o => { const k = Math.floor(o.z / (BZ || 96)); if (!m.has(k)) m.set(k, []); m.get(k).push(o); }); return [...m.entries()].map(([k, L]) => ({ cz: (k + .5) * (BZ || 96), L })); }
-function gtbAdd(im, cz) { GTB.list.push({ im, cz }); }
-function gtbTick(dt) { if (!S || !S.camera) return; GTB.acc -= dt; if (GTB.acc > 0) return; GTB.acc = .35; GTB.list = GTB.list.filter(b => b.im.parent); const cz = S.camera.position.z, far = GTB.FAR[QUAL.lv] || 250; for (const b of GTB.list) b.im.visible = Math.abs(b.cz - cz) < far + 48; }
+function gtbAdd(im, cz, ex) { GTB.list.push({ im, cz, ex: ex || 0 }); }
+function gtbTick(dt) { if (!S || !S.camera) return; GTB.acc -= dt; if (GTB.acc > 0) return; GTB.acc = .35; GTB.list = GTB.list.filter(b => b.im.parent); const cz = S.camera.position.z, far = GTB.FAR[QUAL.lv] || 250; for (const b of GTB.list) b.im.visible = Math.abs(b.cz - cz) < far + 48 + b.ex; }
 const GT = { done: 0, ims: [], pdone: 0, rdone: 0 }, GP_W = { palm_6: .5, palm_1: .125, palm_2: .125, palm_3: .125, palm_4: .125 };
 async function galPalms() {
   if (!S || GT.pdone || !FLORA.palmSpots || !FLORA.palmSpots.length) return; const pm = GRP.man['palms/']; if (!pm) return; GT.pdone = 1;
