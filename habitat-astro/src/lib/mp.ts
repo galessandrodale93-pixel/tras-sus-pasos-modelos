@@ -106,6 +106,14 @@ export async function porId(id: string, c = 1) {
   return registrarPago(await mp("/v1/payments/" + encodeURIComponent(id), tk), { pag: await todos<Pagador>("FinPagadores"), al: await todos<Alumno>("TutAlumnos"), me: await yo(tk, c), c });
 }
 
+// vista interna de un pago tal como lo manda Mercado Pago (sin datos de tarjeta)
+export async function crudo(id: string) {
+  const tk = await token(1);
+  const pg = await mp("/v1/payments/" + encodeURIComponent(id), tk);
+  const { card, ...r } = pg || {};
+  return { ...r, card: card ? "(oculto)" : undefined };
+}
+
 // Trae los pagos de los últimos días (red de seguridad por si un aviso no llegó, y carga inicial).
 export async function traer(dias: number) {
   const tks: Record<number, string> = {};
