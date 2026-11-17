@@ -1,4 +1,4 @@
-// Versión publicada del juego Kids & Hero (commit del repo). La lee jugar.html al abrirse para cargar ese game.js,
+// Versión publicada del juego Kids & Hero (commit del repo). La lee jugar.html al abrirse para cargar ese game.js, (también dispara la publicación de la web al cambiar)
 // así actualizar el juego es cambiar un dato en la colección KhVersion, sin volver a publicar la web.
 import type { APIRoute } from "astro";
 import { q } from "../../lib/sem";
