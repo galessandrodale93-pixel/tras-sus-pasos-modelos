@@ -6281,7 +6281,7 @@ function pgFill() {
   const cells = []; for (let ix = c0x; ix <= c1x; ix++) for (let iz = c0z; iz <= c1z; iz++) { const dx = (ix + .5) * PG_CELL - a.x, dz = (iz + .5) * PG_CELL - a.z; cells.push([dx * dx + dz * dz, ix, iz]); } cells.sort((p, q) => p[0] - q[0]);
   // primero se junta todo lo que entra en el círculo y recién después se decide cuánto dibujar: si el presupuesto no alcanza,
   // se ralea parejo (cada planta tiene su número fijo it.r), así nunca quedan parcelas llenas al lado de parcelas vacías
-  const near = [], farL = []; for (const [, ix, iz] of cells) for (const it of pgCell(ix, iz)) { const dd = Math.hypot(it.x - a.x, it.z - a.z); if (dd > R2) continue; (dd > Rr ? farL : near).push([it, dd]); }
+  const near = [], farL = [], pkp = S.pocket && S.pocket.pg ? 'k' : ''; let made = 0; PG.pend = 0; for (const [, ix, iz] of cells) { if (!PG.cache.has(pkp + ix + ',' + iz)) { if (made >= 2 && PG.ready2) { PG.pend = 1; continue; } made++; } for (const it of pgCell(ix, iz)) { const dd = Math.hypot(it.x - a.x, it.z - a.z); if (dd > R2) continue; (dd > Rr ? farL : near).push([it, dd]); } } PG.ready2 = 1; /* las celdas nuevas se arman de a dos por vez (cada una lleva ~20 ms): sin trabas al caminar */
   const kN = Math.min(1, lim * .72 / Math.max(1, near.length)), kF = Math.min(.34, lim * .28 / Math.max(1, farL.length)), bN = Math.min(1.6, Math.pow(1 / Math.max(.2, kN), .35));
   for (const [it, dd] of near.concat(farL)) { if (used >= lim) break; const far = dd > Rr; if (it.r >= (far ? kF : kN)) continue;
       const ims = PG.groups[it.gi].ims[it.vi]; let full = false; for (const im of ims) if (cnt[idx.get(im)] >= im.userData.cap) full = true; if (full) continue;
@@ -6291,7 +6291,7 @@ function pgFill() {
 }
 function pgTick(dt) {
   if (!PG.ready || !S || !S.av) return; PG.acc -= dt; if (PG.acc > 0) return; PG.acc = .4; const a = S.av.position;
-  if (PG.lv !== QUAL.lv) PG.cache.clear(); if (PG.lv !== QUAL.lv || (a.x - PG.cx) ** 2 + (a.z - PG.cz) ** 2 > (QUAL.lv <= 1 ? 64 : 36)) { PG.lv = QUAL.lv; PG.cx = a.x; PG.cz = a.z; pgFill(); }
+  if (PG.lv !== QUAL.lv) { PG.cache.clear(); PG.ready2 = 0; } if (PG.pend || PG.lv !== QUAL.lv || (a.x - PG.cx) ** 2 + (a.z - PG.cz) ** 2 > (QUAL.lv <= 1 ? 64 : 36)) { PG.lv = QUAL.lv; PG.cx = a.x; PG.cz = a.z; pgFill(); if (PG.pend) PG.acc = .12; }
 }
 function phTick(dt) {
   if (!S || !PH.bands.length) return; PH.uT.value = S.t || 0; PH.near -= dt; if (PH.near > 0) return; PH.near = .5;
