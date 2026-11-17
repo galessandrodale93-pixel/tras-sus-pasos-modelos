@@ -4,7 +4,9 @@
 import type { APIRoute } from "astro";
 import { auth } from "@wix/essentials";
 import { secrets } from "@wix/secrets";
-import { porId } from "../../lib/mp";
+import { auth as _a } from "@wix/essentials";
+import { items } from "@wix/data";
+import { porId, traer } from "../../lib/mp";
 
 const getSecret = auth.elevate(secrets.getSecretValue);
 const ok = (b: unknown = { ok: true }, status = 200) => new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json" } });
@@ -22,7 +24,18 @@ async function firmaValida(request: Request, dataId: string, c: number) {
   return h === parts.v1;
 }
 
+// Revisión cada media hora (la dispara GitHub Actions): trae los pagos de los últimos 2 días por si un aviso no llegó.
+// Cualquiera puede llamarla pero corre como mucho una vez cada 10 minutos y no duplica nada.
+const qy = _a.elevate(items.query), sv = _a.elevate(items.save);
+async function revisar() {
+  const r = (await qy("TutConfig").eq("_id", "mpRevisado").limit(1).find()).items[0] as { valor?: string } | undefined;
+  if (r && r.valor && Date.now() - Date.parse(r.valor) < 10 * 60e3) return ok({ ok: true, salteado: true });
+  await sv("TutConfig", { _id: "mpRevisado", title: "Última revisión de pagos de Mercado Pago", valor: new Date().toISOString() });
+  return ok({ ok: true, traer: await traer(2) });
+}
+
 async function manejar(request: Request, url: URL) {
+  if (url.searchParams.get("revisar") === "1" && request.method === "GET") { try { return await revisar(); } catch (e) { console.error("mp revisar", e); return ok({ error: String((e as Error).message || e) }, 500); } }
   let body: Record<string, unknown> = {};
   try { body = await request.json(); } catch { /* aviso por parámetros */ }
   const tipo = String(body.type || body.topic || url.searchParams.get("type") || url.searchParams.get("topic") || "");
