@@ -603,8 +603,11 @@ function heroWorld(scene, g, allPts, flatSpots, zMax, Q, KK) {
   // terreno
   const L = Z1 - Z0, geo = new THREE.PlaneGeometry(X1 - X0, L, Math.round((X1 - X0) / Q.tg), Math.round(L / Q.tg)); geo.rotateX(-Math.PI / 2); geo.translate((X0 + X1) / 2, 0, (Z0 + Z1) / 2);
   const P = geo.attributes.position, col = new Float32Array(P.count * 3), spl = new Float32Array(P.count * 4);
-  for (let i = 0; i < P.count; i++) { const x = P.getX(i), z = P.getZ(i), d = dAt(x, z), h = hAt(x, z); P.setY(i, h); const n = fbm(x * .15, z * .15), n2 = vnoise(x * .04 + 7, z * .04);
-    const sl = Math.hypot(hAt(x + .8, z) - hAt(x - .8, z), hAt(x, z + .8) - hAt(x, z - .8)) / 1.6;
+  /* alturas una sola vez por vértice; la pendiente sale de los vecinos (antes se pedía la altura cinco veces por punto: la carga tardaba el triple) */
+  const GW = geo.parameters.widthSegments + 1, GH = geo.parameters.heightSegments + 1, HH = new Float32Array(P.count), gsx = (X1 - X0) / (GW - 1), gsz = L / (GH - 1);
+  for (let i = 0; i < P.count; i++) HH[i] = hAt(P.getX(i), P.getZ(i));
+  for (let i = 0; i < P.count; i++) { const x = P.getX(i), z = P.getZ(i), d = dAt(x, z), h = HH[i]; P.setY(i, h); const n = fbm(x * .15, z * .15), n2 = vnoise(x * .04 + 7, z * .04);
+    const ci = i % GW, ri = (i - ci) / GW, cl = Math.max(0, ci - 1), cr = Math.min(GW - 1, ci + 1), ru = Math.max(0, ri - 1), rd = Math.min(GH - 1, ri + 1), sl = Math.hypot((HH[ri * GW + cr] - HH[ri * GW + cl]) / ((cr - cl) * gsx), (HH[rd * GW + ci] - HH[ru * GW + ci]) / ((rd - ru) * gsz));
     const wdR = 1 - sstep(1.1, 2.8, roadAt(x, z)), gk = greenK(x, z); let wd = Math.max(wdR, (1 - sstep(.8, 4.6, dNz(x, z))) * (1 - gk)), wr = Math.max(sstep(5, 11, h) * .8 * (1 - sstep(XB * .8, X1, Math.abs(x))), sstep(.6, 1.1, sl)) /* hacia el borde del valle las lomas siguen verdes, como el campo de afuera */, wy = sstep(.55, .85, n2) * .65 * (1 - wd), wg = 1;
     wg *= (1 - wd) * (1 - wr) * (1 - wy * .9); wy *= (1 - wr); wd *= (1 - wr * .6); const tt = wg + wy + wd + wr || 1;
     { const sp = spDist(x, z); if (sp < 2.2) { const k = (1 - sstep(.45, 1.7, sp)) * .9; wd = Math.max(wd, k); wg *= 1 - k; wy *= 1 - k; } }
