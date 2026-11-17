@@ -774,7 +774,7 @@ function olSitesBuild(scene, HW, hx) {
     else olRincon(scene, p, yAt, M, R, props, hx);
     } catch (e) { console.warn('lugar ' + p.id, e); } });
   // carteles al comienzo de cada sendero, junto al camino
-  (OL.trails || []).forEach(t => { const p = t.p, x = t.x0 + Math.sign(p.x - t.x0) * 1.2, z = t.z0 + 2.2, s = new THREE.Group(), post = cy(.05, .06, 1.9, M('sgp', '#6A4A2C'), 0, .95, 0, s, 6); const ar = bx(1.3, .32, .06, M('sga', '#9A6A3E'), Math.sign(p.x - t.x0) * .5, 1.65, 0, s); const lb = poiLb(textSprite((p.x > t.x0 ? '' : '← ') + p.name + (p.x > t.x0 ? ' →' : ''), hx)); lb.position.y = 2.35; lb.scale.multiplyScalar(.85); s.add(lb); s.position.set(x, yAt(x, z), z); scene.add(s); });
+  (OL.trails || []).forEach(t => { const p = t.p, x = t.x0 + Math.sign(p.x - t.x0) * 1.2, MK = Object.values((S && S.markers) || {}), z = t.z0 + ([2.2, 10, -7, 16, -13].find(dz => !MK.some(m => Math.hypot(m.position.x - x, m.position.z - (t.z0 + dz)) < 11)) ?? 2.2) /* que el cartel no se pise con el nombre de una parada */, s = new THREE.Group(), post = cy(.05, .06, 1.9, M('sgp', '#6A4A2C'), 0, .95, 0, s, 6); const ar = bx(1.3, .32, .06, M('sga', '#9A6A3E'), Math.sign(p.x - t.x0) * .5, 1.65, 0, s); const lb = poiLb(textSprite((p.x > t.x0 ? '' : '← ') + p.name + (p.x > t.x0 ? ' →' : ''), hx)); lb.position.y = 2.35; lb.scale.multiplyScalar(.85); s.add(lb); s.position.set(x, yAt(x, z), z); scene.add(s); });
 }
 function olOficio(scene, p, yAt, M, R, props, hx) {
   const g = new THREE.Group(), y0 = yAt(p.x, p.z) - .02, cols = (x, z, r) => S.cols.push({ x0: p.x + x - r, x1: p.x + x + r, z0: p.z + z - r, z1: p.z + z + r, cx: p.x + x, cz: p.z + z, r });
