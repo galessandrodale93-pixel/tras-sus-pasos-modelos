@@ -6167,13 +6167,13 @@ function pgCell(ix, iz) {
   const PK = S.pocket && S.pocket.pg ? S.pocket : null, key = (PK ? 'k' : '') + ix + ',' + iz; let L = PG.cache.get(key); if (L) return L; if (PROF.on) { const q = performance.now(); const r = pgCellMake(ix, iz, PK, key); PG.cellT = (PG.cellT || 0) + performance.now() - q; PG.cellN = (PG.cellN || 0) + 1; return r; } return pgCellMake(ix, iz, PK, key); }
 function pgCellMake(ix, iz, PK, key) { let L = []; const W = S.W, R = rng((ix * 73856093) ^ (iz * 19349663) ^ 0x51ed);
   const x0 = ix * PG_CELL, z0 = iz * PG_CELL, cx = x0 + PG_CELL / 2, cz = z0 + PG_CELL / 2;
-  if (PK) { /* dentro de la gruta crece el mismo pasto y las mismas flores, sobre el suelo del jardín escondido */ const lv2 = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), dn2 = Math.min(6, PG_TRI[lv2] / PG.avgTri / (Math.PI * PG_R[lv2] * PG_R[lv2] * .8)), n2 = Math.round(dn2 * PG_CELL * PG_CELL * 1.1), G2 = PG.groups;
+  if (PK) { /* dentro de la gruta crece el mismo pasto y las mismas flores, sobre el suelo del jardín escondido */ const lv2 = Math.min(3, QUAL.lv), dn2 = Math.min(6, PG_TRI[lv2] / PG.avgTri / (Math.PI * PG_R[lv2] * PG_R[lv2] * .8)), n2 = Math.round(dn2 * PG_CELL * PG_CELL * 1.1), G2 = PG.groups;
     for (let i = 0; i < n2; i++) { const x = x0 + R() * PG_CELL, z = z0 + R() * PG_CELL; if (!PK.pg(x - PK.cx, z - PK.cz)) continue; const wantF = pgNoise(x * .09 + 90, z * .09 - 30) > .52 && R() < .6, pool = G2.map((g, k) => k).filter(k => G2[k].fl === wantF), P2 = pool.length ? pool : G2.map((g, k) => k); let pick = R() * P2.reduce((t, k) => t + G2[k].w, 0), gi = P2[P2.length - 1]; for (const k of P2) { pick -= G2[k].w; if (pick <= 0) { gi = k; break; } }
       const g = G2[gi], sr = PG_S[g.id] || [2.6, 3.6]; L.push({ x, y: PK.hAt(x, z) - .04, z, ry: R() * 6.283, s: PG_ONLY ? 3.8 + R() * 1.1 : sr[0] + R() * (sr[1] - sr[0]), gi, vi: Math.floor(R() * g.vars.length), r: R(), c: .92 + R() * .18, dry: 0 }); }
     PG.cache.set(key, L); return L; }
   if (Math.abs(cx) > XW + 60) { PG.cache.set(key, L); return L; }
   const poi = (S_poiPts || []).filter(p => Math.abs(p[0] - cx) < PG_CELL && Math.abs(p[1] - cz) < PG_CELL), trees = (FLORA.treesUsed || []).filter(o => Math.abs(o.x - cx) < PG_CELL && Math.abs(o.z - cz) < PG_CELL);
-  const lvm = Math.min(3, Math.max(QUAL.max || 0, QUAL.lv)), dens = Math.min(6, PG_TRI[lvm] / PG.avgTri / (Math.PI * PG_R[lvm] * PG_R[lvm] * .8)), n = Math.round(dens * PG_CELL * PG_CELL * 1.1);
+  const lvm = Math.min(3, QUAL.lv), dens = Math.min(6, PG_TRI[lvm] / PG.avgTri / (Math.PI * PG_R[lvm] * PG_R[lvm] * .8)), n = Math.round(dens * PG_CELL * PG_CELL * 1.1);
   for (let i = 0; i < n; i++) { const x = x0 + R() * PG_CELL, z = z0 + R() * PG_CELL, r1 = R(), r2 = R();
     if (!PG_ONLY) { const cl = pgNoise(x * .06, z * .06) * .75 + pgNoise(x * .21 + 40, z * .21) * .35; if (r1 > cl * 1.15 + .1) continue; } // matas y claros
     let lawn = 0, rdd = W.roadAt ? W.roadAt(x, z) + .9 : 99, d = W.dNz ? Math.min(W.dNz(x, z), rdd) : W.dAt(x, z);
@@ -6291,7 +6291,7 @@ function pgFill() {
 }
 function pgTick(dt) {
   if (!PG.ready || !S || !S.av) return; PG.acc -= dt; if (PG.acc > 0) return; PG.acc = .4; const a = S.av.position;
-  if (PG.lv !== QUAL.lv || (a.x - PG.cx) ** 2 + (a.z - PG.cz) ** 2 > (QUAL.lv <= 1 ? 64 : 36)) { PG.lv = QUAL.lv; PG.cx = a.x; PG.cz = a.z; pgFill(); }
+  if (PG.lv !== QUAL.lv) PG.cache.clear(); if (PG.lv !== QUAL.lv || (a.x - PG.cx) ** 2 + (a.z - PG.cz) ** 2 > (QUAL.lv <= 1 ? 64 : 36)) { PG.lv = QUAL.lv; PG.cx = a.x; PG.cz = a.z; pgFill(); }
 }
 function phTick(dt) {
   if (!S || !PH.bands.length) return; PH.uT.value = S.t || 0; PH.near -= dt; if (PH.near > 0) return; PH.near = .5;
