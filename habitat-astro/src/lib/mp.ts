@@ -155,7 +155,10 @@ export async function cuotaDesdeIngreso(it: Ingreso, mesRef = "") {
   // con varias escuelas (y link de un mes), el pago se reparte entre sus escuelas
   for (let i = 0; i < ps.length; i++) await guardar("FinCobros", { ...base, _id: _id + (i ? "-" + i : ""), title: it.title || "", alumnoId: it.alumnoId, escuela: ps[i].escuela, compartido: pareja ? pareja.title || "" : "", monto: Math.round(it.monto / partes / ps.length), nota: "Cargado solo desde Mercado Pago" });
   if (pareja) {
-    const pp = (await q("FinPlanes").eq("alumnoId", pareja._id).limit(5).find()).items as unknown as Plan[];
+    // solo la escuela que comparten (si la pareja cursa otra escuela aparte, esa la paga por separado)
+    const todas = (await q("FinPlanes").eq("alumnoId", pareja._id).limit(5).find()).items as unknown as Plan[];
+    const comun = todas.filter((x) => ps.some((y) => y.escuela === x.escuela));
+    const pp = comun.length ? comun : todas.slice(0, 1);
     for (let i = 0; i < pp.length; i++) await guardar("FinCobros", { ...base, _id: _id + "-p" + i, title: pareja.title || "", alumnoId: pareja._id, escuela: pp[i].escuela, compartido: yo?.title || "", monto: Math.round(it.monto / partes / pp.length), nota: "Cuota compartida: pagó " + (yo?.title || "su pareja") });
   }
   return _id;
