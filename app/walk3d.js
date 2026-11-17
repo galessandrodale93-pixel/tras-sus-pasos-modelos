@@ -7116,7 +7116,7 @@ function clayBuild(scene, W) {
     if (p.k === 'lake') { for (let i = 0; i < 9; i++) { const a = i / 9 * 6.283; for (const r of [33, 35, 38, 41]) if (add(p.x + Math.cos(a) * r, p.z + Math.sin(a) * r)) break; } }
   }
   if (!L.length) return; const geo = new THREE.SphereGeometry(1, 12, 7, 0, 6.283, 0, Math.PI / 2), mat = tm('claymud', '#6E4A30', { roughness: .45 }), im = new THREE.InstancedMesh(geo, mat, L.length), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3();
-  L.forEach((c, i) => { q.setFromEuler(e.set(0, c.ry, 0)); im.setMatrixAt(i, m.compose(v.set(c.x, c.y - .05, c.z), q, sc.set(1.3 * c.s, .38 * c.s, 1 * c.s))); }); im.receiveShadow = true; im.userData.keep = 1; scene.add(im); BARR.im = im;
+  L.forEach(c => PG_HOLE.push({ x: c.x, z: c.z, r: 1.3 * c.s })); L.forEach((c, i) => { q.setFromEuler(e.set(0, c.ry, 0)); im.setMatrixAt(i, m.compose(v.set(c.x, c.y - .05, c.z), q, sc.set(1.3 * c.s, .38 * c.s, 1 * c.s))); }); im.receiveShadow = true; im.userData.keep = 1; scene.add(im); BARR.im = im;
 }
 /* el trigal de Booz: espigas en los bordes (como Rut) y parcelas para sembrar, regar y cosechar. El trigo crece en tiempo real, aunque cierres el juego */
 const FARM = { plots: [], esp: [], espIm: null, site: null, T: 6 * 60e3, ET: 180 };
@@ -7128,7 +7128,7 @@ function farmBuild(scene, W) {
   const st = (S.olSites || []).find(o => o.id === 'booz'); FARM.site = st; if (!st) return; const g = new THREE.Group(), soil = tm('farmsoil', '#5E4029'), rid = tm('farmrid', '#4A3020'), sp = new THREE.ConeGeometry(.09, 1, 5); sp.translate(0, .5, 0); const M4 = new THREE.Matrix4();
   [-9, -3, 3, 9].forEach(dx => [-17, 17].forEach(dz => { const x = st.x + dx, z = st.z + dz, y = W.hAt(x, z); const s1 = new THREE.Mesh(new THREE.BoxGeometry(4.4, .14, 3), soil); s1.position.set(x, y + .02, z); s1.receiveShadow = true; g.add(s1); for (let r = 0; r < 4; r++) { const rr = new THREE.Mesh(new THREE.BoxGeometry(4.2, .1, .16), rid); rr.position.set(x, y + .12, z - 1.05 + r * .7); g.add(rr); }
     const mat = new THREE.MeshStandardMaterial({ color: '#6FA040', roughness: .85 }), im = new THREE.InstancedMesh(sp, mat, 24); let k = 0; for (let a = 0; a < 6; a++) for (let b = 0; b < 4; b++) { M4.makeTranslation(x - 1.8 + a * .72 + (b % 2) * .2, y + .12, z - 1.05 + b * .7); im.setMatrixAt(k++, M4); } im.userData.base = []; for (let j = 0; j < 24; j++) { const m = new THREE.Matrix4(); im.getMatrixAt(j, m); im.userData.base.push(m); } im.count = 0; im.castShadow = !!S.hx; g.add(im);
-    FARM.plots.push({ x, z, y, im, mat, st: -2 }); S.cols && 0; }));
+    FARM.plots.push({ x, z, y, im, mat, st: -2 }); PG_HOLE.push({ x: x - 1.2, z, r: 2 }, { x: x + 1.2, z, r: 2 }); }));
   g.userData.keep = 1; scene.add(g); FARM.g = g;
   const R = rng(4343), sh = new THREE.ConeGeometry(.28, .9, 6); sh.translate(0, .45, 0); const ims = new THREE.InstancedMesh(sh, tm('espiga', '#D8B050'), 10), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3(1, 1, 1);
   for (let i = 0; i < 10; i++) { const a = i / 10 * 6.283 + .2, x = st.x + Math.cos(a) * 14.5, z = st.z + Math.sin(a) * 12.8, y = W.hAt(x, z); FARM.esp.push({ x, z, y, t: 0 }); q.setFromEuler(e.set((R() - .5) * .5, R() * 6, (R() - .5) * .5)); ims.setMatrixAt(i, M4.compose(v.set(x, y - .05, z), q, sc)); }
