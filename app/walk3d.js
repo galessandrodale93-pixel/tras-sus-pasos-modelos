@@ -882,14 +882,14 @@ const LIFE_SAY = ['«¿Vas para la ciudad? Dicen que el Maestro anda por esta zo
 const LIFE_PAST = ['«Conozco a cada oveja por su nombre. Si una se pierde, dejo a las otras y la busco hasta encontrarla» (Lucas 15:4).', '«El Señor es mi pastor, nada me faltará» (Salmo 23:1). Lo canto de noche, cuando cuido el rebaño.', '«Mis ovejas oyen mi voz» (Juan 10:27). Escuchá: si las llamo, vienen.', '«De día el calor y de noche el frío, pero las ovejas están primero.»'];
 /* Hero: hallazgos desparramados por todo el mapa (pedido de Gui), uno por parcela de 150 m y no todos sobre el camino:
    ropa común 50 %, herramientas 15 %, materiales de construcción 15 %, ropa rara 5 %, otras cosas 15 % (poca comida).
-   La ropa, la ropa rara y las herramientas se encuentran una sola vez; lo demás vuelve a aparecer cada día. */
-const FIND_W = [['ropa', .5], ['herr', .15], ['cons', .15], ['rara', .05], ['otro', .15]], FIND_ONCE = { ropa: 1, rara: 1, herr: 1 };
+   Cada día cambian de lugar al azar. La ropa y las herramientas que ya tenés se vuelven denarios o materiales. */
+const FIND_W = [['ropa', .5], ['herr', .15], ['cons', .15], ['rara', .05], ['otro', .15]];
 function findsScatter(W) {
-  const R = rng(9191), zs = (S.allPts || []).map(p => p[1]), z0 = Math.min(...zs) + 20, C = 150;
+  let dd = 0; try { dd = Math.floor(Date.parse(vday()) / 864e5); } catch (e) {} const R = rng(9191 + (dd || 0) * 7919), zs = (S.allPts || []).map(p => p[1]), z0 = Math.min(...zs) + 20, C = 150;
   for (let cz = -40; cz > z0; cz -= C) for (let cx = -XW + 60; cx < XW - 60; cx += C) { const id = 'f' + Math.round(cx) + '_' + Math.round(cz), r0 = R(), r1 = R(), r2 = R(), r3 = R(); if (r0 > .62) continue;
     let ok = false, x = 0, z = 0; for (let t = 0; t < 6 && !ok; t++) { x = cx + R() * C; z = cz - R() * C; if (z < z0 || Math.abs(x) > XW - 40) continue; const h = W.hAt(x, z); ok = h < 28 && waterWet(x, z, null) < .02 && !blockedAt(x, z) && !(OL.plan || []).some(q => Math.hypot(q.x - x, q.z - z) < q.r + 4) && !(S.pois || []).some(q => Math.hypot(q.x - x, q.z - z) < 26) && (!W.dAt || W.dAt(x, z) > 2.6); }
     if (!ok) continue; let pick = r1, k = 'otro'; for (const [kk, w] of FIND_W) { if (pick < w) { k = kk; break; } pick -= w; }
-    LIFE.pk.push({ id, k, x, z, y: W.hAt(x, z), once: !!FIND_ONCE[k], r: r2 }); }
+    LIFE.pk.push({ id, k, x, z, y: W.hAt(x, z), r: r2 }); }
 }
 function findGive(it) {
   const own = () => gearState().own, gearOf = rs => GEAR.filter(g => rs.includes(g.r) && !g.x && !own().includes(g.id));
@@ -902,7 +902,7 @@ function findGive(it) {
 }
 const PK = { ropa: [null, '👘', 'Ropa'], rara: [null, '✨', 'Ropa rara'], herr: [null, '🧰', 'Herramienta'], cons: [null, '🧱', 'Materiales'], otro: [null, '👝', 'Bolsa'], rama: ['wood', '🪵', 'Rama'], piedra: ['stone', '🪨', 'Piedra'], granada: ['fruit', '🍎', 'Granada'], moneda: ['money', '🪙', 'Denario'], estrella: [null, '⭐', 'Estrellita'], sobre: [null, '🎴', 'Sobre de figuritas'] };
 function lifePk(scene, hx) {
-  const p = G().P(), day = vday(); p.pk = p.pk && p.pk.d === day ? p.pk : { d: day, got: [] }; const got = new Set(p.pk.got.concat(p.pkx || [])), by = {};
+  const p = G().P(), day = vday(); p.pk = p.pk && p.pk.d === day ? p.pk : { d: day, got: [] }; const got = new Set(p.pk.got), by = {};
   LIFE.pk.forEach(it => { it.got = got.has(it.id); (by[it.k] || (by[it.k] = [])).push(it); });
   const G0 = { rama: [new THREE.CylinderGeometry(.04, .06, .9, 5).rotateZ(Math.PI / 2), '#6A4A2C'], piedra: [new THREE.DodecahedronGeometry(.2, 0), '#8E8674'], granada: [new THREE.SphereGeometry(.13, 10, 8), '#C0392B'], moneda: [new THREE.CylinderGeometry(.13, .13, .03, 14), '#E2B43C'], estrella: [new THREE.OctahedronGeometry(.28, 0), '#FFD24A'], ropa: [new THREE.SphereGeometry(.3, 12, 9).scale(1.2, .7, 1), '#C9A36A'], rara: [new THREE.SphereGeometry(.3, 12, 9).scale(1.2, .7, 1), '#6F7FE6'], herr: [new THREE.BoxGeometry(.6, .26, .34), '#7A5532'], cons: [new THREE.BoxGeometry(.95, .16, .32), '#A07A4A'], otro: [new THREE.CylinderGeometry(.15, .21, .38, 10), '#B5764A'], sobre: [new THREE.BoxGeometry(.42, .05, .3).rotateX(-.9), '#E2574C'] };
   Object.entries(by).forEach(([k, L]) => { const [g, c] = G0[k], mt = new THREE.MeshStandardMaterial({ color: c, roughness: .5, metalness: k === 'moneda' ? .8 : 0, emissive: k === 'estrella' || k === 'moneda' || k === 'sobre' || k === 'rara' ? c : '#000000', emissiveIntensity: .45 }), im = new THREE.InstancedMesh(g, mt, L.length), M = new THREE.Matrix4();
@@ -917,7 +917,7 @@ function lifeTick(dt, t) {
   if (!S || !S.av || !LIFE.sorted) return; if (LIFE.pts) LIFE.pts.material.opacity = .55 + Math.sin(t * 3) * .3; LIFE.acc -= dt; if (LIFE.acc > 0) return; LIFE.acc = .12;
   const a = S.av.position, L = LIFE.sorted; let lo = 0, hi = L.length; while (lo < hi) { const m = (lo + hi) >> 1; if (L[m].z < a.z - 1.6) lo = m + 1; else hi = m; }
   for (let i = lo; i < L.length && L[i].z < a.z + 1.6; i++) { const it = L[i]; if (it.got || Math.hypot(it.x - a.x, it.z - a.z) > 1.5) continue;
-    it.got = true; const p = G().P(); if (!p.pk || p.pk.d !== vday()) p.pk = { d: vday(), got: [] }; p.pk.got.push(it.id); if (it.once) (p.pkx || (p.pkx = [])).push(it.id); const im = LIFE.ims[it.k]; if (im) { im.setMatrixAt(it.i, new THREE.Matrix4().makeScale(0, 0, 0)); im.instanceMatrix.needsUpdate = true; }
+    it.got = true; const p = G().P(); if (!p.pk || p.pk.d !== vday()) p.pk = { d: vday(), got: [] }; p.pk.got.push(it.id); const im = LIFE.ims[it.k]; if (im) { im.setMatrixAt(it.i, new THREE.Matrix4().makeScale(0, 0, 0)); im.instanceMatrix.needsUpdate = true; }
     const pa = LIFE.pts.geometry.attributes.position; pa.setXYZ(LIFE.pk.indexOf(it), 0, -999, 0); pa.needsUpdate = true; const d = PK[it.k];
     if (it.k === 'sobre') { try { albGetSobre(1); } catch (e) {} continue; } if (FIND_W.some(f => f[0] === it.k)) { if (svOn()) try { findGive(it); G().save(); } catch (e) { console.warn('hallazgo', e); } try { tone3d(); } catch (e) {} continue; } if (S.hx && d[0] && svOn()) { svAdd(d[0], 1); svUI(); } else svXP(it.k === 'estrella' ? 3 : 1); pkPop('+1 ' + d[1] + ' ' + d[2]); try { tone3d(); } catch (e) {} }
 }
