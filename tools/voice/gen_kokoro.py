@@ -1,3 +1,4 @@
+import re
 # Genera voces con Kokoro (kokoro-onnx) igual que las del juego: <hash>.mp3, hash FNV-1a (UTF-16) de "voz|texto".
 # Uso: python3 -I tools/voice/gen_kokoro.py lista.json   (lista de {"v": voz, "t": texto})
 import json,os,sys,subprocess,tempfile
@@ -18,7 +19,8 @@ for e in L:
     if k in idx: continue
     if os.path.exists(os.path.join(D,k+'.mp3')): idx.add(k); continue
     kv,sp,pt=VOZ.get(v,VOZ['varon'])
-    s,sr=K.create(t,voice=kv,speed=sp,lang='es')
+    say=re.sub(r'[\U0001F000-\U0001FFFF\u2600-\u27BF\u2B00-\u2BFF\uFE0F\u200D]','',t).strip()
+    s,sr=K.create(say,voice=kv,speed=sp,lang='es')
     with tempfile.NamedTemporaryFile(suffix='.wav',delete=False) as f: sf.write(f.name,s,sr); w=f.name
     af='aresample=44100' if pt==1 else f'asetrate={int(sr*pt)},aresample=44100,atempo={1/pt:.4f}'
     subprocess.run(['ffmpeg','-v','error','-y','-i',w,'-af',af,'-ac','1','-b:a','64k',os.path.join(D,k+'.mp3')],check=True); os.unlink(w)
