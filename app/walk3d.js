@@ -919,7 +919,14 @@ function lifeTick(dt, t) {
   for (let i = lo; i < L.length && L[i].z < a.z + 1.6; i++) { const it = L[i]; if (it.got || Math.hypot(it.x - a.x, it.z - a.z) > 1.5) continue;
     it.got = true; const p = G().P(); if (!p.pk || p.pk.d !== vday()) p.pk = { d: vday(), got: [] }; p.pk.got.push(it.id); const im = LIFE.ims[it.k]; if (im) { im.setMatrixAt(it.i, new THREE.Matrix4().makeScale(0, 0, 0)); im.instanceMatrix.needsUpdate = true; }
     const pa = LIFE.pts.geometry.attributes.position; pa.setXYZ(LIFE.pk.indexOf(it), 0, -999, 0); pa.needsUpdate = true; const d = PK[it.k];
-    if (it.k === 'sobre') { try { albGetSobre(1); } catch (e) {} continue; } if (FIND_W.some(f => f[0] === it.k)) { if (svOn()) try { findGive(it); G().save(); } catch (e) { console.warn('hallazgo', e); } try { tone3d(); } catch (e) {} continue; } if (S.hx && d[0] && svOn()) { svAdd(d[0], 1); svUI(); } else svXP(it.k === 'estrella' ? 3 : 1); pkPop('+1 ' + d[1] + ' ' + d[2]); try { tone3d(); } catch (e) {} }
+    if (it.k === 'sobre') { try { albGetSobre(1); } catch (e) {} continue; } if (FIND_W.some(f => f[0] === it.k)) { try { if (svOn()) findGive(it); else kidsFind(it); G().save(); } catch (e) { console.warn('hallazgo', e); } try { tone3d(); } catch (e) {} continue; } if (S.hx && d[0] && svOn()) { svAdd(d[0], 1); svUI(); pkPop('+1 ' + d[1] + ' ' + d[2]); } else { const n = it.k === 'estrella' ? 3 : 1; svXP(n); try { G().refreshHud && G().refreshHud(); } catch (e) {} pkPop(d[1] + ' +' + n + (n > 1 ? ' puntos' : ' punto')); } try { tone3d(); } catch (e) {} }
+}
+/* Kids: lo que se encuentra en el camino también da algo (ropa para el personaje, figuritas o puntos) */
+function kidsFind(it) {
+  const own = gearState().own, of = rs => GEAR.filter(g => rs.includes(g.r) && !g.x && !own.includes(g.id));
+  if (it.k === 'ropa' || it.k === 'rara') { const L = it.k === 'rara' && of(['r']).length ? of(['r']) : of(['c']); if (L.length) { const g = L[Math.floor(it.r * L.length) % L.length]; gearGive(g, 'Lo encontraste en el camino'); pkPop('👘 ¡Ropa nueva! ' + (g.name || '')); return; } }
+  if (it.k === 'otro' && it.r < .35) { try { albGetSobre(1, 'Lo encontraste en el camino'); pkPop('🎴 ¡Un sobre de figuritas!'); return; } catch (e) {} }
+  const n = it.k === 'rara' ? 10 : 5; svXP(n); try { G().refreshHud && G().refreshHud(); } catch (e) {} pkPop((PK[it.k] || [0, '⭐'])[1] + ' +' + n + ' puntos');
 }
 function pkPop(t) { const el = document.createElement('div'); el.className = 'pkpop'; el.textContent = t; document.body.appendChild(el); setTimeout(() => el.remove(), 1400); }
 
@@ -1222,7 +1229,7 @@ const HOWTO = {
 };
 // sala de espera: aparece al instante (fondo con degradé, fotos del juego, versículos y tarjetas), baja el mundo completo
 // y se queda mientras se arma el mundo 3D; se cierra sola cuando todo está listo
-const LB_IMG = { hero: ['hero_e1.jpg', 'hero_e2.jpg', 'hero_e3.jpg', 'hero_e4.jpg', 'hero_e5.jpg'], kids: ['kids_e1.jpg', 'kids_e2.jpg', 'kids_e3.jpg', 'kids_e4.jpg', 'kids_e5.jpg'] };
+const LB_IMG = { hero: ['hero_v1.jpg', 'hero_v2.jpg', 'hero_v3.jpg', 'hero_v4.jpg', 'hero_v5.jpg'], kids: ['kids_e1.jpg', 'kids_e2.jpg', 'kids_e3.jpg', 'kids_e4.jpg', 'kids_e5.jpg'] };
 const LB_CAP = [['Mar de Galilea', 'Donde Jesús llamó a los pescadores'], ['Templo de Jerusalén', 'La casa de su Padre'], ['La colina de los cinco mil', 'Cinco panes y dos peces'], ['El Gólgota', 'Donde dio su vida'], ['Desierto de Judea', 'Cuarenta días en el desierto']];
 const esc3 = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 /* palabra con las letras de nube del juego (el mismo atlas de los carteles de Kids), en alta para la sala */
@@ -3980,7 +3987,7 @@ function esVoice() {
 }
 function say(txt, ref, onend) {
   if (AU.voice && G().vo && G().voOn()) { caption(txt, ref, 60); AU.speaking = true; AU.voSay = true; G().vo(txt, 'narrador', { onend: () => { AU.speaking = false; AU.voSay = false; caption(null); onend && onend(); } }); return; }
-  if (!AU.voice || !('speechSynthesis' in window)) { caption(txt, ref, 9); onend && setTimeout(onend, 9000); return; }
+  if (!AU.voice || !('speechSynthesis' in window) || !S || !S.hx) { caption(txt, ref, 9); onend && setTimeout(onend, 9000); return; }
   try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt.replace(/SEÑOR/g, 'Señor') + '. ' + ref.replace(/(\d+):(\d+)-(\d+)/, '$1, versículos $2 al $3').replace(/(\d+):(\d+)/, '$1, versículo $2')); const v = esVoice(); if (v) u.voice = v; u.lang = v ? v.lang : 'es-419'; u.rate = 1.06; u.pitch = .96; u.volume = .85;
     u.volume = mixV('sfx'); AU.speaking = true; caption(txt, ref, 60); const t0 = performance.now(), minMs = 2500 + txt.length * 55; u.onend = u.onerror = () => { setTimeout(() => { AU.speaking = false; caption(null); onend && onend(); }, Math.max(0, minMs - (performance.now() - t0))); }; speechSynthesis.speak(u); } catch (e) { AU.speaking = false; }
 }
