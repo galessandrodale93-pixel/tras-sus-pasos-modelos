@@ -101,6 +101,14 @@ try{
  var since=rows.map(function(r){return r.start;}).filter(Boolean).sort()[0];
  var car=rows.filter(function(r){return r.k==='carrera';}),esc_=rows.filter(function(r){return r.k==='escuela';}),cur=rows.filter(function(r){return r.k==='curso';});
  document.getElementById('pfLine').textContent=(since?'Alumno de Habitat desde '+new Date(since).getFullYear():'Alumno de Habitat')+(car[0]?' · '+car[0].t:'');
+ // el rótulo según su lugar en Habitat (profe, equipo, músico…), no siempre «alumno»
+ (async function(){try{var tk=JSON.parse(localStorage.getItem('habitat:mtok')).a;var R=await fetch('/api/rol',{headers:{'x-habitat-auth':tk}}).then(function(r){return r.json();});
+  var L=[];if(R.tutor==='director')L.push('Dirección de Habitat');else if(R.tutor)L.push('Equipo de Habitat');if(R.profe)L.push('Profe de Habitat');if(R.musico)L.push('Músico de Zarza');if(R.voluntario&&!R.tutor)L.push('Voluntario de Habitat');
+  if(R.alumno||rows.length)L.push(since?'Alumno desde '+new Date(since).getFullYear():'Alumno de Habitat');
+  if(L.length)document.getElementById('pfLine').textContent=L.join(' · ')+(car[0]?' · '+car[0].t:'');
+  if(!R.alumno&&!rows.length){['gen','seals','dips'].forEach(function(id){var e=document.getElementById(id);e=e&&e.closest('section');if(e)e.style.display='none';});
+   var b=document.querySelector('a.btn-line[href="/campus.html"]');if(b&&(R.profe||R.musico)&&!R.tutor){b.href=R.profe?'/profesor.html':'/musicos.html';b.textContent=R.profe?'Mi panel de profe':'Mi panel de músico';}}
+ }catch(e){}})();
  var mins=rows.reduce(function(a,r){return a+r.mins;},0),hrs=Math.round(mins/60);
  var cDone=cur.filter(function(r){return r.pct>=100;}),eDone=esc_.filter(function(r){return r.pct>=100;}),kDone=car.filter(function(r){return r.pct>=100;});
  document.getElementById('nH').innerHTML=(mins>=60?hrs+'<small> h</small>':mins+'<small> min</small>');
