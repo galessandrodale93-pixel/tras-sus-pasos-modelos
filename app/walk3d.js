@@ -4289,7 +4289,7 @@ function dayTick(dt) {
   if (S.dayI !== undefined && S.dayI !== d.i && d.k < .5) G().toast(['🌅 Amanece un día nuevo…', '☀️ Llegó el mediodía.'][d.i]);
   S.dayI = d.i;
   if (S.W && S.W.sky) { const u = S.W.sky.material.uniforms; u.sk.value = d.i === 1 ? d.k : 1 - d.k; if (SKY.env[0] && QUAL.lv >= 2) { const e = SKY.env[d.k > .5 ? d.i : d.prev] || null; if (S.scene.environment !== e) S.scene.environment = e; } }
-  if (S.hx && S.W) {
+  if (S.W) { /* Kids también tiene el ciclo del día de Hero (amanecer, mediodía, atardecer y noche), un poco más luminoso */
     const A = DAYH[d.prev], B = DAYH[d.i], k = d.k, u = S.W.sky.material.uniforms;
     ['top', 'mid', 'hor', 'sunC'].forEach(n => u[n].value.copy(mixC(A[n], B[n], k)));
     u.stars.value = A.st + (B.st - A.st) * k;
@@ -4297,7 +4297,7 @@ function dayTick(dt) {
     S.W.sunL.color.copy(mixC(A.sunL, B.sunL, k)); S.W.sunL.intensity = A.sI + (B.sI - A.sI) * k;
     S.W.hemi.color.copy(mixC(A.hs, B.hs, k)); S.W.hemi.groundColor.copy(mixC(A.hg, B.hg, k)); S.W.hemi.intensity = A.hI + (B.hI - A.hI) * k;
     S.scene.fog.color.copy(mixC(A.fog, B.fog, k)); S.scene.fog.density = A.fd + (B.fd - A.fd) * k; u.gnd.value.copy(S.scene.fog.color); if (S.scene.environment) S.W.hemi.intensity *= .6;
-    S.renderer.toneMappingExposure = A.ex + (B.ex - A.ex) * k;
+    S.renderer.toneMappingExposure = (A.ex + (B.ex - A.ex) * k) * (S.hx ? 1 : 1.06);
     const nk = S.nk || 0, N = S.moodP || NIGHT; u.kb.value = 1 - nk * (N === NIGHT ? .78 : .25); u.hz.value = nk * (N === NIGHT ? .75 : N === DAWN ? .35 : .6); u.tnt.value.setRGB(1, 1, 1); if (N.tnt) u.tnt.value.setRGB(1 + (N.tnt[0] - 1) * nk, 1 + (N.tnt[1] - 1) * nk, 1 + (N.tnt[2] - 1) * nk);
     if (nk > 0) { const c = new THREE.Color(); ['top', 'mid', 'hor', 'sunC'].forEach(n => u[n].value.lerp(c.set(N[n]), nk)); u.stars.value += (N.st - u.stars.value) * nk;
       S.W.sunDir.lerp(new THREE.Vector3(N.dir[0], N.dir[1], N.dir[2]).normalize(), nk).normalize(); S.W.sunL.color.lerp(c.set(N.sunL), nk); S.W.sunL.intensity += (N.sI - S.W.sunL.intensity) * nk;
