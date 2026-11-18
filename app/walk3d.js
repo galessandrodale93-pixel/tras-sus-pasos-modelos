@@ -7439,7 +7439,7 @@ const BP = {
 };
 const BP_ORDER = ['piedra', 'madera', 'adobe', 'escalon', 'losa', 'techo', 'columna', 'ventana', 'puerta', 'arco', 'carpa', 'cerco', 'antorcha'];
 function bldMats() { if (BLD.mats) return BLD.mats; const kd = !S.hx; return (BLD.mats = {
-  stone: pbrMat('white_sandstone_bricks', 1, 1, { color: kd ? '#FFFFFF' : '#F6EEDC' }), sillar: pbrMat('old_sandstone_02', 1, 1, { color: kd ? '#F4E6CC' : '#E8D6B4' }), mortar: tm('bldmor', kd ? '#B9A584' : '#8E7A5E'), plank: pbrMat('brown_planks_05', 1, 1, { color: kd ? '#E8C49A' : '#C9A27A' }), wood: pbrMat('brown_planks_05', 1, 1, { color: kd ? '#F0CFA6' : '#E2C29C' }),
+  stone: pbrMat('white_sandstone_bricks', 1, 1, { color: kd ? '#FFFFFF' : '#F6EEDC' }), sillar: pbrMat('rocky_trail_02', .45, .45, { color: kd ? '#F6EBD6' : '#E9DCC2' }), mortar: tm('bldmor', kd ? '#B9A584' : '#8E7A5E'), plank: pbrMat('brown_planks_05', 1, 1, { color: kd ? '#E8C49A' : '#C9A27A' }), wood: pbrMat('brown_planks_05', 1, 1, { color: kd ? '#F0CFA6' : '#E2C29C' }),
   marble: pbrMat('marble_01', 1, 1, { color: '#FFFFFF' }), floor: pbrMat('old_sandstone_02', 1, 1, { color: '#EFE2C8' }),
   beam: tm('bldbeam', '#7A5232'), tent: tm('bldtent', '#4A3A2E', { side: THREE.DoubleSide }), adobe: tm('bldadb', kd ? '#E0A070' : '#C98E5E'), mud: tm('bldmud', '#9C7352'), thatch: tm('bldth', '#B89A62'), dark: tm('blddk', '#4A3020'), flame: new THREE.MeshBasicMaterial({ color: '#FFB347', toneMapped: false }) }); }
 function bldMerge(list) {
