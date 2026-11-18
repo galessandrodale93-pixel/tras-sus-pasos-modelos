@@ -112,6 +112,11 @@ export const GET: APIRoute = async ({ url }) => {
       if (!C.cronKey || url.searchParams.get("k") !== C.cronKey) return json({ error: "no" }, 401);
       return json(await crudo(String(url.searchParams.get("mpver"))));
     }
+    // aviso del material de una clase ahora: ?material=<claseId>&k=<cronKey>
+    if (url.searchParams.has("material")) {
+      if (!C.cronKey || url.searchParams.get("k") !== C.cronKey) return json({ error: "no" }, 401);
+      return json({ ok: true, material: await materialDiario(hoy, false, remitente, String(url.searchParams.get("material"))) });
+    }
     // mail puntual de cuota (lo pide la dirección): ?reabre=<hasta, ej. «viernes 20 de noviembre»>&k=<cronKey>
     if (url.searchParams.has("reabre")) {
       if (!C.cronKey || url.searchParams.get("k") !== C.cronKey) return json({ error: "no" }, 401);

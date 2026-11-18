@@ -5,6 +5,7 @@ import type { APIRoute } from "astro";
 import { auth, httpClient } from "@wix/essentials";
 import { items } from "@wix/data";
 import { pagosTutor } from "../../lib/fin";
+import { materialYa } from "../../lib/material";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
@@ -263,7 +264,8 @@ export const POST: APIRoute = async ({ request }) => {
         if (!/^https:\/\//.test(u)) return json({ error: "No se subió el archivo." }, 400);
         const it = { _id: crypto.randomUUID(), title: s(x.nombre, 160) || "Material", claseId: cid, profeId: "direccion", url: u, mime: s(x.mime, 120), fecha: cl.fecha || "", para: s(x.para, 10) === "equipo" ? "equipo" : "alumnos", por: me.title || "" };
         await save("ProfMaterial", it);
-        return json({ ok: true, item: it });
+        const av = it.para === "alumnos" ? await materialYa(cid, cl.fecha || "").catch((e) => { console.error("material ya", e); return null; }) : null;
+        return json({ ok: true, item: it, avisados: av });
       }
       case "clase": {
         if (me.rol !== "director") return json({ error: "Solo la dirección edita el calendario de clases." }, 403);

@@ -31,8 +31,8 @@ async function emails(al: Alumno[]) {
   return out;
 }
 
-export async function materialDiario(hoy: string, dry: boolean, remitente: string) {
-  const mats = (await todos<Mat>("ProfMaterial")).filter((m) => m.para !== "equipo" && !m.avisado && !/^video/.test(m.mime || ""));
+export async function materialDiario(hoy: string, dry: boolean, remitente: string, soloClase = "") {
+  const mats = (await todos<Mat>("ProfMaterial")).filter((m) => m.para !== "equipo" && !m.avisado && !/^video/.test(m.mime || "") && (!soloClase || m.claseId === soloClase));
   if (!mats.length) return { material: "nada" };
   const clases = await todos<Clase>("TutClases");
   const porClase: Record<string, Mat[]> = {};
@@ -59,6 +59,14 @@ export async function materialDiario(hoy: string, dry: boolean, remitente: strin
     out.push({ clase: cid, archivos: L.length, enviados: ok, de: dest.length });
   }
   return out;
+}
+
+// Material subido para una clase de hoy o mañana: el aviso sale en el momento (el resumen de la mañana llegaría tarde).
+export async function materialYa(claseId: string, fecha: string) {
+  const hoy = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+  if (!fecha || fecha < hoy || fecha > mas(hoy, 1)) return null;
+  const r = (await q("TutConfig").eq("_id", "remitente").limit(1).find()).items[0] as { valor?: string } | undefined;
+  return materialDiario(hoy, false, (r && r.valor) || "info@habitat-cfm.org", claseId);
 }
 
 // para el equipo: lo que hay que proyectar en las clases de los próximos días

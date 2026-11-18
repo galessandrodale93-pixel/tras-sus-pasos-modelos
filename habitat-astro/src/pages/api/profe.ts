@@ -5,6 +5,7 @@ import { auth, httpClient } from "@wix/essentials";
 import { items } from "@wix/data";
 import { esClase, esDe, emailDe, hoyAR, json, organiza, profeDe, q, s, todos, type Clase, type Profe } from "../../lib/profe";
 import { animo, esc, progsDe } from "../../lib/vol";
+import { materialYa } from "../../lib/material";
 
 const save = auth.elevate(items.save);
 const rem = auth.elevate(items.remove);
@@ -134,7 +135,8 @@ export const POST: APIRoute = async ({ request }) => {
       const u = s(x.url, 600);
       if (!/^https:\/\/[^\s]+$/.test(u)) return json({ error: "Falta el archivo." }, 400);
       const it = await save("ProfMaterial", { title: s(x.nombre, 160) || "Material", claseId, profeId: p._id, url: u, mime: s(x.mime, 120), fecha: (clase as Clase).fecha });
-      return json({ ok: true, item: it });
+      const av = await materialYa(claseId, (clase as Clase).fecha).catch((e) => { console.error("material ya", e); return null; });
+      return json({ ok: true, item: it, avisados: av });
     }
     if (op === "quitar") {
       const m = (await q("ProfMaterial").eq("_id", s(x.id, 80)).limit(1).find()).items[0] as Mat | undefined;
