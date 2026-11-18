@@ -896,7 +896,7 @@ function findGive(it) {
   const resOne = L => { const [k, n] = L[Math.floor(it.r * L.length) % L.length]; svAdd(k, n); svUI(); pkPop('+' + n + ' ' + RES[k][1] + ' ' + RES[k][0]); };
   const cons = () => resOne([['wood', 3], ['stone', 3], ['plank', 2], ['adobe', 3], ['block', 2], ['wood', 2]]);
   const otro = () => resOne([['money', 3], ['barro', 2], ['lana', 2], ['lino', 2], ['semilla', 2], ['aceitunas', 2], ['money', 5], ['fruit', 1]]);
-  if (it.k === 'ropa' || it.k === 'rara') { const L = it.k === 'rara' ? (gearOf(['r', 'e']).length ? gearOf(['r', 'e']) : gearOf(['c'])) : gearOf(['c']); if (L.length) { gearGive(L[Math.floor(it.r * L.length) % L.length], it.k === 'rara' ? '¡Encontraste ropa rara!' : '¡Encontraste ropa de la época!'); return; } svAdd('money', it.k === 'rara' ? 8 : 3); svUI(); pkPop('+' + (it.k === 'rara' ? 8 : 3) + ' 🪙 Denarios'); return; }
+  if (it.k === 'ropa' || it.k === 'rara') { const L = it.k === 'rara' ? (Math.random() < 1e-6 && gearOf(['e']).length ? gearOf(['e']) : gearOf(['r']).length ? gearOf(['r']) : gearOf(['c'])) : gearOf(['c']); /* lo épico en el camino: una en un millón */ if (L.length) { gearGive(L[Math.floor(it.r * L.length) % L.length], it.k === 'rara' ? '¡Encontraste ropa rara!' : '¡Encontraste ropa de la época!'); return; } svAdd('money', it.k === 'rara' ? 8 : 3); svUI(); pkPop('+' + (it.k === 'rara' ? 8 : 3) + ' 🪙 Denarios'); return; }
   if (it.k === 'herr') { const t = TOOL_ORDER.find(x => !svTool(x)); if (t) { svGiveTool(t, '¡Encontraste una herramienta!'); return; } return cons(); }
   if (it.k === 'cons') return cons(); return otro();
 }
@@ -1141,10 +1141,14 @@ function stageShots(nodeId) {
   try {
     if (!S || !S.hx) return null; const m = S.markers[nodeId], c = S.camera, r = S.renderer; if (!m) return null; const P0 = c.position.clone(), Q0 = c.quaternion.clone(), f0 = c.fov, a0 = c.aspect, out = [];
     const sz = r.getSize(new THREE.Vector2()), tx = m.position.x, tz = m.position.z, ty = (S.W ? S.W.hAt(tx, tz) : 0);
+    /* en celulares, las fotos de la etapa se sacan chicas y aparte: a pantalla completa el iPhone se quedaba sin memoria y la página se caía */
+    const lite = (matchMedia('(pointer: coarse)').matches || window.__liteShots) ? (() => { const w = 640, h = 360, cv = document.createElement('canvas'); cv.width = w; cv.height = h; const lut = new Uint8Array(256); for (let i = 0; i < 256; i++) { const v = i / 255, sv = v <= .0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - .055; lut[i] = Math.round(Math.min(1, sv) * 255); } return { w, h, cv, lut, cx: cv.getContext('2d'), px: new Uint8Array(w * h * 4), rt: new THREE.WebGLRenderTarget(w, h, { depthBuffer: true }) }; })() : null; /* el destino guarda colores lineales: la tabla los pasa a sRGB */
     const poses = [[2.4, 2.2, 9, 1.6], [-.9, 1.1, 6, 1.2], [.5, 5.5, 15, 3.5]];
     for (const [ang, h, dist, ly] of poses) { const yaw = S.yaw + ang, px = tx - Math.sin(yaw) * dist, pz = tz - Math.cos(yaw) * dist, gy = S.W ? S.W.hAt(px, pz) : 0;
       c.position.set(px, Math.max(gy + .6, ty + h), pz); c.fov = 38; c.aspect = sz.x / sz.y; c.updateProjectionMatrix(); c.lookAt(tx, ty + ly, tz);
-      r.shadowMap.needsUpdate = true; if (S.fx) S.fx.render(0); else r.render(S.scene, c); out.push(r.domElement.toDataURL('image/jpeg', .82)); }
+      r.shadowMap.needsUpdate = true; if (lite) { c.aspect = 16 / 9; c.updateProjectionMatrix(); r.setRenderTarget(lite.rt); r.render(S.scene, c); r.readRenderTargetPixels(lite.rt, 0, 0, lite.w, lite.h, lite.px); r.setRenderTarget(null); const id = lite.cx.createImageData(lite.w, lite.h), L = lite.lut, D = id.data, px = lite.px; for (let y = 0; y < lite.h; y++) { const so = (lite.h - 1 - y) * lite.w * 4, dO = y * lite.w * 4; for (let q = 0; q < lite.w * 4; q += 4) { D[dO + q] = L[px[so + q]]; D[dO + q + 1] = L[px[so + q + 1]]; D[dO + q + 2] = L[px[so + q + 2]]; D[dO + q + 3] = 255; } } lite.cx.putImageData(id, 0, 0); out.push(lite.cv.toDataURL('image/jpeg', .8)); }
+      else { if (S.fx) S.fx.render(0); else r.render(S.scene, c); out.push(r.domElement.toDataURL('image/jpeg', .82)); } }
+    if (lite) lite.rt.dispose();
     c.position.copy(P0); c.quaternion.copy(Q0); c.fov = f0; c.aspect = a0; c.updateProjectionMatrix(); return out;
   } catch (e) { return null; }
 }
@@ -3449,7 +3453,7 @@ function roomTick(dt) {
 }
 function placeCard(info) {
   let el = document.getElementById('v3place'); if (!el) { el = document.createElement('div'); el.id = 'v3place'; el.className = 'v3place'; document.body.appendChild(el); }
-  el.innerHTML = `<small>Lugar de la época</small><b>${esc(info[0])}</b><p>${esc(info[1])}</p><em>${esc(info[2])}</em><button aria-label="Cerrar">✕</button>`;
+  el.innerHTML = `<small>Lugar de la época</small><b>${esc(info[0])}</b><p>${esc(info[1])}</p>${info[2] ? `<em>${esc(info[2])}</em>` : ''}<button aria-label="Cerrar">✕</button>`;
   el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); el.querySelector('button').onclick = () => { el.hidden = true; try { G().voStop(); } catch (e) {} }; try { G().vo(info[0]); G().vo(info[1], 'narrador', { queue: 1 }); } catch (e) {}
   clearTimeout(placeCard.t); placeCard.t = setTimeout(() => { el.hidden = true; }, 14000); tone3d();
   /* si te alejás del lugar, el cartel se cierra solo */
