@@ -16,11 +16,13 @@ L=json.load(open(sys.argv[1])); idx=set(json.load(open(os.path.join(D,'index.jso
 for e in L:
     v,t=e['v'],' '.join(str(e['t']).split()); k=h(v+'|'+t)
     if k in idx: continue
+    if os.path.exists(os.path.join(D,k+'.mp3')): idx.add(k); continue
     kv,sp,pt=VOZ.get(v,VOZ['varon'])
     s,sr=K.create(t,voice=kv,speed=sp,lang='es')
     with tempfile.NamedTemporaryFile(suffix='.wav',delete=False) as f: sf.write(f.name,s,sr); w=f.name
     af='aresample=44100' if pt==1 else f'asetrate={int(sr*pt)},aresample=44100,atempo={1/pt:.4f}'
     subprocess.run(['ffmpeg','-v','error','-y','-i',w,'-af',af,'-ac','1','-b:a','64k',os.path.join(D,k+'.mp3')],check=True); os.unlink(w)
     idx.add(k); n+=1; print(n,v,t[:60],flush=True)
+    if n%10==0: json.dump(sorted(idx),open(os.path.join(D,'index.json'),'w'),separators=(',',':'))
 json.dump(sorted(idx),open(os.path.join(D,'index.json'),'w'),separators=(',',':'))
 print('listo',n,'nuevas')
