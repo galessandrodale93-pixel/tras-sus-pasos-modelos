@@ -14,7 +14,8 @@ export type Profe = { _id: string; title?: string; email?: string; clave?: strin
 export type Clase = { _id: string; fecha: string; programa?: string; bloque?: string; title?: string; profe?: string; tipo?: string; nota?: string };
 
 // La clase es de este profe si su nombre aparece en el campo profe (sirve para "Gui y Agus").
-export const esDe = (c: Clase, p: Profe) => !!p.title && nrm(c.profe).includes(nrm(p.title));
+// la clase es del profe si su nombre figura en la clase («Ange» y «Ange Bongiorno» valen los dos)
+export const esDe = (c: Clase, p: Profe) => { if (!p.title || !c.profe) return false; const cp = nrm(c.profe), pt = nrm(p.title); if (cp.includes(pt)) return true; const w = cp.split(/[^a-z0-9]+/).filter(Boolean); return w.includes(pt.split(/\s+/)[0]) && pt.split(/\s+/).slice(1).every((t) => !w.length || w.includes(t) || w.length === 1); };
 export const esClase = (c: Clase) => !c.tipo || /clase/i.test(c.tipo);
 export const hora = (f: string) => horario(f).clase;
 
