@@ -3987,7 +3987,7 @@ function esVoice() {
 }
 function say(txt, ref, onend) {
   if (AU.voice && G().vo && G().voOn()) { caption(txt, ref, 60); AU.speaking = true; AU.voSay = true; G().vo(txt, 'narrador', { onend: () => { AU.speaking = false; AU.voSay = false; caption(null); onend && onend(); } }); return; }
-  if (!AU.voice || !('speechSynthesis' in window) || !S || !S.hx) { caption(txt, ref, 9); onend && setTimeout(onend, 9000); return; }
+  { caption(txt, ref, 9); onend && setTimeout(onend, 9000); return; } /* sin la voz del aparato (sonaba rara) */
   try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt.replace(/SEÑOR/g, 'Señor') + '. ' + ref.replace(/(\d+):(\d+)-(\d+)/, '$1, versículos $2 al $3').replace(/(\d+):(\d+)/, '$1, versículo $2')); const v = esVoice(); if (v) u.voice = v; u.lang = v ? v.lang : 'es-419'; u.rate = 1.06; u.pitch = .96; u.volume = .85;
     u.volume = mixV('sfx'); AU.speaking = true; caption(txt, ref, 60); const t0 = performance.now(), minMs = 2500 + txt.length * 55; u.onend = u.onerror = () => { setTimeout(() => { AU.speaking = false; caption(null); onend && onend(); }, Math.max(0, minMs - (performance.now() - t0))); }; speechSynthesis.speak(u); } catch (e) { AU.speaking = false; }
 }
