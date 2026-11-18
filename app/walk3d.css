@@ -1497,3 +1497,12 @@ body.v3on .v3kalb{display:flex}body.v3cine .v3kalb,body.v3talk .v3kalb,body.v3bl
 
 /* ningún cartel se pisa: con la tarjeta de un lugar abierta, el pensamiento y la ayuda de teclas se esconden */
 body:has(#v3place:not([hidden])) .v3think,body:has(#v3place:not([hidden])) .v3hint{display:none!important}
+
+.cap-how{margin:4px 0 10px;background:rgba(233,195,122,.1);border:1px solid rgba(233,195,122,.3);border-radius:14px;padding:10px 14px}
+.cap-how summary{cursor:pointer;font-weight:800;color:#E9C37A;list-style:none}
+.cap-how summary::-webkit-details-marker{display:none}
+.cap-how summary::after{content:" ▾";opacity:.7}
+.cap-how[open] summary::after{content:" ▴"}
+.cap-how ol{margin:8px 0 2px;padding-left:20px;display:grid;gap:7px}
+.cap-how li b{display:block;font-size:.95em}
+.cap-how li span{display:block;font-size:.88em;opacity:.85;line-height:1.4}

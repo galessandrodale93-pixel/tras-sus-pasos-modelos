@@ -4022,6 +4022,24 @@ function mdb() { return MDB.db || (MDB.db = new Promise((res, rej) => { try { co
 async function mput(k, v) { const db = await mdb(); return new Promise((res, rej) => { const tx = db.transaction('m', 'readwrite'); tx.objectStore('m').put(v, k); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); }
 async function mget(k) { const db = await mdb(); return new Promise(res => { const rq = db.transaction('m').objectStore('m').get(k); rq.onsuccess = () => res(rq.result); rq.onerror = () => res(null); }); }
 const mkey = id => (G().P().id || 'p') + ':' + id;
+/* testimonio: un paso a paso sencillo para contar quién es Jesús (pedido de Gui) */
+const JN316 = '«Pues Dios amó tanto al mundo que dio a su único Hijo, para que todo el que crea en él no se pierda, sino que tenga vida eterna.» (Juan 3:16)';
+function capHow(kids) {
+  const st = kids ? [
+    ['Contale quién es Jesús', 'Jesús es el Hijo de Dios y nos ama muchísimo.'],
+    ['Contale lo que hizo', 'Murió en la cruz por nosotros y al tercer día resucitó. ¡Está vivo!'],
+    ['Decile un versículo', JN316],
+    ['Invitalo a hablar con Jesús', 'Preguntale si quiere orar con vos. Jesús escucha a todos los que le hablan.'],
+  ] : [
+    ['Empezá por tu historia', 'Contá en pocas palabras cómo conociste a Jesús o algo que hizo en tu vida. Lo que vos viviste es lo que más llega.'],
+    ['Contá quién es Jesús', 'Es el Hijo de Dios. Vino a vivir entre nosotros, nos mostró cómo es el Padre y nos ama tal como somos.'],
+    ['Contá lo que hizo por nosotros', 'Dio su vida en la cruz para pagar por nuestros pecados y al tercer día resucitó. Por eso hoy podemos conocerlo y estar en paz con Dios.'],
+    ['Compartí un versículo', JN316],
+    ['Escuchá', 'Preguntale qué piensa y escuchalo con respeto, sin apurarte. Si te hace una pregunta que no sabés responder, está bien decir «lo busco y te cuento».'],
+    ['Invitalo a dar un paso', 'Si quiere, ofrecele orar juntos o invitalo a tu iglesia o grupo. Lo demás lo hace Dios.'],
+  ];
+  return `<details class="cap-how" open><summary>${kids ? 'Cómo contarlo, paso a paso' : 'Cómo compartir de Jesús, paso a paso'}</summary><ol>${st.map(([h, p]) => `<li><b>${esc(h)}</b><span>${esc(p)}</span></li>`).join('')}</ol></details>`;
+}
 function openCapture(m) {
   const el = document.getElementById('v3sheet'), d = m.d, kids = !S.hx; if (!el) return; S.joy.x = 0; S.joy.y = 0;
   const close = () => { el.hidden = true; if (el._rec && el._rec.state === 'recording') { el._rec.onstop = () => { AU.on = AU.wasOn; }; el._rec.stop(); } if (el._stream) { el._stream.getTracks().forEach(t => t.stop()); el._stream = null; } };
@@ -4047,6 +4065,7 @@ function openCapture(m) {
   } else {
     el.innerHTML = `<div class="bag-in mis-in cap"><div class="bag-h"><b>${esc(d.title)}</b><span>Testimonio · +${MIS_PTS} puntos</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
       <p class="mis-ask">Contale a un compañero o compañera de tu ${kids ? 'grado' : 'curso'} quién es Jesús${kids ? '. Pedile a un adulto que te acompañe' : ''}. Si tu compañero o compañera está de acuerdo, sacate una foto con él o ella.</p>
+      ${capHow(kids)}
       <p class="cap-note">Te vamos a pedir permiso para usar la cámara. La foto queda guardada solo en este ${kids ? 'aparato' : 'celular'}.</p>
       <label class="cap-chk"><input type="checkbox" class="c1"> Le hablé de Jesús</label><label class="cap-chk"><input type="checkbox" class="c2"> Mi compañero o compañera aceptó sacarse la foto</label>
       <img class="cap-img" alt="Foto del testimonio" hidden><input type="file" accept="image/*" capture="user" class="cap-file" hidden><p class="cap-err" hidden></p>
