@@ -80,9 +80,32 @@
   $$('#kDias button').forEach(function (b) { b.onclick = function () { $$('#kDias button').forEach(function (x) { x.classList.toggle('on', x === b); }); F.dias = +b.dataset.d; load().catch(function (e) { $('#kOut').innerHTML = '<p class="tt-empty">' + esc(e.message) + '</p>'; }); }; });
   $('#kTester').onchange = function () { F.tester = this.checked; load().catch(function (e) { $('#kOut').innerHTML = '<p class="tt-empty">' + esc(e.message) + '</p>'; }); };
 
+
+  /* reportes de los testers (página reportar.html) */
+  var RF = 'Pendiente', REP = [];
+  function fdate(t) { var d = new Date(t); return isNaN(d) ? '' : d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }); }
+  function renderRep() {
+    var L = REP.filter(function (r) { return !RF || r.estado === RF; }), pend = REP.filter(function (r) { return r.estado !== 'Resuelto'; }).length;
+    $('#krF button').textContent = 'Pendientes' + (pend ? ' (' + pend + ')' : '');
+    $('#krOut').innerHTML = L.length ? '<div class="kr-l">' + L.map(function (r) {
+      var ok = r.estado === 'Resuelto';
+      return '<article class="kr-it' + (ok ? ' res' : '') + '"><div class="kr-m"><b>' + esc(r.nombre || 'Sin nombre') + '</b>' + (r.rama ? '<span class="kr-tag">' + (r.rama === 'hero' ? 'Hero' : 'Kids') + '</span>' : '') + (r.donde ? '<span>📍 ' + esc(r.donde) + '</span>' : '') + '<span>' + esc(fdate(r.fecha)) + '</span>' + (r.contacto ? '<span>✉️ ' + esc(r.contacto) + '</span>' : '') + '</div>' +
+        '<button class="kr-b' + (ok ? '' : ' ok') + '" data-id="' + esc(r.id) + '" data-e="' + (ok ? 'Pendiente' : 'Resuelto') + '">' + (ok ? 'Volver a pendiente' : '✓ Resuelto') + '</button>' +
+        '<p class="kr-t">' + esc(r.texto) + '</p>' + (r.captura ? '<div class="kr-c"><img src="' + esc(r.captura) + '" alt="Captura"></div>' : '') + '<div class="kr-d" title="' + esc(r.disp) + '">' + esc(r.disp) + '</div></article>';
+    }).join('') + '</div>' : '<p class="tt-empty">' + (RF === 'Pendiente' ? 'No hay reportes pendientes. 🙌' : 'Todavía no hay reportes.') + '</p>';
+    $$('#krOut .kr-b').forEach(function (b) { b.onclick = async function () { b.disabled = true; var r = await fetch('/api/kh-reporte', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-habitat-auth': await token() }, body: JSON.stringify({ id: b.dataset.id, estado: b.dataset.e }) }); if (r.ok) { REP.forEach(function (x) { if (x.id === b.dataset.id) x.estado = b.dataset.e; }); renderRep(); } else b.disabled = false; }; });
+    $$('#krOut .kr-c img').forEach(function (im) { im.onclick = function () { var d = document.createElement('div'); d.className = 'kr-big'; d.innerHTML = '<img src="' + im.src + '" alt="">'; d.onclick = function () { d.remove(); }; document.body.appendChild(d); }; });
+  }
+  async function loadRep() {
+    $('#reportes').hidden = false;
+    try { var r = await fetch('/api/kh-reporte', { headers: { 'x-habitat-auth': await token() } }); var j = await r.json(); if (!r.ok) throw new Error(j.error || 'No se pudo cargar.'); REP = j.items || []; renderRep(); }
+    catch (e) { $('#krOut').innerHTML = '<p class="tt-empty">' + esc(e.message) + '</p>'; }
+  }
+  $$('#krF button').forEach(function (b) { b.onclick = function () { $$('#krF button').forEach(function (x) { x.classList.toggle('on', x === b); }); RF = b.dataset.f; renderRep(); }; });
+
   (async function init() {
     if (!A.loggedIn()) { try { sessionStorage.setItem('habitat:ret', '/juego.html'); } catch (e) {} location.replace('/ingresar.html'); return; }
-    try { await load(); }
+    try { await load(); loadRep(); if (location.hash === '#reportes') setTimeout(function () { $('#reportes').scrollIntoView({ behavior: 'smooth' }); }, 300); }
     catch (e) { $('#ttHola').textContent = e.status === 403 ? 'Este panel es de la dirección' : 'No se pudo cargar el panel'; $('#ttWho').textContent = e.status === 403 ? 'Las estadísticas del juego las ven los directores de Habitat.' : 'Revisá tu conexión y recargá la página.'; $('.tt-main').innerHTML = ''; return; }
     var h = new Date().getHours();
     $('#ttHola').textContent = (h < 12 ? 'Buen día' : h < 20 ? 'Buenas tardes' : 'Buenas noches') + ', ' + String((ME && ME.title) || '').split(' ')[0];
