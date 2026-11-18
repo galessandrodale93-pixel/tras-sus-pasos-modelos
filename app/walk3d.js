@@ -881,9 +881,9 @@ function lifeOne(scene, kind, x, z, face, yAt, R, hx, W, b) {
 const LIFE_SAY = ['«¿Vas para la ciudad? Dicen que el Maestro anda por esta zona.»', '«¡Shalom! Que el Señor te guarde en el camino.»', '«Venimos de la fiesta en Jerusalén. Todavía nos falta un buen trecho.»', '«¿Escuchaste lo del ciego que ahora ve? ¡Todo el pueblo habla de eso!»', '«El camino es largo, pero acompañados se hace corto.»', '«Mi abuelo decía: "Lámpara es a mis pies tu palabra" (Salmo 119:105).»', '«Si tenés hambre, en el mercado de adelante venden pan.»', '«Cuidá el agua: hasta el próximo pozo hay un rato.»'];
 const LIFE_PAST = ['«Conozco a cada oveja por su nombre. Si una se pierde, dejo a las otras y la busco hasta encontrarla» (Lucas 15:4).', '«El Señor es mi pastor, nada me faltará» (Salmo 23:1). Lo canto de noche, cuando cuido el rebaño.', '«Mis ovejas oyen mi voz» (Juan 10:27). Escuchá: si las llamo, vienen.', '«De día el calor y de noche el frío, pero las ovejas están primero.»'];
 /* Hero: hallazgos desparramados por todo el mapa (pedido de Gui), uno por parcela de 150 m y no todos sobre el camino:
-   ropa común 50 %, herramientas 15 %, materiales de construcción 15 %, ropa rara 5 %, otras cosas 15 % (poca comida).
+   ropa común 50 %, herramientas 15 %, materiales de construcción 15 %, ropa rara 2 %, otras cosas 18 % (poca comida).
    Cada día cambian de lugar al azar. La ropa y las herramientas que ya tenés se vuelven denarios o materiales. */
-const FIND_W = [['ropa', .5], ['herr', .15], ['cons', .15], ['rara', .05], ['otro', .15]];
+const FIND_W = [['ropa', .5], ['herr', .15], ['cons', .15], ['rara', .02], ['otro', .18]];
 function findsScatter(W) {
   let dd = 0; try { dd = Math.floor(Date.parse(vday()) / 864e5); } catch (e) {} const R = rng(9191 + (dd || 0) * 7919), zs = (S.allPts || []).map(p => p[1]), z0 = Math.min(...zs) + 20, C = 150;
   for (let cz = -40; cz > z0; cz -= C) for (let cx = -XW + 60; cx < XW - 60; cx += C) { const id = 'f' + Math.round(cx) + '_' + Math.round(cz), r0 = R(), r1 = R(), r2 = R(), r3 = R(); if (r0 > .62) continue;
