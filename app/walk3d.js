@@ -1229,7 +1229,7 @@ const HOWTO = {
 };
 // sala de espera: aparece al instante (fondo con degradé, fotos del juego, versículos y tarjetas), baja el mundo completo
 // y se queda mientras se arma el mundo 3D; se cierra sola cuando todo está listo
-const LB_IMG = { hero: ['hero_v1.jpg', 'hero_v2.jpg', 'hero_v3.jpg', 'hero_v4.jpg', 'hero_v5.jpg'], kids: ['kids_e1.jpg', 'kids_e2.jpg', 'kids_e3.jpg', 'kids_e4.jpg', 'kids_e5.jpg'] };
+const LB_IMG = { hero: ['hero_v1.jpg', 'hero_v2.jpg', 'hero_v3.jpg', 'hero_v4.jpg', 'hero_v5.jpg'], kids: ['kids_v1.jpg', 'kids_v2.jpg', 'kids_v3.jpg', 'kids_v4.jpg', 'kids_v5.jpg'] };
 const LB_CAP = [['Mar de Galilea', 'Donde Jesús llamó a los pescadores'], ['Templo de Jerusalén', 'La casa de su Padre'], ['La colina de los cinco mil', 'Cinco panes y dos peces'], ['El Gólgota', 'Donde dio su vida'], ['Desierto de Judea', 'Cuarenta días en el desierto']];
 const esc3 = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 /* palabra con las letras de nube del juego (el mismo atlas de los carteles de Kids), en alta para la sala */
