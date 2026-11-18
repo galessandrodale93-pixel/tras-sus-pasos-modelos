@@ -7439,7 +7439,7 @@ const BP = {
 };
 const BP_ORDER = ['piedra', 'madera', 'adobe', 'escalon', 'losa', 'techo', 'columna', 'ventana', 'puerta', 'arco', 'carpa', 'cerco', 'antorcha'];
 function bldMats() { if (BLD.mats) return BLD.mats; const kd = !S.hx; return (BLD.mats = {
-  stone: pbrMat('white_sandstone_bricks', 1, 1, { color: kd ? '#FFFFFF' : '#F6EEDC' }), wood: pbrMat('brown_planks_05', 1, 1, { color: kd ? '#F0CFA6' : '#E2C29C' }),
+  stone: pbrMat('white_sandstone_bricks', 1, 1, { color: kd ? '#FFFFFF' : '#F6EEDC' }), sillar: pbrMat('old_sandstone_02', 1, 1, { color: kd ? '#F4E6CC' : '#E8D6B4' }), mortar: tm('bldmor', kd ? '#B9A584' : '#8E7A5E'), plank: pbrMat('brown_planks_05', 1, 1, { color: kd ? '#E8C49A' : '#C9A27A' }), wood: pbrMat('brown_planks_05', 1, 1, { color: kd ? '#F0CFA6' : '#E2C29C' }),
   marble: pbrMat('marble_01', 1, 1, { color: '#FFFFFF' }), floor: pbrMat('old_sandstone_02', 1, 1, { color: '#EFE2C8' }),
   beam: tm('bldbeam', '#7A5232'), tent: tm('bldtent', '#4A3A2E', { side: THREE.DoubleSide }), adobe: tm('bldadb', kd ? '#E0A070' : '#C98E5E'), mud: tm('bldmud', '#9C7352'), thatch: tm('bldth', '#B89A62'), dark: tm('blddk', '#4A3020'), flame: new THREE.MeshBasicMaterial({ color: '#FFB347', toneMapped: false }) }); }
 function bldMerge(list) {
@@ -7448,13 +7448,17 @@ function bldMerge(list) {
   const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(cat(P), 3)); geo.setAttribute('normal', new THREE.BufferAttribute(cat(N), 3)); geo.setAttribute('uv', new THREE.BufferAttribute(cat(U), 2)); geo.computeBoundingSphere(); return geo;
 }
 const bB = (w, h, d, x, y, z) => new THREE.BoxGeometry(w, h, d).translate(x, y, z);
+/* piedra tallada: caja con aristas redondeadas (las piezas no son cubos perfectos) */
+const bR = (w, h, d, x, y, z, r = .05) => { const g = new THREE.BoxGeometry(w, h, d, 3, 3, 3), a = g.attributes.position, hw = w / 2 - r, hh = h / 2 - r, hd = d / 2 - r, v = new THREE.Vector3(), q = new THREE.Vector3(); for (let i = 0; i < a.count; i++) { v.fromBufferAttribute(a, i); q.set(Math.max(-hw, Math.min(hw, v.x)), Math.max(-hh, Math.min(hh, v.y)), Math.max(-hd, Math.min(hd, v.z))); const dd = v.clone().sub(q); if (dd.lengthSq() > 1e-9) { dd.setLength(r); v.copy(q).add(dd); } a.setXYZ(i, v.x, v.y, v.z); } g.computeVertexNormals(); return g.translate(x, y, z); };
+/* hiladas de sillares con juntas corridas, como un muro de piedra de la época */
+function bldCourses(rows, h0, sz) { const out = [], R = rng(4242); let y = h0; rows.forEach(ws => { const rh = sz / rows.length; let x = -.5; ws.forEach(w => { const j = (R() - .5) * .03, hz = .96 + R() * .03; out.push(bR(w - .035, rh - .035, hz, x + w / 2, y + rh / 2 + j * .3, (R() - .5) * .025, .045 + R() * .02)); x += w; }); y += rh; }); return out; }
 const bC = (rt, rb, h, x, y, z, seg) => new THREE.CylinderGeometry(rt, rb, h, seg || 12).translate(x, y, z);
 function bldShape(t) {
-  if (t === 'piedra') return [[bldMerge([bB(1, 1, 1, 0, .5, 0)]), 'stone']];
-  if (t === 'madera') return [[bldMerge([bB(1, 1, 1, 0, .5, 0)]), 'wood'], [bldMerge([bB(1.02, .08, 1.02, 0, .04, 0), bB(1.02, .08, 1.02, 0, .96, 0)]), 'beam']];
-  if (t === 'adobe') { const b = []; for (let r = 0; r < 4; r++) { const y = .125 + r * .25; if (r % 2) { b.push(bB(.48, .23, .98, 0, y, 0), bB(.23, .23, .98, -.375, y, 0), bB(.23, .23, .98, .375, y, 0)); } else b.push(bB(.48, .23, .98, -.25, y, 0), bB(.48, .23, .98, .25, y, 0)); } return [[bldMerge([bB(.96, 1, .9, 0, .5, 0)]), 'mud'], [bldMerge(b), 'adobe']]; }
+  if (t === 'piedra') return [[bldMerge([bB(.9, .98, .9, 0, .49, 0)]), 'mortar'], [bldMerge(bldCourses([[.55, .45], [.3, .42, .28], [.48, .52]], 0, 1)), 'sillar']];
+  if (t === 'madera') { const pl = [], R = rng(717); for (let i = 0; i < 5; i++) { const w = .2, hh = .86 + R() * .06; pl.push(bR(w - .025, hh, .96 - R() * .03, -.4 + i * .2, .08 + hh / 2, (R() - .5) * .02, .02)); } return [[bldMerge([bB(.9, .9, .86, 0, .5, 0)]), 'dark'], [bldMerge(pl), 'plank'], [bldMerge([bB(1.02, .08, 1.02, 0, .04, 0), bB(1.02, .08, 1.02, 0, .96, 0)]), 'beam']]; }
+  if (t === 'adobe') { const b = []; for (let r = 0; r < 4; r++) { const y = .125 + r * .25; if (r % 2) { b.push(bR(.48, .23, .98, 0, y, 0, .035), bR(.23, .23, .98, -.375, y, 0, .035), bR(.23, .23, .98, .375, y, 0, .035)); } else b.push(bR(.48, .23, .98, -.25, y, 0, .035), bR(.48, .23, .98, .25, y, 0, .035)); } return [[bldMerge([bB(.96, 1, .9, 0, .5, 0)]), 'mud'], [bldMerge(b), 'adobe']]; }
   if (t === 'carpa') { const c = new THREE.ConeGeometry(1.25, 2, 4, 1, true); c.rotateY(Math.PI / 4); c.translate(0, 1, 0); return [[bldMerge([c]), 'tent'], [bldMerge([bC(.04, .04, 2.1, 0, 1.05, 0, 5)]), 'beam']]; }
-  if (t === 'escalon') return [[bldMerge([bB(1, .5, 1, 0, .25, 0)]), 'stone']];
+  if (t === 'escalon') return [[bldMerge([bB(.9, .48, .9, 0, .24, 0)]), 'mortar'], [bldMerge(bldCourses([[.6, .4]], 0, .5)), 'sillar']];
   if (t === 'losa') return [[bldMerge([bB(1, .18, 1, 0, .09, 0)]), 'floor']];
   if (t === 'techo') { const b = []; for (let i = 0; i < 4; i++) b.push(bB(.12, .12, 1.04, -.375 + i * .25, .06, 0)); return [[bldMerge(b), 'beam'], [bldMerge([bB(1.02, .16, 1.02, 0, .2, 0)]), 'thatch']]; }
   if (t === 'columna') return [[bldMerge([bC(.24, .28, .84, 0, .5, 0, 16), bB(.66, .08, .66, 0, .04, 0), bB(.66, .08, .66, 0, .96, 0)]), 'marble']];
@@ -7468,14 +7472,14 @@ function bldShape(t) {
 function bldP() { const p = G().P(), k = S && S.hx ? 'bldH' : 'bldK'; p[k] = p[k] || []; return p[k]; } /* Hero y Kids construyen por separado */
 function bldBuild(scene) {
   BLD.scene = scene; BLD.parts = {}; BLD.mats = null; BLD.pops = []; BLD.on = false; const M = bldMats();
-  BP_ORDER.forEach(t => { BLD.parts[t] = bldShape(t).map(([geo, mk]) => { const im = new THREE.InstancedMesh(geo, M[mk], BLD.cap); im.count = 0; im.frustumCulled = false; im.castShadow = !!S.hx; im.receiveShadow = true; im.userData.keep = 1; scene.add(im); return im; }); });
+  BP_ORDER.forEach(t => { BLD.parts[t] = bldShape(t).map(([geo, mk]) => { const im = new THREE.InstancedMesh(geo, M[mk], BLD.cap); im.count = 0; if (mk === 'sillar' || mk === 'plank' || mk === 'adobe') { im.userData.tint = 1; _bm.C = _bm.C || new THREE.Color(); for (let q = 0; q < BLD.cap; q++) im.setColorAt(q, _bm.C.setRGB(1, 1, 1)); } im.frustumCulled = false; im.castShadow = !!S.hx; im.receiveShadow = true; im.userData.keep = 1; scene.add(im); return im; }); });
   BLD.list = bldP().slice(); bldSync(); if (!S.hx) bldKidsBtn(); try { albInit(); } catch (e) { console.warn('álbum', e); }
 }
 const _bm = {}; function bldMat(e, k) { const M = _bm.M || (_bm.M = new THREE.Matrix4()), Q = _bm.Q || (_bm.Q = new THREE.Quaternion()), A = _bm.A || (_bm.A = new THREE.Vector3(0, 1, 0)), V = _bm.V || (_bm.V = new THREE.Vector3()), Sc = _bm.S || (_bm.S = new THREE.Vector3()); Q.setFromAxisAngle(A, (e[4] || 0) * Math.PI / 2); return M.compose(V.set(e[1], e[3], e[2]), Q, Sc.set(k, k, k)); }
 function bldSync() {
   if (!BLD.parts) return; const cnt = {}; BP_ORDER.forEach(t => { cnt[t] = 0; });
-  BLD.list.forEach(e => { const ps = BLD.parts[e[0]]; if (!ps) return; const k = cnt[e[0]]++; if (k >= BLD.cap) return; e.k = k; const pop = BLD.pops.find(p => p.e === e), m = bldMat(e, pop ? pop.sc : 1); ps.forEach(im => im.setMatrixAt(k, m)); });
-  BP_ORDER.forEach(t => (BLD.parts[t] || []).forEach(im => { im.count = Math.min(BLD.cap, cnt[t]); im.instanceMatrix.needsUpdate = true; }));
+  BLD.list.forEach(e => { const ps = BLD.parts[e[0]]; if (!ps) return; const k = cnt[e[0]]++; if (k >= BLD.cap) return; e.k = k; const pop = BLD.pops.find(p => p.e === e), m = bldMat(e, pop ? pop.sc : 1); ps.forEach(im => { im.setMatrixAt(k, m); if (im.userData.tint) { const hsh = Math.sin(e[1] * 12.9898 + e[2] * 78.233 + e[3] * 37.719) * 43758.5453, f = .88 + (hsh - Math.floor(hsh)) * .2; im.setColorAt(k, _bm.C.setRGB(f, f * (.98 + (hsh * 7 % 1) * .03), f * .97)); } }); });
+  BP_ORDER.forEach(t => (BLD.parts[t] || []).forEach(im => { im.count = Math.min(BLD.cap, cnt[t]); im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; }));
   bldPhys();
 }
 function bldPhys() {
