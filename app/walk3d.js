@@ -5079,8 +5079,8 @@ function marBuild(g, hx) {
   [-1, 1].forEach(sd => { const b = new THREE.Mesh(bevBox(1.3, .8, 1.3, .06), marble); b.position.set(sd * pw, .4, 0); arch.add(b); const c = new THREE.Mesh(columnGeo(ph - .8, .34, 16), marble); c.position.set(sd * pw, .8, 0); arch.add(c); const cap = new THREE.Mesh(new THREE.CylinderGeometry(.62, .44, .45, 16), gold); cap.position.set(sd * pw, ph + .2, 0); arch.add(cap); });
   const lin = new THREE.Mesh(bevBox(pw * 2 + 1.8, .55, 1.1, .06), gold); lin.position.set(0, ph + .7, 0); arch.add(lin);
   const pl = marPlaque([['SUBE ACÁ', 130, '#9A6A10'], ['«Vi una puerta abierta en el cielo, y la voz como de trompeta me dijo: Sube acá, y te mostraré las cosas que tienen que suceder.»', 36, '#3A2A12', 'italic 600'], ['Apocalipsis 4:1', 36, '#8A5A10']], pw * 2 + 1.2, 3.9, { y0: .2 });
-  pl.position.set(0, ph + 3.0, -.05); pl.rotation.y = Math.PI; arch.add(pl); M.plaque = pl;
-  const crown = new THREE.Mesh(new THREE.OctahedronGeometry(.45, 0), new THREE.MeshStandardMaterial({ color: '#FFE08A', emissive: '#FFC94A', emissiveIntensity: 1.4, metalness: .4, roughness: .2 })); crown.position.set(0, ph + 5.4, 0); arch.add(crown); M.crown = crown;
+  pl.position.set(0, ph + 4.3, -.05); pl.rotation.y = Math.PI; arch.add(pl); M.plaque = pl; M.plY = ph + 4.3; /* la placa «Sube acá» flota sobre el portal */
+  const crown = new THREE.Mesh(new THREE.OctahedronGeometry(.45, 0), new THREE.MeshStandardMaterial({ color: '#FFE08A', emissive: '#FFC94A', emissiveIntensity: 1.4, metalness: .4, roughness: .2 })); crown.position.set(0, ph + 7.1, 0); arch.add(crown); M.crown = crown;
   // círculo de luz en el piso, donde empieza la subida
   const ring = new THREE.Mesh(new THREE.RingGeometry(2.3, 2.6, 64), new THREE.MeshBasicMaterial({ color: '#FFE39A', transparent: true, opacity: .6, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.set(0, .05, -2.2); g.add(ring); M.ring = ring;
   // escalones que se encienden: una franja de luz por escalón
@@ -5094,14 +5094,13 @@ function marBuild(g, hx) {
   const fin = marPlaque([['¡MARANATA!', 120, '#9A6A10'], ['«Sí, vengo pronto.» Amén. ¡Ven, Señor Jesús!', 56, '#3A2A12', 'italic 600'], ['Apocalipsis 22:20', 44, '#8A5A10']], 5.2, 2.7, { y0: .2 }); fin.position.set(0, ST.H + 13.6, ST.L + ST.P - 1.2); fin.rotation.y = Math.PI; fin.material.opacity = 0; g.add(fin); M.fin = fin;
   return M;
 }
-function marHorn() { try { const A = fxCtx(), t0 = A.currentTime + .05, out = A.createGain(), lp = A.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1700; out.gain.value = .22; lp.connect(out); out.connect(A.destination);
-  /* llamada de trompeta: quinta y octava, con un poco de vibrato */
-  [[392, 0, .38], [392, .42, .18], [523.25, .64, .38], [659.25, 1.06, .38], [783.99, 1.48, 1.5]].forEach(([f, d, l]) => { [1, 1.004].forEach(dt => { const o = A.createOscillator(), gn = A.createGain(), vb = A.createOscillator(), vg = A.createGain(); o.type = 'sawtooth'; o.frequency.value = f * dt; vb.frequency.value = 5.5; vg.gain.value = l > 1 ? 4 : 0; vb.connect(vg); vg.connect(o.frequency);
-    gn.gain.setValueAtTime(.0001, t0 + d); gn.gain.exponentialRampToValueAtTime(.5, t0 + d + .05); gn.gain.setValueAtTime(.42, t0 + d + l - .08); gn.gain.exponentialRampToValueAtTime(.0001, t0 + d + l + .12); o.connect(gn); gn.connect(lp); o.start(t0 + d); vb.start(t0 + d); o.stop(t0 + d + l + .15); vb.stop(t0 + d + l + .15); }); }); } catch (e) {} }
+function marHorn() { /* al acercarse a la escalera: un crescendo de orquesta (de la música de Hero) en vez de la trompeta sintetizada */
+  try { const a = MAR_SFX.el || (MAR_SFX.el = new Audio(new URL('./music/mar_sube.mp3', import.meta.url).href)); a.currentTime = 0; a.volume = Math.min(1, .9 * mixV('sfx')); AU.narr = true; clearTimeout(MAR_SFX.t); MAR_SFX.t = setTimeout(() => { AU.narr = false; }, 8500); const p = a.play(); if (p) p.catch(() => { AU.narr = false; }); } catch (e) {} }
+const MAR_SFX = { el: null, t: 0 };
 function marTick(o, t) {
   const M = o.mar, d = o.d, a = S.av.position, u = (a.x - d.x) * d.side, v = Math.abs(a.z - d.z), near = u > -16 && u < ST.L + ST.P + 4 && v < 14;
   if (!near) { if (M.best >= 0 && u < -30) { M.best = -1; M.horn = 0; } if (M.lit) { M.lv.fill(0); M.lit = 0; for (let i = 0; i < ST.N; i++) M.steps.setColorAt(i, new THREE.Color(0, 0, 0)); M.steps.instanceColor.needsUpdate = true; } return; }
-  if (M.crown) M.crown.rotation.y = t * 1.2; M.ring.material.opacity = .35 + .25 * Math.sin(t * 2.2); M.ring.scale.setScalar(1 + .04 * Math.sin(t * 2.2));
+  if (M.crown) { M.crown.rotation.y = t * 1.2; M.crown.position.y = M.plY + 2.8 + Math.sin(t * 1.3 + 1) * .2; } if (M.plaque && M.plY) { M.plaque.position.y = M.plY + Math.sin(t * 1.3) * .22; M.plaque.rotation.z = Math.sin(t * .9) * .012; } M.ring.material.opacity = .35 + .25 * Math.sin(t * 2.2); M.ring.scale.setScalar(1 + .04 * Math.sin(t * 2.2));
   if (!M.horn && u > -10 && v < 6) { M.horn = 1; marHorn(); }
   const k = u >= 0 && u <= ST.L && v <= ST.W + .4 ? Math.min(ST.N - 1, Math.floor(u / ST.L * ST.N)) : (u > ST.L ? ST.N - 1 : -1); if (k > M.best) M.best = k;
   const C = new THREE.Color(); let ch = false;
