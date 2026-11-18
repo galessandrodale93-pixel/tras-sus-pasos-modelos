@@ -101,7 +101,10 @@ textarea{min-height:130px;resize:vertical}
     return so + ' · ' + nav + ' · pantalla ' + screen.width + '×' + screen.height + ' · ' + ua.slice(0, 160);
   }
   $('disp').textContent = 'Se envía también qué aparato usás: ' + disp().split(' · ').slice(0, 3).join(' · ');
+  var QR = ''; try { QR = (new URLSearchParams(location.search).get('rama') || '').toLowerCase(); } catch (e) {}
+  if (QR === 'kids' || QR === 'hero') { var kk = document.querySelector('.k'); if (kk) kk.textContent = 'Testers · ' + (QR === 'kids' ? 'Kids' : 'Hero') + ' · Tras sus pasos'; }
   try { var r0 = localStorage.getItem('kh:rep:nombre'); if (r0) $('nombre').value = r0; var r1 = localStorage.getItem('kh:rep:rama'); if (r1) { var el = document.querySelector('input[name=rama][value=' + r1 + ']'); if (el) el.checked = true; } } catch (e) {}
+  if (QR === 'kids' || QR === 'hero') { var eq = document.querySelector('input[name=rama][value=' + QR + ']'); if (eq) eq.checked = true; }
 
   $('cap').onchange = function () {
     var f = this.files && this.files[0]; if (!f) return;
