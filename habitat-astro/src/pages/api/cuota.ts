@@ -13,6 +13,7 @@ import { preferencia } from "../../lib/pagoCuota";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
+const rem = auth.elevate(items.remove);
 const fetchAuth = auth.elevate(httpClient.fetchWithAuth);
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json", "Cache-Control": "private, no-store" } });
 const s = (v: unknown, max = 300) => (typeof v === "string" ? v : v == null ? "" : String(v)).replace(/[\u0000-\u0008\u000b-\u001f]/g, "").trim().slice(0, max);
@@ -51,8 +52,11 @@ export const GET: APIRoute = async ({ request }) => {
       }
       return { escuela: pl.escuela, formaPago: transf ? "Transferencia al alias habitatcfm" : pl.formaPago || "", debito: !transf && /d[eé]bito/i.test(pl.formaPago || ""), meses, debe: meses.filter((x) => x.estado === "debe").length };
     });
+    // comprobantes que todavía están en revisión: el alumno los puede corregir (otros meses) o borrar y volver a subir
+    const etq = (k: string) => { const [e, mm] = k.split("|"); return (planes.length > 1 ? e + " · " : "") + MS[+mm.slice(5, 7) - 1]; };
+    const enRev = comps.filter((c) => (c.estado || "En revisión") === "En revisión").sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).map((c) => { let ms: string[] = []; try { ms = JSON.parse(c.meses || "[]"); } catch { /* */ } return { id: c._id, fecha: c.fecha || "", monto: c.monto || 0, url: c.url || "", meses: ms, txt: ms.map(etq).join(", ") }; });
     const ult = debi.sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
-    return json({ ok: true, alumno: true, nombre: al.title, hoy, cuota: Number(al.cuota) || 0, cuotaCon: al.cuotaCon || "", cuotaDetalle: al.cuotaDetalle || "", escuelas, ultimoDebito: ult ? { fecha: ult.fecha, mes: ult.mes, estado: ult.estado === "approved" ? "aprobado" : ult.estado === "rejected" ? "rechazado" : "pendiente", monto: ult.monto } : null, alias: "habitatcfm", transferencia: transf, vence: VENCE });
+    return json({ ok: true, alumno: true, nombre: al.title, hoy, cuota: Number(al.cuota) || 0, cuotaCon: al.cuotaCon || "", cuotaDetalle: al.cuotaDetalle || "", escuelas, ultimoDebito: ult ? { fecha: ult.fecha, mes: ult.mes, estado: ult.estado === "approved" ? "aprobado" : ult.estado === "rejected" ? "rechazado" : "pendiente", monto: ult.monto } : null, alias: "habitatcfm", transferencia: transf, vence: VENCE, comprobantes: enRev });
   } catch (e) {
     console.error("cuota", e);
     return json({ ok: false }, 500);
@@ -69,6 +73,27 @@ export const POST: APIRoute = async ({ request }) => {
       const mes = /^\d{4}-\d{2}$/.test(s(x.mes, 7)) ? s(x.mes, 7) : new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 7);
       try { return json({ ok: true, url: await preferencia(al as unknown as Parameters<typeof preferencia>[0], mes) }); }
       catch (e) { return json({ error: String((e as Error).message || e) }, 400); }
+    }
+    // corregir los meses de un comprobante en revisión, o borrarlo para subirlo de nuevo
+    if (x.op === "compMeses" || x.op === "compBorrar") {
+      const c = (await q("FinComprobantes").eq("_id", s(x.id, 80)).limit(1).find()).items[0] as (Comp & Record<string, unknown>) | undefined;
+      if (!c || c.alumnoId !== al._id) return json({ error: "No encontramos ese comprobante." }, 404);
+      if ((c.estado || "En revisión") !== "En revisión") return json({ error: "Ese comprobante ya lo registramos. Si hay algo mal, escribinos y lo corregimos." }, 400);
+      let antes: string[] = []; try { antes = JSON.parse(c.meses || "[]"); } catch { /* */ }
+      const lbl = (L: string[]) => L.map((m) => { const [e, mm] = m.split("|"); return e + " · " + MS[+mm.slice(5, 7) - 1]; }).join(", ");
+      let txt = "";
+      if (x.op === "compBorrar") { await rem("FinComprobantes", c._id); txt = `<b>${esc(al.title)}</b> borró el comprobante que había subido (${esc(lbl(antes))}). Si lo vuelve a subir, te llega otro aviso.`; }
+      else {
+        const meses = (Array.isArray(x.meses) ? (x.meses as unknown[]) : []).map((m) => s(m, 40)).filter((m) => /^[^|]+\|\d{4}-\d{2}$/.test(m)).slice(0, 12);
+        if (!meses.length) return json({ error: "Elegí qué meses pagaste." }, 400);
+        const { _createdDate, _updatedDate, _owner, ...r } = c;
+        await save("FinComprobantes", { ...r, meses: JSON.stringify(meses) });
+        txt = `<b>${esc(al.title)}</b> corrigió los meses de su comprobante: antes decía ${esc(lbl(antes))}, ahora <b>${esc(lbl(meses))}</b>.`;
+      }
+      const fin = ((await q("TutTutores").eq("gastos", true).limit(20).find()).items as { email?: string }[]).filter((t) => t.email);
+      const C = Object.fromEntries(((await q("TutConfig").limit(50).find()).items as { _id: string; valor?: string }[]).map((k) => [k._id, k.valor || ""]));
+      for (const t of fin) await mandar(t.email as string, "Comprobante corregido: " + (al.title || ""), marco("Habitat · Finanzas", "Un alumno corrigió su comprobante", p(txt) + (c.url && x.op !== "compBorrar" ? p(`<a href="${esc(String(c.url))}" style="color:#b8904f">Ver el comprobante</a>`) : "")), C.remitente || "galessandrodale.93@gmail.com", "Habitat CFM").catch(() => null);
+      return json({ ok: true });
     }
     if (x.op === "subir") {
       const r = await fetchAuth("https://www.wixapis.com/site-media/v1/files/generate-upload-url", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mimeType: s(x.mime, 120) || "application/octet-stream", fileName: s(x.nombre, 160) || "comprobante" }) });
