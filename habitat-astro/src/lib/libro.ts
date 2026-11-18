@@ -77,8 +77,8 @@ export function mailAviso(x: Pedido) {
 export const linkComprobante = (x: Pedido) => WEB + "/libro.html?p=" + encodeURIComponent(x._id) + "&k=" + encodeURIComponent(x.clave || "") + "#comprobante";
 const nrm = (t: unknown) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
 const limpio = (x: Record<string, unknown>) => { const { _createdDate, _updatedDate, _owner, ...r } = x; return r; };
-// los avisos internos del libro (pedido nuevo, comprobante, pago) le llegan a la dirección
-export const AVISOS_A = "galessandrodale.93@gmail.com";
+// los avisos internos del libro (pedido nuevo, comprobante, pago) llegan al mail de Habitat
+export const AVISOS_A = "info@habitat-cfm.org";
 async function remitente() {
   const r = (await q("TutConfig").eq("_id", "remitente").limit(1).find()).items[0] as { valor?: string } | undefined;
   return (r && r.valor) || "info@habitat-cfm.org";
