@@ -14,7 +14,7 @@ LOGO = W + '43ca3b_dbb2ca1106804e9b9271ee3989f69c9f~mv2.jpg/v1/fill/w_96,h_96,al
 
 
 # textos genéricos para todos los cursos
-for a, b in [('Cada etapa recorre la vida de Jesús con escenas animadas y narración, de Belén hasta la cruz.', 'Cada curso recorre la Biblia con escenas animadas y narración, historia por historia.'), ('Más de sesenta juegos distintos, cada uno nacido de su historia: llenar las tinajas de Caná, echar las redes, lavar los pies.', 'Cada minijuego nace de su historia y ninguno se repite, ni dentro de un curso ni entre un curso y otro.'), ('Caminan libres por Nazaret, el templo, el mar de Galilea y el Gólgota. Cada lugar muestra cómo se vivía en tiempos de Jesús.', 'Cada curso tiene su propio mundo para recorrer libremente: los lugares donde pasó cada historia y cómo se vivía en esa época.'), ('Ayudan a personajes bíblicos: llevar el pan, buscar la oveja perdida, orar en el huerto. Aprenden a servir haciendo.', 'Ayudan a los personajes bíblicos de cada historia con misiones de servicio. Aprenden a servir haciendo.'), ('Venden lo que cosechan en los mercados y compran en la carpintería o la panadería. En el camino hay mendigos: compartir con ellos les enseña lo que Jesús dijo en Mateo 25.', 'Venden lo que cosechan en los mercados y compran lo que necesitan. En el camino hay personas necesitadas: compartir con ellas les enseña lo que Jesús dijo en Mateo 25.'), ('a ¿Quién soy?, al Versículo en cadena y a carreras por la tierra de Jesús.', 'a ¿Quién soy?, al Versículo en cadena y a carreras por los lugares de cada curso.'), ('Niveles, medallas, recuerdos y una prenda única para quienes terminan el curso. Los puntos se suman de un curso a otro.', 'Niveles, medallas, recuerdos y una insignia en el avatar por cada curso terminado, a la vista de todos. Los puntos se suman de un curso a otro.')]:
+for a, b in [('Cada etapa recorre la vida de Jesús con escenas animadas y narración, de Belén hasta la cruz.', 'Cada curso recorre la Biblia con escenas animadas y narración, historia por historia.'), ('Más de sesenta juegos distintos, cada uno nacido de su historia: llenar las tinajas de Caná, echar las redes, lavar los pies.', 'Cada minijuego nace de su historia y ninguno se repite, ni dentro de un curso ni entre un curso y otro.'), ('Caminan libres por Nazaret, el templo, el mar de Galilea y el Gólgota. Cada lugar muestra cómo se vivía en tiempos de Jesús.', 'Cada curso tiene su propio mundo para recorrer libremente: los lugares donde pasó cada historia y cómo se vivía en esa época.'), ('Ayudan a personajes bíblicos: llevar el pan, buscar la oveja perdida, orar en el huerto. Aprenden a servir haciendo.', 'Ayudan a los personajes bíblicos de cada historia con misiones de servicio. Aprenden a servir haciendo.'), ('Venden lo que cosechan en los mercados y compran en la carpintería o la panadería. En el camino hay mendigos: compartir con ellos les enseña lo que Jesús dijo en Mateo 25.', 'Venden lo que cosechan en los mercados y compran lo que necesitan. En el camino hay personas necesitadas: compartir con ellas les enseña lo que Jesús dijo en Mateo 25.'), ('a ¿Quién soy?, al Versículo en cadena y a carreras por la tierra de Jesús.', 'a ¿Quién soy?, al Versículo en cadena y a carreras por los lugares de cada curso.'), ('Niveles, medallas, recuerdos y una prenda única para quienes terminan el curso. El personaje, las medallas y las insignias pasan de un curso a otro.', 'Niveles, medallas, recuerdos y una insignia en el avatar por cada curso terminado, a la vista de todos. El personaje, las medallas y las insignias pasan de un curso a otro.')]:
     assert a in h, a[:40]
     h = h.replace(a, b)
 # cortar la parte de cuenta y familia
@@ -29,12 +29,12 @@ assert 'hbx-back' in h
 # botón Muy pronto debajo del título
 h = h.replace('<p>Entrenamiento bíblico jugando, para niños y adolescentes de 6 a 18 años.</p>\n    </section>',
               '<p>Entrenamiento bíblico jugando, para niños y adolescentes de 6 a 18 años.</p>\n'
-              '<div class="hbx-cta"><button class="hbx-soon" type="button" data-soon><span>🔒 Jugar</span><small>Muy pronto</small></button></div>\n    </section>')
+              '<div class="hbx-cta"><button class="hbx-soon" type="button" data-soon><span>🔒 Jugar</span><small>Desde el 12 de diciembre</small></button></div>\n    </section>')
 # tarjetas Kids / Hero: abren su portal (sin poder jugar)
 assert 'data-go="kids"' in h and 'data-go="hero"' in h
 
 CURSOS = [
-    ('Curso 1 · Muy pronto', True, 'Tras sus pasos', 'La vida de Jesús, de Belén a la tumba vacía.', '/assets/kh/tras-v3.jpg',
+    ('Curso 1 · 12 de diciembre', True, 'Tras sus pasos', 'La vida de Jesús, de Belén a la tumba vacía.', '/assets/kh/tras-v4.jpg',
      ['Nacimiento', 'Infancia', 'Bautismo', 'Galilea', 'Milagros', 'Parábolas', 'Jerusalén', 'La cruz', 'Resurrección']),
     ('Curso 2 · Próximamente', False, 'Hechos', 'El Espíritu llega y la iglesia nace y sale a las naciones.', W + '43ca3b_2aa79ffc3ca041f0aa2ff4c4ecfe94db~mv2.jpg',
      ['Pentecostés', 'La iglesia en Jerusalén', 'Esteban', 'Felipe y el etíope', 'Saulo en el camino', 'Pedro y Cornelio', 'Los viajes de Pablo', 'Pablo en Roma']),
@@ -53,7 +53,7 @@ cursos = f"""
   <section class="hbx-courses"><div class="wrap">
     <span class="why-k">Los cursos</span>
     <h2 class="hbx-h">Toda la Biblia, <em>curso por curso</em></h2>
-    <p class="hbx-l">Kids &amp; Hero crece de a un curso por vez. Cada curso se juega en las dos versiones, Kids y Hero, y los puntos, niveles y logros se suman de un curso al siguiente.</p>
+    <p class="hbx-l">Kids &amp; Hero crece de a un curso por vez. Cada curso se juega en las dos versiones, Kids y Hero, y tu personaje, tus medallas y tus insignias te acompañan de un curso al siguiente.</p>
     <div class="hbx-cg">{''.join(_card(*c) for c in CURSOS)}</div>
   </div></section>
 """
@@ -81,8 +81,8 @@ gal = f'''
         <div class="hbx-media">{KIDS_MEDIA}</div>
         <p>Un camino marcado y luminoso, historias narradas y juegos simples para los más chicos.</p>
         <div class="hbx-ph">
-          <figure><img loading="lazy" src="{SH['m3']}/v1/fit/w_420,h_840,q_85/m3.jpg" alt="Minijuego Partir el pan"><figcaption>Partir el pan</figcaption></figure>
-          <figure><img loading="lazy" src="{SH['stone']}/v1/fit/w_420,h_840,q_85/s.jpg" alt="Minijuego Correr la piedra"><figcaption>Correr la piedra</figcaption></figure>
+          <figure><img loading="lazy" src="/assets/kh/agua-v4.jpg" alt="Minijuego Caminar sobre el agua"><figcaption>Caminar sobre el agua</figcaption></figure>
+          <figure><img loading="lazy" src="/assets/kh/pan-v4.jpg" alt="Minijuego Partir el pan"><figcaption>Partir el pan</figcaption></figure>
         </div>
       </div>
       <div class="hbx-col hero">
@@ -101,10 +101,11 @@ h = h.replace('<section class="mid">', gal + '<section class="mid">', 1)
 # columna lateral: en vez de datos en vivo, "Muy pronto" + preguntas
 i = h.index('<aside class="side">'); j = h.index('</aside>', i) + len('</aside>')
 side = '''<aside class="side">
-      <span class="hbx-badge">Muy pronto</span>
+      <span class="hbx-badge">Sábado 12 de diciembre</span>
       <h2>Ya casi</h2>
-      <p class="lede">Estamos terminando los últimos detalles de Tras sus pasos, el primer curso. Muy pronto se va a poder jugar desde acá.</p>
-      <button class="hbx-soon wide" type="button" data-soon><span>🔒 Jugar</span><small>Muy pronto</small></button>
+      <p class="lede">Estamos terminando los últimos detalles de Tras sus pasos, el primer curso. Desde el sábado 12 de diciembre se va a poder jugar desde acá.</p>
+      <button class="hbx-soon wide" type="button" data-soon><span>🔒 Jugar</span><small>Desde el 12 de diciembre</small></button>
+      <a class="hbx-pdf" href="/materiales/kids-hero-familias.pdf" target="_blank" rel="noopener"><span class="pi" aria-hidden="true">📄</span><span><b>Guía para familias</b><small>Qué es, cómo se aprende y por qué lo hacemos · PDF</small></span></a>
       <div class="hbx-faq">
         <details><summary>¿En qué se juega?</summary><p>En el navegador, desde el celular, la tablet o la computadora. No hace falta instalar nada.</p></details>
         <details><summary>¿Qué Biblia usa?</summary><p>Los versículos citados son de la Nueva Traducción Viviente (NTV). Cada respuesta muestra el pasaje para buscarlo en la Biblia.</p></details>
@@ -117,7 +118,7 @@ h = re.sub(r'<article><span class="learn-i" aria-hidden="true">🛡️</span><b>
 assert 'fam-card' not in h
 
 # portales Kids y Hero (vistas del juego, sin poder jugar)
-SOONNOTE = '<span>🔒 Muy pronto · Estamos terminando el primer curso</span>'
+SOONNOTE = '<span>🔒 Desde el 12 de diciembre · Estamos terminando el primer curso</span>'
 FOOT = 'Un espacio de <a href="/index.html"><b>Habitat CFM</b></a> · Citas bíblicas: Nueva Traducción Viviente (NTV)'
 def _view(fn):
     v = open(os.path.join(D, 'src', fn), encoding='utf-8').read()
@@ -128,7 +129,7 @@ def _view(fn):
     v = v.replace('</svg>Inicio</button>', '</svg>Kids &amp; Hero</button>')
     for a, b in [('El primero ya está abierto y los demás se van sumando.', 'El primero está por abrirse y los demás se van sumando.'),
                  ('La primera ya está abierta. Las demás siguen selladas y se abren de a una.', 'La primera está por abrirse. Las demás siguen selladas y se abren de a una.'),
-                 ('<span class="hx-label">Expedición I abierta</span>', '<span class="hx-label">Expedición I · Muy pronto</span>')]:
+                 ('<span class="hx-label">Expedición I abierta</span>', '<span class="hx-label">Expedición I · 12 de diciembre</span>')]:
         v = v.replace(a, b)
     assert 'data-session' not in v and 'Versión de prueba' not in v
     return v
@@ -179,6 +180,7 @@ body{{margin:0;font-family:Nunito,system-ui,sans-serif;-webkit-font-smoothing:an
 .hbx-ph img{{width:100%;max-width:100%;aspect-ratio:420/780;object-fit:cover;object-position:top;border-radius:26px;border:7px solid #05060f;box-shadow:0 26px 60px rgba(0,0,0,.5)}}
 .hbx-ph figcaption{{font:700 13px/1.3 Nunito,sans-serif;color:rgba(232,236,255,.7);text-align:center}}
 @media (max-width:820px){{.hbx-ph{{grid-template-columns:repeat(2,1fr);gap:14px}}}}
+.hbx-pdf{{display:flex;gap:12px;align-items:center;margin:12px 0 4px;padding:13px 16px;border-radius:16px;background:rgba(255,210,94,.08);border:1px solid rgba(255,210,94,.28);color:#F3E6C4;text-decoration:none;transition:background .2s,transform .2s}}.hbx-pdf:hover{{background:rgba(255,210,94,.15);transform:translateY(-1px)}}.hbx-pdf .pi{{font-size:22px}}.hbx-pdf b{{display:block;font:800 14px/1.2 Nunito,sans-serif;color:#FFD25E}}.hbx-pdf small{{display:block;font:600 12px/1.35 Nunito,sans-serif;color:rgba(232,236,255,.7);margin-top:2px}}
 .hbx-badge{{justify-self:start;font:800 10.5px/1 Nunito,sans-serif;letter-spacing:.2em;text-transform:uppercase;padding:7px 11px;border-radius:999px;background:rgba(255,210,94,.15);color:#FFD25E}}
 .hbx-faq{{display:grid;gap:8px}}
 .hbx-faq details{{border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);padding:12px 14px}}
@@ -256,7 +258,7 @@ js = r'''<div class="hbx-toast" role="status" aria-live="polite"></div>
 <script>
 (function(){
 var t=document.querySelector('.hbx-toast'),tm;
-function soon(e){if(e)e.preventDefault();t.innerHTML='<b>¡Ya casi!</b> Estamos preparando el lanzamiento de Kids &amp; Hero. Muy pronto vas a poder jugar desde acá.';t.classList.add('on');clearTimeout(tm);tm=setTimeout(function(){t.classList.remove('on')},4200);}
+function soon(e){if(e)e.preventDefault();t.innerHTML='<b>¡Ya casi!</b> Estamos preparando el lanzamiento de Kids &amp; Hero. Desde el sábado 12 de diciembre vas a poder jugar desde acá.';t.classList.add('on');clearTimeout(tm);tm=setTimeout(function(){t.classList.remove('on')},4200);}
 document.addEventListener('click',function(e){if(e.target.closest('[data-soon],[data-play]'))soon(e);},true);
 var V={hub:document.getElementById('hubView'),kids:document.getElementById('homeView'),hero:document.getElementById('adosView')};
 function show(k,top){if(!V[k])k='hub';Object.keys(V).forEach(function(x){if(V[x])V[x].hidden=x!==k;});if(top!==false)window.scrollTo(0,0);}
@@ -279,9 +281,9 @@ page = f'''<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Kids &amp; Hero · Habitat</title>
-<meta name="description" content="Kids &amp; Hero: entrenamiento bíblico jugando para niños y adolescentes de 6 a 18 años. Primer curso: Tras sus pasos. Muy pronto.">
+<meta name="description" content="Kids &amp; Hero: entrenamiento bíblico jugando para niños y adolescentes de 6 a 18 años. Primer curso: Tras sus pasos. Disponible desde el 12 de diciembre.">
 <meta property="og:title" content="Kids &amp; Hero · Habitat">
-<meta property="og:image" content="https://habitat-cfm.org/assets/kh/og-v3.jpg">
+<meta property="og:image" content="https://habitat-cfm.org/assets/kh/og-v4.jpg">
 <meta name="theme-color" content="#090b1c">
 <link rel="icon" type="image/png" href="https://static.wixstatic.com/media/43ca3b_2d985f94c5e04a82b1434561cce4cc35~mv2.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
