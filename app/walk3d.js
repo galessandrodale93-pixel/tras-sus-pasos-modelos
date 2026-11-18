@@ -849,14 +849,14 @@ function roadLife(scene, W, hx) {
   for (let i = 2; i < main.length - 2; i++) { const a = main[i - 1], b = main[i], d = Math.hypot(b[0] - a[0], b[1] - a[1]); if (d > 12) continue; acc += d; accP += d;
     const tx = main[i + 1][0] - main[i - 1][0], tz = main[i + 1][1] - main[i - 1][1], tl = Math.hypot(tx, tz) || 1, nx = tz / tl, nz = -tx / tl;
     // cosas sueltas cada ~24 m
-    if (accP > 24) { accP = 0; const sd = R() < .5 ? 1 : -1, o = 3 + R() * 4, x = b[0] + nx * sd * o, z = b[1] + nz * sd * o; if (W.dAt(x, z) > 2.2 && waterWet(x, z, null) < .02 && !blockedAt(x, z)) { const r = R(), kd = r < .035 ? 'sobre' : r < .7 ? 'estrella' : 'granada'; if (!hx) LIFE.pk.push({ id: 'pk' + LIFE.pk.length, k: kd, x, z, y: yAt(x, z) }); } }
+    if (accP > 24) { accP = 0; const sd = R() < .5 ? 1 : -1, o = 3 + R() * 4, x = b[0] + nx * sd * o, z = b[1] + nz * sd * o; if (W.dAt(x, z) > 2.2 && waterWet(x, z, null) < .02 && !blockedAt(x, z)) { const r = R(), kd = r < .035 ? 'sobre' : r < .7 ? 'estrella' : 'granada'; void kd; } } /* Kids ya no llena el camino de brillitos: los hallazgos van desparramados por el mapa, como en Hero */
     if (acc < 56 || !far(b[0], b[1])) continue; acc = 0; const kind = KINDS[k % KINDS.length], sd = k % 2 ? 1 : -1; k++;
     const off = kind === 'mojon' ? 3.4 : kind === 'mercado' ? 6.5 : 8 + R() * 3, x = b[0] + nx * sd * off, z = b[1] + nz * sd * off, face = Math.atan2(b[0] - x, b[1] - z);
     if (!okAt(x, z, kind === 'mojon' ? .6 : 2)) continue;
     try { lifeOne(scene, kind, x, z, face, yAt, R, hx, W, b); } catch (e) { console.warn('vida', kind, e); } }
   // en el campo de afuera: pastores con rebaños y labradores, desparramados
   for (let n = 0; n < 34; n++) { const sd = n % 2 ? 1 : -1, x = sd * (OL.X1 + 40 + R() * (XW - OL.X1 - 120)), z = -60 + R() * (S.zEnd + 120); if (olSiteAt(x, z) || waterWet(x, z, null) > .02 || spDist(x, z) < 3) continue; try { lifeOne(scene, n % 3 ? 'pastor' : 'gente', x, z, R() * 6.28, yAt, R, hx, W, null); } catch (e) {} }
-  if (hx) try { findsScatter(W); } catch (e) { console.warn('hallazgos', e); }
+  try { findsScatter(W); } catch (e) { console.warn('hallazgos', e); }
   lifePk(scene, hx);
 }
 function lifeOne(scene, kind, x, z, face, yAt, R, hx, W, b) {
