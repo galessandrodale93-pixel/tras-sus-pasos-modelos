@@ -101,7 +101,7 @@ export const GET: APIRoute = async ({ url }) => {
     if (prueba && (!C.cronKey || url.searchParams.get("k") !== C.cronKey)) return json({ error: "no" }, 401);
     const hoy = url.searchParams.get("fecha") || new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
     const dry = url.searchParams.get("dry") === "1";
-    const remitente = C.remitente || "galessandrodale.93@gmail.com";
+    const remitente = C.remitente || "info@habitat-cfm.org";
     // traer ya los pagos de Mercado Pago de los últimos días (sin esperar al resumen diario): ?traer=<días>&k=<cronKey>
     if (url.searchParams.has("traer")) {
       if (!C.cronKey || url.searchParams.get("k") !== C.cronKey) return json({ error: "no" }, 401);

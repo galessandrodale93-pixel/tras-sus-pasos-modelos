@@ -13,7 +13,7 @@ const TONO = /^[A-G](#|b)?m?$/;
 
 async function remitente() {
   const r = (await q("TutConfig").eq("_id", "remitente").limit(1).find()).items[0] as { valor?: string } | undefined;
-  return (r && r.valor) || "galessandrodale.93@gmail.com";
+  return (r && r.valor) || "info@habitat-cfm.org";
 }
 async function porClave(k: string) {
   if (!/^[a-f0-9]{16,40}$/.test(k)) return undefined;

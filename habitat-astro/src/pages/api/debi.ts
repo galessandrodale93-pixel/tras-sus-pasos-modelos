@@ -14,7 +14,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (!/payment/i.test(String(ev.type || ev.event || ""))) return ok({ ignorado: true });
     const cfg = (await q("TutConfig").eq("_id", "remitente").limit(1).find()).items[0] as { valor?: string } | undefined;
     const r = await traerDebi(5);
-    const avisos = await avisarRechazos(hoyAR(), false, (cfg && cfg.valor) || "galessandrodale.93@gmail.com");
+    const avisos = await avisarRechazos(hoyAR(), false, (cfg && cfg.valor) || "info@habitat-cfm.org");
     return ok({ ok: true, r, avisos });
   } catch (e) { console.error("debi webhook", e); return ok({ error: String((e as Error).message || e) }, 500); }
 };

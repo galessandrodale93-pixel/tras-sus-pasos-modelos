@@ -77,9 +77,11 @@ export function mailAviso(x: Pedido) {
 export const linkComprobante = (x: Pedido) => WEB + "/libro.html?p=" + encodeURIComponent(x._id) + "&k=" + encodeURIComponent(x.clave || "") + "#comprobante";
 const nrm = (t: unknown) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
 const limpio = (x: Record<string, unknown>) => { const { _createdDate, _updatedDate, _owner, ...r } = x; return r; };
+// los avisos internos del libro (pedido nuevo, comprobante, pago) le llegan a la dirección
+export const AVISOS_A = "galessandrodale.93@gmail.com";
 async function remitente() {
   const r = (await q("TutConfig").eq("_id", "remitente").limit(1).find()).items[0] as { valor?: string } | undefined;
-  return (r && r.valor) || "galessandrodale.93@gmail.com";
+  return (r && r.valor) || "info@habitat-cfm.org";
 }
 export function mailPagoOk(x: Pedido) {
   const envio = x.entrega === "envio";
@@ -98,7 +100,7 @@ export async function marcarPagado(x: Pedido, de: { id?: string; quien?: string;
   await save("LibPedidos", it as unknown as Record<string, unknown>);
   const rmt = await remitente();
   if (it.email) await mandar(it.email, it.entrega === "envio" ? "Recibimos tu pago del libro Asombro 📦" : "Tu libro Asombro te espera en Habitat 📖", mailPagoOk(it), rmt).catch(() => null);
-  if (avisarNos) await mandar(rmt, "Pagó el libro: " + (it.title || "") + " (" + pesos(it.total || 0) + ")", mailNos(`${esc(it.title || "")} pagó el libro`, p(`Entró por Mercado Pago una transferencia de <b>${pesos(it.total || 0)}</b>${de.quien ? " de " + esc(de.quien) : ""} y la marcamos sola como pagada. Ya le avisamos por mail.`) + p(it.entrega === "envio" ? `Queda para despachar por Andreani${it.dni ? "" : " (todavía falta su DNI)"}.` : "Lo retira en Habitat.")), rmt).catch(() => null);
+  if (avisarNos) await mandar(AVISOS_A, "Pagó el libro: " + (it.title || "") + " (" + pesos(it.total || 0) + ")", mailNos(`${esc(it.title || "")} pagó el libro`, p(`Entró por Mercado Pago una transferencia de <b>${pesos(it.total || 0)}</b>${de.quien ? " de " + esc(de.quien) : ""} y la marcamos sola como pagada. Ya le avisamos por mail.`) + p(it.entrega === "envio" ? `Queda para despachar por Andreani${it.dni ? "" : " (todavía falta su DNI)"}.` : "Lo retira en Habitat.")), rmt).catch(() => null);
   return it;
 }
 
@@ -116,7 +118,7 @@ export async function libroDesdeIngreso(it: Ing) {
     const C = fuerte.length ? fuerte : L;
     for (const x of C) await save("LibPedidos", { ...limpio(x as unknown as Record<string, unknown>), probable: it._id + "|" + (it.title || "") + "|" + it.fecha });
     const rmt = await remitente();
-    await mandar(rmt, "¿Es el pago de un libro? " + pesos(it.monto) + " de " + (it.title || ""), mailNos("Entró un pago que puede ser de un libro", p(`Entró por Mercado Pago una transferencia de <b>${pesos(it.monto)}</b> de <b>${esc(it.title || "")}</b> el ${esc(it.fecha.split("-").reverse().join("/"))}.`) + p(`Coincide con el pedido de ${C.map((x) => "<b>" + esc(x.title || "") + "</b>").join(" o ")}, pero el nombre no es el mismo. Si es ese, entrá al panel y tocá «Es este pago».`)), rmt).catch(() => null);
+    await mandar(AVISOS_A, "¿Es el pago de un libro? " + pesos(it.monto) + " de " + (it.title || ""), mailNos("Entró un pago que puede ser de un libro", p(`Entró por Mercado Pago una transferencia de <b>${pesos(it.monto)}</b> de <b>${esc(it.title || "")}</b> el ${esc(it.fecha.split("-").reverse().join("/"))}.`) + p(`Coincide con el pedido de ${C.map((x) => "<b>" + esc(x.title || "") + "</b>").join(" o ")}, pero el nombre no es el mismo. Si es ese, entrá al panel y tocá «Es este pago».`)), rmt).catch(() => null);
     return { pedido: C.map((x) => x._id), auto: false };
   }
   return null;

@@ -72,7 +72,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (!me) return json({ error: "El panel de Sembradores es solo para la dirección." }, 403);
     let x: Record<string, unknown> = {};
     try { x = await request.json(); } catch { /* vacío */ }
-    const C = await cfg(), remitente = C.remitente || "galessandrodale.93@gmail.com", por = me.title || me.email || "";
+    const C = await cfg(), remitente = C.remitente || "info@habitat-cfm.org", por = me.title || me.email || "";
     switch (x.op) {
       case "sembrador": {
         const id = s(x.id, 90);

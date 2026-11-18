@@ -95,7 +95,7 @@ export const POST: APIRoute = async ({ request }) => {
       }
       const fin = ((await q("TutTutores").eq("gastos", true).limit(20).find()).items as { email?: string }[]).filter((t) => t.email);
       const C = Object.fromEntries(((await q("TutConfig").limit(50).find()).items as { _id: string; valor?: string }[]).map((k) => [k._id, k.valor || ""]));
-      for (const t of fin) await mandar(t.email as string, "Comprobante corregido: " + (al.title || ""), marco("Habitat · Finanzas", "Un alumno corrigió su comprobante", p(txt) + (c.url && x.op !== "compBorrar" ? p(`<a href="${esc(String(c.url))}" style="color:#b8904f">Ver el comprobante</a>`) : "")), C.remitente || "galessandrodale.93@gmail.com", "Habitat CFM").catch(() => null);
+      for (const t of fin) await mandar(t.email as string, "Comprobante corregido: " + (al.title || ""), marco("Habitat · Finanzas", "Un alumno corrigió su comprobante", p(txt) + (c.url && x.op !== "compBorrar" ? p(`<a href="${esc(String(c.url))}" style="color:#b8904f">Ver el comprobante</a>`) : "")), C.remitente || "info@habitat-cfm.org", "Habitat CFM").catch(() => null);
       return json({ ok: true });
     }
     if (x.op === "subir") {
@@ -129,7 +129,7 @@ export const POST: APIRoute = async ({ request }) => {
       const fin = ((await q("TutTutores").eq("gastos", true).limit(20).find()).items as { email?: string }[]).filter((t) => t.email);
       const C = Object.fromEntries(((await q("TutConfig").limit(50).find()).items as { _id: string; valor?: string }[]).map((c) => [c._id, c.valor || ""]));
       const txt = meses.map((m) => { const [e, mm] = m.split("|"); return e + " · " + MS[+mm.slice(5, 7) - 1]; }).join(", ");
-      for (const t of fin) await mandar(t.email as string, "Comprobante de cuota: " + (al.title || ""), marco("Habitat · Finanzas", "Llegó un comprobante de cuota", `${p(`<b>${esc(al.title)}</b> subió el comprobante de: ${esc(txt)}${it.monto ? " · $ " + it.monto.toLocaleString("es-AR") : ""}.`)}${it.nota ? p(esc(it.nota)) : ""}${p(`<a href="${esc(u)}" style="color:#b8904f">Ver el comprobante</a>`)}<p style="margin:18px 0"><a href="https://www.habitat-cfm.org/finanzas.html" style="background:#10251d;color:#fbf8f2;font:700 15px Arial;padding:12px 20px;border-radius:999px;text-decoration:none">Registrar el cobro en Finanzas</a></p>`), C.remitente || "galessandrodale.93@gmail.com", "Habitat CFM").catch(() => null);
+      for (const t of fin) await mandar(t.email as string, "Comprobante de cuota: " + (al.title || ""), marco("Habitat · Finanzas", "Llegó un comprobante de cuota", `${p(`<b>${esc(al.title)}</b> subió el comprobante de: ${esc(txt)}${it.monto ? " · $ " + it.monto.toLocaleString("es-AR") : ""}.`)}${it.nota ? p(esc(it.nota)) : ""}${p(`<a href="${esc(u)}" style="color:#b8904f">Ver el comprobante</a>`)}<p style="margin:18px 0"><a href="https://www.habitat-cfm.org/finanzas.html" style="background:#10251d;color:#fbf8f2;font:700 15px Arial;padding:12px 20px;border-radius:999px;text-decoration:none">Registrar el cobro en Finanzas</a></p>`), C.remitente || "info@habitat-cfm.org", "Habitat CFM").catch(() => null);
       return json({ ok: true, meses });
     }
     return json({ error: "op" }, 400);

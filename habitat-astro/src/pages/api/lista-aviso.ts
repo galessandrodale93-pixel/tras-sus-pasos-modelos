@@ -76,7 +76,7 @@ export const GET: APIRoute = async ({ url }) => {
           emailSubject: nada ? "¿Pudiste tomar lista en la clase del " + diaDe(ayer) + "? 📋" : "Te faltan alumnos por marcar en la lista del " + diaDe(ayer) + " 📋",
           emailHtmlContent: html(v.title || "", diaDe(ayer), F, diaDe(mas(ayer, 3))),
           senderName: "Habitat CFM",
-          senderEmailAddress: C.remitente || "galessandrodale.93@gmail.com",
+          senderEmailAddress: C.remitente || "info@habitat-cfm.org",
           toRecipients: [{ emailAddress: String(v.email).split(/[,;\s]+/)[0] }],
           type: "TRANSACTIONAL",
         },

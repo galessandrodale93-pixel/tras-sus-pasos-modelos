@@ -45,7 +45,7 @@ export const POST: APIRoute = async ({ request }) => {
     try { x = await request.json(); } catch { /* vacío */ }
     const v = await porClave(s(x.k, 40));
     if (!v) return json({ error: "Este link ya no es válido." }, 404);
-    const C = await cfg(), remitente = C.remitente || "galessandrodale.93@gmail.com";
+    const C = await cfg(), remitente = C.remitente || "info@habitat-cfm.org";
     if (x.op === "responder") { const it = await responder(v, s(x.r, 10), remitente); return json({ ok: true, ...vista(it) }); }
     if (x.op === "subir") {
       const mime = s(x.mime, 80);

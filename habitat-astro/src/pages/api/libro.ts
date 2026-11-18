@@ -5,7 +5,7 @@ import type { APIRoute } from "astro";
 import { auth, httpClient } from "@wix/essentials";
 import { items } from "@wix/data";
 import { emailDe, veLibro } from "../../lib/profe";
-import { kmDe, viaDe, VIA, CANALES, ENVIO, ENVIO_CERCA, ESTADOS, PERFILES, PRECIO, PROVINCIAS, mailAviso, mailDespacho, mailPedido, mandar, marcarPagado, pesos, totalDe, type Pedido } from "../../lib/libro";
+import { AVISOS_A, kmDe, viaDe, VIA, CANALES, ENVIO, ENVIO_CERCA, ESTADOS, PERFILES, PRECIO, PROVINCIAS, mailAviso, mailDespacho, mailPedido, mandar, marcarPagado, pesos, totalDe, type Pedido } from "../../lib/libro";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
@@ -20,7 +20,7 @@ const hoyAR = () => ahoraAR().slice(0, 10);
 
 async function remitente() {
   const r = (await q("TutConfig").eq("_id", "remitente").limit(1).find()).items[0] as { valor?: string } | undefined;
-  return (r && r.valor) || "galessandrodale.93@gmail.com";
+  return (r && r.valor) || "info@habitat-cfm.org";
 }
 async function todos(): Promise<Pedido[]> {
   const out: Pedido[] = [];
@@ -111,7 +111,7 @@ export const POST: APIRoute = async ({ request }) => {
       const r = await mandar(it.email as string, "Tu pedido del libro Asombro 📖", mailPedido(it), rmt);
       it.mail = r.ok ? ahoraAR() : "";
       await save(COL, it as unknown as Record<string, unknown>);
-      await mandar(rmt, "Nuevo pedido del libro: " + it.title + (envio ? " (envío)" : " (retira)"), mailAviso(it), rmt).catch(() => null);
+      await mandar(AVISOS_A, "Nuevo pedido del libro: " + it.title + (envio ? " (envío)" : " (retira)"), mailAviso(it), rmt).catch(() => null);
       return json({ ok: true, total: it.total, mail: r.ok, email: it.email, entrega: it.entrega, id: it._id, k: it.clave });
     }
 
@@ -136,7 +136,7 @@ export const POST: APIRoute = async ({ request }) => {
       it.comprobante = u; it.compFecha = ahoraAR();
       await save(COL, it as unknown as Record<string, unknown>);
       const rmt = await remitente();
-      await mandar(rmt, "Comprobante del libro: " + (it.title || "") + " (" + pesos(it.total || 0) + ")", `<div style="font-family:Arial;max-width:560px;margin:auto;color:#10251d"><p style="font:16px/1.6 Arial"><b>${(it.title || "").replace(/[<>&]/g, "")}</b> subió el comprobante de <b>${pesos(it.total || 0)}</b> por el libro Asombro.</p><p><a href="${u}" style="color:#b8904f">Ver comprobante</a></p><p><a href="https://www.habitat-cfm.org/libro-panel.html" style="background:#10251d;color:#fbf8f2;font:700 15px Arial;padding:12px 20px;border-radius:999px;text-decoration:none">Revisarlo y marcar pagado</a></p></div>`, rmt).catch(() => null);
+      await mandar(AVISOS_A, "Comprobante del libro: " + (it.title || "") + " (" + pesos(it.total || 0) + ")", `<div style="font-family:Arial;max-width:560px;margin:auto;color:#10251d"><p style="font:16px/1.6 Arial"><b>${(it.title || "").replace(/[<>&]/g, "")}</b> subió el comprobante de <b>${pesos(it.total || 0)}</b> por el libro Asombro.</p><p><a href="${u}" style="color:#b8904f">Ver comprobante</a></p><p><a href="https://www.habitat-cfm.org/libro-panel.html" style="background:#10251d;color:#fbf8f2;font:700 15px Arial;padding:12px 20px;border-radius:999px;text-decoration:none">Revisarlo y marcar pagado</a></p></div>`, rmt).catch(() => null);
       return json({ ok: true, pedido: { ...pub, comprobante: true } });
     }
 

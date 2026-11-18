@@ -21,7 +21,7 @@ async function who(request: Request) {
   const admin = !!tu && (tu.rol === "director" || !!tu.org);
   return vol || admin ? { vol, admin, nombre: (vol && vol.title) || (tu && tu.title) || "" } : null;
 }
-async function remitente() { const c = (await q("TutConfig").eq("_id", "remitente").limit(1).find()).items[0] as { valor?: string } | undefined; return (c && c.valor) || "galessandrodale.93@gmail.com"; }
+async function remitente() { const c = (await q("TutConfig").eq("_id", "remitente").limit(1).find()).items[0] as { valor?: string } | undefined; return (c && c.valor) || "info@habitat-cfm.org"; }
 
 export const GET: APIRoute = async ({ request }) => {
   try {

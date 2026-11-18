@@ -124,7 +124,7 @@ export const POST: APIRoute = async ({ request }) => {
           ? P(`En Debi figura como <b>${e(nombres.join(" / ") || a.title)}</b> (cliente ${e([...clientes].join(", "))}). <b>Hay que cancelar su débito automático en Debi</b> para que no le sigan cobrando.`)
           : P("No encontramos un débito de Debi asociado a este alumno en la web. Si paga por Debi, buscalo por nombre en Debi y cancelá su débito automático.");
         let avisados = 0;
-        for (const t of fin) { const r = await mandar(t.email as string, "Baja: cortar el débito de " + String(a.title || alu), marco("Habitat · Finanzas", "Un alumno se dio de baja", `${P(`<b>${e(a.title)}</b> quedó dado de baja desde <b>${MS[desde - 1]}</b>${motivo ? " (" + e(motivo) + ")" : ""}. Lo cargó ${e(por)}.`)}${debiTxt}${P("En la web ya no figura como deudor desde ese mes y no le llegan más avisos de cobro.")}`), C.remitente || "galessandrodale.93@gmail.com"); if (r.ok) avisados++; }
+        for (const t of fin) { const r = await mandar(t.email as string, "Baja: cortar el débito de " + String(a.title || alu), marco("Habitat · Finanzas", "Un alumno se dio de baja", `${P(`<b>${e(a.title)}</b> quedó dado de baja desde <b>${MS[desde - 1]}</b>${motivo ? " (" + e(motivo) + ")" : ""}. Lo cargó ${e(por)}.`)}${debiTxt}${P("En la web ya no figura como deudor desde ese mes y no le llegan más avisos de cobro.")}`), C.remitente || "info@habitat-cfm.org"); if (r.ok) avisados++; }
         return json({ ok: true, planes, alumno: { _id: alu, activo: false }, debi: [...clientes], avisados });
       }
       case "fijos": {

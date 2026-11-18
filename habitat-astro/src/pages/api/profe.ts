@@ -36,7 +36,7 @@ ${P(`<b>Cómo entrar:</b> en <a href="https://www.habitat-cfm.org/ingresar.html"
 ${P("Además, una semana antes de cada clase te llega un recordatorio por mail.")}
 <p style="font:italic 17px/1.6 Georgia;border-left:3px solid #b8904f;padding-left:14px;margin:20px 0">Gracias por sembrar la Palabra en esta generación.</p>
 </div>`;
-  const body = { emailTransmission: { emailSubject: "Bienvenido al Campus de Habitat 🎓", emailHtmlContent: html, senderName: "Habitat CFM", senderEmailAddress: C.remitente || "galessandrodale.93@gmail.com", toRecipients: [{ emailAddress: email }], type: "TRANSACTIONAL" }, idempotencyKey: crypto.randomUUID() };
+  const body = { emailTransmission: { emailSubject: "Bienvenido al Campus de Habitat 🎓", emailHtmlContent: html, senderName: "Habitat CFM", senderEmailAddress: C.remitente || "info@habitat-cfm.org", toRecipients: [{ emailAddress: email }], type: "TRANSACTIONAL" }, idempotencyKey: crypto.randomUUID() };
   const r = await fetchAuth("https://www.wixapis.com/email-transmissions/v1/email-transmissions/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   return { ok: r.ok, status: r.status };
 }

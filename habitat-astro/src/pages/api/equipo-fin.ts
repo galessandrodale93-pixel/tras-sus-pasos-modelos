@@ -14,7 +14,7 @@ const nombre = (f?: Ficha) => String((f && f.title) || "");
 
 async function remitente() {
   const r = (await q("TutConfig").eq("_id", "remitente").limit(1).find()).items[0] as { valor?: string } | undefined;
-  return (r && r.valor) || "galessandrodale.93@gmail.com";
+  return (r && r.valor) || "info@habitat-cfm.org";
 }
 async function quien(request: Request, k: string, L: Ficha[]) {
   if (k) return L.find((f) => f.clave === k);

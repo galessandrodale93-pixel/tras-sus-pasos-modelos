@@ -11,7 +11,7 @@ export const GET: APIRoute = async ({ url }) => {
     const dry = url.searchParams.get("dry") === "1";
     if (dry && url.searchParams.get("k") !== C.cronKey) return new Response(JSON.stringify({ error: "no" }), { status: 401 });
     const cuando = url.searchParams.get("cuando") === "noche" ? "noche" : "manana";
-    const r = await oracionAviso(cuando, hoyAR(), dry, C.remitente || "galessandrodale.93@gmail.com");
+    const r = await oracionAviso(cuando, hoyAR(), dry, C.remitente || "info@habitat-cfm.org");
     return new Response(JSON.stringify({ ok: true, cuando, ...r }), { headers: { "Content-Type": "application/json" } });
   } catch (e) { return new Response(JSON.stringify({ error: String((e as Error).message || e) }), { status: 500 }); }
 };

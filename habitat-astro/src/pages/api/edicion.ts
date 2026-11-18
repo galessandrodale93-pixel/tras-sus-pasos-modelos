@@ -43,7 +43,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (!me) return json({ error: "Sin acceso." }, 403);
     let x: Record<string, unknown> = {};
     try { x = await request.json(); } catch { /* vacío */ }
-    const C = await cfg(), remitente = C.remitente || "galessandrodale.93@gmail.com", hoy = hoyAR();
+    const C = await cfg(), remitente = C.remitente || "info@habitat-cfm.org", hoy = hoyAR();
     const L = await lista(), by = Object.fromEntries(L.map((v) => [v._id, v]));
     const ids = (Array.isArray(x.ids) ? x.ids : [x.id]).map((v) => s(v, 80)).filter((v) => by[v]).slice(0, 80);
     switch (x.op) {
