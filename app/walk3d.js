@@ -9236,7 +9236,7 @@ function secOpen(e) {
   const show = () => { const n = Object.keys(p.secrets).length, el = document.getElementById('v3sheet');
     el.innerHTML = `<div class="inv${S.hx ? ' hx' : ' kd'} sv-sheet vil sec"><div class="inv-h"><b>${M.ENTRY[d.entry][1]} ${esc(d.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">${first ? '¡Descubriste un lugar secreto!' : 'Lugar secreto'} · ${n} de ${M.SECRETS.length}</small><p class="vil-p">${esc(d.t)}</p>
       <h4 class="x-h">Lo que guarda (único en todo el juego)</h4>${d.items.map(([nm, ic, ds, ref]) => `<div class="sec-it"><span>${ic}</span><div><b>${esc(nm)}</b><small>${esc(ds)}</small><em>${esc(ref)}</em></div></div>`).join('')}</div>`;
-    el.hidden = false; el.querySelector('.bag-x').onclick = () => { el.hidden = true; }; };
+    el.hidden = false; el.querySelector('.bag-x').onclick = () => { el.hidden = true; }; shVo(d.t); };
   if (!first) { pocketEnter(e); return; }
   S.secBusy = 1; svToast('⏳ ' + M.ENTRY[d.entry][0] + '…'); h3do(['M_Reaching_Out', 'PickUp_Table', 'M_Picking_Up'], 2.6, .8);
   setTimeout(() => { S.secBusy = 0; if (!S) return; const a = S.av.position; if ((e.x - a.x) ** 2 + (e.z - a.z) ** 2 > 16) { svToast('Te alejaste antes de terminar.'); return; }
@@ -9394,9 +9394,9 @@ function pocketExit() {
 function pocketOk(x, z) { const P = S.pocket; if (P.ok) return P.ok(x - P.cx, z - P.cz); if (Math.hypot(x - P.cx, z - P.cz) > P.r) return false; for (const [a, b, r] of P.cols) if ((x - a) ** 2 + (z - b) ** 2 < (r + .3) ** 2) return false; return true; }
 function pocketNear() { const P = S && S.pocket; if (!P) return null; const a = S.av.position; if ((a.x - P.ex[0]) ** 2 + (a.z - P.ex[1]) ** 2 < 1.6 * 1.6) return { k: 'secx', label: 'Salir del lugar secreto' }; for (const it of P.items) if ((a.x - it.x) ** 2 + (a.z - it.z) ** 2 < 1.6 * 1.6) return { k: 'seci', it, label: 'Mirar · ' + it.it[0] }; return null; }
 function pocketTick(dt) { const P = S && S.pocket; if (!P) return; P.t += dt; P.fl.scale.y = 1 + Math.sin(P.t * 13) * .12 + Math.sin(P.t * 7.3) * .08; P.items.forEach((it, i) => { it.lb.position.y = 1.45 + Math.sin(P.t * 1.6 + i) * .06; }); if (P.tick) { P.tick(dt); return; } if (S.walking) pocketExit(); }
-function pocketItem(n) { const [nm, ic, ds, ref] = n.it.it; vilSheet(`<div class="inv-h"><b>${ic} ${esc(nm)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">${S.pocket && S.pocket.tick ? 'Para contemplar' : 'Objeto único'} · ${esc(S.pocket ? S.pocket.e.d.name : '')}</small><p class="vil-p">${esc(ds)}</p><small class="vil-k">📖 ${esc(ref)}</small>`); h3do(['M_Kneeling_Inspecting', 'M_Looking'], 2); }
+function pocketItem(n) { const [nm, ic, ds, ref] = n.it.it; vilSheet(`<div class="inv-h"><b>${ic} ${esc(nm)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">${S.pocket && S.pocket.tick ? 'Para contemplar' : 'Objeto único'} · ${esc(S.pocket ? S.pocket.e.d.name : '')}</small><p class="vil-p">${esc(ds)}</p><small class="vil-k">📖 ${esc(ref)}</small>`); shVo(ds); h3do(['M_Kneeling_Inspecting', 'M_Looking'], 2); }
 function secretHint() { const M = SEC.mod; if (!M || !SEC.list.length) return; const p = secP(), left = SEC.list.filter(e => !p.secrets[e.d.id]); if (!left.length) return; const e = left[Math.floor(Math.random() * left.length)], rn = G().REGIONS[e.r] ? G().REGIONS[e.r].name : '';
-  svToast(`🧭 Te cuentan un secreto: en la etapa ${rn} hay ${e.d.hint}.`); behav('pistas'); }
+  svSay(`🧭 Te cuentan un secreto: en la etapa ${rn} hay ${e.d.hint}.`, `Te cuentan un secreto: en la etapa ${rn} hay ${e.d.hint}.`, 'narrador'); behav('pistas'); }
 /* tienda */
 function svShop(kind) {
   const sh = SHOPS[kind]; if (!sh) return; const el = document.getElementById('v3sheet'), s = svP(); S.joy.x = 0; S.joy.y = 0; h3do(['M_Lengthy_Head_Nod'], 1.7);
