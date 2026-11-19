@@ -7288,11 +7288,11 @@ function svToolMesh(t) {
 const BARR = { list: [], im: null, T: 240 };
 function clayBuild(scene, W) {
   BARR.list = []; if (BARR.im && BARR.im.parent) BARR.im.parent.remove(BARR.im); BARR.im = null; const R = rng(777), L = BARR.list, dry = (x, z) => { try { return waterWet(x, z, null) < .04; } catch (e) { return true; } };
-  const add = (x, z) => { if (!dry(x, z)) return false; if (L.some(c => (c.x - x) ** 2 + (c.z - z) ** 2 < 36)) return false; L.push({ x, z, y: W.hAt(x, z), s: .8 + R() * .5, ry: R() * 6, t: 0 }); return true; };
+  const add = (x, z, t7) => { if (!dry(x, z)) return false; if (L.some(c => (c.x - x) ** 2 + (c.z - z) ** 2 < 36)) return false; L.push({ x, z, y: W.hAt(x, z), s: .8 + R() * .5, ry: R() * 6, t: 0, t7: t7 || 1 }); return true; }; /* barro del camino en la alfarería, del río en el Jordán y arcilla en la orilla del lago */
   const al = (S.olSites || []).find(o => o.id === 'alfareria'); if (al) for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283 + .4, r = 9 + R() * 4; add(al.x + Math.cos(a) * r, al.z + Math.sin(a) * r); }
   for (const p of (S.pois || [])) {
-    if (p.k === 'river' && p.pts && p.pts.length > 4) { const st = Math.max(2, Math.floor(p.pts.length / 12)); for (let i = 1; i < p.pts.length - 1; i += st) { const a = p.pts[i - 1], b = p.pts[i + 1], dx = b[0] - a[0], dz = b[1] - a[1], l = Math.hypot(dx, dz) || 1, nx = -dz / l, nz = dx / l, sd = R() < .5 ? -1 : 1; for (const o of [5, 6.5, 8, 10]) if (add(p.pts[i][0] + nx * o * sd, p.pts[i][1] + nz * o * sd)) break; } }
-    if (p.k === 'lake') { for (let i = 0; i < 9; i++) { const a = i / 9 * 6.283; for (const r of [33, 35, 38, 41]) if (add(p.x + Math.cos(a) * r, p.z + Math.sin(a) * r)) break; } }
+    if (p.k === 'river' && p.pts && p.pts.length > 4) { const st = Math.max(2, Math.floor(p.pts.length / 12)); for (let i = 1; i < p.pts.length - 1; i += st) { const a = p.pts[i - 1], b = p.pts[i + 1], dx = b[0] - a[0], dz = b[1] - a[1], l = Math.hypot(dx, dz) || 1, nx = -dz / l, nz = dx / l, sd = R() < .5 ? -1 : 1; for (const o of [5, 6.5, 8, 10]) if (add(p.pts[i][0] + nx * o * sd, p.pts[i][1] + nz * o * sd, 2)) break; } }
+    if (p.k === 'lake') { for (let i = 0; i < 9; i++) { const a = i / 9 * 6.283; for (const r of [33, 35, 38, 41]) if (add(p.x + Math.cos(a) * r, p.z + Math.sin(a) * r, 3)) break; } }
   }
   if (!L.length) return; const geo = new THREE.SphereGeometry(1, 12, 7, 0, 6.283, 0, Math.PI / 2), mat = tm('claymud', '#6E4A30', { roughness: .45 }), im = new THREE.InstancedMesh(geo, mat, L.length), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3();
   L.forEach(c => PG_HOLE.push({ x: c.x, z: c.z, r: 1.3 * c.s })); L.forEach((c, i) => { q.setFromEuler(e.set(0, c.ry, 0)); im.setMatrixAt(i, m.compose(v.set(c.x, c.y - .05, c.z), q, sc.set(1.3 * c.s, .38 * c.s, 1 * c.s))); }); im.receiveShadow = true; im.userData.keep = 1; scene.add(im); BARR.im = im;
@@ -7316,8 +7316,8 @@ function farmBuild(scene, W) {
 function farmDraw() { const c = new THREE.Color(), G0 = new THREE.Color('#6FA040'), G1 = new THREE.Color('#D9B45A'), sm = new THREE.Matrix4(); FARM.plots.forEach((p, i) => { const g = farmStage(i), q = g < 0 ? -1 : g >= 1 ? 2 : Math.floor(g * 8) / 8; if (q === p.st && !FARM.dirty) return; p.st = q; if (g < 0) { p.im.count = 0; return; } p.im.count = 24; const h = .12 + Math.min(1, g) * 1.05, w = .5 + Math.min(1, g) * .6; for (let j = 0; j < 24; j++) { p.im.setMatrixAt(j, sm.copy(p.im.userData.base[j]).multiply(new THREE.Matrix4().makeScale(w, h * (.85 + (j * 37 % 10) / 40), w))); } p.im.instanceMatrix.needsUpdate = true; p.mat.color.copy(c.copy(G0).lerp(G1, g >= 1 ? 1 : Math.max(0, g - .5) * 1.2)); }); FARM.dirty = 0; }
 function farmTick(dt) { if (!FARM.site) return; FARM.acc = (FARM.acc || 0) + dt; if (FARM.acc > 1) { FARM.acc = 0; farmDraw(); } FARM.esp.forEach((o, i) => { if (o.t > 0) { o.t -= dt; if (o.t <= 0) { o.t = 0; svHide(FARM.espIm, i, true); } } }); }
 function farmNear() { if (!FARM.site) return null; const a = S.av.position; if ((FARM.site.x - a.x) ** 2 + (FARM.site.z - a.z) ** 2 > 30 * 30) return null;
-  for (let i = 0; i < FARM.esp.length; i++) { const o = FARM.esp[i]; if (o.t <= 0 && (o.x - a.x) ** 2 + (o.z - a.z) ** 2 < 3) return { k: 'esp', i, label: 'Espigar' }; }
-  for (let i = 0; i < FARM.plots.length; i++) { const p = FARM.plots[i]; if (Math.abs(p.x - a.x) < 2.9 && Math.abs(p.z - a.z) < 2.2) { const g = farmStage(i), f = farmP()[i]; if (g < 0) return { k: 'farm', i, label: (svP().inv.semilla || 0) > 0 ? 'Sembrar' : 'Necesitás semillas', need: !(svP().inv.semilla > 0) }; if (g >= 1) return { k: 'farm', i, label: 'Cosechar' }; if (!f.w) return { k: 'farm', i, label: 'Regar' }; return { k: 'farm', i, label: 'Creciendo ' + Math.round(g * 100) + '%' }; } }
+  for (let i = 0; i < FARM.esp.length; i++) { const o = FARM.esp[i]; if (o.t <= 0 && (o.x - a.x) ** 2 + (o.z - a.z) ** 2 < 3) return { k: 'esp', i, label: 'Espigar cebada' }; }
+  for (let i = 0; i < FARM.plots.length; i++) { const p = FARM.plots[i]; if (Math.abs(p.x - a.x) < 2.9 && Math.abs(p.z - a.z) < 2.2) { const g = farmStage(i), f = farmP()[i]; if (g < 0) return { k: 'farm', i, label: (svP().inv.semilla || 0) > 0 ? 'Sembrar' : 'Necesitás semillas', need: !(svP().inv.semilla > 0) }; if (g >= 1) return { k: 'farm', i, label: 'Cosechar trigo' }; if (!f.w) return { k: 'farm', i, label: 'Regar' }; return { k: 'farm', i, label: 'Creciendo ' + Math.round(g * 100) + '%' }; } }
   return null; }
 function farmAct(n) { const s = svP(), lv = ofiLv('agr');
   if (n.k === 'esp') { const o = FARM.esp[n.i]; h3do(['M_Pick_Fruit', 'PickUp_Table'], 1.8, .4); svAdd('trigo', 1); ofiXP('agr', 3); svXP(1); o.t = FARM.ET; svHide(FARM.espIm, n.i, false); G().save(); svToast('🌾 Espigaste un poco de trigo, como Rut en el campo de Booz.'); svUI(); return; }
@@ -7394,7 +7394,7 @@ function svNear() {
   chopList().forEach((o, i) => { if (st.felled.has(i)) return; const d = d2(o.x, o.z); if (d < bd) { bd = d; const t = t7Tier('tree', o, i); best = { k: 'tree', i, t, label: svTool('axe') ? 'Talar ' + lc1(R7.wood.n[t - 1]) + (t > 1 ? ' · nivel ' + t : '') : 'Necesitás un hacha', need: !svTool('axe') }; } });
   rockList().forEach((o, i) => { if (st.mined.has(i)) return; const r = .6 + (.35 + o.v * .7) * o.s, d = d2(o.x, o.z); if (d < (r + 1.4) ** 2 && d < bd + 2) { bd = d; const t = t7Tier('rock', o, i); best = { k: 'rock', i, t, label: svTool('pick') ? 'Picar ' + lc1(R7.stone.n[t - 1]) + (t > 1 ? ' · nivel ' + t : '') : 'Necesitás un pico', need: !svTool('pick') }; } });
   if (best) return best;
-  { const c = clayNear(); if (c != null) return { k: 'clay', i: c, label: 'Sacar barro' }; }
+  { const c = clayNear(); if (c != null) return { k: 'clay', i: c, label: 'Sacar ' + lc1(R7.barro.n[((BARR.list[c] || {}).t7 || 1) - 1]) + ((BARR.list[c] || {}).t7 > 1 ? ' · nivel ' + BARR.list[c].t7 : '') }; }
   { const f = farmNear(); if (f) return f; }
   { const o = orchNear(); if (o) return o; }
   { const o = woolNear(); if (o) return o; }
@@ -7429,7 +7429,11 @@ svHide.store = new Map();
 const T7 = {
   axe: { of: 'car', at: 'fue', res: 'wood', ic: '🪓', verb: 'Talar', ing: 'Talando', names: ['Hacha de pedernal', 'Hacha de cobre', 'Hacha de bronce', 'Hacha de hierro', 'Hacha del carpintero', 'Hacha de doble filo', 'Hacha de Hiram'] },
   pick: { of: 'can', at: 'fue', res: 'stone', ic: '⛏️', verb: 'Picar', ing: 'Picando', names: ['Pico de asta', 'Pico de cobre', 'Pico de bronce', 'Pico de hierro', 'Pico del cantero', 'Pico del minero', 'Pico de Timna'] },
-  rod: { of: 'pes', at: 'pac', res: 'fish', ic: '🎣', verb: 'Pescar', ing: 'Pescando', names: ['Caña de junco', 'Caña de sauce', 'Caña con anzuelo de bronce', 'Red de mano', 'Red de los pescadores de Betsaida', 'Red de arrastre de barca', 'Red de la pesca milagrosa'] }
+  rod: { of: 'pes', at: 'pac', res: 'fish', ic: '🎣', verb: 'Pescar', ing: 'Pescando', names: ['Caña de junco', 'Caña de sauce', 'Caña con anzuelo de bronce', 'Red de mano', 'Red de los pescadores de Betsaida', 'Red de arrastre de barca', 'Red de la pesca milagrosa'] },
+  pala: { of: 'alf', at: 'fue', res: 'barro', ic: '🪏', free: 1, verb: 'Sacar', ing: 'Sacando', names: ['Pala de madera', 'Pala de cobre', 'Pala de bronce', 'Azada de hierro', 'Azada del alfarero', 'Azada de los mercaderes', 'Torno de Jeremías'] },
+  hoz: { of: 'agr', at: 'pac', res: 'trigo', ic: '🌾', free: 1, verb: 'Cosechar', ing: 'Cosechando', names: ['Hoz de pedernal', 'Hoz de cobre', 'Hoz de bronce', 'Hoz de hierro', 'Hoz del segador', 'Hoz de doble filo', 'Hoz de Booz'] },
+  vara: { of: 'oli', at: 'fue', res: 'aceitunas', ic: '🫒', free: 1, verb: 'Varear', ing: 'Vareando', names: ['Vara de caña', 'Vara de olivo', 'Vara de cedro', 'Prensa de piedra', 'Prensa de viga', 'Prensa de dos piedras', 'Prensa de Getsemaní'] },
+  podadera: { of: 'vin', at: 'pac', res: 'uvas', ic: '🍇', free: 1, verb: 'Cortar', ing: 'Cortando', names: ['Cuchillo de pedernal', 'Podadera de cobre', 'Podadera de bronce', 'Podadera de hierro', 'Podadera del viñador', 'Podadera de doble filo', 'Podadera de Escol'] }
 };
 /* minutos de juego que tarda en volver un árbol o una roca, según su nivel (lo mejor tarda más, hasta 12) */
 const T7_BACK = { tree: [3, 3, 5, 5, 7, 9, 10], rock: [4, 4, 6, 6, 8, 10, 12] };
@@ -7442,15 +7446,21 @@ const R7 = {
   fish: { n: ['Sardina de Galilea', 'Pez del Jordán', 'Pez de San Pedro', 'Barbo de Galilea', 'Barbo grande', 'Dorada del Mediterráneo', 'Atún de mar abierto'], it: ['Pescado crudo', 'Pez del Jordán', 'Pez de San Pedro', 'Barbo de Galilea', 'Barbo grande', 'Dorada', 'Atún'], ic: '🐟',
     w: ['La orilla del Mar de Galilea', 'El río Jordán', 'El mar abierto, más allá de las piedras del lago', 'La orilla del lago de Juan 21', 'El muelle de Magdala, en el Mar de Galilea', 'El puerto de Jope (próximamente)', 'Mar abierto frente a Jope (próximamente)'] }
 };
-const R7_SELL = { wood: [1, 2, 4, 7, 12, 20, 40], stone: [1, 2, 4, 7, 12, 20, 40], fish: [2, 3, 5, 8, 13, 22, 45] };
-const r7k = (g, t) => t <= 1 ? g : g + t; /* clave del recurso: wood, wood2 … wood7 */
-const R7_POOL = {}; Object.keys(R7).forEach(g => { R7_POOL[g] = [1, 2, 3, 4, 5, 6, 7].map(t => r7k(g, t)); for (let t = 2; t <= 7; t++) { RES[r7k(g, t)] = [R7[g].it[t - 1], R7[g].ic]; RES_PROD.add(r7k(g, t)); } });
+Object.assign(R7, {
+  barro: { n: ['Barro del camino', 'Barro del río', 'Arcilla del lago', 'Arcilla blanca', 'Arcilla fina', 'Arcilla de mar', 'Arcilla de la casa del alfarero'], it: ['Barro', 'Barro del río', 'Arcilla del lago', 'Arcilla blanca', 'Arcilla fina', 'Arcilla de mar', 'Arcilla del alfarero'], ic: '🟤' },
+  trigo: { k: ['cebada', 'trigo', 'lentejas', 'habas', 'espelta', 'trigob', 'primicias'], n: ['Cebada', 'Trigo', 'Lentejas', 'Habas y mijo', 'Espelta', 'Trigo de Basán', 'Primicias'], it: ['Cebada', 'Trigo', 'Lentejas', 'Habas y mijo', 'Espelta', 'Trigo de Basán', 'Primicias'], ic: '🌾' },
+  aceitunas: { n: ['Aceitunas de olivo joven', 'Aceitunas de aldea', 'Aceitunas verdes', 'Aceitunas negras', 'Aceitunas de Getsemaní', 'Aceitunas de los olivos viejos', 'Aceite puro'], it: ['Aceitunas', 'Aceitunas de aldea', 'Aceitunas verdes', 'Aceitunas negras', 'Aceitunas de Getsemaní', 'Aceitunas de olivos viejos', 'Aceite puro'], ic: '🫒' },
+  uvas: { n: ['Uvas silvestres', 'Uvas de aldea', 'Uvas de Caná', 'Uvas de Hebrón', 'Racimos de Escol', 'Uvas de En-gadi', 'Vid escogida'], it: ['Uvas', 'Uvas de aldea', 'Uvas de Caná', 'Uvas de Hebrón', 'Racimos de Escol', 'Uvas de En-gadi', 'Uvas de la vid escogida'], ic: '🍇' }
+});
+const R7_SELL = { wood: [1, 2, 4, 7, 12, 20, 40], stone: [1, 2, 4, 7, 12, 20, 40], fish: [2, 3, 5, 8, 13, 22, 45], barro: [1, 2, 3, 6, 10, 18, 35], trigo: [1, 2, 3, 6, 10, 18, 35], aceitunas: [1, 2, 3, 6, 10, 18, 35], uvas: [1, 2, 3, 6, 10, 18, 35] };
+const r7k = (g, t) => R7[g] && R7[g].k ? R7[g].k[t - 1] : t <= 1 ? g : g + t; /* clave del recurso: wood, wood2 … wood7 (o la lista propia del grupo) */
+const R7_POOL = {}; Object.keys(R7).forEach(g => { R7_POOL[g] = [1, 2, 3, 4, 5, 6, 7].map(t => r7k(g, t)); for (let t = 1; t <= 7; t++) { const k = r7k(g, t); if (t > 1 || !RES[k]) RES[k] = [R7[g].it[t - 1], R7[g].ic]; if (t > 1 || R7[g].k) RES_PROD.add(k); } });
 const R7_OF = {}; Object.entries(R7_POOL).forEach(([g, L]) => L.forEach((k, i) => { R7_OF[k] = [g, i + 1]; }));
 const R7_COOK = [1, 1, 2, 2, 3, 3, 4]; /* pescado asado que da cada pez según su nivel */
 const fishAll = () => { const s = svP(); return R7_POOL.fish.reduce((a, k) => a + (s.inv[k] || 0), 0); };
 /* inventario con la madera, la piedra y el pescado de todos los niveles sumados (para recetas y construcciones) */
 function t7Inv(inv, hide) { return new Proxy(inv, { get: (o, k) => R7_POOL[k] ? R7_POOL[k].reduce((a, x) => a + (o[x] || 0), 0) : hide && R7_OF[k] && R7_OF[k][1] > 1 ? 0 : o[k] }); }
-function t7P() { const s = svP(); if (!s.t7) { s.t7 = { axe: {}, pick: {}, rod: {} }; const T = s.tools || []; if (T.includes('axe')) s.t7.axe[1] = T7_DUR[0]; if (T.includes('pick')) s.t7.pick[1] = T7_DUR[0]; if (T.includes('rod')) s.t7.rod[1] = T7_DUR[0]; if (T.includes('net')) s.t7.rod[2] = T7_DUR[1]; } return s.t7; }
+function t7P() { const s = svP(); if (s.t7) Object.keys(T7).forEach(ty => { if (!s.t7[ty]) { s.t7[ty] = {}; if (T7[ty].free) s.t7[ty][1] = T7_DUR[0]; } }); if (!s.t7) { s.t7 = {}; Object.keys(T7).forEach(ty => { s.t7[ty] = {}; if (T7[ty].free) s.t7[ty][1] = T7_DUR[0]; }); const T = s.tools || []; if (T.includes('axe')) s.t7.axe[1] = T7_DUR[0]; if (T.includes('pick')) s.t7.pick[1] = T7_DUR[0]; if (T.includes('rod')) s.t7.rod[1] = T7_DUR[0]; if (T.includes('net')) s.t7.rod[2] = T7_DUR[1]; } return s.t7; }
 const t7Type = t => t === 'net' ? 'rod' : T7[t] ? t : null;
 const t7Has = type => Object.keys(t7P()[type]).length > 0;
 const t7Ok = (type, t) => ofiLv(T7[type].of) >= T7_LV[t - 1] && fv(T7[type].at) >= T7_AT[t - 1];
@@ -7664,24 +7674,28 @@ function kMisTalk(id) {
 /* los demás oficios también trabajan solos con la misma regla: cada pieza sale en 2 a 4 golpes de 1,5 segundos
    (barro, espigas, cosecha, olivos, uvas, poda, esquila, lino y fruta). Si parás antes, te llevás lo que ya juntaste. */
 const JOB = {
-  clay: { res: () => 'barro', c: () => 2 + (ofiLv('alf') >= 4 ? 1 : 0) + (ofiLv('alf') >= 24 ? 1 : 0), ing: 'Sacando barro', ic: '🟤', an: 'kneel' },
-  esp: { res: () => 'trigo', c: () => 1, ing: 'Espigando trigo', ic: '🌾', an: 'pick' },
-  farm: { res: () => 'trigo', c: () => 3 + (ofiLv('agr') >= 4 ? 1 : 0) + (ofiLv('agr') >= 24 ? 1 : 0), ing: 'Cosechando trigo', ic: '🌾', an: 'pick' },
-  olive: { res: () => 'aceitunas', c: () => 3 + (ofiLv('oli') >= 4 ? 1 : 0), ing: 'Vareando el olivo', ic: '🫒', an: 'axe' },
-  vid: { res: () => 'uvas', c: n => 3 + (ofiLv('vin') >= 4 ? 1 : 0) + (ORCH.vid[n.i] && ORCH.vid[n.i].p ? 1 : 0), ing: 'Cortando uvas', ic: '🍇', an: 'pick' },
+  clay: { ty: 'pala', g: 'barro', tier: n => (BARR.list[n.i] || {}).t7 || 1, res: () => 'barro', c: () => 2 + (ofiLv('alf') >= 4 ? 1 : 0) + (ofiLv('alf') >= 24 ? 1 : 0), ing: 'Sacando barro', ic: '🟤', an: 'kneel' },
+  esp: { ty: 'hoz', g: 'trigo', tier: () => 1, res: () => 'trigo', c: () => 1, ing: 'Espigando trigo', ic: '🌾', an: 'pick' },
+  farm: { ty: 'hoz', g: 'trigo', tier: () => 2, res: () => 'trigo', c: () => 3 + (ofiLv('agr') >= 4 ? 1 : 0) + (ofiLv('agr') >= 24 ? 1 : 0), ing: 'Cosechando trigo', ic: '🌾', an: 'pick' },
+  olive: { ty: 'vara', g: 'aceitunas', tier: () => 1, res: () => 'aceitunas', c: () => 3 + (ofiLv('oli') >= 4 ? 1 : 0), ing: 'Vareando el olivo', ic: '🫒', an: 'axe' },
+  vid: { ty: 'podadera', g: 'uvas', tier: () => 1, res: () => 'uvas', c: n => 3 + (ofiLv('vin') >= 4 ? 1 : 0) + (ORCH.vid[n.i] && ORCH.vid[n.i].p ? 1 : 0), ing: 'Cortando uvas', ic: '🍇', an: 'pick' },
   pod: { res: () => 'wood', c: () => 1, ing: 'Podando la viña', ic: '✂️', an: 'axe' },
   shear: { res: () => 'lana', c: () => 2 + (ofiLv('tej') >= 4 ? 1 : 0), ing: 'Esquilando', ic: '🐑', an: 'kneel' },
   lino: { res: () => 'lino', c: () => 2 + (ofiLv('carp') >= 4 ? 1 : 0), ing: 'Arrancando lino', ic: '🌿', an: 'pick' },
   fruit: { res: n => { const o = S.sv.fruit.trees[n.i]; return o && o.kind === 'lemon' ? 'lemon' : 'fruit'; }, c: n => { const o = S.sv.fruit.trees[n.i]; return o ? o.n : 0; }, ing: 'Juntando fruta', ic: '🍎', an: 'pick' }
 };
 function jobKind(n) { if (!n || n.go || n.need) return null; if (n.k === 'farm') return farmStage(n.i) >= 1 ? 'farm' : null; if (n.k === 'shear') return n.done ? null : 'shear'; return JOB[n.k] ? n.k : null; }
-function jobStart(n, jk) { const J = JOB[jk], c = J.c(n); if (!(c > 0)) return false; S.sv.work = { job: 1, jk, nn: n, c, k: 'job', n: 0, hits: 0, need: 2 + Math.floor(Math.random() * 3), t: 0, label: J.ing, res: J.res(n) }; S.joy.x = 0; S.joy.y = 0; svToast(`${J.ic} ${J.ing}. Sigue solo; movete o tocá E para parar.`); svUI(); return true; }
+function jobStart(n, jk) { const J = JOB[jk], c = J.c(n); if (!(c > 0)) return false;
+  let tier = 1, tl = 0, d = 0, res = J.res(n), lab = J.ing;
+  if (J.ty) { tier = J.tier(n); tl = t7Best(J.ty); const rn = lc1(R7[J.g].n[tier - 1]); if (!tl) { svToast(`${T7[J.ty].ic} Necesitás ${lc1(t7Name(J.ty, 1))} o una mejor. Se consigue en el puesto del oficio.`); return true; } d = tl - tier; if (d <= -2) { svToast(`⚠️ Tu ${lc1(t7Name(J.ty, tl))} no alcanza: ${rn} pide una herramienta de nivel ${tier - 1} o más.`); return true; } res = r7k(J.g, tier); lab = `${T7[J.ty].ing} ${rn}`; }
+  S.sv.work = { job: 1, jk, nn: n, c, k: 'job', n: 0, hits: 0, need: t7Need(d, tier), t: 0, label: lab, res, base: J.res(n), ty: J.ty, tl, tier, d }; S.joy.x = 0; S.joy.y = 0; svToast(`${J.ic} ${J.ing}. Sigue solo; movete o tocá E para parar.`); svUI(); return true; }
 /* terminar el trabajo: al completar se hace la acción de siempre (que deja el lugar vacío hasta que vuelva); si parás antes, te llevás lo que juntaste */
-function jobEnd(w, full) { if (full) { try { svAct(Object.assign({}, w.nn, { go: 1 })); } catch (e) {} return; } if (w.n) svAdd(w.res, w.n); svToast(w.n ? `${JOB[w.jk].ic} Paraste: juntaste ${w.n}.` : 'Paraste de trabajar.'); }
+function jobEnd(w, full) { if (full) { try { svAct(Object.assign({}, w.nn, { go: 1 })); } catch (e) {} if (w.res !== w.base) { svAdd(w.base, -w.c); svAdd(w.res, w.c); } return; } if (w.n) svAdd(w.res, w.n); svToast(w.n ? `${JOB[w.jk].ic} Paraste: juntaste ${w.n}.` : 'Paraste de trabajar.'); }
 function jobTick(w, dt) {
-  w.t += dt; if (w.t < 1.5) return; w.t = 0; w.hits++; const J = JOB[w.jk];
+  w.t += dt; if (w.t < 1.5 * (w.ty ? 1 - .3 * fv(T7[w.ty].at) / 100 : 1)) return; w.t = 0; w.hits++; const J = JOB[w.jk];
   if (J.an === 'axe') { S.toolK = 'axe'; S.toolT = 1.2; h3do(['M_Idle', 'Idle_Loop'], 1); } else h3do(J.an === 'kneel' ? ['M_Kneeling_Idle', 'PickUp_Table'] : [['M_Pick_Fruit', 'M_Pick_Fruit_1', 'M_Pick_Fruit_2'][w.hits % 3], 'PickUp_Table'], 1.6, .4);
-  AXS.workT = 6; if (w.hits < w.need) return; w.hits = 0; w.need = 2 + Math.floor(Math.random() * 3); w.n++;
+  AXS.workT = 6; if (w.hits < w.need) return; w.hits = 0; w.need = t7Need(w.d || 0, w.tier || 1); w.n++;
+  if (w.ty && t7Wear(w.ty, w.tl, w.d === -1 ? 5 : 1)) { S.sv.work = null; svAdd(w.res, w.n); svToast(`💥 Tu ${lc1(t7Name(w.ty, w.tl))} se gastó del todo y se rompió. Te llevás ${w.n}.`); G().save(); svUI(); return; }
   try { pkPop(`${J.ic} +1 ${lc1(RES[w.res] ? RES[w.res][0] : w.res)}`); } catch (e) {}
   if (w.n >= w.c) { S.sv.work = null; jobEnd(w, true); svUI(); }
 }
@@ -8258,7 +8272,7 @@ function svUI() {
 
 /* ---------- mochila: trabajo y atributos ---------- */
 function invSurv(body) {
-  const s = svP(); const tools = `<div class="sv-tool${s.tools.includes('flint') ? '' : ' off'}"><span>${TOOLS.flint[1]}</span><b>${TOOLS.flint[0]}</b><small>${s.tools.includes('flint') ? TOOLS.flint[2] : 'Todavía no lo tenés'}</small></div>` + ['axe', 'pick', 'rod'].map(ty => { const P = t7P()[ty], own = [7, 6, 5, 4, 3, 2, 1].filter(t => P[t] != null && P[t] !== 0), best = t7Best(ty);
+  const s = svP(); const tools = `<div class="sv-tool${s.tools.includes('flint') ? '' : ' off'}"><span>${TOOLS.flint[1]}</span><b>${TOOLS.flint[0]}</b><small>${s.tools.includes('flint') ? TOOLS.flint[2] : 'Todavía no lo tenés'}</small></div>` + Object.keys(T7).map(ty => { const P = t7P()[ty], own = [7, 6, 5, 4, 3, 2, 1].filter(t => P[t] != null && P[t] !== 0), best = t7Best(ty);
     if (!own.length) return `<div class="sv-tool off"><span>${T7[ty].ic}</span><b>${ty === 'axe' ? 'Hacha' : ty === 'pick' ? 'Pico' : 'Caña o red'}</b><small>Todavía no tenés. Se consigue en el mercado.</small></div>`;
     return own.map(t => { const d = P[t], pct = d < 0 ? 100 : Math.round(d / T7_DUR[t - 1] * 100), ok = t7Ok(ty, t); return `<div class="sv-tool${ok ? '' : ' off'}"><span>${T7[ty].ic}</span><b>${esc(t7Name(ty, t))} · nivel ${t}${t === best ? ' · en uso' : ''}</b><small>${esc(t7Ficha(ty, t))}${ok ? '' : ' Todavía no la podés usar.'}</small><i class="t7-dur"><i style="width:${pct}%" class="${pct < 25 ? 'low' : ''}"></i></i><small>${d < 0 ? 'No se gasta' : 'Le queda ' + pct + '%'}</small></div>`; }).join(''); }).join('');
   const res = Object.entries(RES).filter(([k]) => !RES_PROD.has(k) || (s.inv[k] || 0) > 0).map(([k, [n, i]]) => `<div class="sv-res"><span>${i}</span><b>${s.inv[k] || 0}</b><small>${n}</small></div>`).join('');
@@ -8508,8 +8522,8 @@ const SHOPS = {
 /* en todos los mercados se consiguen las herramientas básicas (caña, hacha y pico); y algunas prendas comunes según el oficio de cada lugar */
 const SHOP_WEAR = { carpintero: ['carpintero', 'vendcuero'], alfarero: ['alfarero', 'alfarerog'], panadero: ['segadorhat', 'trigo'], pescador: ['red', 'pescadorb', 'bastonpesc'], tejedora: ['lino', 'indigo', 'tejedora', 'turbante'], posada: ['capucha', 'cuero', 'viajet'], mercado: ['gorromerc', 'juncos', 'tierra'] };
 /* herramientas de la escalera de 7: el nivel 1 en todos lados; el 2 y el 3 en el mercado; hasta el 4 con el artesano de cada una */
-const SHOP_T7 = { mercado: { axe: 3, pick: 3, rod: 3 }, carpintero: { axe: 4 }, alfarero: { pick: 4 }, pescador: { rod: 4 } };
-Object.entries(SHOPS).forEach(([k, sh]) => { sh.buy = sh.buy.filter(b => !(b[0] === 't' && T7[t7Type(b[1]) || ''])); const tl = []; ['axe', 'pick', 'rod'].forEach(ty => { const mx = (SHOP_T7[k] || {})[ty] || 1; for (let t = 1; t <= mx; t++) tl.push(['T', ty + ':' + t, T7_PR[t - 1]]); }); sh.buy = tl.concat(sh.buy, (SHOP_WEAR[k] || []).map(id => ['p', id, 12])); sh.fix = SHOP_T7[k] ? Object.keys(SHOP_T7[k]) : []; });
+const SHOP_T7 = { mercado: { axe: 3, pick: 3, rod: 3 }, carpintero: { axe: 4 }, alfarero: { pick: 4, pala: 4 }, pescador: { rod: 4 }, panadero: { hoz: 4 }, posada: { vara: 4, podadera: 4 } };
+Object.entries(SHOPS).forEach(([k, sh]) => { sh.buy = sh.buy.filter(b => !(b[0] === 't' && T7[t7Type(b[1]) || ''])); const tl = []; Object.keys(T7).forEach(ty => { const mx = (SHOP_T7[k] || {})[ty] || (T7[ty].free ? 0 : 1); for (let t = 1; t <= mx; t++) tl.push(['T', ty + ':' + t, T7_PR[t - 1]]); }); sh.buy = tl.concat(sh.buy, (SHOP_WEAR[k] || []).map(id => ['p', id, 12])); sh.fix = SHOP_T7[k] ? Object.keys(SHOP_T7[k]) : []; });
 Object.assign(SHOPS, {
   jacobo: { name: 'Taller de Jacobo', ic: '🪓', cloth: '#7A5A3A', buy: [['T', 'axe:5', T7_PR[4]]], sell: ['wood5'], fix: ['axe'] },
   templo: { name: 'El constructor del Templo', ic: '⛏️', cloth: '#8A7A6A', buy: [['T', 'pick:5', T7_PR[4]]], sell: ['stone5', 'wood7', 'stone7'], fix: ['pick'] },
@@ -8518,7 +8532,7 @@ Object.assign(SHOPS, {
   jerico: { name: 'El minero de Jericó', ic: '⛏️', cloth: '#6A4A3A', buy: [['T', 'pick:6', T7_PR[5]]], sell: [], fix: ['pick'] },
   tiro: { name: 'Los mercaderes de Tiro', ic: '🪓', cloth: '#5A2A6A', g: 'chica', buy: [['T', 'axe:6', T7_PR[5]], ['T', 'rod:6', T7_PR[5]]], sell: ['fish6', 'fish7'], fix: ['axe', 'rod'] }
 });
-['wood', 'stone', 'fish'].forEach(g => { const L = [2, 3, 4].map(t => r7k(g, t)), add = k => { const sh = SHOPS[k]; const i = sh.sell.indexOf(g); sh.sell.splice(i >= 0 ? i + 1 : sh.sell.length, 0, ...L.filter(x => !sh.sell.includes(x))); }; add('mercado'); add(g === 'wood' ? 'carpintero' : g === 'stone' ? 'alfarero' : 'pescador'); if (g === 'fish') add('posada'); });
+['wood', 'stone', 'fish', 'barro', 'trigo', 'aceitunas', 'uvas'].forEach(g => { const L = [1, 2, 3, 4].map(t => r7k(g, t)), add = k => { const sh = SHOPS[k]; if (!sh) return; const i = sh.sell.indexOf(g); sh.sell.splice(i >= 0 ? i + 1 : sh.sell.length, 0, ...L.filter(x => !sh.sell.includes(x))); }; add('mercado'); add({ wood: 'carpintero', stone: 'alfarero', fish: 'pescador', barro: 'alfarero', trigo: 'panadero', aceitunas: 'posada', uvas: 'posada' }[g]); if (g === 'fish') add('posada'); });
 const SERV_PERKS = [
   [3, 'Te conocen en el mercado', 'Los comerciantes te hacen precio: todo cuesta un 10% menos.'],
   [8, 'Manos abiertas', 'Cada misión cumplida te deja 5 denarios más.'],
