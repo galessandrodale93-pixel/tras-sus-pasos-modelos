@@ -7426,6 +7426,8 @@ const T7 = {
   pick: { of: 'can', at: 'fue', res: 'stone', ic: '⛏️', verb: 'Picar', ing: 'Picando', names: ['Pico de asta', 'Pico de cobre', 'Pico de bronce', 'Pico de hierro', 'Pico del cantero', 'Pico del minero', 'Pico de Timna'] },
   rod: { of: 'pes', at: 'pac', res: 'fish', ic: '🎣', verb: 'Pescar', ing: 'Pescando', names: ['Caña de junco', 'Caña de sauce', 'Caña con anzuelo de bronce', 'Red de mano', 'Red de los pescadores de Betsaida', 'Red de arrastre de barca', 'Red de la pesca milagrosa'] }
 };
+/* minutos de juego que tarda en volver un árbol o una roca, según su nivel (lo mejor tarda más, hasta 12) */
+const T7_BACK = { tree: [3, 3, 5, 5, 7, 9, 10], rock: [4, 4, 6, 6, 8, 10, 12] };
 const T7_LV = [1, 3, 6, 10, 14, 19, 24], T7_AT = [0, 5, 10, 20, 30, 45, 60], T7_DUR = [60, 80, 100, 130, 160, 200, -1], T7_PR = [5, 15, 35, 70, 150, 300, 0];
 const R7 = {
   wood: { n: ['Retama', 'Higuera', 'Sicómoro', 'Acacia', 'Olivo viejo', 'Encina de Basán', 'Cedro del Líbano'], it: ['Madera', 'Madera de higuera', 'Madera de sicómoro', 'Madera de acacia', 'Madera de olivo', 'Madera de encina', 'Madera de cedro'], ic: '🪵',
@@ -7506,7 +7508,7 @@ function t7Tick(dt) {
   try { pkPop(`${R7[g].ic} +${amt} ${lc1(RES[key][0])}`); } catch (e) {}
   const broke = t7Wear(w.type, w.tl, (w.d === -1 ? 5 : 1) * (w.k === 'fish' && ft('pac') >= 2 ? .5 : 1));
   if (w.k !== 'fish') { st.t7left = st.t7left || new Map(); const lk = w.k + w.i, left = (st.t7left.has(lk) ? st.t7left.get(lk) : 3 + (w.i % 6)) - 1;
-    if (left <= 0) { st.t7left.delete(lk); if (w.k === 'tree') { treeShow(w.i, false); st.felled.set(w.i, SV.TREE); } else { rockShow(w.i, false); st.mined.set(w.i, SV.ROCK); }
+    if (left <= 0) { st.t7left.delete(lk); if (w.k === 'tree') { treeShow(w.i, false); st.felled.set(w.i, T7_BACK.tree[w.tier - 1] * 60); } else { rockShow(w.i, false); st.mined.set(w.i, T7_BACK.rock[w.tier - 1] * 60); }
       G().save(); if (broke) { t7Stop(`💥 Tu ${lc1(t7Name(w.type, w.tl))} se gastó del todo y se rompió.`); return; } t7Stop(w.k === 'tree' ? `🪵 Se terminó el árbol: sacaste ${w.n} ${w.n > 1 ? 'piezas' : 'pieza'}. Vuelve a crecer en unos minutos.` : `🪨 Se terminó la roca: sacaste ${w.n} ${w.n > 1 ? 'piezas' : 'pieza'}. Se recupera en unos minutos.`); return; }
     st.t7left.set(lk, left); }
   if (broke) { t7Stop(`💥 Tu ${lc1(t7Name(w.type, w.tl))} se gastó del todo y se rompió. Se arreglan antes de romperse, en el mercado o con el artesano.`); return; }
