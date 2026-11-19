@@ -40,11 +40,12 @@ export async function linkPago(a: AlumnoPago, meses: string | string[]) {
 export const refDe = (ref: unknown) => { const m = /^cuota\|([^|]+)\|(\d{4}-\d{2}(?:,\d{4}-\d{2})*)$/.exec(String(ref || "")); return m ? { alumnoId: m[1], mes: m[2] } : null; };
 
 // crea el pago en Mercado Pago (cuenta de Habitat) y devuelve el link para pagar
-export async function preferencia(a: AlumnoPago, meses: string | string[]) {
+// total: monto fijo acordado (link firmado desde la dirección, p. ej. cuando un mes fue compartido y otro individual)
+export async function preferencia(a: AlumnoPago, meses: string | string[], total = 0) {
   const L = lista(meses);
   if (!L.length) throw new Error("Falta el mes de la cuota.");
-  if (!montoDe(a)) throw new Error("Tu cuota no tiene un monto cargado. Escribinos y lo vemos.");
-  const monto = totalDe(a, L);
+  if (!montoDe(a) && !total) throw new Error("Tu cuota no tiene un monto cargado. Escribinos y lo vemos.");
+  const monto = total > 0 ? total : totalDe(a, L);
   const tk = await token(1);
   if (!tk) throw new Error("Falta la clave de Mercado Pago.");
   const txt = (m: string) => MS[+m.slice(5, 7) - 1] || m;

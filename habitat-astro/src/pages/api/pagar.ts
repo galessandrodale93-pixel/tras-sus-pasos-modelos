@@ -10,10 +10,12 @@ const pagina = (t: string) => new Response(`<!doctype html><meta charset="utf-8"
 export const GET: APIRoute = async ({ url }) => {
   try {
     const a = String(url.searchParams.get("a") || "").slice(0, 80), m = String(url.searchParams.get("m") || ""), s = String(url.searchParams.get("s") || "");
-    if (!a || !MESES_RE.test(m) || s !== (await firma(a, m))) return pagina("Este link de pago no es válido. Entrá al Campus para pagar tu cuota.");
+    // &t=<total>: monto fijo acordado; va dentro de la firma, así nadie lo puede cambiar
+    const t = /^\d{3,7}$/.test(String(url.searchParams.get("t") || "")) ? Number(url.searchParams.get("t")) : 0;
+    if (!a || !MESES_RE.test(m) || s !== (await firma(a, t ? m + "|" + t : m))) return pagina("Este link de pago no es válido. Entrá al Campus para pagar tu cuota.");
     const al = (await q("TutAlumnos").eq("_id", a).limit(1).find()).items[0] as (AlumnoPago & { activo?: boolean }) | undefined;
     if (!al || al.activo === false) return pagina("No encontramos tu cuota. Escribinos y lo vemos.");
-    const link = await preferencia(al, m);
+    const link = await preferencia(al, m, t);
     if (url.searchParams.get("ver") === "1") return new Response(JSON.stringify({ ok: true, link }), { headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
     return Response.redirect(link, 302);
   } catch (e) {
