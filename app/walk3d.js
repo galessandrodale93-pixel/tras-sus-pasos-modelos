@@ -7637,7 +7637,7 @@ function kidsTick(dt) {
 function kUI() {
   if (svOn() || !S) return; let el = document.getElementById('v3kids');
   if (!el) { el = document.createElement('div'); el.id = 'v3kids'; el.className = 'v3surv kdo'; el.innerHTML = '<button class="sv-do" data-a="do"><b>✋</b><span></span></button>'; document.body.appendChild(el); const b = el.querySelector('button'); b.onpointerdown = e => { e.preventDefault(); kAct(); }; }
-  const n = document.getElementById('view3d').hidden ? null : kNear(); el.hidden = !n; if (n) el.querySelector('span').textContent = n.label + (n.k === 'work' ? '' : ' (E)');
+  const n = document.getElementById('view3d').hidden ? null : kNear(), b = el.querySelector('button'); b.hidden = !n; if (n) b.querySelector('span').textContent = n.label + (n.k === 'work' ? '' : ' (E)');
 }
 /* las tres misiones brillantes: una persona con una chispa; al acercarte te cuenta qué necesita */
 function kidsMisBuild(scene, W) {
