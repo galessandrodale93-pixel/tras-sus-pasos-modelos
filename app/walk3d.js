@@ -7575,8 +7575,8 @@ function epAct(id) { const x = epStep(id); if (!x || x.sp.k !== 'act') return;
   if (x.sp.give) Object.entries(x.sp.give).forEach(([k, n]) => svAdd(k, n)); h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 3); epAdvance(id, x.sp.ok);
 }
 /* ---------- Kids: talar, pescar y picar en 3 niveles (común, especial, brillante), sin desgaste ni hambre ----------
-   Un toque y trabaja solo (2 a 4 golpes por pieza). La herramienta especial se gana al completar una página del álbum,
-   y la brillante con una misión corta. Lo que juntás va al álbum: figuritas nuevas, y cada 10 cosas, un sobre. */
+   Un toque y trabaja solo (de 2 a 6 golpes por pieza, según lo que saques). La herramienta especial se gana al completar una página del álbum,
+   y la brillante con una misión corta. Lo que juntás va al álbum: figuritas nuevas, y cada 15 cosas, un sobre. */
 const K3 = {
   wood: { n: ['Higuera', 'Sicómoro', 'Cedro'], card: ['higuera', 'sicomoro', 'cedro'], ic: '🪵', ty: 'axe', verb: 'Talar', ing: 'Talando' },
   stone: { n: ['Piedra de campo', 'Basalto negro', 'Piedra de sal que brilla'], card: [], ic: '🪨', ty: 'pick', verb: 'Picar', ing: 'Picando' },
@@ -7588,6 +7588,8 @@ const KMIS = {
   zaqueo: { name: 'El árbol de Zaqueo', ty: 'axe', ol: 'jerico', who: 'Zaqueo', ref: 'Lucas 19:1-10', need: ['wood', 2, 3], t: 'Zaqueo: «Jesús viene a mi casa y la quiero arreglar». Juntá 3 maderas de sicómoro y traéselas.', end: 'Zaqueo: «¡Hoy Jesús viene a mi casa!». Te regala su hacha brillante.' },
   roca: { name: 'Una casa sobre la roca', ty: 'pick', poi: 'field', who: 'Un constructor', ref: 'Mateo 7:24', need: ['stone', 2, 3], t: 'Un constructor sabio quiere hacer su casa sobre la roca. Juntá 3 piedras de basalto negro y traéselas.', end: 'Jesús dijo que el que escucha sus palabras y las pone en práctica es como el que construye su casa sobre la roca (Mateo 7:24). Te regala su pico brillante.' }
 };
+/* golpes por pieza en Kids (cada golpe dura 1,5 segundos): lo común 2 a 4, lo especial 3 a 5, lo brillante 4 a 6; igual para talar, picar y pescar */
+const kNeed = t => t + 1 + Math.floor(Math.random() * 3);
 function kP() { const p = G().P(); p.kt = p.kt || { got: {}, n: 0, br: {}, mis: {} }; return p.kt; }
 const kPage = () => { try { const h = albP().have; return ALB_PAGES.some(pg => ALB.filter(c => c.pg === pg[0]).every(c => h[c.id])); } catch (e) { return false; } };
 const kTool = ty => kP().br[ty] ? 3 : kPage() ? 2 : 1;
@@ -7607,7 +7609,7 @@ function kAct() {
   const n = kNear(), st = S.sv; if (!n) return; if (n.k === 'work') { kStop(); return; }
   const G3 = K3[n.g], tl = kTool(G3.ty);
   if (tl < n.t) { const m = n.t === 2 ? 'Se gana completando una página de tu álbum.' : 'Se gana con la misión «' + Object.values(KMIS).find(x => x.ty === G3.ty).name + '».'; svToast(`${G3.ic} Para ${lc1(G3.n[n.t - 1])} necesitás ${lc1(K3T[G3.ty][n.t - 1])}. ${m}`); return; }
-  st.kw = { k: n.k, i: n.i, t: n.t, g: n.g, hits: 0, need: 2 + Math.floor(Math.random() * 3), tt: 0, n: 0, label: G3.ing + ' ' + lc1(G3.n[n.t - 1]) }; S.joy.x = 0; S.joy.y = 0;
+  st.kw = { k: n.k, i: n.i, t: n.t, g: n.g, hits: 0, need: kNeed(n.t), tt: 0, n: 0, label: G3.ing + ' ' + lc1(G3.n[n.t - 1]) }; S.joy.x = 0; S.joy.y = 0;
   svToast(`${G3.ic} ${G3.ing} ${lc1(G3.n[n.t - 1])}. Sigue solo; caminá o tocá otra vez para parar.`); kUI();
 }
 function kStop(msg) { if (!S.sv.kw) return; const w = S.sv.kw; S.sv.kw = null; svToast(msg || (w.n ? `¡Juntaste ${w.n}!` : 'Paraste.')); G().save(); kUI(); }
@@ -7620,13 +7622,13 @@ function kidsTick(dt) {
   st.kui = (st.kui || 0) + dt; if (st.kui > .5) { st.kui = 0; kUI(); }
   const w = st.kw; if (!w) return;
   if (S.freeMoving || S.walking || sheetUp()) { kStop(); return; }
-  w.tt += dt; if (w.tt < 1) return; w.tt = 0; w.hits++;
-  if (w.k === 'fish') h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 1.2); else svSwing(w.k);
-  if (w.hits < w.need) return; w.hits = 0; w.need = 2 + Math.floor(Math.random() * 3); w.n++;
+  w.tt += dt; if (w.tt < 1.5) return; w.tt = 0; w.hits++;
+  if (w.k === 'fish') h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 1.7); else svSwing(w.k);
+  if (w.hits < w.need) return; w.hits = 0; w.need = kNeed(w.t); w.n++;
   const P = kP(), G3 = K3[w.g], key = w.g + w.t; P.got[key] = (P.got[key] || 0) + 1; P.n = (P.n || 0) + 1; svXP(w.t * 2);
   try { pkPop(`${G3.ic} +1 ${lc1(G3.n[w.t - 1])}`); } catch (e) {}
   { const id = G3.card[w.t - 1], c = id && ALB.find(x => x.id === id); if (c && !albP().have[c.id]) { albAdd(c); albBtn(true); albToast(c); } }
-  if (P.n % 10 === 0) { try { albGetSobre(1, 'Cambiaste 10 cosas que juntaste por un sobre de figuritas'); } catch (e) {} }
+  if (P.n % 15 === 0) { try { albGetSobre(1, 'Cambiaste 15 cosas que juntaste por un sobre de figuritas'); } catch (e) {} }
   G().save();
   if (w.k !== 'fish') { st.t7left = st.t7left || new Map(); const lk = 'k' + w.k + w.i, left = (st.t7left.has(lk) ? st.t7left.get(lk) : 3) - 1;
     if (left <= 0) { st.t7left.delete(lk); if (w.k === 'tree') { treeShow(w.i, false); st.felled.set(w.i, 120); } else { rockShow(w.i, false); st.mined.set(w.i, 120); } kStop(`¡Juntaste ${w.n}! ${w.k === 'tree' ? 'El árbol' : 'La piedra'} vuelve en un ratito.`); return; }
