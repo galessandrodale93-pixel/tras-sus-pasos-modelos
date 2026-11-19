@@ -861,13 +861,17 @@ function specStall(scene, x, z, yAt, shop, rot) {
 const SPEC_AT = [{ shop: 'jacobo', poi: 'taller' }, { shop: 'templo', poi: 'temple' }, { shop: 'magdala', poi: 'lake', pier: 1 }, { shop: 'betsaida', ol: 'betsaida' }, { shop: 'jerico', ol: 'jerico' }];
 function specBuild(scene, W) {
   if (!S.hx) return; const yAt = (x, z) => W.hAt(x, z);
+  /* un lugar libre: sin construcciones ni otros carteles cerca, así el puesto no queda tapado por otra acción */
+  const free = (x, z) => !blockedAt(x, z) && !(S.lore || []).some(l => (l.x - x) ** 2 + (l.z - z) ** 2 < 64) && !Z7.stalls.some(q => (q.x - x) ** 2 + (q.z - z) ** 2 < 49) && !((S.sv && S.sv.stalls) || []).some(q => (q.x - x) ** 2 + (q.z - z) ** 2 < 49);
+  const pick = (bx0, bz0, C) => { for (const [ox, oz] of C) if (free(bx0 + ox, bz0 + oz)) return [bx0 + ox, bz0 + oz]; return [bx0 + C[0][0], bz0 + C[0][1]]; };
+  const RING = [0, 1, 2, 3, 4, 5, 6, 7].flatMap(i => [9, 13, 17].map(r => [Math.cos(i * .785) * r, Math.sin(i * .785) * r]));
   SPEC_AT.forEach(sp => { try {
     let x, z;
     if (sp.poi) { const p = (S.pois || []).find(q => q.k === sp.poi); if (!p) return;
       if (sp.pier) { const dx = -p.side, L = [34, 30, 26]; const pg = new THREE.Group(); for (let i = 0; i < 9; i++) { const d = 35 - i; bx(1.4, .12, .9, WOODL(), 0, 0, 0, pg).position.set(p.x + dx * d, yAt(p.x + dx * 36, p.z) + .25, p.z); } for (const d of [35, 31, 27]) [-0.6, .6].forEach(o => cy(.07, .07, 2.2, WOOD(), p.x + dx * d, yAt(p.x + dx * 36, p.z) - .7, p.z + o, pg, 6)); scene.add(pg); void L;
-        Z7.pier = { x: p.x + dx * 36, z: p.z }; x = p.x + dx * 39; z = p.z + 4; }
-      else { const C = [[-p.side * 9, 6], [-p.side * 11, -6], [-p.side * 7, 12], [p.side * 9, -10]]; for (const [ox, oz] of C) { if (!blockedAt(p.x + ox, p.z + oz)) { x = p.x + ox; z = p.z + oz; break; } } if (x == null) { x = p.x + C[0][0]; z = p.z + C[0][1]; } } }
-    else { const p = (OL.plan || []).find(q => q.id === sp.ol); if (!p) return; x = p.x - Math.sign(p.x) * (p.r + 4); z = p.z + 3; }
+        Z7.pier = { x: p.x + dx * 36, z: p.z }; [x, z] = pick(p.x + dx * 39, p.z, [[0, 4], [0, -4], [dx * 3, 6], [dx * 3, -6]]); }
+      else { [x, z] = pick(p.x, p.z, [[-p.side * 9, 6], [-p.side * 11, -6], [-p.side * 7, 12], [p.side * 9, -10]].concat(RING)); } }
+    else { const p = (OL.plan || []).find(q => q.id === sp.ol); if (!p) return; const sx = -Math.sign(p.x); [x, z] = pick(p.x, p.z, [[sx * (p.r + 4), 3], [sx * (p.r + 4), -8], [sx * (p.r + 8), 10], [0, p.r + 4], [0, -p.r - 4]]); }
     specStall(scene, x, z, yAt, sp.shop, 0);
   } catch (e) { console.warn('puesto ' + sp.shop, e); } });
 }
@@ -7374,13 +7378,13 @@ function svNear() {
   if (st.fishing) return { k: 'fishing' };
   { const v = vilNearNpc(); if (v) return { k: 'vil', v, label: vilLabel(v) }; }
   { const x = pocketNear(); if (x) return x; if (S.pocket) return null; }
+  for (const m of Z7.stalls) if (d2(m.x, m.z) < 9) return { k: 'shop', shop: m.shop, label: SHOPS[m.shop].name };
   { const r = readNear(); if (r) return r; }
   { const l = loreNear(2.6); if (l) return { k: 'lore', l, label: l.label }; }
   { const e = secNear(); if (e) return { k: 'sec', e, label: secP().secrets[e.d.id] ? 'Ver el lugar secreto' : SEC.mod.ENTRY[e.d.entry][0] }; }
   { const m = matNear(); if (m) return m; }
   for (const b of (st.beggars || [])) if (d2(b.x, b.z) < 6) return { k: 'beg', b, label: 'Ayudar' };
   for (const m of (st.stalls || [])) if (d2(m.x, m.z) < 9) return { k: 'shop', shop: 'mercado', label: 'Comprar y vender' };
-  for (const m of Z7.stalls) if (d2(m.x, m.z) < 9) return { k: 'shop', shop: m.shop, label: SHOPS[m.shop].name };
   if (S.inRoom && SHOPS[S.inRoom.trade]) return { k: 'shop', shop: S.inRoom.trade, label: 'Comprar y vender' };
   if (st.bag && d2(st.bag.x, st.bag.z) < 4) return { k: 'bag', label: 'Recoger tus cosas' };
   const fire = svFireNear(); if (fire && fishAll() > 0) return { k: 'cook', label: 'Cocinar pescado', fire };
