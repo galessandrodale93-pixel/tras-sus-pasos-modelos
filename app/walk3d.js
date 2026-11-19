@@ -7588,22 +7588,74 @@ const EPIC = {
       { k: 'give', at: 'templo', wait: 1, need: { stone7: 20 }, t: 'Picá 20 piezas de cobre en la mina de Timna con un pico de nivel 6 y traéselas al fundidor.', ok: 'El fundidor: «Cobre bueno, bien limpio. Ahora falta la madera para el mango».' },
       { k: 'give', at: 'templo', wait: 1, need: { wood6: 5 }, t: 'Traé 5 maderas de encina de Basán para el mango del pico.', ok: 'El fundidor: «Mañana lo forjamos. Pero antes te quiero preguntar algo».' },
       { k: 'quiz', at: 'templo', wait: 1, q: 'Según Deuteronomio 8, ¿cómo era la tierra que Dios le daba a su pueblo?', o: ['Una tierra buena, con agua, trigo y cobre en sus montes', 'Un desierto sin agua ni comida', 'Una isla en medio del mar'], c: 0 }
+    ] },
+  casa_alfarero: { name: 'En la casa del alfarero', giver: 'alfarero', ty: 'pala', ref: 'Jeremías 18:1-6', title: 'Barro en sus manos', req: { of: 'alf', lv: 22, at: 'fue', v: 50, fr: 'fid' },
+    steps: [
+      { k: 'talk', at: 'alfarero', t: 'El alfarero: «Dios le dijo a Jeremías: “Bajá a la casa del alfarero y ahí te voy a hablar” (Jeremías 18:2). Si querés aprender de verdad, primero traeme el mejor barro que encuentres».', b: 'Te lo traigo' },
+      { k: 'give', at: 'alfarero', need: { barro5: 10, barro6: 5 }, t: 'Llevale al alfarero 10 de barro del valle del alfarero (nivel 5) y 5 de barro de la costa de Tiro (nivel 6).', ok: 'El alfarero: «Buen barro. Mañana bajamos juntos al valle, que te quiero mostrar algo en el torno».' },
+      { k: 'act', at: 'valle_alfarero', wait: 1, a: 'torno', anim: ['M_Kneeling_Idle', 'PickUp_Table'], label: 'Mirar al alfarero en el torno', t: 'Andá al valle del alfarero y mirá cómo trabaja en el torno.', ok: 'La vasija se le echó a perder en las manos, y el alfarero la volvió a hacer, como le pareció mejor (Jeremías 18:4). «Así somos nosotros en las manos de Dios», te dice. Te llevás 6 de barro del torno, el mejor.', give: { barro7: 6 } },
+      { k: 'quiz', at: 'alfarero', wait: 1, q: 'En Jeremías 18, ¿qué hizo el alfarero cuando la vasija se le echó a perder?', o: ['La volvió a hacer, como le pareció mejor', 'La tiró y se fue', 'La vendió igual en el mercado'], c: 0 }
+    ] },
+  rut: { name: 'Las espigas de Rut', giver: 'belen', ty: 'hoz', ref: 'Rut 2', title: 'Segador de Belén', req: { of: 'agr', lv: 22, at: 'pac', v: 50, fr: 'amor' },
+    steps: [
+      { k: 'talk', at: 'belen', t: 'Un pastor de Belén: «Acá Rut espigaba detrás de los segadores, y Booz les mandó dejar caer espigas a propósito para ella (Rut 2:16). Este año hay viudas que necesitan pan. ¿Nos ayudás con la cosecha?».', b: 'Los ayudo' },
+      { k: 'give', at: 'belen', need: { trigob: 10, espelta: 5 }, t: 'Cosechá 10 de trigo de Basán y 5 de espelta, y traéselos a los pastores de Belén.', ok: 'El pastor: «Con esto comen varias familias. Mañana vamos al campo grande de Esdrelón».' },
+      { k: 'act', at: 'esdrelon', wait: 1, a: 'espigas', anim: ['PickUp_Table', 'M_Kneeling_Idle'], label: 'Dejar caer espigas para los que espigan', t: 'Andá a la llanura de Esdrelón y, mientras cosechás, dejá espigas para los que vienen detrás.', ok: 'Dejaste caer espigas a propósito, como los segadores de Booz. Al atardecer, una viuda junta un buen manojo y te bendice: «El Señor te lo pague» (Rut 2:12). Te dan 6 de las primicias del campo.', give: { primicias: 6 } },
+      { k: 'quiz', at: 'belen', wait: 1, q: '¿Qué les mandó Booz a sus segadores?', o: ['Que dejaran caer espigas a propósito para Rut', 'Que echaran a Rut del campo', 'Que le cobraran cada espiga'], c: 0 }
+    ] },
+  panes: { name: 'Cinco panes y dos peces', giver: 'panadero', prize: 'el horno de Belén para siempre', ref: 'Juan 6:1-14', title: 'Pan para la multitud', req: { of: 'pan', lv: 22, at: 'pac', v: 50, fr: 'amor' },
+    steps: [
+      { k: 'talk', at: 'panadero', t: 'El panadero: «Un muchacho tenía cinco panes de cebada y dos pescados. Se los dio a Jesús, y comieron cinco mil (Juan 6:9-11). Hoy no hace falta tanto: llevale a Andrés, en Betsaida, cinco panes de cebada y dos pescados asados».', b: 'Los llevo' },
+      { k: 'give', at: 'betsaida', need: { pancebada: 5, cooked: 2 }, t: 'Hacé 5 panes de cebada y asá 2 pescados, y llevaselos a Andrés, con los pescadores de Betsaida.', ok: 'Andrés: «Eso mismo llevaba aquel muchacho. ¿Y qué es esto para tantos?, pensé yo… y sobraron doce canastas (Juan 6:13). Andá a Belén: el horno de allá te espera».' },
+      { k: 'act', at: 'hornobelen', wait: 1, a: 'belen', anim: ['M_Kneeling_Idle', 'PickUp_Table'], label: 'Encender el horno de Belén', t: 'Viajá a Belén y encendé el horno grande.', ok: 'Belén quiere decir «casa del pan». Ahí nació Jesús, que dijo: «Yo soy el pan de vida» (Juan 6:35). Ya podés hornear en el horno de Belén.' },
+      { k: 'give', at: 'templo', need: { panprop: 12 }, t: 'Hacé los doce panes de la proposición en el horno de Belén (con 4 de primicias, cernidas dos veces) y llevalos al Templo.', ok: 'El sacerdote los pone en dos filas sobre la mesa de oro, delante del Señor (Levítico 24:6). «Volvé mañana», te dice.' },
+      { k: 'quiz', at: 'templo', wait: 1, q: '¿Qué dijo Jesús después de dar de comer a la multitud?', o: ['«Yo soy el pan de vida»', '«Guarden el pan para mañana»', '«El pan es solo para los sacerdotes»'], c: 0 }
+    ] },
+  aceite: { name: 'Aceite para el candelabro', giver: 'templo', ty: 'vara', ref: 'Éxodo 27:20', title: 'Guardián de la lámpara', req: { of: 'oli', lv: 22, at: 'fue', v: 50, fr: 'fid' },
+    steps: [
+      { k: 'talk', at: 'templo', t: 'El sacerdote: «Las lámparas del candelabro tienen que arder siempre, con aceite puro de olivas machacadas (Éxodo 27:20). Necesito las mejores aceitunas de la tierra».', b: 'Las consigo' },
+      { k: 'give', at: 'templo', need: { aceitunas6: 15 }, t: 'Vareá 15 aceitunas de los olivos viejos en el monte de los Olivos (nivel 6) y traéselas al sacerdote.', ok: 'El sacerdote: «Buenas aceitunas. Mañana machacalas en la prensa: el aceite para el Señor no se prensa con fuerza, se machaca despacio».' },
+      { k: 'act', at: 'prensa', wait: 1, a: 'machacar', anim: ['M_Pull_Heavy_Object', 'Interact'], label: 'Machacar las aceitunas despacio', t: 'Andá a la prensa de aceite y machacá las aceitunas a mano.', ok: 'Sale un aceite claro, sin borra, el primero de la aceituna: aceite puro. Te llevás 6 de aceite puro.', give: { aceitunas7: 6 } },
+      { k: 'give', at: 'templo', need: { aceite: 5 }, t: 'Llevale al sacerdote 5 de aceite de oliva.', ok: 'El sacerdote llena las lámparas. «Jesús dijo: “Yo soy la luz del mundo” (Juan 8:12). Volvé mañana».' },
+      { k: 'quiz', at: 'templo', wait: 1, q: '¿Cómo tenía que ser el aceite del candelabro?', o: ['Aceite puro de olivas machacadas', 'Cualquier grasa que ardiera', 'Aceite mezclado con vino'], c: 0 }
+    ] },
+  escol: { name: 'El racimo de Escol', giver: 'hebron', ty: 'podadera', ref: 'Números 13:17-30', title: 'Explorador de la tierra', req: { of: 'vin', lv: 22, at: 'pac', v: 50, fr: 'dom' },
+    steps: [
+      { k: 'talk', at: 'hebron', t: 'El viñador de Hebrón: «Por acá pasaron los doce espías de Moisés. En el valle de Escol cortaron un racimo tan grande que lo llevaron entre dos, colgado de una vara (Números 13:23). ¿Te animás a buscar uno así?».', b: 'Me animo' },
+      { k: 'give', at: 'hebron', need: { uvas6: 10, uvas5: 10 }, t: 'Traele al viñador 10 uvas del oasis de En-gadi (nivel 6) y 10 del valle de Escol (nivel 5).', ok: 'El viñador: «Ya sabés cuidar la vid. Mañana bajá al valle de Escol: la cepa vieja dio fruto».' },
+      { k: 'act', at: 'escol', wait: 1, a: 'racimo', anim: ['PickUp_Table', 'M_Holding_Idle'], label: 'Cortar el racimo grande', t: 'Andá al valle de Escol y cortá el racimo de la cepa vieja.', ok: 'El racimo es tan pesado que lo tenés que colgar de una vara. Caleb dijo: «Subamos, que podemos conquistar la tierra» (Números 13:30). Te llevás 4 racimos de Escol.', give: { uvas7: 4 } },
+      { k: 'quiz', at: 'hebron', wait: 1, q: '¿Qué dijeron Josué y Caleb de la tierra que habían explorado?', o: ['Que era muy buena y que Dios los iba a hacer entrar', 'Que era imposible entrar', 'Que no había nada para comer'], c: 0 }
+    ] },
+  tunica: { name: 'La túnica sin costura', giver: 'tejedora', ty: 'tijera', ref: 'Juan 19:23-24', title: 'Tejedor de una sola pieza', req: { of: 'tej', lv: 22, at: 'pac', v: 50, fr: 'fid' },
+    steps: [
+      { k: 'talk', at: 'tejedora', t: 'La tejedora: «La túnica de Jesús no tenía costura: era tejida de una sola pieza, de arriba abajo (Juan 19:23). Eso solo lo hace alguien con mucha paciencia. Si querés aprender, empezá por la mejor lana».', b: 'Quiero aprender' },
+      { k: 'give', at: 'tejedora', need: { purpura: 6, lanaroja: 6 }, t: 'Llevale a la tejedora 6 de púrpura de Tiro y 6 de lana teñida de rojo.', ok: 'La tejedora: «Hermosa. Mañana andá a la costa de Tiro a lavarla en el mar, como hacen los tintoreros, y te enseño el último paso».' },
+      { k: 'act', at: 'costa_tiro', wait: 1, a: 'lavar', anim: ['M_Kneeling_Idle', 'PickUp_Table'], label: 'Lavar la lana en el mar', t: 'Andá a la costa de Tiro y lavá la lana en el agua del mar.', ok: 'Con la lana limpia, la tejedora te muestra cómo tejer en redondo, sin cortar el hilo. Te llevás 3 de lino fino torcido.', give: { linotor: 3 } },
+      { k: 'quiz', at: 'tejedora', wait: 1, q: '¿Qué hicieron los soldados con la túnica sin costura de Jesús?', o: ['La sortearon para no romperla', 'La cortaron en cuatro partes', 'La tiraron al fuego'], c: 0 }
+    ] },
+  cortinas: { name: 'Las cortinas del tabernáculo', giver: 'templo', ty: 'aguja', ref: 'Éxodo 26:1; 35:30-35', title: 'Artesano como Bezalel', req: { of: 'carp', lv: 22, at: 'pac', v: 50, fr: 'dom' },
+    steps: [
+      { k: 'talk', at: 'templo', t: 'El sacerdote: «Dios llenó a Bezalel de sabiduría para todo trabajo de artesano (Éxodo 35:31), y con él hicieron las cortinas del tabernáculo, de lino fino torcido, azul, púrpura y carmesí (Éxodo 26:1). Queremos renovar el velo de la entrada».', b: 'Ayudo' },
+      { k: 'give', at: 'templo', need: { canamo: 8, pelonegro: 8 }, t: 'Traele al sacerdote 8 de cáñamo de la costa de Tiro y 8 de pelo de cabra negra.', ok: 'El sacerdote: «El pelo de cabra es para la carpa de afuera, como en el desierto (Éxodo 26:7). Mañana andá a En-gadi a buscar el mejor lino».' },
+      { k: 'act', at: 'engadi', wait: 1, a: 'lino', anim: ['PickUp_Table', 'M_Kneeling_Idle'], label: 'Juntar el lino junto al oasis', t: 'Andá al oasis de En-gadi y juntá el lino que crece junto al agua.', ok: 'Junto al agua de En-gadi crece el lino más alto. Te llevás 4 de lino del tabernáculo.', give: { linotab: 4 } },
+      { k: 'quiz', at: 'templo', wait: 1, q: '¿A quién llenó Dios de sabiduría para hacer el tabernáculo?', o: ['A Bezalel', 'A Goliat', 'Al faraón'], c: 0 }
     ] }
 };
 const FRN = { fid: 'Fidelidad', amor: 'Amor', dom: 'Control propio' };
+const epPrize = E => E.ty ? lc1(t7Name(E.ty, 7)) : E.prize;
 function epP() { const s = svP(); s.epic = s.epic || {}; return s.epic; }
 const epDay = () => Math.floor(svP().play / SV.DAY);
 function epReqTxt(E) { const r = E.req, miss = []; if (ofiLv(r.of) < r.lv) miss.push(`${OFI[r.of].name.toLowerCase()} nivel ${r.lv} (tenés ${ofiLv(r.of)})`); if (fv(r.at) < r.v) miss.push(`${ATN[r.at]} ${r.v} (tenés ${Math.floor(fv(r.at))})`); if (ft(r.fr) < 3) miss.push(`${FRN[r.fr]} en escalón 3 (tenés ${ft(r.fr)})`); return miss; }
 /* el paso que toca ahora, si se puede hacer hoy */
 function epStep(id) { const E = EPIC[id], st = epP()[id] || { s: 0, d: -1 }; if (st.done) return null; const sp = E.steps[st.s]; if (!sp) return null; return { E, st, sp, today: !sp.wait || epDay() > st.d }; }
 function epAdvance(id, msg) { const P = epP(), E = EPIC[id], st = P[id] || { s: 0, d: -1 }; st.s++; st.d = epDay(); P[id] = st;
-  if (st.s >= E.steps.length) { st.done = 1; t7Grant(E.ty, 7); const s = svP(); s.titles = s.titles || []; if (!s.titles.includes(E.title)) s.titles.push(E.title); svXP(150); try { pkPop('✨ ' + t7Name(E.ty, 7)); } catch (e) {} svToast(`✨ ¡Terminaste «${E.name}»! Ganaste ${lc1(t7Name(E.ty, 7))}, que no se gasta nunca, y el título «${E.title}».`); }
+  if (st.s >= E.steps.length) { st.done = 1; if (E.ty) t7Grant(E.ty, 7); const s = svP(); s.titles = s.titles || []; if (!s.titles.includes(E.title)) s.titles.push(E.title); svXP(150); try { pkPop('✨ ' + epPrize(E)); } catch (e) {} svToast(`✨ ¡Terminaste «${E.name}»! Ganaste ${epPrize(E)}${E.ty ? ', que no se gasta nunca,' : ''} y el título «${E.title}».`); }
   else if (msg) svToast(msg); G().save(); svUI(); }
 /* sección de misión épica dentro del puesto */
 function epHTML(shop) {
-  return Object.entries(EPIC).map(([id, E]) => { const x = epStep(id), st = epP()[id]; if (st && st.done) return E.giver === shop ? `<div class="sv-rec"><div><b>✨ ${esc(E.name)}</b><small>Misión cumplida. Ganaste ${esc(lc1(t7Name(E.ty, 7)))}.</small></div></div>` : '';
+  return Object.entries(EPIC).map(([id, E]) => { const x = epStep(id), st = epP()[id]; if (st && st.done) return E.giver === shop ? `<div class="sv-rec"><div><b>✨ ${esc(E.name)}</b><small>Misión cumplida. Ganaste ${esc(lc1(epPrize(E)))}.</small></div></div>` : '';
     if (!x || x.sp.at !== shop) return ''; const head = `<b>✨ ${esc(E.name)} · paso ${x.st.s + 1} de ${E.steps.length}</b>`;
-    if (x.st.s === 0) { const miss = epReqTxt(E); if (miss.length) return `<div class="sv-rec off"><div>${head}<small>Misión épica: el premio es ${esc(lc1(t7Name(E.ty, 7)))}. Para empezarla te falta ${esc(miss.join(', '))}.</small></div></div>`; }
+    if (x.st.s === 0) { const miss = epReqTxt(E); if (miss.length) return `<div class="sv-rec off"><div>${head}<small>Misión épica: el premio es ${esc(lc1(epPrize(E)))}. Para empezarla te falta ${esc(miss.join(', '))}.</small></div></div>`; }
     if (!x.today) return `<div class="sv-rec off"><div>${head}<small>Esto sigue mañana: volvé otro día de juego.</small></div></div>`;
     if (x.sp.k === 'talk') return `<div class="sv-rec"><div>${head}<small>${esc(x.sp.t)}</small></div><button data-ep="${id}">${esc(x.sp.b || 'Seguir')}</button></div>`;
     if (x.sp.k === 'give') { const ok = svHas(x.sp.need), list = Object.entries(x.sp.need).map(([k, n]) => `${n} de ${lc1(RES[k][0])}`).join(' y '); return `<div class="sv-rec${ok ? '' : ' off'}"><div>${head}<small>${esc(x.sp.t)} Hace falta: ${esc(list)}.</small></div><button data-ep="${id}" ${ok ? '' : 'disabled'}>Entregar</button></div>`; }
@@ -7613,10 +7665,12 @@ function epHTML(shop) {
 function epClick(id) { const x = epStep(id); if (!x || !x.today || (x.sp.k !== 'talk' && x.sp.k !== 'give')) return; if (x.st.s === 0 && epReqTxt(x.E).length) return; if (x.sp.k === 'give') { if (!svHas(x.sp.need)) return; svPay(x.sp.need); } epAdvance(id, x.sp.ok || (x.sp.k === 'talk' ? `✨ Empezaste la misión épica «${x.E.name}».` : '')); }
 function epQuiz(id, i) { const x = epStep(id); if (!x || x.sp.k !== 'quiz') return; if (+i === x.sp.c) epAdvance(id); else svToast('Pensalo de nuevo: repasá la historia (' + x.E.ref + ') y volvé a intentar.'); }
 /* pasos que se hacen en un lugar del mapa (el muelle de Magdala) */
-function epNear() { if (!Z7.pier) return null; const a = S.av.position; if ((Z7.pier.x - a.x) ** 2 + (Z7.pier.z - a.z) ** 2 > 9) return null; for (const id in EPIC) { const x = epStep(id); if (x && x.today && x.sp.k === 'act' && x.sp.at === 'pier') return { k: 'epic', id, label: x.sp.label }; } return null; }
+/* el muelle de Magdala, el horno de Belén o el centro de un lugar del mapa (la zona de la misión) */
+function epPlace(at) { if (at === 'pier') return Z7.pier ? { x: Z7.pier.x, z: Z7.pier.z, r: 3 } : null; if (at === 'hornobelen') { const o = BK.ovens.find(o => o.t === 7); return o ? { x: o.x, z: o.z, r: 3 } : null; } const p = OL_PLAN.find(q => q.id === at); return p ? { x: p.x, z: p.z, r: Math.max(8, (p.r || 20) * .55) } : null; }
+function epNear() { const a = S.av.position; for (const id in EPIC) { const x = epStep(id); if (!x || !x.today || x.sp.k !== 'act') continue; const P = epPlace(x.sp.at); if (P && (P.x - a.x) ** 2 + (P.z - a.z) ** 2 < P.r * P.r) return { k: 'epic', id, label: x.sp.label }; } return null; }
 function epAct(id) { const x = epStep(id); if (!x || x.sp.k !== 'act') return;
   if (x.sp.a === 'noche') { S.moodForce = ['night', 1]; S.daySig = ''; h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 8); svToast('🌙 Pasan la noche en la barca, tirando la red una y otra vez…'); setTimeout(() => { if (S) { S.moodForce = null; S.daySig = ''; } epAdvance(id, x.sp.ok); }, 9000); return; }
-  if (x.sp.give) Object.entries(x.sp.give).forEach(([k, n]) => svAdd(k, n)); h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 3); epAdvance(id, x.sp.ok);
+  if (x.sp.give) Object.entries(x.sp.give).forEach(([k, n]) => svAdd(k, n)); h3do(x.sp.anim || ['M_Fishing_Idle', 'M_Holding_Idle'], 3); epAdvance(id, x.sp.ok);
 }
 /* ---------- Kids: talar, pescar y picar en 3 niveles (común, especial, brillante), sin desgaste ni hambre ----------
    Un toque y trabaja solo (de 2 a 6 golpes por pieza, según lo que saques). La herramienta especial se gana al completar una página del álbum,
@@ -7817,7 +7871,7 @@ function bkNear() {
 function bkTier() { let t = 0, nm = ''; const a = S.av.position; for (const o of BK.ovens) if ((o.x - a.x) ** 2 + (o.z - a.z) ** 2 < 9) { if (o.t > t) { t = o.t; nm = o.name; } }
   if (t < 3) { const s = svP(); if (s.house && s.furn.includes('horno') && S.sv.oven && (S.sv.oven.x - a.x) ** 2 + (S.sv.oven.z - a.z) ** 2 < 9) { t = 3; nm = 'tu horno de piedra'; } }
   if (t < 2 && clayKilnNear()) { t = 2; nm = 'el horno de la alfarería'; } if (t < 1 && svFireNear()) { t = 1; nm = 'la fogata'; } return { t, nm }; }
-function bkLocked(r) { return r.oven === 7 && !(epP().panes && epP().panes.done); }
+function bkLocked(r) { const e = epP().panes; return r.oven === 7 && !(e && (e.done || e.s >= 3)); }
 function bkOpen() {
   const el = document.getElementById('v3sheet'), s = svP(); S.joy.x = 0; S.joy.y = 0; let msg = '';
   const draw = () => { const ov = bkTier(), B = bkP(), lv = ofiLv('pan'), mill = (s.inv.piedramoler || 0) > 0;
