@@ -9729,6 +9729,8 @@ function svShop(kind) {
     el.querySelectorAll('[data-s]').forEach(b => b.onclick = () => sell(b.dataset.s, 1)); el.querySelectorAll('[data-sa]').forEach(b => b.onclick = () => sell(b.dataset.sa, 999));
   };
   el.hidden = false; el.onclick = e => { if (e.target === el) el.hidden = true; }; draw();
+  /* el paso de la misión épica de este puesto se escucha con voz */
+  try { const x = Object.keys(EPIC).map(id => epStep(id)).find(x => x && x.today && x.sp.at === kind && !(x.st.s === 0 && epReqTxt(x.E).length)); if (x) shVo(x.sp.k === 'quiz' ? x.sp.q : x.sp.t); } catch (e) {}
 }
 
 /* dar a quien lo necesita */
