@@ -1510,3 +1510,4 @@ body:has(#v3place:not([hidden])) .v3think,body:has(#v3place:not([hidden])) .v3hi
 .t7-dur{display:block;height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:3px}
 .t7-dur>i{display:block;height:100%;background:linear-gradient(90deg,#C9A24A,#F2D27A)}.t7-dur>i.low{background:#C0392B}
 .sv-do span{display:inline-block;max-width:min(40vw,320px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+.ep-o{display:grid;gap:6px;margin-top:6px}.ep-o button{text-align:left;white-space:normal}

@@ -7370,6 +7370,7 @@ function clayKilnNear() { const a = S.av.position, al = (S.olSites || []).find(o
 function svNear() {
   if (!svOn() || !S.sv) return null; const a = S.av.position, st = S.sv, s = svP(), d2 = (x, z) => (x - a.x) ** 2 + (z - a.z) ** 2;
   if (st.work) return { k: 'work', label: 'Parar' };
+  { const e = epNear(); if (e) return e; }
   if (st.fishing) return { k: 'fishing' };
   { const v = vilNearNpc(); if (v) return { k: 'vil', v, label: vilLabel(v) }; }
   { const x = pocketNear(); if (x) return x; if (S.pocket) return null; }
@@ -7444,7 +7445,7 @@ const R7_OF = {}; Object.entries(R7_POOL).forEach(([g, L]) => L.forEach((k, i) =
 const R7_COOK = [1, 1, 2, 2, 3, 3, 4]; /* pescado asado que da cada pez según su nivel */
 const fishAll = () => { const s = svP(); return R7_POOL.fish.reduce((a, k) => a + (s.inv[k] || 0), 0); };
 /* inventario con la madera, la piedra y el pescado de todos los niveles sumados (para recetas y construcciones) */
-function t7Inv(inv) { return new Proxy(inv, { get: (o, k) => R7_POOL[k] ? R7_POOL[k].reduce((a, x) => a + (o[x] || 0), 0) : R7_OF[k] && R7_OF[k][1] > 1 ? 0 : o[k] }); }
+function t7Inv(inv, hide) { return new Proxy(inv, { get: (o, k) => R7_POOL[k] ? R7_POOL[k].reduce((a, x) => a + (o[x] || 0), 0) : hide && R7_OF[k] && R7_OF[k][1] > 1 ? 0 : o[k] }); }
 function t7P() { const s = svP(); if (!s.t7) { s.t7 = { axe: {}, pick: {}, rod: {} }; const T = s.tools || []; if (T.includes('axe')) s.t7.axe[1] = T7_DUR[0]; if (T.includes('pick')) s.t7.pick[1] = T7_DUR[0]; if (T.includes('rod')) s.t7.rod[1] = T7_DUR[0]; if (T.includes('net')) s.t7.rod[2] = T7_DUR[1]; } return s.t7; }
 const t7Type = t => t === 'net' ? 'rod' : T7[t] ? t : null;
 const t7Has = type => Object.keys(t7P()[type]).length > 0;
@@ -7515,6 +7516,60 @@ function t7Tick(dt) {
   if (w.k === 'fish' && !svWaterNear()) { t7Stop(); return; }
   G().save();
 }
+/* ---------- misiones épicas: las herramientas de nivel 7 (Hacha de Hiram, Red de la pesca milagrosa, Pico de Timna) ----------
+   Cada una pide oficio alto, un atributo y un fruto en escalón 3; tiene varios pasos y algunos se abren recién al día siguiente. */
+const EPIC = {
+  cedros: { name: 'Los cedros del Templo', giver: 'templo', ty: 'axe', ref: '1 Reyes 5', title: 'Amigo de los cedros', req: { of: 'car', lv: 22, at: 'fue', v: 50, fr: 'fid' },
+    steps: [
+      { k: 'talk', at: 'templo', t: 'El constructor del Templo: «Para la casa de Dios quiero la mejor madera, como en tiempos de Salomón. Antes de mandarte al Líbano quiero ver tu trabajo: llevale a Jacobo, el carpintero de Nazaret, 10 maderas de acacia y 5 de olivo».', b: 'Acepto' },
+      { k: 'give', at: 'jacobo', need: { wood4: 10, wood5: 5 }, t: 'Llevale a Jacobo, en Nazaret, 10 maderas de acacia y 5 de olivo.', ok: 'Jacobo: «Buen trabajo, se nota que cuidás lo que hacés. Mañana podés salir para el Líbano».' },
+      { k: 'give', at: 'templo', wait: 1, need: { wood7: 5 }, t: 'Viajá a los cedros del Líbano, talá 5 cedros con un hacha de nivel 6 y traele los troncos al constructor del Templo.', ok: 'El constructor: «¡Cedro del Líbano! Como el que mandó el rey Hiram. Volvé mañana: te quiero preguntar algo».' },
+      { k: 'quiz', at: 'templo', wait: 1, q: '¿Por qué Salomón usó cedro del Líbano para el templo?', o: ['Porque era fuerte, perfumado y no se pudría', 'Porque era la madera más barata', 'Porque crecía en el patio del templo'], c: 0 }
+    ] },
+  red: { name: 'Echen la red a la derecha', giver: 'betsaida', ty: 'rod', ref: 'Juan 21', title: 'Pescador de hombres', req: { of: 'pes', lv: 22, at: 'pac', v: 50, fr: 'amor' },
+    steps: [
+      { k: 'talk', at: 'betsaida', t: 'Pedro: «Me vuelvo a pescar. ¿Venís conmigo esta noche al muelle de Magdala?» (Juan 21:3)', b: 'Voy con vos' },
+      { k: 'act', at: 'pier', a: 'noche', label: 'Pasar la noche pescando con Pedro', t: 'Andá al muelle de Magdala y pasá la noche pescando con Pedro.', ok: 'Pescaron toda la noche y no sacaron nada (Juan 21:3). Volvé al muelle mañana temprano.' },
+      { k: 'act', at: 'pier', wait: 1, a: 'red', label: 'Escuchar la voz desde la orilla', t: 'Volvé al muelle de Magdala al amanecer.', ok: 'Alguien les grita desde la orilla: «¡Echen la red a la derecha de la barca y tendrán pesca!». La red se llena de 153 peces grandes y no se rompe (Juan 21:6, 11). Te llevás 15 barbos grandes.', give: { fish5: 15 } },
+      { k: 'give', at: 'betsaida', need: { cooked: 5 }, t: 'Hacé fuego, cociná pescado y llevale 5 pescados asados a Pedro, en Betsaida. En la orilla, Jesús los esperaba con pescado sobre las brasas (Juan 21:9).', ok: 'Pedro: «Comimos con él en la orilla, como antes. Volvé mañana, que te quiero contar lo que me dijo».' },
+      { k: 'quiz', at: 'betsaida', wait: 1, q: 'Jesús le preguntó tres veces a Pedro: «¿Me amas?». ¿Qué le pidió después de cada respuesta?', o: ['Que cuidara de sus ovejas', 'Que volviera a pescar', 'Que se quedara callado'], c: 0 }
+    ] },
+  cobre: { name: 'La tierra de cobre', giver: 'templo', ty: 'pick', ref: 'Deuteronomio 8:7-10', title: 'Heredero de la tierra prometida', req: { of: 'can', lv: 22, at: 'fue', v: 50, fr: 'dom' },
+    steps: [
+      { k: 'talk', at: 'templo', t: 'El fundidor del Templo: «Para las herramientas del Templo necesito cobre de Timna, al sur, y madera dura para los mangos. Prepará bien el viaje: es largo y en el camino no hay qué comer».', b: 'Voy a Timna' },
+      { k: 'give', at: 'templo', wait: 1, need: { stone7: 20 }, t: 'Picá 20 piezas de cobre en la mina de Timna con un pico de nivel 6 y traéselas al fundidor.', ok: 'El fundidor: «Cobre bueno, bien limpio. Ahora falta la madera para el mango».' },
+      { k: 'give', at: 'templo', wait: 1, need: { wood6: 5 }, t: 'Traé 5 maderas de encina de Basán para el mango del pico.', ok: 'El fundidor: «Mañana lo forjamos. Pero antes te quiero preguntar algo».' },
+      { k: 'quiz', at: 'templo', wait: 1, q: 'Según Deuteronomio 8, ¿cómo era la tierra que Dios le daba a su pueblo?', o: ['Una tierra buena, con agua, trigo y cobre en sus montes', 'Un desierto sin agua ni comida', 'Una isla en medio del mar'], c: 0 }
+    ] }
+};
+const FRN = { fid: 'Fidelidad', amor: 'Amor', dom: 'Control propio' };
+function epP() { const s = svP(); s.epic = s.epic || {}; return s.epic; }
+const epDay = () => Math.floor(svP().play / SV.DAY);
+function epReqTxt(E) { const r = E.req, miss = []; if (ofiLv(r.of) < r.lv) miss.push(`${OFI[r.of].name.toLowerCase()} nivel ${r.lv} (tenés ${ofiLv(r.of)})`); if (fv(r.at) < r.v) miss.push(`${ATN[r.at]} ${r.v} (tenés ${Math.floor(fv(r.at))})`); if (ft(r.fr) < 3) miss.push(`${FRN[r.fr]} en escalón 3 (tenés ${ft(r.fr)})`); return miss; }
+/* el paso que toca ahora, si se puede hacer hoy */
+function epStep(id) { const E = EPIC[id], st = epP()[id] || { s: 0, d: -1 }; if (st.done) return null; const sp = E.steps[st.s]; if (!sp) return null; return { E, st, sp, today: !sp.wait || epDay() > st.d }; }
+function epAdvance(id, msg) { const P = epP(), E = EPIC[id], st = P[id] || { s: 0, d: -1 }; st.s++; st.d = epDay(); P[id] = st;
+  if (st.s >= E.steps.length) { st.done = 1; t7Grant(E.ty, 7); const s = svP(); s.titles = s.titles || []; if (!s.titles.includes(E.title)) s.titles.push(E.title); svXP(150); try { pkPop('✨ ' + t7Name(E.ty, 7)); } catch (e) {} svToast(`✨ ¡Terminaste «${E.name}»! Ganaste ${lc1(t7Name(E.ty, 7))}, que no se gasta nunca, y el título «${E.title}».`); }
+  else if (msg) svToast(msg); G().save(); svUI(); }
+/* sección de misión épica dentro del puesto */
+function epHTML(shop) {
+  return Object.entries(EPIC).map(([id, E]) => { const x = epStep(id), st = epP()[id]; if (st && st.done) return E.giver === shop ? `<div class="sv-rec"><div><b>✨ ${esc(E.name)}</b><small>Misión cumplida. Ganaste ${esc(lc1(t7Name(E.ty, 7)))}.</small></div></div>` : '';
+    if (!x || x.sp.at !== shop) return ''; const head = `<b>✨ ${esc(E.name)} · paso ${x.st.s + 1} de ${E.steps.length}</b>`;
+    if (x.st.s === 0) { const miss = epReqTxt(E); if (miss.length) return `<div class="sv-rec off"><div>${head}<small>Misión épica: el premio es ${esc(lc1(t7Name(E.ty, 7)))}. Para empezarla te falta ${esc(miss.join(', '))}.</small></div></div>`; }
+    if (!x.today) return `<div class="sv-rec off"><div>${head}<small>Esto sigue mañana: volvé otro día de juego.</small></div></div>`;
+    if (x.sp.k === 'talk') return `<div class="sv-rec"><div>${head}<small>${esc(x.sp.t)}</small></div><button data-ep="${id}">${esc(x.sp.b || 'Seguir')}</button></div>`;
+    if (x.sp.k === 'give') { const ok = svHas(x.sp.need), list = Object.entries(x.sp.need).map(([k, n]) => `${n} de ${lc1(RES[k][0])}`).join(' y '); return `<div class="sv-rec${ok ? '' : ' off'}"><div>${head}<small>${esc(x.sp.t)} Hace falta: ${esc(list)}.</small></div><button data-ep="${id}" ${ok ? '' : 'disabled'}>Entregar</button></div>`; }
+    if (x.sp.k === 'quiz') return `<div class="sv-rec"><div>${head}<small>${esc(x.sp.q)}</small><div class="ep-o">${x.sp.o.map((o, i) => `<button data-eq="${id}:${i}">${esc(o)}</button>`).join('')}</div></div></div>`;
+    return ''; }).join('');
+}
+function epClick(id) { const x = epStep(id); if (!x || !x.today || (x.sp.k !== 'talk' && x.sp.k !== 'give')) return; if (x.st.s === 0 && epReqTxt(x.E).length) return; if (x.sp.k === 'give') { if (!svHas(x.sp.need)) return; svPay(x.sp.need); } epAdvance(id, x.sp.ok || (x.sp.k === 'talk' ? `✨ Empezaste la misión épica «${x.E.name}».` : '')); }
+function epQuiz(id, i) { const x = epStep(id); if (!x || x.sp.k !== 'quiz') return; if (+i === x.sp.c) epAdvance(id); else svToast('Pensalo de nuevo: repasá la historia (' + x.E.ref + ') y volvé a intentar.'); }
+/* pasos que se hacen en un lugar del mapa (el muelle de Magdala) */
+function epNear() { if (!Z7.pier) return null; const a = S.av.position; if ((Z7.pier.x - a.x) ** 2 + (Z7.pier.z - a.z) ** 2 > 9) return null; for (const id in EPIC) { const x = epStep(id); if (x && x.today && x.sp.k === 'act' && x.sp.at === 'pier') return { k: 'epic', id, label: x.sp.label }; } return null; }
+function epAct(id) { const x = epStep(id); if (!x || x.sp.k !== 'act') return;
+  if (x.sp.a === 'noche') { S.moodForce = ['night', 1]; S.daySig = ''; h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 8); svToast('🌙 Pasan la noche en la barca, tirando la red una y otra vez…'); setTimeout(() => { if (S) { S.moodForce = null; S.daySig = ''; } epAdvance(id, x.sp.ok); }, 9000); return; }
+  if (x.sp.give) Object.entries(x.sp.give).forEach(([k, n]) => svAdd(k, n)); h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 3); epAdvance(id, x.sp.ok);
+}
 function svAct() {
   if (!svOn() || !S.sv || S.walking || sheetUp() || S.down) return; const n = svNear(), s = svP(), st = S.sv; wake();
   if (!n) { svToast('No hay nada para hacer acá. Buscá árboles, rocas, granados o agua.'); return; }
@@ -7522,6 +7577,7 @@ function svAct() {
   if (n.need && (n.k === 'press' || n.k === 'lagar')) { orchAct(n); return; }
   if (n.need) { svToast(n.label + '. Las herramientas se consiguen en misiones o brillando en el mapa.'); return; }
   if (n.k === 'work') { t7Stop(); return; }
+  if (n.k === 'epic') { epAct(n.id); return; }
   if (n.k === 'fishing') { svFishTap(); return; }
   if (n.k === 'vil') { vilAct(n.v); return; }
   if (n.k === 'sec') { secOpen(n.e); return; }
@@ -7937,7 +7993,7 @@ const sameNeed = (a, b) => { const ka = Object.keys(a).filter(k => a[k] > 0), kb
 function svCraft(tab) {
   if (typeof tab !== 'string') tab = null; if (!S || S.down || !S.av) return; if (BLD.on) bldStop(); const el = document.getElementById('v3sheet'); if (!el) return; S.joy.x = 0; S.joy.y = 0; const hx = svOn();
   if (!hx) tab = 'obra'; else if (tab) TL.tab = tab; else if (!TL.tab) TL.tab = 'mesa'; if (hx) tab = TL.tab;
-  const s = hx ? svP() : null, inv = s ? t7Inv(s.inv) : {};
+  const s = hx ? svP() : null, inv = s ? t7Inv(s.inv, 1) : {};
   const slotN = () => Object.values(TL.slots).reduce((a, b) => a + b, 0);
   const draw = (fx) => {
     const tabs = hx ? `<div class="tl-tabs">${[['mesa', '🧪 Combinar'], ['obra', '🧱 Construir'], ['casa', '🏠 Tu casa'], ['libro', '📖 Recetas ' + comboDisc().filter(id => COMBOS.some(c => c.id === id)).length + '/' + COMBOS.length]].map(([k, n]) => `<button data-tab="${k}" class="${tab === k ? 'on' : ''}">${n}</button>`).join('')}</div>` : '';
@@ -9569,7 +9625,7 @@ function svShop(kind) {
     const sells = sh.sell.filter(k => (s.inv[k] || 0) > 0).map(k => { const u = sellUnit(kind, k); return `<div class="sv-rec"><div><b>${RES[k][1]} ${RES[k][0]}</b><small>Tenés ${s.inv[k]} · ${u} denario${u > 1 ? 's' : ''} cada uno${R7_OF[k] && u < SELL[k] ? ' (bajó: vendiste mucho acá hoy)' : ''}</small></div><button data-s="${k}">Vender 1</button><button data-sa="${k}">Todo</button></div>`; }).join('');
     const fixes = (sh.fix || []).flatMap(ty => Object.entries(t7P()[ty]).filter(([t, d]) => d > 0 && d < T7_DUR[t - 1]).map(([t, d]) => `<div class="sv-rec${money() < price(2 * t) ? ' off' : ''}"><div><b>${T7[ty].ic} Arreglar ${esc(lc1(t7Name(ty, +t)))}</b><small>Le queda ${Math.round(d / T7_DUR[t - 1] * 100)}% · ${price(2 * t)} denarios</small></div><button data-fx="${ty}:${t}" ${money() < price(2 * t) ? 'disabled' : ''}>Arreglar</button></div>`)).join('');
     el.innerHTML = `<div class="inv hx sv-sheet"><div class="inv-h"><b>${esc(sh.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="sv-have"><span class="sv-chip">🪙 ${money()} denarios</span>${servV() >= 3 ? '<span class="sv-chip">10% menos por tu servicio</span>' : ''}</div>${S.hx && kind === 'mercado' ? `<div class="vil-hag"><button data-h="0" class="${S.haggle ? '' : 'on'}">Pagar lo justo</button><button data-h="1" class="${S.haggle ? 'on' : ''}">Regatear duro (−20%)</button><small>${S.haggle ? 'Regatear te ahorra denarios, pero en la aldea lo notan.' : 'Pagar lo justo suma Gentileza y reputación.'}</small></div>` : ''}
-      <h4 class="x-h">Comprar</h4>${rows}${fixes ? '<h4 class="x-h">Arreglar herramientas</h4>' + fixes : ''}${sh.sell.length ? `<h4 class="x-h">Vender</h4>${sells || '<p class="sv-tip">No tenés nada que te compren acá.</p>'}` : ''}<p class="sv-tip">En tiempos de Jesús se pagaba con denarios: un denario era el jornal de un día de trabajo (Mateo 20:2).</p></div>`;
+      ${(() => { const e = epHTML(kind); return e ? '<h4 class="x-h">Misión épica</h4>' + e : ''; })()}<h4 class="x-h">Comprar</h4>${rows}${fixes ? '<h4 class="x-h">Arreglar herramientas</h4>' + fixes : ''}${sh.sell.length ? `<h4 class="x-h">Vender</h4>${sells || '<p class="sv-tip">No tenés nada que te compren acá.</p>'}` : ''}<p class="sv-tip">En tiempos de Jesús se pagaba con denarios: un denario era el jornal de un día de trabajo (Mateo 20:2).</p></div>`;
     el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
     el.querySelectorAll('[data-h]').forEach(b => b.onclick = () => { S.haggle = b.dataset.h === '1'; draw(); });
     el.querySelectorAll('[data-b]').forEach(b => b.onclick = () => { const [t, k, p] = sh.buy[+b.dataset.b], cost = price(p); if (money() < cost) return; if (S.hx && kind === 'mercado') { const vv = vilNearest(60); if (S.haggle) { if (vv) repAdd(vv.name, -1); behav('regateos'); } else { if (vv) repAdd(vv.name, 1); axGain('gent', 1); behav('pagoJusto'); } }
@@ -9580,6 +9636,8 @@ function svShop(kind) {
       else { const left = GEAR.filter(x => x.r === k && !x.x && !gearState().own.includes(x.id)); if (!left.length) return; svAdd('money', -cost); gearGive(left[Math.floor(Math.random() * left.length)], 'Compraste'); }
       tone3d(); G().save(); svUI(); draw(); });
     const sell = (k, n) => { n = Math.min(n, s.inv[k] || 0); if (!n) return; let m = 0; for (let j = 0; j < n; j++) { m += sellUnit(kind, k); if (R7_OF[k]) sellCount(kind, k); } svAdd(k, -n); svAdd('money', m); G().save(); svUI(); draw(); };
+    el.querySelectorAll('[data-ep]').forEach(b => b.onclick = () => { epClick(b.dataset.ep); draw(); });
+    el.querySelectorAll('[data-eq]').forEach(b => b.onclick = () => { const [id, i] = b.dataset.eq.split(':'); epQuiz(id, i); draw(); });
     el.querySelectorAll('[data-fx]').forEach(b => b.onclick = () => { const [ty, t] = b.dataset.fx.split(':'), c = price(2 * t); if (money() < c) return; svAdd('money', -c); t7P()[ty][t] = T7_DUR[t - 1]; svToast(`🔧 Quedó como nueva: ${lc1(t7Name(ty, +t))}.`); G().save(); svUI(); draw(); });
     el.querySelectorAll('[data-s]').forEach(b => b.onclick = () => sell(b.dataset.s, 1)); el.querySelectorAll('[data-sa]').forEach(b => b.onclick = () => sell(b.dataset.sa, 999));
   };
