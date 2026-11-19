@@ -3543,7 +3543,7 @@ function buildTowns(scene, g, hx, HW, pois) {
     if (p.k === 'taller') { // Nazaret: cuatro talleres alrededor de una plaza con pozo
       const pv = new THREE.Mesh(new THREE.CircleGeometry(15, 40), new THREE.MeshStandardMaterial({ map: townTex().pave, color: hx ? '#BFAE8E' : '#FFFFFF', roughness: 1 })); pv.rotation.x = -Math.PI / 2; pv.position.set(p.x, yAt(p.x, p.z) + .03, p.z); pv.receiveShadow = true; scene.add(pv);
       const w = well(hx); w.position.set(p.x, yAt(p.x, p.z), p.z); w.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(w); S.cols.push({ x0: p.x - 1, x1: p.x + 1, z0: p.z - 1, z1: p.z + 1 });
-      [['carpintero', -6, -8.5, 0], ['alfarero', 6, -8.5, 0], ['panadero', -6, 8.5, Math.PI], ['tejedora', 6, 8.5, Math.PI]].forEach(([k, ox, oz, rot]) => { const H = bigHouse(k, hx), x = p.x + ox * 1.25, z = p.z + oz, y = Math.max(yAt(x, z), yAt(x - 3, z - 3), yAt(x + 3, z + 3)) - .02; placeHouse(scene, H, x, z, rot, y); if (k === 'carpintero' && !rot) S.tallerJose = [x - 1.5, z - .45, Math.PI]; /* José trabaja en su banco: ahí te da la misión del banquito */ });
+      [['carpintero', -6, -8.5, 0], ['alfarero', 6, -8.5, 0], ['panadero', -6, 8.5, Math.PI], ['tejedora', 6, 8.5, Math.PI]].forEach(([k, ox, oz, rot]) => { const H = bigHouse(k, hx), x = p.x + ox * 1.25, z = p.z + oz, y = Math.max(yAt(x, z), yAt(x - 3, z - 3), yAt(x + 3, z + 3)) - .02; placeHouse(scene, H, x, z, rot, y); if (k === 'carpintero' && !rot) S.tallerJose = [x - 1.5, z - .45, Math.PI]; if (k === 'panadero') S.panHouse = { x, z, rot }; /* José trabaja en su banco: ahí te da la misión del banquito */ });
     }
     if (p.k === 'taller') { try { nazaretMore(scene, p, yAt, poiProp, hx, HW); } catch (er) { console.warn('nazaret', er); } }
     if (p.k === 'temple') S.temple = bigTemple(scene, p.x, p.z, p.side, hx, yAt);
@@ -7072,7 +7072,7 @@ const OFI = {
       ['El que siembra tiene que esperar: primero la hoja, después la espiga, después el grano lleno. «No nos cansemos de hacer el bien, porque a su debido tiempo cosecharemos si no nos damos por vencidos.»', 'Gálatas 6:9']],
     dia: [[{ trigo: 4 }, 4, 'Hoy hay que llevar cuatro de trigo a la era para trillar.'], [{ semilla: 6 }, 5, 'Separame seis puñados de semilla buena para la siembra.'], [{ trigo: 8 }, 9, 'Viene el molinero de Belén: necesito ocho de trigo.']],
     enc: [[{ trigo: 3 }, 8, 'Para empezar, espigá como Rut: juntá tres de trigo de los bordes del campo.'], [{ gavilla: 2 }, 22, 'Atá dos gavillas para la fiesta de las primicias.'], [{ trigo: 20 }, 34, 'Llegó la gran cosecha. Traeme veinte de trigo y vas a ser segador de verdad.']] },
-  pan: { name: 'Panadero', ic: '🥖', how: 'Molé el trigo en harina y cocinala junto al fuego. El trigo se consigue en el trigal de Booz o en el mercado.',
+  pan: { name: 'Panadero', ic: '🥖', how: 'Espigá cebada y trigo con la hoz en los trigales (también sube tu oficio) y hacé los siete panes, cada uno con su proceso: moler, amasar, dejar levar, hornear. Hay hornos en la panadería de Nazaret, en la plaza de Capernaúm, en el palacio de Jerusalén y en Belén.',
     m: { at: 'Belén', of: 'panadera', donde: 'Belén, que quiere decir casa del pan', off: [-12, 8], name: 'Ana', sub: 'maestra panadera de Belén', voice: 'mujer', look: { g: 'chica', age: 18, skin: '#C99A72', hair: '#3A2A1A', outfit: '#B08A5A' } },
     perks: [[4, 'Cada tanda de pan rinde un pan más'], [8, 'Aprendés a hacer pan sin levadura'], [12, 'Con piedra de moler, sale el doble de harina'], [14, 'Aprendés a hacer tortas dulces'], [18, 'Tu pan te llena más'], [22, 'Aprendés a preparar cinco panes y dos peces'], [30, 'Sos maestra o maestro panadero: a veces sale una tanda de más']],
     les: [
@@ -7291,7 +7291,7 @@ function svBuild(scene, W) {
   // tu casa, si ya la construiste
   if (S.hx) { const s = svP(); if (s.house) svPlaceHouse(scene, s.house, true);
   if (s.bag && s.bag.left > 0) svDropBag(s.bag, true); }
-  try { econBuild(scene, W); } catch (e) { console.warn('econ', e); } try { specBuild(scene, W); } catch (e) { console.warn('spec', e); } try { z7Central(scene, W); } catch (e) { console.warn('z7', e); } try { kidsMisBuild(scene, W); } catch (e) { console.warn('kmis', e); } if (S.hx) try { vilBuild(scene, W).then(() => secBuild(scene, W)).then(() => matBuild(scene, W)).catch(e => console.warn('sec', e)); } catch (e) { console.warn('vil', e); }
+  try { econBuild(scene, W); } catch (e) { console.warn('econ', e); } try { specBuild(scene, W); } catch (e) { console.warn('spec', e); } try { bkBuild(scene, W); } catch (e) { console.warn('hornos', e); } try { z7Central(scene, W); } catch (e) { console.warn('z7', e); } try { kidsMisBuild(scene, W); } catch (e) { console.warn('kmis', e); } if (S.hx) try { vilBuild(scene, W).then(() => secBuild(scene, W)).then(() => matBuild(scene, W)).catch(e => console.warn('sec', e)); } catch (e) { console.warn('vil', e); }
   svUI();
 }
 function svToolMesh(t) {
@@ -7400,6 +7400,7 @@ function svNear() {
   { const x = pocketNear(); if (x) return x; if (S.pocket) return null; }
   for (const m of Z7.stalls) if (d2(m.x, m.z) < 9) return { k: 'shop', shop: m.shop, label: SHOPS[m.shop].name };
   { const z = z7Near(); if (z) return z; }
+  { const b = bkNear(); if (b) return b; }
   { const r = readNear(); if (r) return r; }
   { const l = loreNear(2.6); if (l) return { k: 'lore', l, label: l.label }; }
   { const e = secNear(); if (e) return { k: 'sec', e, label: secP().secrets[e.d.id] ? 'Ver el lugar secreto' : SEC.mod.ENTRY[e.d.entry][0] }; }
@@ -7409,6 +7410,7 @@ function svNear() {
   if (S.inRoom && SHOPS[S.inRoom.trade]) return { k: 'shop', shop: S.inRoom.trade, label: 'Comprar y vender' };
   if (st.bag && d2(st.bag.x, st.bag.z) < 4) return { k: 'bag', label: 'Recoger tus cosas' };
   const fire = svFireNear(); if (fire && fishAll() > 0) return { k: 'cook', label: 'Cocinar pescado', fire };
+  if (fire && S.hx && fire.lit !== false && ((s.inv.cebada || 0) >= 2 || fire === S.sv.oven)) return { k: 'bake', label: '🍞 Hacer pan junto al fuego', fire };
   if (fire && fire.lit !== false && MAT.mod) return { k: 'reflex', label: 'Sentarte junto al fuego', fire };
   let best = null, bd = 2.6 * 2.6;
   st.fruit.trees.forEach((o, i) => { const d = d2(o.x, o.z); if (d < bd && o.n > 0) { bd = d; best = { k: 'fruit', i, label: o.kind === 'lemon' ? 'Recoger limones' : 'Recoger granadas' }; } });
@@ -7527,7 +7529,7 @@ const rockList = () => rockList.c && rockList.n === (FLORA.rock || []).length + 
 function rockShow(i, on) { const o = rockList()[i]; if (!o) return; if (o.oi != null) { trpHide(o.oi, !on); return; } if (o.mesh) { o.mesh.visible = on; return; } svHide(FLORA.rI, i - Z7.rocks.length, on); }
 function treeShow(i, on) { if (FLORA.olive && FLORA.olive.length) { svHide(FLORA.oT, i, on); for (let j = 0; j < 6; j++) svHide(FLORA.oB, i * 6 + j, on); return; } const o = chopList()[i]; if (!o) return; o.down = !on; if (o.mesh) o.mesh.visible = on; if (o.gt) o.gt.forEach(([im, k]) => svHide(im, k, on)); if (o.oi != null) trpHide(o.oi, !on); }
 /* el trabajo en marcha */
-function t7Stop(msg) { if (!S.sv || !S.sv.work) return; const w = S.sv.work; S.sv.work = null; if (w.job) { jobEnd(w, false); G().save(); svUI(); return; } if (msg !== false) svToast(msg || (w.n ? `Paraste. Sacaste ${w.n} ${w.n > 1 ? 'piezas' : 'pieza'}.` : 'Paraste de trabajar.')); G().save(); svUI(); }
+function t7Stop(msg) { if (!S.sv || !S.sv.work) return; const w = S.sv.work; S.sv.work = null; if (w.job) { jobEnd(w, false); G().save(); svUI(); return; } if (w.bake) { bkStop(w); G().save(); svUI(); return; } if (msg !== false) svToast(msg || (w.n ? `Paraste. Sacaste ${w.n} ${w.n > 1 ? 'piezas' : 'pieza'}.` : 'Paraste de trabajar.')); G().save(); svUI(); }
 function t7Start(k, i, tier) {
   const st = S.sv, type = k === 'tree' ? 'axe' : k === 'rock' ? 'pick' : 'rod', T = T7[type], g = T.res, rn = lc1(R7[g].n[tier - 1]);
   const tl = t7Best(type); if (!tl) { const P = t7P()[type], own = [1, 2, 3, 4, 5, 6, 7].filter(t => P[t] != null && P[t] !== 0); svToast(own.length ? `Tu ${lc1(t7Name(type, own[0]))} pide ${t7Req(type, own[0])}. Subí tu oficio o conseguí una más simple en el mercado.` : `Necesitás ${type === 'rod' ? 'una caña o una red' : type === 'axe' ? 'un hacha' : 'un pico'}. Se consiguen en el mercado.`); return; }
@@ -7541,6 +7543,7 @@ function t7Tick(dt) {
   const st = S.sv, w = st && st.work; if (!w) return;
   if (S.freeMoving || S.walking || S.down || BLD.on || sheetUp()) { t7Stop(); return; }
   if (w.job) { jobTick(w, dt); return; }
+  if (w.bake) { bkTick(w, dt); return; }
   if ((w.k === 'tree' && st.felled.has(w.i)) || (w.k === 'rock' && st.mined.has(w.i))) { t7Stop(false); return; }
   const T = T7[w.type], iv = 1.5 * (1 - .3 * fv(T.at) / 100); w.t += dt; if (w.t < iv) return; w.t = 0; w.hits++;
   if (w.k === 'fish') { S.catchT = iv; h3do(['M_Fishing_Idle', 'M_Holding_Idle'], iv + .2); } else svSwing(w.k);
@@ -7761,6 +7764,99 @@ function z7Node(scene, x, z, y, g, t, ty, cost) {
 }
 function z7Inst(geo, mat, L, cols) { const im = new THREE.InstancedMesh(geo, mat, L.length), m4 = new THREE.Matrix4(), cc = new THREE.Color(); L.forEach(([x, y, z, a, b, c], k) => { m4.makeScale(a, b, c).setPosition(x, y, z); im.setMatrixAt(k, m4); if (cols) im.setColorAt(k, cc.set(cols[k % cols.length])); }); return im; }
 function z7Vis(o, on) { o.mesh.visible = on; try { trpHide(o.oi, !on); } catch (e) {} }
+/* ===================== LA PANADERÍA: siete panes, cada uno con su proceso (moler, cernir, mezclar, amasar, dejar levar,
+   cocinar sobre las brasas u hornear). Cada pan pide un horno de cierto nivel; un horno mejor sirve para los panes de abajo.
+   El panadero espiga sus granos en los trigales (eso también sube su oficio) ===================== */
+const BK_STEP = { moler: ['Moliendo el grano', '⚪'], cernir: ['Cerniendo la harina', '🥣'], mezclar: ['Mezclando los granos', '🥣'], amasar: ['Amasando', '🤲'], levar: ['Dejando levar la masa', '⏳'], brasas: ['Cocinando sobre las brasas', '🔥'], hornear: ['Horneando', '🔥'] };
+const BK_STEPN = { moler: 'Moler', cernir: 'Cernir', mezclar: 'Mezclar', amasar: 'Amasar', levar: 'Dejar levar', brasas: 'Brasas', hornear: 'Hornear' };
+const BK_OVEN = ['una fogata o un fogón', 'un horno de barro', 'un horno de piedra', 'un horno de dos bocas', 'el horno de la plaza de Capernaúm', 'el horno del palacio en Jerusalén', 'el horno de Belén'];
+const BREADS = [
+  { id: 'cebada', name: 'Pan de cebada', ref: 'Juan 6:9', lv: 1, oven: 1, need: { cebada: 2 }, out: { pancebada: 2 }, steps: [['moler', 5], ['brasas', 7]], txt: 'El pan de los pobres: el muchacho que compartió su almuerzo tenía cinco panes de cebada.' },
+  { id: 'trigo', name: 'Pan de trigo', lv: 3, oven: 2, need: { trigo: 2 }, out: { pantrigo: 2 }, steps: [['moler', 5], ['amasar', 5], ['hornear', 8]], txt: 'Harina de trigo amasada con agua y sal, cocida en el horno.' },
+  { id: 'azimo', name: 'Pan sin levadura', ref: 'Éxodo 12:39', lv: 6, oven: 3, need: { trigo: 2 }, out: { azimo: 4 }, steps: [['moler', 5], ['amasar', 4], ['hornear', 5]], txt: 'Se amasa y se hornea enseguida, sin esperar: así salió Israel de Egipto, de apuro.' },
+  { id: 'leud', name: 'Pan con levadura', ref: 'Mateo 13:33', lv: 10, oven: 4, need: { trigo: 3, levadura: 1 }, out: { bread: 4, levadura: 1 }, steps: [['moler', 6], ['amasar', 6], ['levar', 180], ['hornear', 9]], txt: 'Un poco de masa vieja hace crecer toda la masa. Te queda otra vez levadura para la próxima.' },
+  { id: 'tortas', name: 'Tortas de pasas', ref: '1 Samuel 25:18', lv: 14, oven: 5, need: { trigo: 2, pasas: 2 }, out: { torta: 3 }, steps: [['moler', 5], ['amasar', 6], ['hornear', 9]], txt: 'Abigail le llevó a David tortas de pasas. Las pasas se hacen con las uvas del viñador.' },
+  { id: 'ezeq', name: 'Pan de Ezequiel', ref: 'Ezequiel 4:9', lv: 19, oven: 6, need: { cebada: 1, trigo: 1, lentejas: 1, habas: 1, espelta: 1, trigob: 1 }, out: { panezeq: 3 }, steps: [['moler', 9], ['mezclar', 4], ['amasar', 6], ['hornear', 10]], txt: 'Dios le dijo a Ezequiel que hiciera pan con seis granos juntos. Es el pan que más llena.' },
+  { id: 'prop', name: 'Panes de la proposición', ref: 'Levítico 24:5-9', lv: 24, oven: 7, need: { primicias: 4 }, out: { panprop: 12 }, steps: [['moler', 8], ['cernir', 5], ['cernir', 5], ['amasar', 8], ['hornear', 12]], txt: 'Doce panes de flor de harina, cernida dos veces, que se ponían cada sábado en la mesa del Templo.' }
+];
+const BK = { ovens: [] };
+function bkP() { const s = svP(); s.bk = s.bk || { made: {} }; return s.bk; }
+function bkHas(need) { const I = svP().inv; return Object.entries(need).every(([k, n]) => (I[k] || 0) >= n); }
+function bkPay(need, sg) { Object.entries(need).forEach(([k, n]) => svAdd(k, -n * (sg || 1))); }
+function bkSecs(r, d) { return d * (1 - Math.min(.4, (ofiLv('pan') - r.lv) * .02)); }
+/* el horno de cada nivel: domo de barro sobre una base de piedra; el de dos bocas tiene dos domos; el del palacio es de piedra labrada */
+function bkOven(scene, x, z, y, t, name, hx) {
+  const g = new THREE.Group(), clay = z7Mat('bkc' + t, t === 7 ? '#C0905A' : '#A8784A'), st = z7Mat('bks', t === 6 ? '#D8CCB0' : '#8E8270'), dark = z7Mat('bkd', '#1E140E'), ember = new THREE.MeshBasicMaterial({ color: '#FF7A2A' });
+  const dome = (dx, r) => { const d = new THREE.Mesh(new THREE.SphereGeometry(r, 18, 12, 0, 6.283, 0, Math.PI / 2), clay); d.scale.y = 1.15; d.position.set(dx, .55, 0); g.add(d); const m = new THREE.Mesh(new THREE.CircleGeometry(r * .38, 14, 0, Math.PI), dark); m.position.set(dx, .56, r * .98); g.add(m); const e = new THREE.Mesh(new THREE.CircleGeometry(r * .22, 10, 0, Math.PI), ember); e.position.set(dx, .57, r * .99); g.add(e); const ch = new THREE.Mesh(new THREE.CylinderGeometry(.09, .12, .3, 8), clay); ch.position.set(dx - r * .3, .55 + r * 1.08, -r * .2); g.add(ch); };
+  if (t === 6) { const b = new THREE.Mesh(bevBox(3.2, 2.2, 2.2, .08), st); b.position.y = 1.1; g.add(b); const a = new THREE.Mesh(new THREE.CircleGeometry(.6, 18, 0, Math.PI), dark); a.position.set(0, 1, 1.11); g.add(a); const a2 = new THREE.Mesh(new THREE.PlaneGeometry(1.2, .4), dark); a2.position.set(0, .8, 1.11); g.add(a2); const e = new THREE.Mesh(new THREE.CircleGeometry(.35, 14, 0, Math.PI), ember); e.position.set(0, .62, 1.12); g.add(e); [-1.7, 1.7].forEach(dx => { const c = new THREE.Mesh(new THREE.CylinderGeometry(.18, .22, 2.6, 12), st); c.position.set(dx, 1.3, 1.1); g.add(c); }); const top = new THREE.Mesh(bevBox(3.8, .25, 2.5, .05), st); top.position.y = 2.6; g.add(top); }
+  else { const base = new THREE.Mesh(new THREE.CylinderGeometry(t >= 4 ? 2.4 : 1.4, t >= 4 ? 2.5 : 1.5, .55, 20), st); base.position.y = .27; base.scale.z = t >= 4 ? .55 : 1; g.add(base); if (t >= 4) { dome(-1.05, .95); dome(1.05, .95); } else dome(0, 1.05); }
+  const tb = new THREE.Group(); bx(1.8, .08, .7, WOODL(), 0, .8, 0, tb); [[-.8, -.28], [.8, -.28], [-.8, .28], [.8, .28]].forEach(([a, b]) => bx(.07, .8, .07, WOOD(), a, .4, b, tb)); const loaf = new THREE.SphereGeometry(.14, 10, 7), lm = z7Mat('bkl', '#C98A42'); for (let i = 0; i < 6; i++) { const l = new THREE.Mesh(loaf, lm); l.scale.y = .45; l.position.set(-.65 + i * .26, .88, (i % 2 - .5) * .2); tb.add(l); } tb.position.set(t === 6 ? 2.9 : t >= 4 ? 3.3 : 2.2, 0, .6); g.add(tb);
+  g.position.set(x, y, z); g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(g); const ry = 0; void ry;
+  z7Put('dry_branches_medium_01', [{ x: x - (t >= 4 ? 3.1 : 2), y: y, z: z + .4, ry: 1.2, s: 1, v: 0 }], { nocol: 1 }); z7Put('wicker_basket_01', [{ x: x + (t === 6 ? 2.9 : t >= 4 ? 3.3 : 2.2) + 1.3, y, z: z + 1.1, ry: .4, s: 1, v: 0 }], { nocol: 1 }); z7Put('antique_ceramic_vase_01', [{ x: x - (t >= 4 ? 3 : 1.9), y, z: z - 1, ry: 2, s: 1.1, v: 0 }], { nocol: 1 });
+  S.cols.push({ x0: x - (t >= 4 ? 2.2 : 1.3), x1: x + (t >= 4 ? 2.2 : 1.3), z0: z - 1.2, z1: z + 1.2 });
+  const lb = poiLb(textSprite(name, hx)); lb.scale.multiplyScalar(.6); lb.position.set(x, y + (t === 6 ? 4.2 : 3.4), z); scene.add(lb);
+  BK.ovens.push({ x, z: z + 2.2, t, name });
+}
+function bkBuild(scene, W) {
+  BK.ovens = []; if (!S.hx) return; const yAt = (x, z) => W.hAt(x, z), hx = G().branch === 'ados';
+  const spot = (cx, cz, R0) => { for (let r = R0; r < R0 + 16; r += 3) for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283 + r, x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r; if ([0, 1, 2, 3, 4].every(q => !blockedAt(x + [0, 3, -3, 0, 0][q], z + [0, 0, 0, 2.5, -2.5][q])) && !(S.lore || []).some(l => (l.x - x) ** 2 + (l.z - z) ** 2 < 36) && !Z7.stalls.some(q => (q.x - x) ** 2 + (q.z - z) ** 2 < 49) && !Z7.nodes.some(q => (q.x - x) ** 2 + (q.z - z) ** 2 < 25)) return [x, z]; } return null; };
+  const P = S.pois || [], at = (k, nm) => P.find(q => q.k === k && (!nm || q.name === nm));
+  const L = [];
+  if (S.panHouse) L.push([S.panHouse.x, S.panHouse.z, 8, 4, 'Horno de la panadería']);
+  { const p = at('roofhouse'); if (p) L.push([p.x, p.z, 16, 5, 'Horno de la plaza']); }
+  { const p = at('temple'); if (p) L.push([p.x, p.z, 30, 6, 'Horno del palacio']); }
+  { const p = at('village', 'Belén'); if (p) L.push([p.x, p.z, 14, 7, 'Horno de Belén']); }
+  L.forEach(([cx, cz, r0, t, nm]) => { try { const sp = spot(cx, cz, r0); if (!sp) return; bkOven(scene, sp[0], sp[1], yAt(sp[0], sp[1]), t, nm, hx); } catch (e) { console.warn('horno ' + nm, e); } });
+}
+/* el horno más cerca (o la fogata, o tu horno de casa, o el horno de la alfarería) */
+function bkNear() {
+  if (!S.hx) return null; const a = S.av.position, d2 = (x, z) => (x - a.x) ** 2 + (z - a.z) ** 2;
+  for (const o of BK.ovens) if (d2(o.x, o.z) < 7) return { k: 'bake', o, label: '🍞 Hacer pan · ' + o.name };
+  return null;
+}
+function bkTier() { let t = 0, nm = ''; const a = S.av.position; for (const o of BK.ovens) if ((o.x - a.x) ** 2 + (o.z - a.z) ** 2 < 9) { if (o.t > t) { t = o.t; nm = o.name; } }
+  if (t < 3) { const s = svP(); if (s.house && s.furn.includes('horno') && S.sv.oven && (S.sv.oven.x - a.x) ** 2 + (S.sv.oven.z - a.z) ** 2 < 9) { t = 3; nm = 'tu horno de piedra'; } }
+  if (t < 2 && clayKilnNear()) { t = 2; nm = 'el horno de la alfarería'; } if (t < 1 && svFireNear()) { t = 1; nm = 'la fogata'; } return { t, nm }; }
+function bkLocked(r) { return r.oven === 7 && !(epP().panes && epP().panes.done); }
+function bkOpen() {
+  const el = document.getElementById('v3sheet'), s = svP(); S.joy.x = 0; S.joy.y = 0; let msg = '';
+  const draw = () => { const ov = bkTier(), B = bkP(), lv = ofiLv('pan'), mill = (s.inv.piedramoler || 0) > 0;
+    const dough = B.rise ? BREADS.find(r => r.id === B.rise.id) : null, left = dough ? Math.max(0, Math.ceil((B.rise.until - Date.now()) / 1000)) : 0;
+    const rows = BREADS.map(r => { const lock = bkLocked(r), lvOk = lv >= r.lv, ovOk = ov.t >= r.oven, have = bkHas(r.need), needMill = r.steps.some(x => x[0] === 'moler') && !mill;
+      const ing = Object.entries(r.need).map(([k, n]) => `${RES[k] ? RES[k][1] : ''} ${n} ${RES[k] ? RES[k][0].toLowerCase() : k} (${s.inv[k] || 0})`).join(' · ');
+      const proc = r.steps.map(x => BK_STEPN[x[0]]).join(' → ');
+      const why = lock ? 'Este horno se abre con la misión épica del panadero.' : !lvOk ? `Se aprende con panadero nivel ${r.lv} (tenés ${lv}).` : !ovOk ? `Se hace en ${BK_OVEN[r.oven - 1]} o un horno mejor.` : needMill ? 'Necesitás una piedra de moler: se compra en la panadería o la hacés vos.' : !have ? 'Te faltan ingredientes.' : '';
+      const ok = !why && !dough;
+      return `<div class="sv-rec${ok ? '' : ' off'}"><div><b>${(B.made[r.id] ? '' : '✨ ')}${esc(r.name)}${r.ref ? ' <small>(' + esc(r.ref) + ')</small>' : ''}</b><small>${esc(r.txt)}</small><small>Lleva: ${esc(ing)}</small><small>Proceso: ${esc(proc)}</small>${why ? `<small class="ep-o">${esc(why)}</small>` : ''}</div><button data-r="${r.id}" ${ok ? '' : 'disabled'}>Hacer</button></div>`; }).join('');
+    const rise = dough ? `<div class="sv-rec${left ? ' off' : ''}"><div><b>⏳ ${esc(dough.name)}: la masa está levando</b><small>${left ? `Le falta ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}. Podés ir y venir; después la horneás en ${BK_OVEN[dough.oven - 1]} o uno mejor.` : 'Ya levó: lista para hornear.'}</small></div><button data-h="1" ${left || ov.t < dough.oven ? 'disabled' : ''}>Hornear</button></div>` : '';
+    el.innerHTML = `<div class="inv hx sv-sheet"><div class="inv-h"><b>🍞 La panadería</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="sv-have"><span class="sv-chip">${ov.t ? '🔥 Estás en ' + esc(ov.nm) : 'No hay fuego cerca'}</span><span class="sv-chip">🥖 Panadero nivel ${lv}</span><span class="sv-chip">${mill ? '⚪ Tenés piedra de moler' : '⚪ Sin piedra de moler'}</span></div>${msg ? `<p class="sv-tip">${esc(msg)}</p>` : ''}${rise}${rows}<p class="sv-tip">Los granos se espigan en los trigales y los campos: con la hoz juntás más y también subís de panadero. Un horno mejor sirve para los panes de abajo.</p></div>`;
+    el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
+    el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { const r = BREADS.find(x => x.id === b.dataset.r); el.hidden = true; bkStart(r, 0); });
+    const hb = el.querySelector('[data-h]'); if (hb) hb.onclick = () => { const r = BREADS.find(x => x.id === bkP().rise.id); el.hidden = true; bkStart(r, r.steps.findIndex(x => x[0] === 'levar') + 1, true); };
+    if (dough && left) clearTimeout(bkOpen.tm), bkOpen.tm = setTimeout(() => { if (!el.hidden && el.querySelector('.sv-sheet') && el.innerHTML.includes('La panadería')) draw(); }, 1000);
+  };
+  el.hidden = false; draw();
+}
+function bkStart(r, si, resumed) {
+  if (!resumed) { if (!bkHas(r.need)) { svToast('Te faltan ingredientes.'); return; } bkPay(r.need); }
+  const w = { bake: 1, k: 'bake', r, si, t: 0, n: 0, x: S.av.position.x, z: S.av.position.z, resumed };
+  w.dur = bkSecs(r, r.steps[si][1]); w.label = `${BK_STEP[r.steps[si][0]][0]} · paso ${si + 1} de ${r.steps.length}`; S.sv.work = w; S.joy.x = 0; S.joy.y = 0;
+  svToast(`${BK_STEP[r.steps[si][0]][1]} ${r.name}: ${r.steps.map(x => BK_STEPN[x[0]].toLowerCase()).join(', ')}. Sigue solo; movete o tocá E para parar.`); svUI();
+}
+function bkTick(w, dt) {
+  const r = w.r, [kind] = r.steps[w.si]; w.t += dt; w.a = (w.a || 0) + dt;
+  if (w.a > 1.6) { w.a = 0; if (kind === 'brasas' || kind === 'hornear') { S.toolK = 'flint'; S.toolT = 1; h3do(['M_Kneeling_Idle', 'PickUp_Table'], 1.6); } else h3do(kind === 'moler' || kind === 'cernir' ? ['M_Kneeling_Idle', 'PickUp_Table'] : ['M_Pull_Heavy_Object', 'Interact'], 1.6); AXS.workT = 6; }
+  if (w.t < w.dur) return; ofiXP('pan', 2 + r.lv); w.si++; w.t = 0;
+  const nx = r.steps[w.si];
+  if (nx && nx[0] === 'levar') { const B = bkP(); B.rise = { id: r.id, until: Date.now() + bkSecs(r, nx[1]) * 1000 }; S.sv.work = null; svToast(`⏳ La masa queda levando unos ${Math.round(bkSecs(r, nx[1]) / 60)} minutos. Podés ir y venir: después la horneás acá o en otro horno igual o mejor.`); G().save(); svUI(); return; }
+  if (nx) { w.dur = bkSecs(r, nx[1]); w.label = `${BK_STEP[nx[0]][0]} · paso ${w.si + 1} de ${r.steps.length}`; try { pkPop(`${BK_STEP[nx[0]][1]} ${BK_STEPN[nx[0]]}`); } catch (e) {} svUI(); return; }
+  S.sv.work = null; const B = bkP(); if (w.resumed) B.rise = null; const first = !B.made[r.id]; B.made[r.id] = (B.made[r.id] || 0) + 1;
+  Object.entries(r.out).forEach(([k, n]) => svAdd(k, n)); svXP(2 + r.lv); if (first) { svXP(15); try { sello('pan-' + r.id, r.name); } catch (e) {} }
+  const o = Object.entries(r.out).filter(([k]) => k !== 'levadura').map(([k, n]) => `${n} de ${RES[k][0].toLowerCase()}`).join(', ');
+  try { pkPop(`🍞 +${o}`); tone3d(); } catch (e) {} svToast(`${first ? '✨ ¡Primera vez! ' : ''}🍞 Hiciste ${r.name.toLowerCase()}: ${o}.${r.out.levadura ? ' Guardaste un poco de masa vieja para la próxima.' : ''}${r.id === 'prop' ? ' Son para la mesa del Templo.' : ''}`); G().save(); svUI();
+}
+/* si parás antes de terminar, los ingredientes vuelven a tu bolsa (si ya estaba levando, la masa sigue esperando) */
+function bkStop(w) { if (w.resumed) { svToast('Paraste. La masa sigue lista para hornear.'); return; } bkPay(w.r.need, -1); svToast('Paraste. Los ingredientes volvieron a tu bolsa.'); }
 /* lugares del centro del mapa con puntos de nivel 3 y 4 */
 const Z7_POI = [
   { poi: 'village', name: 'Caná', L: [['uvas', 3, 'podadera', 4], ['barro', 4, 'pala', 3]] },
@@ -7777,7 +7873,7 @@ function z7Central(scene, W) {
   z7Flush();
 }
 function z7Near() { const a = S.av.position; for (let i = 0; i < Z7.nodes.length; i++) { const o = Z7.nodes[i]; if (o.back > 0) continue; if ((o.x - a.x) ** 2 + (o.z - a.z) ** 2 < 5.3) { const nm = lc1(R7[o.g].n[o.t - 1]); return { k: 'z7', i, label: (o.cost ? 'Teñir · ' : T7[o.ty].verb + ' ') + nm + ' · nivel ' + o.t }; } } return null; }
-function z7Done(i) { const o = Z7.nodes[i]; if (!o) return; o.back = (o.g === 'barro' ? T7_BACK.rock : T7_BACK.tree)[o.t - 1] * 60; z7Vis(o, false); svAdd(r7k(o.g, o.t), 3); ofiXP(T7[o.ty].of, (3 + o.t * 2) * 3); svXP(o.t); G().save(); svToast(`${R7[o.g].ic} Juntaste 3 de ${lc1(RES[r7k(o.g, o.t)][0])}. Vuelve en unos minutos.`); svUI(); }
+function z7Done(i) { const o = Z7.nodes[i]; if (!o) return; o.back = (o.g === 'barro' ? T7_BACK.rock : T7_BACK.tree)[o.t - 1] * 60; z7Vis(o, false); svAdd(r7k(o.g, o.t), 3); ofiXP(T7[o.ty].of, (3 + o.t * 2) * 3); if (o.g === 'trigo') ofiXP('pan', (3 + o.t * 2) * 2); svXP(o.t); G().save(); svToast(`${R7[o.g].ic} Juntaste 3 de ${lc1(RES[r7k(o.g, o.t)][0])}. Vuelve en unos minutos.`); svUI(); }
 function z7Tick(dt) { for (const o of Z7.nodes) if (o.back > 0) { o.back -= dt; if (o.back <= 0) { o.back = 0; z7Vis(o, true); } } }
 function svAct(nn) {
   if (S && !S.hx && S.sv && !svOn()) { if (!S.walking && !sheetUp() && !S.down) kAct(); return; }
@@ -7789,6 +7885,7 @@ function svAct(nn) {
   if (n.need) { svToast(n.label + '. Las herramientas se consiguen en misiones o brillando en el mapa.'); return; }
   if (n.k === 'work') { t7Stop(); return; }
   if (n.k === 'epic') { epAct(n.id); return; }
+  if (n.k === 'bake') { bkOpen(n.o); return; }
   if (n.k === 'fishing') { svFishTap(); return; }
   if (n.k === 'vil') { vilAct(n.v); return; }
   if (n.k === 'sec') { secOpen(n.e); return; }
@@ -7821,9 +7918,9 @@ function svAct(nn) {
 }
 function svFishTap() { const f = S.sv.fishing; if (!f || f.mode !== 'rod') return; if (f.t >= f.bite && f.t <= f.bite + f.win) { axGain('pac', 3); const n = (1 + (S.hx ? (fv('pac') >= 40 && Math.random() < .3 ? 1 : 0) : (Math.random() < atr('pac') * .06 ? 1 : 0))) * (legOn('pescahombres') ? 2 : 1) + (S.hx && ofiLv('pes') >= 12 && Math.random() < (ofiLv('pes') >= 25 ? .35 : .2) ? 1 : 0); svAdd('fish', n); ofiXP('pes', 4 * n); if (S.hx && ofiLv('pes') >= 20 && Math.random() < .1) { svAdd('money', 5); svToast('🐟 ¡Un pez grande! Lo vendiste por 5 denarios.'); } if (S.hx && fv('pac') >= 50 && Math.random() < .15) { svAdd('money', 3); svToast('✨ ¡Un pez raro! Lo vendiste por 3 denarios.'); } S.catchT = 1.6; h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 1.6); svXP(2); G().save(); svToast('🐟 ¡Sacaste ' + (n > 1 ? 'dos peces!' : 'un pez!') + ' Cocinalo en una fogata antes de comerlo.'); } else svToast('Muy rápido. Esperá a que pique.'); S.sv.fishing = null; svUI(); }
 function svEat() {
-  if (!svOn() || S.down) return; const s = svP(), k = (s.inv.torta || 0) > 0 ? 'torta' : (s.inv.cooked || 0) > 0 ? 'cooked' : (s.inv.bread || 0) > 0 ? 'bread' : (s.inv.azimo || 0) > 0 ? 'azimo' : (s.inv.fruit || 0) > 0 ? 'fruit' : (s.inv.pasas || 0) > 0 ? 'pasas' : (s.inv.lemon || 0) > 0 ? 'lemon' : null;
+  if (!svOn() || S.down) return; const s = svP(), k = (s.inv.panezeq || 0) > 0 ? 'panezeq' : (s.inv.torta || 0) > 0 ? 'torta' : (s.inv.cooked || 0) > 0 ? 'cooked' : (s.inv.pantrigo || 0) > 0 ? 'pantrigo' : (s.inv.bread || 0) > 0 ? 'bread' : (s.inv.pancebada || 0) > 0 ? 'pancebada' : (s.inv.azimo || 0) > 0 ? 'azimo' : (s.inv.fruit || 0) > 0 ? 'fruit' : (s.inv.pasas || 0) > 0 ? 'pasas' : (s.inv.lemon || 0) > 0 ? 'lemon' : null;
   if (!k) { svToast((s.inv.fish || 0) > 0 ? 'El pescado crudo hay que cocinarlo primero en una fogata.' : 'No tenés comida. Buscá granados o pescá.'); return; }
-  h3do(['M_Drinking', 'PickUp_Table'], 2.4, .6, 1.2); svAdd(k, -1); s.sat = Math.min(SV.FULL, s.sat + FOOD[k] * (S.hx && fv('dom') >= 20 ? 1.25 : 1) * ((k === 'bread' || k === 'azimo' || k === 'torta') && ofiLv('pan') >= 18 ? 1.4 : 1)); s.warned = 0; G().save(); if (humV() >= 1 && MP.code) xSend({ k: 'share', by: meInfo().name, x: S.av.position.x, z: S.av.position.z }); svToast(k === 'cooked' ? '🍢 Comiste pescado asado. ¡Recuperaste fuerzas!' : k === 'bread' ? '🥖 Comiste pan.' : k === 'torta' ? '🥮 Comiste una torta dulce. ¡Quedaste lleno!' : k === 'azimo' ? '🫓 Comiste pan sin levadura.' : k === 'pasas' ? '🫐 Comiste pasas de uva.' : k === 'lemon' ? '🍋 Comiste un limón. ¡Qué ácido!' : '🍎 Comiste una granada.'); svUI();
+  h3do(['M_Drinking', 'PickUp_Table'], 2.4, .6, 1.2); svAdd(k, -1); s.sat = Math.min(SV.FULL, s.sat + FOOD[k] * (S.hx && fv('dom') >= 20 ? 1.25 : 1) * (/^(bread|azimo|torta|pancebada|pantrigo|panezeq)$/.test(k) && ofiLv('pan') >= 18 ? 1.4 : 1)); s.warned = 0; G().save(); if (humV() >= 1 && MP.code) xSend({ k: 'share', by: meInfo().name, x: S.av.position.x, z: S.av.position.z }); svToast(RES[k] && /^pan(cebada|trigo|ezeq)$/.test(k) ? `${RES[k][1]} Comiste ${RES[k][0].toLowerCase()}.` : k === 'cooked' ? '🍢 Comiste pescado asado. ¡Recuperaste fuerzas!' : k === 'bread' ? '🥖 Comiste pan.' : k === 'torta' ? '🥮 Comiste una torta dulce. ¡Quedaste lleno!' : k === 'azimo' ? '🫓 Comiste pan sin levadura.' : k === 'pasas' ? '🫐 Comiste pasas de uva.' : k === 'lemon' ? '🍋 Comiste un limón. ¡Qué ácido!' : '🍎 Comiste una granada.'); svUI();
 }
 
 /* ---------- fabricar y construir ---------- */
@@ -8589,12 +8686,13 @@ function prayTogetherTick(dt) {
    - Servicio: atributo único que solo crece haciendo obras para los demás.
    ===================================================================== */
 RES.money = ['Denarios', '🪙']; RES.bread = ['Pan', '🥖']; FOOD.bread = 15 * 60;
-const SELL = { wood: 1, stone: 1, plank: 3, block: 3, fruit: 1, lemon: 1, fish: 2, cooked: 3, bread: 1, salado: 6, banquito: 9, yugo: 16, arado: 28, piedramoler: 9, tinaja: 16, dintel: 28, barro: 1, plato: 3, vasija: 5, cantaro: 8, adobe: 2, vpint: 14, anfora: 18, trigo: 1, harina: 2, gavilla: 7, azimo: 1, torta: 5, cesta: 20, aceitunas: 1, aceite: 4, lampara: 8, unguento: 12, aceitepuro: 14, uvas: 1, mosto: 3, pasas: 2, vino: 9, vinofiesta: 22, lana: 1, lino: 1, hilo: 1, tela: 4, lienzo: 7, manto: 14, tunica: 24, soga: 2, estaca: 1, lona: 6, carpa: 30, cortina: 26 };
+Object.assign(RES, { pancebada: ['Pan de cebada', '🫓'], pantrigo: ['Pan de trigo', '🍞'], levadura: ['Levadura (masa vieja)', '🫙'], panezeq: ['Pan de Ezequiel', '🍞'], panprop: ['Panes de la proposición', '🍞'] }); Object.assign(FOOD, { pancebada: 12 * 60, pantrigo: 18 * 60, panezeq: 40 * 60 }); ['pancebada', 'pantrigo', 'panezeq', 'panprop', 'levadura'].forEach(k => RES_PROD.add(k));
+const SELL = { pancebada: 1, pantrigo: 2, panezeq: 9, panprop: 6, levadura: 2, wood: 1, stone: 1, plank: 3, block: 3, fruit: 1, lemon: 1, fish: 2, cooked: 3, bread: 1, salado: 6, banquito: 9, yugo: 16, arado: 28, piedramoler: 9, tinaja: 16, dintel: 28, barro: 1, plato: 3, vasija: 5, cantaro: 8, adobe: 2, vpint: 14, anfora: 18, trigo: 1, harina: 2, gavilla: 7, azimo: 1, torta: 5, cesta: 20, aceitunas: 1, aceite: 4, lampara: 8, unguento: 12, aceitepuro: 14, uvas: 1, mosto: 3, pasas: 2, vino: 9, vinofiesta: 22, lana: 1, lino: 1, hilo: 1, tela: 4, lienzo: 7, manto: 14, tunica: 24, soga: 2, estaca: 1, lona: 6, carpa: 30, cortina: 26 };
 Object.keys(R7).forEach(g => { for (let t = 1; t <= 7; t++) SELL[r7k(g, t)] = R7_SELL[g][t - 1]; });
 const SHOPS = {
   carpintero: { name: 'La carpintería', buy: [['t', 'axe', 15], ['t', 'pick', 18], ['r', 'plank', 4]], sell: ['wood', 'plank', 'banquito', 'yugo', 'arado'] },
   alfarero: { name: 'El alfarero', buy: [['r', 'barro', 2], ['r', 'block', 4], ['t', 'flint', 6]], sell: ['barro', 'plato', 'vasija', 'cantaro', 'adobe', 'vpint', 'anfora', 'stone', 'block', 'piedramoler', 'tinaja', 'dintel'] },
-  panadero: { name: 'La panadería', buy: [['r', 'semilla', 1], ['r', 'harina', 3], ['r', 'bread', 2]], sell: ['trigo', 'harina', 'bread', 'azimo', 'torta', 'cesta', 'gavilla', 'fruit', 'lemon'] },
+  panadero: { name: 'La panadería', buy: [['r', 'semilla', 1], ['r', 'harina', 3], ['r', 'bread', 2], ['r', 'levadura', 3], ['r', 'piedramoler', 10]], sell: ['trigo', 'harina', 'bread', 'pancebada', 'pantrigo', 'azimo', 'torta', 'panezeq', 'cesta', 'gavilla', 'fruit', 'lemon'] },
   pescador: { name: 'La casa del pescador', buy: [['t', 'rod', 12], ['t', 'net', 20], ['r', 'cooked', 4]], sell: ['fish', 'cooked', 'salado'] },
   tejedora: { name: 'La tejedora', buy: [['r', 'lana', 2], ['r', 'hilo', 2], ['g', 'c', 10], ['g', 'r', 30]], sell: ['lana', 'lino', 'hilo', 'tela', 'lienzo', 'manto', 'tunica', 'lona', 'carpa', 'cortina'] },
   posada: { name: 'La posada', buy: [['r', 'bread', 2], ['r', 'cooked', 4], ['r', 'pasas', 3]], sell: ['fruit', 'fish', 'vino', 'vinofiesta', 'aceite', 'pasas', 'bread'] },
