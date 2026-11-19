@@ -748,8 +748,8 @@ const OL_PLAN = [
   { id: 'timna', k: 'zona', zr: 'stone', zt: 7, zc: '#5E7E64', zc2: '#8A5A3A', name: 'La mina de Timna', x: -780, z: -260, r: 26, ref: 'Deuteronomio 8:9', txt: 'Dios describió la tierra prometida como una tierra de cuyos montes se saca cobre. En Timna, al sur, se sacaba cobre hace más de tres mil años. Acá se pica cobre, la piedra de nivel 7.' },
   { id: 'sal', k: 'zona', zr: 'stone', zt: 6, zc: '#EDE8DC', zc2: '#D8D0BE', flat: '#E6E0D2', name: 'El monte de sal', x: -800, z: -1250, r: 26, ref: 'Mateo 5:13', txt: 'Junto al Mar Muerto hay montes de sal de roca. Jesús dijo: «Ustedes son la sal de la tierra». La sal servía para conservar la comida. Acá se pica sal, la piedra de nivel 6.' },
   { id: 'tiro', k: 'zona', shop: 'tiro', name: 'Los mercaderes de Tiro', x: 780, z: -2900, r: 18, ref: 'Ezequiel 27:3', txt: 'Tiro era la gran ciudad comerciante junto al mar. Sus mercaderes llevaban herramientas, telas y pescado de mar por todas partes.' },
-  { id: 'basan', k: 'zona', zr: 'wood', zt: 6, zm: 'island_tree_01', nodes: [['trigo', 6, 'hoz', 5]], name: 'Las encinas de Basán', x: 760, z: -3300, r: 30, ref: 'Ezequiel 27:6', txt: 'En las alturas de Basán crecían encinas enormes, de madera dura: con ellas se hacían los remos de los barcos de Tiro. Acá se tala encina, la madera de nivel 6.' },
-  { id: 'libano', k: 'zona', zr: 'wood', zt: 7, zm: 'island_tree_03', name: 'Los cedros del Líbano', x: -820, z: -3420, r: 32, ref: '1 Reyes 5:6', txt: 'Salomón le pidió al rey Hiram que mandara cortar cedros del Líbano para el templo. El cedro es fuerte, perfumado y no se pudre. Acá se tala cedro, la madera de nivel 7.' },
+  { id: 'basan', k: 'zona', zr: 'wood', zt: 6, zm: 'island_tree_02', zs: 2.1, nodes: [['trigo', 6, 'hoz', 5]], name: 'Las encinas de Basán', x: 760, z: -3300, r: 30, ref: 'Ezequiel 27:6', txt: 'En las alturas de Basán crecían encinas enormes, de madera dura: con ellas se hacían los remos de los barcos de Tiro. Acá se tala encina, la madera de nivel 6.' },
+  { id: 'libano', k: 'zona', zr: 'wood', zt: 7, zm: 'pine_tree_01', zs: 1.5, name: 'Los cedros del Líbano', x: -820, z: -3420, r: 32, ref: '1 Reyes 5:6', txt: 'Salomón le pidió al rey Hiram que mandara cortar cedros del Líbano para el templo. El cedro es fuerte, perfumado y no se pudre. Acá se tala cedro, la madera de nivel 7.' },
   { id: 'valle_alfarero', k: 'zona', nodes: [['barro', 5, 'pala', 6]], name: 'El valle del alfarero', x: -620, z: -2600, r: 24, ref: 'Jeremías 18:1-6', txt: 'Junto a Jerusalén trabajaban los alfareros. Dios mandó a Jeremías a la casa del alfarero para enseñarle que somos como el barro en sus manos. Acá se saca arcilla fina, de nivel 5.' },
   { id: 'costa_tiro', k: 'zona', nodes: [['barro', 6, 'pala', 4], ['lana', 6, 'tijera', 4], ['lino', 6, 'aguja', 4]], name: 'La costa de Tiro', x: 860, z: -2740, r: 26, ref: 'Ezequiel 27:7', txt: 'En la costa de Tiro se juntaban caracoles de mar para hacer la púrpura, el tinte más caro del mundo, y se trabajaba el cáñamo para las velas de los barcos. Acá hay arcilla de mar, púrpura y cáñamo, de nivel 6.' },
   { id: 'jezreel', k: 'zona', nodes: [['trigo', 3, 'hoz', 4], ['trigo', 4, 'hoz', 5]], name: 'El valle de Jezreel', x: 700, z: -1800, r: 28, ref: 'Ezequiel 4:9', txt: 'Jezreel es el valle más fértil de la tierra de Israel. Ahí crecían lentejas, habas y mijo, los granos que Dios le indicó a Ezequiel para su pan. Acá se cosechan granos de nivel 3 y 4.' },
@@ -846,11 +846,12 @@ function olRincon(scene, p, yAt, M, R, props, hx) {
 function olZona(scene, p, yAt, M, R, props, hx) {
   const g = new THREE.Group(), y0 = yAt(p.x, p.z) - .05;
   if (p.zr === 'wood') { for (let i = 0; i < 14; i++) { const a = i / 14 * 6.283 + R() * .3, rr = 6 + R() * (p.r - 10), x = p.x + Math.cos(a) * rr, z = p.z + Math.sin(a) * rr, oi = 900000 + Z7.trees.length, y = yAt(x, z) - .04;
-    props(p.zm || 'island_tree_01', [{ x, y, z, ry: R() * 6.28, s: (p.zt >= 7 ? 2.4 : 1.9) + R() * .5, v: i, oi }], { wind: 3, far: 1, olive: 1 }); Z7.trees.push({ x, z, y, zt: p.zt, oi }); } }
+    props(p.zm || 'island_tree_01', [{ x, y, z, ry: R() * 6.28, s: (p.zs || 1.9) * (1 + R() * .25), v: i, oi }], { wind: 3, far: 1, olive: 1, keepId: p.zm ? 1 : 0 }); Z7.trees.push({ x, z, y, zt: p.zt, oi }); } }
   if (p.zr === 'stone') {
     if (p.flat) { const f = new THREE.Mesh(new THREE.CircleGeometry(p.r - 2, 40), new THREE.MeshStandardMaterial({ color: p.flat, roughness: .95 })); f.rotation.x = -Math.PI / 2; f.position.y = .08; f.receiveShadow = true; g.add(f); }
     for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283 + R() * .3, rr = 4 + R() * (p.r - 8), x = p.x + Math.cos(a) * rr, z = p.z + Math.sin(a) * rr, sc = .9 + R() * .5;
-      const m = new THREE.Mesh(new THREE.DodecahedronGeometry(.9, 0), M('zr' + p.id + (i % 2), i % 2 ? p.zc : p.zc2 || p.zc)); m.scale.set(sc * 1.2, sc * .85, sc); m.rotation.set(R(), R() * 6, R()); m.position.set(x - p.x, yAt(x, z) - y0 + .45 * sc, z - p.z); m.castShadow = true; m.receiveShadow = true; g.add(m); Z7.rocks.push({ x, z, s: 1, v: .5, zt: p.zt, mesh: m }); } }
+      const oi = 960000 + Z7.rocks.length, id = i % 3 ? 'namaqualand_boulder_02' : 'namaqualand_boulders_01', y = yAt(x, z) - .1;
+      props(id, [{ x, y, z, ry: R() * 6.28, s: (id === 'namaqualand_boulders_01' ? .55 : .8) * sc, v: i, oi }], { olive: 1, nocol: 1, keepY: 1, tint: i % 2 ? p.zc : p.zc2 || p.zc }); Z7.rocks.push({ x, z, s: 1, v: .5, zt: p.zt, oi }); } }
   (p.nodes || []).forEach(([gg, t, ty, n, cost], j) => { for (let i = 0; i < n; i++) { const a = (i / n) * 6.283 + j * 1.1 + R() * .3, rr = 5 + R() * (p.r - 9), x = p.x + Math.cos(a) * rr, z = p.z + Math.sin(a) * rr; z7Node(scene, x, z, yAt(x, z) - .02, gg, t, ty, cost); } });
   if (p.shop) specStall(scene, p.x, p.z, yAt, p.shop, 0);
   g.position.set(p.x, y0, p.z); scene.add(g);
@@ -877,7 +878,7 @@ function specBuild(scene, W) {
   SPEC_AT.forEach(sp => { try {
     let x, z;
     if (sp.poi) { const p = (S.pois || []).find(q => q.k === sp.poi); if (!p) return;
-      if (sp.pier) { const dx = -p.side, L = [34, 30, 26]; const pg = new THREE.Group(); for (let i = 0; i < 9; i++) { const d = 35 - i; bx(1.4, .12, .9, WOODL(), 0, 0, 0, pg).position.set(p.x + dx * d, yAt(p.x + dx * 36, p.z) + .25, p.z); } for (const d of [35, 31, 27]) [-0.6, .6].forEach(o => cy(.07, .07, 2.2, WOOD(), p.x + dx * d, yAt(p.x + dx * 36, p.z) - .7, p.z + o, pg, 6)); scene.add(pg); void L;
+      if (sp.pier) { const dx = -p.side, L = [34, 30, 26]; /* el muelle del pack (el mismo de la orilla de Galilea), tres tramos hacia el agua */ const py = yAt(p.x + dx * 36, p.z) + .22, pry = dx > 0 ? Math.PI / 2 : -Math.PI / 2; (FLORA.poiProps = FLORA.poiProps || []).push(['modular_wooden_pier', [26.6, 29, 31.4, 33.8].map(d => ({ x: p.x + dx * d, y: py, z: p.z, ry: pry, s: 1, v: 0 })), { shadow: true, keepY: 1 }]); void L;
         Z7.pier = { x: p.x + dx * 36, z: p.z }; [x, z] = pick(p.x + dx * 39, p.z, [[0, 4], [0, -4], [dx * 3, 6], [dx * 3, -6]]); }
       else { [x, z] = pick(p.x, p.z, [[-p.side * 9, 6], [-p.side * 11, -6], [-p.side * 7, 12], [p.side * 9, -10]].concat(RING)); } }
     else { const p = (OL.plan || []).find(q => q.id === sp.ol); if (!p) return; const sx = -Math.sign(p.x); [x, z] = pick(p.x, p.z, [[sx * (p.r + 4), 3], [sx * (p.r + 4), -8], [sx * (p.r + 8), 10], [0, p.r + 4], [0, -p.r - 4]]); }
@@ -6039,8 +6040,8 @@ function phGet(id) {
   return PH.cache[id];
 }
 function phMat(m, o) {
-  const k = '_ph' + (o.wind ? 'w' + o.wind : '') + (o.grass ? 'g' : '') + (PH.kids ? 'k' : ''); if (m[k]) return m[k];
-  const c = m.clone(); if (PH.kids && c.color) c.color.multiplyScalar(1.12);
+  const k = '_ph' + (o.wind ? 'w' + o.wind : '') + (o.grass ? 'g' : '') + (PH.kids ? 'k' : '') + (o.tint ? 't' + o.tint : ''); if (m[k]) return m[k];
+  const c = m.clone(); if (PH.kids && c.color) c.color.multiplyScalar(1.12); if (o.tint && c.color) { const tc = new THREE.Color(o.tint); c.color.multiply(tc); if (tc.r + tc.g + tc.b > 2.2) c.color.multiplyScalar(1.7); } /* rocas de cobre verdosas, sal blanca */
   if (o.wind) { if (o.wind < 3) { c.side = THREE.DoubleSide; c.shadowSide = THREE.FrontSide; } c.onBeforeCompile = sh => { sh.uniforms.uT = PH.uT; const W = o.wind > 3 ? ['0.', '1.1', '.16', '1.5'] : o.wind > 2 ? ['1.5', '7.', '.022', '.6'] : o.wind > 1 ? ['0.', '.8', '.06', '1.4'] : ['0.', '1.3', '.04', '1.2'];
     sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <project_vertex>', 'vec4 wp=vec4(transformed,1.);vec3 bp=vec3(0.);\n#ifdef USE_INSTANCING\nwp=instanceMatrix*wp;bp=instanceMatrix[3].xyz;\n#endif\nwp=modelMatrix*wp;bp=(modelMatrix*vec4(bp,1.)).xyz;\nfloat hh=wp.y-bp.y,k=clamp((hh-' + W[0] + ')/' + W[1] + ',0.,1.);k*=k;float ph=uT*' + W[3] + '+bp.x*.37+bp.z*.29;\nwp.x+=(sin(ph)*.7+sin(ph*2.3+1.)*.3)*' + W[2] + '*k*max(hh,1.)+sin(uT*3.1+wp.x*2.3+wp.z*1.9)*.012*k;wp.z+=cos(ph*.8+.6)*' + W[2] + '*.5*k*max(hh,1.);\nvec4 mvPosition=viewMatrix*wp;gl_Position=projectionMatrix*mvPosition;'); }; c.customProgramCacheKey = () => 'phw2' + o.wind; }
   if (o.grass) seasonMat(c);
@@ -6204,7 +6205,7 @@ function phPlace(id, items, o) {
   /* ningún árbol ni palmera plantado encima de un sendero o del camino de luz que lleva a una escena */
   if (!o.force && !o.poi && /tree|palm|olive|pine|cypress|jacaranda|sapling|grp_|trp_/i.test(id) && Array.isArray(items)) { try { items = items.filter(it => it.x == null || (spDist(it.x, it.z) > 1.8 && !inTrail(it.x, it.z))); } catch (e) {} }
   if (!o.pk && /tree|palm|olive|pine|cypress|jacaranda|sapling|grp_|trp_/i.test(id) && Array.isArray(items)) items = items.filter(it => !inSea(it)); /* ni palmeras ni árboles plantados dentro del lago o del mar */
-  if (FLORA.paidT && PG_TSUB[id]) { id = PG_TSUB[id]; items = items.map(it => Object.assign({}, it, { s: Math.max(.8, Math.min(1.3, it.s || 1)) })); o = Object.assign({}, o); }
+  if (FLORA.paidT && PG_TSUB[id] && !o.keepId) { id = PG_TSUB[id]; items = items.map(it => Object.assign({}, it, { s: Math.max(.8, Math.min(1.3, it.s || 1)) })); o = Object.assign({}, o); }
   if (FLORA.paidT && /^(island_tree_0[13]|tree_small_02)$/.test(id)) o = Object.assign({}, o, { shadow: true, wind: 3, far: 1, imp: 1 }); if (/^grass_/.test(id)) o.grass = 1; const by = new Map();
   items.forEach(it => { const b = Math.floor(it.z / PH_BAND); if (!by.has(b)) by.set(b, []); by.get(b).push(it); });
   by.forEach((list, b) => PH.bands.push({ id, list, o, zc: (b + .5) * PH_BAND, built: false, ims: [] }));
@@ -7510,7 +7511,7 @@ function sellCount(kind, k) { const s = svP(); s.sold.m[sellKey(kind, k)] = (s.s
 const Z7 = { trees: [], rocks: [], pier: null, stalls: [], nodes: [] };
 const chopList = () => FLORA.olive && FLORA.olive.length ? FLORA.olive : (chopList.c && chopList.n === (FLORA.treesUsed || []).length + Z7.trees.length ? chopList.c : (chopList.n = (FLORA.treesUsed || []).length + Z7.trees.length, chopList.c = Z7.trees.concat(FLORA.treesUsed || [])));
 const rockList = () => rockList.c && rockList.n === (FLORA.rock || []).length + Z7.rocks.length ? rockList.c : (rockList.n = (FLORA.rock || []).length + Z7.rocks.length, rockList.c = Z7.rocks.concat(FLORA.rock || []));
-function rockShow(i, on) { const o = rockList()[i]; if (!o) return; if (o.mesh) { o.mesh.visible = on; return; } svHide(FLORA.rI, i - Z7.rocks.length, on); }
+function rockShow(i, on) { const o = rockList()[i]; if (!o) return; if (o.oi != null) { trpHide(o.oi, !on); return; } if (o.mesh) { o.mesh.visible = on; return; } svHide(FLORA.rI, i - Z7.rocks.length, on); }
 function treeShow(i, on) { if (FLORA.olive && FLORA.olive.length) { svHide(FLORA.oT, i, on); for (let j = 0; j < 6; j++) svHide(FLORA.oB, i * 6 + j, on); return; } const o = chopList()[i]; if (!o) return; o.down = !on; if (o.gt) o.gt.forEach(([im, k]) => svHide(im, k, on)); if (o.oi != null) trpHide(o.oi, !on); }
 /* el trabajo en marcha */
 function t7Stop(msg) { if (!S.sv || !S.sv.work) return; const w = S.sv.work; S.sv.work = null; if (w.job) { jobEnd(w, false); G().save(); svUI(); return; } if (msg !== false) svToast(msg || (w.n ? `Paraste. Sacaste ${w.n} ${w.n > 1 ? 'piezas' : 'pieza'}.` : 'Paraste de trabajar.')); G().save(); svUI(); }
@@ -7719,15 +7720,32 @@ function jobTick(w, dt) {
 const Z7M = {};
 function z7Mat(k, c) { return Z7M[k] || (Z7M[k] = new THREE.MeshStandardMaterial({ color: c, roughness: .85 })); }
 const Z7C = { barro: ['#7A5A3A', '#8A6A44', '#9A6A4A', '#D8CFC0', '#B07A5A', '#6A5A4A', '#C9A27A'], trigo: ['#C9B16A', '#D9B85A', '#8A6A3A', '#9A8A4A', '#C9A64A', '#E0C060', '#F0D070'], uvas: ['#4A2A5A', '#5B2766', '#6A2A6A', '#5A1A4A', '#7A2A7A', '#4A1A3A', '#8A3A8A'], lana: ['#EEE8DA', '#F4F0E6', '#E2DACA', '#E8E4D8', '#B0302A', '#6A2A7A', '#F8F4EA'], lino: ['#6E8A3A', '#6E8A3A', '#3A3028', '#6E9A4A', '#1E1A18', '#8A7A4A', '#F0EADA'] };
+/* cada punto de recurso con modelos de verdad: olivos y vides del pack, ovejas, vasijas y baldes; los manojos de espigas y de lino
+   como en los campos del juego (tallo y espiga). Los modelos instanciados se esconden con su número (oi) cuando se agota */
 function z7Node(scene, x, z, y, g, t, ty, cost) {
-  const gr = new THREE.Group(), c = (Z7C[g] || [])[t - 1] || '#888', R = rng(Math.round(x * 13 + z * 7));
-  if (g === 'barro') { const m = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 7, 0, 6.283, 0, 1.2), z7Mat('zb' + t, c)); m.scale.set(1.3, .25, 1.1); gr.add(m); }
-  else if (g === 'trigo' || g === 'lino') { const st = new THREE.ConeGeometry(.06, 1, 5); st.translate(0, .5, 0); const mt = z7Mat('zs' + g + t, c); for (let i = 0; i < 14; i++) { const m = new THREE.Mesh(st, mt); m.position.set((R() - .5) * 1.6, 0, (R() - .5) * 1.6); m.scale.y = .7 + R() * .5; gr.add(m); } }
-  else if (g === 'aceitunas' || g === 'uvas') { const tr = new THREE.Mesh(new THREE.CylinderGeometry(.09, .14, 1.4, 6), z7Mat('ztr', '#5A4632')); tr.position.y = .7; gr.add(tr); const can = new THREE.Mesh(new THREE.IcosahedronGeometry(g === 'uvas' ? .7 : 1.05, 1), z7Mat('zcn' + g, g === 'uvas' ? '#4F7A2E' : '#5E7A4A')); can.position.y = g === 'uvas' ? 1.3 : 1.8; can.scale.y = .75; gr.add(can); const fr = new THREE.SphereGeometry(g === 'uvas' ? .13 : .07, 6, 4); for (let i = 0; i < (g === 'uvas' ? 5 : 12); i++) { const m = new THREE.Mesh(fr, z7Mat('zf' + g + t, g === 'aceitunas' ? (t >= 4 ? '#2A2A22' : '#6A7A3A') : c)); const a = R() * 6.28; m.position.set(Math.cos(a) * .8, can.position.y - .2 + (R() - .5) * .4, Math.sin(a) * .8); gr.add(m); } }
-  else if (g === 'lana') { if (cost) { const tub = new THREE.Mesh(new THREE.CylinderGeometry(.8, .7, .7, 14), z7Mat('ztub', '#6A4A2E')); tub.position.y = .35; gr.add(tub); const liq = new THREE.Mesh(new THREE.CircleGeometry(.72, 14), z7Mat('zliq', '#9A1A1A')); liq.rotation.x = -Math.PI / 2; liq.position.y = .66; gr.add(liq); } else { const sh = new THREE.IcosahedronGeometry(.35, 0); for (let i = 0; i < 6; i++) { const m = new THREE.Mesh(sh, z7Mat('zl' + t, c)); m.position.set((R() - .5) * 1.4, .3 + R() * .2, (R() - .5) * 1.4); gr.add(m); } } }
-  gr.position.set(x, y, z); gr.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(gr);
-  Z7.nodes.push({ x, z, g, t, ty, mesh: gr, cost: cost || null, back: 0 });
+  const gr = new THREE.Group(), c = (Z7C[g] || [])[t - 1] || '#888', R = rng(Math.round(x * 13 + z * 7)), oi = 950000 + Z7.nodes.length, ry = R() * 6.28;
+  const put = (id, L, o) => (FLORA.poiProps = FLORA.poiProps || []).push([id, L, Object.assign({ shadow: true, nocol: 1, olive: 1 }, o || {})]);
+  const at = (dx, dz, s, v) => ({ x: x + dx, y: S.W ? S.W.hAt(x + dx, z + dz) - .04 : y, z: z + dz, ry: R() * 6.28, s, v: v || 0, oi });
+  if (g === 'barro') { const m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8, 0, 6.283, 0, 1.2), z7Mat('zb' + t, c)); m.scale.set(1.3, .28, 1.1); gr.add(m);
+    const w = new THREE.Mesh(new THREE.CircleGeometry(.5, 14), z7Mat('zbw', '#5E5A48')); w.rotation.x = -Math.PI / 2; w.position.set(.2, .29, .1); gr.add(w);
+    put('planter_pot_clay', [at(1.6, .4, .9)]); put('antique_ceramic_vase_01', [at(-1.5, .8, 1.1), at(-1.2, -1.1, .9, 1)]); put('wooden_bucket_02', [at(1.2, -1.2, .9)]); }
+  else if (g === 'trigo' || g === 'lino') { const n = 70, st = new THREE.ConeGeometry(.03, 1, 4); st.translate(0, .5, 0); const hdG = g === 'trigo' ? new THREE.CapsuleGeometry(.035, .16, 2, 5) : new THREE.SphereGeometry(.05, 6, 4);
+    const sm = new THREE.InstancedMesh(st, z7Mat('zs' + g + t, g === 'lino' ? '#6E8A48' : c), n), hm = new THREE.InstancedMesh(hdG, z7Mat('zh' + g + t, g === 'lino' ? ['#7A9AD8', '#8AA8E0', '#C8C0A0', '#9A88C0', '#3A3A30', '#9A8A50', '#B0A070'][t - 1] : c), n), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3();
+    for (let k = 0; k < n; k++) { const a = R() * 6.28, r = Math.sqrt(R()) * 1.1, px = Math.cos(a) * r, pz = Math.sin(a) * r, h = .8 + R() * .4; e.set((R() - .5) * .25, 0, (R() - .5) * .25); q.setFromEuler(e); m4.compose(v.set(px, 0, pz), q, sc.set(1, h, 1)); sm.setMatrixAt(k, m4); const tip = new THREE.Vector3(0, h, 0).applyQuaternion(q); m4.compose(v.set(px + tip.x, tip.y + .06, pz + tip.z), q, sc.set(1, 1, 1)); hm.setMatrixAt(k, m4); }
+    gr.add(sm, hm); }
+  else if (g === 'aceitunas') { put('trp_olive', [at(0, 0, .55 + t * .05)], { wind: 3, far: 1, keepId: 1 }); put('wicker_basket_01', [at(1.3, .6, 1)]);
+    const fr = new THREE.SphereGeometry(.05, 6, 4), mt = z7Mat('zfa' + t, t >= 4 ? '#2A2A22' : '#6A7A3A'); for (let i = 0; i < 8; i++) { const m = new THREE.Mesh(fr, mt); m.position.set(1.3 + (R() - .5) * .3, .3, .6 + (R() - .5) * .3); gr.add(m); } }
+  else if (g === 'uvas') { /* una vid en su espaldera: tronco torcido, follaje del pack y racimos colgando */
+    const tr = new THREE.Mesh(new THREE.CylinderGeometry(.06, .11, 1.2, 6), z7Mat('ztr', '#5A4632')); tr.position.y = .6; tr.rotation.z = .1; gr.add(tr); [-1.1, 1.1].forEach(dx => { const p2 = new THREE.Mesh(new THREE.CylinderGeometry(.05, .06, 1.5, 6), z7Mat('ztr', '#5A4632')); p2.position.set(dx, .75, 0); gr.add(p2); }); const wi = new THREE.Mesh(new THREE.CylinderGeometry(.01, .01, 2.2, 4), z7Mat('zwi', '#6A5A44')); wi.rotation.z = Math.PI / 2; wi.position.y = 1.35; gr.add(wi);
+    put('shrub_02', [{ x, y: y + .55, z, ry, s: .55, sy: .45, v: 0, oi }], { wind: 2, keepY: 1 });
+    const gg = new THREE.SphereGeometry(.07, 6, 4), mt = z7Mat('zfu' + t, c); for (let b = 0; b < 5; b++) { const bxx = -.8 + b * .4 + (R() - .5) * .1, bz = (R() - .5) * .5; for (let i = 0; i < 9; i++) { const m = new THREE.Mesh(gg, mt); const lv = Math.floor(i / 3); m.position.set(bxx + ((i % 3) - 1) * .07 * (3 - lv) / 3, 1.15 - lv * .1, bz); gr.add(m); } } }
+  else if (g === 'lana') { if (cost) { put('wooden_bucket_02', [at(0, 0, 2.6)]); const liq = new THREE.Mesh(new THREE.CircleGeometry(.5, 16), z7Mat('zliq', '#8A1530')); liq.rotation.x = -Math.PI / 2; liq.position.y = .72; gr.add(liq); put('wicker_basket_01', [at(1.2, .4, 1)]); }
+    else { for (let i = 0; i < 3; i++) { const sh = misMesh({ k: 'sheep' }), a = i * 2.1 + R(), r = .6 + R() * .5; sh.position.set(Math.cos(a) * r, 0, Math.sin(a) * r); sh.rotation.y = R() * 6.28; sh.scale.setScalar(.9 + R() * .2); if (t >= 3 && i === 0) sh.traverse(m => { if (m.isMesh && m.material && m.material.color) { m.material = m.material.clone(); m.material.color.multiply(new THREE.Color(c)); } }); gr.add(sh); }
+      put('wicker_basket_01', [at(1.5, -.4, 1)]); } }
+  gr.position.set(x, y, z); gr.rotation.y = ry; gr.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(gr);
+  Z7.nodes.push({ x, z, g, t, ty, mesh: gr, oi, cost: cost || null, back: 0 });
 }
+function z7Vis(o, on) { o.mesh.visible = on; try { trpHide(o.oi, !on); } catch (e) {} }
 /* lugares del centro del mapa con puntos de nivel 3 y 4 */
 const Z7_POI = [
   { poi: 'village', name: 'Caná', L: [['uvas', 3, 'podadera', 4], ['barro', 4, 'pala', 3]] },
@@ -7743,8 +7761,8 @@ function z7Central(scene, W) {
   });
 }
 function z7Near() { const a = S.av.position; for (let i = 0; i < Z7.nodes.length; i++) { const o = Z7.nodes[i]; if (o.back > 0) continue; if ((o.x - a.x) ** 2 + (o.z - a.z) ** 2 < 5.3) { const nm = lc1(R7[o.g].n[o.t - 1]); return { k: 'z7', i, label: (o.cost ? 'Teñir · ' : T7[o.ty].verb + ' ') + nm + ' · nivel ' + o.t }; } } return null; }
-function z7Done(i) { const o = Z7.nodes[i]; if (!o) return; o.back = (o.g === 'barro' ? T7_BACK.rock : T7_BACK.tree)[o.t - 1] * 60; o.mesh.visible = false; svAdd(r7k(o.g, o.t), 3); ofiXP(T7[o.ty].of, (3 + o.t * 2) * 3); svXP(o.t); G().save(); svToast(`${R7[o.g].ic} Juntaste 3 de ${lc1(RES[r7k(o.g, o.t)][0])}. Vuelve en unos minutos.`); svUI(); }
-function z7Tick(dt) { for (const o of Z7.nodes) if (o.back > 0) { o.back -= dt; if (o.back <= 0) { o.back = 0; o.mesh.visible = true; } } }
+function z7Done(i) { const o = Z7.nodes[i]; if (!o) return; o.back = (o.g === 'barro' ? T7_BACK.rock : T7_BACK.tree)[o.t - 1] * 60; z7Vis(o, false); svAdd(r7k(o.g, o.t), 3); ofiXP(T7[o.ty].of, (3 + o.t * 2) * 3); svXP(o.t); G().save(); svToast(`${R7[o.g].ic} Juntaste 3 de ${lc1(RES[r7k(o.g, o.t)][0])}. Vuelve en unos minutos.`); svUI(); }
+function z7Tick(dt) { for (const o of Z7.nodes) if (o.back > 0) { o.back -= dt; if (o.back <= 0) { o.back = 0; z7Vis(o, true); } } }
 function svAct(nn) {
   if (S && !S.hx && S.sv && !svOn()) { if (!S.walking && !sheetUp() && !S.down) kAct(); return; }
   if (!svOn() || !S.sv || S.walking || sheetUp() || S.down) return; const n = nn || svNear(), s = svP(), st = S.sv; wake();
