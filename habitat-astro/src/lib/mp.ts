@@ -122,7 +122,7 @@ export async function registrarPago(pg: Pago, ctx?: { pag: Pagador[]; al: Alumno
   // una transferencia de banco que antes se tomó sola como «entre cuentas propias» se vuelve a mirar con el remitente real
   const revisar = !!prev && prev.tipo === "Transferencia entre cuentas propias" && prev.por === "Mercado Pago" && esBanco(pg) && !deOtra;
   // pago desde el link de la cuota (external_reference «cuota|alumno|mes»): ya sabemos de quién y de qué mes es
-  const ref = /^cuota\|([^|]+)\|(\d{4}-\d{2})$/.exec(String(pg.external_reference || ""));
+  const ref = /^cuota\|([^|]+)\|(\d{4}-\d{2}(?:,\d{4}-\d{2})*)$/.exec(String(pg.external_reference || ""));
   const c = ref && (!prev || prev.tipo === "Por clasificar") ? { tipo: "Cuota de alumno (MP)", alumnoId: ref[1], key: clavePagador(pg) } : prev && prev.tipo !== "Por clasificar" && !revisar ? { tipo: prev.tipo, alumnoId: prev.alumnoId || "", key: prev.pagador || clavePagador(pg) } : deOtra ? { tipo: "Transferencia entre cuentas propias", alumnoId: "", key: clavePagador(pg) } : await clasificar(pg, ctx);
   const fecha = fechaAR(pg.date_approved || pg.date_created || new Date().toISOString());
   const it: Ingreso = { _id, title: anonima(pg) && prev && prev.title && !/@|^sin nombre$/i.test(prev.title) ? prev.title : nombrePagador(pg), email: emailPagador(pg), fecha, mes: fecha.slice(0, 7), monto: Number(pg.transaction_amount) || 0, neto: Number((pg.transaction_details || {}).net_received_amount) || 0, tipo: c.tipo, origen: c0 === 1 ? "Mercado Pago" : "Mercado Pago (cuenta " + c0 + ")", alumnoId: c.alumnoId, pagador: c.key, descripcion: ((esSuscripcion(pg) ? "Suscripción · " : "") + String(pg.description || "")).slice(0, 300), estado: pg.status, nota: (prev && prev.nota) || "", por: prev && prev.por && !revisar ? prev.por : "Mercado Pago" };
@@ -183,6 +183,13 @@ async function traerCuenta(dias: number, tk: string, ctx: { pag: Pagador[]; al: 
 // Se aplica al mes impago más viejo; si está todo pago, al mes del pago. Con varias escuelas lo asigna Finanzas a mano.
 export async function cuotaDesdeIngreso(it: Ingreso, mesRef = "") {
   if (it.tipo !== "Cuota de alumno (MP)" || !it.alumnoId) return "";
+  // link de varios meses («2026-09,2026-10»): el pago se reparte en partes iguales, un cobro por mes
+  if (mesRef.includes(",")) {
+    const L = mesRef.split(",").filter(Boolean);
+    const out: string[] = [];
+    for (let i = 0; i < L.length; i++) out.push(await cuotaDesdeIngreso({ ...it, _id: it._id + "-" + (i + 1), monto: Math.round(it.monto / L.length) }, L[i]));
+    return out.filter(Boolean).join(",");
+  }
   const _id = "mp-" + it._id;
   if ((await q("FinCobros").eq("_id", _id).limit(1).find()).items.length) return _id;
   const ps = (await q("FinPlanes").eq("alumnoId", it.alumnoId).limit(5).find()).items as unknown as Plan[];

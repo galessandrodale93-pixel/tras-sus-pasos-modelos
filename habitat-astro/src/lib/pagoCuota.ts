@@ -22,24 +22,38 @@ export async function firma(alumnoId: string, mes: string) {
   return [...new Uint8Array(d)].slice(0, 10).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 export const montoDe = (a: AlumnoPago) => (a.cuotaDetalle === "Becado" ? 0 : Number(a.cuota) || 0);
-// link para mails: no hace falta entrar a la cuenta
-export async function linkPago(a: AlumnoPago, mes: string) {
+// recargo por mes de cuota vencida sin pagar (la cuota vence el 10 de cada mes)
+export const RECARGO = 1500;
+const VENCE_DIA = 10;
+const hoyAR = () => new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+export const vencida = (mes: string, hoy = hoyAR()) => mes < hoy.slice(0, 7) || (mes === hoy.slice(0, 7) && +hoy.slice(8, 10) > VENCE_DIA);
+export const MESES_RE = /^\d{4}-\d{2}(,\d{4}-\d{2}){0,11}$/;
+const lista = (meses: string | string[]) => (Array.isArray(meses) ? meses : String(meses).split(",")).filter((m) => /^\d{4}-\d{2}$/.test(m)).sort();
+// total a pagar: cada mes su cuota, más el recargo si ya venció
+export const totalDe = (a: AlumnoPago, meses: string | string[], hoy = hoyAR()) => lista(meses).reduce((t, m) => t + montoDe(a) + (vencida(m, hoy) ? RECARGO : 0), 0);
+// link para mails y WhatsApp: no hace falta entrar a la cuenta. Puede llevar varios meses («2026-09,2026-10»).
+export async function linkPago(a: AlumnoPago, meses: string | string[]) {
   if (!montoDe(a)) return "";
-  return `${WEB}/api/pagar?a=${encodeURIComponent(a._id)}&m=${mes}&s=${await firma(a._id, mes)}`;
+  const m = lista(meses).join(",");
+  return `${WEB}/api/pagar?a=${encodeURIComponent(a._id)}&m=${m}&s=${await firma(a._id, m)}`;
 }
-export const refDe = (ref: unknown) => { const m = /^cuota\|([^|]+)\|(\d{4}-\d{2})$/.exec(String(ref || "")); return m ? { alumnoId: m[1], mes: m[2] } : null; };
+export const refDe = (ref: unknown) => { const m = /^cuota\|([^|]+)\|(\d{4}-\d{2}(?:,\d{4}-\d{2})*)$/.exec(String(ref || "")); return m ? { alumnoId: m[1], mes: m[2] } : null; };
 
 // crea el pago en Mercado Pago (cuenta de Habitat) y devuelve el link para pagar
-export async function preferencia(a: AlumnoPago, mes: string) {
-  const monto = montoDe(a);
-  if (!monto) throw new Error("Tu cuota no tiene un monto cargado. Escribinos y lo vemos.");
+export async function preferencia(a: AlumnoPago, meses: string | string[]) {
+  const L = lista(meses);
+  if (!L.length) throw new Error("Falta el mes de la cuota.");
+  if (!montoDe(a)) throw new Error("Tu cuota no tiene un monto cargado. Escribinos y lo vemos.");
+  const monto = totalDe(a, L);
   const tk = await token(1);
   if (!tk) throw new Error("Falta la clave de Mercado Pago.");
-  const mesTxt = MS[+mes.slice(5, 7) - 1] || mes;
+  const txt = (m: string) => MS[+m.slice(5, 7) - 1] || m;
+  const nombres = L.length === 1 ? txt(L[0]) : L.slice(0, -1).map(txt).join(", ") + " y " + txt(L[L.length - 1]);
+  const rec = L.filter((m) => vencida(m)).length;
   const body = {
-    items: [{ id: "cuota-" + mes, title: `Cuota de ${mesTxt} · Habitat${a.cuotaCon ? " (compartida)" : ""}`, description: String(a.title || ""), quantity: 1, unit_price: monto, currency_id: "ARS" }],
+    items: [{ id: "cuota-" + L.join("-"), title: `${L.length === 1 ? "Cuota" : "Cuotas"} de ${nombres} · Habitat${a.cuotaCon ? " (compartida)" : ""}${rec ? " · incluye recargo" : ""}`, description: String(a.title || ""), quantity: 1, unit_price: monto, currency_id: "ARS" }],
     payer: a.email ? { email: a.email } : undefined,
-    external_reference: `cuota|${a._id}|${mes}`,
+    external_reference: `cuota|${a._id}|${L.join(",")}`,
     back_urls: { success: `${WEB}/campus.html?pago=ok#cuotaSec`, pending: `${WEB}/campus.html?pago=pendiente#cuotaSec`, failure: `${WEB}/campus.html#cuotaSec` },
     auto_return: "approved",
     notification_url: `${WEB}/api/mp`,
