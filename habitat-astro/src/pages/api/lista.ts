@@ -69,10 +69,14 @@ export const POST: APIRoute = async ({ request }) => {
     if (!DATE.test(f) || !ID.test(alu)) return json({ error: "datos" }, 400);
     const hoy = hoyAR();
     if (f > hoy || f < menos(hoy, 3)) return json({ error: "La lista de esa clase ya se cerró. Si hay que corregirla, avisale a Raquel." }, 403);
-    const t = (await turnosLista(v._id, f, f))[0];
+    // quien tiene asistencia presencial y online el mismo día carga las dos listas: se usa el turno de la lista que está cargando
+    const ts = await turnosLista(v._id, f, f);
+    const ok = (m: string) => (m === "Zoom" ? /^[ZA]?$/ : /^[PA]?$/);
+    const pedido = String(x.modo || "");
+    const t = ts.find((y) => pedido && modoLista(y.tarea) === pedido) || ts.find((y) => est && est !== "A" && ok(modoLista(y.tarea)).test(est)) || ts[0];
     if (!t) return json({ error: "Esta lista la carga quien tiene el turno de asistencia ese día." }, 403);
     const modo = modoLista(t.tarea);
-    const okEst = modo === "Zoom" ? /^[ZA]?$/ : /^[PA]?$/;
+    const okEst = ok(modo);
     if (!okEst.test(est)) return json({ error: "estado" }, 400);
     const _id = alu + "|" + f;
     if (!est) { await rem("TutAsistencia", _id).catch(() => null); return json({ ok: true }); }
