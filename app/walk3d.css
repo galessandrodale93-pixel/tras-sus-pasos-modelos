@@ -1506,3 +1506,6 @@ body:has(#v3place:not([hidden])) .v3think,body:has(#v3place:not([hidden])) .v3hi
 .cap-how ol{margin:8px 0 2px;padding-left:20px;display:grid;gap:7px}
 .cap-how li b{display:block;font-size:.95em}
 .cap-how li span{display:block;font-size:.88em;opacity:.85;line-height:1.4}
+.sv-tools{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.t7-dur{display:block;height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:3px}
+.t7-dur>i{display:block;height:100%;background:linear-gradient(90deg,#C9A24A,#F2D27A)}.t7-dur>i.low{background:#C0392B}
