@@ -7360,8 +7360,8 @@ function woolBuild(scene, W) { if (WOOL.lIm && WOOL.lIm.parent) WOOL.lIm.parent.
   const g = new THREE.Group(); g.add(im, im2); g.userData.keep = 1; scene.add(g); WOOL.lIm = g; WOOL.ims = [im, im2]; }
 function woolTick(dt) { WOOL.lino.forEach((o, i) => { if (o.t > 0) { o.t -= dt; if (o.t <= 0) { o.t = 0; for (let j = 0; j < 6; j++) WOOL.ims.forEach(im => svHide(im, i * 6 + j, true)); } } }); for (const [k, t] of WOOL.flock) { if (t - dt <= 0) WOOL.flock.delete(k); else WOOL.flock.set(k, t - dt); } }
 function woolNear() { const a = S.av.position, d2 = (x, z) => (x - a.x) ** 2 + (z - a.z) ** 2;
-  for (const f of (LIFE.flocks || [])) if (d2(f[0], f[1]) < 30) { const k = Math.round(f[0]) + ':' + Math.round(f[1]); return WOOL.flock.has(k) ? { k: 'shear', f, key: k, label: 'Ya las esquilaron', done: 1 } : { k: 'shear', f, key: k, label: 'Esquilar las ovejas' }; }
-  for (let i = 0; i < WOOL.lino.length; i++) { const o = WOOL.lino[i]; if (o.t <= 0 && d2(o.x, o.z) < 1.3) return { k: 'lino', i, label: 'Arrancar lino' }; }
+  for (const f of (LIFE.flocks || [])) if (d2(f[0], f[1]) < 30) { const k = Math.round(f[0]) + ':' + Math.round(f[1]); if (WOOL.flock.has(k)) return { k: 'shear', f, key: k, label: 'Ya las esquilaron', done: 1 }; const t = JOB.shear.tier({ f }); return { k: 'shear', f, key: k, label: 'Esquilar · ' + lc1(R7.lana.n[t - 1]) }; }
+  for (let i = 0; i < WOOL.lino.length; i++) { const o = WOOL.lino[i]; if (o.t <= 0 && d2(o.x, o.z) < 1.3) return { k: 'lino', i, label: 'Arrancar ' + lc1(R7.lino.n[(i % 2 ? 2 : 1) - 1]) }; }
   return null; }
 function woolAct(n) {
   if (n.k === 'shear') { if (n.done) { svToast('🐑 A este rebaño ya lo esquilaron. Probá con otro pastor, o volvé en unos minutos.'); return; } const lv = ofiLv('tej'), c = 2 + (lv >= 4 ? 1 : 0); h3do(['M_Kneeling_Idle', 'PickUp_Table'], 2.2, .5); svAdd('lana', c); ofiXP('tej', 5); svXP(1); axGain('amor', 1); WOOL.flock.set(n.key, WOOL.FT * (lv >= 24 ? .6 : 1)); G().save(); svToast('🐑 El pastor te dejó esquilar sus ovejas: ' + c + ' de lana. Las ovejas conocen su voz (Juan 10:4).'); svUI(); return; }
@@ -7433,6 +7433,8 @@ const T7 = {
   pala: { of: 'alf', at: 'fue', res: 'barro', ic: '🪏', free: 1, verb: 'Sacar', ing: 'Sacando', names: ['Pala de madera', 'Pala de cobre', 'Pala de bronce', 'Azada de hierro', 'Azada del alfarero', 'Azada de los mercaderes', 'Torno de Jeremías'] },
   hoz: { of: 'agr', at: 'pac', res: 'trigo', ic: '🌾', free: 1, verb: 'Cosechar', ing: 'Cosechando', names: ['Hoz de pedernal', 'Hoz de cobre', 'Hoz de bronce', 'Hoz de hierro', 'Hoz del segador', 'Hoz de doble filo', 'Hoz de Booz'] },
   vara: { of: 'oli', at: 'fue', res: 'aceitunas', ic: '🫒', free: 1, verb: 'Varear', ing: 'Vareando', names: ['Vara de caña', 'Vara de olivo', 'Vara de cedro', 'Prensa de piedra', 'Prensa de viga', 'Prensa de dos piedras', 'Prensa de Getsemaní'] },
+  tijera: { of: 'tej', at: 'pac', res: 'lana', ic: '✂️', free: 1, verb: 'Esquilar', ing: 'Esquilando', names: ['Tijera de pedernal', 'Tijera de cobre', 'Tijera de bronce', 'Telar de pie', 'Telar grande', 'Telar de los mercaderes', 'Telar de lino fino'] },
+  aguja: { of: 'carp', at: 'pac', res: 'lino', ic: '🪡', free: 1, verb: 'Arrancar', ing: 'Arrancando', names: ['Cuchillo de pedernal', 'Hoz de cobre', 'Tijera de bronce', 'Aguja de hierro', 'Bastidor de pastor', 'Bastidor de caravana', 'Aguja de Bezalel'] },
   podadera: { of: 'vin', at: 'pac', res: 'uvas', ic: '🍇', free: 1, verb: 'Cortar', ing: 'Cortando', names: ['Cuchillo de pedernal', 'Podadera de cobre', 'Podadera de bronce', 'Podadera de hierro', 'Podadera del viñador', 'Podadera de doble filo', 'Podadera de Escol'] }
 };
 /* minutos de juego que tarda en volver un árbol o una roca, según su nivel (lo mejor tarda más, hasta 12) */
@@ -7450,9 +7452,11 @@ Object.assign(R7, {
   barro: { n: ['Barro del camino', 'Barro del río', 'Arcilla del lago', 'Arcilla blanca', 'Arcilla fina', 'Arcilla de mar', 'Arcilla de la casa del alfarero'], it: ['Barro', 'Barro del río', 'Arcilla del lago', 'Arcilla blanca', 'Arcilla fina', 'Arcilla de mar', 'Arcilla del alfarero'], ic: '🟤' },
   trigo: { k: ['cebada', 'trigo', 'lentejas', 'habas', 'espelta', 'trigob', 'primicias'], n: ['Cebada', 'Trigo', 'Lentejas', 'Habas y mijo', 'Espelta', 'Trigo de Basán', 'Primicias'], it: ['Cebada', 'Trigo', 'Lentejas', 'Habas y mijo', 'Espelta', 'Trigo de Basán', 'Primicias'], ic: '🌾' },
   aceitunas: { n: ['Aceitunas de olivo joven', 'Aceitunas de aldea', 'Aceitunas verdes', 'Aceitunas negras', 'Aceitunas de Getsemaní', 'Aceitunas de los olivos viejos', 'Aceite puro'], it: ['Aceitunas', 'Aceitunas de aldea', 'Aceitunas verdes', 'Aceitunas negras', 'Aceitunas de Getsemaní', 'Aceitunas de olivos viejos', 'Aceite puro'], ic: '🫒' },
+  lana: { k: ['lana', 'lanacor', 'lanagal', 'linofino', 'lanaroja', 'purpura', 'linotor'], n: ['Lana común', 'Lana de cordero', 'Lana de Galilea', 'Lino fino', 'Lana teñida de rojo', 'Púrpura de Tiro', 'Lino fino torcido'], it: ['Lana', 'Lana de cordero', 'Lana de Galilea', 'Lino fino', 'Lana teñida de rojo', 'Púrpura de Tiro', 'Lino fino torcido'], ic: '🐑' },
+  lino: { k: ['lino', 'lino2', 'pelocabra', 'linogal', 'pelonegro', 'canamo', 'linotab'], n: ['Lino silvestre', 'Lino del taller', 'Pelo de cabra', 'Lino de Galilea', 'Pelo de cabra negra', 'Cáñamo de Tiro', 'Lino fino para el tabernáculo'], it: ['Lino', 'Lino del taller', 'Pelo de cabra', 'Lino de Galilea', 'Pelo de cabra negra', 'Cáñamo de Tiro', 'Lino del tabernáculo'], ic: '🌿' },
   uvas: { n: ['Uvas silvestres', 'Uvas de aldea', 'Uvas de Caná', 'Uvas de Hebrón', 'Racimos de Escol', 'Uvas de En-gadi', 'Vid escogida'], it: ['Uvas', 'Uvas de aldea', 'Uvas de Caná', 'Uvas de Hebrón', 'Racimos de Escol', 'Uvas de En-gadi', 'Uvas de la vid escogida'], ic: '🍇' }
 });
-const R7_SELL = { wood: [1, 2, 4, 7, 12, 20, 40], stone: [1, 2, 4, 7, 12, 20, 40], fish: [2, 3, 5, 8, 13, 22, 45], barro: [1, 2, 3, 6, 10, 18, 35], trigo: [1, 2, 3, 6, 10, 18, 35], aceitunas: [1, 2, 3, 6, 10, 18, 35], uvas: [1, 2, 3, 6, 10, 18, 35] };
+const R7_SELL = { wood: [1, 2, 4, 7, 12, 20, 40], stone: [1, 2, 4, 7, 12, 20, 40], fish: [2, 3, 5, 8, 13, 22, 45], barro: [1, 2, 3, 6, 10, 18, 35], trigo: [1, 2, 3, 6, 10, 18, 35], aceitunas: [1, 2, 3, 6, 10, 18, 35], uvas: [1, 2, 3, 6, 10, 18, 35], lana: [2, 3, 4, 7, 12, 20, 40], lino: [2, 3, 4, 7, 12, 20, 40] };
 const r7k = (g, t) => R7[g] && R7[g].k ? R7[g].k[t - 1] : t <= 1 ? g : g + t; /* clave del recurso: wood, wood2 … wood7 (o la lista propia del grupo) */
 const R7_POOL = {}; Object.keys(R7).forEach(g => { R7_POOL[g] = [1, 2, 3, 4, 5, 6, 7].map(t => r7k(g, t)); for (let t = 1; t <= 7; t++) { const k = r7k(g, t); if (t > 1 || !RES[k]) RES[k] = [R7[g].it[t - 1], R7[g].ic]; if (t > 1 || R7[g].k) RES_PROD.add(k); } });
 const R7_OF = {}; Object.entries(R7_POOL).forEach(([g, L]) => L.forEach((k, i) => { R7_OF[k] = [g, i + 1]; }));
@@ -7680,8 +7684,8 @@ const JOB = {
   olive: { ty: 'vara', g: 'aceitunas', tier: () => 1, res: () => 'aceitunas', c: () => 3 + (ofiLv('oli') >= 4 ? 1 : 0), ing: 'Vareando el olivo', ic: '🫒', an: 'axe' },
   vid: { ty: 'podadera', g: 'uvas', tier: () => 1, res: () => 'uvas', c: n => 3 + (ofiLv('vin') >= 4 ? 1 : 0) + (ORCH.vid[n.i] && ORCH.vid[n.i].p ? 1 : 0), ing: 'Cortando uvas', ic: '🍇', an: 'pick' },
   pod: { res: () => 'wood', c: () => 1, ing: 'Podando la viña', ic: '✂️', an: 'axe' },
-  shear: { res: () => 'lana', c: () => 2 + (ofiLv('tej') >= 4 ? 1 : 0), ing: 'Esquilando', ic: '🐑', an: 'kneel' },
-  lino: { res: () => 'lino', c: () => 2 + (ofiLv('carp') >= 4 ? 1 : 0), ing: 'Arrancando lino', ic: '🌿', an: 'pick' },
+  shear: { ty: 'tijera', g: 'lana', tier: n => { const r = n.f ? regAt(n.f[1]) : 1; return r === 0 ? 2 : r >= 3 && r <= 5 ? 3 : 1; }, res: () => 'lana', c: () => 2 + (ofiLv('tej') >= 4 ? 1 : 0), ing: 'Esquilando', ic: '🐑', an: 'kneel' },
+  lino: { ty: 'aguja', g: 'lino', tier: n => n.i % 2 ? 2 : 1, res: () => 'lino', c: () => 2 + (ofiLv('carp') >= 4 ? 1 : 0), ing: 'Arrancando lino', ic: '🌿', an: 'pick' },
   fruit: { res: n => { const o = S.sv.fruit.trees[n.i]; return o && o.kind === 'lemon' ? 'lemon' : 'fruit'; }, c: n => { const o = S.sv.fruit.trees[n.i]; return o ? o.n : 0; }, ing: 'Juntando fruta', ic: '🍎', an: 'pick' }
 };
 function jobKind(n) { if (!n || n.go || n.need) return null; if (n.k === 'farm') return farmStage(n.i) >= 1 ? 'farm' : null; if (n.k === 'shear') return n.done ? null : 'shear'; return JOB[n.k] ? n.k : null; }
@@ -8522,7 +8526,7 @@ const SHOPS = {
 /* en todos los mercados se consiguen las herramientas básicas (caña, hacha y pico); y algunas prendas comunes según el oficio de cada lugar */
 const SHOP_WEAR = { carpintero: ['carpintero', 'vendcuero'], alfarero: ['alfarero', 'alfarerog'], panadero: ['segadorhat', 'trigo'], pescador: ['red', 'pescadorb', 'bastonpesc'], tejedora: ['lino', 'indigo', 'tejedora', 'turbante'], posada: ['capucha', 'cuero', 'viajet'], mercado: ['gorromerc', 'juncos', 'tierra'] };
 /* herramientas de la escalera de 7: el nivel 1 en todos lados; el 2 y el 3 en el mercado; hasta el 4 con el artesano de cada una */
-const SHOP_T7 = { mercado: { axe: 3, pick: 3, rod: 3 }, carpintero: { axe: 4 }, alfarero: { pick: 4, pala: 4 }, pescador: { rod: 4 }, panadero: { hoz: 4 }, posada: { vara: 4, podadera: 4 } };
+const SHOP_T7 = { mercado: { axe: 3, pick: 3, rod: 3 }, carpintero: { axe: 4 }, alfarero: { pick: 4, pala: 4 }, pescador: { rod: 4 }, panadero: { hoz: 4 }, posada: { vara: 4, podadera: 4 }, tejedora: { tijera: 4, aguja: 4 } };
 Object.entries(SHOPS).forEach(([k, sh]) => { sh.buy = sh.buy.filter(b => !(b[0] === 't' && T7[t7Type(b[1]) || ''])); const tl = []; Object.keys(T7).forEach(ty => { const mx = (SHOP_T7[k] || {})[ty] || (T7[ty].free ? 0 : 1); for (let t = 1; t <= mx; t++) tl.push(['T', ty + ':' + t, T7_PR[t - 1]]); }); sh.buy = tl.concat(sh.buy, (SHOP_WEAR[k] || []).map(id => ['p', id, 12])); sh.fix = SHOP_T7[k] ? Object.keys(SHOP_T7[k]) : []; });
 Object.assign(SHOPS, {
   jacobo: { name: 'Taller de Jacobo', ic: '🪓', cloth: '#7A5A3A', buy: [['T', 'axe:5', T7_PR[4]]], sell: ['wood5'], fix: ['axe'] },
@@ -8532,7 +8536,7 @@ Object.assign(SHOPS, {
   jerico: { name: 'El minero de Jericó', ic: '⛏️', cloth: '#6A4A3A', buy: [['T', 'pick:6', T7_PR[5]]], sell: [], fix: ['pick'] },
   tiro: { name: 'Los mercaderes de Tiro', ic: '🪓', cloth: '#5A2A6A', g: 'chica', buy: [['T', 'axe:6', T7_PR[5]], ['T', 'rod:6', T7_PR[5]]], sell: ['fish6', 'fish7'], fix: ['axe', 'rod'] }
 });
-['wood', 'stone', 'fish', 'barro', 'trigo', 'aceitunas', 'uvas'].forEach(g => { const L = [1, 2, 3, 4].map(t => r7k(g, t)), add = k => { const sh = SHOPS[k]; if (!sh) return; const i = sh.sell.indexOf(g); sh.sell.splice(i >= 0 ? i + 1 : sh.sell.length, 0, ...L.filter(x => !sh.sell.includes(x))); }; add('mercado'); add({ wood: 'carpintero', stone: 'alfarero', fish: 'pescador', barro: 'alfarero', trigo: 'panadero', aceitunas: 'posada', uvas: 'posada' }[g]); if (g === 'fish') add('posada'); });
+['wood', 'stone', 'fish', 'barro', 'trigo', 'aceitunas', 'uvas', 'lana', 'lino'].forEach(g => { const L = [1, 2, 3, 4].map(t => r7k(g, t)), add = k => { const sh = SHOPS[k]; if (!sh) return; const i = sh.sell.indexOf(g); sh.sell.splice(i >= 0 ? i + 1 : sh.sell.length, 0, ...L.filter(x => !sh.sell.includes(x))); }; add('mercado'); add({ wood: 'carpintero', stone: 'alfarero', fish: 'pescador', barro: 'alfarero', trigo: 'panadero', aceitunas: 'posada', uvas: 'posada', lana: 'tejedora', lino: 'tejedora' }[g]); if (g === 'fish') add('posada'); });
 const SERV_PERKS = [
   [3, 'Te conocen en el mercado', 'Los comerciantes te hacen precio: todo cuesta un 10% menos.'],
   [8, 'Manos abiertas', 'Cada misión cumplida te deja 5 denarios más.'],
