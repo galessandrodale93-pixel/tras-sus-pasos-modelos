@@ -744,10 +744,15 @@ const OL_PLAN = [
   { id: 'arimatea', k: 'aldea', name: 'Arimatea', x: -380, z: -3100, r: 26, n: 6, ref: 'Lucas 23:50-53', txt: 'De Arimatea era José, un hombre bueno que esperaba el reino de Dios. Pidió el cuerpo de Jesús y lo puso en su propia tumba nueva.' },
   { id: 'mirador', k: 'rincon', name: 'El mirador de los montes', x: -860, z: -3000, r: 9, ref: 'Salmo 121:1-2', txt: '«Levanto mis ojos a los montes: ¿de dónde vendrá mi ayuda? Mi ayuda viene del Señor, que hizo los cielos y la tierra.»', mk: 'cairn' },
   { id: 'ebenezer', k: 'rincon', name: 'La piedra Ebenezer', x: -600, z: -3500, r: 9, ref: '1 Samuel 7:12', txt: 'Samuel levantó una piedra y la llamó Ebenezer, porque dijo: «Hasta aquí nos ayudó el Señor».', mk: 'stone' },
-  { id: 'tiberiades', k: 'aldea', name: 'Tiberíades', x: 330, z: -3560, r: 26, n: 7, ref: 'Juan 6:23', txt: 'Una ciudad a la orilla del lago, que también se llamaba mar de Tiberíades. Desde acá llegaron barcas buscando a Jesús después de que multiplicó los panes.' }
+  { id: 'tiberiades', k: 'aldea', name: 'Tiberíades', x: 330, z: -3560, r: 26, n: 7, ref: 'Juan 6:23', txt: 'Una ciudad a la orilla del lago, que también se llamaba mar de Tiberíades. Desde acá llegaron barcas buscando a Jesús después de que multiplicó los panes.' },
+  { id: 'timna', k: 'zona', zr: 'stone', zt: 7, zc: '#5E7E64', zc2: '#8A5A3A', name: 'La mina de Timna', x: -780, z: -260, r: 26, ref: 'Deuteronomio 8:9', txt: 'Dios describió la tierra prometida como una tierra de cuyos montes se saca cobre. En Timna, al sur, se sacaba cobre hace más de tres mil años. Acá se pica cobre, la piedra de nivel 7.' },
+  { id: 'sal', k: 'zona', zr: 'stone', zt: 6, zc: '#EDE8DC', zc2: '#D8D0BE', flat: '#E6E0D2', name: 'El monte de sal', x: -800, z: -1250, r: 26, ref: 'Mateo 5:13', txt: 'Junto al Mar Muerto hay montes de sal de roca. Jesús dijo: «Ustedes son la sal de la tierra». La sal servía para conservar la comida. Acá se pica sal, la piedra de nivel 6.' },
+  { id: 'tiro', k: 'zona', shop: 'tiro', name: 'Los mercaderes de Tiro', x: 780, z: -2900, r: 18, ref: 'Ezequiel 27:3', txt: 'Tiro era la gran ciudad comerciante junto al mar. Sus mercaderes llevaban herramientas, telas y pescado de mar por todas partes.' },
+  { id: 'basan', k: 'zona', zr: 'wood', zt: 6, zm: 'island_tree_01', name: 'Las encinas de Basán', x: 760, z: -3300, r: 30, ref: 'Ezequiel 27:6', txt: 'En las alturas de Basán crecían encinas enormes, de madera dura: con ellas se hacían los remos de los barcos de Tiro. Acá se tala encina, la madera de nivel 6.' },
+  { id: 'libano', k: 'zona', zr: 'wood', zt: 7, zm: 'island_tree_03', name: 'Los cedros del Líbano', x: -820, z: -3420, r: 32, ref: '1 Reyes 5:6', txt: 'Salomón le pidió al rey Hiram que mandara cortar cedros del Líbano para el templo. El cedro es fuerte, perfumado y no se pudre. Acá se tala cedro, la madera de nivel 7.' }
 ];
 function olPlan() {
-  OL.plan = OL_PLAN.map(p => Object.assign({}, p, { dirt: p.k === 'aldea' ? .55 : p.k === 'oficio' ? .35 : .2 })).filter(p => waterWet(p.x, p.z, null) < .01);
+  OL.plan = OL_PLAN.filter(p => p.k !== 'zona' || G().branch === 'ados').map(p => Object.assign({}, p, { dirt: p.k === 'aldea' ? .55 : p.k === 'oficio' ? .35 : .2 })).filter(p => waterWet(p.x, p.z, null) < .01);
 }
 /* senderos: de cada lugar al camino, con alguna curva; se suman a los senderitos (tierra pisada, sin pasto ni árboles encima) */
 function olTrails(allPts, hAt) {
@@ -758,6 +763,7 @@ function olTrails(allPts, hAt) {
     OL.trails.push({ p, pts, x0, z0 }); });
 }
 function olSitesBuild(scene, HW, hx) {
+  Z7.trees = []; Z7.rocks = []; Z7.stalls = []; Z7.pier = null; chopList.c = null; rockList.c = null;
   if (!OL.plan) return; const yAt = (x, z) => HW.hAt(x, z), M = (k, c) => tm('ol' + k, c), R0 = rng(4242); S.olSites = []; S.oliT = []; S.vinV = []; S.carpSite = null;
   const props = (id, list, o) => (FLORA.poiProps = FLORA.poiProps || []).push([id, list, Object.assign({ shadow: true }, o || {})]);
   const lore = (p, x, z, label, extra) => S.lore.push(Object.assign({ x, z, r: 3, label, dur: 5, info: [p.name, p.txt + ' (' + p.ref + ')'] }, extra || {}));
@@ -771,6 +777,7 @@ function olSitesBuild(scene, HW, hx) {
         for (let i = 0; i < 7; i++) { const sh = misMesh({ k: 'sheep' }), a = R() * 6.28, r = R() * 4; sh.position.set(cx + Math.cos(a) * r, yAt(cx + Math.cos(a) * r, cz + Math.sin(a) * r), cz + Math.sin(a) * r); sh.rotation.y = R() * 6.28; scene.add(sh); }
         S.lore.push({ x: cx + 7, z: cz, r: 3, label: 'Mirar el redil', dur: 5, info: ['El redil', 'De noche las ovejas duermen en el corral de piedra y el pastor se acuesta en la entrada. Jesús dijo: «Yo soy la puerta de las ovejas… Yo soy el buen pastor» (Juan 10:7-11).'] }); }
     } else if (p.k === 'oficio') olOficio(scene, p, yAt, M, R, props, hx);
+    else if (p.k === 'zona') olZona(scene, p, yAt, M, R, props, hx);
     else olRincon(scene, p, yAt, M, R, props, hx);
     } catch (e) { console.warn('lugar ' + p.id, e); } });
   // carteles al comienzo de cada sendero, junto al camino
@@ -826,6 +833,43 @@ function olRincon(scene, p, yAt, M, R, props, hx) {
   else if (p.mk === 'fig') { props('tree_small_02', [{ x: p.x, y: y0, z: p.z, ry: R() * 6, s: 1.8, v: 0 }], { wind: 3, far: 1 }); cl(0, 0, .8); }
   g.position.set(p.x, y0, p.z); scene.add(g);
   S.lore.push({ x: p.x + lx, z: p.z + lz, r: 3.2, label: 'Mirar ' + p.name.toLowerCase(), dur: 5, info: [p.name, p.txt + ' (' + p.ref + ')'] });
+}
+/* zonas de recursos de nivel alto en las tierras de afuera (encinas, cedros, sal, cobre) y mercaderes puntuales */
+function olZona(scene, p, yAt, M, R, props, hx) {
+  const g = new THREE.Group(), y0 = yAt(p.x, p.z) - .05;
+  if (p.zr === 'wood') { for (let i = 0; i < 14; i++) { const a = i / 14 * 6.283 + R() * .3, rr = 6 + R() * (p.r - 10), x = p.x + Math.cos(a) * rr, z = p.z + Math.sin(a) * rr, oi = 900000 + Z7.trees.length, y = yAt(x, z) - .04;
+    props(p.zm || 'island_tree_01', [{ x, y, z, ry: R() * 6.28, s: (p.zt >= 7 ? 2.4 : 1.9) + R() * .5, v: i, oi }], { wind: 3, far: 1, olive: 1 }); Z7.trees.push({ x, z, y, zt: p.zt, oi }); } }
+  if (p.zr === 'stone') {
+    if (p.flat) { const f = new THREE.Mesh(new THREE.CircleGeometry(p.r - 2, 40), new THREE.MeshStandardMaterial({ color: p.flat, roughness: .95 })); f.rotation.x = -Math.PI / 2; f.position.y = .08; f.receiveShadow = true; g.add(f); }
+    for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283 + R() * .3, rr = 4 + R() * (p.r - 8), x = p.x + Math.cos(a) * rr, z = p.z + Math.sin(a) * rr, sc = .9 + R() * .5;
+      const m = new THREE.Mesh(new THREE.DodecahedronGeometry(.9, 0), M('zr' + p.id + (i % 2), i % 2 ? p.zc : p.zc2 || p.zc)); m.scale.set(sc * 1.2, sc * .85, sc); m.rotation.set(R(), R() * 6, R()); m.position.set(x - p.x, yAt(x, z) - y0 + .45 * sc, z - p.z); m.castShadow = true; m.receiveShadow = true; g.add(m); Z7.rocks.push({ x, z, s: 1, v: .5, zt: p.zt, mesh: m }); } }
+  if (p.shop) specStall(scene, p.x, p.z, yAt, p.shop, 0);
+  g.position.set(p.x, y0, p.z); scene.add(g);
+  const lb = poiLb(textSprite(p.name, hx)); lb.position.set(p.x, y0 + 5.5, p.z); lb.scale.multiplyScalar(.9); scene.add(lb);
+  S.lore.push({ x: p.x - 5, z: p.z - 5, r: 3.2, label: 'Mirar ' + lc1(p.name), dur: 5, info: [p.name, p.txt + ' (' + p.ref + ')'] });
+}
+/* un puesto con su vendedor y su cartel */
+function specStall(scene, x, z, yAt, shop, rot) {
+  const sh = SHOPS[shop]; if (!sh) return; const y = yAt(x, z), gr = new THREE.Group(), cloth = sh.cloth || '#5A3E7A';
+  bx(2.4, .1, 1.1, WOODL(), 0, .85, 0, gr); [[-1.1, -.45], [1.1, -.45], [-1.1, .45], [1.1, .45]].forEach(([a, b]) => cy(.05, .05, 2.2, WOOD(), a, 1.1, b, gr, 6)); const roof = bx(2.7, .06, 1.5, tm('awz' + shop, cloth, { side: THREE.DoubleSide }), 0, 2.2, 0, gr); roof.rotation.x = .12;
+  if (sh.ic) { const t = textSprite(sh.ic, false); t.scale.multiplyScalar(.5); t.position.set(0, 1.35, 0); gr.add(t); }
+  gr.position.set(x, y, z); gr.rotation.y = rot || 0; gr.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(gr); S.cols.push({ x0: x - .7, x1: x + .7, z0: z - .7, z1: z + .7 });
+  try { const sell = buildHeroAvatar({ g: sh.g || 'chico', age: 18, skin: '#B98A62', hair: '#2A1B14', outfit: cloth, anim: ['M_Standing_Idle', 'M_Holding_Idle'] }); sell.position.set(x, y, z + 1.3); sell.rotation.y = Math.PI; scene.add(sell); } catch (e) {}
+  const lb = poiLb(textSprite(sh.name, G().branch === 'ados')); lb.scale.multiplyScalar(.65); lb.position.set(x, y + 3.1, z); scene.add(lb); Z7.stalls.push({ x, z: z + .8, shop });
+}
+/* los mercaderes puntuales que quedan en lugares de siempre, y el muelle de Magdala */
+const SPEC_AT = [{ shop: 'jacobo', poi: 'taller' }, { shop: 'templo', poi: 'temple' }, { shop: 'magdala', poi: 'lake', pier: 1 }, { shop: 'betsaida', ol: 'betsaida' }, { shop: 'jerico', ol: 'jerico' }];
+function specBuild(scene, W) {
+  if (!S.hx) return; const yAt = (x, z) => W.hAt(x, z);
+  SPEC_AT.forEach(sp => { try {
+    let x, z;
+    if (sp.poi) { const p = (S.pois || []).find(q => q.k === sp.poi); if (!p) return;
+      if (sp.pier) { const dx = -p.side, L = [34, 30, 26]; const pg = new THREE.Group(); for (let i = 0; i < 9; i++) { const d = 35 - i; bx(1.4, .12, .9, WOODL(), 0, 0, 0, pg).position.set(p.x + dx * d, yAt(p.x + dx * 36, p.z) + .25, p.z); } for (const d of [35, 31, 27]) [-0.6, .6].forEach(o => cy(.07, .07, 2.2, WOOD(), p.x + dx * d, yAt(p.x + dx * 36, p.z) - .7, p.z + o, pg, 6)); scene.add(pg); void L;
+        Z7.pier = { x: p.x + dx * 36, z: p.z }; x = p.x + dx * 39; z = p.z + 4; }
+      else { const C = [[-p.side * 9, 6], [-p.side * 11, -6], [-p.side * 7, 12], [p.side * 9, -10]]; for (const [ox, oz] of C) { if (!blockedAt(p.x + ox, p.z + oz)) { x = p.x + ox; z = p.z + oz; break; } } if (x == null) { x = p.x + C[0][0]; z = p.z + C[0][1]; } } }
+    else { const p = (OL.plan || []).find(q => q.id === sp.ol); if (!p) return; x = p.x - Math.sign(p.x) * (p.r + 4); z = p.z + 3; }
+    specStall(scene, x, z, yAt, sp.shop, 0);
+  } catch (e) { console.warn('puesto ' + sp.shop, e); } });
 }
 /* descubrir un lugar: premio visible la primera vez (sello, puntos y un cartel) */
 function olDiscover() {
@@ -2061,7 +2105,7 @@ const CG = { ref: null, n: 0, lastAt: null, m: new Map(), big: [], C: 8, E: [] }
 function cgNear(x, z) { const L = S.cols; if (CG.ref !== L || L.length < CG.n || (CG.n && L[CG.n - 1] !== CG.lastAt)) { CG.ref = L; CG.n = 0; CG.m = new Map(); CG.big = []; }
   const C = CG.C; for (; CG.n < L.length; CG.n++) { const b = L[CG.n]; if (b.x0 == null) { CG.big.push(b); continue; } const i0 = Math.floor((b.x0 - .5) / C), i1 = Math.floor((b.x1 + .5) / C), j0 = Math.floor((b.z0 - .5) / C), j1 = Math.floor((b.z1 + .5) / C); if ((i1 - i0 + 1) * (j1 - j0 + 1) > 64) { CG.big.push(b); continue; } for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) { const k = i * 65536 + j; let a = CG.m.get(k); if (!a) CG.m.set(k, a = []); a.push(b); } }
   CG.lastAt = L[L.length - 1]; const a = CG.m.get(Math.floor(x / C) * 65536 + Math.floor(z / C)); if (!CG.big.length) return a || CG.E; return a ? a.concat(CG.big) : CG.big; }
-function blockedAt(x, z, only) { const L0 = only || (S && S.cols); if (!L0) return false; const L = only ? only : cgNear(x, z); if (WATER.canyon && S.W && canyonAt(x, z) > .45 && S.W.roadAt(x, z) > 6 && !inTrail(x, z)) return true; if (WATER.quarry && quarryAt(x, z) > .4) return true; const r = S.hx ? .34 : .28; for (const b of L) if (x > b.x0 - r && x < b.x1 + r && z > b.z0 - r && z < b.z1 + r) { if (b.oi != null && S.sv && S.sv.felled && S.sv.felled.has(b.oi)) continue; if (b.ymax != null && S.av && S.av.position.y > b.ymax) continue; if (b.ymin != null && S.av && S.av.position.y + 1.5 < b.ymin) continue; /* lo construido en alto (techos) no frena por abajo */ /* muros de planta baja: arriba (en el primer piso) no frenan */ if (b.r == null || (x - b.cx) ** 2 + (z - b.cz) ** 2 < (b.r + r) ** 2) return true; } return false; }
+function blockedAt(x, z, only) { const L0 = only || (S && S.cols); if (!L0) return false; const L = only ? only : cgNear(x, z); if (WATER.canyon && S.W && canyonAt(x, z) > .45 && S.W.roadAt(x, z) > 6 && !inTrail(x, z)) return true; if (WATER.quarry && quarryAt(x, z) > .4) return true; const r = S.hx ? .34 : .28; for (const b of L) if (x > b.x0 - r && x < b.x1 + r && z > b.z0 - r && z < b.z1 + r) { if (b.oi != null && S.sv && S.sv.felled && S.sv.felled.has(b.oi)) continue; if (b.ref && b.ref.down) continue; if (b.ymax != null && S.av && S.av.position.y > b.ymax) continue; if (b.ymin != null && S.av && S.av.position.y + 1.5 < b.ymin) continue; /* lo construido en alto (techos) no frena por abajo */ /* muros de planta baja: arriba (en el primer piso) no frenan */ if (b.r == null || (x - b.cx) ** 2 + (z - b.cz) ** 2 < (b.r + r) ** 2) return true; } return false; }
 function floorH(x, z) { const L = S && S.floors; if (!L) return -1; let h = -1; for (const f of L) if (x > f.x0 && x < f.x1 && z > f.z0 && z < f.z1 && f.y > h) h = f.y; return h; }
 function cnvTex(w, h, fn, rep) { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]); } return t; }
 let TT = null; // texturas compartidas
@@ -6289,7 +6333,7 @@ async function galTrees() {
   models.forEach(m => { if (!m.list.length) return; gtBands(m.list).forEach(B => m.ms.forEach(mm => { const im = new THREE.InstancedMesh(mm.geo, phMat(mm.mat, { wind: 3 }), B.L.length);
     B.L.forEach((o, i) => { E.set(0, o.rot || 0, 0); M.compose(V.set(o.x, o.y - .05, o.z), Q.setFromEuler(E), SC.setScalar(.85 + hsh(o.x, o.z) * .35)).multiply(mm.m); im.setMatrixAt(i, M); (o.gt = o.gt || []).push([im, i]); });
     im.instanceMatrix.needsUpdate = true; im.castShadow = QUAL.lv > 0; im.receiveShadow = true; im.frustumCulled = true; im.computeBoundingSphere(); S.scene.add(im); GT.ims.push(im); gtbAdd(im, B.cz); })); });
-  spots.forEach(o => phCyl(o.x, o.z, .3));
+  spots.forEach(o => { phCyl(o.x, o.z, .3); if (S.cols && S.cols.length) S.cols[S.cols.length - 1].ref = o; });
   r2log('árboles: ' + spots.length + ' (' + models.map(m => m.nm + ' ' + m.list.length).join(', ') + ')');
   try { const inn = (S.pois || []).find(q => q.k === 'inn'); if (inn && !GT.zaq) { GT.zaq = 1; let big = null, bigTop = 0; models.forEach(m => { const bb = new THREE.Box3(); m.ms.forEach(mm => { mm.geo.computeBoundingBox(); bb.union(mm.geo.boundingBox.clone().applyMatrix4(mm.m)); }); if (bb.max.y > bigTop) { bigTop = bb.max.y; big = { m, bb }; } });
       if (big) { const sc = Math.max(1.2, 9 / bigTop), x = inn.x - (inn.side || 1) * 14, z = inn.z - 11, y = S.W.hAt(x, z), M = new THREE.Matrix4(), rad = Math.max(big.bb.max.x - big.bb.min.x, big.bb.max.z - big.bb.min.z) / 2 * sc;
@@ -6777,7 +6821,7 @@ function camFollow(dt) {
 }
 // la cámara no atraviesa paredes ni casas: se acerca al personaje si hay algo en medio
 /* los troncos se tuercen y la copa se abre: para la cámara cada árbol ocupa más que su choque al pie */
-function camTreeAt(x, z) { if (!S || !S.camTrees) return false; const a = S.av.position; if (!S.camNear || Math.hypot(a.x - S.camNear.x, a.z - S.camNear.z) > 2) S.camNear = { x: a.x, z: a.z, L: S.camTrees.filter(c => Math.abs(c.cx - a.x) < 9 && Math.abs(c.cz - a.z) < 9) }; for (const c of S.camNear.L) { if (S.sv && S.sv.felled && c.oi != null && S.sv.felled.has(c.oi)) continue; const rr = c.r + .55; if (Math.abs(x - c.cx) < rr && Math.abs(z - c.cz) < rr && (x - c.cx) ** 2 + (z - c.cz) ** 2 < rr * rr) return true; } return false; }
+function camTreeAt(x, z) { if (!S || !S.camTrees) return false; const a = S.av.position; if (!S.camNear || Math.hypot(a.x - S.camNear.x, a.z - S.camNear.z) > 2) S.camNear = { x: a.x, z: a.z, L: S.camTrees.filter(c => Math.abs(c.cx - a.x) < 9 && Math.abs(c.cz - a.z) < 9) }; for (const c of S.camNear.L) { if (S.sv && S.sv.felled && c.oi != null && S.sv.felled.has(c.oi)) continue; if (c.ref && c.ref.down) continue; const rr = c.r + .55; if (Math.abs(x - c.cx) < rr && Math.abs(z - c.cz) < rr && (x - c.cx) ** 2 + (z - c.cz) ** 2 < rr * rr) return true; } return false; }
 function camSafeBack(a, yaw, back) { let b = back; for (let k = 1; k <= 10; k++) { const r = back * k / 10, x = a.x - Math.sin(yaw) * r, z = a.z - Math.cos(yaw) * r; if (blockedAt(x, z) || (r > .7 && camTreeAt(x, z))) { b = Math.max(.9, back * (k - 1) / 10 - .2); break; } } return b; }
 function wake() { if (!S) return; S.idleT = 0; if (S.hint) S.hint.classList.remove('on'); if (S.think) S.think.classList.remove('on'); }
 const HV = { v: null };
@@ -7223,7 +7267,7 @@ function svBuild(scene, W) {
   // tu casa, si ya la construiste
   if (S.hx) { const s = svP(); if (s.house) svPlaceHouse(scene, s.house, true);
   if (s.bag && s.bag.left > 0) svDropBag(s.bag, true); }
-  try { econBuild(scene, W); } catch (e) { console.warn('econ', e); } if (S.hx) try { vilBuild(scene, W).then(() => secBuild(scene, W)).then(() => matBuild(scene, W)).catch(e => console.warn('sec', e)); } catch (e) { console.warn('vil', e); }
+  try { econBuild(scene, W); } catch (e) { console.warn('econ', e); } try { specBuild(scene, W); } catch (e) { console.warn('spec', e); } if (S.hx) try { vilBuild(scene, W).then(() => secBuild(scene, W)).then(() => matBuild(scene, W)).catch(e => console.warn('sec', e)); } catch (e) { console.warn('vil', e); }
   svUI();
 }
 function svToolMesh(t) {
@@ -7335,6 +7379,7 @@ function svNear() {
   { const m = matNear(); if (m) return m; }
   for (const b of (st.beggars || [])) if (d2(b.x, b.z) < 6) return { k: 'beg', b, label: 'Ayudar' };
   for (const m of (st.stalls || [])) if (d2(m.x, m.z) < 9) return { k: 'shop', shop: 'mercado', label: 'Comprar y vender' };
+  for (const m of Z7.stalls) if (d2(m.x, m.z) < 9) return { k: 'shop', shop: m.shop, label: SHOPS[m.shop].name };
   if (S.inRoom && SHOPS[S.inRoom.trade]) return { k: 'shop', shop: S.inRoom.trade, label: 'Comprar y vender' };
   if (st.bag && d2(st.bag.x, st.bag.z) < 4) return { k: 'bag', label: 'Recoger tus cosas' };
   const fire = svFireNear(); if (fire && fishAll() > 0) return { k: 'cook', label: 'Cocinar pescado', fire };
@@ -7342,7 +7387,7 @@ function svNear() {
   let best = null, bd = 2.6 * 2.6;
   st.fruit.trees.forEach((o, i) => { const d = d2(o.x, o.z); if (d < bd && o.n > 0) { bd = d; best = { k: 'fruit', i, label: o.kind === 'lemon' ? 'Recoger limones' : 'Recoger granadas' }; } });
   chopList().forEach((o, i) => { if (st.felled.has(i)) return; const d = d2(o.x, o.z); if (d < bd) { bd = d; const t = t7Tier('tree', o, i); best = { k: 'tree', i, t, label: svTool('axe') ? 'Talar ' + lc1(R7.wood.n[t - 1]) + (t > 1 ? ' · nivel ' + t : '') : 'Necesitás un hacha', need: !svTool('axe') }; } });
-  (FLORA.rock || []).forEach((o, i) => { if (st.mined.has(i)) return; const r = .6 + (.35 + o.v * .7) * o.s, d = d2(o.x, o.z); if (d < (r + 1.4) ** 2 && d < bd + 2) { bd = d; const t = t7Tier('rock', o, i); best = { k: 'rock', i, t, label: svTool('pick') ? 'Picar ' + lc1(R7.stone.n[t - 1]) + (t > 1 ? ' · nivel ' + t : '') : 'Necesitás un pico', need: !svTool('pick') }; } });
+  rockList().forEach((o, i) => { if (st.mined.has(i)) return; const r = .6 + (.35 + o.v * .7) * o.s, d = d2(o.x, o.z); if (d < (r + 1.4) ** 2 && d < bd + 2) { bd = d; const t = t7Tier('rock', o, i); best = { k: 'rock', i, t, label: svTool('pick') ? 'Picar ' + lc1(R7.stone.n[t - 1]) + (t > 1 ? ' · nivel ' + t : '') : 'Necesitás un pico', need: !svTool('pick') }; } });
   if (best) return best;
   { const c = clayNear(); if (c != null) return { k: 'clay', i: c, label: 'Sacar barro' }; }
   { const f = farmNear(); if (f) return f; }
@@ -7353,7 +7398,7 @@ function svNear() {
 }
 function svWaterNear() {
   /* devuelve el nivel del pez que hay en esa agua (0 si no hay agua): la orilla del lago 1, el Jordán 2, el mar abierto del lago 3, la orilla de Juan 21 4 */
-  const a = S.av.position; let t = 0; for (const p of (S.pois || [])) {
+  const a = S.av.position; let t = 0; if (Z7.pier && (Z7.pier.x - a.x) ** 2 + (Z7.pier.z - a.z) ** 2 < 6) return 5; for (const p of (S.pois || [])) {
     if (p.k === 'lake') { const d = Math.hypot(a.x - p.x, a.z - p.z); if (d > 24 && d < 38) t = Math.max(t, 1); }
     if (p.k === 'lake') for (const b of WATER.basins) if (b.sea) { const d = Math.hypot(a.x - b.x, a.z - b.z); if (d > b.r * .86 - 4 && d < b.r * 1.05 + 3) t = Math.max(t, Math.hypot(b.x - p.x, b.z - p.z) < 120 ? 3 : 4); }
     if (p.k === 'shore') { const d = Math.hypot(a.x - (p.x + p.side * 7), a.z - p.z); if (d < 11.5) t = Math.max(t, 4); }
@@ -7384,11 +7429,11 @@ const T7 = {
 const T7_LV = [1, 3, 6, 10, 14, 19, 24], T7_AT = [0, 5, 10, 20, 30, 45, 60], T7_DUR = [60, 80, 100, 130, 160, 200, -1], T7_PR = [5, 15, 35, 70, 150, 300, 0];
 const R7 = {
   wood: { n: ['Retama', 'Higuera', 'Sicómoro', 'Acacia', 'Olivo viejo', 'Encina de Basán', 'Cedro del Líbano'], it: ['Madera', 'Madera de higuera', 'Madera de sicómoro', 'Madera de acacia', 'Madera de olivo', 'Madera de encina', 'Madera de cedro'], ic: '🪵',
-    w: ['Alrededor de las aldeas y del camino', 'Huertos de Nazaret y de Galilea', 'Valle del Jordán, cerca de Jericó', 'Desierto de Judea', 'Getsemaní, en el Monte de los Olivos', 'Basán, al este del lago (próximamente)', 'El Líbano, al norte (próximamente)'] },
+    w: ['Alrededor de las aldeas y del camino', 'Huertos de Nazaret y de Galilea', 'Valle del Jordán, cerca de Jericó', 'Desierto de Judea', 'Getsemaní, en el Monte de los Olivos', 'Las encinas de Basán, en las tierras de afuera', 'Los cedros del Líbano, en las tierras de afuera'] },
   stone: { n: ['Piedra de campo', 'Caliza blanca', 'Basalto negro', 'Piedra de Jerusalén', 'Sillar de cantera', 'Sal de roca', 'Cobre de Timna'], it: ['Piedra', 'Caliza blanca', 'Basalto negro', 'Piedra de Jerusalén', 'Sillar de cantera', 'Sal de roca', 'Cobre de Timna'], ic: '🪨',
-    w: ['Junto a las aldeas y en el camino', 'Alrededor de Nazaret', 'Galilea y Capernaúm, tierra de basalto', 'Jerusalén y sus alrededores', 'La cantera de la tumba del huerto', 'Junto al Mar Muerto (próximamente)', 'La mina de Timna, al sur (próximamente)'] },
+    w: ['Junto a las aldeas y en el camino', 'Alrededor de Nazaret', 'Galilea y Capernaúm, tierra de basalto', 'Jerusalén y sus alrededores', 'La cantera de la tumba del huerto', 'El monte de sal, en las tierras de afuera', 'La mina de Timna, en las tierras de afuera'] },
   fish: { n: ['Sardina de Galilea', 'Pez del Jordán', 'Pez de San Pedro', 'Barbo de Galilea', 'Barbo grande', 'Dorada del Mediterráneo', 'Atún de mar abierto'], it: ['Pescado crudo', 'Pez del Jordán', 'Pez de San Pedro', 'Barbo de Galilea', 'Barbo grande', 'Dorada', 'Atún'], ic: '🐟',
-    w: ['La orilla del Mar de Galilea', 'El río Jordán', 'El mar abierto, más allá de las piedras del lago', 'La orilla del lago de Juan 21', 'Aguas profundas, desde una barca (próximamente)', 'El puerto de Jope (próximamente)', 'Mar abierto frente a Jope (próximamente)'] }
+    w: ['La orilla del Mar de Galilea', 'El río Jordán', 'El mar abierto, más allá de las piedras del lago', 'La orilla del lago de Juan 21', 'El muelle de Magdala, en el Mar de Galilea', 'El puerto de Jope (próximamente)', 'Mar abierto frente a Jope (próximamente)'] }
 };
 const R7_SELL = { wood: [1, 2, 4, 7, 12, 20, 40], stone: [1, 2, 4, 7, 12, 20, 40], fish: [2, 3, 5, 8, 13, 22, 45] };
 const r7k = (g, t) => t <= 1 ? g : g + t; /* clave del recurso: wood, wood2 … wood7 */
@@ -7420,7 +7465,7 @@ function t7Need(d) { const R = d >= 3 ? [1, 3] : d === 2 ? [2, 4] : d === 1 ? [3
 const W7R = [1, 2, 3, 2, 2, 2, 1, 1, 2], S7R = [1, 2, 1, 3, 3, 2, 4, 4, 2];
 function regAt(z) { const g = G(); if (!regAt.c) { try { regAt.c = g.REGIONS.map((_, r) => regionZ(g, r)); } catch (e) { regAt.c = []; } } let best = 0, bd = Infinity; regAt.c.forEach(([a, b], r) => { if (z <= a && z >= b) { bd = -1; best = r; } else if (bd >= 0) { const d = Math.min(Math.abs(z - a), Math.abs(z - b)); if (d < bd) { bd = d; best = r; } } }); return best; }
 function t7Tier(kind, o, i) {
-  if (o.t7) return o.t7; const P = S.pois || [], near = (k, r) => P.some(p => p.k === k && (p.x - o.x) ** 2 + (p.z - o.z) ** 2 < r * r);
+  if (o.t7) return o.t7; if (o.zt) return (o.t7 = o.zt); const P = S.pois || [], near = (k, r) => P.some(p => p.k === k && (p.x - o.x) ** 2 + (p.z - o.z) ** 2 < r * r);
   let t = kind === 'tree' ? (near('garden', 40) ? 5 : near('desert', 45) ? 4 : W7R[regAt(o.z)] || 1) : (near('tomb', 35) ? 5 : S7R[regAt(o.z)] || 1);
   if (t > 1 && (i * 7) % 10 < 3) t = 1; return (o.t7 = t);
 }
@@ -7429,8 +7474,11 @@ function sellKey(kind, k) { const v = vilNearest(90); return kind + ':' + (v ? v
 function sellUnit(kind, k, extra) { const base = SELL[k]; if (!R7_OF[k]) return base; const s = svP(), day = Math.floor(s.play / SV.DAY); if (!s.sold || s.sold.d !== day) s.sold = { d: day, m: {} }; const c = (s.sold.m[sellKey(kind, k)] || 0) + (extra || 0); return Math.max(Math.ceil(base / 2), Math.round(base * (1 - .05 * c))); }
 function sellCount(kind, k) { const s = svP(); s.sold.m[sellKey(kind, k)] = (s.sold.m[sellKey(kind, k)] || 0) + 1; }
 /* árboles que se pueden talar: los olivos de siempre o, con la vegetación comprada, los árboles de Galilea */
-const chopList = () => FLORA.olive && FLORA.olive.length ? FLORA.olive : (FLORA.treesUsed || []);
-function treeShow(i, on) { if (FLORA.olive && FLORA.olive.length) { svHide(FLORA.oT, i, on); for (let j = 0; j < 6; j++) svHide(FLORA.oB, i * 6 + j, on); return; } const o = (FLORA.treesUsed || [])[i]; if (o && o.gt) o.gt.forEach(([im, k]) => svHide(im, k, on)); }
+const Z7 = { trees: [], rocks: [], pier: null, stalls: [] };
+const chopList = () => FLORA.olive && FLORA.olive.length ? FLORA.olive : (chopList.c && chopList.n === (FLORA.treesUsed || []).length + Z7.trees.length ? chopList.c : (chopList.n = (FLORA.treesUsed || []).length + Z7.trees.length, chopList.c = Z7.trees.concat(FLORA.treesUsed || [])));
+const rockList = () => rockList.c && rockList.n === (FLORA.rock || []).length + Z7.rocks.length ? rockList.c : (rockList.n = (FLORA.rock || []).length + Z7.rocks.length, rockList.c = Z7.rocks.concat(FLORA.rock || []));
+function rockShow(i, on) { const o = rockList()[i]; if (!o) return; if (o.mesh) { o.mesh.visible = on; return; } svHide(FLORA.rI, i - Z7.rocks.length, on); }
+function treeShow(i, on) { if (FLORA.olive && FLORA.olive.length) { svHide(FLORA.oT, i, on); for (let j = 0; j < 6; j++) svHide(FLORA.oB, i * 6 + j, on); return; } const o = chopList()[i]; if (!o) return; o.down = !on; if (o.gt) o.gt.forEach(([im, k]) => svHide(im, k, on)); if (o.oi != null) trpHide(o.oi, !on); }
 /* el trabajo en marcha */
 function t7Stop(msg) { if (!S.sv || !S.sv.work) return; const w = S.sv.work; S.sv.work = null; if (msg !== false) svToast(msg || (w.n ? `Paraste. Sacaste ${w.n} ${w.n > 1 ? 'piezas' : 'pieza'}.` : 'Paraste de trabajar.')); G().save(); svUI(); }
 function t7Start(k, i, tier) {
@@ -7458,7 +7506,7 @@ function t7Tick(dt) {
   try { pkPop(`${R7[g].ic} +${amt} ${lc1(RES[key][0])}`); } catch (e) {}
   const broke = t7Wear(w.type, w.tl, (w.d === -1 ? 5 : 1) * (w.k === 'fish' && ft('pac') >= 2 ? .5 : 1));
   if (w.k !== 'fish') { st.t7left = st.t7left || new Map(); const lk = w.k + w.i, left = (st.t7left.has(lk) ? st.t7left.get(lk) : 3 + (w.i % 6)) - 1;
-    if (left <= 0) { st.t7left.delete(lk); if (w.k === 'tree') { treeShow(w.i, false); st.felled.set(w.i, SV.TREE); } else { svHide(FLORA.rI, w.i, false); st.mined.set(w.i, SV.ROCK); }
+    if (left <= 0) { st.t7left.delete(lk); if (w.k === 'tree') { treeShow(w.i, false); st.felled.set(w.i, SV.TREE); } else { rockShow(w.i, false); st.mined.set(w.i, SV.ROCK); }
       G().save(); if (broke) { t7Stop(`💥 Tu ${lc1(t7Name(w.type, w.tl))} se gastó del todo y se rompió.`); return; } t7Stop(w.k === 'tree' ? `🪵 Se terminó el árbol: sacaste ${w.n} ${w.n > 1 ? 'piezas' : 'pieza'}. Vuelve a crecer en unos minutos.` : `🪨 Se terminó la roca: sacaste ${w.n} ${w.n > 1 ? 'piezas' : 'pieza'}. Se recupera en unos minutos.`); return; }
     st.t7left.set(lk, left); }
   if (broke) { t7Stop(`💥 Tu ${lc1(t7Name(w.type, w.tl))} se gastó del todo y se rompió. Se arreglan antes de romperse, en el mercado o con el artesano.`); return; }
@@ -8005,7 +8053,7 @@ function survTick(dt, t) {
   // regenerar árboles, rocas y frutos
   for (const [i, left] of st.felled) { if (left - dt <= 0) { st.felled.delete(i); treeShow(i, true); } else st.felled.set(i, left - dt); }
   clayTick(dt); farmTick(dt); orchTick(dt); woolTick(dt);
-  for (const [i, left] of st.mined) { if (left - dt <= 0) { st.mined.delete(i); svHide(FLORA.rI, i, true); } else st.mined.set(i, left - dt); }
+  for (const [i, left] of st.mined) { if (left - dt <= 0) { st.mined.delete(i); rockShow(i, true); } else st.mined.set(i, left - dt); }
   st.fruit.trees.forEach((o, i) => { if (o.n > 0) return; o.t -= dt; if (o.t <= 0) { o.n = o.n0 || 5; svFruitShow(o, i, true); } });
   // fogatas
   let lit = null; st.fires = st.fires.filter(f => { f.left -= dt; f.fl.scale.set(1 + Math.sin(t * 13) * .12, 1 + Math.sin(t * 9 + 1) * .2, 1); if (f.left <= 0) { S.scene.remove(f.g); ambOff(f.amb); return false; } if (!lit || (f.x - S.av.position.x) ** 2 + (f.z - S.av.position.z) ** 2 < (lit.x - S.av.position.x) ** 2 + (lit.z - S.av.position.z) ** 2) lit = f; return true; });
@@ -8287,6 +8335,14 @@ const SHOP_WEAR = { carpintero: ['carpintero', 'vendcuero'], alfarero: ['alfarer
 /* herramientas de la escalera de 7: el nivel 1 en todos lados; el 2 y el 3 en el mercado; hasta el 4 con el artesano de cada una */
 const SHOP_T7 = { mercado: { axe: 3, pick: 3, rod: 3 }, carpintero: { axe: 4 }, alfarero: { pick: 4 }, pescador: { rod: 4 } };
 Object.entries(SHOPS).forEach(([k, sh]) => { sh.buy = sh.buy.filter(b => !(b[0] === 't' && T7[t7Type(b[1]) || ''])); const tl = []; ['axe', 'pick', 'rod'].forEach(ty => { const mx = (SHOP_T7[k] || {})[ty] || 1; for (let t = 1; t <= mx; t++) tl.push(['T', ty + ':' + t, T7_PR[t - 1]]); }); sh.buy = tl.concat(sh.buy, (SHOP_WEAR[k] || []).map(id => ['p', id, 12])); sh.fix = SHOP_T7[k] ? Object.keys(SHOP_T7[k]) : []; });
+Object.assign(SHOPS, {
+  jacobo: { name: 'Taller de Jacobo', ic: '🪓', cloth: '#7A5A3A', buy: [['T', 'axe:5', T7_PR[4]]], sell: ['wood5'], fix: ['axe'] },
+  templo: { name: 'El constructor del Templo', ic: '⛏️', cloth: '#8A7A6A', buy: [['T', 'pick:5', T7_PR[4]]], sell: ['stone5', 'wood7', 'stone7'], fix: ['pick'] },
+  magdala: { name: 'El saladero de Magdala', ic: '🐟', cloth: '#3E5A6A', buy: [['r', 'salado', 8]], sell: ['fish5', 'wood6', 'stone6'], fix: ['rod'] },
+  betsaida: { name: 'Los pescadores de Betsaida', ic: '🎣', cloth: '#4A5A6A', buy: [['T', 'rod:5', T7_PR[4]]], sell: ['fish5'], fix: ['rod'] },
+  jerico: { name: 'El minero de Jericó', ic: '⛏️', cloth: '#6A4A3A', buy: [['T', 'pick:6', T7_PR[5]]], sell: [], fix: ['pick'] },
+  tiro: { name: 'Los mercaderes de Tiro', ic: '🪓', cloth: '#5A2A6A', g: 'chica', buy: [['T', 'axe:6', T7_PR[5]], ['T', 'rod:6', T7_PR[5]]], sell: ['fish6', 'fish7'], fix: ['axe', 'rod'] }
+});
 ['wood', 'stone', 'fish'].forEach(g => { const L = [2, 3, 4].map(t => r7k(g, t)), add = k => { const sh = SHOPS[k]; const i = sh.sell.indexOf(g); sh.sell.splice(i >= 0 ? i + 1 : sh.sell.length, 0, ...L.filter(x => !sh.sell.includes(x))); }; add('mercado'); add(g === 'wood' ? 'carpintero' : g === 'stone' ? 'alfarero' : 'pescador'); if (g === 'fish') add('posada'); });
 const SERV_PERKS = [
   [3, 'Te conocen en el mercado', 'Los comerciantes te hacen precio: todo cuesta un 10% menos.'],
