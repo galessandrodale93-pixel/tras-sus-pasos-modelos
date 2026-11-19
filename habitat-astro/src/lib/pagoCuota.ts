@@ -29,8 +29,10 @@ const hoyAR = () => new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10)
 export const vencida = (mes: string, hoy = hoyAR()) => mes < hoy.slice(0, 7) || (mes === hoy.slice(0, 7) && +hoy.slice(8, 10) > VENCE_DIA);
 export const MESES_RE = /^\d{4}-\d{2}(,\d{4}-\d{2}){0,11}$/;
 const lista = (meses: string | string[]) => (Array.isArray(meses) ? meses : String(meses).split(",")).filter((m) => /^\d{4}-\d{2}$/.test(m)).sort();
-// total a pagar: cada mes su cuota, más el recargo si ya venció
-export const totalDe = (a: AlumnoPago, meses: string | string[], hoy = hoyAR()) => lista(meses).reduce((t, m) => t + montoDe(a) + (vencida(m, hoy) ? RECARGO : 0), 0);
+// total a pagar: cada mes su cuota. El recargo corre solo si debe algún mes anterior al actual
+// (quien debe únicamente el mes en curso paga la cuota sin recargo); en ese caso va en cada mes vencido.
+export const conRecargo = (L: string[], hoy = hoyAR()) => L.some((m) => m < hoy.slice(0, 7));
+export const totalDe = (a: AlumnoPago, meses: string | string[], hoy = hoyAR()) => { const L = lista(meses), r = conRecargo(L, hoy); return L.reduce((t, m) => t + montoDe(a) + (r && vencida(m, hoy) ? RECARGO : 0), 0); };
 // link para mails y WhatsApp: no hace falta entrar a la cuenta. Puede llevar varios meses («2026-09,2026-10»).
 export async function linkPago(a: AlumnoPago, meses: string | string[]) {
   if (!montoDe(a)) return "";
@@ -50,7 +52,7 @@ export async function preferencia(a: AlumnoPago, meses: string | string[], total
   if (!tk) throw new Error("Falta la clave de Mercado Pago.");
   const txt = (m: string) => MS[+m.slice(5, 7) - 1] || m;
   const nombres = L.length === 1 ? txt(L[0]) : L.slice(0, -1).map(txt).join(", ") + " y " + txt(L[L.length - 1]);
-  const rec = L.filter((m) => vencida(m)).length;
+  const rec = conRecargo(L) ? L.filter((m) => vencida(m)).length : 0;
   const body = {
     items: [{ id: "cuota-" + L.join("-"), title: `${L.length === 1 ? "Cuota" : "Cuotas"} de ${nombres} · Habitat${a.cuotaCon ? " (compartida)" : ""}${rec ? " · incluye recargo" : ""}`, description: String(a.title || ""), quantity: 1, unit_price: monto, currency_id: "ARS" }],
     payer: a.email ? { email: a.email } : undefined,
