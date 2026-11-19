@@ -7232,7 +7232,7 @@ function svHas(need) { const s = svP(), I = t7Inv(s.inv); return Object.entries(
 /* la madera, la piedra y el pescado se pagan empezando por lo más común */
 function svPay(need) { const s = svP(); Object.entries(need).forEach(([k, n]) => { n = svN(k, n); if (R7_POOL[k] && n > 0) { for (const x of R7_POOL[k]) { const u = Math.min(n, s.inv[x] || 0); if (u) { svAdd(x, -u); n -= u; } if (!n) break; } } else svAdd(k, -n); }); }
 function svTool(t) { const ty = t7Type(t); return ty ? t7Has(ty) : svP().tools.includes(t); }
-function svToast(t) { G().toast(t); }
+function svToast(t) { if (svToast.mute) return; G().toast(t); }
 function svGiveTool(t, why) {
   const s = svP(), ty = t7Type(t), tt = t === 'net' ? 2 : 1; if (ty ? !t7Grant(ty, tt) && s.tools.includes(t) : s.tools.includes(t)) return false; if (!s.tools.includes(t)) s.tools.push(t); G().save();
   const el = document.getElementById('v3pop'); if (el) { el.innerHTML = `<span class="ic sv-ic">${TOOLS[t][1]}</span><span class="tx"><small>${esc(why)}</small><b>${esc(TOOLS[t][0])}</b><em class="gp-tip">${esc(TOOLS[t][2])}</em></span>`; el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); clearTimeout(pop.t); pop.t = setTimeout(() => { el.classList.remove('on'); el.hidden = true; }, 4200); }
@@ -7467,7 +7467,9 @@ function t7Ficha(type, t) {
   return `Saca ${easy.join(', ')} (más rápido cuanto más común).` + (slow.length ? ` Con ${slow[0]} trabaja lento y se gasta.` : '') + (brk.length ? ` Con ${brk[0]}${brk.length > 1 ? ' en adelante' : ''} se rompe.` : '') + ` Pide ${t7Req(type, t)}.` + (t === 7 ? ' No se gasta nunca.' : '');
 }
 /* golpes que hacen falta (no se muestran), según la herramienta frente al recurso */
-function t7Need(d) { const R = d >= 3 ? [1, 3] : d === 2 ? [2, 4] : d === 1 ? [3, 6] : d === 0 ? [5, 8] : [7, 10]; return R[0] + Math.floor(Math.random() * (R[1] - R[0] + 1)); }
+/* misma regla en todo el juego: lo más común sale en 2 a 4 golpes y cada nivel del recurso suma uno (el 7, de 8 a 10);
+   cada nivel de herramienta por encima del recurso resta un golpe (mínimo 1), y una por debajo suma tres */
+function t7Need(d, tier) { const b = (tier || 1) + 1 + Math.floor(Math.random() * 3); return Math.max(1, d >= 0 ? b - d : b + 3); }
 /* nivel de cada árbol y roca según la etapa donde está; un tercio de lo de cada etapa es común */
 const W7R = [1, 2, 3, 2, 2, 2, 1, 1, 2], S7R = [1, 2, 1, 3, 3, 2, 4, 4, 2];
 function regAt(z) { const g = G(); if (!regAt.c) { try { regAt.c = g.REGIONS.map((_, r) => regionZ(g, r)); } catch (e) { regAt.c = []; } } let best = 0, bd = Infinity; regAt.c.forEach(([a, b], r) => { if (z <= a && z >= b) { bd = -1; best = r; } else if (bd >= 0) { const d = Math.min(Math.abs(z - a), Math.abs(z - b)); if (d < bd) { bd = d; best = r; } } }); return best; }
@@ -7487,25 +7489,26 @@ const rockList = () => rockList.c && rockList.n === (FLORA.rock || []).length + 
 function rockShow(i, on) { const o = rockList()[i]; if (!o) return; if (o.mesh) { o.mesh.visible = on; return; } svHide(FLORA.rI, i - Z7.rocks.length, on); }
 function treeShow(i, on) { if (FLORA.olive && FLORA.olive.length) { svHide(FLORA.oT, i, on); for (let j = 0; j < 6; j++) svHide(FLORA.oB, i * 6 + j, on); return; } const o = chopList()[i]; if (!o) return; o.down = !on; if (o.gt) o.gt.forEach(([im, k]) => svHide(im, k, on)); if (o.oi != null) trpHide(o.oi, !on); }
 /* el trabajo en marcha */
-function t7Stop(msg) { if (!S.sv || !S.sv.work) return; const w = S.sv.work; S.sv.work = null; if (msg !== false) svToast(msg || (w.n ? `Paraste. Sacaste ${w.n} ${w.n > 1 ? 'piezas' : 'pieza'}.` : 'Paraste de trabajar.')); G().save(); svUI(); }
+function t7Stop(msg) { if (!S.sv || !S.sv.work) return; const w = S.sv.work; S.sv.work = null; if (w.job) { jobEnd(w, false); G().save(); svUI(); return; } if (msg !== false) svToast(msg || (w.n ? `Paraste. Sacaste ${w.n} ${w.n > 1 ? 'piezas' : 'pieza'}.` : 'Paraste de trabajar.')); G().save(); svUI(); }
 function t7Start(k, i, tier) {
   const st = S.sv, type = k === 'tree' ? 'axe' : k === 'rock' ? 'pick' : 'rod', T = T7[type], g = T.res, rn = lc1(R7[g].n[tier - 1]);
   const tl = t7Best(type); if (!tl) { const P = t7P()[type], own = [1, 2, 3, 4, 5, 6, 7].filter(t => P[t] != null && P[t] !== 0); svToast(own.length ? `Tu ${lc1(t7Name(type, own[0]))} pide ${t7Req(type, own[0])}. Subí tu oficio o conseguí una más simple en el mercado.` : `Necesitás ${type === 'rod' ? 'una caña o una red' : type === 'axe' ? 'un hacha' : 'un pico'}. Se consiguen en el mercado.`); return; }
   const d = tl - tier, key = k + i;
   if (d <= -2) { const now = performance.now(); if (!st.t7warn || st.t7warn.key !== key || now - st.t7warn.t > 6000) { st.t7warn = { key, t: now }; svToast(`⚠️ Tu ${lc1(t7Name(type, tl))} no va a aguantar: ${rn} pide una herramienta de nivel ${tier - 1} o más. Si igual querés intentar, tocá otra vez y se va a romper.`); return; } st.t7warn = null; }
-  st.work = { k, i, type, tl, tier, d, hits: 0, need: t7Need(d), t: 0, n: 0, brk: d <= -2 ? 3 : 0, label: `${T.ing} ${rn}` };
+  st.work = { k, i, type, tl, tier, d, hits: 0, need: t7Need(d, tier), t: 0, n: 0, brk: d <= -2 ? 3 : 0, label: `${T.ing} ${rn}` };
   S.joy.x = 0; S.joy.y = 0; svToast(`${T.ic} ${T.ing} ${rn} con ${lc1(t7Name(type, tl))}. Sigue solo; movete o tocá E para parar.` + (d === -1 ? ' Le cuesta: se va a gastar rápido.' : '')); svUI();
 }
 function t7Wear(type, t, n) { const P = t7P()[type]; if (P[t] == null || P[t] < 0) return false; P[t] = Math.max(0, P[t] - n); if (P[t] === 0) { delete P[t]; return true; } return false; }
 function t7Tick(dt) {
   const st = S.sv, w = st && st.work; if (!w) return;
   if (S.freeMoving || S.walking || S.down || BLD.on || sheetUp()) { t7Stop(); return; }
+  if (w.job) { jobTick(w, dt); return; }
   if ((w.k === 'tree' && st.felled.has(w.i)) || (w.k === 'rock' && st.mined.has(w.i))) { t7Stop(false); return; }
-  const T = T7[w.type], iv = 1.15 * (1 - .3 * fv(T.at) / 100); w.t += dt; if (w.t < iv) return; w.t = 0; w.hits++;
+  const T = T7[w.type], iv = 1.5 * (1 - .3 * fv(T.at) / 100); w.t += dt; if (w.t < iv) return; w.t = 0; w.hits++;
   if (w.k === 'fish') { S.catchT = iv; h3do(['M_Fishing_Idle', 'M_Holding_Idle'], iv + .2); } else svSwing(w.k);
   axGain(T.at, 1); AXS.workT = 6;
   if (w.brk) { if (w.hits >= w.brk) { t7Wear(w.type, w.tl, 1e9); t7Stop(`💥 Se rompió tu ${lc1(t7Name(w.type, w.tl))}. Para esto hace falta una herramienta mejor.`); } return; }
-  if (w.hits < w.need) return; w.hits = 0; w.need = t7Need(w.d); w.n++;
+  if (w.hits < w.need) return; w.hits = 0; w.need = t7Need(w.d, w.tier); w.n++;
   const g = T.res, key = r7k(g, w.tier), lv = ofiLv(T.of); let amt = (w.tier <= 2 ? 2 : 1) + (lv >= 22 ? 1 : 0);
   if (w.k === 'fish' && legOn('pescahombres')) amt *= 2;
   if (w.k === 'fish' && ft('pac') >= 4 && w.n % 5 === 0) amt += 1;
@@ -7588,7 +7591,7 @@ const KMIS = {
   zaqueo: { name: 'El árbol de Zaqueo', ty: 'axe', ol: 'jerico', who: 'Zaqueo', ref: 'Lucas 19:1-10', need: ['wood', 2, 3], t: 'Zaqueo: «Jesús viene a mi casa y la quiero arreglar». Juntá 3 maderas de sicómoro y traéselas.', end: 'Zaqueo: «¡Hoy Jesús viene a mi casa!». Te regala su hacha brillante.' },
   roca: { name: 'Una casa sobre la roca', ty: 'pick', poi: 'field', who: 'Un constructor', ref: 'Mateo 7:24', need: ['stone', 2, 3], t: 'Un constructor sabio quiere hacer su casa sobre la roca. Juntá 3 piedras de basalto negro y traéselas.', end: 'Jesús dijo que el que escucha sus palabras y las pone en práctica es como el que construye su casa sobre la roca (Mateo 7:24). Te regala su pico brillante.' }
 };
-/* golpes por pieza en Kids (cada golpe dura 1,5 segundos): lo común 2 a 4, lo especial 3 a 5, lo brillante 4 a 6; igual para talar, picar y pescar */
+/* golpes por pieza en Kids (cada golpe dura 1,3 segundos, un poco más fácil que Hero): lo común 2 a 4, lo especial 3 a 5, lo brillante 4 a 6; igual para talar, picar y pescar */
 const kNeed = t => t + 1 + Math.floor(Math.random() * 3);
 function kP() { const p = G().P(); p.kt = p.kt || { got: {}, n: 0, br: {}, mis: {} }; return p.kt; }
 const kPage = () => { try { const h = albP().have; return ALB_PAGES.some(pg => ALB.filter(c => c.pg === pg[0]).every(c => h[c.id])); } catch (e) { return false; } };
@@ -7622,7 +7625,7 @@ function kidsTick(dt) {
   st.kui = (st.kui || 0) + dt; if (st.kui > .5) { st.kui = 0; kUI(); }
   const w = st.kw; if (!w) return;
   if (S.freeMoving || S.walking || sheetUp()) { kStop(); return; }
-  w.tt += dt; if (w.tt < 1.5) return; w.tt = 0; w.hits++;
+  w.tt += dt; if (w.tt < 1.3) return; w.tt = 0; w.hits++;
   if (w.k === 'fish') h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 1.7); else svSwing(w.k);
   if (w.hits < w.need) return; w.hits = 0; w.need = kNeed(w.t); w.n++;
   const P = kP(), G3 = K3[w.g], key = w.g + w.t; P.got[key] = (P.got[key] || 0) + 1; P.n = (P.n || 0) + 1; svXP(w.t * 2);
@@ -7658,9 +7661,34 @@ function kMisTalk(id) {
   if (have >= M.need[2]) { st.done = 1; P.br[M.ty] = 1; G().save(); placeCard([M.name, M.end + ' (' + M.ref + ')']); try { kidsShine(); pkPop('✨ ' + K3T[M.ty][2]); } catch (e) {} svXP(30); return; }
   placeCard([M.name, `${M.t} Llevás ${Math.max(0, have)} de ${M.need[2]}.`]);
 }
-function svAct() {
+/* los demás oficios también trabajan solos con la misma regla: cada pieza sale en 2 a 4 golpes de 1,5 segundos
+   (barro, espigas, cosecha, olivos, uvas, poda, esquila, lino y fruta). Si parás antes, te llevás lo que ya juntaste. */
+const JOB = {
+  clay: { res: () => 'barro', c: () => 2 + (ofiLv('alf') >= 4 ? 1 : 0) + (ofiLv('alf') >= 24 ? 1 : 0), ing: 'Sacando barro', ic: '🟤', an: 'kneel' },
+  esp: { res: () => 'trigo', c: () => 1, ing: 'Espigando trigo', ic: '🌾', an: 'pick' },
+  farm: { res: () => 'trigo', c: () => 3 + (ofiLv('agr') >= 4 ? 1 : 0) + (ofiLv('agr') >= 24 ? 1 : 0), ing: 'Cosechando trigo', ic: '🌾', an: 'pick' },
+  olive: { res: () => 'aceitunas', c: () => 3 + (ofiLv('oli') >= 4 ? 1 : 0), ing: 'Vareando el olivo', ic: '🫒', an: 'axe' },
+  vid: { res: () => 'uvas', c: n => 3 + (ofiLv('vin') >= 4 ? 1 : 0) + (ORCH.vid[n.i] && ORCH.vid[n.i].p ? 1 : 0), ing: 'Cortando uvas', ic: '🍇', an: 'pick' },
+  pod: { res: () => 'wood', c: () => 1, ing: 'Podando la viña', ic: '✂️', an: 'axe' },
+  shear: { res: () => 'lana', c: () => 2 + (ofiLv('tej') >= 4 ? 1 : 0), ing: 'Esquilando', ic: '🐑', an: 'kneel' },
+  lino: { res: () => 'lino', c: () => 2 + (ofiLv('carp') >= 4 ? 1 : 0), ing: 'Arrancando lino', ic: '🌿', an: 'pick' },
+  fruit: { res: n => { const o = S.sv.fruit.trees[n.i]; return o && o.kind === 'lemon' ? 'lemon' : 'fruit'; }, c: n => { const o = S.sv.fruit.trees[n.i]; return o ? o.n : 0; }, ing: 'Juntando fruta', ic: '🍎', an: 'pick' }
+};
+function jobKind(n) { if (!n || n.go || n.need) return null; if (n.k === 'farm') return farmStage(n.i) >= 1 ? 'farm' : null; if (n.k === 'shear') return n.done ? null : 'shear'; return JOB[n.k] ? n.k : null; }
+function jobStart(n, jk) { const J = JOB[jk], c = J.c(n); if (!(c > 0)) return false; S.sv.work = { job: 1, jk, nn: n, c, k: 'job', n: 0, hits: 0, need: 2 + Math.floor(Math.random() * 3), t: 0, label: J.ing, res: J.res(n) }; S.joy.x = 0; S.joy.y = 0; svToast(`${J.ic} ${J.ing}. Sigue solo; movete o tocá E para parar.`); svUI(); return true; }
+/* terminar el trabajo: al completar se hace la acción de siempre (que deja el lugar vacío hasta que vuelva); si parás antes, te llevás lo que juntaste */
+function jobEnd(w, full) { if (full) { try { svAct(Object.assign({}, w.nn, { go: 1 })); } catch (e) {} return; } if (w.n) svAdd(w.res, w.n); svToast(w.n ? `${JOB[w.jk].ic} Paraste: juntaste ${w.n}.` : 'Paraste de trabajar.'); }
+function jobTick(w, dt) {
+  w.t += dt; if (w.t < 1.5) return; w.t = 0; w.hits++; const J = JOB[w.jk];
+  if (J.an === 'axe') { S.toolK = 'axe'; S.toolT = 1.2; h3do(['M_Idle', 'Idle_Loop'], 1); } else h3do(J.an === 'kneel' ? ['M_Kneeling_Idle', 'PickUp_Table'] : [['M_Pick_Fruit', 'M_Pick_Fruit_1', 'M_Pick_Fruit_2'][w.hits % 3], 'PickUp_Table'], 1.6, .4);
+  AXS.workT = 6; if (w.hits < w.need) return; w.hits = 0; w.need = 2 + Math.floor(Math.random() * 3); w.n++;
+  try { pkPop(`${J.ic} +1 ${lc1(RES[w.res] ? RES[w.res][0] : w.res)}`); } catch (e) {}
+  if (w.n >= w.c) { S.sv.work = null; jobEnd(w, true); svUI(); }
+}
+function svAct(nn) {
   if (S && !S.hx && S.sv && !svOn()) { if (!S.walking && !sheetUp() && !S.down) kAct(); return; }
-  if (!svOn() || !S.sv || S.walking || sheetUp() || S.down) return; const n = svNear(), s = svP(), st = S.sv; wake();
+  if (!svOn() || !S.sv || S.walking || sheetUp() || S.down) return; const n = nn || svNear(), s = svP(), st = S.sv; wake();
+  { const jk = jobKind(n); if (jk && jobStart(n, jk)) return; }
   if (!n) { svToast('No hay nada para hacer acá. Buscá árboles, rocas, granados o agua.'); return; }
   if (n.need && n.k === 'farm') { farmAct(n); return; }
   if (n.need && (n.k === 'press' || n.k === 'lagar')) { orchAct(n); return; }
