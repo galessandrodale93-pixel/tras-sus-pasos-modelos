@@ -771,7 +771,7 @@ function olTrails(allPts, hAt) {
     OL.trails.push({ p, pts, x0, z0 }); });
 }
 function olSitesBuild(scene, HW, hx) {
-  Z7.trees = []; Z7.rocks = []; Z7.stalls = []; Z7.pier = null; Z7.nodes = []; chopList.c = null; rockList.c = null;
+  Z7.trees = []; Z7.rocks = []; Z7.stalls = []; Z7.pier = null; Z7.nodes = []; Z7.pb = {}; chopList.c = null; rockList.c = null;
   if (!OL.plan) return; const yAt = (x, z) => HW.hAt(x, z), M = (k, c) => tm('ol' + k, c), R0 = rng(4242); S.olSites = []; S.oliT = []; S.vinV = []; S.carpSite = null;
   const props = (id, list, o) => (FLORA.poiProps = FLORA.poiProps || []).push([id, list, Object.assign({ shadow: true }, o || {})]);
   const lore = (p, x, z, label, extra) => S.lore.push(Object.assign({ x, z, r: 3, label, dur: 5, info: [p.name, p.txt + ' (' + p.ref + ')'] }, extra || {}));
@@ -846,12 +846,12 @@ function olRincon(scene, p, yAt, M, R, props, hx) {
 function olZona(scene, p, yAt, M, R, props, hx) {
   const g = new THREE.Group(), y0 = yAt(p.x, p.z) - .05;
   if (p.zr === 'wood') { for (let i = 0; i < 14; i++) { const a = i / 14 * 6.283 + R() * .3, rr = 6 + R() * (p.r - 10), x = p.x + Math.cos(a) * rr, z = p.z + Math.sin(a) * rr, oi = 900000 + Z7.trees.length, y = yAt(x, z) - .04;
-    props(p.zm || 'island_tree_01', [{ x, y, z, ry: R() * 6.28, s: (p.zs || 1.9) * (1 + R() * .25), v: i, oi }], { wind: 3, far: 1, olive: 1, keepId: p.zm ? 1 : 0 }); Z7.trees.push({ x, z, y, zt: p.zt, oi }); } }
+    z7Put(p.zm || 'island_tree_01', [{ x, y, z, ry: R() * 6.28, s: (p.zs || 1.9) * (1 + R() * .25), v: i, oi }], { wind: 3, far: 1, olive: 1, keepId: p.zm ? 1 : 0 }); Z7.trees.push({ x, z, y, zt: p.zt, oi }); } }
   if (p.zr === 'stone') {
     if (p.flat) { const f = new THREE.Mesh(new THREE.CircleGeometry(p.r - 2, 40), new THREE.MeshStandardMaterial({ color: p.flat, roughness: .95 })); f.rotation.x = -Math.PI / 2; f.position.y = .08; f.receiveShadow = true; g.add(f); }
     for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283 + R() * .3, rr = 4 + R() * (p.r - 8), x = p.x + Math.cos(a) * rr, z = p.z + Math.sin(a) * rr, sc = .9 + R() * .5;
       const oi = 960000 + Z7.rocks.length, id = i % 3 ? 'namaqualand_boulder_02' : 'namaqualand_boulders_01', y = yAt(x, z) - .1;
-      props(id, [{ x, y, z, ry: R() * 6.28, s: (id === 'namaqualand_boulders_01' ? .55 : .8) * sc, v: i, oi }], { olive: 1, nocol: 1, keepY: 1, tint: i % 2 ? p.zc : p.zc2 || p.zc }); Z7.rocks.push({ x, z, s: 1, v: .5, zt: p.zt, oi }); } }
+      z7Put(id, [{ x, y, z, ry: R() * 6.28, s: (id === 'namaqualand_boulders_01' ? .55 : .8) * sc, v: i, oi }], { olive: 1, nocol: 1, keepY: 1, tint: i % 2 ? p.zc : p.zc2 || p.zc }); Z7.rocks.push({ x, z, s: 1, v: .5, zt: p.zt, oi }); } }
   (p.nodes || []).forEach(([gg, t, ty, n, cost], j) => { for (let i = 0; i < n; i++) { const a = (i / n) * 6.283 + j * 1.1 + R() * .3, rr = 5 + R() * (p.r - 9), x = p.x + Math.cos(a) * rr, z = p.z + Math.sin(a) * rr; z7Node(scene, x, z, yAt(x, z) - .02, gg, t, ty, cost); } });
   if (p.shop) specStall(scene, p.x, p.z, yAt, p.shop, 0);
   g.position.set(p.x, y0, p.z); scene.add(g);
@@ -7508,7 +7508,10 @@ function sellKey(kind, k) { const v = vilNearest(90); return kind + ':' + (v ? v
 function sellUnit(kind, k, extra) { const base = SELL[k]; if (!R7_OF[k]) return base; const s = svP(), day = Math.floor(s.play / SV.DAY); if (!s.sold || s.sold.d !== day) s.sold = { d: day, m: {} }; const c = (s.sold.m[sellKey(kind, k)] || 0) + (extra || 0); return Math.max(Math.ceil(base / 2), Math.round(base * (1 - .05 * c))); }
 function sellCount(kind, k) { const s = svP(); s.sold.m[sellKey(kind, k)] = (s.sold.m[sellKey(kind, k)] || 0) + 1; }
 /* árboles que se pueden talar: los olivos de siempre o, con la vegetación comprada, los árboles de Galilea */
-const Z7 = { trees: [], rocks: [], pier: null, stalls: [], nodes: [] };
+const Z7 = { trees: [], rocks: [], pier: null, stalls: [], nodes: [], pb: {} };
+/* los modelos de los puntos de recurso se juntan por tipo y se mandan juntos (una sola tanda por modelo, menos dibujos por cuadro) */
+function z7Put(id, L, o) { const k = id + '|' + JSON.stringify(o || {}); (Z7.pb[k] = Z7.pb[k] || [id, [], Object.assign({ shadow: true }, o || {})])[1].push(...L); }
+function z7Flush() { Object.values(Z7.pb || {}).forEach(e => (FLORA.poiProps = FLORA.poiProps || []).push(e)); Z7.pb = {}; }
 const chopList = () => FLORA.olive && FLORA.olive.length ? FLORA.olive : (chopList.c && chopList.n === (FLORA.treesUsed || []).length + Z7.trees.length ? chopList.c : (chopList.n = (FLORA.treesUsed || []).length + Z7.trees.length, chopList.c = Z7.trees.concat(FLORA.treesUsed || [])));
 const rockList = () => rockList.c && rockList.n === (FLORA.rock || []).length + Z7.rocks.length ? rockList.c : (rockList.n = (FLORA.rock || []).length + Z7.rocks.length, rockList.c = Z7.rocks.concat(FLORA.rock || []));
 function rockShow(i, on) { const o = rockList()[i]; if (!o) return; if (o.oi != null) { trpHide(o.oi, !on); return; } if (o.mesh) { o.mesh.visible = on; return; } svHide(FLORA.rI, i - Z7.rocks.length, on); }
@@ -7724,7 +7727,7 @@ const Z7C = { barro: ['#7A5A3A', '#8A6A44', '#9A6A4A', '#D8CFC0', '#B07A5A', '#6
    como en los campos del juego (tallo y espiga). Los modelos instanciados se esconden con su número (oi) cuando se agota */
 function z7Node(scene, x, z, y, g, t, ty, cost) {
   const gr = new THREE.Group(), c = (Z7C[g] || [])[t - 1] || '#888', R = rng(Math.round(x * 13 + z * 7)), oi = 950000 + Z7.nodes.length, ry = R() * 6.28;
-  const put = (id, L, o) => (FLORA.poiProps = FLORA.poiProps || []).push([id, L, Object.assign({ shadow: true, nocol: 1, olive: 1 }, o || {})]);
+  const put = (id, L, o) => z7Put(id, L, Object.assign({ nocol: 1, olive: 1 }, o || {}));
   const at = (dx, dz, s, v) => ({ x: x + dx, y: S.W ? S.W.hAt(x + dx, z + dz) - .04 : y, z: z + dz, ry: R() * 6.28, s, v: v || 0, oi });
   if (g === 'barro') { const m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8, 0, 6.283, 0, 1.2), z7Mat('zb' + t, c)); m.scale.set(1.3, .28, 1.1); gr.add(m);
     const w = new THREE.Mesh(new THREE.CircleGeometry(.5, 14), z7Mat('zbw', '#5E5A48')); w.rotation.x = -Math.PI / 2; w.position.set(.2, .29, .1); gr.add(w);
@@ -7734,17 +7737,19 @@ function z7Node(scene, x, z, y, g, t, ty, cost) {
     for (let k = 0; k < n; k++) { const a = R() * 6.28, r = Math.sqrt(R()) * 1.1, px = Math.cos(a) * r, pz = Math.sin(a) * r, h = .8 + R() * .4; e.set((R() - .5) * .25, 0, (R() - .5) * .25); q.setFromEuler(e); m4.compose(v.set(px, 0, pz), q, sc.set(1, h, 1)); sm.setMatrixAt(k, m4); const tip = new THREE.Vector3(0, h, 0).applyQuaternion(q); m4.compose(v.set(px + tip.x, tip.y + .06, pz + tip.z), q, sc.set(1, 1, 1)); hm.setMatrixAt(k, m4); }
     gr.add(sm, hm); }
   else if (g === 'aceitunas') { put('trp_olive', [at(0, 0, .55 + t * .05)], { wind: 3, far: 1, keepId: 1 }); put('wicker_basket_01', [at(1.3, .6, 1)]);
-    const fr = new THREE.SphereGeometry(.05, 6, 4), mt = z7Mat('zfa' + t, t >= 4 ? '#2A2A22' : '#6A7A3A'); for (let i = 0; i < 8; i++) { const m = new THREE.Mesh(fr, mt); m.position.set(1.3 + (R() - .5) * .3, .3, .6 + (R() - .5) * .3); gr.add(m); } }
-  else if (g === 'uvas') { /* una vid en su espaldera: tronco torcido, follaje del pack y racimos colgando */
-    const tr = new THREE.Mesh(new THREE.CylinderGeometry(.06, .11, 1.2, 6), z7Mat('ztr', '#5A4632')); tr.position.y = .6; tr.rotation.z = .1; gr.add(tr); [-1.1, 1.1].forEach(dx => { const p2 = new THREE.Mesh(new THREE.CylinderGeometry(.05, .06, 1.5, 6), z7Mat('ztr', '#5A4632')); p2.position.set(dx, .75, 0); gr.add(p2); }); const wi = new THREE.Mesh(new THREE.CylinderGeometry(.01, .01, 2.2, 4), z7Mat('zwi', '#6A5A44')); wi.rotation.z = Math.PI / 2; wi.position.y = 1.35; gr.add(wi);
-    put('shrub_02', [{ x, y: y + .55, z, ry, s: .55, sy: .45, v: 0, oi }], { wind: 2, keepY: 1 });
-    const gg = new THREE.SphereGeometry(.07, 6, 4), mt = z7Mat('zfu' + t, c); for (let b = 0; b < 5; b++) { const bxx = -.8 + b * .4 + (R() - .5) * .1, bz = (R() - .5) * .5; for (let i = 0; i < 9; i++) { const m = new THREE.Mesh(gg, mt); const lv = Math.floor(i / 3); m.position.set(bxx + ((i % 3) - 1) * .07 * (3 - lv) / 3, 1.15 - lv * .1, bz); gr.add(m); } } }
+    { const L = []; for (let i = 0; i < 10; i++) L.push([1.3 + (R() - .5) * .3, .32, .6 + (R() - .5) * .3, 1, 1, 1]); gr.add(z7Inst(new THREE.SphereGeometry(.05, 6, 4), z7Mat('zfa' + t, t >= 4 ? '#2A2A22' : '#6A7A3A'), L)); } }
+  else if (g === 'uvas') { /* una vid en su espaldera: tronco torcido, dos postes con alambre, el follaje estirado a lo largo del alambre y racimos colgando */
+    const wd = z7Mat('ztr', '#5A4632'), tr = new THREE.Mesh(new THREE.CylinderGeometry(.06, .11, 1.25, 6), wd); tr.position.y = .62; tr.rotation.z = .12; gr.add(tr); [-1.2, 1.2].forEach(dx => { const p2 = new THREE.Mesh(new THREE.CylinderGeometry(.05, .06, 1.6, 6), wd); p2.position.set(dx, .8, 0); gr.add(p2); }); const wi = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, 2.4, 4), z7Mat('zwi', '#6A5A44')); wi.rotation.z = Math.PI / 2; wi.position.y = 1.4; gr.add(wi);
+    const LG = Z7M._vl || (Z7M._vl = new THREE.IcosahedronGeometry(1, 1)), L1 = [], L2 = []; for (let k = 0; k < 16; k++) { const r = .16 + R() * .14; L1.push([-1.15 + k * .15 + (R() - .5) * .1, 1.42 + (R() - .3) * .18, (R() - .5) * .3, r * 1.4, r * .75, r]); }
+    for (let b = 0; b < 6; b++) { const bxx = -.95 + b * .38 + (R() - .5) * .08, bz = (b % 2 ? .14 : -.14) + (R() - .5) * .2; for (let lv = 0; lv < 5; lv++) { const nn = 5 - lv, rr = .028 * nn; for (let q = 0; q < nn; q++) { const a = q / nn * 6.28 + lv; L2.push([bxx + Math.cos(a) * rr, 1.3 - lv * .065, bz + Math.sin(a) * rr, 1, 1, 1]); } } }
+    gr.add(z7Inst(LG, z7Mat('zvl', '#FFFFFF'), L1, ['#5F7A34', '#6B8A3A', '#56702E', '#738F40']), z7Inst(Z7M._vg || (Z7M._vg = new THREE.SphereGeometry(.045, 6, 4)), z7Mat('zfu' + t, c), L2)); }
   else if (g === 'lana') { if (cost) { put('wooden_bucket_02', [at(0, 0, 2.6)]); const liq = new THREE.Mesh(new THREE.CircleGeometry(.5, 16), z7Mat('zliq', '#8A1530')); liq.rotation.x = -Math.PI / 2; liq.position.y = .72; gr.add(liq); put('wicker_basket_01', [at(1.2, .4, 1)]); }
     else { for (let i = 0; i < 3; i++) { const sh = misMesh({ k: 'sheep' }), a = i * 2.1 + R(), r = .6 + R() * .5; sh.position.set(Math.cos(a) * r, 0, Math.sin(a) * r); sh.rotation.y = R() * 6.28; sh.scale.setScalar(.9 + R() * .2); if (t >= 3 && i === 0) sh.traverse(m => { if (m.isMesh && m.material && m.material.color) { m.material = m.material.clone(); m.material.color.multiply(new THREE.Color(c)); } }); gr.add(sh); }
       put('wicker_basket_01', [at(1.5, -.4, 1)]); } }
   gr.position.set(x, y, z); gr.rotation.y = ry; gr.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(gr);
   Z7.nodes.push({ x, z, g, t, ty, mesh: gr, oi, cost: cost || null, back: 0 });
 }
+function z7Inst(geo, mat, L, cols) { const im = new THREE.InstancedMesh(geo, mat, L.length), m4 = new THREE.Matrix4(), cc = new THREE.Color(); L.forEach(([x, y, z, a, b, c], k) => { m4.makeScale(a, b, c).setPosition(x, y, z); im.setMatrixAt(k, m4); if (cols) im.setColorAt(k, cc.set(cols[k % cols.length])); }); return im; }
 function z7Vis(o, on) { o.mesh.visible = on; try { trpHide(o.oi, !on); } catch (e) {} }
 /* lugares del centro del mapa con puntos de nivel 3 y 4 */
 const Z7_POI = [
@@ -7755,10 +7760,11 @@ const Z7_POI = [
   { poi: 'lake', L: [['lana', 5, 'tijera', 2, { lana: 1 }]] }
 ];
 function z7Central(scene, W) {
-  if (!S.hx) return; const yAt = (x, z) => W.hAt(x, z), dry = (x, z) => { try { return waterWet(x, z, null) < .03; } catch (e) { return true; } };
+  if (!S.hx) { z7Flush(); return; } const yAt = (x, z) => W.hAt(x, z), dry = (x, z) => { try { return waterWet(x, z, null) < .03; } catch (e) { return true; } };
   Z7_POI.forEach(sp => { const p = (S.pois || []).find(q => q.k === sp.poi && (!sp.name || q.name === sp.name)); if (!p) return; let k = 0;
     sp.L.forEach(([g, t, ty, n, cost]) => { for (let j = 0; j < n; j++) { for (let tr = 0; tr < 24; tr++) { const a = (k * 2.39 + tr * .7), r = (sp.poi === 'lake' ? 42 : 13) + (tr % 5) * 2.5, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (blockedAt(x, z) || !dry(x, z) || Z7.nodes.some(o => (o.x - x) ** 2 + (o.z - z) ** 2 < 9)) continue; z7Node(scene, x, z, yAt(x, z), g, t, ty, cost); break; } k++; } });
   });
+  z7Flush();
 }
 function z7Near() { const a = S.av.position; for (let i = 0; i < Z7.nodes.length; i++) { const o = Z7.nodes[i]; if (o.back > 0) continue; if ((o.x - a.x) ** 2 + (o.z - a.z) ** 2 < 5.3) { const nm = lc1(R7[o.g].n[o.t - 1]); return { k: 'z7', i, label: (o.cost ? 'Teñir · ' : T7[o.ty].verb + ' ') + nm + ' · nivel ' + o.t }; } } return null; }
 function z7Done(i) { const o = Z7.nodes[i]; if (!o) return; o.back = (o.g === 'barro' ? T7_BACK.rock : T7_BACK.tree)[o.t - 1] * 60; z7Vis(o, false); svAdd(r7k(o.g, o.t), 3); ofiXP(T7[o.ty].of, (3 + o.t * 2) * 3); svXP(o.t); G().save(); svToast(`${R7[o.g].ic} Juntaste 3 de ${lc1(RES[r7k(o.g, o.t)][0])}. Vuelve en unos minutos.`); svUI(); }
