@@ -5614,7 +5614,7 @@ function buildHero3(av) {
   const tint = { body: (hx(D.shirt) || {}).t || (npc && av.outfit ? new THREE.Color(av.outfit).lerp(new THREE.Color('#FFFFFF'), av.tintK ?? .35).getStyle() : null), legs: (hx(D.pants) || {}).t, feet: (hx(D.boots) || {}).t, bracer: (hx(D.gloves) || {}).t, hood: (hx(D.hat) || {}).hood };
   const kid = G().branch !== 'ados'; if (kid && !tint.body && av.outfit) tint.body = new THREE.Color(av.outfit).lerp(new THREE.Color('#FFFFFF'), npc ? .45 : .12).getStyle();
   const hood = !!(hx(D.hat) || {}).hood, hatProc = D.hat && !hood ? D.hat : null, gray = /^#(9|A|B|C|D)/i.test(av.hair || ''), drop = [];
-  const skinC = new THREE.Color(av.skin || '#D9A57E').multiplyScalar(1.28), hairC = new THREE.Color(av.hair || '#2A1B14').multiplyScalar(1.15);
+  const skinC = new THREE.Color(av.skin || '#D9A57E').multiplyScalar(1.28), skinF = (() => { const c = skinC.clone(), h = {}; c.getHSL(h); return c.setHSL(h.h + .012, h.s * .62, Math.min(.86, h.l * 1.04)); })(), hairC = new THREE.Color(av.hair || '#2A1B14').multiplyScalar(1.15);
   const recolor = (m, c, opt) => { m.material = m.material.clone(); m.material.color.set(c); if (opt && opt.metal) { m.material.metalness = opt.metal; m.material.roughness = .4; } if (opt && opt.glow) { m.material.emissive = new THREE.Color(opt.glow); m.material.emissiveIntensity = .6; } if (opt && opt.cloth) h3cloth(m.material, opt.rb); };
   o.traverse(m => {
     if (!m.isSkinnedMesh) return; const n = m.name, mn = (m.material && m.material.name) || '';
@@ -5632,7 +5632,7 @@ function buildHero3(av) {
       keep = isBeard ? (sx === 'm' && (npc ? gray : (av.beard === '1' && !kid))) : (n.startsWith(def) && !hood && !(hatProc && hatProc.t !== 'straw'));
     }
     if (!keep) { drop.push(m); return; }
-    if (/Regular|Superhero/i.test(mn)) recolor(m, skinC);
+    if (/Regular|Superhero/i.test(mn)) recolor(m, /Female/i.test(mn) ? skinF : skinC); /* la textura de piel de mujer ya viene rojiza: se le baja el tono para que no se vea colorada */
     else if (/Hair/i.test(mn)) recolor(m, hairC);
     else if (part === 'arms' && tint.body) recolor(m, tint.body, Object.assign({ cloth: 1 }, hx(D.shirt)));
     else if (part && tint[part]) recolor(m, tint[part], Object.assign({ cloth: 1 }, hx({ body: D.shirt, legs: D.pants, feet: D.boots, bracer: D.gloves, hood: D.hat }[part])));
