@@ -2030,7 +2030,7 @@ function misCarry(m, on) {
 }
 function misDone(m) {
   const p = misState(), d = m.d; p.missions[d.id] = true; p.mact = null; G().save(); G().refreshHud && G().refreshHud(); misCarry(m, false); if (m.ring) m.ring.visible = false; if (m.pick) m.pick.visible = false;
-  if (S.hx) { const help = ['deliver', 'fetch', 'act'].includes(d.kind); if (help) { axGain('amor', 3); const b = [0, 5, 5, 10, 10, 10][ft('amor')]; if (b) { const pp = G().P(); pp.bonus = (pp.bonus || 0) + b; } } axGain('ale', 2); axGain('fid', 1); if (fv('ale') >= 40) { S.boostT = 30; setTimeout(() => svToast('😊 ¡Alegría! 30 segundos de paso rápido.'), 2200); } behav('misiones'); }
+  if (S.hx) { const help = ['deliver', 'fetch', 'act'].includes(d.kind); if (help) { axGain('amor', 3); const b = [0, 5, 5, 10, 10, 10, 15, 20][ft('amor')]; if (b) { const pp = G().P(); pp.bonus = (pp.bonus || 0) + b; } } axGain('ale', 2); axGain('fid', 1); if (fv('ale') >= 40) { S.boostT = 30; setTimeout(() => svToast('😊 ¡Alegría! 30 segundos de paso rápido.'), 2200); } behav('misiones'); }
   misPop('¡Misión cumplida! +' + MIS_PTS, d.done); tone3d(); try { const who = d.target || d.giver; G().vo(d.done, who.look && who.look.g === 'chica' ? 'mujer' : 'varon'); } catch (e) {} glowAdd(10, 'mision'); h3npcPlay(m.target || m.giver, ['M_Thankful', 'M_Cheering'], 3); if (m.target && m.giver) setTimeout(() => h3npcPlay(m.giver, ['M_Clapping', 'M_Thankful'], 2.5), 600);
   if (Math.random() < .5) setTimeout(() => gearGive(gearRoll(), 'Recompensa de la misión'), 3400);
   if (S && S.hx) setTimeout(() => svMissionReward(d), 1800);
@@ -4392,6 +4392,14 @@ function dayTick(dt) {
 const SLOTS = [['hat', 'Cabeza'], ['shirt', 'Túnica'], ['pants', 'Mano'], ['boots', 'Sandalias'], ['gloves', 'Muñequeras']]; /* ropa de la época: los ids de siempre, así nadie pierde lo que tiene */
 const RAR = { c: ['Común', '#C9C2B4', 70], r: ['Rara', '#6FB6FF', 20], e: ['Épica', '#C77DFF', 7], l: ['Legendaria', '#FFB13B', 3], u: ['Única · nunca se pierde', '#4FD1C5', 0] };
 const GEAR = [
+  { id: 'fr7_amor', s: 'shirt', r: 'u', t: 'stripes', c: '#A8322E', c2: '#E8C27A', name: 'Túnica del amor', desc: 'Del escalón 7 de Amor. «El amor es paciente, es bondadoso» (1 Corintios 13:4).' },
+  { id: 'fr7_ale', s: 'hat', r: 'u', t: 'wrap', c: '#E6B03A', c2: '#B8562A', name: 'Turbante de fiesta', desc: 'Del escalón 7 de Alegría. «Alégrense siempre en el Señor» (Filipenses 4:4).' },
+  { id: 'fr7_paz', s: 'shirt', r: 'u', t: 'seamless', c: '#7FA6C8', c2: '#E8E2D2', name: 'Manto de paz', desc: 'Del escalón 7 de Paz. «La paz les dejo, mi paz les doy» (Juan 14:27).' },
+  { id: 'fr7_pac', s: 'hat', r: 'u', t: 'cloth', c: '#3E6A7A', c2: '#D8C8A0', name: 'Tocado del pescador paciente', desc: 'Del escalón 7 de Paciencia. «Miren cómo el labrador espera el precioso fruto de la tierra» (Santiago 5:7).' },
+  { id: 'fr7_gent', s: 'gloves', r: 'u', t: 'wrap', c: '#D9B8A0', name: 'Vendas suaves', desc: 'Del escalón 7 de Gentileza. «Que su gentileza sea conocida por todos» (Filipenses 4:5).' },
+  { id: 'fr7_gen', s: 'boots', r: 'u', t: 'sandal', c: '#8A5A3A', name: 'Sandalias del samaritano', desc: 'Del escalón 7 de Bondad. El samaritano se acercó al herido y lo cuidó (Lucas 10:34).' },
+  { id: 'fr7_fid', s: 'shirt', r: 'u', t: 'plain', c: '#2E4E7A', name: 'Túnica fiel', desc: 'Del escalón 7 de Fidelidad. «Bien, buen siervo y fiel» (Mateo 25:21).' },
+  { id: 'fr7_dom', s: 'pants', r: 'u', t: 'hand', c: '#5A5040', name: 'Calzón del caminante sobrio', desc: 'Del escalón 7 de Control propio. «Todo atleta se disciplina en todo» (1 Corintios 9:25).' },
   { id: 'turbante', s: 'hat', r: 'c', t: 'turban', c: '#E8DDC6', name: 'Turbante de lino', desc: 'Una tela larga enrollada en la cabeza para cubrirse del sol del camino.' },
   { id: 'tocado', s: 'hat', r: 'c', t: 'cloth', c: '#D9CBB0', c2: '#3A2A1A', name: 'Tocado de pastor', desc: 'Paño de lana sujeto con un cordón, como el de los pastores de Belén en las noches de frío.' },
   { id: 'gorro', s: 'hat', r: 'r', t: 'cap', c: '#8A5A3A', name: 'Gorro de lana de Belén', desc: 'Tejido con lana de las ovejas de los campos de Belén.' },
@@ -6621,7 +6629,9 @@ const POSES = [
   { id: 'brazos', name: 'Brazos cruzados', ico: '🙅', clip: 'M_Idle' },
   { id: 'capa', name: 'Capa al viento', ico: '🧣', clip: 'Idle_Loop', cape: 1 },
   { id: 'horizonte', name: 'Mirar el horizonte', ico: '🌅', clip: 'M_Looking' },
-  { id: 'lampara', name: 'Levantar la lámpara', ico: '🪔', clip: 'Idle_Torch_Loop', lamp: 1 }];
+  { id: 'lampara', name: 'Levantar la lámpara', ico: '🪔', clip: 'Idle_Torch_Loop', lamp: 1 },
+  { id: 'fr_amor', fr: 'amor', name: 'Brazos abiertos', ico: '❤️', clip: 'M_Reaching_Out' }, { id: 'fr_ale', fr: 'ale', name: 'Festejar', ico: '🎉', clip: 'M_Cheering' }, { id: 'fr_paz', fr: 'paz', name: 'Orar en paz', ico: '🕊️', clip: 'M_Praying' }, { id: 'fr_pac', fr: 'pac', name: 'Esperar sentado', ico: '⏳', clip: 'M_Sitting_Idle' },
+  { id: 'fr_gent', fr: 'gent', name: 'Saludar', ico: '👋', clip: 'M_Waving' }, { id: 'fr_gen', fr: 'gen', name: 'Dar gracias', ico: '🙏', clip: 'M_Thankful' }, { id: 'fr_fid', fr: 'fid', name: 'De rodillas', ico: '🧎', clip: 'M_Kneeling_Idle' }, { id: 'fr_dom', fr: 'dom', name: 'Pensar en calma', ico: '🤔', clip: 'M_Thinking' }];
 const GLW = { lvMax: 10 };
 function glowState() { const p = G().P(); if (!p.glow || typeof p.glow !== 'object') p.glow = { pts: 0 }; return p.glow; }
 const glowLv = pts => Math.min(GLW.lvMax, Math.floor(Math.sqrt(Math.max(0, pts) / 12)));
@@ -6666,7 +6676,7 @@ function poseEnd() { if (!S || !S.poseK) return; poseOff(); S.poseK = null; S.ac
 function poseMenu(show) {
   let el = POSE.menu; if (!el) { el = document.createElement('div'); el.className = 'v3poses'; el.hidden = true; document.body.appendChild(el); POSE.menu = el; }
   if (show === undefined) show = el.hidden; if (!show) { el.hidden = true; return; }
-  const list = POSES.filter(p => !p.hx || S.hx); el.innerHTML = `<b>Resplandor · elegí una pose</b>${list.map(p => `<button data-p="${p.id}"><span>${p.ico}</span>${p.name}</button>`).join('')}<small>Quedate quieto unos segundos y la cámara te rodea. La luz que tenés crece con tus buenas obras.</small>`;
+  const list = POSES.filter(p => (!p.hx || S.hx) && (!p.fr || (S.hx && ft(p.fr) >= 6))); el.innerHTML = `<b>Resplandor · elegí una pose</b>${list.map(p => `<button data-p="${p.id}"><span>${p.ico}</span>${p.name}</button>`).join('')}<small>Quedate quieto unos segundos y la cámara te rodea. La luz que tenés crece con tus buenas obras.</small>`;
   el.querySelectorAll('[data-p]').forEach(b => b.onclick = () => poseSet(b.dataset.p)); el.hidden = false;
 }
 // Kids: un solo botón que brilla con chispas
@@ -6967,14 +6977,14 @@ const ATTRK = [
   ['gen', 'Generosidad', 'Las misiones te regalan comida y materiales.']
 ];
 const FRUITS = [
-  ['amor', 'Amor', 'Crece ayudando.', ['+10% en misiones de ayuda', 'Los que ayudaste vuelven con una misión nueva', '+20% en misiones de ayuda', 'Tus ayudas suben la reputación de la aldea', 'Si te desmayás, alguien que ayudaste cuida tu bolsa: no se pierde aunque pase el tiempo']],
-  ['ale', 'Alegría', 'Crece cumpliendo misiones y animando a otros.', ['+5% de experiencia', 'Las estrellas de los minijuegos valen más', '+10% de experiencia', '30 s de carrera rápida al completar una misión', '+15% de experiencia y compañeros más animados']],
-  ['paz', 'Paz', 'Crece jugando los minijuegos con golpes.', ['Parpadeo de invulnerabilidad de 0,5 s tras un golpe', '1 s de invulnerabilidad', '+1 corazón', '2 s de invulnerabilidad', 'Escudo de paz: el primer golpe de cada partida no resta']],
-  ['pac', 'Paciencia', 'Crece pescando. Cuanto más alta, más rápido pescás y mejores cañas y redes podés usar.', ['Pescás un poco más rápido', 'Tus cañas y redes se gastan la mitad', 'Pescás más rápido', 'Cada cinco piezas sale un pez de más', 'Pescás mucho más rápido']],
-  ['gent', 'Gentileza', 'Crece tratando bien a la gente de las aldeas.', ['-5% en los precios', 'Te saludan primero y te dan pistas', '-10% en los precios', 'Te regalan comida', 'Misiones escondidas']],
-  ['gen', 'Bondad', 'Crece compartiendo pan y denarios.', ['Compartir duplica la reputación que ganás', 'Lo compartido a veces vuelve como regalo', 'Los necesitados te cuentan dónde hay lugares secretos', 'Compartir también suma Alegría', 'A veces aparece una canasta extra de pan']],
-  ['fid', 'Fidelidad', 'Crece volviendo cada día y terminando lo empezado.', ['Bonus de racha', '1 día de gracia en la racha', 'Bonus de racha mayor', 'Las misiones a medias nunca se pierden', 'Cofre semanal']],
-  ['dom', 'Control propio', 'Crece comiendo con medida y cuidando tus fuerzas.', ['-10% de hambre', 'Comer te llena más', '-20% de hambre', 'Si te desmayás, tenés 1 minuto más para buscar la bolsa', '-35% de hambre']]
+  ['amor', 'Amor', 'Crece ayudando.', ['+10% en misiones de ayuda', 'Los que ayudaste vuelven con una misión nueva', '+20% en misiones de ayuda', 'Tus ayudas suben la reputación de la aldea', 'Si te desmayás, alguien que ayudaste cuida tu bolsa: no se pierde aunque pase el tiempo', 'Pose nueva: Brazos abiertos · +15 de experiencia por ayuda', 'Prenda única: la Túnica del amor y el título «Fruto de Amor» · +20 de experiencia por ayuda']],
+  ['ale', 'Alegría', 'Crece cumpliendo misiones y animando a otros.', ['+5% de experiencia', 'Las estrellas de los minijuegos valen más', '+10% de experiencia', '30 s de carrera rápida al completar una misión', '+15% de experiencia y compañeros más animados', 'Pose nueva: Festejar · +20% de experiencia', 'Prenda única: el Turbante de fiesta y el título «Fruto de Alegría» · +25% de experiencia']],
+  ['paz', 'Paz', 'Crece jugando los minijuegos con golpes.', ['Parpadeo de invulnerabilidad de 0,5 s tras un golpe', '1 s de invulnerabilidad', '+1 corazón', '2 s de invulnerabilidad', 'Escudo de paz: el primer golpe de cada partida no resta', 'Pose nueva: Orar en paz', 'Prenda única: el Manto de paz y el título «Fruto de Paz»']],
+  ['pac', 'Paciencia', 'Crece pescando. Cuanto más alta, más rápido pescás y mejores cañas y redes podés usar.', ['Pescás un poco más rápido', 'Tus cañas y redes se gastan la mitad', 'Pescás más rápido', 'Cada cinco piezas sale un pez de más', 'Pescás mucho más rápido', 'Pose nueva: Esperar sentado · tus cañas se gastan un cuarto', 'Prenda única: el Tocado del pescador paciente y el título «Fruto de Paciencia» · cada tres piezas sale un pez de más']],
+  ['gent', 'Gentileza', 'Crece tratando bien a la gente de las aldeas.', ['-5% en los precios', 'Te saludan primero y te dan pistas', '-10% en los precios', 'Te regalan comida', 'Misiones escondidas', 'Pose nueva: Saludar · -15% en los precios', 'Prenda única: las Vendas suaves y el título «Fruto de Gentileza»']],
+  ['gen', 'Bondad', 'Crece compartiendo pan y denarios.', ['Compartir duplica la reputación que ganás', 'Lo compartido a veces vuelve como regalo', 'Los necesitados te cuentan dónde hay lugares secretos', 'Compartir también suma Alegría', 'A veces aparece una canasta extra de pan', 'Pose nueva: Dar gracias', 'Prenda única: las Sandalias del samaritano y el título «Fruto de Bondad»']],
+  ['fid', 'Fidelidad', 'Crece volviendo cada día y terminando lo empezado.', ['Bonus de racha', '1 día de gracia en la racha', 'Bonus de racha mayor', 'Las misiones a medias nunca se pierden', 'Cofre semanal', 'Pose nueva: De rodillas', 'Prenda única: la Túnica fiel y el título «Fruto de Fidelidad»']],
+  ['dom', 'Control propio', 'Crece comiendo con medida y cuidando tus fuerzas.', ['-10% de hambre', 'Comer te llena más', '-20% de hambre', 'Si te desmayás, tenés 1 minuto más para buscar la bolsa', '-35% de hambre', 'Pose nueva: Pensar en calma · -40% de hambre', 'Prenda única: el Calzón del caminante sobrio y el título «Fruto de Control propio» · -45% de hambre']]
 ];
 const BODY = [['fue', 'Fuerza', 'Talás y picás más rápido, y te deja usar mejores hachas y picos.'], ['agi', 'Agilidad', 'Caminás más rápido y saltás más alto.']];
 const SABI = ['sab', 'Sabiduría', 'Crece escuchando a los testigos, descubriendo lugares secretos, mirando los objetos del camino, leyendo la Escritura, respondiendo a Teófilo y superando desafíos.', ['+40% de experiencia por trabajar', '+80% de experiencia por trabajar', '+120% de experiencia por trabajar', '+160% de experiencia por trabajar', '+200% de experiencia por trabajar']];
@@ -6983,7 +6993,14 @@ const attrList = () => (S && S.hx) || (G().branch === 'ados') ? ATTRH : ATTRK;
 const ATTR = new Proxy([], { get: (o, k) => { const L = attrList(), v = L[k]; return typeof v === 'function' ? v.bind(L) : v; } });
 // valor del fruto (0–50) y escalón (0–5)
 // atributos de 0 a 100: fv valor total (puntos + práctica), atr escala 0..10 para efectos, ft escalón 0..5 (uno cada 20)
-const fv = k => Math.min(100, (atP()[k] || 0) + axLv(k)), ft = k => Math.min(5, Math.floor(fv(k) / 20));
+const fv = k => Math.min(100, (atP()[k] || 0) + axLv(k)), ft = k => { const t = Math.min(5, Math.floor(fv(k) / 20)); if (t < 5 || k === 'sab') return t; const h = (atP().fr7 || {})[k] || 0; return h >= 7 ? 7 : h >= 6 ? 6 : 5; };
+/* escalones 6 y 7 de los frutos: el 6 se gana practicando el fruto cuando ya está al máximo; el 7 (épico) pide además una misión épica de ese fruto */
+const FR6 = 200, FR_POSE = { amor: 'fr_amor', ale: 'fr_ale', paz: 'fr_paz', pac: 'fr_pac', gent: 'fr_gent', gen: 'fr_gen', fid: 'fr_fid', dom: 'fr_dom' };
+function frEpicDone(k) { const P = epP(); return Object.entries(EPIC).some(([id, E]) => E.req && E.req.fr === k && P[id] && P[id].done); }
+function frCheck(k) { if (!S || !S.hx || !FR_POSE[k]) return; const a = atP(); a.fr7 = a.fr7 || {}; const h = a.fr7[k] || 0, nm = FRUITS.find(x => x[0] === k)[1];
+  if (h < 6 && fv(k) >= 100 && ((a.ov && a.ov[k]) || 0) >= FR6) { a.fr7[k] = 6; G().save(); glowAdd(80, 'fruto'); try { misPop(`✨ ${nm}: escalón 6`, 'Pose nueva desbloqueada en Resplandor'); tone3d(); } catch (e) {} svToast(`✨ Tu ${nm.toLowerCase()} llegó al escalón 6. Tenés una pose nueva en Resplandor. Para el escalón 7, terminá una misión épica de ${nm.toLowerCase()}.`); }
+  if ((a.fr7[k] || 0) === 6 && frEpicDone(k)) { a.fr7[k] = 7; const s = svP(); s.titles = s.titles || []; const ti = 'Fruto de ' + nm; if (!s.titles.includes(ti)) s.titles.push(ti); G().save(); glowAdd(150, 'fruto'); try { gearGive(GEAR.find(g => g.id === 'fr7_' + k), `${nm}: escalón 7`); } catch (e) {} svToast(`✨ ¡${nm} en el escalón 7! Ganaste una prenda única y el título «${ti}».`); }
+}
 const RECIPES = [
   { id: 'plank', name: 'Tablones', out: { plank: 1 }, need: { wood: 2 }, tool: 'axe', desc: 'Cortá la madera en tablones para construir.' },
   { id: 'block', name: 'Bloques de piedra', out: { block: 1 }, need: { stone: 2 }, tool: 'pick', desc: 'Tallá la piedra en bloques.' },
@@ -7199,6 +7216,7 @@ function attrMigrate() {
 function axGain(k, n) { if (legOn('sacerdote')) n *= 1.25;
   if (!AXN[k] || !S) return; if (G() && G().khLocked && G().khLocked()) return; /* modo recorrido: los atributos no crecen */ const a = axP(); a.xp[k] = (a.xp[k] || 0) + n; let up = false;
   while (a.xp[k] >= axNeed(a.xl[k] || 0) && (a.xl[k] || 0) < 30) { a.xp[k] -= axNeed(a.xl[k] || 0); a.xl[k] = (a.xl[k] || 0) + 1; up = true; }
+  if (FR_POSE[k] && fv(k) >= 100) { a.ov = a.ov || {}; a.ov[k] = (a.ov[k] || 0) + n; if (a.ov[k] >= FR6 && !((a.fr7 || {})[k] >= 6)) frCheck(k); }
   axFloat(up ? `+1 ${AXN[k]}` : `+${n} exp. ${AXN[k]}`, up); if (up) { G().toast(`💪 Tu ${AXN[k]} subió a ${(a[k] || 0) + a.xl[k]} de tanto practicar.`); G().save(); }
   else { AXS.dirty = (AXS.dirty || 0) + 1; if (AXS.dirty > 6) { AXS.dirty = 0; G().save(); } }
 }
@@ -7247,7 +7265,7 @@ function attrSync() {
 async function attrOpen() { try { if (document.getElementById('view3d').hidden) await show3d(true); } catch (e) {} if (S) setTimeout(() => openBag('at'), 200); }
 function ptsFree() { const a = atP(); return Math.max(0, (Math.min(LV_MAX, lvlNow()) - 1) * ATTR_PER_LV - (a.spent || 0)); }
 function humHalo() { const g = new THREE.Group(), r = new THREE.Mesh(new THREE.TorusGeometry(.32, .025, 8, 32), new THREE.MeshBasicMaterial({ color: '#FFD25E', transparent: true, opacity: .85, blending: THREE.AdditiveBlending, depthWrite: false })); r.rotation.x = Math.PI / 2; r.position.y = 2.15; g.add(r); g.name = 'humHalo'; return g; }
-function svXP(n) { const p = G().P(); if (legOn('coronavida')) n *= 1.25; p.bonus = (p.bonus || 0) + Math.round(n * (S && S.hx ? 1 + [0, .05, .05, .1, .1, .15][ft('ale')] + atr('sab') * .2 : 1 + atr('sab') * .2)); }
+function svXP(n) { const p = G().P(); if (legOn('coronavida')) n *= 1.25; p.bonus = (p.bonus || 0) + Math.round(n * (S && S.hx ? 1 + [0, .05, .05, .1, .1, .15, .2, .25][ft('ale')] + atr('sab') * .2 : 1 + atr('sab') * .2)); }
 function svAdd(k, n) { if (k === 'money' && n > 0 && G() && G().khLocked && G().khLocked()) return; if (k === 'money' && n > 0 && legOn('samuel')) n = Math.round(n * 1.25); const s = svP(); if (n > 0 && R7_OF[k] && R7_OF[k][0] === 'fish') s.fishN = (s.fishN || 0) + n; s.inv[k] = Math.max(0, (s.inv[k] || 0) + n); }
 /* con los Brazaletes de Bezalel, los materiales (no los denarios) cuestan la mitad */
 const svN = (k, n) => k !== 'money' && n > 0 && legOn('bezalel') ? Math.ceil(n / 2) : n;
@@ -7556,10 +7574,10 @@ function t7Tick(dt) {
   if (w.hits < w.need) return; w.hits = 0; w.need = t7Need(w.d, w.tier); w.n++;
   const g = T.res, key = r7k(g, w.tier), lv = ofiLv(T.of); let amt = (w.tier <= 2 ? 2 : 1) + (lv >= 22 ? 1 : 0);
   if (w.k === 'fish' && legOn('pescahombres')) amt *= 2;
-  if (w.k === 'fish' && ft('pac') >= 4 && w.n % 5 === 0) amt += 1;
+  if (w.k === 'fish' && ft('pac') >= 4 && w.n % (ft('pac') >= 7 ? 3 : 5) === 0) amt += 1;
   svAdd(key, amt); ofiXP(T.of, 3 + w.tier * 2); svXP(1 + Math.floor(w.tier / 2)); if (w.k === 'fish') axGain('pac', 2);
   try { pkPop(`${R7[g].ic} +${amt} ${lc1(RES[key][0])}`); } catch (e) {}
-  const broke = t7Wear(w.type, w.tl, (w.d === -1 ? 5 : 1) * (w.k === 'fish' && ft('pac') >= 2 ? .5 : 1));
+  const broke = t7Wear(w.type, w.tl, (w.d === -1 ? 5 : 1) * (w.k === 'fish' && ft('pac') >= 2 ? (ft('pac') >= 6 ? .25 : .5) : 1));
   if (w.k !== 'fish') { st.t7left = st.t7left || new Map(); const lk = w.k + w.i, left = (st.t7left.has(lk) ? st.t7left.get(lk) : 3 + (w.i % 6)) - 1;
     if (left <= 0) { st.t7left.delete(lk); if (w.k === 'tree') { treeShow(w.i, false); st.felled.set(w.i, T7_BACK.tree[w.tier - 1] * 60); } else { rockShow(w.i, false); st.mined.set(w.i, T7_BACK.rock[w.tier - 1] * 60); }
       G().save(); if (broke) { t7Stop(`💥 Tu ${lc1(t7Name(w.type, w.tl))} se gastó del todo y se rompió.`); return; } t7Stop(w.k === 'tree' ? `🪵 Se terminó el árbol: sacaste ${w.n} ${w.n > 1 ? 'piezas' : 'pieza'}. Vuelve a crecer en unos minutos.` : `🪨 Se terminó la roca: sacaste ${w.n} ${w.n > 1 ? 'piezas' : 'pieza'}. Se recupera en unos minutos.`); return; }
@@ -7643,17 +7661,52 @@ const EPIC = {
       { k: 'give', at: 'templo', need: { canamo: 8, pelonegro: 8 }, t: 'Traele al sacerdote 8 de cáñamo de la costa de Tiro y 8 de pelo de cabra negra.', ok: 'El sacerdote: «El pelo de cabra es para la carpa de afuera, como en el desierto (Éxodo 26:7). Mañana andá a En-gadi a buscar el mejor lino».' },
       { k: 'act', at: 'engadi', wait: 1, a: 'lino', anim: ['PickUp_Table', 'M_Kneeling_Idle'], label: 'Juntar el lino junto al oasis', t: 'Andá al oasis de En-gadi y juntá el lino que crece junto al agua.', ok: 'Junto al agua de En-gadi crece el lino más alto. Te llevás 4 de lino del tabernáculo.', give: { linotab: 4 } },
       { k: 'quiz', at: 'templo', wait: 1, q: '¿A quién llenó Dios de sabiduría para hacer el tabernáculo?', o: ['A Bezalel', 'A Goliat', 'Al faraón'], c: 0 }
+    ] },
+  hijo: { name: 'La fiesta del hijo que volvió', giver: 'posada', prize: 'el escalón 7 de Alegría', ref: 'Lucas 15:11-32', title: 'Invitado a la fiesta', req: { fr: 'ale', frLv: 6 },
+    steps: [
+      { k: 'talk', at: 'posada', t: 'El posadero: «Un padre de Betania espera todos los días a su hijo, que se fue lejos. Si vuelve, quiere hacer fiesta: “Comamos y celebremos” (Lucas 15:23). ¿Ayudás a preparar todo?».', b: 'Ayudo' },
+      { k: 'give', at: 'posada', need: { pantrigo: 6, cooked: 6 }, t: 'Traele al posadero 6 panes de trigo y 6 pescados asados para la fiesta.', ok: 'El posadero: «Con esto alcanza para todo el pueblo. Mañana andá a Betania: dicen que alguien viene por el camino».' },
+      { k: 'act', at: 'betania', wait: 1, a: 'fiesta', anim: ['M_Cheering', 'M_Clapping'], label: 'Salir al camino a recibirlo', t: 'Andá a Betania y salí al camino con el padre.', ok: 'El padre lo ve de lejos, corre, lo abraza y lo besa (Lucas 15:20). Empieza la fiesta, con música y danzas.' },
+      { k: 'quiz', at: 'posada', wait: 1, q: '¿Qué hizo el padre cuando vio venir de lejos a su hijo?', o: ['Corrió, lo abrazó y lo besó', 'Le cerró la puerta', 'Le pidió que trabajara como esclavo'], c: 0 }
+    ] },
+  tormenta: { name: 'Calma en la tormenta', giver: 'betsaida', prize: 'el escalón 7 de Paz', ref: 'Marcos 4:35-41', title: 'Corazón en calma', req: { fr: 'paz', frLv: 6 },
+    steps: [
+      { k: 'talk', at: 'betsaida', t: 'Pedro: «Una noche cruzábamos el lago y se levantó una tormenta enorme. Jesús dormía en la popa. Lo despertamos, y él le dijo al mar: “¡Silencio! ¡Cálmate!” (Marcos 4:39). ¿Me acompañás esta noche al muelle de Magdala?».', b: 'Te acompaño' },
+      { k: 'act', at: 'pier', a: 'noche', label: 'Cruzar el lago de noche', t: 'Andá al muelle de Magdala y cruzá el lago de noche con Pedro.', ok: 'Las olas golpean la barca y el viento ruge. Te acordás de sus palabras: «¿Por qué tienen miedo? ¿Todavía no tienen fe?» (Marcos 4:40). De a poco, el corazón se calma.' },
+      { k: 'give', at: 'betsaida', wait: 1, need: { cooked: 4 }, t: 'Llevale a Pedro 4 pescados asados para desayunar juntos, en Betsaida.', ok: 'Pedro: «Después de esa noche aprendí que con él en la barca no hay que tener miedo. Volvé mañana».' },
+      { k: 'quiz', at: 'betsaida', wait: 1, q: '¿Qué pasó cuando Jesús le habló al viento y al mar?', o: ['Se calmaron por completo', 'La tormenta creció', 'La barca se hundió'], c: 0 }
+    ] },
+  esperar: { name: 'Esperar en Jope', giver: 'jope', prize: 'el escalón 7 de Paciencia', ref: 'Hechos 10:1-23', title: 'El que sabe esperar', req: { fr: 'pac', frLv: 6 },
+    steps: [
+      { k: 'talk', at: 'jope', t: 'Un pescador del puerto: «Pedro se quedó muchos días en Jope, en la casa de Simón el curtidor (Hechos 9:43). Mientras esperaba, Dios le habló. Acá se aprende a esperar: el atún no viene apurado».', b: 'Quiero aprender' },
+      { k: 'give', at: 'jope', need: { fish6: 10 }, t: 'Pescá 10 doradas en la costa del Mediterráneo y traéselas al pescador del puerto de Jope.', ok: 'El pescador: «Bien, tenés paciencia. Mañana subí a orar a la azotea de la casa de Simón, como Pedro».' },
+      { k: 'act', at: 'jope', wait: 1, a: 'azotea', anim: ['M_Praying', 'M_Kneeling_Idle'], label: 'Orar en la azotea, como Pedro', t: 'Andá a Jope y orá en la azotea de la casa de Simón el curtidor.', ok: 'Mientras orás, llegan unos hombres preguntando por Pedro: los mandaba Cornelio, un capitán romano. Pedro esperó, escuchó y fue con ellos (Hechos 10:17-23). Los pescadores te regalan 3 atunes de mar abierto.', give: { fish7: 3 } },
+      { k: 'quiz', at: 'jope', wait: 1, q: '¿Qué le enseñó Dios a Pedro en Jope con la visión del lienzo?', o: ['Que la buena noticia también era para los que no eran judíos', 'Que no comiera más pescado', 'Que se quedara a vivir en Jope'], c: 0 }
+    ] },
+  tabita: { name: 'Tabita, la que cosía para todos', giver: 'tejedora', prize: 'el escalón 7 de Gentileza', ref: 'Hechos 9:36-42', title: 'Manos que sirven', req: { fr: 'gent', frLv: 6 },
+    steps: [
+      { k: 'talk', at: 'tejedora', t: 'La tejedora: «En Jope vivía Tabita, que hacía túnicas y vestidos para las viudas (Hechos 9:39). Quiero seguir su ejemplo. ¿Me ayudás?».', b: 'Te ayudo' },
+      { k: 'give', at: 'tejedora', need: { lanagal: 8, linofino: 4 }, t: 'Llevale a la tejedora 8 de lana de Galilea y 4 de lino fino.', ok: 'La tejedora: «Con esto hacemos túnicas para varias viudas. Mañana llevalas a Jope».' },
+      { k: 'act', at: 'jope', wait: 1, a: 'viudas', anim: ['M_Thankful', 'M_Talking'], label: 'Repartir las túnicas a las viudas', t: 'Andá a Jope y repartí las túnicas entre las viudas.', ok: 'Las viudas te muestran las túnicas que les había hecho Tabita y se alegran con las nuevas. Pedro oró, y Dios le devolvió la vida a Tabita; muchos creyeron en el Señor (Hechos 9:40-42).' },
+      { k: 'quiz', at: 'tejedora', wait: 1, q: '¿Por qué era conocida Tabita en Jope?', o: ['Porque hacía buenas obras y ayudaba a los pobres', 'Porque era la más rica de la ciudad', 'Porque era pescadora'], c: 0 }
+    ] },
+  samaritano: { name: 'El buen samaritano', giver: 'posada', prize: 'el escalón 7 de Bondad', ref: 'Lucas 10:25-37', title: 'Prójimo de todos', req: { fr: 'gen', frLv: 6 },
+    steps: [
+      { k: 'talk', at: 'posada', t: 'El posadero: «Hace tiempo un samaritano me trajo a un hombre herido y me dio dos denarios: “Cuídalo, y lo que gastes de más te lo pagaré a mi regreso” (Lucas 10:35). Hoy hay otro herido en el camino a Jericó».', b: 'Voy' },
+      { k: 'act', at: 'jerico', a: 'herido', anim: ['M_Kneeling_Idle', 'M_Kneeling_Inspecting'], label: 'Vendar al herido del camino', t: 'Andá hasta Jericó y buscá al herido del camino.', ok: 'Le limpiás las heridas con aceite y vino y lo vendás, como hizo el samaritano (Lucas 10:34). Lo llevás despacio hasta la posada.' },
+      { k: 'give', at: 'posada', need: { aceite: 2, money: 2 }, t: 'Llevale al posadero 2 de aceite y 2 denarios para que cuide al herido.', ok: 'El posadero: «Dos denarios, igual que aquella vez. Yo lo cuido. Volvé mañana».' },
+      { k: 'quiz', at: 'posada', wait: 1, q: '¿Quién fue el prójimo del hombre herido?', o: ['El que tuvo compasión de él', 'El que pasó de largo', 'El que lo miró desde lejos'], c: 0 }
     ] }
 };
-const FRN = { fid: 'Fidelidad', amor: 'Amor', dom: 'Control propio' };
+const FRN = { fid: 'Fidelidad', amor: 'Amor', dom: 'Control propio', ale: 'Alegría', paz: 'Paz', pac: 'Paciencia', gent: 'Gentileza', gen: 'Bondad' };
 const epPrize = E => E.ty ? lc1(t7Name(E.ty, 7)) : E.prize;
 function epP() { const s = svP(); s.epic = s.epic || {}; return s.epic; }
 const epDay = () => Math.floor(svP().play / SV.DAY);
-function epReqTxt(E) { const r = E.req, miss = []; if (ofiLv(r.of) < r.lv) miss.push(`${OFI[r.of].name.toLowerCase()} nivel ${r.lv} (tenés ${ofiLv(r.of)})`); if (fv(r.at) < r.v) miss.push(`${ATN[r.at]} ${r.v} (tenés ${Math.floor(fv(r.at))})`); if (ft(r.fr) < 3) miss.push(`${FRN[r.fr]} en escalón 3 (tenés ${ft(r.fr)})`); return miss; }
+function epReqTxt(E) { const r = E.req, miss = []; if (r.of && ofiLv(r.of) < r.lv) miss.push(`${OFI[r.of].name.toLowerCase()} nivel ${r.lv} (tenés ${ofiLv(r.of)})`); if (r.at && fv(r.at) < r.v) miss.push(`${ATN[r.at]} ${r.v} (tenés ${Math.floor(fv(r.at))})`); if (ft(r.fr) < (r.frLv || 3)) miss.push(`${FRN[r.fr]} en escalón ${r.frLv || 3} (tenés ${ft(r.fr)})`); return miss; }
 /* el paso que toca ahora, si se puede hacer hoy */
 function epStep(id) { const E = EPIC[id], st = epP()[id] || { s: 0, d: -1 }; if (st.done) return null; const sp = E.steps[st.s]; if (!sp) return null; return { E, st, sp, today: !sp.wait || epDay() > st.d }; }
 function epAdvance(id, msg) { const P = epP(), E = EPIC[id], st = P[id] || { s: 0, d: -1 }; st.s++; st.d = epDay(); P[id] = st;
-  if (st.s >= E.steps.length) { st.done = 1; if (E.ty) t7Grant(E.ty, 7); const s = svP(); s.titles = s.titles || []; if (!s.titles.includes(E.title)) s.titles.push(E.title); svXP(150); try { pkPop('✨ ' + epPrize(E)); } catch (e) {} svToast(`✨ ¡Terminaste «${E.name}»! Ganaste ${epPrize(E)}${E.ty ? ', que no se gasta nunca,' : ''} y el título «${E.title}».`); }
+  if (st.s >= E.steps.length) { st.done = 1; if (E.ty) t7Grant(E.ty, 7); setTimeout(() => { try { frCheck(E.req.fr); } catch (e) {} }, 3500); const s = svP(); s.titles = s.titles || []; if (!s.titles.includes(E.title)) s.titles.push(E.title); svXP(150); try { pkPop('✨ ' + epPrize(E)); } catch (e) {} svToast(`✨ ¡Terminaste «${E.name}»! Ganaste ${epPrize(E)}${E.ty ? ', que no se gasta nunca,' : ''} y el título «${E.title}».`); }
   else if (msg) svToast(msg); G().save(); svUI(); }
 /* sección de misión épica dentro del puesto */
 function epHTML(shop) {
@@ -8447,7 +8500,7 @@ function tlMix(draw) {
 
 /* ---------- hambre, desmayo y la bolsa en el piso ---------- */
 function svTickHunger(dt) {
-  const s = svP(); if (S.down) return; s.play += dt; const drain = S.hx ? 1 - [0, .1, .1, .2, .2, .35][ft('dom')] : 1 - Math.min(.6, atr('dom') * .07); s.sat -= dt * drain * (legOn('jose') ? .7 : 1);
+  const s = svP(); if (S.down) return; s.play += dt; const drain = S.hx ? 1 - [0, .1, .1, .2, .2, .35, .4, .45][ft('dom')] : 1 - Math.min(.6, atr('dom') * .07); s.sat -= dt * drain * (legOn('jose') ? .7 : 1);
   if (s.sat <= SV.WARN && (!s.warned || s.play - s.warned > 120)) { s.warned = s.play; svToast('🍞 Tenés hambre. Necesitás comer pronto: frutos de los granados o pescado asado.'); }
   if (s.sat <= 0) svFaint();
 }
@@ -8540,7 +8593,7 @@ function invSurv(body) {
   if (st) st.onclick = () => { if (!nearHome()) { svToast('Tenés que estar en tu casa para usar el cofre.'); return; } Object.entries(s.inv).forEach(([k, n]) => { s.chest[k] = (s.chest[k] || 0) + n; }); s.inv = {}; G().save(); invSurv(body); };
   if (tk) tk.onclick = () => { if (!nearHome()) { svToast('Tenés que estar en tu casa para usar el cofre.'); return; } Object.entries(s.chest).forEach(([k, n]) => svAdd(k, n)); s.chest = {}; G().save(); invSurv(body); };
 }
-function perksHtml(k) { const f = FRUITS.find(x => x[0] === k) || (k === 'sab' ? SABI : null); if (!f) return ''; const t = ft(k); return `<span class="sv-perk">${t ? `✓ ${esc(f[3][t - 1])}` : ''}${t < 5 ? `${t ? ' · ' : ''}Con ${(t + 1) * 20}: ${esc(f[3][t])}` : ''}</span>`; }
+function perksHtml(k) { const f = FRUITS.find(x => x[0] === k) || (k === 'sab' ? SABI : null); if (!f) return ''; const t = ft(k), ov = Math.min(FR6, Math.round((atP().ov || {})[k] || 0)); const nx = t < 5 ? `Con ${(t + 1) * 20}: ${esc(f[3][t])}` : !FR_POSE[k] || t >= 7 ? '' : t === 5 ? `Escalón 6, practicando este fruto al máximo (${ov} de ${FR6}): ${esc(f[3][5])}` : `Escalón 7, con una misión épica de ${esc(f[1].toLowerCase())}: ${esc(f[3][6])}`; return `<span class="sv-perk">${t ? `✓ ${esc(f[3][t - 1])}` : ''}${nx ? `${t ? ' · ' : ''}${nx}` : ''}</span>`; }
 function invAttr(body) {
   const AP = invAttr.pend || (invAttr.pend = {}), a0 = atP(), pt = Object.keys(AP).reduce((x, k) => x + atCostTo(a0[k] || 0, (a0[k] || 0) + AP[k]), 0);
   const a = atP(), free = ptsFree() - pt, lv = Math.min(LV_MAX, lvlNow()), h = a.hum || 0;
@@ -8799,7 +8852,7 @@ const SERV_PERKS = [
 ];
 function servV() { return svOn() ? (atP().serv || 0) : 0; }
 function servAdd(n, why) { const a = atP(); a.serv = (a.serv || 0) + n; G().save(); if (a.serv >= 15 && GBY.servidor && !gearState().own.includes('servidor')) gearGive(GBY.servidor, 'Por tu servicio'); }
-function price(n) { let f = servV() >= 3 ? .9 : 1; if (S && S.hx) { f *= [1, .95, .95, .9, .9, .9][ft('gent')]; const v = vilNearest(60); if (v && repStars(v.name) >= 4) f *= .95; if (S.haggle) f *= .8; } return Math.max(1, Math.round(n * f)); }
+function price(n) { let f = servV() >= 3 ? .9 : 1; if (S && S.hx) { f *= [1, .95, .95, .9, .9, .9, .85, .85][ft('gent')]; const v = vilNearest(60); if (v && repStars(v.name) >= 4) f *= .95; if (S.haggle) f *= .8; } return Math.max(1, Math.round(n * f)); }
 function money() { return svP().inv.money || 0; }
 
 /* puestos del mercado y mendigos a lo largo del camino */
