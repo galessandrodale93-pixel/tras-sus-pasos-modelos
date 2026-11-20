@@ -7455,7 +7455,7 @@ function svNear() {
 function svWaterNear() {
   /* devuelve el nivel del pez que hay en esa agua (0 si no hay agua): la orilla del lago 1, el Jordán 2, el mar abierto del lago 3, la orilla de Juan 21 4 */
   const a = S.av.position; let t = 0; if (Z7.pier && (Z7.pier.x - a.x) ** 2 + (Z7.pier.z - a.z) ** 2 < 6) return 5; if (Z7.mpier && (Z7.mpier.x - a.x) ** 2 + (Z7.mpier.z - a.z) ** 2 < 7) return 7;
-  for (const b of WATER.basins) if (b.med) { const d = Math.hypot(a.x - b.x, a.z - b.z); if (d > b.r * .8 && d < b.r * 1.02 + 3 && S.W && S.W.hAt(a.x, a.z) < 2.5) return 6; } /* la costa del Mediterráneo: doradas; desde el muelle de Jope, atunes */ for (const p of (S.pois || [])) {
+  for (const b of WATER.basins) if (b.med) { const d = Math.hypot(a.x - b.x, a.z - b.z); if (d > b.r * .8 && d < b.r * 1.02 + 3 && S.W && S.W.hAt(a.x, a.z) < .9) return 6; } /* la costa del Mediterráneo: doradas; desde el muelle de Jope, atunes */ for (const p of (S.pois || [])) {
     if (p.k === 'lake') { const d = Math.hypot(a.x - p.x, a.z - p.z); if (d > 24 && d < 38) t = Math.max(t, 1); }
     if (p.k === 'lake') for (const b of WATER.basins) if (b.sea) { const d = Math.hypot(a.x - b.x, a.z - b.z); if (d > b.r * .86 - 4 && d < b.r * 1.05 + 3) t = Math.max(t, Math.hypot(b.x - p.x, b.z - p.z) < 120 ? 3 : 4); }
     if (p.k === 'shore') { const d = Math.hypot(a.x - (p.x + p.side * 7), a.z - p.z); if (d < 11.5) t = Math.max(t, 4); }
@@ -7996,9 +7996,10 @@ function bkStop(w) { if (w.resumed) { svToast('Paraste. La masa sigue lista para
 /* lugares del centro del mapa con puntos de nivel 3 y 4 */
 const Z7_POI = [
   { poi: 'village', name: 'Caná', L: [['uvas', 3, 'podadera', 4], ['barro', 4, 'pala', 3]] },
-  { poi: 'taller', L: [['aceitunas', 3, 'vara', 4]] },
+  { poi: 'taller', L: [['aceitunas', 3, 'vara', 4], ['trigo', 1, 'hoz', 4]] },
+  { poi: 'village', name: 'Emaús', L: [['trigo', 2, 'hoz', 3]] },
   { poi: 'roofhouse', L: [['aceitunas', 4, 'vara', 3], ['trigo', 3, 'hoz', 3], ['lana', 4, 'tijera', 3], ['lino', 4, 'aguja', 3]] },
-  { poi: 'pastores', L: [['lino', 3, 'aguja', 4]] },
+  { poi: 'pastores', L: [['lino', 3, 'aguja', 4], ['trigo', 1, 'hoz', 3], ['trigo', 2, 'hoz', 3]] },
   { poi: 'lake', L: [['lana', 5, 'tijera', 2, { lana: 1 }]] }
 ];
 function z7Central(scene, W) {
@@ -8828,7 +8829,7 @@ Object.keys(R7).forEach(g => { for (let t = 1; t <= 7; t++) SELL[r7k(g, t)] = R7
 const SHOPS = {
   carpintero: { name: 'La carpintería', buy: [['t', 'axe', 15], ['t', 'pick', 18], ['r', 'plank', 4]], sell: ['wood', 'plank', 'banquito', 'yugo', 'arado'] },
   alfarero: { name: 'El alfarero', buy: [['r', 'barro', 2], ['r', 'block', 4], ['t', 'flint', 6]], sell: ['barro', 'plato', 'vasija', 'cantaro', 'adobe', 'vpint', 'anfora', 'stone', 'block', 'piedramoler', 'tinaja', 'dintel'] },
-  panadero: { name: 'La panadería', buy: [['r', 'semilla', 1], ['r', 'harina', 3], ['r', 'bread', 2], ['r', 'levadura', 3], ['r', 'piedramoler', 10]], sell: ['trigo', 'harina', 'bread', 'pancebada', 'pantrigo', 'azimo', 'torta', 'panezeq', 'cesta', 'gavilla', 'fruit', 'lemon'] },
+  panadero: { name: 'La panadería', buy: [['r', 'semilla', 1], ['r', 'cebada', 1], ['r', 'harina', 3], ['r', 'bread', 2], ['r', 'levadura', 3], ['r', 'piedramoler', 10]], sell: ['trigo', 'harina', 'bread', 'pancebada', 'pantrigo', 'azimo', 'torta', 'panezeq', 'cesta', 'gavilla', 'fruit', 'lemon'] },
   pescador: { name: 'La casa del pescador', buy: [['t', 'rod', 12], ['t', 'net', 20], ['r', 'cooked', 4]], sell: ['fish', 'cooked', 'salado'] },
   tejedora: { name: 'La tejedora', buy: [['r', 'lana', 2], ['r', 'hilo', 2], ['g', 'c', 10], ['g', 'r', 30]], sell: ['lana', 'lino', 'hilo', 'tela', 'lienzo', 'manto', 'tunica', 'lona', 'carpa', 'cortina'] },
   posada: { name: 'La posada', buy: [['r', 'bread', 2], ['r', 'cooked', 4], ['r', 'pasas', 3]], sell: ['fruit', 'fish', 'vino', 'vinofiesta', 'aceite', 'pasas', 'bread'] },

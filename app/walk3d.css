@@ -1512,3 +1512,6 @@ body:has(#v3place:not([hidden])) .v3think,body:has(#v3place:not([hidden])) .v3hi
 .sv-do span{display:inline-block;max-width:min(40vw,320px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
 .ep-o{display:grid;gap:6px;margin-top:6px}.ep-o button{text-align:left;white-space:normal}
 body.v3on .v3surv.kdo .sv-do{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+
+/* en pantallas angostas el botón de acción va arriba de los botones redondos de comida y construir, sin taparlos */
+@media (max-width:640px){body.v3on .v3surv .sv-do{bottom:calc(84px + env(safe-area-inset-bottom,0px))}body.v3on .v3surv.kdo .sv-do{bottom:calc(140px + env(safe-area-inset-bottom,0px))}}
