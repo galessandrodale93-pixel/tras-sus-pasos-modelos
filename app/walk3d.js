@@ -7005,8 +7005,8 @@ const fv = k => Math.min(100, (atP()[k] || 0) + axLv(k)), ft = k => { const t = 
 const FR6 = 200, FR_POSE = { amor: 'fr_amor', ale: 'fr_ale', paz: 'fr_paz', pac: 'fr_pac', gent: 'fr_gent', gen: 'fr_gen', fid: 'fr_fid', dom: 'fr_dom' };
 function frEpicDone(k) { const P = epP(); return Object.entries(EPIC).some(([id, E]) => E.req && E.req.fr === k && P[id] && P[id].done); }
 function frCheck(k) { if (!S || !S.hx || !FR_POSE[k]) return; const a = atP(); a.fr7 = a.fr7 || {}; const h = a.fr7[k] || 0, nm = FRUITS.find(x => x[0] === k)[1];
-  if (h < 6 && fv(k) >= 100 && ((a.ov && a.ov[k]) || 0) >= FR6) { a.fr7[k] = 6; G().save(); glowAdd(80, 'fruto'); try { misPop(`✨ ${nm}: escalón 6`, 'Pose nueva desbloqueada en Resplandor'); tone3d(); } catch (e) {} svToast(`✨ Tu ${nm.toLowerCase()} llegó al escalón 6. Tenés una pose nueva en Resplandor. Para el escalón 7, terminá una misión épica de ${nm.toLowerCase()}.`); }
-  if ((a.fr7[k] || 0) === 6 && frEpicDone(k)) { a.fr7[k] = 7; const s = svP(); s.titles = s.titles || []; const ti = 'Fruto de ' + nm; if (!s.titles.includes(ti)) s.titles.push(ti); G().save(); glowAdd(150, 'fruto'); try { gearGive(GEAR.find(g => g.id === 'fr7_' + k), `${nm}: escalón 7`); } catch (e) {} svToast(`✨ ¡${nm} en el escalón 7! Ganaste una prenda única y el título «${ti}».`); }
+  if (h < 6 && fv(k) >= 100 && ((a.ov && a.ov[k]) || 0) >= FR6) { a.fr7[k] = 6; G().save(); glowAdd(80, 'fruto'); try { misPop(`✨ ${nm}: escalón 6`, 'Pose nueva desbloqueada en Resplandor'); tone3d(); } catch (e) {} svToast(`✨ Tu ${nm.toLowerCase()} llegó al escalón 6. Tenés una pose nueva en Resplandor. Para el escalón 7, terminá una misión épica de ${nm.toLowerCase()}.`, 'Tu fruto llegó al escalón seis. Tenés una pose nueva.'); }
+  if ((a.fr7[k] || 0) === 6 && frEpicDone(k)) { a.fr7[k] = 7; const s = svP(); s.titles = s.titles || []; const ti = 'Fruto de ' + nm; if (!s.titles.includes(ti)) s.titles.push(ti); G().save(); glowAdd(150, 'fruto'); try { gearGive(GEAR.find(g => g.id === 'fr7_' + k), `${nm}: escalón 7`); } catch (e) {} svToast(`✨ ¡${nm} en el escalón 7! Ganaste una prenda única y el título «${ti}».`, '¡Tu fruto llegó al escalón siete! Ganaste una prenda única.'); }
 }
 const RECIPES = [
   { id: 'plank', name: 'Tablones', out: { plank: 1 }, need: { wood: 2 }, tool: 'axe', desc: 'Cortá la madera en tablones para construir.' },
@@ -7231,7 +7231,7 @@ const AXS = {};
 // contadores de comportamiento (para el futuro descubrimiento de dones)
 function behav(k, n) { try { const p = G().P(); p.behav = p.behav || {}; p.behav[k] = (p.behav[k] || 0) + (n || 1); } catch (e) {} }
 function fidDaily() { try { if (!S || !S.hx) return; const p = G().P(), d = new Date().toISOString().slice(0, 10); if (p.fidDay === d) return; const prev = p.fidDay; p.fidDay = d; const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10), y2 = new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10);
-  p.fidRun = prev === y || (prev === y2 && fv('fid') >= 20) ? (p.fidRun || 0) + 1 : 1; axGain('fid', 4); const b = fv('fid') >= 30 ? 10 : fv('fid') >= 10 ? 5 : 0; if (b && p.fidRun > 1) { p.bonus = (p.bonus || 0) + b * Math.min(7, p.fidRun); setTimeout(() => svToast(`📅 Volviste ${p.fidRun} días seguidos: +${b * Math.min(7, p.fidRun)} puntos por tu Fidelidad.`), 4000); }
+  p.fidRun = prev === y || (prev === y2 && fv('fid') >= 20) ? (p.fidRun || 0) + 1 : 1; axGain('fid', 4); const b = fv('fid') >= 30 ? 10 : fv('fid') >= 10 ? 5 : 0; if (b && p.fidRun > 1) { p.bonus = (p.bonus || 0) + b * Math.min(7, p.fidRun); setTimeout(() => svToast(`📅 Volviste ${p.fidRun} días seguidos: +${b * Math.min(7, p.fidRun)} puntos por tu Fidelidad.`, 'Volviste otro día seguido. Tu fidelidad suma puntos.'), 4000); }
   if (fv('fid') >= 50) { const w = Math.floor(Date.now() / 6048e5); if (p.fidWeek !== w) { p.fidWeek = w; setTimeout(() => { svAdd('bread', 3); svAdd('money', 10); svToast('🎁 Cofre semanal de la Fidelidad: 3 panes y 10 denarios.'); }, 6000); } } behav('dias'); G().save(); } catch (e) {} }
 function axFloat(t, big) { const d = document.createElement('div'); d.className = 'v3ax' + (big ? ' up' : ''); d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 1700); }
 // mantener apretada la acción (E o el botón) repite el trabajo: talar, picar, pescar
@@ -7280,7 +7280,7 @@ function svHas(need) { const s = svP(), I = t7Inv(s.inv); return Object.entries(
 /* la madera, la piedra y el pescado se pagan empezando por lo más común */
 function svPay(need) { const s = svP(); Object.entries(need).forEach(([k, n]) => { n = svN(k, n); if (R7_POOL[k] && n > 0) { for (const x of R7_POOL[k]) { const u = Math.min(n, s.inv[x] || 0); if (u) { svAdd(x, -u); n -= u; } if (!n) break; } } else svAdd(k, -n); }); }
 function svTool(t) { const ty = t7Type(t); return ty ? t7Has(ty) : svP().tools.includes(t); }
-function svToast(t) { if (svToast.mute) return; G().toast(t); }
+function svToast(t, vk) { if (svToast.mute) return; if (vk) { G().toast(t, 0, 1); try { shVo(vk, 'narrador'); } catch (e) {} } else G().toast(t); } /* vk: frase fija con voz para los avisos que cambian según lo que hacés */
 function svGiveTool(t, why) {
   const s = svP(), ty = t7Type(t), tt = t === 'net' ? 2 : 1; if (ty ? !t7Grant(ty, tt) && s.tools.includes(t) : s.tools.includes(t)) return false; if (!s.tools.includes(t)) s.tools.push(t); G().save();
   const el = document.getElementById('v3pop'); if (el) { el.innerHTML = `<span class="ic sv-ic">${TOOLS[t][1]}</span><span class="tx"><small>${esc(why)}</small><b>${esc(TOOLS[t][0])}</b><em class="gp-tip">${esc(TOOLS[t][2])}</em></span>`; el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); clearTimeout(pop.t); pop.t = setTimeout(() => { el.classList.remove('on'); el.hidden = true; }, 4200); }
@@ -7563,9 +7563,9 @@ function t7Start(k, i, tier) {
   const st = S.sv, type = k === 'tree' ? 'axe' : k === 'rock' ? 'pick' : 'rod', T = T7[type], g = T.res, rn = lc1(R7[g].n[tier - 1]);
   const tl = t7Best(type); if (!tl) { const P = t7P()[type], own = [1, 2, 3, 4, 5, 6, 7].filter(t => P[t] != null && P[t] !== 0); svToast(own.length ? `Tu ${lc1(t7Name(type, own[0]))} pide ${t7Req(type, own[0])}. Subí tu oficio o conseguí una más simple en el mercado.` : `Necesitás ${type === 'rod' ? 'una caña o una red' : type === 'axe' ? 'un hacha' : 'un pico'}. Se consiguen en el mercado.`); return; }
   const d = tl - tier, key = k + i;
-  if (d <= -2) { const now = performance.now(); if (!st.t7warn || st.t7warn.key !== key || now - st.t7warn.t > 6000) { st.t7warn = { key, t: now }; svToast(`⚠️ Tu ${lc1(t7Name(type, tl))} no va a aguantar: ${rn} pide una herramienta de nivel ${tier - 1} o más. Si igual querés intentar, tocá otra vez y se va a romper.`); return; } st.t7warn = null; }
+  if (d <= -2) { const now = performance.now(); if (!st.t7warn || st.t7warn.key !== key || now - st.t7warn.t > 6000) { st.t7warn = { key, t: now }; svToast(`⚠️ Tu ${lc1(t7Name(type, tl))} no va a aguantar: ${rn} pide una herramienta de nivel ${tier - 1} o más. Si igual querés intentar, tocá otra vez y se va a romper.`, 'Esta herramienta no va a aguantar. Si igual querés intentar, tocá otra vez y se va a romper.'); return; } st.t7warn = null; }
   st.work = { k, i, type, tl, tier, d, hits: 0, need: t7Need(d, tier), t: 0, n: 0, brk: d <= -2 ? 3 : 0, label: `${T.ing} ${rn}` };
-  S.joy.x = 0; S.joy.y = 0; svToast(`${T.ic} ${T.ing} ${rn} con ${lc1(t7Name(type, tl))}. Sigue solo; movete o tocá E para parar.` + (d === -1 ? ' Le cuesta: se va a gastar rápido.' : '')); svUI();
+  S.joy.x = 0; S.joy.y = 0; svToast(`${T.ic} ${T.ing} ${rn} con ${lc1(t7Name(type, tl))}. Sigue solo; movete o tocá E para parar.` + (d === -1 ? ' Le cuesta: se va a gastar rápido.' : ''), 'Trabajando. Sigue solo; movete o tocá E para parar.'); svUI();
 }
 function t7Wear(type, t, n) { const P = t7P()[type]; if (P[t] == null || P[t] < 0) return false; P[t] = Math.max(0, P[t] - n); if (P[t] === 0) { delete P[t]; return true; } return false; }
 function t7Tick(dt) {
@@ -7713,7 +7713,7 @@ function epReqTxt(E) { const r = E.req, miss = []; if (r.of && ofiLv(r.of) < r.l
 /* el paso que toca ahora, si se puede hacer hoy */
 function epStep(id) { const E = EPIC[id], st = epP()[id] || { s: 0, d: -1 }; if (st.done) return null; const sp = E.steps[st.s]; if (!sp) return null; return { E, st, sp, today: !sp.wait || epDay() > st.d }; }
 function epAdvance(id, msg) { const P = epP(), E = EPIC[id], st = P[id] || { s: 0, d: -1 }; st.s++; st.d = epDay(); P[id] = st;
-  if (st.s >= E.steps.length) { st.done = 1; if (E.ty) t7Grant(E.ty, 7); setTimeout(() => { try { frCheck(E.req.fr); } catch (e) {} }, 3500); const s = svP(); s.titles = s.titles || []; if (!s.titles.includes(E.title)) s.titles.push(E.title); svXP(150); try { pkPop('✨ ' + epPrize(E)); } catch (e) {} svToast(`✨ ¡Terminaste «${E.name}»! Ganaste ${epPrize(E)}${E.ty ? ', que no se gasta nunca,' : ''} y el título «${E.title}».`); }
+  if (st.s >= E.steps.length) { st.done = 1; if (E.ty) t7Grant(E.ty, 7); setTimeout(() => { try { frCheck(E.req.fr); } catch (e) {} }, 3500); const s = svP(); s.titles = s.titles || []; if (!s.titles.includes(E.title)) s.titles.push(E.title); svXP(150); try { pkPop('✨ ' + epPrize(E)); } catch (e) {} svToast(`✨ ¡Terminaste «${E.name}»! Ganaste ${epPrize(E)}${E.ty ? ', que no se gasta nunca,' : ''} y el título «${E.title}».`, '¡Terminaste la misión épica! Ganaste tu premio y un título nuevo.'); }
   else if (msg) svToast(msg); G().save(); svUI(); }
 /* sección de misión épica dentro del puesto */
 function epHTML(shop) {
@@ -7742,12 +7742,14 @@ function epAct(id) { const x = epStep(id); if (!x || x.sp.k !== 'act') return;
 const K3 = {
   wood: { n: ['Higuera', 'Sicómoro', 'Cedro'], card: ['higuera', 'sicomoro', 'cedro'], ic: '🪵', ty: 'axe', verb: 'Talar', ing: 'Talando' },
   stone: { n: ['Piedra de campo', 'Basalto negro', 'Piedra de sal que brilla'], card: [], ic: '🪨', ty: 'pick', verb: 'Picar', ing: 'Picando' },
-  fish: { n: ['Sardina', 'Pez de San Pedro', 'Pez dorado'], card: ['pez', 'pez', 'pez'], ic: '🐟', ty: 'rod', verb: 'Pescar', ing: 'Pescando' }
+  fish: { n: ['Sardina', 'Pez de San Pedro', 'Pez dorado'], card: ['pez', 'pez', 'pez'], ic: '🐟', ty: 'rod', verb: 'Pescar', ing: 'Pescando' },
+  grain: { n: ['Cebada', 'Trigo', 'Espiga dorada'], card: ['pan', 'pan', 'ninopanes'], ic: '🌾', ty: 'hoz', verb: 'Cosechar', ing: 'Cosechando' }
 };
-const K3T = { axe: ['Hacha', 'Hacha especial', 'Hacha brillante'], pick: ['Pico', 'Pico especial', 'Pico brillante'], rod: ['Caña', 'Caña especial', 'Caña brillante'] };
+const K3T = { hoz: ['Hoz', 'Hoz especial', 'Hoz brillante'], axe: ['Hacha', 'Hacha especial', 'Hacha brillante'], pick: ['Pico', 'Pico especial', 'Pico brillante'], rod: ['Caña', 'Caña especial', 'Caña brillante'] };
 const KMIS = {
   pedro: { name: 'Una noche sin peces', ty: 'rod', poi: 'lake', who: 'Pedro', ref: 'Lucas 5:1-11', need: ['fish', 1, 3], t: 'Pedro: «Trabajamos toda la noche y no sacamos nada». ¿Lo ayudás? Pescá 3 sardinas en la orilla del lago y volvé.', end: 'Jesús le dijo a Pedro: «Echen las redes». ¡Las redes se llenaron de peces! Pedro te regala su caña brillante.' },
   zaqueo: { name: 'El árbol de Zaqueo', ty: 'axe', ol: 'jerico', who: 'Zaqueo', ref: 'Lucas 19:1-10', need: ['wood', 2, 3], t: 'Zaqueo: «Jesús viene a mi casa y la quiero arreglar». Juntá 3 maderas de sicómoro y traéselas.', end: 'Zaqueo: «¡Hoy Jesús viene a mi casa!». Te regala su hacha brillante.' },
+  rut: { name: 'Las espigas de Rut', ty: 'hoz', poi: 'pastores', g: 'chica', who: 'Rut', ref: 'Rut 2', need: ['grain', 2, 3], t: 'Rut: «Junto espigas para mi suegra Noemí, que no tiene qué comer». ¿La ayudás? Cosechá 3 de trigo y traéselas.', end: 'Booz mandó dejar caer espigas a propósito para Rut (Rut 2:16), y Rut llevó comida para las dos. Rut te regala su hoz brillante.' },
   roca: { name: 'Una casa sobre la roca', ty: 'pick', poi: 'field', who: 'Un constructor', ref: 'Mateo 7:24', need: ['stone', 2, 3], t: 'Un constructor sabio quiere hacer su casa sobre la roca. Juntá 3 piedras de basalto negro y traéselas.', end: 'Jesús dijo que el que escucha sus palabras y las pone en práctica es como el que construye su casa sobre la roca (Mateo 7:24). Te regala su pico brillante.' }
 };
 /* golpes por pieza en Kids (cada golpe dura 1,3 segundos, un poco más fácil que Hero): lo común 2 a 4, lo especial 3 a 5, lo brillante 4 a 6; igual para talar, picar y pescar */
@@ -7763,6 +7765,7 @@ function kNear() {
   let best = null, bd = 2.6 * 2.6;
   chopList().forEach((o, i) => { if (st.felled.has(i)) return; const d = d2(o.x, o.z); if (d < bd) { bd = d; const t = kTier('tree', o, i); best = { k: 'tree', i, t, g: 'wood' }; } });
   rockList().forEach((o, i) => { if (st.mined.has(i)) return; const r = .6 + (.35 + (o.v || .5) * .7) * (o.s || 1), d = d2(o.x, o.z); if (d < (r + 1.4) ** 2 && d < bd + 2) { bd = d; const t = kTier('rock', o, i); best = { k: 'rock', i, t, g: 'stone' }; } });
+  (S.kgr || []).forEach((o, i) => { if (st.kgrT && st.kgrT.has(i)) return; const d = d2(o.x, o.z); if (d < 2.4 * 2.4 && d < bd) { bd = d; best = { k: 'grain', i, t: o.t, g: 'grain' }; } });
   if (!best) { const t = kFishT(); if (t) best = { k: 'fish', i: 0, t, g: 'fish' }; }
   if (best) best.label = K3[best.g].verb + ' ' + lc1(K3[best.g].n[best.t - 1]);
   return best;
@@ -7770,22 +7773,23 @@ function kNear() {
 function kAct() {
   const n = kNear(), st = S.sv; if (!n) return; if (n.k === 'work') { kStop(); return; }
   const G3 = K3[n.g], tl = kTool(G3.ty);
-  if (tl < n.t) { const m = n.t === 2 ? 'Se gana completando una página de tu álbum.' : 'Se gana con la misión «' + Object.values(KMIS).find(x => x.ty === G3.ty).name + '».'; svToast(`${G3.ic} Para ${lc1(G3.n[n.t - 1])} necesitás ${lc1(K3T[G3.ty][n.t - 1])}. ${m}`); return; }
+  if (tl < n.t) { const m = n.t === 2 ? 'Se gana completando una página de tu álbum.' : 'Se gana con la misión «' + Object.values(KMIS).find(x => x.ty === G3.ty).name + '».'; svToast(`${G3.ic} Para ${lc1(G3.n[n.t - 1])} necesitás ${lc1(K3T[G3.ty][n.t - 1])}. ${m}`, 'Para esto necesitás una herramienta mejor.'); return; }
   st.kw = { k: n.k, i: n.i, t: n.t, g: n.g, hits: 0, need: kNeed(n.t), tt: 0, n: 0, label: G3.ing + ' ' + lc1(G3.n[n.t - 1]) }; S.joy.x = 0; S.joy.y = 0;
-  svToast(`${G3.ic} ${G3.ing} ${lc1(G3.n[n.t - 1])}. Sigue solo; caminá o tocá otra vez para parar.`); kUI();
+  svToast(`${G3.ic} ${G3.ing} ${lc1(G3.n[n.t - 1])}. Sigue solo; caminá o tocá otra vez para parar.`, 'Trabajando. Sigue solo; caminá o tocá otra vez para parar.'); kUI();
 }
 function kStop(msg) { if (!S.sv.kw) return; const w = S.sv.kw; S.sv.kw = null; svToast(msg || (w.n ? `¡Juntaste ${w.n}!` : 'Paraste.')); G().save(); kUI(); }
 function kidsTick(dt) {
   if (svOn() || !S || !S.sv) return; const st = S.sv;
   for (const [i, left] of st.felled) { if (left - dt <= 0) { st.felled.delete(i); treeShow(i, true); } else st.felled.set(i, left - dt); }
   for (const [i, left] of st.mined) { if (left - dt <= 0) { st.mined.delete(i); rockShow(i, true); } else st.mined.set(i, left - dt); }
+  if (st.kgrT) for (const [i, left] of st.kgrT) { if (left - dt <= 0) { st.kgrT.delete(i); const o = (S.kgr || [])[i]; if (o) z7Vis(o, true); } else st.kgrT.set(i, left - dt); }
   // las misiones brillantes se pueden volver a abrir cuando te alejás
   for (const l of (S.lore || [])) if (l.km && l.seen) { const a = S.av.position; if ((l.x - a.x) ** 2 + (l.z - a.z) ** 2 > (l.r + 3) ** 2) l.seen = 0; }
   st.kui = (st.kui || 0) + dt; if (st.kui > .5) { st.kui = 0; kUI(); }
   const w = st.kw; if (!w) return;
   if (S.freeMoving || S.walking || sheetUp()) { kStop(); return; }
   w.tt += dt; if (w.tt < 1.3) return; w.tt = 0; w.hits++;
-  if (w.k === 'fish') h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 1.7); else svSwing(w.k);
+  if (w.k === 'fish') h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 1.7); else if (w.k === 'grain') h3do(['PickUp_Table', 'M_Kneeling_Idle'], 1.6); else svSwing(w.k);
   if (w.hits < w.need) return; w.hits = 0; w.need = kNeed(w.t); w.n++;
   const P = kP(), G3 = K3[w.g], key = w.g + w.t; P.got[key] = (P.got[key] || 0) + 1; P.n = (P.n || 0) + 1; svXP(w.t * 2);
   try { pkPop(`${G3.ic} +1 ${lc1(G3.n[w.t - 1])}`); } catch (e) {}
@@ -7793,6 +7797,7 @@ function kidsTick(dt) {
   if (P.n % 15 === 0) { try { albGetSobre(1, 'Cambiaste 15 cosas que juntaste por un sobre de figuritas'); } catch (e) {} }
   G().save();
   if (w.k !== 'fish') { st.t7left = st.t7left || new Map(); const lk = 'k' + w.k + w.i, left = (st.t7left.has(lk) ? st.t7left.get(lk) : 3) - 1;
+    if (left <= 0 && w.k === 'grain') { st.t7left.delete(lk); const o = S.kgr[w.i]; z7Vis(o, false); st.kgrT = st.kgrT || new Map(); st.kgrT.set(w.i, 120); kStop(`¡Juntaste ${w.n}! El trigo vuelve a crecer en un ratito.`); return; }
     if (left <= 0) { st.t7left.delete(lk); if (w.k === 'tree') { treeShow(w.i, false); st.felled.set(w.i, 120); } else { rockShow(w.i, false); st.mined.set(w.i, 120); } kStop(`¡Juntaste ${w.n}! ${w.k === 'tree' ? 'El árbol' : 'La piedra'} vuelve en un ratito.`); return; }
     st.t7left.set(lk, left); }
   else if (!kFishT()) kStop();
@@ -7806,10 +7811,12 @@ function kUI() {
 /* las tres misiones brillantes: una persona con una chispa; al acercarte te cuenta qué necesita */
 function kidsMisBuild(scene, W) {
   if (svOn()) return; const yAt = (x, z) => W.hAt(x, z);
+  /* campos de trigo de Kids: cebada cerca de Nazaret y Belén, trigo en Belén y Capernaúm, una espiga dorada en el campo grande */
+  S.kgr = []; try { [['taller', 1, 2], ['pastores', 1, 2], ['pastores', 2, 2], ['roofhouse', 2, 2], ['field', 3, 1]].forEach(([pk, t, n], q) => { const p = (S.pois || []).find(x => x.k === pk); if (!p) return; for (let j = 0; j < n; j++) for (let tr = 0; tr < 24; tr++) { const a = q * 1.7 + j * 2.4 + tr * .7, r = 12 + (tr % 5) * 2.5, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (blockedAt(x, z) || waterWet(x, z, null) > .02 || S.kgr.some(o => (o.x - x) ** 2 + (o.z - z) ** 2 < 9)) continue; const before = Z7.nodes.length; z7Node(scene, x, z, yAt(x, z), 'trigo', t, 'hoz'); const o = Z7.nodes.splice(before, 1)[0]; if (o) S.kgr.push(o); break; } }); } catch (e) { console.warn('campos kids', e); }
   Object.entries(KMIS).forEach(([id, M]) => { try {
     let x, z; if (M.poi) { const p = (S.pois || []).find(q => q.k === M.poi); if (!p) return; const C = [[-p.side * 34, 6], [-p.side * 36, -6], [-p.side * 10, 6], [-p.side * 12, -8]]; const c = C.find(([ox, oz]) => !blockedAt(p.x + ox, p.z + oz) && !(M.poi === 'lake' ? false : waterWet(p.x + ox, p.z + oz, null) > .02)) || C[0]; x = p.x + c[0]; z = p.z + c[1]; if (M.poi !== 'lake') { x = p.x + C[2][0]; z = p.z + C[2][1]; } }
     else { const p = (OL.plan || []).find(q => q.id === M.ol); if (!p) return; x = p.x - Math.sign(p.x) * (p.r + 3); z = p.z - 4; }
-    try { const npc = buildHeroAvatar({ g: 'chico', age: 18, skin: '#B98A62', hair: '#2A1B14', outfit: '#7A5A3A', anim: ['M_Standing_Idle', 'M_Holding_Idle'] }); npc.position.set(x, yAt(x, z), z); scene.add(npc); } catch (e) {}
+    try { const npc = buildHeroAvatar({ g: M.g || 'chico', age: 18, skin: '#B98A62', hair: '#2A1B14', outfit: M.g ? '#8A5A6A' : '#7A5A3A', anim: ['M_Standing_Idle', 'M_Holding_Idle'] }); npc.position.set(x, yAt(x, z), z); scene.add(npc); } catch (e) {}
     S.lore.push({ x, z, r: 3, km: id, label: 'Hablar con ' + M.who, dur: 5, info: [M.name, M.t], act: () => kMisTalk(id) });
   } catch (e) { console.warn('misión brillante ' + id, e); } });
 }
@@ -7838,15 +7845,15 @@ function jobKind(n) { if (!n || n.go || n.need) return null; if (n.k === 'farm')
 function jobStart(n, jk) { const J = JOB[jk], c = J.c(n); if (!(c > 0)) return false;
   let tier = 1, tl = 0, d = 0, res = J.res(n), lab = J.ing;
   const JT = typeof J.ty === 'function' ? J.ty(n) : J.ty, JG = typeof J.g === 'function' ? J.g(n) : J.g, cost = jk === 'z7' ? Z7.nodes[n.i].cost : null;
-  if (JT) { tier = J.tier(n); tl = t7Best(JT); const rn = lc1(R7[JG].n[tier - 1]); if (!tl) { svToast(`${T7[JT].ic} Necesitás ${lc1(t7Name(JT, 1))} o una mejor. Se consigue en el puesto del oficio.`); return true; } d = tl - tier; if (d <= -2) { svToast(`⚠️ Tu ${lc1(t7Name(JT, tl))} no alcanza: ${rn} pide una herramienta de nivel ${tier - 1} o más.`); return true; } if (cost && !svHas(cost)) { svToast('🧺 Para teñir necesitás lana: una por cada pieza.'); return true; } res = r7k(JG, tier); lab = `${cost ? 'Tiñendo' : T7[JT].ing} ${rn}`; }
-  S.sv.work = { job: 1, jk, nn: n, c, k: 'job', n: 0, hits: 0, need: t7Need(d, tier), t: 0, label: lab, res, base: J.res(n), ty: JT, tl, tier, d, cost }; S.joy.x = 0; S.joy.y = 0; svToast(`${J.ic} ${J.ing}. Sigue solo; movete o tocá E para parar.`); svUI(); return true; }
+  if (JT) { tier = J.tier(n); tl = t7Best(JT); const rn = lc1(R7[JG].n[tier - 1]); if (!tl) { svToast(`${T7[JT].ic} Necesitás ${lc1(t7Name(JT, 1))} o una mejor. Se consigue en el puesto del oficio.`, 'Necesitás una herramienta. Se consigue en el puesto del oficio.'); return true; } d = tl - tier; if (d <= -2) { svToast(`⚠️ Tu ${lc1(t7Name(JT, tl))} no alcanza: ${rn} pide una herramienta de nivel ${tier - 1} o más.`, 'Esta herramienta no va a aguantar. Si igual querés intentar, tocá otra vez y se va a romper.'); return true; } if (cost && !svHas(cost)) { svToast('🧺 Para teñir necesitás lana: una por cada pieza.'); return true; } res = r7k(JG, tier); lab = `${cost ? 'Tiñendo' : T7[JT].ing} ${rn}`; }
+  S.sv.work = { job: 1, jk, nn: n, c, k: 'job', n: 0, hits: 0, need: t7Need(d, tier), t: 0, label: lab, res, base: J.res(n), ty: JT, tl, tier, d, cost }; S.joy.x = 0; S.joy.y = 0; svToast(`${J.ic} ${J.ing}. Sigue solo; movete o tocá E para parar.`, 'Trabajando. Sigue solo; movete o tocá E para parar.'); svUI(); return true; }
 /* terminar el trabajo: al completar se hace la acción de siempre (que deja el lugar vacío hasta que vuelva); si parás antes, te llevás lo que juntaste */
 function jobEnd(w, full) { if (full) { try { svAct(Object.assign({}, w.nn, { go: 1 })); } catch (e) {} if (w.res !== w.base) { svAdd(w.base, -w.c); svAdd(w.res, w.c); } return; } if (w.n) svAdd(w.res, w.n); svToast(w.n ? `${JOB[w.jk].ic} Paraste: juntaste ${w.n}.` : 'Paraste de trabajar.'); }
 function jobTick(w, dt) {
   w.t += dt; if (w.t < 1.5 * (w.ty ? 1 - .3 * fv(T7[w.ty].at) / 100 : 1)) return; w.t = 0; w.hits++; const J = JOB[w.jk];
   if (J.an === 'axe') { S.toolK = 'axe'; S.toolT = 1.2; h3do(['M_Idle', 'Idle_Loop'], 1); } else h3do(J.an === 'kneel' ? ['M_Kneeling_Idle', 'PickUp_Table'] : [['M_Pick_Fruit', 'M_Pick_Fruit_1', 'M_Pick_Fruit_2'][w.hits % 3], 'PickUp_Table'], 1.6, .4);
-  AXS.workT = 6; if (w.hits < w.need) return; if (w.cost) { if (!svHas(w.cost)) { S.sv.work = null; if (w.n) svAdd(w.res, w.n); svToast(`🧺 Se terminó la lana. Teñiste ${w.n}.`); G().save(); svUI(); return; } svPay(w.cost); } w.hits = 0; w.need = t7Need(w.d || 0, w.tier || 1); w.n++;
-  if (w.ty && t7Wear(w.ty, w.tl, w.d === -1 ? 5 : 1)) { S.sv.work = null; svAdd(w.res, w.n); svToast(`💥 Tu ${lc1(t7Name(w.ty, w.tl))} se gastó del todo y se rompió. Te llevás ${w.n}.`); G().save(); svUI(); return; }
+  AXS.workT = 6; if (w.hits < w.need) return; if (w.cost) { if (!svHas(w.cost)) { S.sv.work = null; if (w.n) svAdd(w.res, w.n); svToast(`🧺 Se terminó la lana. Teñiste ${w.n}.`, 'Se terminó la lana.'); G().save(); svUI(); return; } svPay(w.cost); } w.hits = 0; w.need = t7Need(w.d || 0, w.tier || 1); w.n++;
+  if (w.ty && t7Wear(w.ty, w.tl, w.d === -1 ? 5 : 1)) { S.sv.work = null; svAdd(w.res, w.n); svToast(`💥 Tu ${lc1(t7Name(w.ty, w.tl))} se gastó del todo y se rompió. Te llevás ${w.n}.`, 'Tu herramienta se gastó del todo y se rompió.'); G().save(); svUI(); return; }
   try { pkPop(`${J.ic} +1 ${lc1(RES[w.res] ? RES[w.res][0] : w.res)}`); } catch (e) {}
   if (w.n >= w.c) { S.sv.work = null; jobEnd(w, true); svUI(); }
 }
@@ -7977,19 +7984,19 @@ function bkStart(r, si, resumed) {
   if (!resumed) { if (!bkHas(r.need)) { svToast('Te faltan ingredientes.'); return; } bkPay(r.need); }
   const w = { bake: 1, k: 'bake', r, si, t: 0, n: 0, x: S.av.position.x, z: S.av.position.z, resumed };
   w.dur = bkSecs(r, r.steps[si][1]); w.label = `${BK_STEP[r.steps[si][0]][0]} · paso ${si + 1} de ${r.steps.length}`; S.sv.work = w; S.joy.x = 0; S.joy.y = 0;
-  svToast(`${BK_STEP[r.steps[si][0]][1]} ${r.name}: ${r.steps.map(x => BK_STEPN[x[0]].toLowerCase()).join(', ')}. Sigue solo; movete o tocá E para parar.`); svUI();
+  svToast(`${BK_STEP[r.steps[si][0]][1]} ${r.name}: ${r.steps.map(x => BK_STEPN[x[0]].toLowerCase()).join(', ')}. Sigue solo; movete o tocá E para parar.`, 'Manos a la masa. Sigue solo; movete o tocá E para parar.'); svUI();
 }
 function bkTick(w, dt) {
   const r = w.r, [kind] = r.steps[w.si]; w.t += dt; w.a = (w.a || 0) + dt;
   if (w.a > 1.6) { w.a = 0; if (kind === 'brasas' || kind === 'hornear') { S.toolK = 'flint'; S.toolT = 1; h3do(['M_Kneeling_Idle', 'PickUp_Table'], 1.6); } else h3do(kind === 'moler' || kind === 'cernir' ? ['M_Kneeling_Idle', 'PickUp_Table'] : ['M_Pull_Heavy_Object', 'Interact'], 1.6); AXS.workT = 6; }
   if (w.t < w.dur) return; ofiXP('pan', 2 + r.lv); w.si++; w.t = 0;
   const nx = r.steps[w.si];
-  if (nx && nx[0] === 'levar') { const B = bkP(); B.rise = { id: r.id, until: Date.now() + bkSecs(r, nx[1]) * 1000 }; S.sv.work = null; svToast(`⏳ La masa queda levando unos ${Math.round(bkSecs(r, nx[1]) / 60)} minutos. Podés ir y venir: después la horneás acá o en otro horno igual o mejor.`); G().save(); svUI(); return; }
+  if (nx && nx[0] === 'levar') { const B = bkP(); B.rise = { id: r.id, until: Date.now() + bkSecs(r, nx[1]) * 1000 }; S.sv.work = null; svToast(`⏳ La masa queda levando unos ${Math.round(bkSecs(r, nx[1]) / 60)} minutos. Podés ir y venir: después la horneás acá o en otro horno igual o mejor.`, 'La masa queda levando. Podés ir y venir, y después la horneás.'); G().save(); svUI(); return; }
   if (nx) { w.dur = bkSecs(r, nx[1]); w.label = `${BK_STEP[nx[0]][0]} · paso ${w.si + 1} de ${r.steps.length}`; try { pkPop(`${BK_STEP[nx[0]][1]} ${BK_STEPN[nx[0]]}`); } catch (e) {} svUI(); return; }
   S.sv.work = null; const B = bkP(); if (w.resumed) B.rise = null; const first = !B.made[r.id]; B.made[r.id] = (B.made[r.id] || 0) + 1;
   Object.entries(r.out).forEach(([k, n]) => svAdd(k, n)); svXP(2 + r.lv); if (first) { svXP(15); try { sello('pan-' + r.id, r.name); } catch (e) {} }
   const pl = (k, n) => { const w = RES[k][0].toLowerCase(); return n === 1 ? 'un ' + w : n + ' ' + (/^panes|^tortas/.test(w) ? w : w.replace(/^pan( |$)/, 'panes$1')); }, o = Object.entries(r.out).filter(([k]) => k !== 'levadura').map(([k, n]) => pl(k, n)).join(', ');
-  try { pkPop(`🍞 +${o}`); tone3d(); } catch (e) {} svToast(`${first ? '✨ ¡Primera vez! ' : ''}🍞 Hiciste ${o}.${r.out.levadura ? ' Guardaste un poco de masa vieja para la próxima.' : ''}${r.id === 'prop' ? ' Son para la mesa del Templo.' : ''}`); G().save(); svUI();
+  try { pkPop(`🍞 +${o}`); tone3d(); } catch (e) {} svToast(`${first ? '✨ ¡Primera vez! ' : ''}🍞 Hiciste ${o}.${r.out.levadura ? ' Guardaste un poco de masa vieja para la próxima.' : ''}${r.id === 'prop' ? ' Son para la mesa del Templo.' : ''}`, '¡Pan listo!'); G().save(); svUI();
 }
 /* si parás antes de terminar, los ingredientes vuelven a tu bolsa (si ya estaba levando, la masa sigue esperando) */
 function bkStop(w) { if (w.resumed) { svToast('Paraste. La masa sigue lista para hornear.'); return; } bkPay(w.r.need, -1); svToast('Paraste. Los ingredientes volvieron a tu bolsa.'); }
@@ -8010,7 +8017,7 @@ function z7Central(scene, W) {
   z7Flush();
 }
 function z7Near() { const a = S.av.position; for (let i = 0; i < Z7.nodes.length; i++) { const o = Z7.nodes[i]; if (o.back > 0) continue; if ((o.x - a.x) ** 2 + (o.z - a.z) ** 2 < 5.3) { const nm = lc1(R7[o.g].n[o.t - 1]); return { k: 'z7', i, label: (o.cost ? 'Teñir · ' : T7[o.ty].verb + ' ') + nm + ' · nivel ' + o.t }; } } return null; }
-function z7Done(i) { const o = Z7.nodes[i]; if (!o) return; o.back = (o.g === 'barro' ? T7_BACK.rock : T7_BACK.tree)[o.t - 1] * 60; z7Vis(o, false); svAdd(r7k(o.g, o.t), 3); ofiXP(T7[o.ty].of, (3 + o.t * 2) * 7); if (o.g === 'trigo') ofiXP('pan', (3 + o.t * 2) * 4); /* los puntos de recurso son pocos y tardan en volver: cada uno vale más, así estos oficios suben a un ritmo parecido al de talar o pescar */ svXP(o.t); G().save(); svToast(`${R7[o.g].ic} Juntaste 3 de ${lc1(RES[r7k(o.g, o.t)][0])}. Vuelve en unos minutos.`); svUI(); }
+function z7Done(i) { const o = Z7.nodes[i]; if (!o) return; o.back = (o.g === 'barro' ? T7_BACK.rock : T7_BACK.tree)[o.t - 1] * 60; z7Vis(o, false); svAdd(r7k(o.g, o.t), 3); ofiXP(T7[o.ty].of, (3 + o.t * 2) * 7); if (o.g === 'trigo') ofiXP('pan', (3 + o.t * 2) * 4); /* los puntos de recurso son pocos y tardan en volver: cada uno vale más, así estos oficios suben a un ritmo parecido al de talar o pescar */ svXP(o.t); G().save(); svToast(`${R7[o.g].ic} Juntaste 3 de ${lc1(RES[r7k(o.g, o.t)][0])}. Vuelve en unos minutos.`, 'Juntaste tres. Vuelve en unos minutos.'); svUI(); }
 function z7Tick(dt) { for (const o of Z7.nodes) if (o.back > 0) { o.back -= dt; if (o.back <= 0) { o.back = 0; z7Vis(o, true); } } }
 function svAct(nn) {
   if (S && !S.hx && S.sv && !svOn()) { if (!S.walking && !sheetUp() && !S.down) kAct(); return; }
@@ -8909,7 +8916,7 @@ function vilFamCheck(v) { const X = vilX(); if (X.fam[v.vil] || repOf(v.vil) < 1
   X.fam[v.vil] = 1; const s = svP(); s.titles = s.titles || []; const ti = 'Como de la familia en ' + v.vil; if (!s.titles.includes(ti)) s.titles.push(ti); G().save(); glowAdd(120, 'aldea');
   setTimeout(() => { try { h3do(['M_Sitting_Idle', 'M_Thankful'], 4); svSay(`🍞 ${v.name}: «Esta noche comés con nosotros. En ${v.vil} ya sos como de la familia». Te sientan a la mesa, parten el pan y te dan un regalo que guardan para los de la casa.`, 'Esta noche comés con nosotros. Ya sos como de la familia.', 'mujer'); gearGive(GEAR.find(g => g.id === VIL_GIFT[v.vil]), `${v.vil}: como familia`); } catch (e) {} }, 3200); return true; }
 /* al llegar a una aldea de la casa o de la familia, te convidan pan una vez por día */
-function vilFed(name) { const l = repLv(name); if (l < 6) return; const X = vilX(), d = vday(); if (X.fed[name] === d) return; X.fed[name] = d; const n = l >= 7 ? 2 : 1; svAdd('bread', n); G().save(); setTimeout(() => svToast(`🍞 En ${name} te convidan ${n === 1 ? 'un pan' : 'dos panes'} recién hechos.`), 1800); }
+function vilFed(name) { const l = repLv(name); if (l < 6) return; const X = vilX(), d = vday(); if (X.fed[name] === d) return; X.fed[name] = d; const n = l >= 7 ? 2 : 1; svAdd('bread', n); G().save(); setTimeout(() => svToast(`🍞 En ${name} te convidan ${n === 1 ? 'un pan' : 'dos panes'} recién hechos.`, 'Te convidan pan recién hecho.'), 1800); }
 function repAdd(name, n) { if (!name) return; const r = repP(); let k = n; if (n > 0 && fv('amor') >= 40) k += 1; r[name] = Math.max(0, Math.min(100, repOf(name) + k)); G().save(); }
 function vilNearest(maxD) { const a = S.av.position; let best = null, bd = (maxD || 40) ** 2; for (const v of VIL.list) { const d = (v.x - a.x) ** 2 + (v.z - a.z) ** 2; if (d < bd) { bd = d; best = v; } } return best; }
 /* ===== Etapas vivas: el material del alumno contado jugando. Por etapa: una charla con un personaje (con voz), rollos escondidos,
@@ -10102,7 +10109,7 @@ function svShop(kind) {
     el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
     el.querySelectorAll('[data-h]').forEach(b => b.onclick = () => { S.haggle = b.dataset.h === '1'; draw(); });
     el.querySelectorAll('[data-b]').forEach(b => b.onclick = () => { const [t, k, p] = sh.buy[+b.dataset.b], cost = price(p); if (money() < cost) return; if (S.hx && kind === 'mercado') { const vv = vilNearest(60); if (S.haggle) { if (vv) repAdd(vv.name, -1); behav('regateos'); } else { if (vv) repAdd(vv.name, 1); axGain('gent', 1); behav('pagoJusto'); } }
-      if (t === 'T') { const [ty, tt] = k.split(':'); if (!t7Grant(ty, +tt)) return; svAdd('money', -cost); svToast(`${T7[ty].ic} Compraste ${lc1(t7Name(ty, +tt))}. ${t7Ficha(ty, +tt)}`); }
+      if (t === 'T') { const [ty, tt] = k.split(':'); if (!t7Grant(ty, +tt)) return; svAdd('money', -cost); svToast(`${T7[ty].ic} Compraste ${lc1(t7Name(ty, +tt))}. ${t7Ficha(ty, +tt)}`, 'Compraste una herramienta nueva.'); }
       else if (t === 't') { if (s.tools.includes(k)) return; svAdd('money', -cost); svGiveTool(k, 'Compraste'); }
       else if (t === 'r') { svAdd('money', -cost); svAdd(k, 1); }
       else if (t === 'p') { const gi = GBY[k]; if (!gi || gearState().own.includes(k)) return; svAdd('money', -cost); gearGive(gi, 'Compraste'); }
@@ -10111,7 +10118,7 @@ function svShop(kind) {
     const sell = (k, n) => { n = Math.min(n, s.inv[k] || 0); if (!n) return; let m = 0; for (let j = 0; j < n; j++) { m += sellUnit(kind, k); if (R7_OF[k]) sellCount(kind, k); } svAdd(k, -n); svAdd('money', m); G().save(); svUI(); draw(); };
     el.querySelectorAll('[data-ep]').forEach(b => b.onclick = () => { epClick(b.dataset.ep); draw(); });
     el.querySelectorAll('[data-eq]').forEach(b => b.onclick = () => { const [id, i] = b.dataset.eq.split(':'); epQuiz(id, i); draw(); });
-    el.querySelectorAll('[data-fx]').forEach(b => b.onclick = () => { const [ty, t] = b.dataset.fx.split(':'), c = price(2 * t); if (money() < c) return; svAdd('money', -c); t7P()[ty][t] = T7_DUR[t - 1]; svToast(`🔧 Quedó como nueva: ${lc1(t7Name(ty, +t))}.`); G().save(); svUI(); draw(); });
+    el.querySelectorAll('[data-fx]').forEach(b => b.onclick = () => { const [ty, t] = b.dataset.fx.split(':'), c = price(2 * t); if (money() < c) return; svAdd('money', -c); t7P()[ty][t] = T7_DUR[t - 1]; svToast(`🔧 Quedó como nueva: ${lc1(t7Name(ty, +t))}.`, 'Quedó como nueva.'); G().save(); svUI(); draw(); });
     el.querySelectorAll('[data-s]').forEach(b => b.onclick = () => sell(b.dataset.s, 1)); el.querySelectorAll('[data-sa]').forEach(b => b.onclick = () => sell(b.dataset.sa, 999));
   };
   el.hidden = false; el.onclick = e => { if (e.target === el) el.hidden = true; }; draw();
