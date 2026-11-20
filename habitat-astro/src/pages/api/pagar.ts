@@ -12,6 +12,11 @@ export const GET: APIRoute = async ({ url }) => {
     const a = String(url.searchParams.get("a") || "").slice(0, 80), m = String(url.searchParams.get("m") || ""), s = String(url.searchParams.get("s") || "");
     // &t=<total>: monto fijo acordado; va dentro de la firma, así nadie lo puede cambiar
     const t = /^\d{3,7}$/.test(String(url.searchParams.get("t") || "")) ? Number(url.searchParams.get("t")) : 0;
+    // control automático (GitHub Actions): ?a=prueba&m=<mes> recorre el mismo camino hasta Mercado Pago con $100 y sin alumno real
+    if (a === "prueba" && MESES_RE.test(m)) {
+      const link = await preferencia({ _id: "prueba", title: "Control automático de la web", cuota: 100 }, m, 100);
+      return new Response(null, { status: 302, headers: { Location: link, "Cache-Control": "no-store" } });
+    }
     if (!a || !MESES_RE.test(m) || s !== (await firma(a, t ? m + "|" + t : m))) return pagina("Este link de pago no es válido. Entrá al Campus para pagar tu cuota.");
     const al = (await q("TutAlumnos").eq("_id", a).limit(1).find()).items[0] as (AlumnoPago & { activo?: boolean }) | undefined;
     if (!al || al.activo === false) return pagina("No encontramos tu cuota. Escribinos y lo vemos.");

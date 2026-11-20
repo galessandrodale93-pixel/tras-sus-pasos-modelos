@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 4
     steps:
+      - uses: actions/checkout@v4
+      - name: Controlar la web (páginas y link de pago)
+        run: bash .github/scripts/habitat-chequeo.sh
       - name: Revisar pagos
         run: |
           code=$(curl -sS --retry 2 --retry-delay 20 --max-time 150 -o resp.json -w '%{http_code}' "https://www.habitat-cfm.org/api/mp?revisar=1")

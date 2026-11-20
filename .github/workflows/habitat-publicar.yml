@@ -56,3 +56,6 @@ jobs:
           COMENTARIO: ${{ inputs.comentario || 'Publicado al actualizar el juego Kids & Hero' }}
           CI: "true"
         run: npx wix release --comment "$COMENTARIO" < /dev/null
+      - name: Controlar la web publicada (páginas y link de pago)
+        working-directory: .
+        run: sleep 30 && bash .github/scripts/habitat-chequeo.sh
