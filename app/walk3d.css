@@ -1515,3 +1515,4 @@ body.v3on .v3surv.kdo .sv-do{bottom:calc(84px + env(safe-area-inset-bottom,0px))
 
 /* en pantallas angostas el botón de acción va arriba de los botones redondos de comida y construir, sin taparlos */
 @media (max-width:640px){body.v3on .v3surv .sv-do{bottom:calc(84px + env(safe-area-inset-bottom,0px))}body.v3on .v3surv.kdo .sv-do{bottom:calc(140px + env(safe-area-inset-bottom,0px))}}
+@media (max-width:640px){.sv-do span{max-width:min(72vw,340px)}}
