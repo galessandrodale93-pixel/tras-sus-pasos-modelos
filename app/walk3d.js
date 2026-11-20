@@ -399,6 +399,7 @@ function groundMat(Q, kids) {
   return m;
 }
 /* ---------- agua de verdad: Mar de Galilea y río Jordán (oleaje, reflejo según el ángulo, espuma en la orilla y corriente) ---------- */
+const MED = [[1046, -2160], [1040, -2290], [1046, -2420]], MED_R = 180; /* tres círculos grandes: la costa queda casi recta */
 const WATER = { basins: [], river: null, uT: { value: 0 }, WL: -.05, RL: -.12, nm: null, env: null, mats: [] };
 /* cañón del desierto de Judea: un valle seco que se abre al camino y se mete serpenteando entre paredes de roca escalonadas */
 function canyonAt(x, z) { const C = WATER.canyon; if (!C) return 0; const u = (x - C.x) * -C.sd, v = z - C.z; if (u > 28 || u < -120 || Math.abs(v) > 70) return 0;
@@ -490,6 +491,7 @@ function sidePaths(allPts, hAt, roadAt, dAt) {
 function spDist(x, z) { if (!SP.S.length) return 99; const i0 = Math.floor(x / SPC), j0 = Math.floor(z / SPC); let bd = 1e9; for (let i = i0 - 1; i <= i0 + 1; i++) for (let j = j0 - 1; j <= j0 + 1; j++) { const L = SP.B.get(trlKey(i, j)); if (!L) continue; for (const q of L) { const d = (q[0] - x) ** 2 + (q[1] - z) ** 2; if (d < bd) bd = d; } } return Math.sqrt(bd); }
 function waterPlan(pois) {
   WATER.basins = []; WATER.river = null; WATER.mats = []; WATER.canyon = null;
+  try { if (G().branch === 'ados') MED.forEach(([x, z]) => WATER.basins.push({ x, z, r: MED_R, med: 1 })); } catch (e) {} /* el mar Mediterráneo, al este del mapa, frente a Jope */
   for (const p of pois) if (p.k === 'desert') WATER.canyon = { x: p.x, z: p.z, sd: p.side || -1 }; /* el desierto es un cañón */
   TRL.defs = null; TRL.city = pois.find(q => q.k === 'temple') || null; for (const p of pois) if (p.k === 'desert') trailPlan(p); /* y desde el fondo del cañón suben los senderos del Monte de la Tentación */
   WATER.hill = null; for (const p of pois) if (p.k === 'golgota') WATER.hill = { x: p.x, z: p.z }; /* el Gólgota se levanta como una loma que se ve desde lejos */
@@ -649,7 +651,7 @@ function olH(h1, x, z) {
   const ax = Math.abs(x); let h = h1(x, z); if (ax <= OL.X1) return h; const kk = OL.kk;
   if (h > -.5) { const b = sstep(OL.X1, OL.X1 + 90, ax), v = fbm(x * .0032 + 17, z * .0032 - 9), w = vnoise(x * .009 - 4, z * .009 + 2); h = h * (1 - b) + b * (h * (.3 + .85 * v) + (v * 9 - 3 + w * 4) * kk); }
   const L = OL.sg.get(Math.floor(x / 128) + ':' + Math.floor(z / 128)); if (L) for (const s of L) { const d = Math.hypot(x - s.x, z - s.z); if (d < s.r * 1.7) { const k = 1 - sstep(s.r, s.r * 1.7, d); h += (s.y - h) * k; } }
-  const u = (ax - XW) / 150; if (u > -.25) { const r = 1 - Math.abs(vnoise(x * .018 + 11, z * .014) * 2 - 1), n = fbm(x * .011 + 5, z * .009), rr = 1 - Math.abs(vnoise(x * .05 - 3, z * .05) * 2 - 1); h += sstep(-.25, .6, u) * (12 + n * 38 + r * r * 34 + rr * 7) * (kk < 1 ? .6 : 1); }
+  const u = (ax - XW) / 150; let sea = 0; for (const b of WATER.basins) if (b.med) sea = Math.max(sea, 1 - sstep(1.02, 1.4, Math.hypot(x - b.x, z - b.z) / b.r)); if (u > -.25 && sea < .999) { const r = 1 - Math.abs(vnoise(x * .018 + 11, z * .014) * 2 - 1), n = fbm(x * .011 + 5, z * .009), rr = 1 - Math.abs(vnoise(x * .05 - 3, z * .05) * 2 - 1); h += sstep(-.25, .6, u) * (12 + n * 38 + r * r * 34 + rr * 7) * (kk < 1 ? .6 : 1) * (1 - sea); }
   return h;
 }
 function olInit(HW, Q, hx) {
@@ -745,6 +747,7 @@ const OL_PLAN = [
   { id: 'mirador', k: 'rincon', name: 'El mirador de los montes', x: -860, z: -3000, r: 9, ref: 'Salmo 121:1-2', txt: '«Levanto mis ojos a los montes: ¿de dónde vendrá mi ayuda? Mi ayuda viene del Señor, que hizo los cielos y la tierra.»', mk: 'cairn' },
   { id: 'ebenezer', k: 'rincon', name: 'La piedra Ebenezer', x: -600, z: -3500, r: 9, ref: '1 Samuel 7:12', txt: 'Samuel levantó una piedra y la llamó Ebenezer, porque dijo: «Hasta aquí nos ayudó el Señor».', mk: 'stone' },
   { id: 'tiberiades', k: 'aldea', name: 'Tiberíades', x: 330, z: -3560, r: 26, n: 7, ref: 'Juan 6:23', txt: 'Una ciudad a la orilla del lago, que también se llamaba mar de Tiberíades. Desde acá llegaron barcas buscando a Jesús después de que multiplicó los panes.' },
+  { id: 'jope', k: 'aldea', hero: 1, n: 8, name: 'Jope', x: 790, z: -2290, r: 26, ref: 'Jonás 1:3; Hechos 9:36-43', txt: 'Jope era el puerto del Mediterráneo más cercano a Jerusalén. De acá salió Jonás en un barco a Tarsis, huyendo de lo que Dios le había pedido. Muchos años después, Pedro resucitó acá a Tabita, una discípula que ayudaba a los pobres. En la costa se pescan doradas, y desde el muelle, atunes de mar abierto.' },
   { id: 'timna', k: 'zona', zr: 'stone', zt: 7, zc: '#5E7E64', zc2: '#8A5A3A', name: 'La mina de Timna', x: -780, z: -260, r: 26, ref: 'Deuteronomio 8:9', txt: 'Dios describió la tierra prometida como una tierra de cuyos montes se saca cobre. En Timna, al sur, se sacaba cobre hace más de tres mil años. Acá se pica cobre, la piedra de nivel 7.' },
   { id: 'sal', k: 'zona', zr: 'stone', zt: 6, zc: '#EDE8DC', zc2: '#D8D0BE', flat: '#E6E0D2', name: 'El monte de sal', x: -800, z: -1250, r: 26, ref: 'Mateo 5:13', txt: 'Junto al Mar Muerto hay montes de sal de roca. Jesús dijo: «Ustedes son la sal de la tierra». La sal servía para conservar la comida. Acá se pica sal, la piedra de nivel 6.' },
   { id: 'tiro', k: 'zona', shop: 'tiro', name: 'Los mercaderes de Tiro', x: 780, z: -2900, r: 18, ref: 'Ezequiel 27:3', txt: 'Tiro era la gran ciudad comerciante junto al mar. Sus mercaderes llevaban herramientas, telas y pescado de mar por todas partes.' },
@@ -760,7 +763,7 @@ const OL_PLAN = [
   { id: 'engadi', k: 'zona', nodes: [['uvas', 6, 'podadera', 5], ['lino', 5, 'aguja', 4]], name: 'El oasis de En-gadi', x: -860, z: -1620, r: 26, ref: '1 Samuel 24:2', txt: 'En-gadi es un oasis junto al Mar Muerto, con viñas famosas (Cantares 1:14) y peñascos llenos de cabras monteses, donde David se escondió de Saúl. Acá hay uvas de nivel 6 y pelo de cabra negra, de nivel 5.' }
 ];
 function olPlan() {
-  OL.plan = OL_PLAN.filter(p => p.k !== 'zona' || G().branch === 'ados').map(p => Object.assign({}, p, { dirt: p.k === 'aldea' ? .55 : p.k === 'oficio' ? .35 : .2 })).filter(p => waterWet(p.x, p.z, null) < .01);
+  OL.plan = OL_PLAN.filter(p => (p.k !== 'zona' && !p.hero) || G().branch === 'ados').map(p => Object.assign({}, p, { dirt: p.k === 'aldea' ? .55 : p.k === 'oficio' ? .35 : .2 })).filter(p => waterWet(p.x, p.z, null) < .01);
 }
 /* senderos: de cada lugar al camino, con alguna curva; se suman a los senderitos (tierra pisada, sin pasto ni árboles encima) */
 function olTrails(allPts, hAt) {
@@ -776,7 +779,7 @@ function olSitesBuild(scene, HW, hx) {
   const props = (id, list, o) => (FLORA.poiProps = FLORA.poiProps || []).push([id, list, Object.assign({ shadow: true }, o || {})]);
   const lore = (p, x, z, label, extra) => S.lore.push(Object.assign({ x, z, r: 3, label, dur: 5, info: [p.name, p.txt + ' (' + p.ref + ')'] }, extra || {}));
   OL.plan.forEach((p, idx) => { try { const R = rng(9000 + idx * 31); S.olSites.push({ id: p.id, name: p.name, x: p.x, z: p.z, k: p.k, r: p.r });
-    if (p.k === 'aldea') { const placed = townLayout(scene, p, yAt, HW, { seed: 7100 + idx * 13, n: p.n || 7, r: p.r - 4, plaza: 8, gap: 2.2 }); const w = well(hx); w.position.set(p.x, yAt(p.x, p.z), p.z); scene.add(w); S.cols.push({ x0: p.x - 1, x1: p.x + 1, z0: p.z - 1, z1: p.z + 1, cx: p.x, cz: p.z, r: 1 });
+    if (p.k === 'aldea') { const placed = townLayout(scene, p, yAt, HW, { seed: 7100 + idx * 13, n: p.n || 7, r: p.r - 4, plaza: 8, gap: 2.2 }); if (p.id === 'jope') S.jopeH = placed; const w = well(hx); w.position.set(p.x, yAt(p.x, p.z), p.z); scene.add(w); S.cols.push({ x0: p.x - 1, x1: p.x + 1, z0: p.z - 1, z1: p.z + 1, cx: p.x, cz: p.z, r: 1 });
       try { townFolk(scene, p, yAt, HW, hx ? 6 : 5, p.r * .6, 300 + idx, placed.map(q => [q.x, q.z, q.rr])); } catch (e) {} lore(p, p.x + 2.4, p.z + 1.2, 'Conocer ' + p.name);
       if (p.extra === 'sicomoro') { const x = p.x + 9, z = p.z - 4; props('island_tree_01', [{ x, y: yAt(x, z) - .05, z, ry: 1.2, s: 2.3, v: 0 }], { wind: 3, far: 1 }); S.cols.push({ x0: x - .9, x1: x + .9, z0: z - .9, z1: z + .9, cx: x, cz: z, r: .9 }); S.lore.push({ x: x + 2.2, z, r: 3, label: 'Mirar el sicómoro', dur: 6, go: () => sello('sicomoro', 'El sicómoro de Zaqueo'), info: ['El sicómoro de Zaqueo', 'Zaqueo era tan bajito que no veía nada entre la gente. Se subió a este árbol, y Jesús se detuvo justo abajo: «Zaqueo, bajá enseguida, que hoy tengo que quedarme en tu casa» (Lucas 19:5).'] }); }
       if (p.extra === 'pozo') { const x = p.x - 8, z = p.z + 6, w2 = well(hx); w2.scale.setScalar(1.25); w2.position.set(x, yAt(x, z), z); scene.add(w2); S.cols.push({ x0: x - 1.2, x1: x + 1.2, z0: z - 1.2, z1: z + 1.2, cx: x, cz: z, r: 1.2 }); S.lore.push({ x: x + 2, z, r: 3, label: 'Sacar agua del pozo de Jacob', dur: 6, go: () => sello('pozo-jacob', 'El pozo de Jacob'), info: ['El pozo de Jacob', 'Un pozo hondo que cavó Jacob hace mucho tiempo. Acá Jesús, cansado del viaje, le pidió agua a la samaritana y le ofreció agua viva (Juan 4:6-10).'] }); }
@@ -2129,7 +2132,7 @@ const CG = { ref: null, n: 0, lastAt: null, m: new Map(), big: [], C: 8, E: [] }
 function cgNear(x, z) { const L = S.cols; if (CG.ref !== L || L.length < CG.n || (CG.n && L[CG.n - 1] !== CG.lastAt)) { CG.ref = L; CG.n = 0; CG.m = new Map(); CG.big = []; }
   const C = CG.C; for (; CG.n < L.length; CG.n++) { const b = L[CG.n]; if (b.x0 == null) { CG.big.push(b); continue; } const i0 = Math.floor((b.x0 - .5) / C), i1 = Math.floor((b.x1 + .5) / C), j0 = Math.floor((b.z0 - .5) / C), j1 = Math.floor((b.z1 + .5) / C); if ((i1 - i0 + 1) * (j1 - j0 + 1) > 64) { CG.big.push(b); continue; } for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) { const k = i * 65536 + j; let a = CG.m.get(k); if (!a) CG.m.set(k, a = []); a.push(b); } }
   CG.lastAt = L[L.length - 1]; const a = CG.m.get(Math.floor(x / C) * 65536 + Math.floor(z / C)); if (!CG.big.length) return a || CG.E; return a ? a.concat(CG.big) : CG.big; }
-function blockedAt(x, z, only) { const L0 = only || (S && S.cols); if (!L0) return false; const L = only ? only : cgNear(x, z); if (WATER.canyon && S.W && canyonAt(x, z) > .45 && S.W.roadAt(x, z) > 6 && !inTrail(x, z)) return true; if (WATER.quarry && quarryAt(x, z) > .4) return true; const r = S.hx ? .34 : .28; for (const b of L) if (x > b.x0 - r && x < b.x1 + r && z > b.z0 - r && z < b.z1 + r) { if (b.oi != null && S.sv && S.sv.felled && S.sv.felled.has(b.oi)) continue; if (b.ref && b.ref.down) continue; if (b.ymax != null && S.av && S.av.position.y > b.ymax) continue; if (b.ymin != null && S.av && S.av.position.y + 1.5 < b.ymin) continue; /* lo construido en alto (techos) no frena por abajo */ /* muros de planta baja: arriba (en el primer piso) no frenan */ if (b.r == null || (x - b.cx) ** 2 + (z - b.cz) ** 2 < (b.r + r) ** 2) return true; } return false; }
+function blockedAt(x, z, only) { const L0 = only || (S && S.cols); if (!L0) return false; const L = only ? only : cgNear(x, z); if (WATER.canyon && S.W && canyonAt(x, z) > .45 && S.W.roadAt(x, z) > 6 && !inTrail(x, z)) return true; if (WATER.quarry && quarryAt(x, z) > .4) return true; const r = S.hx ? .34 : .28; for (const b of L) if (x > b.x0 - r && x < b.x1 + r && z > b.z0 - r && z < b.z1 + r) { if (b.hole && x > b.hole[0] && x < b.hole[1] && z > b.hole[2] && z < b.hole[3]) continue; if (b.oi != null && S.sv && S.sv.felled && S.sv.felled.has(b.oi)) continue; if (b.ref && b.ref.down) continue; if (b.ymax != null && S.av && S.av.position.y > b.ymax) continue; if (b.ymin != null && S.av && S.av.position.y + 1.5 < b.ymin) continue; /* lo construido en alto (techos) no frena por abajo */ /* muros de planta baja: arriba (en el primer piso) no frenan */ if (b.r == null || (x - b.cx) ** 2 + (z - b.cz) ** 2 < (b.r + r) ** 2) return true; } return false; }
 function floorH(x, z) { const L = S && S.floors; if (!L) return -1; let h = -1; for (const f of L) if (x > f.x0 && x < f.x1 && z > f.z0 && z < f.z1 && f.y > h) h = f.y; return h; }
 function cnvTex(w, h, fn, rep) { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]); } return t; }
 let TT = null; // texturas compartidas
@@ -7291,7 +7294,7 @@ function svBuild(scene, W) {
   // tu casa, si ya la construiste
   if (S.hx) { const s = svP(); if (s.house) svPlaceHouse(scene, s.house, true);
   if (s.bag && s.bag.left > 0) svDropBag(s.bag, true); }
-  try { econBuild(scene, W); } catch (e) { console.warn('econ', e); } try { specBuild(scene, W); } catch (e) { console.warn('spec', e); } try { bkBuild(scene, W); } catch (e) { console.warn('hornos', e); } try { z7Central(scene, W); } catch (e) { console.warn('z7', e); } try { kidsMisBuild(scene, W); } catch (e) { console.warn('kmis', e); } if (S.hx) try { vilBuild(scene, W).then(() => secBuild(scene, W)).then(() => matBuild(scene, W)).catch(e => console.warn('sec', e)); } catch (e) { console.warn('vil', e); }
+  try { econBuild(scene, W); } catch (e) { console.warn('econ', e); } try { specBuild(scene, W); } catch (e) { console.warn('spec', e); } try { medBuild(scene, W); } catch (e) { console.warn('mar', e); } try { bkBuild(scene, W); } catch (e) { console.warn('hornos', e); } try { z7Central(scene, W); } catch (e) { console.warn('z7', e); } try { kidsMisBuild(scene, W); } catch (e) { console.warn('kmis', e); } if (S.hx) try { vilBuild(scene, W).then(() => secBuild(scene, W)).then(() => matBuild(scene, W)).catch(e => console.warn('sec', e)); } catch (e) { console.warn('vil', e); }
   svUI();
 }
 function svToolMesh(t) {
@@ -7426,7 +7429,8 @@ function svNear() {
 }
 function svWaterNear() {
   /* devuelve el nivel del pez que hay en esa agua (0 si no hay agua): la orilla del lago 1, el Jordán 2, el mar abierto del lago 3, la orilla de Juan 21 4 */
-  const a = S.av.position; let t = 0; if (Z7.pier && (Z7.pier.x - a.x) ** 2 + (Z7.pier.z - a.z) ** 2 < 6) return 5; for (const p of (S.pois || [])) {
+  const a = S.av.position; let t = 0; if (Z7.pier && (Z7.pier.x - a.x) ** 2 + (Z7.pier.z - a.z) ** 2 < 6) return 5; if (Z7.mpier && (Z7.mpier.x - a.x) ** 2 + (Z7.mpier.z - a.z) ** 2 < 7) return 7;
+  for (const b of WATER.basins) if (b.med) { const d = Math.hypot(a.x - b.x, a.z - b.z); if (d > b.r * .8 && d < b.r * 1.02 + 3 && S.W && S.W.hAt(a.x, a.z) < 2.5) return 6; } /* la costa del Mediterráneo: doradas; desde el muelle de Jope, atunes */ for (const p of (S.pois || [])) {
     if (p.k === 'lake') { const d = Math.hypot(a.x - p.x, a.z - p.z); if (d > 24 && d < 38) t = Math.max(t, 1); }
     if (p.k === 'lake') for (const b of WATER.basins) if (b.sea) { const d = Math.hypot(a.x - b.x, a.z - b.z); if (d > b.r * .86 - 4 && d < b.r * 1.05 + 3) t = Math.max(t, Math.hypot(b.x - p.x, b.z - p.z) < 120 ? 3 : 4); }
     if (p.k === 'shore') { const d = Math.hypot(a.x - (p.x + p.side * 7), a.z - p.z); if (d < 11.5) t = Math.max(t, 4); }
@@ -7818,6 +7822,24 @@ function z7Node(scene, x, z, y, g, t, ty, cost) {
 }
 function z7Inst(geo, mat, L, cols) { const im = new THREE.InstancedMesh(geo, mat, L.length), m4 = new THREE.Matrix4(), cc = new THREE.Color(); L.forEach(([x, y, z, a, b, c], k) => { m4.makeScale(a, b, c).setPosition(x, y, z); im.setMatrixAt(k, m4); if (cols) im.setColorAt(k, cc.set(cols[k % cols.length])); }); return im; }
 function z7Vis(o, on) { o.mesh.visible = on; try { trpHide(o.oi, !on); } catch (e) {} }
+/* ===================== EL MEDITERRÁNEO Y JOPE (Hero): el mar se abre al este del mapa, frente al puerto de Jope.
+   En la costa se pescan doradas (nivel 6); desde la punta del muelle, atunes de mar abierto (nivel 7) ===================== */
+function medBuild(scene, W) {
+  Z7.mpier = null; if (!S.hx || !WATER.basins.some(b => b.med)) return; const yAt = (x, z) => W.hAt(x, z), J = (OL.plan || []).find(q => q.id === 'jope'); if (!J) return;
+  waterLake(scene, 1190, -2290, 330, true, yAt);
+  /* la costa frente a Jope: se busca donde el terreno baja al agua */
+  const z = J.z; let cx = J.x + 30; for (let x = J.x + 30; x < 1000; x += .5) if (yAt(x, z) < WATER.WL - .05) { cx = x; break; }
+  const py = Math.max(yAt(cx - 2, z), WATER.WL) + .22, D = [-1, 1.4, 3.8, 6.2, 8.6, 11];
+  (FLORA.poiProps = FLORA.poiProps || []).push(['modular_wooden_pier', D.map(d => ({ x: cx + d, y: py, z, ry: Math.PI / 2, s: 1, v: 0 })), { shadow: true, keepY: 1 }]);
+  Z7.mpier = { x: cx + 11.5, z }; const hole = [cx - 3, cx + 12.4, z - 1.05, z + 1.05]; S.floors.push({ x0: cx - 2.2, x1: cx + 12.3, z0: z - 1.05, z1: z + 1.05, y: py + .38 });
+  WATER.basins.filter(b => b.med).forEach(b => S.cols.push({ x0: b.x - b.r, x1: b.x + b.r, z0: b.z - b.r, z1: b.z + b.r, cx: b.x, cz: b.z, r: b.r * .9, hole }));
+  /* barcas de pescadores junto al muelle y una más lejos, con la vela arriba */
+  [[cx + 6, z + 4.5, .2, { L: 5.4, B: 1.8, D: .76, sail: 'furled', oars: 1, nets: 1 }], [cx + 9, z - 4.6, -.3, { L: 5, B: 1.7, D: .74, sail: 'furled', oars: 1 }], [cx + 46, z + 22, 1.1, { L: 7, B: 2.2, D: .9, sail: 'up' }]].forEach(([x, zz, ry, o]) => { try { const b = boatMesh(o); b.position.set(x, WATER.WL - .3, zz); b.rotation.y = ry; scene.add(b); } catch (e) {} });
+  /* el puesto del puerto, en tierra, al lado del muelle */
+  { let sx = cx - 7, sz = z + 6; for (const [ox, oz] of [[-7, 6], [-7, -6], [-10, 9], [-10, -9], [-13, 0]]) if (!blockedAt(cx + ox, z + oz) && yAt(cx + ox, z + oz) > WATER.WL + .3) { sx = cx + ox; sz = z + oz; break; } specStall(scene, sx, sz, yAt, 'jope', 0); }
+  S.lore.push({ x: cx - 2, z: z - 3.5, r: 3, label: 'Mirar el mar', dur: 5, info: ['El barco de Jonás', 'Jonás bajó a Jope, encontró un barco que iba a Tarsis, pagó el pasaje y subió, para huir de lo que Dios le había pedido. En alta mar vino una tormenta enorme; lo tiraron al agua y un gran pez se lo tragó. Después Jonás fue a Nínive, y Dios tuvo compasión de esa ciudad (Jonás 1 al 4).'] });
+  { const H = (S.jopeH || []).slice().sort((a, b) => b.x - a.x)[0]; if (H) S.lore.push({ x: H.x - 3, z: H.z + 3, r: 3, label: 'La casa de Simón el curtidor', dur: 5, info: ['La casa de Simón el curtidor', 'Pedro se alojaba en Jope en la casa de Simón, un curtidor, junto al mar. Subió a la azotea a orar y vio un lienzo que bajaba del cielo con toda clase de animales. Así Dios le enseñó que la buena noticia de Jesús era también para los que no eran judíos (Hechos 10:9-16).'] }); }
+}
 /* ===================== LA PANADERÍA: siete panes, cada uno con su proceso (moler, cernir, mezclar, amasar, dejar levar,
    cocinar sobre las brasas u hornear). Cada pan pide un horno de cierto nivel; un horno mejor sirve para los panes de abajo.
    El panadero espiga sus granos en los trigales (eso también sube su oficio) ===================== */
@@ -8760,6 +8782,7 @@ Object.entries(SHOPS).forEach(([k, sh]) => { sh.buy = sh.buy.filter(b => !(b[0] 
 Object.assign(SHOPS, {
   jacobo: { name: 'Taller de Jacobo', ic: '🪓', cloth: '#7A5A3A', buy: [['T', 'axe:5', T7_PR[4]]], sell: ['wood5'], fix: ['axe'] },
   templo: { name: 'El constructor del Templo', ic: '⛏️', cloth: '#8A7A6A', buy: [['T', 'pick:5', T7_PR[4]], ['T', 'pala:5', T7_PR[4]], ['T', 'vara:5', T7_PR[4]]], sell: ['stone5', 'wood7', 'stone7', 'barro5', 'aceitunas5'], fix: ['pick', 'pala', 'vara'] },
+  jope: { name: 'El puerto de Jope', ic: '⚓', cloth: '#2E4E7A', buy: [['T', 'rod:5', T7_PR[4]], ['r', 'salado', 8]], sell: ['fish5', 'fish6', 'fish7', 'salado', 'cooked'], fix: ['rod'] },
   magdala: { name: 'El saladero de Magdala', ic: '🐟', cloth: '#3E5A6A', buy: [['r', 'salado', 8], ['T', 'tijera:5', T7_PR[4]]], sell: ['fish5', 'wood6', 'stone6', 'lanaroja'], fix: ['rod', 'tijera'] },
   hebron: { name: 'El viñador de Hebrón', ic: '🍇', cloth: '#5A2A4A', buy: [['T', 'podadera:5', T7_PR[4]]], sell: ['uvas4', 'uvas5'], fix: ['podadera'] },
   belen: { name: 'Los pastores de Belén', ic: '🌾', cloth: '#6A5A3A', buy: [['T', 'hoz:5', T7_PR[4]], ['T', 'aguja:5', T7_PR[4]]], sell: ['espelta', 'pelonegro'], fix: ['hoz', 'aguja'] },
