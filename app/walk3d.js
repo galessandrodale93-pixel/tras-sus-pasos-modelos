@@ -8859,7 +8859,7 @@ const SERV_PERKS = [
 ];
 function servV() { return svOn() ? (atP().serv || 0) : 0; }
 function servAdd(n, why) { const a = atP(); a.serv = (a.serv || 0) + n; G().save(); if (a.serv >= 15 && GBY.servidor && !gearState().own.includes('servidor')) gearGive(GBY.servidor, 'Por tu servicio'); }
-function price(n) { let f = servV() >= 3 ? .9 : 1; if (S && S.hx) { f *= [1, .95, .95, .9, .9, .9, .85, .85][ft('gent')]; const v = vilNearest(60); if (v) { const l = repLv(v.name); f *= l === 1 ? 1.1 : l >= 5 ? .9 : l >= 4 ? .95 : 1; } if (S.haggle) f *= .8; } return Math.max(1, Math.round(n * f)); }
+function price(n) { let f = servV() >= 3 ? .9 : 1; if (S && S.hx) { f *= [1, .95, .95, .9, .9, .9, .85, .85][ft('gent')]; const v = vilNearest(60); if (v) { const l = repLv(v.name); f *= l >= 5 ? .9 : l >= 4 ? .95 : 1; } if (S.haggle) f *= .8; } return Math.max(1, Math.round(n * f)); }
 function money() { return svP().inv.money || 0; }
 
 /* puestos del mercado y mendigos a lo largo del camino */
@@ -8890,9 +8890,9 @@ function repP() { const p = G().P(); p.rep = p.rep || {}; return p.rep; }
 const repOf = name => { const r = repP(); return r[name] == null ? 45 : r[name]; };
 const repStars = name => Math.max(1, Math.min(5, 1 + Math.floor(repOf(name) / 20)));
 /* relación con cada aldea en 7 escalones. El 7 (como familia) pide además tres regalos de nivel 5 o más y la invitación a la mesa */
-const REP_TH = [20, 40, 55, 70, 85], REP_N = ['Desconfianza', 'Conocido', 'Vecino', 'Amigo', 'De confianza', 'De la casa', 'Como familia'];
-const REP_TX = ['Te miran con desconfianza', 'Te conocen de vista', 'Te reciben como a un vecino', 'Te reciben con cariño', 'Confían en vos', 'Sos uno más de la casa', 'Sos como de la familia'];
-const REP_PK = ['Los precios te salen un 10% más caros', 'Precios normales', 'Precios normales', 'Te saludan primero · -5% en los precios', '-10% en los precios', 'Una vez por día te convidan pan al llegar · -10% en los precios', 'Un regalo único de la aldea · dos panes por día al llegar · -10% en los precios'];
+const REP_TH = [20, 40, 55, 70, 85], REP_N = ['Forastero', 'Conocido', 'Vecino', 'Amigo', 'De confianza', 'De la casa', 'Como familia'];
+const REP_TX = ['Todavía no te conocen', 'Te conocen de vista', 'Te reciben como a un vecino', 'Te reciben con cariño', 'Confían en vos', 'Sos uno más de la casa', 'Sos como de la familia'];
+const REP_PK = ['Precios normales', 'Precios normales', 'Precios normales', 'Te saludan primero · -5% en los precios', '-10% en los precios', 'Una vez por día te convidan pan al llegar · -10% en los precios', 'Un regalo único de la aldea · dos panes por día al llegar · -10% en los precios'];
 function vilX() { const p = G().P(); p.vilx = p.vilx || { gift: {}, fam: {}, fed: {} }; return p.vilx; }
 const repLv = name => { const r = repOf(name); let l = 1; REP_TH.forEach(t => { if (r >= t) l++; }); return l >= 6 && vilX().fam[name] ? 7 : l; };
 const VIL_GIFT = { 'Nazaret': 'vil_nazaret', 'Belén': 'vil_belen', 'Caná': 'vil_cana', 'Emaús': 'vil_emaus', 'Capernaúm': 'vil_capernaum', 'Jericó': 'vil_jerico', 'Jerusalén': 'vil_jerusalen' };
