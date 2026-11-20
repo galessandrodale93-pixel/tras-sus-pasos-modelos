@@ -17,7 +17,8 @@ export const GET: APIRoute = async ({ url }) => {
     if (!al || al.activo === false) return pagina("No encontramos tu cuota. Escribinos y lo vemos.");
     const link = await preferencia(al, m, t);
     if (url.searchParams.get("ver") === "1") return new Response(JSON.stringify({ ok: true, link }), { headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
-    return Response.redirect(link, 302);
+    // Response.redirect() trae los encabezados bloqueados y el servidor de Wix falla al agregarles los suyos («inmutable»)
+    return new Response(null, { status: 302, headers: { Location: link, "Cache-Control": "no-store" } });
   } catch (e) {
     console.error("pagar", e);
     return pagina(String((e as Error).message || "No pudimos abrir Mercado Pago. Probá de nuevo en un ratito."));
