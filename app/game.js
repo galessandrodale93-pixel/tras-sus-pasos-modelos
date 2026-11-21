@@ -1290,7 +1290,7 @@ function Memo(th,f,av){
   function deal(){round++;const n=Math.min(keys.length,2+round*2),pick=shuffle(keys.slice()).slice(0,n),deck=shuffle([...pick,...pick]);
     const cols=4,rows=Math.ceil(deck.length/cols),gx=10,gy=10,w=(GW-32-gx*(cols-1))/cols,h=Math.min(96,(GH-92-gy*(rows-1))/rows),top=70+(GH-80-(rows*h+(rows-1)*gy))/2;
     cards=deck.map((k,i)=>({k,x:16+(i%cols)*(w+gx),y:top+Math.floor(i/cols)*(h+gy),w,h,up:false,done:false,flip:0}));open=[];
-    const add=(10+n*6)/f;left=round===1?add:left+add;full=Math.max(full,left);ban=1.4;}
+    const add=(th.hx?22:10+n*6)/f;left=round===1?add:left+add;/* Hero: el mismo tiempo corto en cada ronda, aunque la ronda sea más difícil */full=Math.max(full,left);ban=1.4;}
   deal();
   return {get score(){return score},get over(){return over},
    input(k,d){if(over||k!=='tap'||lock>0||ban>.9)return;const cd=cards.find(q=>d.x>q.x&&d.x<q.x+q.w&&d.y>q.y&&d.y<q.y+q.h);if(!cd||cd.up||cd.done)return;
@@ -1316,7 +1316,7 @@ function Maze(th,f,av){
      if(!nb.length){st.pop();continue;}const [j,a,b]=nb[Math.floor(Math.random()*nb.length)];W[i]&=~a;W[j]&=~b;seen[j]=1;st.push(j);}
     for(let k=0;k<Math.floor(C*R/14);k++){const i=Math.floor(Math.random()*C*R),x=i%C,y=Math.floor(i/C);if(x<C-1&&Math.random()<.5){W[i]&=~2;W[i+1]&=~8;}else if(y<R-1){W[i]&=~4;W[i+C]&=~1;}}
     px=0;py=0;dx=0;dy=0;items=[];const used=new Set([0,C*R-1]);for(let k=0;k<2+round;k++){let i;do i=Math.floor(Math.random()*C*R);while(used.has(i));used.add(i);items.push({x:i%C,y:Math.floor(i/C)});}
-    const add=(C*R/6+8)/f;left=round===1?add:left+add;full=Math.max(full,left);ban=1.3;}
+    const add=(th.hx?18:C*R/6+8)/f;left=round===1?add:left+add;full=Math.max(full,left);ban=1.3;}
   gen();
   const move=k=>{if(over||ban>.8)return;const i=py*C+px,m={up:[0,-1,1],right:[1,0,2],down:[0,1,4],left:[-1,0,8]}[k];if(!m||W[i]&m[2])return;px+=m[0];py+=m[1];if(m[0])face=m[0];tone(330+((px+py)%5)*40,.06);
     const it=items.findIndex(q=>q.x===px&&q.y===py);if(it>=0){items.splice(it,1);score+=10;burstAt(ox+px*cs+cs/2,oy+py*cs+cs/2);tone(780,.18);}
@@ -1361,7 +1361,7 @@ function Simon(th,f,av){
 function Verso(th,f,av){
   const pool=shuffle(th.verses.slice());let vi=-1,V=null,tiles=[],built=[],score=0,over=false,left=0,full=0,ban=0,tt=0,shake=null,shT=0,ctx=null;
   const split=txt=>{const w=txt.split(' '),n=Math.min(9,w.length),out=[];let k=0;for(let i=0;i<n;i++){const take=Math.round((w.length-k)/(n-i));out.push(w.slice(k,k+take).join(' '));k+=take;}return out;};
-  function load(){vi++;V=pool[vi%pool.length];const parts=split(V.text);built=[];tiles=shuffle(parts.map((s,i)=>({s,i,used:false})));layout();const add=(14+parts.length*2.4)/f;left=vi===0?add:left+add;full=Math.max(full,left);ban=1.3;V.parts=parts;}
+  function load(){vi++;V=pool[vi%pool.length];const parts=split(V.text);built=[];tiles=shuffle(parts.map((s,i)=>({s,i,used:false})));layout();const add=(th.hx?18:14+parts.length*2.4)/f;left=vi===0?add:left+add;full=Math.max(full,left);ban=1.3;V.parts=parts;}
   function layout(){if(!ctx)return;ctx.font='800 15px Nunito,sans-serif';const rows=[];let row=[],rw=0;const maxW=GW-32;
     tiles.filter(q=>!q.used).forEach(q=>{q.w=ctx.measureText(q.s).width+26;if(rw+q.w>maxW&&row.length){rows.push([row,rw]);row=[];rw=0;}row.push(q);rw+=q.w+8;});if(row.length)rows.push([row,rw]);
     let y=GH-24-rows.length*50;rows.forEach(([r,w])=>{let x=(GW-(w-8))/2;r.forEach(q=>{q.x=x;q.y=y;x+=q.w+8;});y+=50;});}
