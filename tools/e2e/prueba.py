@@ -24,7 +24,7 @@ OUT = os.path.join(AQUI, 'salida')
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
 DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync')
 
 
 def local(url):
@@ -108,7 +108,18 @@ ADVI = COMUN + """
       sessionStorage.removeItem('tsp:adv'); d.advStarSync(); const fuera=!d.advHoy().on||true; document.getElementById('v3sheet').hidden=true;
       return {ok:g&&g.hot&&/día 12/.test(g.t)&&cerrada&&abiertas==='3,12'&&estrella&&puertas===25&&bloq===13&&prendas===2, d:`próximo paso: ${g&&g.t} · el 13 sigue cerrado: ${cerrada} · abiertas: ${abiertas} · estrella sobre Belén: ${estrella} · calendario: ${puertas} ventanas, ${bloq} todavía cerradas · túnica y turbante: ${prendas} de 2`};"""
 
+AVISOS = COMUN + r"""
+      const n=d.notiP(); delete n.on; delete n.cal; await d.notiSync();
+      const c=await caches.open('tsp-noti'), st=await (await c.match('/__tsp_estado')).json(), dd=new Date(), hoy=dd.getFullYear()+'-'+(dd.getMonth()+1)+'-'+dd.getDate();
+      d.metaOpen(); const b=document.querySelector('#v3sheet .nt-on'); if(!b) return {ok:false,d:'no aparece «Avisarme cada día» en el desafío'};
+      let ics=''; const oc=URL.createObjectURL; URL.createObjectURL=bl=>{if(bl&&/calendar/.test(bl.type||'')) bl.text().then(t=>ics=t); return oc.call(URL,bl);};
+      b.click(); await new Promise(r=>setTimeout(r,3500)); const cal=document.querySelector('#v3sheet .nt-ics'); if(cal) cal.click(); for(let i=0;i<30&&!ics;i++) await new Promise(r=>setTimeout(r,300)); URL.createObjectURL=oc;
+      document.getElementById('v3sheet').hidden=true;
+      const okIcs=/RRULE:FREQ=DAILY/.test(ics)&&/DTSTART:\d{8}T180000/.test(ics)&&/jugar\.html/.test(ics);
+      return {ok:st.jugado===hoy&&!!st.url&&!!cal&&okIcs&&n.cal===1, d:`el juego anota que hoy jugaste (así no avisa): ${st.jugado===hoy} · en esta compu ofrece el calendario: ${!!cal} · recordatorio diario a las 18 h: ${okIcs}`};"""
+
 HERO = {
+    'avisos': ('Avisos: «Avisarme cada día», recordatorio de calendario y estado para el aviso', AVISOS),
     'adviento': ('Adviento: ventana del día, días pasados, estrella sobre Belén y regalos de Navidad y Reyes', ADVI),
     'meta': ('Desafío del día y camino de 7 días (con la prenda del séptimo)', META),
     'guia': ('Guía: pista con el narrador y «Tu próximo paso» sin tapar nada', GUIA),

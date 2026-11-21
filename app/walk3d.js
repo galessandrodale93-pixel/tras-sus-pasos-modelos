@@ -5455,6 +5455,7 @@ function guiaTick(dt) {
   if (GUIA.cur) { GUIA.el.classList.add('on'); guiaRing(); if (performance.now() > GUIA.until) guiaHide(); }
   GUIA.gT -= dt; if (GUIA.gT <= 0) { GUIA.gT = 1; GUIA.goals = guiaGoals(); const top = GUIA.goals[0], bt = chip.querySelector('b'); if (top && bt.textContent !== top.t) bt.textContent = top.t; }
   GUIA.play = (GUIA.play || 0) + dt;
+  if (!NOTI.sync || NOTI.sync !== notiHoy()) { NOTI.sync = notiHoy(); notiSync(); try { navigator.clearAppBadge && navigator.clearAppBadge().catch(() => {}); } catch (e) {} }
   if (!GUIA.star || GUIA.star < now0()) { GUIA.star = now0() + 5000; try { advStarSync(); } catch (e) {} }
   { const a = S.av.position, L = GUIA.lp; if (L) { const d = Math.hypot(a.x - L[0], a.z - L[1]); if (d > .05 && d < 8) { GUIA.dist = (GUIA.dist || 0) + d; if (GUIA.dist >= 10) { metaEv('camina', GUIA.dist); GUIA.dist = 0; } } } GUIA.lp = [a.x, a.z]; }
   chip.classList.toggle('pulse', (S.idleT || 0) > 40 && !GUIA.cur);
@@ -5518,7 +5519,49 @@ function metaOpen() {
   const steps = P7.map((r, i) => `<div class="md-d${i < cal ? ' on' : ''}${i === cal && !m.ok ? ' hoy' : ''}${i === 6 ? ' big' : ''}"><span>${i < cal ? '✓' : r[0]}</span><small>Día ${i + 1}</small><em>${esc(r[1])}</em></div>`).join('');
   vilSheet(`<div class="inv-h"><b>☀️ Desafío del día</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">${m.ok ? 'Ya lo cumpliste. Mañana hay un desafío nuevo.' : 'Cumplí las tres y sumás un paso en tu camino de 7 días.'}</p><div class="gd-list">${rows}</div>
     <h4 class="md-h">Camino de 7 días</h4><div class="md-cal">${steps}</div><p class="md-k">Los días no tienen que ser seguidos: cada desafío cumplido suma un paso, y el séptimo trae una prenda única.</p>`);
+  notiInto();
 }
+
+/* ---------- avisos: «Avisarme cada día» ----------
+   Sin servidor: en Android con el juego instalado, el aviso diario lo muestra el service worker (Periodic Background Sync).
+   Donde eso no existe (iPhone, compu) se ofrece un recordatorio en el calendario del dispositivo. El ícono de la app muestra
+   un 1 cuando el desafío del día quedó pendiente. Nunca avisa de noche ni más de una vez por día. */
+const NOTI = { sw: null };
+const notiHoy = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+function notiP() { const p = G().P(); p.noti = p.noti || {}; return p.noti; }
+async function notiSync(extra) {
+  try { if (!('caches' in window)) return; const c = await caches.open('tsp-noti'), r = await c.match('/__tsp_estado'), st = r ? await r.json() : {};
+    Object.assign(st, { url: location.origin + '/jugar.html', icon: location.origin + '/kh/icon-192.png', jugado: notiHoy() }, extra || {});
+    await c.put('/__tsp_estado', new Response(JSON.stringify(st), { headers: { 'Content-Type': 'application/json' } })); } catch (e) {}
+}
+async function notiPuede() { try { if (!('serviceWorker' in navigator) || !('Notification' in window)) return false; const reg = await Promise.race([navigator.serviceWorker.ready, new Promise(r => setTimeout(() => r(null), 2500))]); if (!reg || !('periodicSync' in reg)) return false; const q = await navigator.permissions.query({ name: 'periodic-background-sync' }); return q.state === 'granted'; /* Chrome lo da solo con el juego instalado */ } catch (e) { return false; } }
+async function notiActivar(box) {
+  const set = h => { if (box) box.innerHTML = h; };
+  if (await notiPuede()) {
+    let perm = 'default'; try { perm = await Notification.requestPermission(); } catch (e) {}
+    if (perm === 'granted') { try { const reg = await navigator.serviceWorker.ready, q = await navigator.permissions.query({ name: 'periodic-background-sync' });
+      if (q.state === 'granted') { await reg.periodicSync.register('tsp-diario', { minInterval: 12 * 3600 * 1000 }); notiP().on = 1; G().save(); await notiSync({ on: true }); set(notiHTML()); notiBind(box); svToast('🔔 Listo: te aviso una vez por día, nunca de noche.'); return; } } catch (e) {} }
+  }
+  set(`<div class="nt-in"><b>📅 En este dispositivo el aviso va por el calendario</b><small>Agregamos un recordatorio diario a las 18 h con el enlace al juego. Lo podés cambiar o borrar desde tu calendario cuando quieras.</small><button type="button" class="nt-ics">Agregar al calendario</button></div>`);
+  box.querySelector('.nt-ics').onclick = () => { notiIcs(); notiP().cal = 1; G().save(); };
+}
+async function notiApagar(box) { try { const reg = await navigator.serviceWorker.ready; if (reg.periodicSync) await reg.periodicSync.unregister('tsp-diario'); } catch (e) {} notiP().on = 0; G().save(); await notiSync({ on: false }); if (box) { box.innerHTML = notiHTML(); notiBind(box); } }
+function notiIcs() {
+  const d = new Date(), p2 = n => String(n).padStart(2, '0'), day = d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()), now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, ''), url = location.origin + '/jugar.html';
+  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Habitat CFM//Tras sus pasos//ES', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT', 'UID:tsp-diario-' + Date.now() + '@habitat-cfm.org', 'DTSTAMP:' + now, 'DTSTART:' + day + 'T180000', 'DURATION:PT15M', 'RRULE:FREQ=DAILY',
+    'SUMMARY:Tras sus pasos: tu desafío del día', 'DESCRIPTION:Tres metas cortas te esperan. ' + url, 'URL:' + url, 'BEGIN:VALARM', 'TRIGGER:PT0M', 'ACTION:DISPLAY', 'DESCRIPTION:Tu desafío del día te espera', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' })); a.download = 'tras-sus-pasos-recordatorio.ics'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+  svToast('📅 Abrí el archivo para sumar el recordatorio a tu calendario.');
+}
+function notiHTML() {
+  const n = notiP(), kid = !(S && S.hx);
+  if (n.on) return `<div class="nt-in on"><b>🔔 Avisos activados</b><small>Un aviso por día, de día, cuando todavía no jugaste.</small><button type="button" class="nt-off">Desactivar</button></div>`;
+  return `<div class="nt-in"><b>🔔 ¿Querés que te avise cada día?</b><small>${kid ? 'Pedile a un adulto que lo active con vos. ' : ''}Un solo aviso por día, de día, cuando hay desafío o ventana nueva.</small><button type="button" class="nt-on">Avisarme cada día</button>${n.cal ? '<small class="nt-ok">Ya agregaste el recordatorio al calendario.</small>' : ''}</div>`;
+}
+function notiBind(box) { if (!box) return; const on = box.querySelector('.nt-on'), off = box.querySelector('.nt-off'); if (on) on.onclick = () => notiActivar(box); if (off) off.onclick = () => notiApagar(box); }
+function notiInto(sel) { const el = document.querySelector('#v3sheet .inv'); if (!el) return; const box = document.createElement('div'); box.className = 'nt-box'; box.innerHTML = notiHTML(); el.appendChild(box); notiBind(box); }
+/* el ícono de la app instalada muestra un 1 si el desafío de hoy quedó pendiente al salir */
+document.addEventListener('visibilitychange', () => { try { if (!navigator.setAppBadge || !S || !S.av) return; if (document.hidden) { const m = metaP(); if (!m.ok) navigator.setAppBadge(1).catch(() => {}); else navigator.clearAppBadge().catch(() => {}); } else navigator.clearAppBadge().catch(() => {}); } catch (e) {} });
 
 /* ---------- Adviento y Navidad: una ventana por día del 1 al 25 de diciembre y la de Reyes el 6 de enero ----------
    Cada ventana cuenta un tramo de la historia (lo lee el narrador) y trae un regalito. Las ventanas de días que pasaron
@@ -5581,6 +5624,7 @@ function advOpen() {
     return `<button class="adv-d${op ? ' op' : ''}${ok ? '' : ' lock'}${hoy ? ' hoy' : ''}${n >= 24 ? ' big' : ''}" data-n="${n}" ${ok ? '' : 'disabled'}><b>${n === 26 ? '👑' : n}</b><small>${op ? '✓' : ok ? (n === 26 ? 'Reyes' : n === 25 ? 'Navidad' : n === 24 ? 'Nochebuena' : 'Abrir') : '🔒'}</small></button>`; }).join('');
   vilSheet(`<div class="inv-h"><b>🎄 Calendario de Adviento</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">Cada día de diciembre se abre una ventana con la historia de la Navidad. Las de días que pasaron se abren igual, hasta el 10 de enero.</p><div class="adv-g">${doors}</div>`);
   document.querySelectorAll('#v3sheet .adv-d:not([disabled])').forEach(b => b.onclick = () => advRead(+b.dataset.n));
+  notiInto();
 }
 function advRead(n) {
   const h = advHoy(); if (!advAbre(n, h)) return; const A = advP(), [ref, tx] = ADV[n - 1], nuevo = !A.o[n], pr = nuevo ? advPremio(n) : null;

@@ -1577,3 +1577,12 @@ body:not(.v3on) .v3pista,body.v3lb .v3pista,body.v3talk .v3pista{display:none}
 .adv-card small{font:900 11px "Nunito",sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#E9C37A}
 .adv-card p{margin:6px 0 0;font:600 16px/1.55 "Fraunces",Georgia,serif}
 .adv-gift{margin-top:12px;display:inline-block;padding:7px 12px;border-radius:99px;background:rgba(255,210,94,.18);border:1px solid rgba(255,210,94,.5);font:900 13px "Nunito",sans-serif}
+/* avisos */
+.nt-box{margin-top:14px}
+.nt-in{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:14px;border:1px dashed rgba(233,195,122,.5);background:rgba(255,255,255,.03)}
+.nt-in.on{border-style:solid;border-color:rgba(95,211,154,.55)}
+.nt-in b{font:800 14px "Nunito",sans-serif}
+.nt-in small{font:700 12.5px/1.4 "Nunito",sans-serif;opacity:.8}
+.nt-in button{align-self:flex-start;border:0;border-radius:12px;padding:9px 14px;font:900 13px "Nunito",sans-serif;background:linear-gradient(180deg,#FFD98A,#E8913A);color:#2B1D00;cursor:pointer}
+.nt-in .nt-off{background:rgba(255,255,255,.1);color:inherit}
+.nt-ok{color:#5FD39A}
