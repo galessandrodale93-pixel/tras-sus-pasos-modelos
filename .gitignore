@@ -6,3 +6,7 @@ assets-fab/
 *.tga
 *.blend
 *.blend1
+
+# pruebas automáticas
+tools/e2e/node_modules/
+tools/e2e/salida/

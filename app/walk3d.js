@@ -2294,7 +2294,7 @@ function worldMerge(scene, frames) {
       const mesh = new THREE.Mesh(geo, G2.m); mesh.castShadow = G2.cast; mesh.receiveShadow = G2.recv; mesh.matrixAutoUpdate = false; mesh.userData.merged = 1; if (G2.root) { geo.applyMatrix4(new THREE.Matrix4().copy(G2.root.matrixWorld).invert()); geo.computeBoundingSphere(); geo.computeBoundingBox(); G2.root.add(mesh); } else out.add(mesh); saved += G2.list.length - 1; });
     drop.forEach(o => { if (o.parent) o.parent.remove(o); }); saved = drop.size - out.children.length;
     out.children.forEach(m => m.updateMatrix()); scene.add(out); out.children.forEach(m => { if (m.parent !== out || !m.geometry) return; m.geometry.computeBoundingSphere(); const bs = m.geometry.boundingSphere; if (bs.radius < 90) gtbAdd(m, bs.center.z, 110); }); S.wmSaved = saved; S.wmMeshes = out.children.length; S.wmDbg = { cand: cand.length, ok: ok.length, refs: refs.size, tops: scene.children.length, why };
-    try { if (S.renderer.compileAsync) S.renderer.compileAsync(out, S.camera); } catch (e) {} r2log('fusión: ' + drop.size + ' mallas sueltas → ' + out.children.length + ' (' + cand.length + ' candidatas, ' + refs.size + ' reservadas)'); if (S.wmDone) S.wmDone();
+    try { if (S.renderer.compileAsync) S.renderer.compileAsync(out, S.camera).catch(() => {}); } catch (e) {} /* si algo se descartó antes de compilar, no deja un error suelto */ r2log('fusión: ' + drop.size + ' mallas sueltas → ' + out.children.length + ' (' + cand.length + ' candidatas, ' + refs.size + ' reservadas)'); if (S.wmDone) S.wmDone();
   };
   requestAnimationFrame(tick);
 }

@@ -1,0 +1,190 @@
+#!/usr/bin/env python3
+"""Batería de pruebas automáticas de Kids & Hero (Playwright).
+
+Abre el juego con los archivos de este repositorio (sin publicar nada), entra como un jugador nuevo
+y recorre lo principal como lo haría una persona. Al final deja en tools/e2e/salida/:
+  informe.md   el resultado de cada prueba (bien / falló) con el detalle
+  *.png        una captura por prueba
+
+Uso:  python3 tools/e2e/prueba.py            (todas)
+      python3 tools/e2e/prueba.py jope kids  (solo esas)
+
+El entorno no tiene placa de video: el juego anda lento, así que las pruebas adelantan el reloj del
+juego (llaman a los «tick» a mano) en lugar de esperar en tiempo real.
+"""
+import asyncio, os, re, sys, json, time, mimetypes
+from playwright.async_api import async_playwright
+
+AQUI = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.abspath(os.path.join(AQUI, '..', '..'))
+PUB = os.path.join(REPO, 'habitat-juego', 'public')
+THREE = os.path.join(AQUI, 'node_modules', 'three', 'build', 'three.module.js')
+OUT = os.path.join(AQUI, 'salida')
+
+# funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
+DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, gearState, epReqTxt, '
+       'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP')
+
+
+def local(url):
+    m = re.search(r'tras-sus-pasos-modelos[/@]([0-9a-f]{40}|main)/(.*?)(\?.*)?$', url)
+    if m: return os.path.join(REPO, m.group(2))
+    m = re.search(r'workers\.dev/(.*?)(\?.*)?$', url)
+    if m: return os.path.join(REPO, m.group(1))
+    if 'three@0.160.0/build/three.module.js' in url: return THREE
+    m = re.search(r'localhost:8123/(.*?)(\?.*)?$', url)
+    if m: return os.path.join(PUB, m.group(1) or 'jugar.html')
+    return None
+
+
+async def servir(route):
+    u = route.request.url; f = local(u)
+    if f and not os.path.isfile(f) and os.path.isfile(f + '.html'): f += '.html'
+    if f and f.endswith('app/walk3d.js') and os.path.isfile(f):
+        body = open(f, encoding='utf-8').read() + '\nwindow.__dbg = { ' + DBG + ' };\n'
+        return await route.fulfill(body=body, headers={'content-type': 'text/javascript', 'access-control-allow-origin': '*'})
+    if f and os.path.isfile(f):
+        ct = 'text/javascript' if f.endswith(('.js', '.mjs')) else (mimetypes.guess_type(f)[0] or 'application/octet-stream')
+        return await route.fulfill(path=f, headers={'content-type': ct, 'access-control-allow-origin': '*'})
+    await route.fulfill(status=404, body='nf', headers={'access-control-allow-origin': '*'})
+
+
+SALTAR = """(()=>{const r=[];for(const t of [/Saltar/i,/Saltear/i]){[...document.querySelectorAll('button,a,div')].filter(b=>b.children.length<3&&t.test(b.textContent.trim())&&b.textContent.trim().length<12).forEach(x=>{try{x.click();r.push(1)}catch(e){}})}return r.length})()"""
+
+
+async def entrar(pg, rama):
+    """Entra como jugador nuevo: elige la rama, pasa la creación del personaje y la intro."""
+    await pg.goto('http://localhost:8123/jugar.html?tester=galilea2611')
+    await pg.wait_for_timeout(7000)
+    await pg.evaluate(f"location.hash='#jugar-{rama}'")
+    await pg.wait_for_timeout(28000)
+    await pg.evaluate("window.W3 && W3.enter && W3.enter()")
+    await pg.wait_for_timeout(25000)
+    await pg.evaluate("(()=>{const b=[...document.querySelectorAll('button')].find(b=>/Listo/i.test(b.textContent));b&&b.click()})()")
+    await pg.wait_for_timeout(12000)
+    for _ in range(3):
+        await pg.evaluate(SALTAR); await pg.wait_for_timeout(4000)
+    return await pg.evaluate("!!(window.__dbg && __dbg.S() && __dbg.S().av)")
+
+
+# ───────────── las pruebas: cada una es JavaScript que devuelve {ok, d} ─────────────
+COMUN = "const d=__dbg;try{d.CINE.on=false;}catch(e){}document.querySelectorAll('#v3sheet,.sheet').forEach(e=>e.hidden=true);document.body.classList.remove('v3cine');const S=d.S(),s=d.svP?d.svP():null,tp=(x,z)=>S.av.position.set(x,S.W.hAt(x,z),z),tick=(n,dt)=>{for(let i=0;i<n;i++)d.t7Tick(dt||1)};"
+
+HERO = {
+    'oficio': ('Cosechar cebada con la hoz que dan gratis', COMUN + """
+      const o=d.Z7.nodes.find(o=>o.g==='trigo'&&o.t===1); if(!o) return {ok:false,d:'no hay campos de cebada'};
+      const antes=s.inv.cebada||0; tp(o.x+1,o.z); const n=d.svNear(); if(!n||!/cebada/i.test(n.label||'')) return {ok:false,d:'no aparece «Cosechar cebada»: '+(n&&n.label)};
+      if(d.sheetUp()) return {ok:false,d:'quedó abierta una ventana o escena que frena el trabajo'};
+      d.svAct(n); tick(60,1.6); const g=(s.inv.cebada||0)-antes;
+      return {ok:g>=3, d:'juntó '+g+' de cebada; el campo se ve: '+o.mesh.visible};"""),
+    'panaderia': ('Hornear pan de cebada y pan con levadura (con la espera de la masa)', COMUN + """
+      s.inv.cebada=4; s.inv.trigo=6; s.inv.levadura=1; s.inv.piedramoler=1; d.ofiP().pan.xp=Math.max(d.ofiP().pan.xp,2000);
+      const o=d.BK.ovens.find(o=>o.t===4); if(!o) return {ok:false,d:'no está el horno de la panadería'}; tp(o.x,o.z);
+      const t=d.bkTier(); if(t.t<4) return {ok:false,d:'el horno no se reconoce: '+JSON.stringify(t)};
+      const p0=s.inv.pancebada||0; d.bkStart(d.BREADS[0],0); tick(30,1); const p1=(s.inv.pancebada||0)-p0;
+      const b0=s.inv.bread||0; d.bkStart(d.BREADS[3],0); tick(40,1); const levando=!!d.bkP().rise; if(!levando) return {ok:false,d:`pan de cebada +${p1}; el pan con levadura no llegó a la espera de la masa`};
+      d.bkP().rise.until=Date.now()-1; d.bkStart(d.BREADS[3],3,true); tick(20,1); const b1=(s.inv.bread||0)-b0;
+      return {ok:p1===2&&levando&&b1===4&&s.inv.levadura===1, d:`pan de cebada +${p1}, la masa quedó levando: ${levando}, pan con levadura +${b1}, levadura guardada: ${s.inv.levadura}`};"""),
+    'epica': ('Misión épica del panadero de punta a punta (abre el horno de Belén)', COMUN + """
+      const id='panes',E=d.EPIC[id]; const P=d.epP(); delete P[id]; P[id]={s:0,d:-9};
+      s.inv.pancebada=5; s.inv.cooked=2; s.inv.panprop=12; const log=[];
+      for(let i=0;i<E.steps.length;i++){ const sp=E.steps[i]; P[id].d=-9;
+        if(sp.k==='act'){ const pl=d.epPlace(sp.at); if(!pl) return {ok:false,d:'no hay lugar para '+sp.at}; tp(pl.x,pl.z); const n=d.epNear(); if(!n||n.id!==id) return {ok:false,d:'no aparece el paso en '+sp.at}; d.epAct(id); }
+        else if(sp.k==='quiz') d.epAdvance(id,'ok');
+        else d.epAdvance(id, sp.ok||'ok');
+        log.push(sp.k+'→'+(P[id].done?'fin':P[id].s)); }
+      const s7=d.BREADS.find(b=>b.id==='prop');
+      return {ok:!!P[id].done, d:log.join(', ')+' · título: '+((s.titles||[]).includes(E.title))};"""),
+    'aldea': ('Aldea: tres regalos de nivel 5 llevan a «Como familia» y dan la prenda', COMUN + """
+      d.repP()['Caná']=97; s.inv.barro5=3; const v={vil:'Caná',name:'Ana'}; const ks=[];
+      for(let i=0;i<3;i++){ d.vilGiftOpen(v); const b=document.querySelector('#v3sheet [data-k]'); if(!b) return {ok:false,d:'no aparece qué regalar'}; ks.push(b.dataset.k); b.click(); }
+      await new Promise(r=>setTimeout(r,4500)); const lv=d.repLv('Caná'), g=d.gearState().own.includes('vil_cana');
+      return {ok:lv===7&&g, d:`regaló ${ks.join(', ')} · escalón ${lv} de 7 · prenda: ${g}`};"""),
+    'jope': ('Jope: muelle con atún, pesca en la orilla y puesto del puerto', COMUN + """
+      const m=d.Z7.mpier; if(!m) return {ok:false,d:'no está el muelle de Jope'};
+      tp(m.x-1,m.z); const t7=d.svWaterNear(); const near=[]; for(const dz of [6,15]) for(let x=m.x-24;x<m.x;x+=1){tp(x,m.z+dz); const n=d.svNear(); if(n) near.push(n.k+':'+(n.label||n.shop||'').slice(0,25));}
+      const prof=[]; for(let x=m.x-16;x<m.x;x+=1){ tp(x,m.z+15); const nn=d.svNear(); prof.push(x.toFixed(0)+':'+S.W.hAt(x,m.z+15).toFixed(1)+':'+d.svWaterNear()+':'+(nn?nn.k+'/'+(nn.label||'').slice(0,20):'-')); }
+      const tienda=near.some(x=>/Jope/.test(x)), dorada=near.some(x=>/^fish:/.test(x)); /* sin caña dice «Necesitás una caña», con caña «Pescar dorada» */
+      if(!dorada) return {ok:false,d:'perfil de la orilla '+prof.join(' ')};
+      return {ok:t7===7&&tienda&&dorada, d:`muelle: nivel ${t7} · puesto: ${tienda} · dorada en la orilla: ${dorada}`};"""),
+    'frutos': ('Frutos: escalón 6 practicando y 7 con una épica (pose y prenda)', COMUN + """
+      const a=d.atP(); a.paz=100; a.ov=a.ov||{}; a.ov.paz=250; d.frCheck('paz'); const e6=d.ft('paz');
+      const P=d.epP(); P.tormenta={s:9,done:1}; d.frCheck('paz'); const e7=d.ft('paz'); delete P.tormenta;
+      const g=d.gearState().own.includes('fr7_paz'), pose=d.POSES.some(p=>p.fr==='paz');
+      return {ok:e6===6&&e7===7&&g&&pose, d:`escalón ${e6} → ${e7} · prenda: ${g}`};"""),
+}
+
+KIDS = {
+    'kids': ('Kids: cosechar con la hoz y que el campo vuelva', COMUN + """
+      const o=(S.kgr||[])[0]; if(!o) return {ok:false,d:'no hay campos de trigo en Kids'}; tp(o.x+1,o.z);
+      const n=d.kNear(); if(!n||n.k!=='grain') return {ok:false,d:'no aparece cosechar: '+(n&&n.label)};
+      d.kAct(); for(let i=0;i<40;i++) d.kidsTick(1.4); const oculto=!o.mesh.visible; for(let i=0;i<100;i++) d.kidsTick(1.5);
+      return {ok:oculto&&o.mesh.visible, d:`se cosechó: ${oculto} · volvió a crecer: ${o.mesh.visible}`};"""),
+}
+
+CELU = {
+    'celular': ('Celular: sin zoom al tocar dos veces, botones sin taparse', COMUN + """
+      const vp=document.querySelector('meta[name=viewport]').content; const o=d.Z7.nodes.find(o=>o.g==='trigo'&&o.t===1); if(o) tp(o.x+1,o.z);
+      await new Promise(r=>setTimeout(r,2500));
+      const R=e=>e&&!e.hidden&&getComputedStyle(e).display!=='none'?e.getBoundingClientRect():null, hit=(a,b)=>a&&b&&a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom;
+      const doBtn=R(document.querySelector('.v3surv .sv-do')), btns=[...document.querySelectorAll('.v3surv .sv-btn,.fan-tg,.v3cam-tg')].map(R).filter(Boolean);
+      const tapa=btns.some(b=>hit(doBtn,b));
+      return {ok:/user-scalable=no/.test(vp)&&!tapa, d:`viewport: ${vp} · el botón de acción tapa otro: ${tapa} · zoom: ${visualViewport.scale}`};"""),
+}
+
+
+async def correr(b, nombre, rama, pruebas, movil, elegidas, res):
+    pr = {k: v for k, v in pruebas.items() if not elegidas or k in elegidas}
+    if not pr: return
+    if movil:
+        ctx = await b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2, is_mobile=True, has_touch=True,
+                                  user_agent='Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36')
+    else:
+        ctx = await b.new_context(viewport={'width': 1280, 'height': 720})
+    await ctx.route('**/*', servir)
+    pg = await ctx.new_page(); errores = []
+    def err(e):
+        st = getattr(e, 'stack', '') or ''
+        # solo cuentan los errores del código del juego; los de scripts de afuera (que en la prueba no cargan) se anotan aparte
+        (errores if re.search(r'/app/|/kh/|jugar\.html', st) else ajenos).append(str(e)[:200] + ' @ ' + (re.findall(r'(\S+\.(?:js|html)):(\d+)', st)[:1] or [''])[0].__str__())
+    ajenos = []; pg.on('pageerror', err)
+    t0 = time.time(); ok = False
+    try: ok = await entrar(pg, rama)
+    except Exception as e: errores.append('entrar: ' + str(e)[:200])
+    if not ok:
+        for k, (t, _) in pr.items(): res.append((k, t, False, 'no se pudo entrar al juego (' + nombre + ')'))
+        await ctx.close(); return
+    if movil:  # doble toque de verdad sobre la pantalla del juego
+        await pg.touchscreen.tap(200, 400); await pg.wait_for_timeout(120); await pg.touchscreen.tap(200, 400); await pg.wait_for_timeout(800)
+    for k, (titulo, js) in pr.items():
+        try:
+            r = await pg.evaluate('(async()=>{' + js + '})()')
+        except Exception as e:
+            r = {'ok': False, 'd': 'error: ' + str(e)[:300]}
+        try: await pg.screenshot(path=os.path.join(OUT, k + '.png'), timeout=90000)
+        except Exception: pass
+        res.append((k, titulo, bool(r.get('ok')), r.get('d', '')))
+        print(('✅ ' if r.get('ok') else '❌ ') + k + ' · ' + r.get('d', ''), flush=True)
+    if errores: res.append(('errores-' + nombre, 'Errores de código durante ' + nombre, False, ' | '.join(errores[:5])))
+    if ajenos: print('  (avisos de scripts de afuera, no cuentan: ' + ' | '.join(ajenos[:3]) + ')', flush=True)
+    print(f'  ({nombre}: {time.time() - t0:.0f} s)', flush=True)
+    await ctx.close()
+
+
+async def main():
+    elegidas = set(sys.argv[1:]); os.makedirs(OUT, exist_ok=True); res = []
+    async with async_playwright() as p:
+        b = await p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox', '--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
+        await correr(b, 'Hero en compu', 'hero', HERO, False, elegidas, res)
+        await correr(b, 'Hero en celular', 'hero', CELU, True, elegidas, res)
+        await correr(b, 'Kids', 'kids', KIDS, False, elegidas, res)
+        await b.close()
+    bien = sum(1 for r in res if r[2])
+    with open(os.path.join(OUT, 'informe.md'), 'w', encoding='utf-8') as f:
+        f.write(f'# Pruebas de Kids & Hero · {time.strftime("%d/%m/%Y %H:%M")}\n\n{bien} de {len(res)} bien.\n\n')
+        for k, t, ok, d in res: f.write(f'- {"✅" if ok else "❌"} **{t}** ({k}): {d}\n')
+    print(f'\n{bien} de {len(res)} bien. Informe: {os.path.join(OUT, "informe.md")}')
+    sys.exit(0 if bien == len(res) else 1)
+
+asyncio.run(main())
