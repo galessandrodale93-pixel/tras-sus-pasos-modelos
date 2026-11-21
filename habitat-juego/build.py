@@ -33,7 +33,7 @@ loader = ('<script>window.TSP_WIX=location.origin+"/kh/wix";window.TSP_SW_SCOPE=
 h = h.replace(m.group(0), loader)
 # manifest: arranca en /jugar.html
 mf = json.load(open(os.path.join(SRC, 'manifest.json'), encoding='utf-8'))
-mf['start_url'] = '/jugar.html#jugar-hero'; mf['scope'] = '/jugar'
+mf['start_url'] = '/jugar.html'; mf['scope'] = '/jugar'; mf['id'] = '/jugar.html'; mf['orientation'] = 'any'  # app instalable (PWA): abre en la portada del juego, en vertical o en horizontal
 json.dump(mf, open(os.path.join(OUT, 'kh', 'manifest.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
 open(os.path.join(OUT, 'jugar.html'), 'w', encoding='utf-8').write(h)
 # service worker en la raíz (con alcance /jugar, no toca el resto de la web)

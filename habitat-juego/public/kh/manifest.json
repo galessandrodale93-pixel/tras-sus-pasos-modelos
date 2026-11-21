@@ -3,10 +3,10 @@
   "short_name": "Kids & Hero",
   "description": "Un juego para caminar la historia de Jesús: Kids y Hero.",
   "lang": "es",
-  "start_url": "/jugar.html#jugar-hero",
+  "start_url": "/jugar.html",
   "scope": "/jugar",
   "display": "fullscreen",
-  "orientation": "landscape",
+  "orientation": "any",
   "background_color": "#0E0C08",
   "theme_color": "#0E0C08",
   "icons": [
@@ -30,5 +30,6 @@
   "display_override": [
     "fullscreen",
     "standalone"
-  ]
+  ],
+  "id": "/jugar.html"
 }
