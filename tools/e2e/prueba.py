@@ -24,7 +24,7 @@ OUT = os.path.join(AQUI, 'salida')
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
 DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui')
 
 
 def local(url):
@@ -72,7 +72,7 @@ async def entrar(pg, rama):
 COMUN = "const d=__dbg;try{d.CINE.on=false;}catch(e){}try{const gp=d.guiaP();['go','obj','do','ham','mis','t_bag','t_map','t_eat','t_craft','t_fan','t_glow'].forEach(k=>gp[k]=1);d.GUIA.cur=null;}catch(e){}document.body.classList.remove('v3talk');document.querySelectorAll('#v3sheet,.sheet').forEach(e=>e.hidden=true);document.body.classList.remove('v3cine');const S=d.S(),s=d.svP?d.svP():null,tp=(x,z)=>S.av.position.set(x,S.W.hAt(x,z),z),tick=(n,dt)=>{for(let i=0;i<n;i++)d.t7Tick(dt||1)};"
 
 GUIA = COMUN + """
-      const gp=d.guiaP(); for(const k in gp) delete gp[k]; d.GUIA.cine=1; d.GUIA.last=0; d.GUIA.cur=null; S.walking=false;
+      const gp=d.guiaP(); for(const k in gp) delete gp[k]; d.GUIA.cine=1; d.GUIA.last=0; d.GUIA.cur=null; S.walking=false; S.freeMoving=false; S.quiet=false; try{d.ui();}catch(e){}
       for(let i=0;i<25&&!d.GUIA.cur;i++) await new Promise(r=>setTimeout(r,700));
       d.GUIA.until=performance.now()+120000; await new Promise(r=>setTimeout(r,600));
       const k=d.GUIA.cur, chip=document.getElementById('v3obj'), pz=document.querySelector('.v3pista.on'), ring=document.querySelector('.v3ring:not([hidden])');
@@ -150,7 +150,20 @@ RESU = COMUN + r"""
       const w=img?img.naturalWidth:0, h=img?img.naturalHeight:0, btn=!!ov.querySelector('.cd-dl'); ov.querySelector('.rc-x').click();
       return {ok:due&&due[0]==='semana'&&!otra&&t1==='Tu semana'&&w===1080&&h===1920&&btn, d:`aparece solo a los 7 días: ${due&&due[0]} (y no se repite: ${!otra}) · presentación: ${t1} · tarjeta ${w}×${h} · botón para guardar: ${btn}`};"""
 
+VIDEO = COMUN + r"""
+      d.danceBuild(); const R=d.recapData('semana'); const b=await d.vidMake({kind:'semana',R},'D_salmo',null,1.5);
+      const v=document.createElement('video'); v.muted=true; v.src=URL.createObjectURL(b); await new Promise(r=>{v.onloadedmetadata=r; v.onerror=r; setTimeout(r,8000);});
+      return {ok:b.size>20000&&v.videoWidth===720&&v.videoHeight===1280, d:`video ${v.videoWidth}×${v.videoHeight}, ${Math.round(b.size/1024)} KB, ${v.duration&&v.duration.toFixed(1)} s · bailes: ${['D_david','D_salmo','D_ronda','D_fiesta'].filter(k=>d.H3.clips[k]).length} de 4`};"""
+
+BAILE = COMUN + r"""
+      d.danceBuild(); d.poseMenu(true); const m=document.querySelector('.v3poses'); m.querySelector('[data-t="b"]').click(); await new Promise(r=>setTimeout(r,200));
+      const bs=[...document.querySelectorAll('.v3poses [data-p]')], lock=bs.filter(b=>b.disabled).length; const dv=bs.find(b=>b.dataset.p==='d_david'); dv&&dv.click(); await new Promise(r=>setTimeout(r,1500));
+      const ok=S.poseK==='d_david'&&S.actK==='D_david'; S.joy.y=1; await new Promise(r=>setTimeout(r,900)); S.joy.y=0; const fin=!S.poseK;
+      return {ok:bs.length===4&&lock===2&&ok&&fin, d:`bailes en el menú: ${bs.length} (${lock} se ganan con el camino de 7 días) · baila la danza de David: ${ok} · al caminar deja de bailar: ${fin}`};"""
+
 HERO = {
+    'baile': ('Bailes bíblicos en el menú del Resplandor', BAILE),
+    'video': ('Video para compartir: personaje bailando y logros (MP4 720×1280)', VIDEO),
     'resumen': ('Resumen de la semana: aparece solo, presentación con el narrador y tarjeta 1080×1920', RESU),
     'tarjeta': ('Tarjeta para compartir: imagen 1080×1350 con el personaje y el logro', TARJ),
     'avisos': ('Avisos: «Avisarme cada día», recordatorio de calendario y estado para el aviso', AVISOS),
@@ -201,6 +214,7 @@ HERO = {
 }
 
 KIDS = {
+    'bailekids': ('Kids: brillar o bailar desde la estrella', BAILE),
     'resukids': ('Kids: resumen de la semana', RESU),
     'tarjkids': ('Kids: tarjeta para compartir', TARJ),
     'advkids': ('Kids: calendario de Adviento', ADVI),

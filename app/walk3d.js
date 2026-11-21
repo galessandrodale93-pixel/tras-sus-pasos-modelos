@@ -3755,7 +3755,7 @@ function wireActs() {
   let box = document.getElementById('v3acts');
   if (!box) { box = document.createElement('div'); box.id = 'v3acts'; box.className = 'v3acts';
     box.innerHTML = '<button data-a="jump" aria-label="Saltar" title="Saltar (barra espaciadora)"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 4l7 7h-4v6H9v-6H5Z" fill="currentColor"/><path d="M6 21h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><button data-a="pray" aria-label="Arrodillarse a orar" title="Orar (tecla O)">🙏</button><button data-a="wave" aria-label="Saludar" title="Saludar (tecla H)">👋</button><button data-a="glow" aria-label="Resplandor" title="Resplandor (tecla P)">🌟</button><button data-a="room" aria-label="Jugar con amigos" title="Jugar con amigos">👥</button><button data-a="help" aria-label="Cómo se juega" title="Cómo se juega">❔</button>';
-    document.body.appendChild(box); box.querySelectorAll('button').forEach(b => b.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); ({ jump: doJump, pray: doPray, wave: doWave, sit: doSit, glow: () => S && (S.hx ? poseMenu() : kidsShine()), room: mpPanel, help: () => guiaPanel() })[b.dataset.a](); }); }
+    document.body.appendChild(box); box.querySelectorAll('button').forEach(b => b.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); ({ jump: doJump, pray: doPray, wave: doWave, sit: doSit, glow: () => S && poseMenu(), room: mpPanel, help: () => guiaPanel() })[b.dataset.a](); }); }
   addEventListener('keydown', e => { if (!S || document.getElementById('view3d').hidden || e.repeat || /INPUT|TEXTAREA/.test((e.target || {}).tagName || '')) return; const k = e.key.toLowerCase(); if (BLD.on && bldKey(k)) { e.preventDefault(); return; } if (k === ' ') { e.preventDefault(); doJump(); } else if (k === 'o') doPray(); else if (k === 'h') doWave(); else if (k === 't' && MP.code) talkStart(); else if (k === 'e') axHold(true); else if (k === 'c') svEat(); else if (k === 'b') svCraft(); else if (k === 'p' && S) (S.hx ? poseMenu() : kidsShine()); });
   addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 't') talkStop(); }); addEventListener('blur', () => talkStop());
 }
@@ -5667,7 +5667,8 @@ async function cardShow(o) {
   svToast('📸 Armando tu tarjeta…'); const cv = await cardMake(o), url = cv.toDataURL('image/jpeg', .9);
   const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', .9)), file = new File([blob], 'tras-sus-pasos.jpg', { type: 'image/jpeg' }); cv.width = cv.height = 1;
   const can = !!(navigator.canShare && navigator.canShare({ files: [file] }));
-  vilSheet(`<div class="inv-h"><b>📸 Tu tarjeta</b><button class="bag-x" aria-label="Cerrar">✕</button></div><img class="cd-img" src="${url}" alt="Tarjeta para compartir"><div class="cd-b">${can ? '<button type="button" class="cd-sh">Compartir</button>' : ''}<button type="button" class="cd-dl${can ? ' sec' : ''}">Descargar</button></div><p class="md-k">La tarjeta muestra tu personaje del juego, sin tu nombre ni fotos tuyas.</p>`);
+  vilSheet(`<div class="inv-h"><b>📸 Tu tarjeta</b><button class="bag-x" aria-label="Cerrar">✕</button></div><img class="cd-img" src="${url}" alt="Tarjeta para compartir"><div class="cd-b">${can ? '<button type="button" class="cd-sh">Compartir</button>' : ''}<button type="button" class="cd-dl${can ? ' sec' : ''}">Descargar</button></div><div class="vd-box"></div><p class="md-k">La tarjeta muestra tu personaje del juego, sin tu nombre ni fotos tuyas.</p>`);
+  try { vidPick(Object.assign({ kind: 'logro' }, o), document.querySelector('#v3sheet .vd-box')); } catch (e) {}
   const el = document.getElementById('v3sheet'), sh = el.querySelector('.cd-sh'), dl = el.querySelector('.cd-dl');
   if (sh) sh.onclick = async () => { try { await navigator.share({ files: [file], text: o.share || 'Tras sus pasos · habitat-cfm.org' }); } catch (e) {} };
   dl.onclick = () => { const a = document.createElement('a'); a.href = url; a.download = 'tras-sus-pasos.jpg'; document.body.appendChild(a); a.click(); a.remove(); };
@@ -5770,7 +5771,7 @@ async function recapShow(kind, prev) {
 async function recapFin(R, st) {
   try { const cv = await recapCard(R), url = cv.toDataURL('image/jpeg', .9), blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', .9)), file = new File([blob], 'tras-sus-pasos-' + R.kind + '.jpg', { type: 'image/jpeg' }); cv.width = cv.height = 1;
     const can = !!(navigator.canShare && navigator.canShare({ files: [file] })), box = st.querySelector('.rc-card'), bt = st.querySelector('.rc-btns'); if (!box) return;
-    box.innerHTML = `<img src="${url}" alt="Tu resumen para compartir">`; bt.innerHTML = (can ? '<button type="button" class="cd-sh">Compartir</button>' : '') + `<button type="button" class="cd-dl${can ? ' sec' : ''}">Descargar</button>`;
+    box.innerHTML = `<img src="${url}" alt="Tu resumen para compartir">`; { const vb = document.createElement('div'); vb.className = 'vd-box'; bt.after(vb); vidPick({ kind: R.kind, R }, vb); } bt.innerHTML = (can ? '<button type="button" class="cd-sh">Compartir</button>' : '') + `<button type="button" class="cd-dl${can ? ' sec' : ''}">Descargar</button>`;
     const sh = bt.querySelector('.cd-sh'); if (sh) sh.onclick = async e => { e.stopPropagation(); try { await navigator.share({ files: [file], text: R.nom + ' en Tras sus pasos ✨' }); } catch (er) {} };
     bt.querySelector('.cd-dl').onclick = e => { e.stopPropagation(); const a = document.createElement('a'); a.href = url; a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); }; } catch (e) { console.warn('resumen', e); }
 }
@@ -5788,6 +5789,82 @@ function recapDue() {
   if (H.ml !== mk) { const pm = mK(new Date(y, m - 1, 1)); H.ml = mk; if ((H.dias[pm] || 0) >= 2) { H.wl = today; return ['mes', true]; } }
   const dw = (new Date(today) - new Date(H.wl)) / 864e5; if (dw >= 7) { const ak = dK(new Date(now.getTime() - 6 * 864e5)), n = Object.keys(H.d).filter(k => k >= ak).length; H.wl = today; if (n >= 2) return ['semana', false]; }
   return null;
+}
+
+/* ---------- video para compartir: tu personaje bailando y tus logros apareciendo ----------
+   8 segundos, 720×1280 (formato historia), en MP4 (H.264) armado cuadro por cuadro en el aparato con WebCodecs: sale igual
+   aunque el celular sea lento. Si el aparato no puede hacer video, queda la tarjeta de imagen. */
+const VID = { busy: false };
+const vidOk = () => typeof VideoEncoder === 'function' && typeof VideoFrame === 'function';
+async function vidCodec(w, h) { for (const c of ['avc1.42001f', 'avc1.4d001f', 'avc1.640028']) { try { const s = await VideoEncoder.isConfigSupported({ codec: c, width: w, height: h, bitrate: 4e6, framerate: 24 }); if (s && s.supported) return c; } catch (e) {} } return null; }
+/* o: { kind: 'semana'|'mes'|'semestre'|'anio'|'logro', R (resumen) o t/ref/lines (logro) }, clip: nombre del baile */
+async function vidMake(o, clip, prog, dur) {
+  const FW = 720, FH = 1280, FPS = 24, DUR = dur || 8, N = FPS * DUR, K = FW / 1080, codec = await vidCodec(FW, FH); if (!codec) throw new Error('sin códec');
+  const { Muxer, ArrayBufferTarget } = await import(new URL('./vendor/mp4-muxer.mjs', import.meta.url).href);
+  await cardFonts(); const hx = !!S.hx, T = CARD_TEMA[o.kind] || CARD_TEMA.logro, R = o.R, recap = !!R;
+  /* capa fija (fondo, motivo, marco, marca) dibujada una vez a 1080×1920 */
+  const st = document.createElement('canvas'); st.width = 1080; st.height = 1920; const sx = st.getContext('2d'); cardFondo(sx, 1080, 1920, T, hx); cardMotivo(sx, 1080, 1920, T, (R ? R.range : o.t) || 'x'); cardMarco(sx, 1080, 1920, T); cardMarca(sx, 1080, T, hx);
+  /* el personaje: escena propia, el baile elegido y el mismo motor del juego */
+  const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#FFF4E0', '#3A2A1C', 1.6)); const kl = new THREE.DirectionalLight('#FFE2B8', 2.6); kl.position.set(2, 4, 4); sc.add(kl); const rim = new THREE.DirectionalLight('#9EC2FF', 1.8); rim.position.set(-3, 2.5, -3); sc.add(rim);
+  const look = lookOf(G().P()), av = buildHero3(look); av.traverse(m => { if (m.isSprite) m.visible = false; if (m.isPointLight) m.intensity = 0; }); const u = av.userData.h3; if (u.lamp) u.lamp.visible = false; sc.add(av);
+  const mx = u.mixer; mx.stopAllAction(); const act = H3.clips[clip] ? mx.clipAction(H3.clips[clip]) : null; if (act) { act.reset(); act.setLoop(THREE.LoopRepeat); act.play(); }
+  const AW = 330, AH = 450, h = 1.85 * av.scale.y, cam = new THREE.PerspectiveCamera(26, AW / AH, .1, 40); cam.position.set(0, h * .7, h * 2.75); cam.lookAt(0, h * .62, 0);
+  const acv = document.createElement('canvas'), LR = liteR(acv, 1); LR.setSize(AW, AH);
+  const cv = document.createElement('canvas'); cv.width = FW; cv.height = FH; const x = cv.getContext('2d');
+  const target = new ArrayBufferTarget(), mux = new Muxer({ target, video: { codec: 'avc', width: FW, height: FH }, fastStart: 'in-memory' });
+  let err = null; const enc = new VideoEncoder({ output: (ch, meta) => mux.addVideoChunk(ch, meta), error: e => { err = e; } }); enc.configure({ codec, width: FW, height: FH, bitrate: 4e6, framerate: FPS });
+  const ease = k => 1 - Math.pow(1 - Math.max(0, Math.min(1, k)), 3), rng = cardRng('chispas');
+  const sparks = Array.from({ length: 46 }, () => ({ x: rng() * 1080, y0: rng() * 1920, v: 60 + rng() * 120, r: 1.5 + rng() * 3.5, ph: rng() * 6.28 }));
+  for (let i = 0; i < N; i++) {
+    if (err) throw err; const t = i / FPS;
+    x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(st, 0, 0, FW, FH); x.setTransform(K, 0, 0, K, 0, 0);
+    /* rayos que giran y chispas que suben */
+    const top = recap ? 336 : 300, ah = recap ? 640 : 760, aw = ah * AW / AH, cy = top + ah * .42;
+    x.save(); x.translate(540, cy); x.rotate(t * .25); x.globalAlpha = .2; for (let r = 0; r < 18; r++) { x.rotate(Math.PI / 9); x.fillStyle = T.acc2; x.beginPath(); x.moveTo(-6, 0); x.lineTo(6, 0); x.lineTo(30, -560); x.lineTo(-30, -560); x.fill(); } x.restore();
+    const gl = x.createRadialGradient(540, cy, 10, 540, cy, 380); gl.addColorStop(0, T.acc + '99'); gl.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = gl; x.fillRect(140, cy - 400, 800, 800);
+    for (const p of sparks) { const y = (p.y0 - t * p.v + 1920 * 3) % 1920; x.globalAlpha = .35 + .35 * Math.sin(t * 3 + p.ph); x.fillStyle = T.acc2; x.beginPath(); x.arc(p.x, y, p.r, 0, 7); x.fill(); } x.globalAlpha = 1;
+    /* el personaje bailando */
+    if (act) mx.setTime(t); av.updateMatrixWorld(true); LR.render(sc, cam); x.save(); x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = 30; x.drawImage(acv, 540 - aw / 2, top, aw, ah); x.restore();
+    x.save(); x.globalAlpha = .55; x.strokeStyle = T.acc; x.lineWidth = 4; x.beginPath(); x.ellipse(540, top + ah - 18, aw * .36, 22, 0, 0, 7); x.stroke(); x.restore();
+    /* título que entra con fuerza */
+    const kt = ease(t / .7), sTit = .6 + .4 * kt; x.save(); x.globalAlpha = kt; x.textAlign = 'center'; x.translate(540, recap ? 216 : 190); x.scale(sTit, sTit); x.shadowColor = 'rgba(0,0,0,.6)'; x.shadowBlur = 20;
+    if (recap) { x.font = '700 124px Fraunces'; x.fillStyle = cardOro(x, T, -100, 30); x.fillText(T.nom, 0, 30); x.shadowBlur = 0; x.font = '800 34px Nunito'; x.fillStyle = T.acc2; x.fillText(R.range.charAt(0).toUpperCase() + R.range.slice(1), 0, 88); }
+    else { x.font = '700 76px Fraunces'; x.fillStyle = cardOro(x, T, -80, 40); const L = cardWrap(x, o.t, 900); L.slice(0, 2).forEach((l, j) => x.fillText(l, 0, j * 86)); }
+    x.restore();
+    if (recap) {
+      /* cinta del nivel y los seis números, uno detrás del otro */
+      const kr = ease((t - 1.1) / .5); if (kr > 0) { const lvT = R.lvB > R.lvA ? `NIVEL ${R.lvA}  →  ${R.lvB}` : `NIVEL ${R.lvB}`, ry = 1012; x.save(); x.globalAlpha = kr; x.translate(540, ry); x.scale(.7 + .3 * kr, .7 + .3 * kr); x.font = '900 46px Nunito'; const lw = x.measureText(lvT).width + 110;
+        x.fillStyle = cardOro(x, T, -40, 40); x.beginPath(); x.moveTo(-lw / 2 - 30, 0); x.lineTo(-lw / 2, -40); x.lineTo(lw / 2, -40); x.lineTo(lw / 2 + 30, 0); x.lineTo(lw / 2, 40); x.lineTo(-lw / 2, 40); x.closePath(); x.fill(); x.fillStyle = '#2B1A04'; x.textAlign = 'center'; x.fillText(lvT, 0, 16); x.restore(); }
+      const tw = 300, th = 232, gx = 30, x0 = (1080 - tw * 3 - gx * 2) / 2, y0 = 1084;
+      R.tiles.forEach(([ic, n, lab, tot, raw], j) => { const t0 = 1.6 + j * .42, k = ease((t - t0) / .45); if (k <= 0) return; const tx = x0 + (j % 3) * (tw + gx), ty = y0 + Math.floor(j / 3) * (th + 26) + (1 - k) * 60;
+        x.save(); x.globalAlpha = k; x.fillStyle = 'rgba(255,255,255,.08)'; x.strokeStyle = T.acc + '99'; x.lineWidth = 2; x.beginPath(); x.roundRect ? x.roundRect(tx, ty, tw, th, 26) : x.rect(tx, ty, tw, th); x.fill(); x.stroke();
+        x.textAlign = 'center'; x.font = '46px Nunito'; x.fillStyle = '#FFFFFF'; x.fillText(ic, tx + tw / 2, ty + 62); const cnt = typeof n === 'number' && !raw ? Math.round(n * ease((t - t0) / .9)) : n;
+        x.font = '900 ' + (String(n).length > 6 ? 54 : 74) + 'px Nunito'; x.fillText((raw || !n ? '' : '+') + cnt, tx + tw / 2, ty + 142); x.font = '800 25px Nunito'; x.fillStyle = T.acc2; cardWrap(x, lab, tw - 30).slice(0, 2).forEach((l, q) => x.fillText(l, tx + tw / 2, ty + 180 + q * 30)); x.restore(); });
+      const kv = ease((t - 4.6) / .8); if (kv > 0) { x.save(); x.globalAlpha = kv; x.textAlign = 'center'; x.font = 'italic 600 38px Fraunces'; x.fillStyle = 'rgba(255,248,232,.95)'; let vy = 1640; for (const l of cardWrap(x, '«' + R.verse[0] + '»', 880)) { x.fillText(l, 540, vy); vy += 50; } x.font = '900 24px Nunito'; x.fillStyle = T.acc; x.fillText(R.verse[1].toUpperCase(), 540, vy + 8); x.restore(); }
+    } else {
+      const kl2 = ease((t - 1.4) / .7); if (kl2 > 0) { x.save(); x.globalAlpha = kl2; x.textAlign = 'center'; let y = 1180 + (1 - kl2) * 40; if (o.ref) { x.font = '900 28px Nunito'; x.fillStyle = T.acc; x.fillText(o.ref.toUpperCase(), 540, y); y += 60; }
+        x.font = (o.ref ? 'italic 600 40px Fraunces' : '700 38px Nunito'); x.fillStyle = 'rgba(255,248,232,.95)'; for (const l of (o.lines || [])) for (const ll of cardWrap(x, l, 880)) { if (y > 1740) break; x.fillText(ll, 540, y); y += 54; } x.restore(); }
+    }
+    x.save(); x.textAlign = 'center'; x.fillStyle = T.acc; x.globalAlpha = .7; x.fillRect(470, 1802, 140, 3); x.globalAlpha = 1; x.font = '800 30px Nunito'; x.fillStyle = T.acc2; x.fillText('Jugá en habitat-cfm.org', 540, 1850); x.restore();
+    const fr = new VideoFrame(cv, { timestamp: Math.round(i * 1e6 / FPS), duration: Math.round(1e6 / FPS) }); enc.encode(fr, { keyFrame: i % 48 === 0 }); fr.close();
+    if (enc.encodeQueueSize > 6) await new Promise(r => setTimeout(r, 0)); if (i % 6 === 0) { prog && prog(i / N); await new Promise(r => setTimeout(r, 0)); }
+  }
+  await enc.flush(); enc.close(); mux.finalize(); LR.dispose(); mx.stopAllAction(); sc.remove(av); cv.width = cv.height = st.width = st.height = 1;
+  return new Blob([target.buffer], { type: 'video/mp4' });
+}
+/* elegir el baile y armar el video */
+function vidPick(o, box) {
+  if (!vidOk() || !H3.ok) { box.innerHTML = '<small class="md-k">Este aparato no puede armar video: compartí la tarjeta.</small>'; return; }
+  const vu = (() => { try { return metaP().vueltas || 0; } catch (e) { return 0; } })(), L = POSES.filter(p => p.dance && (p.need || 0) <= vu);
+  box.innerHTML = `<b class="vd-h">🎬 Video con tu personaje bailando</b><div class="vd-l">${L.map(p => `<button type="button" data-c="${p.clip}">${p.ico} ${p.name}</button>`).join('')}</div>`;
+  box.querySelectorAll('[data-c]').forEach(b => b.onclick = async e => { e.stopPropagation(); if (VID.busy) return; VID.busy = true; const clip = b.dataset.c;
+    box.innerHTML = '<div class="vd-p"><i style="width:0%"></i></div><small class="md-k">Armando tu video… dejá el juego abierto unos segundos.</small>'; const bar = box.querySelector('.vd-p i');
+    try { const blob = await vidMake(o, clip, k => { bar.style.width = Math.round(k * 100) + '%'; }), file = new File([blob], 'tras-sus-pasos.mp4', { type: 'video/mp4' }), url = URL.createObjectURL(blob), can = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+      box.innerHTML = `<video class="vd-v" src="${url}" autoplay loop muted playsinline></video><div class="cd-b">${can ? '<button type="button" class="cd-sh">Compartir video</button>' : ''}<button type="button" class="cd-dl${can ? ' sec' : ''}">Descargar</button></div><small class="md-k">Sin sonido: en Instagram o en el estado de WhatsApp le podés poner la música que quieras.</small>`;
+      const sh = box.querySelector('.cd-sh'); if (sh) sh.onclick = async ev => { ev.stopPropagation(); try { await navigator.share({ files: [file], text: 'Tras sus pasos ✨' }); } catch (er) {} };
+      box.querySelector('.cd-dl').onclick = ev => { ev.stopPropagation(); const a = document.createElement('a'); a.href = url; a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); };
+    } catch (er) { console.warn('video', er); box.innerHTML = '<small class="md-k">No se pudo armar el video en este aparato. Compartí la tarjeta.</small>'; }
+    VID.busy = false; });
 }
 
 /* ---------- Adviento y Navidad: una ventana por día del 1 al 25 de diciembre y la de Reyes el 6 de enero ----------
@@ -5888,7 +5965,7 @@ async function heroLoad() {
     H3.clips = Object.fromEntries(an.animations.map(c => [c.name, c]));
     const xl = f => new Promise((r, j) => L.load(new URL('../hero/' + f, import.meta.url).href, r, undefined, j)).then(ex => ex.animations.forEach(c => { if (!H3.clips[c.name] && !/dance/i.test(c.name)) H3.clips[c.name] = c; })).catch(e2 => console.warn('hero3d extra', f, e2));
     buildStep('animaciones'); await withTO(Promise.all([xl('hero_anims2.glb'), xl('hero_anims3.glb')]), 25000, 'animaciones').catch(e => console.warn('hero3d extra', e));
-    H3.ok = true;
+    H3.ok = true; try { danceBuild(); } catch (e) { console.warn('bailes', e); }
   } catch (e) { console.warn('hero3d', e); H3.fail = true; }
 }
 // junta todas las piezas (cabeza, ropa, pelo) sobre un solo esqueleto
@@ -7106,10 +7183,65 @@ function invCourses(body) {
     return `<div class="ins-row${d ? ' on' : ''}"><img alt="" src="${emblemURL(c.id, 72)}" width="44" height="44"><div><b>${esc(c.name)}</b><small>${d ? 'Terminado el ' + fmt(d.at) + (d.of ? ` · Desafíos ${d.ok}/${d.of} · ${d.pct}%` : '') : c.soon ? 'Próximamente' : 'Todavía no terminado'}</small>${d && d.don && DONL[d.don] ? `<small class="ins-don">✦ Don descubierto: <b>${DONL[d.don]}</b></small>` : ''}</div>${d ? '<span class="ins-ok">✓</span>' : ''}</div>`; }).join('')}</div>`;
 }
 
+/* ---------- bailes bíblicos de festejo ----------
+   Se arman acá, sobre el mismo esqueleto de los personajes: cada baile es una función del tiempo que dice cuánto gira cada
+   hueso alrededor de los ejes del cuerpo (x: hacia la izquierda del personaje, y: arriba, z: adelante), partiendo de la
+   postura de estar parado. Sin movimientos de cadera sensuales: saltos, palmas, rondas y brazos al cielo. */
+const sm = k => k <= 0 ? 0 : k >= 1 ? 1 : k * k * (3 - 2 * k);
+const sn = (t, p, ph) => Math.sin((t / p + (ph || 0)) * Math.PI * 2);
+const DANZAS = {
+  /* 2 Samuel 6:14 — saltos de alegría con los brazos en alto */
+  D_david: { dur: 2.4, f: t => { const b = (t % .6) / .6, hop = Math.sin(b * Math.PI), land = 1 - hop, w = sn(t, 1.2);
+    return { py: .11 * hop, pz: 0, R: { spine_01: [['x', -6]], spine_03: [['x', -6]], Head: [['x', -14]], neck_01: [['x', -4]],
+      upperarm_l: [['z', 148 + 12 * w], ['x', -10]], upperarm_r: [['z', -(148 - 12 * w)], ['x', -10]], lowerarm_l: [['x', -12]], lowerarm_r: [['x', -12]], hand_l: [['y', 20 * w]], hand_r: [['y', 20 * w]],
+      thigh_l: [['x', -14 * land - 6]], thigh_r: [['x', -14 * land - 6]], calf_l: [['x', 26 * land + 6]], calf_r: [['x', 26 * land + 6]], foot_l: [['x', -10 * land]], foot_r: [['x', -10 * land]] } }; } },
+  /* Salmo 150 — palmas, un paso a cada lado y los brazos al cielo */
+  D_salmo: { dur: 4.8, f: t => { const a = sm(t / .4) * (1 - sm((t - 1.1) / .3)), st = sm((t - 1.2) / .3) * (1 - sm((t - 2.3) / .3)), up = sm((t - 2.4) / .9) * (1 - sm((t - 4.3) / .5)), clap = (Math.sin((t / .3) * Math.PI * 2) + 1) / 2;
+    const lk = st * Math.max(0, sn(t - 1.2, 1.2, .25)), rk = st * Math.max(0, -sn(t - 1.2, 1.2, .25));
+    return { py: .03 * Math.abs(sn(t, .6)) * (st + up * .5), px: .05 * st * sn(t - 1.2, 1.2), R: {
+      upperarm_l: [['x', -62 * a - 20 * st], ['y', -(16 + 10 * clap) * a], ['z', 168 * up + 25 * st]], upperarm_r: [['x', -62 * a - 20 * st], ['y', (16 + 10 * clap) * a], ['z', -(168 * up + 25 * st)]],
+      lowerarm_l: [['x', -62 * a - 25 * st]], lowerarm_r: [['x', -62 * a - 25 * st]], Head: [['x', -18 * up]], spine_03: [['x', -6 * up]],
+      thigh_l: [['x', -38 * lk]], thigh_r: [['x', -38 * rk]], calf_l: [['x', 55 * lk]], calf_r: [['x', 55 * rk]] } }; } },
+  /* ronda de la cosecha — brazos abiertos como tomados de los hombros, pasos cruzados y patadas suaves */
+  D_ronda: { dur: 2.4, f: t => { const b = sn(t, 1.2), k1 = Math.max(0, sn(t, 1.2)), k2 = Math.max(0, -sn(t, 1.2));
+    return { py: .035 * Math.abs(sn(t, .6)), px: .06 * sn(t, 2.4), R: { spine_02: [['y', 12 * sn(t, 2.4)]], Head: [['y', -8 * sn(t, 2.4)], ['x', -4]],
+      upperarm_l: [['z', 62], ['x', -22]], upperarm_r: [['z', -62], ['x', -22]], lowerarm_l: [['x', -34]], lowerarm_r: [['x', -34]], clavicle_l: [['z', 6]], clavicle_r: [['z', -6]],
+      thigh_l: [['x', -40 * k1], ['z', -6 * k1]], thigh_r: [['x', -40 * k2], ['z', 6 * k2]], calf_l: [['x', 20 * k1 * (1 - k1) * 4]], calf_r: [['x', 20 * k2 * (1 - k2) * 4]], foot_l: [['x', 20 * k1]], foot_r: [['x', 20 * k2]] } }; } },
+  /* Lucas 15:25 — la fiesta del hijo que volvió: dos palmas, un giro con los brazos abiertos y un salto de alegría */
+  D_fiesta: { dur: 3.6, f: t => { const c = 1 - sm((t - 1.1) / .2), sp = sm((t - 1.2) / 1.2), j = t > 2.4 ? Math.sin(Math.min(1, (t - 2.6) / .5) * Math.PI) * (t > 2.6 ? 1 : 0) : 0, open = sm((t - 1.1) / .25) * (1 - sm((t - 2.4) / .25)), hi = sm((t - 2.4) / .3) * (1 - sm((t - 3.3) / .3)), clap = (Math.sin((t / .3) * Math.PI * 2) + 1) / 2;
+    return { py: .12 * j, yaw: 360 * sp, R: { upperarm_l: [['x', -60 * c], ['y', -(16 + 12 * clap) * c], ['z', 95 * open + 160 * hi]], upperarm_r: [['x', -60 * c], ['y', (16 + 12 * clap) * c], ['z', -(95 * open + 160 * hi)]],
+      lowerarm_l: [['x', -64 * c - 10 * open]], lowerarm_r: [['x', -64 * c - 10 * open]], Head: [['x', -12 * hi]], spine_03: [['x', -5 * hi]],
+      thigh_l: [['x', -10 * (1 - j) * hi]], thigh_r: [['x', -10 * (1 - j) * hi]], calf_l: [['x', 20 * (1 - j) * hi]], calf_r: [['x', 20 * (1 - j) * hi]] } }; } }
+};
+function danceBuild() {
+  if (H3.danzas || !H3.ok || !H3.clips || !H3.clips.Idle_Loop) return; H3.danzas = 1; const AX = { x: new THREE.Vector3(1, 0, 0), y: new THREE.Vector3(0, 1, 0), z: new THREE.Vector3(0, 0, 1) };
+  try {
+    const o = buildHero3({ g: 'chico', age: 18 }); o.position.set(0, 0, 0); o.rotation.set(0, 0, 0); o.scale.set(1, 1, 1);
+    const mx = new THREE.AnimationMixer(o); mx.stopAllAction(); const a = mx.clipAction(H3.clips.Idle_Loop); a.play(); mx.setTime(0); o.updateMatrixWorld(true);
+    const bones = [], seen = new Set(); o.traverse(b => { if (b.isBone && !seen.has(b.name)) { seen.add(b.name); bones.push(b); } });
+    const base = {}, Wq = {}, oInv = o.getWorldQuaternion(new THREE.Quaternion()).invert(); bones.forEach(b => { base[b.name] = b.quaternion.clone(); Wq[b.name] = oInv.clone().multiply(b.getWorldQuaternion(new THREE.Quaternion())); });
+    const pel = o.getObjectByName('pelvis'), pBase = pel.position.clone(), pm = new THREE.Matrix3().setFromMatrix4(new THREE.Matrix4().copy(pel.parent.matrixWorld).invert()), q = new THREE.Quaternion(), r = new THREE.Quaternion(), tmp = new THREE.Quaternion();
+    for (const [name, D] of Object.entries(DANZAS)) {
+      const FPS = 30, n = Math.round(D.dur * FPS) + 1, times = new Float32Array(n), vals = {}, pv = new Float32Array(n * 3), used = new Set();
+      for (let i = 0; i < n; i++) { const fr = D.f(Math.min(i / FPS, D.dur - 1e-4)); Object.keys(fr.R).forEach(k => used.add(k)); if (fr.yaw) used.add('pelvis'); } /* primero se junta qué huesos se mueven en todo el baile */
+      for (let i = 0; i < n; i++) { const t = i / FPS; times[i] = t; const fr = D.f(Math.min(t, D.dur - 1e-4));
+        for (const k of used) { if (!base[k]) continue; const spec = fr.R[k] || [], W = Wq[k]; r.identity(); for (const [ax, deg] of spec) { q.setFromAxisAngle(AX[ax], deg * Math.PI / 180); r.premultiply(q); } if (k === 'pelvis' && fr.yaw) { q.setFromAxisAngle(AX.y, fr.yaw * Math.PI / 180); r.premultiply(q); }
+          tmp.copy(W).invert().multiply(r).multiply(W); const L = base[k].clone().multiply(tmp); const arr = vals[k] || (vals[k] = new Float32Array(n * 4)); if (i) { const j = (i - 1) * 4; if (arr[j] * L.x + arr[j + 1] * L.y + arr[j + 2] * L.z + arr[j + 3] * L.w < 0) L.set(-L.x, -L.y, -L.z, -L.w); } L.toArray(arr, i * 4); }
+        const off = new THREE.Vector3(fr.px || 0, fr.py || 0, fr.pz || 0).applyMatrix3(pm); pBase.clone().add(off).toArray(pv, i * 3); }
+      const tracks = [new THREE.VectorKeyframeTrack('pelvis.position', times, pv)];
+      bones.forEach(b => { const v = vals[b.name]; if (v) tracks.push(new THREE.QuaternionKeyframeTrack(b.name + '.quaternion', times, v)); else tracks.push(new THREE.QuaternionKeyframeTrack(b.name + '.quaternion', [0, D.dur], [...base[b.name].toArray(), ...base[b.name].toArray()])); });
+      H3.clips[name] = new THREE.AnimationClip(name, D.dur, tracks);
+    }
+    mx.stopAllAction();
+  } catch (e) { console.warn('bailes', e); }
+}
+
 /* ---------- Resplandor: poses quietas, modo cinemático y la luz que crece con las buenas obras ----------
    No es vanidad: es reflejar a Dios (como el rostro de Moisés que brillaba después de estar con el Señor, Éxodo 34)
    y dejar que las buenas obras alumbren a otros (Mateo 5). Nada de bailes. */
 const POSES = [
+  { id: 'd_david', dance: 1, name: 'La danza de David', ico: '🙌', clip: 'D_david', ref: '2 Samuel 6:14' }, { id: 'd_salmo', dance: 1, name: 'Salmo 150', ico: '👏', clip: 'D_salmo', ref: 'Salmo 150' },
+  { id: 'd_ronda', dance: 1, need: 1, name: 'La ronda de la cosecha', ico: '🌾', clip: 'D_ronda' }, { id: 'd_fiesta', dance: 1, need: 2, name: 'La fiesta del hijo que volvió', ico: '🎉', clip: 'D_fiesta', ref: 'Lucas 15:25' },
   { id: 'brazos', name: 'Brazos cruzados', ico: '🙅', clip: 'M_Idle' },
   { id: 'capa', name: 'Capa al viento', ico: '🧣', clip: 'Idle_Loop', cape: 1 },
   { id: 'horizonte', name: 'Mirar el horizonte', ico: '🌅', clip: 'M_Looking' },
@@ -7161,8 +7293,12 @@ function poseMenu(show) {
   try { const gp = guiaP(); if (!gp.t_glow) { gp.t_glow = 1; G().save(); } } catch (e) {}
   let el = POSE.menu; if (!el) { el = document.createElement('div'); el.className = 'v3poses'; el.hidden = true; document.body.appendChild(el); POSE.menu = el; }
   if (show === undefined) show = el.hidden; if (!show) { el.hidden = true; return; }
-  const list = POSES.filter(p => (!p.hx || S.hx) && (!p.fr || (S.hx && ft(p.fr) >= 6))); el.innerHTML = `<b>Resplandor · elegí una pose</b>${list.map(p => `<button data-p="${p.id}"><span>${p.ico}</span>${p.name}</button>`).join('')}<small>Quedate quieto unos segundos y la cámara te rodea. La luz que tenés crece con tus buenas obras.</small>`;
-  el.querySelectorAll('[data-p]').forEach(b => b.onclick = () => poseSet(b.dataset.p)); el.hidden = false;
+  const tab = POSE.tab || 'p', vu = (() => { try { return metaP().vueltas || 0; } catch (e) { return 0; } })();
+  const poses = S.hx ? POSES.filter(p => !p.dance && (!p.fr || ft(p.fr) >= 6)) : [], bailes = POSES.filter(p => p.dance);
+  const btn = p => { const lock = (p.need || 0) > vu; return `<button data-p="${p.id}"${lock ? ' disabled class="off"' : ''}><span>${lock ? '🔒' : p.ico}</span><em>${p.name}${lock ? `<i>Se gana con ${p.need === 1 ? 'tu primer' : 'tu segundo'} camino de 7 días</i>` : p.ref ? `<i>${p.ref}</i>` : ''}</em></button>`; };
+  el.innerHTML = `<div class="ps-tabs"><button data-t="p" class="${tab === 'p' ? 'on' : ''}">${S.hx ? '✦ Poses' : '✨ Brillar'}</button><button data-t="b" class="${tab === 'b' ? 'on' : ''}">🎶 Bailes</button></div><div class="ps-list">${tab === 'b' ? bailes.map(btn).join('') : S.hx ? poses.map(btn).join('') : '<button data-k="shine"><span>✨</span><em>Brillar con la lámpara</em></button>'}</div><small>${tab === 'b' ? 'Bailes de alegría como en la Biblia. Caminá para dejar de bailar.' : 'Quedate quieto unos segundos y la cámara te rodea. La luz que tenés crece con tus buenas obras.'}</small>`;
+  el.querySelectorAll('[data-p]').forEach(b => b.onclick = () => poseSet(b.dataset.p)); el.querySelectorAll('[data-t]').forEach(b => b.onclick = e => { e.stopPropagation(); POSE.tab = b.dataset.t; poseMenu(true); });
+  const sh = el.querySelector('[data-k="shine"]'); if (sh) sh.onclick = () => { poseMenu(false); kidsShine(); }; el.hidden = false;
 }
 // Kids: un solo botón que brilla con chispas
 function kidsShine() { if (!S || S.walking) return; try { metaEv('brilla'); const gp = guiaP(); if (!gp.t_glow) { gp.t_glow = 1; G().save(); } } catch (e) {} poseSet('lampara'); S.shineT = 4.5; sparkBurst(); setTimeout(() => { if (S && S.poseK === 'lampara') poseEnd(); }, 4600); }

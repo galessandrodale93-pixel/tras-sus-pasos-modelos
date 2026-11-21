@@ -1621,3 +1621,21 @@ body.lowmem *,body.lowmem *::before,body.lowmem *::after{-webkit-backdrop-filter
 .rc-menu button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;border-radius:16px;border:1px solid rgba(233,195,122,.45);background:rgba(255,255,255,.05);color:inherit;font:900 15px "Nunito",sans-serif;cursor:pointer}
 .rc-menu button span{font-size:30px}
 @media (max-height:520px){.v3recap{padding-top:44px}.rc-card img{max-height:58vh}.rc-n{font-size:64px}.rc-two .rc-n{font-size:52px}.rc-sl h2{font-size:40px}}
+/* menú del Resplandor: poses y bailes */
+.v3poses{max-height:calc(100vh - 210px - env(safe-area-inset-bottom,0px));overflow:auto}
+.ps-tabs{display:flex;gap:6px}
+.ps-tabs button{flex:1;justify-content:center;padding:7px 8px!important;font-size:13px!important}
+.ps-tabs button.on{background:linear-gradient(180deg,#FFD98A,#E8913A)!important;color:#2B1D00!important;border-color:transparent!important}
+.ps-list{display:grid;gap:6px}
+.v3poses button em{display:flex;flex-direction:column;font-style:normal;line-height:1.15}
+.v3poses button em i{font:700 11px "Nunito",sans-serif;font-style:normal;opacity:.7}
+.v3poses button.off{opacity:.55}
+@media (max-height:520px){.v3poses{bottom:calc(70px + env(safe-area-inset-bottom,0px));max-height:calc(100vh - 90px)}}
+/* video para compartir */
+.vd-box{margin-top:12px;text-align:center}
+.vd-h{display:block;margin-bottom:8px;font:900 14px "Nunito",sans-serif}
+.vd-l{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.vd-l button{border:1px solid rgba(233,195,122,.5);border-radius:99px;padding:8px 12px;background:rgba(255,255,255,.06);color:inherit;font:800 13px "Nunito",sans-serif;cursor:pointer}
+.vd-p{height:8px;border-radius:9px;background:rgba(255,255,255,.15);overflow:hidden;margin:6px 0}.vd-p i{display:block;height:100%;background:linear-gradient(90deg,#FFD98A,#E8913A);transition:width .2s}
+.vd-v{display:block;width:100%;max-width:300px;max-height:56vh;margin:0 auto;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.rc-stage{overflow-y:auto;max-height:calc(100vh - 70px - env(safe-area-inset-top,0px))}
