@@ -69,7 +69,7 @@ async def entrar(pg, rama):
 
 
 # ───────────── las pruebas: cada una es JavaScript que devuelve {ok, d} ─────────────
-COMUN = "const d=__dbg;try{d.CINE.on=false;}catch(e){}try{const gp=d.guiaP();['go','obj','do','ham','mis','t_bag','t_map','t_eat','t_craft','t_fan'].forEach(k=>gp[k]=1);d.GUIA.cur=null;}catch(e){}document.body.classList.remove('v3talk');document.querySelectorAll('#v3sheet,.sheet').forEach(e=>e.hidden=true);document.body.classList.remove('v3cine');const S=d.S(),s=d.svP?d.svP():null,tp=(x,z)=>S.av.position.set(x,S.W.hAt(x,z),z),tick=(n,dt)=>{for(let i=0;i<n;i++)d.t7Tick(dt||1)};"
+COMUN = "const d=__dbg;try{d.CINE.on=false;}catch(e){}try{const gp=d.guiaP();['go','obj','do','ham','mis','t_bag','t_map','t_eat','t_craft','t_fan','t_glow'].forEach(k=>gp[k]=1);d.GUIA.cur=null;}catch(e){}document.body.classList.remove('v3talk');document.querySelectorAll('#v3sheet,.sheet').forEach(e=>e.hidden=true);document.body.classList.remove('v3cine');const S=d.S(),s=d.svP?d.svP():null,tp=(x,z)=>S.av.position.set(x,S.W.hAt(x,z),z),tick=(n,dt)=>{for(let i=0;i<n;i++)d.t7Tick(dt||1)};"
 
 GUIA = COMUN + """
       const gp=d.guiaP(); for(const k in gp) delete gp[k]; d.GUIA.cine=1; d.GUIA.last=0; d.GUIA.cur=null; S.walking=false;

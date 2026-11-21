@@ -1576,7 +1576,7 @@ function fanAll() {
   return L;
 }
 function fanItems() {
-  const all = fanAll(), pri = ['pray', 'wave', 'jump', 'prog'], main = [];
+  const all = fanAll(), pri = ['glow', 'pray', 'wave', 'jump'], main = []; /* el Resplandor, primero y a mano */
   pri.forEach(k => { const f = all.find(x => x[3] === k); if (f) main.push(f); });
   all.forEach(f => { if (main.length < 4 && !main.includes(f)) main.push(f); });
   main.push(['<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="5" cy="12" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="19" cy="12" r="2.2" fill="currentColor"/></svg>', 'Más opciones', () => moreOpen(), 'more', '']);
@@ -5420,7 +5420,7 @@ const GUIA_TOQUES = [
   ['.v3mapbtn, .v3comp, #viewToggle', 'map', 'Este es el mapa. Tocá cualquier lugar y una flecha en el piso te lleva hasta ahí.'],
   ['.v3surv [data-a="eat"]', 'eat', 'Comer te vuelve a llenar la barra de alimento. Conviene llevar siempre algo de comida en la mochila.'],
   ['.v3surv [data-a="craft"]', 'craft', 'Acá fabricás y construís con lo que juntaste: herramientas, muebles y hasta tu propia casa.'],
-  ['.v3fan .fan-tg', 'fan', 'Acá están tus acciones: orar, saludar, saltar y ver tu progreso. En «Más opciones» hay muchas más.']
+  ['.v3fan .fan-tg', 'fan', 'Acá están tus acciones: tu Resplandor, orar, saludar y saltar. En «Más opciones» hay muchas más.']
 ];
 document.addEventListener('pointerdown', e => { if (!S || !S.av || !e.target.closest) return; for (const [sel, k, tx] of GUIA_TOQUES) { if (!e.target.closest(sel)) continue; const gp = guiaP(); if (gp['t_' + k]) return; gp['t_' + k] = 1; G().save(); if (GUIA.cur) guiaHide(); setTimeout(() => { G().toast(tx, 0, 1); try { G().vo(tx, 'narrador'); } catch (er) {} }, 350); return; } }, true);
 /* si pasa un rato y no lo tocó, el narrador le pregunta */
@@ -5428,6 +5428,7 @@ const GUIA_PREG = [
   { k: 'bag', min: 1.5, sel: '.cr-bag, .v3baghud, #v3bag', t: '¿Ya viste tu mochila?', tx: 'Tocala: ahí guardás todo lo que vas juntando en el camino.' },
   { k: 'map', min: 3, sel: '.v3mapbtn', t: '¿Ya abriste el mapa?', tx: 'Ahí ves las paradas, las misiones y los pueblos. Tocá un lugar y te llevo.' },
   { k: 'fan', min: 5, sel: '.v3fan .fan-tg', t: '¿Ya probaste orar?', tx: 'Tocá este botón: podés orar, saludar a la gente y ver cómo vas.' },
+  { k: 'glow', min: 6.5, sel: '.v3fan .fan-tg', t: '¿Ya probaste tu Resplandor?', tx: 'Tocá este botón y elegí una pose. Quedate quieto unos segundos y mirá cómo brilla tu luz.' },
   { k: 'craft', min: 8, hx: 1, sel: '.v3surv [data-a="craft"]', t: '¿Sabías que podés fabricar?', tx: 'Con lo que juntás hacés herramientas, muebles y hasta tu casa. Tocá el martillo.' }
 ];
 const guiaDef = k => GUIA_PISTAS[k] || GUIA_PREG.find(q => 'q_' + q.k === k);
@@ -5610,7 +5611,7 @@ function cardWrap(x, t, maxW) { const out = []; let line = ''; for (const w of S
 const CARD_TEMA = {
   logro: { bg: '#1A140D', bgK: '#14204A', acc: '#FFD27A', acc2: '#FFF1C8', mot: 'rayos' },
   semana: { bg: '#2A1806', acc: '#FFD27A', acc2: '#FFF3D0', mot: 'sol', nom: 'MI SEMANA' },
-  mes: { bg: '#0B1434', acc: '#C9DAFF', acc2: '#FFE7A6', mot: 'estrellas', nom: 'MI MES' },
+  mes: { bg: '#2B140C', acc: '#F2A86B', acc2: '#FFE4C4', mot: 'huellas', nom: 'MI MES' },
   semestre: { bg: '#121F0E', acc: '#D5EBA6', acc2: '#FFE7A6', mot: 'olivo', nom: 'MI SEMESTRE' },
   anio: { bg: '#1C0C2C', acc: '#F5C96B', acc2: '#FFF0C8', mot: 'fuegos', nom: 'MI AÑO' }
 };
@@ -5618,6 +5619,12 @@ function cardRng(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.ch
 function cardMotivo(x, W, H, T, seed) {
   const R = cardRng(seed); x.save();
   if (T.mot === 'sol' || T.mot === 'rayos') { x.globalAlpha = .16; x.translate(W / 2, H * .3); for (let i = 0; i < 28; i++) { x.rotate(Math.PI * 2 / 28); const gr = x.createLinearGradient(0, 0, 0, -H); gr.addColorStop(0, T.acc); gr.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = gr; x.beginPath(); x.moveTo(-8, 0); x.lineTo(8, 0); x.lineTo(55, -H); x.lineTo(-55, -H); x.fill(); } }
+  else if (T.mot === 'huellas') { /* un camino que sube serpenteando con huellas de sandalias: tras sus pasos */
+    x.globalAlpha = .22; x.strokeStyle = T.acc; x.lineWidth = 120; x.lineCap = 'round'; x.beginPath(); x.moveTo(W * .5, H * 1.02); x.bezierCurveTo(W * 1.05, H * .78, -W * .05, H * .5, W * .5, H * .22); x.stroke();
+    const P = t => { const u = 1 - t, a = [W * .5, H * 1.02], b = [W * 1.05, H * .78], c = [-W * .05, H * .5], d = [W * .5, H * .22]; return [u * u * u * a[0] + 3 * u * u * t * b[0] + 3 * u * t * t * c[0] + t * t * t * d[0], u * u * u * a[1] + 3 * u * u * t * b[1] + 3 * u * t * t * c[1] + t * t * t * d[1]]; };
+    for (let i = 0; i < 22; i++) { const t = i / 22, [px, py] = P(t), [qx, qy] = P(t + .01), ang = Math.atan2(qy - py, qx - px) + Math.PI / 2, side = i % 2 ? 1 : -1, sc = .55 + (1 - t) * .7;
+      x.save(); x.translate(px + Math.cos(ang - Math.PI / 2) * 22 * side * sc, py + Math.sin(ang - Math.PI / 2) * 22 * side * sc); x.rotate(ang); x.globalAlpha = .55 * (.4 + (1 - t) * .6); x.fillStyle = T.acc2;
+      x.beginPath(); x.ellipse(0, 0, 9 * sc, 17 * sc, 0, 0, 7); x.fill(); x.beginPath(); x.ellipse(0, 24 * sc, 7 * sc, 9 * sc, 0, 0, 7); x.fill(); x.restore(); } }
   else if (T.mot === 'estrellas') { for (let i = 0; i < 140; i++) { const sx = R() * W, sy = R() * H * .62, r = R() < .1 ? 3.2 : 1.1 + R() * 1.4; x.globalAlpha = .35 + R() * .6; x.fillStyle = '#FFFFFF'; x.beginPath(); x.arc(sx, sy, r, 0, 7); x.fill(); }
     x.globalAlpha = .9; x.fillStyle = '#FFF1C8'; x.beginPath(); x.arc(W * .82, H * .12, 46, 0, 7); x.fill(); x.fillStyle = T.bg; x.beginPath(); x.arc(W * .82 + 20, H * .12 - 12, 42, 0, 7); x.fill(); }
   else if (T.mot === 'olivo') { const rama = (ox, oy, ang, n, sc) => { x.save(); x.translate(ox, oy); x.rotate(ang); x.strokeStyle = 'rgba(213,235,166,.35)'; x.lineWidth = 4 * sc; x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(60 * sc, -150 * sc, 20 * sc, -320 * sc); x.stroke();
@@ -5768,7 +5775,7 @@ async function recapFin(R, st) {
     bt.querySelector('.cd-dl').onclick = e => { e.stopPropagation(); const a = document.createElement('a'); a.href = url; a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); }; } catch (e) { console.warn('resumen', e); }
 }
 function recapMenu() {
-  vilSheet(`<div class="inv-h"><b>✨ Mis resúmenes</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">Mirá cuánto creciste y compartilo. Cada domingo, cada mes, cada semestre y a fin de año aparece uno solo.</p><div class="rc-menu">${[['semana', '☀️', 'Mi semana'], ['mes', '🌙', 'Mi mes'], ['semestre', '🌿', 'Mi semestre'], ['anio', '🎆', 'Mi año']].map(([k, ic, t]) => `<button type="button" data-k="${k}"><span>${ic}</span>${t}</button>`).join('')}</div>`);
+  vilSheet(`<div class="inv-h"><b>✨ Mis resúmenes</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">Mirá cuánto creciste y compartilo. Cada domingo, cada mes, cada semestre y a fin de año aparece uno solo.</p><div class="rc-menu">${[['semana', '☀️', 'Mi semana'], ['mes', '👣', 'Mi mes'], ['semestre', '🌿', 'Mi semestre'], ['anio', '🎆', 'Mi año']].map(([k, ic, t]) => `<button type="button" data-k="${k}"><span>${ic}</span>${t}</button>`).join('')}</div>`);
   document.querySelectorAll('#v3sheet .rc-menu button').forEach(b => b.onclick = () => { document.getElementById('v3sheet').hidden = true; recapShow(b.dataset.k); });
 }
 /* cuándo aparece solo: a fin de año (26 de diciembre al 10 de enero), en julio el del primer semestre, al empezar cada mes el del mes que pasó y cada 7 días el de la semana. Uno por vez y solo si jugó algunos días */
@@ -7151,13 +7158,14 @@ function poseSet(id) {
 }
 function poseEnd() { if (!S || !S.poseK) return; poseOff(); S.poseK = null; S.actT = 0; POSE.cine = 0; const u = S.av.userData.h3; if (u) { if (u.cape) u.cape.visible = false; if (u.sword) u.sword.visible = false; u.poseLamp = false; } cineUI(false); }
 function poseMenu(show) {
+  try { const gp = guiaP(); if (!gp.t_glow) { gp.t_glow = 1; G().save(); } } catch (e) {}
   let el = POSE.menu; if (!el) { el = document.createElement('div'); el.className = 'v3poses'; el.hidden = true; document.body.appendChild(el); POSE.menu = el; }
   if (show === undefined) show = el.hidden; if (!show) { el.hidden = true; return; }
   const list = POSES.filter(p => (!p.hx || S.hx) && (!p.fr || (S.hx && ft(p.fr) >= 6))); el.innerHTML = `<b>Resplandor · elegí una pose</b>${list.map(p => `<button data-p="${p.id}"><span>${p.ico}</span>${p.name}</button>`).join('')}<small>Quedate quieto unos segundos y la cámara te rodea. La luz que tenés crece con tus buenas obras.</small>`;
   el.querySelectorAll('[data-p]').forEach(b => b.onclick = () => poseSet(b.dataset.p)); el.hidden = false;
 }
 // Kids: un solo botón que brilla con chispas
-function kidsShine() { if (!S || S.walking) return; try { metaEv('brilla'); } catch (e) {} poseSet('lampara'); S.shineT = 4.5; sparkBurst(); setTimeout(() => { if (S && S.poseK === 'lampara') poseEnd(); }, 4600); }
+function kidsShine() { if (!S || S.walking) return; try { metaEv('brilla'); const gp = guiaP(); if (!gp.t_glow) { gp.t_glow = 1; G().save(); } } catch (e) {} poseSet('lampara'); S.shineT = 4.5; sparkBurst(); setTimeout(() => { if (S && S.poseK === 'lampara') poseEnd(); }, 4600); }
 let _spk = null;
 function sparkTex() { if (_spk) return _spk; const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.25, 'rgba(255,240,200,.8)'); g.addColorStop(1, 'rgba(255,220,150,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); x.fillStyle = 'rgba(255,255,255,.9)'; x.fillRect(30, 4, 4, 56); x.fillRect(4, 30, 56, 4); _spk = new THREE.CanvasTexture(c); return _spk; }
 function sparkBurst() {
