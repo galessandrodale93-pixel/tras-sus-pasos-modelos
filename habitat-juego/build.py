@@ -16,6 +16,9 @@ for f in ['hero-game.css', 'hero.css', 'home.css', 'hub.css', 'portal.css', 'her
     assert f'"/{f}"' in h, f
     h = h.replace(f'"/{f}"', f'"/kh/{f}"')
     shutil.copy(os.path.join(SRC, f), os.path.join(OUT, 'kh', f))
+# íconos (pantalla de inicio del celular y app instalable): mismo dominio, así el iPhone los carga
+for f in ['apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png']:
+    shutil.copy(os.path.join(SRC, f), os.path.join(OUT, 'kh', f))
 # el juego (game.js) se carga con la versión publicada en KhVersion; si la consulta falla, usa la fijada acá
 m = re.search(r'<script type="module" src="https://rawcdn\.githack\.com/galessandrodale93-pixel/tras-sus-pasos-modelos/([0-9a-f]{40})/app/game\.js"[^>]*></script>', h)
 assert m, 'game.js'
