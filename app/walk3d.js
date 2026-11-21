@@ -4402,6 +4402,8 @@ function dayTick(dt) {
 const SLOTS = [['hat', 'Cabeza'], ['shirt', 'Túnica'], ['pants', 'Mano'], ['boots', 'Sandalias'], ['gloves', 'Muñequeras']]; /* ropa de la época: los ids de siempre, así nadie pierde lo que tiene */
 const RAR = { c: ['Común', '#C9C2B4', 70], r: ['Rara', '#6FB6FF', 20], e: ['Épica', '#C77DFF', 7], l: ['Legendaria', '#FFB13B', 3], u: ['Única · nunca se pierde', '#4FD1C5', 0] };
 const GEAR = [
+  { id: 'nav_gloria', s: 'shirt', r: 'u', t: 'plain', c: '#F1ECDF', name: 'Túnica de Nochebuena', desc: 'Regalo de Navidad. «¡Gloria a Dios en las alturas, y en la tierra paz!» (Lucas 2:14).' },
+  { id: 'nav_magos', s: 'hat', r: 'u', t: 'turban', c: '#6E3A86', name: 'Turbante de los magos', desc: 'Regalo de Reyes. Los sabios de oriente siguieron la estrella hasta Belén para adorar al niño (Mateo 2:1-11).' },
   { id: 'cam7', s: 'shirt', r: 'u', t: 'plain', c: '#9C7A4E', name: 'Manto del caminante', desc: 'Premio del camino de 7 días. «Lámpara es a mis pies tu palabra, y lumbrera a mi camino» (Salmo 119:105).' },
   { id: 'vil_nazaret', s: 'gloves', r: 'u', t: 'glove', c: '#8A6A4A', name: 'Guantes del taller de Nazaret', desc: 'Regalo de Nazaret para los de la familia. En este pueblo creció Jesús, en el taller de José.' },
   { id: 'vil_belen', s: 'shirt', r: 'u', t: 'plain', c: '#C8B89A', name: 'Manto de pastor de Belén', desc: 'Regalo de Belén para los de la familia. Así se abrigaban los pastores que vieron a los ángeles (Lucas 2:8).' },
@@ -5372,6 +5374,7 @@ const DOOR_LINK = '';
 /* ---------- guía en el momento: nadie se pierde, aunque haya salteado la explicación ----------
    No frena el juego: pistas cortas con la voz del narrador la primera vez que pasa algo (con un aro sobre
    el botón del que hablan) y un botón fijo «Tu próximo paso» que siempre dice qué sigue y te lleva. */
+const now0 = () => performance.now();
 const GUIA = { t0: 0, cine: 0, tk: 0, cur: null, until: 0, gT: 0, goals: [], chip: null, ring: null, el: null, last: 0 };
 const GUIA_TOUCH = () => matchMedia('(pointer: coarse)').matches;
 const GUIA_PISTAS = {
@@ -5379,6 +5382,7 @@ const GUIA_PISTAS = {
   obj: { sel: '#v3obj', t: 'Tu próximo paso', tx: 'Si no sabés qué hacer, tocá acá arriba. Siempre te digo qué sigue y te llevo.' },
   do: { sel: '.v3surv:not([hidden]) .sv-do:not([hidden])', t: 'Hacé la acción', tx: 'Cuando aparece este botón, tocalo o apretá E para hacer lo que dice.', txT: 'Cuando aparece este botón, tocalo para hacer lo que dice.' },
   ham: { sel: '.v3surv [data-a="eat"]', t: 'Tenés hambre', tx: 'Tocá el plato para comer algo de tu mochila. Si no tenés comida, cosechá o comprá pan en un puesto.' },
+  adv: { sel: '#v3obj', t: '¡Empezó el Adviento!', tx: 'Cada día de diciembre se abre una ventana con la historia de la Navidad. Tocá «Tu próximo paso» para abrir la de hoy.' },
   dia: { sel: '#v3obj', t: 'Desafío de hoy', tx: 'Hoy tenés un desafío nuevo. Tocá «Tu próximo paso» para verlo.' },
   mis: { sel: '.v3mis:not([hidden])', t: 'Tu misión', tx: 'Acá arriba ves lo que te falta. Tocá «Tu próximo paso» y te marco el camino con una flecha.' }
 };
@@ -5412,8 +5416,10 @@ function guiaGoals() {
   if (S.misGoal) { const m = S.misGoal; out.push({ ic: '⭐', t: m.txt, sub: 'Misión de ' + m.who + '.', b: 'Llevarme', fn: m.gp ? () => guiaWp(m.gp[0], m.gp[1], m.txt) : null }); }
   if (hx) try { for (const id in EPIC) { const st = epP()[id]; if (!st || st.done || !st.s) continue; const x = epStep(id); if (!x) continue; const pl = guiaEpPlace(x.sp.at);
     out.push({ ic: '✨', t: x.E.name, sub: `Misión épica · paso ${x.st.s + 1} de ${x.E.steps.length}` + (x.today ? (pl && pl.n ? ' · en ' + pl.n : '') : ' · sigue mañana: volvé otro día de juego'), b: 'Llevarme', fn: pl && x.today ? () => guiaWp(pl.x, pl.z, pl.n || x.E.name) : null }); } } catch (e) {}
+  let adv = null; try { adv = advGoal(); if (adv && adv.hot) out.push(adv); } catch (e) {}
   try { const id = nodeActive(); if (id) { const n = g.NODES[id], here = id === g.P().pos; out.push({ ic: '📖', t: here ? 'Entrá ' + aLp(n.label) : 'Caminá ' + aLp(n.label), sub: here ? 'Seguí la historia: te espera el pasaje y su desafío.' : 'Seguí la historia: es tu próxima parada. El botón dorado te lleva caminando.', b: here ? 'Entrar' : 'Caminar', fn: () => go(id) }); } } catch (e) {}
   try { out.push(metaGoal()); } catch (e) {}
+  if (adv && !adv.hot) out.push(adv);
   if (hx) out.push({ ic: '🔨', t: 'Trabajá en un oficio', sub: 'Cerca de los pueblos hay campos, árboles, piedras y agua. Lo que juntás sirve para comer, vender y subir de nivel.', fn: null });
   else out.push({ ic: '🗺️', t: 'Explorá el mapa', sub: 'Abrí el mapa y tocá un lugar: una flecha en el piso te lleva.', b: 'Mapa', fn: () => openMap() });
   return out;
@@ -5449,6 +5455,7 @@ function guiaTick(dt) {
   if (GUIA.cur) { GUIA.el.classList.add('on'); guiaRing(); if (performance.now() > GUIA.until) guiaHide(); }
   GUIA.gT -= dt; if (GUIA.gT <= 0) { GUIA.gT = 1; GUIA.goals = guiaGoals(); const top = GUIA.goals[0], bt = chip.querySelector('b'); if (top && bt.textContent !== top.t) bt.textContent = top.t; }
   GUIA.play = (GUIA.play || 0) + dt;
+  if (!GUIA.star || GUIA.star < now0()) { GUIA.star = now0() + 5000; try { advStarSync(); } catch (e) {} }
   { const a = S.av.position, L = GUIA.lp; if (L) { const d = Math.hypot(a.x - L[0], a.z - L[1]); if (d > .05 && d < 8) { GUIA.dist = (GUIA.dist || 0) + d; if (GUIA.dist >= 10) { metaEv('camina', GUIA.dist); GUIA.dist = 0; } } } GUIA.lp = [a.x, a.z]; }
   chip.classList.toggle('pulse', (S.idleT || 0) > 40 && !GUIA.cur);
   GUIA.tk -= dt; if (GUIA.tk > 0 || GUIA.cur || S.walking) return; GUIA.tk = .5;
@@ -5460,6 +5467,7 @@ function guiaTick(dt) {
   if (may('do')) return guiaShow('do');
   if (may('mis')) return guiaShow('mis');
   if (gp.go && !gp.obj && now - GUIA.t0 > 45000 && may('obj')) return guiaShow('obj');
+  if (started && gp.go && now - GUIA.t0 > 12000) { const h = advHoy(); if (h.on) { const A = advP(); if (!A.vis && guiaVis('#v3obj')) { A.vis = 1; G().save(); return guiaShow('adv'); } } }
   if (started && gp.go && now - GUIA.t0 > 20000) { const m = metaP(); if (m.vis !== m.d && guiaVis('#v3obj')) { m.vis = m.d; return guiaShow('dia'); } }
   if (!started) return; for (const q of GUIA_PREG) { if (q.hx && !S.hx) continue; if (gp['t_' + q.k] || gp['q_' + q.k] || GUIA.play < q.min * 60) continue; if (guiaVis(q.sel)) return guiaShow('q_' + q.k); }
 }
@@ -5510,6 +5518,88 @@ function metaOpen() {
   const steps = P7.map((r, i) => `<div class="md-d${i < cal ? ' on' : ''}${i === cal && !m.ok ? ' hoy' : ''}${i === 6 ? ' big' : ''}"><span>${i < cal ? '✓' : r[0]}</span><small>Día ${i + 1}</small><em>${esc(r[1])}</em></div>`).join('');
   vilSheet(`<div class="inv-h"><b>☀️ Desafío del día</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">${m.ok ? 'Ya lo cumpliste. Mañana hay un desafío nuevo.' : 'Cumplí las tres y sumás un paso en tu camino de 7 días.'}</p><div class="gd-list">${rows}</div>
     <h4 class="md-h">Camino de 7 días</h4><div class="md-cal">${steps}</div><p class="md-k">Los días no tienen que ser seguidos: cada desafío cumplido suma un paso, y el séptimo trae una prenda única.</p>`);
+}
+
+/* ---------- Adviento y Navidad: una ventana por día del 1 al 25 de diciembre y la de Reyes el 6 de enero ----------
+   Cada ventana cuenta un tramo de la historia (lo lee el narrador) y trae un regalito. Las ventanas de días que pasaron
+   se pueden abrir igual hasta el 10 de enero: faltar un día no hace perder nada. Sobre Belén se enciende una estrella
+   que brilla más con cada ventana abierta. Para probarlo antes de diciembre: jugar.html?adv=12 (o ?adv=reyes). */
+const ADV = [
+  ['Isaías 9:2', 'Siglos antes de que naciera Jesús, el profeta Isaías anunció que el pueblo que caminaba en la oscuridad iba a ver una gran luz. Mirá el cielo sobre Belén: cada ventana que abras enciende un poco más una estrella.'],
+  ['Isaías 7:14', 'Isaías también anunció una señal: una joven virgen iba a tener un hijo, y lo iban a llamar Emanuel, que quiere decir Dios con nosotros.'],
+  ['Miqueas 5:2', 'El profeta Miqueas dijo que de Belén, un pueblo chico entre los de Judá, iba a salir el que guiaría al pueblo de Dios.'],
+  ['Isaías 9:6', 'Un niño nos va a nacer, dijo Isaías, y lo van a llamar Admirable Consejero, Dios fuerte, Padre eterno y Príncipe de paz.'],
+  ['Isaías 11:1', 'Del tronco de Isaí, el papá del rey David, iba a brotar un retoño nuevo. Dios cumple lo que promete, aunque pasen muchos años.'],
+  ['Lucas 1:5-7', 'En tiempos del rey Herodes vivía un sacerdote llamado Zacarías con su esposa Elisabet. Amaban a Dios, ya eran grandes y no tenían hijos.'],
+  ['Lucas 1:11-13', 'Un día, mientras Zacarías servía en el templo, se le apareció un ángel: Dios escuchó tu oración, Elisabet va a tener un hijo y lo vas a llamar Juan.'],
+  ['Lucas 1:19-20', 'El ángel se llamaba Gabriel. Como Zacarías dudó, quedó mudo hasta que naciera el bebé. Todo lo que Dios dijo se iba a cumplir a su tiempo.'],
+  ['Lucas 1:26-28', 'Seis meses después, Dios mandó al ángel Gabriel a Nazaret, a una joven llamada María, comprometida con José. Alegrate, le dijo, el Señor está con vos.'],
+  ['Lucas 1:30-33', 'No tengas miedo, María, le dijo el ángel. Vas a tener un hijo y lo vas a llamar Jesús. Va a reinar para siempre y su reino no va a tener fin.'],
+  ['Lucas 1:37-38', 'Para Dios nada es imposible, le aseguró el ángel. Y María respondió: Acá estoy, soy la servidora del Señor. Que se haga en mí lo que dijiste.'],
+  ['Lucas 1:39-41', 'María viajó a visitar a su parienta Elisabet. Apenas la saludó, el bebé que Elisabet esperaba saltó de alegría dentro de ella.'],
+  ['Lucas 1:46-49', 'Entonces María cantó: Mi alma alaba al Señor y mi espíritu se alegra en Dios, mi Salvador, porque hizo cosas grandes conmigo.'],
+  ['Lucas 1:57-64', 'Elisabet tuvo a su bebé. Zacarías pidió una tablita y escribió: Su nombre es Juan. En ese momento volvió a hablar y alabó a Dios.'],
+  ['Lucas 1:76-79', 'Zacarías anunció que Juan iba a preparar el camino del Señor, y que una luz de lo alto iba a venir a iluminar a los que estaban en la oscuridad.'],
+  ['Mateo 1:19-20', 'José era un hombre justo. Mientras pensaba qué hacer, un ángel le habló en sueños: José, no tengas miedo de recibir a María como tu esposa.'],
+  ['Mateo 1:21', 'Ella va a tener un hijo, le dijo el ángel, y lo vas a llamar Jesús, porque él va a salvar a su pueblo de sus pecados.'],
+  ['Mateo 1:24', 'Cuando José se despertó, hizo lo que el ángel del Señor le había mandado y recibió a María en su casa.'],
+  ['Lucas 2:1-3', 'El emperador Augusto ordenó que todos se anotaran en un censo. Cada uno tenía que ir a anotarse a la ciudad de su familia.'],
+  ['Lucas 2:4-5', 'José era de la familia del rey David, así que viajó con María desde Nazaret hasta Belén, la ciudad de David. Ella ya estaba por tener a su bebé.'],
+  ['Lucas 2:6', 'Mientras estaban en Belén, llegó el momento de que naciera el bebé. Todo pasaba tal como lo habían anunciado los profetas.'],
+  ['Lucas 2:7', 'En Belén había mucha gente por el censo, y para ellos ya no quedaba lugar en el alojamiento.'],
+  ['Juan 1:14', 'El Hijo de Dios se hizo hombre y vivió entre nosotros. Vimos su gloria, llena de amor y de verdad. Mañana es Nochebuena.'],
+  ['Lucas 2:7', 'Es Nochebuena. María tuvo a su hijo, lo envolvió en pañales y lo acostó en un pesebre. Dios con nosotros, tal como lo había prometido.'],
+  ['Lucas 2:8-14', '¡Feliz Navidad! Esa noche, unos pastores cuidaban sus ovejas cerca de Belén. Un ángel les dijo: Les traigo una gran alegría, hoy les nació un Salvador. Y muchos ángeles cantaron: ¡Gloria a Dios en las alturas y paz en la tierra!'],
+  ['Mateo 2:1-2, 10-11', 'Unos sabios de oriente siguieron la estrella hasta Belén. Cuando la vieron detenerse sobre la casa, se llenaron de alegría. Entraron, adoraron al niño y le regalaron oro, incienso y mirra.']
+];
+function advHoy() {
+  let demo = null; try { const q = new URLSearchParams(location.search).get('adv'); if (q) sessionStorage.setItem('tsp:adv', q); demo = sessionStorage.getItem('tsp:adv'); } catch (e) {}
+  const t = new Date(); let m = t.getMonth(), d = t.getDate(); const y = t.getFullYear() - (m === 0 ? 1 : 0); /* el Adviento de un año sigue hasta Reyes del siguiente */
+  if (demo) { if (demo === 'reyes') { m = 0; d = 6; } else { m = 11; d = Math.max(1, Math.min(31, +demo || 1)); } }
+  if (m === 11) return { on: true, d: Math.min(d, 26), reyes: false, y };
+  if (m === 0 && d <= 10) return { on: true, d: 26, reyes: d >= 6, y };
+  return { on: false, y };
+}
+function advP() { const p = G().P(), h = advHoy(); if (!p.adv || p.adv.y !== h.y) p.adv = { y: h.y, o: {} }; return p.adv; }
+const advAbre = (n, h) => n <= 25 ? n <= h.d : h.reyes; /* n 26 es la ventana de Reyes */
+function advPremio(n) {
+  const hx = !!(S && S.hx), own = id => gearState().own.includes(id);
+  if (n === 25) return own('nav_gloria') ? (hx ? ['🪙', '50 denarios', { money: 50 }] : ['⭐', '50 puntos', { pts: 50 }]) : ['🎁', 'La túnica de Nochebuena', { gear: 'nav_gloria' }];
+  if (n === 26) return own('nav_magos') ? (hx ? ['🪙', '50 denarios', { money: 50 }] : ['⭐', '50 puntos', { pts: 50 }]) : ['👑', 'El turbante de los magos', { gear: 'nav_magos' }];
+  if (hx) return [['🪙', '10 denarios', { money: 10 }], ['🍞', '2 panes', { bread: 2 }], ['✦', '5 de Resplandor', { glow: 5 }]][n % 3];
+  return n % 2 ? ['⭐', '10 puntos', { pts: 10 }] : ['🌟', '5 de luz', { glow: 5 }];
+}
+function advGoal() {
+  const h = advHoy(); if (!h.on) return null; const A = advP(), hoy = h.reyes && !A.o[26] ? 26 : Math.min(h.d, 25), n = Object.keys(A.o).length;
+  if (!A.o[hoy] && advAbre(hoy, h)) return { ic: hoy === 26 ? '👑' : '🎄', t: hoy === 26 ? 'Reyes: abrí la ventana de los magos' : hoy === 25 ? '¡Feliz Navidad! Abrí la ventana' : 'Adviento: abrí la ventana del día ' + hoy, sub: 'Un tramo de la historia de la Navidad y un regalito.', b: 'Abrir', fn: () => advRead(hoy), hot: 1 };
+  return { ic: '🎄', t: 'Calendario de Adviento', sub: `Abriste ${n} de ${h.reyes ? 26 : 25} ventanas.` + (advFalta(h) ? ' Las de días que pasaron se abren igual.' : ''), b: 'Ver', fn: advOpen };
+}
+const advFalta = h => { const A = advP(); for (let i = 1; i <= 26; i++) if (advAbre(i, h) && !A.o[i]) return true; return false; };
+function advOpen() {
+  const h = advHoy(), A = advP(), max = h.reyes ? 26 : 25;
+  const doors = Array.from({ length: max }, (_, i) => i + 1).map(n => { const ok = advAbre(n, h), op = !!A.o[n], hoy = n === Math.min(h.d, 25) || (n === 26 && h.reyes);
+    return `<button class="adv-d${op ? ' op' : ''}${ok ? '' : ' lock'}${hoy ? ' hoy' : ''}${n >= 24 ? ' big' : ''}" data-n="${n}" ${ok ? '' : 'disabled'}><b>${n === 26 ? '👑' : n}</b><small>${op ? '✓' : ok ? (n === 26 ? 'Reyes' : n === 25 ? 'Navidad' : n === 24 ? 'Nochebuena' : 'Abrir') : '🔒'}</small></button>`; }).join('');
+  vilSheet(`<div class="inv-h"><b>🎄 Calendario de Adviento</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">Cada día de diciembre se abre una ventana con la historia de la Navidad. Las de días que pasaron se abren igual, hasta el 10 de enero.</p><div class="adv-g">${doors}</div>`);
+  document.querySelectorAll('#v3sheet .adv-d:not([disabled])').forEach(b => b.onclick = () => advRead(+b.dataset.n));
+}
+function advRead(n) {
+  const h = advHoy(); if (!advAbre(n, h)) return; const A = advP(), [ref, tx] = ADV[n - 1], nuevo = !A.o[n], pr = nuevo ? advPremio(n) : null;
+  if (nuevo) { A.o[n] = 1; G().save(); metaDar(pr[2]); try { advStarSync(); } catch (e) {} }
+  vilSheet(`<div class="inv-h"><b>${n === 26 ? '👑 6 de enero · Reyes' : n === 25 ? '⭐ 25 de diciembre · Navidad' : '🎄 ' + n + ' de diciembre'}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="adv-card"><small>${esc(ref)}</small><p>${esc(tx)}</p>${pr ? `<div class="adv-gift">${pr[0]} Ganaste ${esc(pr[1])}</div>` : ''}</div><button class="gd-how adv-back" type="button">Ver el calendario</button>`);
+  document.querySelector('#v3sheet .adv-back').onclick = advOpen;
+  try { G().vo(tx, 'narrador'); } catch (e) {} if (pr) try { tone3d(); } catch (e) {}
+}
+/* la estrella sobre Belén: tenue el primer día, plena en Nochebuena; queda hasta el 10 de enero */
+function advStarSync() {
+  const h = advHoy(); if (!S || !S.scene) return; const st = S.advStar;
+  if (!h.on) { if (st) st.visible = false; return; }
+  if (!st) { const be = (S.pois || []).find(q => q.name === 'Belén'); if (!be || !S.W) return;
+    const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), gr = x.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.12, 'rgba(255,244,200,.95)'); gr.addColorStop(.35, 'rgba(255,214,120,.35)'); gr.addColorStop(1, 'rgba(255,200,100,0)'); x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
+    x.strokeStyle = 'rgba(255,248,220,.85)'; x.lineWidth = 2; x.beginPath(); x.moveTo(64, 2); x.lineTo(64, 126); x.moveTo(2, 64); x.lineTo(126, 64); x.stroke();
+    const g = new THREE.Group(), sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), blending: THREE.AdditiveBlending, depthWrite: false, fog: false, transparent: true })); g.add(sp);
+    const bm = new THREE.Mesh(new THREE.CylinderGeometry(.5, 2.6, 44, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#FFE7A8', transparent: true, opacity: .1, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false })); bm.position.y = -22; g.add(bm);
+    g.position.set(be.x, Math.max(0, S.W.hAt(be.x, be.z)) + 46, be.z); g.userData = { sp, bm }; S.scene.add(g); S.advStar = g; }
+  const s = S.advStar, k = Math.min(1, Math.max(Object.keys(advP().o).length / 24, h.d >= 24 ? 1 : 0)); s.visible = true; s.userData.sp.scale.setScalar(10 + 22 * k); s.userData.sp.material.opacity = .45 + .55 * k; s.userData.bm.material.opacity = .04 + .1 * k;
 }
 
 /* ---------- personajes 3D de Hero: modelos esculpidos con esqueleto y animaciones (Quaternius, CC0) ---------- */

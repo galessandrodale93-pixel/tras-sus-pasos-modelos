@@ -1564,3 +1564,16 @@ body:not(.v3on) .v3pista,body.v3lb .v3pista,body.v3talk .v3pista{display:none}
 .md-d.big.on span{background:#5FD39A}
 @media (max-width:520px),(max-height:520px){.md-d em{display:none}.md-d span{width:28px;height:28px;font-size:14px}}
 .gd-list .sv-rec{margin:0}.gd-list .gd-ic{font-size:22px!important}
+/* calendario de Adviento */
+.adv-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:7px;margin-top:8px}
+.adv-d{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:62px;border-radius:12px;border:1px solid rgba(233,195,122,.45);background:linear-gradient(180deg,rgba(150,40,40,.35),rgba(90,20,24,.35));color:inherit;cursor:pointer;font-family:"Nunito",sans-serif}
+.adv-d b{font:800 20px/1 "Fraunces",Georgia,serif}
+.adv-d small{font:900 9.5px "Nunito",sans-serif;letter-spacing:.06em;text-transform:uppercase;opacity:.8}
+.adv-d.op{background:rgba(95,211,154,.14);border-color:rgba(95,211,154,.55)}
+.adv-d.lock{opacity:.4;cursor:default}
+.adv-d.hoy{border-color:#FFD25E;box-shadow:0 0 0 2px rgba(255,210,94,.35),0 0 18px rgba(255,210,94,.35)}
+.adv-d.big:not(.op){background:linear-gradient(180deg,rgba(255,214,120,.35),rgba(200,120,40,.3))}
+.adv-card{margin-top:8px;padding:16px;border-radius:16px;border:1px solid rgba(233,195,122,.45);background:rgba(255,255,255,.04)}
+.adv-card small{font:900 11px "Nunito",sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#E9C37A}
+.adv-card p{margin:6px 0 0;font:600 16px/1.55 "Fraunces",Georgia,serif}
+.adv-gift{margin-top:12px;display:inline-block;padding:7px 12px;border-radius:99px;background:rgba(255,210,94,.18);border:1px solid rgba(255,210,94,.5);font:900 13px "Nunito",sans-serif}

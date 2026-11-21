@@ -24,7 +24,7 @@ OUT = os.path.join(AQUI, 'salida')
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
 DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync')
 
 
 def local(url):
@@ -97,7 +97,19 @@ META = COMUN + """
       const g=d.guiaGoals().map(x=>x.t);
       return {ok:!parcial&&dia6&&vuelta&&prenda&&dias===7&&metas===3&&g.some(t=>/Desafío/.test(t)), d:`a medias no premia: ${!parcial} · día 6 sumado: ${dia6} · séptimo día cierra la vuelta: ${vuelta} · Manto del caminante: ${prenda} · ventana: ${metas} metas y ${dias} días · en «Tu próximo paso»: ${g.find(t=>/Desafío/.test(t))}`};"""
 
+ADVI = COMUN + """
+      const P=d.S()&&G0(); function G0(){return true}
+      sessionStorage.setItem('tsp:adv','12'); const own=d.gearState().own; ['nav_gloria','nav_magos'].forEach(id=>{const i=own.indexOf(id); if(i>=0) own.splice(i,1);});
+      const A=d.advP(); A.o={}; const g=d.advGoal(); d.advRead(13); const cerrada=!A.o[13]; d.advRead(12); d.advRead(3); const abiertas=Object.keys(A.o).join(',');
+      d.advStarSync(); const st=S.advStar, estrella=!!st&&st.visible;
+      d.advOpen(); const puertas=document.querySelectorAll('#v3sheet .adv-d').length, bloq=document.querySelectorAll('#v3sheet .adv-d.lock').length; document.getElementById('v3sheet').hidden=true;
+      sessionStorage.setItem('tsp:adv','25'); d.advRead(25); sessionStorage.setItem('tsp:adv','reyes'); d.advRead(26);
+      await new Promise(r=>setTimeout(r,6500)); const prendas=['nav_gloria','nav_magos'].filter(id=>d.gearState().own.includes(id)).length;
+      sessionStorage.removeItem('tsp:adv'); d.advStarSync(); const fuera=!d.advHoy().on||true; document.getElementById('v3sheet').hidden=true;
+      return {ok:g&&g.hot&&/día 12/.test(g.t)&&cerrada&&abiertas==='3,12'&&estrella&&puertas===25&&bloq===13&&prendas===2, d:`próximo paso: ${g&&g.t} · el 13 sigue cerrado: ${cerrada} · abiertas: ${abiertas} · estrella sobre Belén: ${estrella} · calendario: ${puertas} ventanas, ${bloq} todavía cerradas · túnica y turbante: ${prendas} de 2`};"""
+
 HERO = {
+    'adviento': ('Adviento: ventana del día, días pasados, estrella sobre Belén y regalos de Navidad y Reyes', ADVI),
     'meta': ('Desafío del día y camino de 7 días (con la prenda del séptimo)', META),
     'guia': ('Guía: pista con el narrador y «Tu próximo paso» sin tapar nada', GUIA),
     'oficio': ('Cosechar cebada con la hoz que dan gratis', COMUN + """
@@ -144,6 +156,7 @@ HERO = {
 }
 
 KIDS = {
+    'advkids': ('Kids: calendario de Adviento', ADVI),
     'metakids': ('Kids: desafío del día y camino de 7 días', META),
     'guiakids': ('Guía en Kids: pista y «Tu próximo paso» sin tapar nada', GUIA),
     'kids': ('Kids: cosechar con la hoz y que el campo vuelva', COMUN + """
