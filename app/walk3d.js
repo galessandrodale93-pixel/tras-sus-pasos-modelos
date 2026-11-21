@@ -2,6 +2,11 @@
 const THREE_URL = window.THREE_URL || 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 let THREE = null, S = null;
 const G = () => window.GAME;
+/* tez de la época (Judea y Galilea, siglo I): ningún personaje con piel muy clara. Las pieles guardadas de la paleta vieja
+   pasan a su par de la nueva; cualquier otro tono más claro que el más claro de la paleta se oscurece hasta ahí */
+const SK_OLD = ['#F7D7BE', '#EEC7A3', '#E6B691', '#D19A6E', '#C08559', '#9C6640', '#7E4E30', '#5A3620'], SK_NEW = ['#D9A777', '#C99466', '#B88257', '#A6724B', '#93623F', '#7E5133', '#6A4229', '#53321F'];
+function skinFix(c) { c = String(c || '').toUpperCase(); const i = SK_OLD.indexOf(c); if (i >= 0) return SK_NEW[i]; const m = /^#([0-9A-F]{6})$/.exec(c); if (!m) return SK_NEW[2];
+  const n = parseInt(m[1], 16), r = n >> 16, g = n >> 8 & 255, b = n & 255, L = .299 * r + .587 * g + .114 * b, MX = .299 * 0xD9 + .587 * 0xA7 + .114 * 0x77; if (L <= MX) return c; const k = MX / L; return '#' + [r, g, b].map(v => Math.round(v * k).toString(16).padStart(2, '0')).join(''); }
 const PREF = 'tsp-view';
 const WS = 3; // escala del mundo: todo tres veces más grande y espaciado
 const SC = 0.06 * WS; // píxeles del mapa → unidades 3D
@@ -197,7 +202,7 @@ export const ICONS = {
 /* ---------- personaje ---------- */
 function buildAvatar(av, hx) {
   const g = new THREE.Group();
-  const D = gearOn(av), skin = mat(av.skin || '#E6B691'), hair = mat(av.hair || '#2A1B14', { roughness: .7 }), shirt = mat(D.shirt ? D.shirt.c : (av.outfit || '#5B8DEF')), pants = mat(D.pants ? D.pants.c : (hx ? '#3A3226' : '#34426E')), shoe = mat(D.boots ? D.boots.c : (hx ? '#2A1E14' : '#2B2B3A')), handM = D.gloves ? mat(D.gloves.c) : skin;
+  const D = gearOn(av), skin = mat(skinFix(av.skin)), hair = mat(av.hair || '#2A1B14', { roughness: .7 }), shirt = mat(D.shirt ? D.shirt.c : (av.outfit || '#5B8DEF')), pants = mat(D.pants ? D.pants.c : (hx ? '#3A3226' : '#34426E')), shoe = mat(D.boots ? D.boots.c : (hx ? '#2A1E14' : '#2B2B3A')), handM = D.gloves ? mat(D.gloves.c) : skin;
   const kid = (av.age || 12) < 12, k = kid ? .88 : 1;
   const hip = new THREE.Group(); hip.position.y = .78 * k; g.add(hip);
   const leg = (sx) => { const l = new THREE.Group(); l.position.set(sx * .13, 0, 0); const th = new THREE.Mesh(new THREE.CapsuleGeometry(.1, .5 * k, 4, 10), pants); th.position.y = -.33 * k; l.add(th); const sh = new THREE.Mesh(new THREE.BoxGeometry(.17, .1, .3), shoe); sh.position.set(0, -.72 * k, .05); l.add(sh); hip.add(l); return l; };
@@ -249,7 +254,7 @@ function buildHeroAvatar(av) {
   const g = new THREE.Group(), girl = av.g === 'chica', age = av.age || 14, k = .9 + Math.min(18, Math.max(12, age)) / 18 * .1;
   const M = (c, r, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: r ?? .9, metalness: 0 }, o || {}));
   const D = gearOn(av), base = new THREE.Color(av.outfit || '#2FAE7C'), tunicC = D.shirt ? new THREE.Color(D.shirt.c) : base.clone().lerp(new THREE.Color('#B8A27A'), .5), mantleC = base.clone().lerp(new THREE.Color('#3E2C20'), .8);
-  const skin = M(av.skin || '#E6B691', .62), hairM = M(av.hair || '#2A1B14', .75), tunic = M(tunicC, .95), under = M('#D9C8A6', .95), mantle = M(mantleC, .96, { side: THREE.DoubleSide }), sash = M('#8E3B2A', .9), leather = M('#6A4528', .85), sole = M('#3E2A18', .9);
+  const skin = M(skinFix(av.skin), .62), hairM = M(av.hair || '#2A1B14', .75), tunic = M(tunicC, .95), under = M('#D9C8A6', .95), mantle = M(mantleC, .96, { side: THREE.DoubleSide }), sash = M('#8E3B2A', .9), leather = M('#6A4528', .85), sole = M('#3E2A18', .9);
   const lathe = (pts, mtl, seg = 20) => new THREE.Mesh(new THREE.LatheGeometry(pts.map(p => new THREE.Vector2(p[0], p[1])), seg), mtl);
   const hip = new THREE.Group(); hip.position.y = .92 * k; g.add(hip);
   // piernas con rodilla
@@ -303,7 +308,7 @@ function buildHeroAvatar(av) {
     const ir = new THREE.Mesh(new THREE.SphereGeometry(.009, 10, 8), iris); ir.position.set(s * .04, .018, .106); head.add(ir);
     const br = new THREE.Mesh(new THREE.BoxGeometry(.04, .008, .012), hairM); br.position.set(s * .042, .044, .1); br.rotation.z = s * -.12; head.add(br);
     const ear = new THREE.Mesh(new THREE.SphereGeometry(.025, 10, 8), skin); ear.scale.set(.5, 1, .8); ear.position.set(s * .1, 0, -.005); head.add(ear); });
-  const lip = new THREE.Mesh(new THREE.CapsuleGeometry(.006, .03, 3, 6), M(new THREE.Color(av.skin || '#E6B691').multiplyScalar(.75), .6)); lip.rotation.z = Math.PI / 2; lip.position.set(0, -.058, .098); head.add(lip);
+  const lip = new THREE.Mesh(new THREE.CapsuleGeometry(.006, .03, 3, 6), M(new THREE.Color(skinFix(av.skin)).multiplyScalar(.75), .6)); lip.rotation.z = Math.PI / 2; lip.position.set(0, -.058, .098); head.add(lip);
   // pelo
   const capH = new THREE.Mesh(new THREE.SphereGeometry(.12, 24, 16, 0, Math.PI * 2, 0, Math.PI * .5), hairM); capH.scale.set(.95, 1.05, 1.05); capH.position.set(0, .012, -.008); capH.rotation.x = -.22; head.add(capH);
   if (girl) {
@@ -1842,12 +1847,22 @@ function invEquip(body) {
 /* en celulares con poca memoria (iPhone) el visor de la mochila usa el mismo motor 3D del juego y dibuja en un lienzo común:
    abrir un segundo motor 3D volvía a subir todas las texturas del personaje y el iPhone cerraba la página */
 function liteR(cv, always) {
-  const R0 = _r0, ctx = cv.getContext('2d'), LUT = new Uint8ClampedArray(256), cc = new THREE.Color(); let W = 2, H = 2, rt = null, img = null, buf = null, t = 0;
-  for (let v = 0; v < 256; v++) { const x = v / 255 / .66, a = Math.min(1, Math.max(0, (x * (2.51 * x + .03)) / (x * (2.43 * x + .59) + .14))); LUT[v] = Math.round((a <= .0031308 ? 12.92 * a : 1.055 * Math.pow(a, 1 / 2.4) - .055) * 255); }
-  return { lite: 1, fast: 0, setPixelRatio() {}, setSize(w, h) { const k = always ? 1 : Math.min(1.5, devicePixelRatio || 1); W = Math.max(2, Math.round(w * k)); H = Math.max(2, Math.round(h * k)); cv.width = W; cv.height = H; if (rt) rt.dispose(); rt = new THREE.WebGLRenderTarget(W, H); img = ctx.createImageData(W, H); buf = new Uint8Array(W * H * 4); t = 0; },
+  /* dibuja con el motor del juego en una textura de punto flotante y aplica acá el mismo tono (ACES de three.js) y el paso a sRGB */
+  const R0 = _r0, ctx = cv.getContext('2d'), cc = new THREE.Color(); let W = 2, H = 2, rt = null, img = null, buf = null, t = 0, fl = true;
+  const enc = a => { a = a < 0 ? 0 : a > 1 ? 1 : a; return (a <= .0031308 ? 12.92 * a : 1.055 * Math.pow(a, 1 / 2.4) - .055) * 255; };
+  const mk = () => { if (rt) rt.dispose(); rt = new THREE.WebGLRenderTarget(W, H, fl ? { type: THREE.FloatType } : {}); buf = fl ? new Float32Array(W * H * 4) : new Uint8Array(W * H * 4); };
+  return { lite: 1, fast: 0, setPixelRatio() {}, setSize(w, h) { const k = always ? 1 : Math.min(1.5, devicePixelRatio || 1); W = Math.max(2, Math.round(w * k)); H = Math.max(2, Math.round(h * k)); cv.width = W; cv.height = H; img = ctx.createImageData(W, H); mk(); t = 0; },
     render(sc, cam) { const n = performance.now(); if (!R0 || !rt || (!always && n - t < (this.fast ? 50 : 220))) return; t = n;
-      const pt = R0.getRenderTarget(), pa = R0.getClearAlpha(); R0.getClearColor(cc); R0.setRenderTarget(rt); R0.setClearColor(0x000000, 0); R0.clear(); R0.render(sc, cam); R0.readRenderTargetPixels(rt, 0, 0, W, H, buf); R0.setRenderTarget(pt); R0.setClearColor(cc, pa);
-      const D = img.data; for (let y = 0; y < H; y++) { let s = (H - 1 - y) * W * 4, d = y * W * 4; for (let x = 0; x < W; x++, s += 4, d += 4) { D[d] = LUT[buf[s]]; D[d + 1] = LUT[buf[s + 1]]; D[d + 2] = LUT[buf[s + 2]]; D[d + 3] = buf[s + 3]; } } ctx.putImageData(img, 0, 0); },
+      const pt = R0.getRenderTarget(), pa = R0.getClearAlpha(), ex = R0.toneMappingExposure / .6; R0.getClearColor(cc);
+      const draw = () => { R0.setRenderTarget(rt); R0.setClearColor(0x000000, 0); R0.clear(); R0.render(sc, cam); R0.readRenderTargetPixels(rt, 0, 0, W, H, buf); };
+      try { draw(); } catch (e) { if (fl) { fl = false; mk(); try { draw(); } catch (e2) {} } } R0.setRenderTarget(pt); R0.setClearColor(cc, pa);
+      const D = img.data, q = fl ? 1 : 1 / 255;
+      for (let y = 0; y < H; y++) { let s = (H - 1 - y) * W * 4, d = y * W * 4; for (let x = 0; x < W; x++, s += 4, d += 4) {
+        const r = buf[s] * q * ex, g = buf[s + 1] * q * ex, b = buf[s + 2] * q * ex;
+        let R = .59719 * r + .35458 * g + .04823 * b, G2 = .076 * r + .90834 * g + .01566 * b, B = .0284 * r + .13383 * g + .83777 * b;
+        R = (R * (R + .0245786) - .000090537) / (R * (.983729 * R + .432951) + .238081); G2 = (G2 * (G2 + .0245786) - .000090537) / (G2 * (.983729 * G2 + .432951) + .238081); B = (B * (B + .0245786) - .000090537) / (B * (.983729 * B + .432951) + .238081);
+        D[d] = enc(1.60475 * R - .53108 * G2 - .07367 * B); D[d + 1] = enc(-.10208 * R + 1.10813 * G2 - .00605 * B); D[d + 2] = enc(-.00327 * R - .07276 * G2 + 1.07602 * B); D[d + 3] = Math.min(255, buf[s + 3] * q * 255); } }
+      ctx.putImageData(img, 0, 0); },
     dispose() { if (rt) rt.dispose(); rt = null; }, forceContextLoss() {} };
 }
 // el personaje girando en 3D dentro de la mochila
@@ -2961,7 +2976,7 @@ function belenLife(scene, p, yAt, hx, HW, kx, kz, placed) {
   // la estrella, alta sobre la aldea: se ve desde lejos y titila
   { const g = new THREE.Group(), core = glowSpr('#FFFFFF', 3.2, 1), halo = glowSpr('#FFF1C4', 15, .5), rm = new THREE.MeshBasicMaterial({ color: '#FFF6DC', transparent: true, opacity: .55, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false });
     [core.material, halo.material].forEach(m => { m.fog = false; }); g.add(halo, core); for (let i = 0; i < 4; i++) { const r = new THREE.Mesh(new THREE.PlaneGeometry(.22, i % 2 ? 7 : 11), rm); r.rotation.z = i * Math.PI / 4; g.add(r); }
-    g.position.set(p.x + sd * 4, y0 + 34, p.z - 4); scene.add(g); let t = 0; core.onBeforeRender = (r2, sc, cam) => { t += .016; halo.material.opacity = .42 + Math.sin(t * 2.3) * .08; g.quaternion.copy(cam.quaternion); };
+    g.position.set(p.x + sd * 4, y0 + 34, p.z - 4); scene.add(g); S.belenStar = g; let t = 0; core.onBeforeRender = (r2, sc, cam) => { t += .016; halo.material.opacity = .42 + Math.sin(t * 2.3) * .08; g.quaternion.copy(cam.quaternion); };
     const [lx, lz] = [p.x + sd * 4, p.z - 1.5]; if (free(lx, lz, 2)) LEp(S, { x: lx, z: lz, r: 2.6, label: 'Mirar la estrella', dur: 6, go: () => sello('estrella', 'La estrella de Belén'), info: ['La estrella se detuvo', 'Unos sabios de oriente siguieron la estrella hasta que se detuvo sobre el lugar donde estaba el niño. ¡Se llenaron de alegría! Entraron en la casa, vieron al niño con su madre María y lo adoraron.', 'Mateo 2:9-11'] }); }
   // el mesón, lleno por el censo: la casa más cercana al establo, con un farol en la puerta
   { const h = (placed || []).slice().sort((a, b) => Math.hypot(a.x - kx, a.z - kz) - Math.hypot(b.x - kx, b.z - kz))[0];
@@ -5698,15 +5713,11 @@ function advRead(n) {
 }
 /* la estrella sobre Belén: tenue el primer día, plena en Nochebuena; queda hasta el 10 de enero */
 function advStarSync() {
-  const h = advHoy(); if (!S || !S.scene) return; const st = S.advStar;
-  if (!h.on) { if (st) st.visible = false; return; }
-  if (!st) { const be = (S.pois || []).find(q => q.name === 'Belén'); if (!be || !S.W) return;
-    const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), gr = x.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.12, 'rgba(255,244,200,.95)'); gr.addColorStop(.35, 'rgba(255,214,120,.35)'); gr.addColorStop(1, 'rgba(255,200,100,0)'); x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
-    x.strokeStyle = 'rgba(255,248,220,.85)'; x.lineWidth = 2; x.beginPath(); x.moveTo(64, 2); x.lineTo(64, 126); x.moveTo(2, 64); x.lineTo(126, 64); x.stroke();
-    const g = new THREE.Group(), sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), blending: THREE.AdditiveBlending, depthWrite: false, fog: false, transparent: true })); g.add(sp);
-    const bm = new THREE.Mesh(new THREE.CylinderGeometry(.5, 2.6, 44, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#FFE7A8', transparent: true, opacity: .1, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false })); bm.position.y = -22; g.add(bm);
-    g.position.set(be.x, Math.max(0, S.W.hAt(be.x, be.z)) + 46, be.z); g.userData = { sp, bm }; S.scene.add(g); S.advStar = g; }
-  const s = S.advStar, k = Math.min(1, Math.max(Object.keys(advP().o).length / 24, h.d >= 24 ? 1 : 0)); s.visible = true; s.userData.sp.scale.setScalar(10 + 22 * k); s.userData.sp.material.opacity = .45 + .55 * k; s.userData.bm.material.opacity = .04 + .1 * k;
+  /* Belén ya tiene su estrella; en Adviento crece y baja un haz de luz que se ve de lejos, más fuerte con cada ventana abierta */
+  const h = advHoy(), g = S && S.belenStar; if (!g) return;
+  if (!g.userData.bm) { const bm = new THREE.Mesh(new THREE.CylinderGeometry(.4, 2.4, 34, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#FFE7A8', transparent: true, opacity: .08, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false })); bm.position.copy(g.position); bm.position.y -= 17; bm.visible = false; S.scene.add(bm); g.userData.bm = bm; }
+  if (!h.on) { g.scale.setScalar(1); g.userData.bm.visible = false; return; }
+  const k = Math.min(1, Math.max(Object.keys(advP().o).length / 24, h.d >= 24 ? 1 : 0)); g.scale.setScalar(1.25 + 1.1 * k); g.userData.bm.visible = true; g.userData.bm.material.opacity = .04 + .1 * k; S.advStar = g;
 }
 
 /* ---------- personajes 3D de Hero: modelos esculpidos con esqueleto y animaciones (Quaternius, CC0) ---------- */
@@ -5931,7 +5942,7 @@ function buildHero3(av) {
   const tint = { body: (hx(D.shirt) || {}).t || (npc && av.outfit ? new THREE.Color(av.outfit).lerp(new THREE.Color('#FFFFFF'), av.tintK ?? .35).getStyle() : null), legs: (hx(D.pants) || {}).t, feet: (hx(D.boots) || {}).t, bracer: (hx(D.gloves) || {}).t, hood: (hx(D.hat) || {}).hood };
   const kid = G().branch !== 'ados'; if (kid && !tint.body && av.outfit) tint.body = new THREE.Color(av.outfit).lerp(new THREE.Color('#FFFFFF'), npc ? .45 : .12).getStyle();
   const hood = !!(hx(D.hat) || {}).hood, hatProc = D.hat && !hood ? D.hat : null, gray = /^#(9|A|B|C|D)/i.test(av.hair || ''), drop = [];
-  const skinC = new THREE.Color(av.skin || '#D9A57E').multiplyScalar(1.28), skinF = (() => { const c = new THREE.Color(av.skin || '#D9A57E'); return c.setRGB(c.r / .376 * .92, c.g / .171 * .92, c.b / .080 * .92); })() /* la textura de mujer ya es anaranjada (165,115,80 en sRGB): se divide por ella en lineal, así la piel queda del tono elegido */, hairC = new THREE.Color(av.hair || '#2A1B14').multiplyScalar(1.15);
+  const skinC = new THREE.Color(skinFix(av.skin)).multiplyScalar(1.12), skinF = (() => { const c = new THREE.Color(skinFix(av.skin)); return c.setRGB(c.r / .376 * .92, c.g / .171 * .92, c.b / .080 * .92); })() /* la textura de mujer ya es anaranjada (165,115,80 en sRGB): se divide por ella en lineal, así la piel queda del tono elegido */, hairC = new THREE.Color(av.hair || '#2A1B14').multiplyScalar(1.15);
   const recolor = (m, c, opt) => { m.material = m.material.clone(); m.material.color.set(c); if (opt && opt.metal) { m.material.metalness = opt.metal; m.material.roughness = .4; } if (opt && opt.glow) { m.material.emissive = new THREE.Color(opt.glow); m.material.emissiveIntensity = .6; } if (opt && opt.cloth) h3cloth(m.material, opt.rb); };
   o.traverse(m => {
     if (!m.isSkinnedMesh) return; const n = m.name, mn = (m.material && m.material.name) || '';

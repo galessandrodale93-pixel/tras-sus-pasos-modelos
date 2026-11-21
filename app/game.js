@@ -319,7 +319,7 @@ const MEDALS=[
  {id:'memoria',name:'Memoria de oro',desc:'Completá los tres versículos.',c:'#F3C79A',g:'M16 15h20v22H16z M20 21h12 M20 26h12 M20 31h8',w:2.6},
  {id:'peregrino',name:'Peregrino',desc:'Llegá al final de todas las etapas.',c:'#E8E0F8',g:'M18 38c2-6 4-8 8-8s6 2 8 8 M26 27a5 5 0 1 0 0-10 5 5 0 0 0 0 10',w:2.6}
 ];
-const SKINS=['#F7D7BE','#EEC7A3','#E6B691','#D19A6E','#C08559','#9C6640','#7E4E30','#5A3620'];
+const SKINS=['#D9A777','#C99466','#B88257','#A6724B','#93623F','#7E5133','#6A4229','#53321F'];/* tez de la época: sin pieles muy claras */const SK_OLD=['#F7D7BE','#EEC7A3','#E6B691','#D19A6E','#C08559','#9C6640','#7E4E30','#5A3620'];function skinFix(c){c=String(c||'').toUpperCase();const i=SK_OLD.indexOf(c);if(i>=0)return SKINS[i];const m=/^#([0-9A-F]{6})$/.exec(c);if(!m)return SKINS[2];const n=parseInt(m[1],16),r=n>>16,g=n>>8&255,b=n&255,L=.299*r+.587*g+.114*b,MX=.299*0xD9+.587*0xA7+.114*0x77;if(L<=MX)return c;const k=MX/L;return '#'+[r,g,b].map(v=>Math.round(v*k).toString(16).padStart(2,'0')).join('');}
 const HAIRS=['#14100E','#2A1B14','#5B3521','#7A3B1E','#A8743A','#E7C680','#8E8780','#D8D4CE'];
 const EYES=['#5A3A22','#8A5A2E','#3F6E3A','#4E7FA8','#6E7A86','#2B2320'];
 const OUTFITS=['#5B8DEF','#EF6F61','#2FAE7C','#F2B33D','#9B7BE8'];
@@ -387,7 +387,7 @@ const coin=(m,size=52)=>`<svg class="coin" width="${size}" height="${size}" view
 
 let uid=0;
 function body(a){const age=a.age||14,kid=age<13,teen=age<18;return {leg:kid?14:teen?18:21,bh:kid?18:teen?22:25,hr:kid?12.5:teen?11.6:11};}
-function avatarSVG(a){
+function avatarSVG(a){a=Object.assign({},a,{skin:skinFix(a&&a.skin)});
   const u='a'+(uid++),{leg,bh,hr}=body(a),top=-(leg+bh),hy=top-hr+2.5;
   const dark=shade(a.outfit,-.22),pants='#34426E';
   const back=a.g==='chica'?`<path d="M${-hr-2} ${hy-2} Q${-hr-4} ${hy+hr+10} ${-hr+1} ${hy+hr+12} L${hr-1} ${hy+hr+12} Q${hr+4} ${hy+hr+10} ${hr+2} ${hy-2}Z" fill="${a.hair}"/>`:'';
@@ -1165,7 +1165,7 @@ const DRAW={
 // el jugador en los minijuegos: si ya están los cuadros del avatar 3D, se dibuja ese (mismo personaje que en el mundo)
 let AVSPR=null;
 function avSprReq(av){AVSPR=null;try{if(window.W3&&W3.avSprites){const pr=W3.avSprites(av);if(pr&&pr.then)pr.then(r=>{AVSPR=r||null;}).catch(()=>{});}}catch(e){}}
-function drawMe(c,x,y,s,a,t,walk,basket){
+function drawMe(c,x,y,s,a,t,walk,basket){a=Object.assign({},a,{skin:skinFix(a&&a.skin)});
   if(AVSPR&&!basket){const A=AVSPR,i=walk?Math.floor(t*11)%A.NF:A.NF,h=46*s*(branch==='ados'?1.12:1),w=h*A.FW/A.FH;c.save();shadowE(c,x,y,15*s);c.drawImage(A.cv,i*A.FW,0,A.FW,A.FH,x-w/2,y-h*.97,w,h);c.restore();return;}
   const {leg,bh,hr}=body(a),top=-(leg+bh),hy=top-hr+2.5,sw=walk?Math.sin(t*16)*.45:0,dk=shade(a.outfit,-.22);
   c.save();c.translate(x,y);c.scale(s,s);shadowE(c,0,0,15);c.translate(0,walk?-Math.abs(Math.sin(t*16))*1.5:0);
@@ -3025,7 +3025,7 @@ let draft=null,editing=false;
 const ageNote=a=>a<13?'Personaje niño · juegos más tranquilos':a<16?'Personaje adolescente · juegos a velocidad media':'Personaje adolescente grande · juegos más rápidos';
 function openCreate(edit){
   editing=edit;const p=edit&&P(),R=BR[branch];
-  draft=p?{...p.avatar}:{g:'chica',age:R.def,skin:SKINS[2],hair:HAIRS[1],outfit:OUTFITS[0]};
+  draft=p?{...p.avatar,skin:skinFix(p.avatar&&p.avatar.skin)}:{g:'chica',age:R.def,skin:SKINS[2],hair:HAIRS[1],outfit:OUTFITS[0]};
   draft={hs:'a',beard:'0',eye:EYES[0],ht:'n',bd:'n',...draft};delete draft.face;creatorFields();
   draft.age=Math.min(R.max,Math.max(R.min,draft.age));
   const ag=$('#cAge');ag.min=R.min;ag.max=R.max;ag.value=draft.age;
