@@ -24,7 +24,7 @@ OUT = os.path.join(AQUI, 'salida')
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
 DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, gearState, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel')
 
 
 def local(url):
@@ -69,9 +69,26 @@ async def entrar(pg, rama):
 
 
 # ───────────── las pruebas: cada una es JavaScript que devuelve {ok, d} ─────────────
-COMUN = "const d=__dbg;try{d.CINE.on=false;}catch(e){}document.querySelectorAll('#v3sheet,.sheet').forEach(e=>e.hidden=true);document.body.classList.remove('v3cine');const S=d.S(),s=d.svP?d.svP():null,tp=(x,z)=>S.av.position.set(x,S.W.hAt(x,z),z),tick=(n,dt)=>{for(let i=0;i<n;i++)d.t7Tick(dt||1)};"
+COMUN = "const d=__dbg;try{d.CINE.on=false;}catch(e){}try{const gp=d.guiaP();['go','obj','do','ham','mis','t_bag','t_map','t_eat','t_craft','t_fan'].forEach(k=>gp[k]=1);d.GUIA.cur=null;}catch(e){}document.body.classList.remove('v3talk');document.querySelectorAll('#v3sheet,.sheet').forEach(e=>e.hidden=true);document.body.classList.remove('v3cine');const S=d.S(),s=d.svP?d.svP():null,tp=(x,z)=>S.av.position.set(x,S.W.hAt(x,z),z),tick=(n,dt)=>{for(let i=0;i<n;i++)d.t7Tick(dt||1)};"
+
+GUIA = COMUN + """
+      const gp=d.guiaP(); for(const k in gp) delete gp[k]; d.GUIA.cine=1; d.GUIA.last=0; d.GUIA.cur=null; S.walking=false;
+      for(let i=0;i<25&&!d.GUIA.cur;i++) await new Promise(r=>setTimeout(r,700));
+      d.GUIA.until=performance.now()+120000; await new Promise(r=>setTimeout(r,600));
+      const k=d.GUIA.cur, chip=document.getElementById('v3obj'), pz=document.querySelector('.v3pista.on'), ring=document.querySelector('.v3ring:not([hidden])');
+      const R=e=>e.getBoundingClientRect(), hit=(a,b)=>a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom;
+      const vis=e=>{const cs=getComputedStyle(e),r=R(e);return cs.display!=='none'&&cs.visibility!=='hidden'&&!e.hidden&&r.width>0&&r.height>0&&+cs.opacity>.05};
+      const others=[...document.querySelectorAll('.v3surv,.v3mapbtn,.v3baghud,#v3go button,.v3cam,.v3fan .fan-tg,#v3acts>button,.v3comp,.v3mis,#v3crest,.v3mmbox,#v3joy,#toast.on')].filter(vis);
+      const nm=e=>(e.id?'#'+e.id:'.'+String(e.className).split(' ')[0]);
+      const tapa=pz?others.filter(e=>hit(R(pz),R(e))).map(nm):['(no hay pista)'];
+      const ctapa=chip&&vis(chip)?others.filter(e=>hit(R(chip),R(e))).map(nm):['(no se ve el botón)'];
+      const paso=chip?chip.querySelector('b').textContent:'';
+      const bg=[...document.querySelectorAll('.cr-bag, .v3baghud, #v3bag')].find(vis); bg&&bg.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true})); await new Promise(r=>setTimeout(r,900)); const narra=/mochila/.test((document.querySelector('#toast')||{}).textContent||'');
+      chip&&chip.click(); await new Promise(r=>setTimeout(r,500)); const rows=[...document.querySelectorAll('#v3sheet .gd-r b')].map(b=>b.textContent); document.getElementById('v3sheet').hidden=true;
+      return {ok:!!k&&!!pz&&!!ring&&!tapa.length&&!ctapa.length&&rows.length>=2&&!!paso&&narra, d:`pista: ${k} · el narrador explica la mochila al tocarla: ${narra} · aro sobre el botón: ${!!ring} · la pista tapa: ${tapa.join(',')||'nada'} · «Tu próximo paso» tapa: ${ctapa.join(',')||'nada'} · dice: ${paso} · lista: ${rows.join(' / ')}`};"""
 
 HERO = {
+    'guia': ('Guía: pista con el narrador y «Tu próximo paso» sin tapar nada', GUIA),
     'oficio': ('Cosechar cebada con la hoz que dan gratis', COMUN + """
       const o=d.Z7.nodes.find(o=>o.g==='trigo'&&o.t===1); if(!o) return {ok:false,d:'no hay campos de cebada'};
       const antes=s.inv.cebada||0; tp(o.x+1,o.z); const n=d.svNear(); if(!n||!/cebada/i.test(n.label||'')) return {ok:false,d:'no aparece «Cosechar cebada»: '+(n&&n.label)};
@@ -116,6 +133,7 @@ HERO = {
 }
 
 KIDS = {
+    'guiakids': ('Guía en Kids: pista y «Tu próximo paso» sin tapar nada', GUIA),
     'kids': ('Kids: cosechar con la hoz y que el campo vuelva', COMUN + """
       const o=(S.kgr||[])[0]; if(!o) return {ok:false,d:'no hay campos de trigo en Kids'}; tp(o.x+1,o.z);
       const n=d.kNear(); if(!n||n.k!=='grain') return {ok:false,d:'no aparece cosechar: '+(n&&n.label)};
@@ -124,6 +142,7 @@ KIDS = {
 }
 
 CELU = {
+    'guiacel': ('Guía en el celular: pista y «Tu próximo paso» sin tapar nada', GUIA),
     'celular': ('Celular: sin zoom al tocar dos veces, botones sin taparse', COMUN + """
       const vp=document.querySelector('meta[name=viewport]').content; const o=d.Z7.nodes.find(o=>o.g==='trigo'&&o.t===1); if(o) tp(o.x+1,o.z);
       await new Promise(r=>setTimeout(r,2500));
@@ -138,7 +157,7 @@ async def correr(b, nombre, rama, pruebas, movil, elegidas, res):
     pr = {k: v for k, v in pruebas.items() if not elegidas or k in elegidas}
     if not pr: return
     if movil:
-        ctx = await b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2, is_mobile=True, has_touch=True,
+        ctx = await b.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2, is_mobile=True, has_touch=True,
                                   user_agent='Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36')
     else:
         ctx = await b.new_context(viewport={'width': 1280, 'height': 720})
@@ -156,7 +175,7 @@ async def correr(b, nombre, rama, pruebas, movil, elegidas, res):
         for k, (t, _) in pr.items(): res.append((k, t, False, 'no se pudo entrar al juego (' + nombre + ')'))
         await ctx.close(); return
     if movil:  # doble toque de verdad sobre la pantalla del juego
-        await pg.touchscreen.tap(200, 400); await pg.wait_for_timeout(120); await pg.touchscreen.tap(200, 400); await pg.wait_for_timeout(800)
+        await pg.touchscreen.tap(400, 200); await pg.wait_for_timeout(120); await pg.touchscreen.tap(400, 200); await pg.wait_for_timeout(800)
     for k, (titulo, js) in pr.items():
         try:
             r = await pg.evaluate('(async()=>{' + js + '})()')

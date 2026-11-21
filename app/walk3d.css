@@ -1516,3 +1516,31 @@ body.v3on .v3surv.kdo .sv-do{bottom:calc(84px + env(safe-area-inset-bottom,0px))
 /* en pantallas angostas el botón de acción va arriba de los botones redondos de comida y construir, sin taparlos */
 @media (max-width:640px){body.v3on .v3surv .sv-do{bottom:calc(84px + env(safe-area-inset-bottom,0px))}body.v3on .v3surv.kdo .sv-do{bottom:calc(140px + env(safe-area-inset-bottom,0px))}}
 @media (max-width:640px){.sv-do span{max-width:min(72vw,340px)}}
+/* guía en el momento: «Tu próximo paso», pistas con el narrador y el aro sobre el botón del que hablan */
+.v3obj{position:fixed;z-index:6;left:50%;transform:translateX(-50%);top:calc(52px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:8px;padding:5px 14px 5px 5px;border-radius:999px;background:linear-gradient(180deg,rgba(255,221,140,.97),rgba(232,160,64,.97));border:1px solid rgba(255,240,200,.85);color:#2B1D00;font-family:"Nunito",sans-serif;text-align:left;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.5);max-width:min(78vw,360px)}
+.v3obj i{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:16px;background:rgba(255,255,255,.45)}
+.v3obj span{display:flex;flex-direction:column;min-width:0;line-height:1.1}
+.v3obj small{font:900 9px "Nunito",sans-serif;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
+.v3obj b{font:900 13px "Nunito",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v3obj[hidden],body:not(.v3on) .v3obj,body:has(#v3sheet:not([hidden])) .v3obj,body.v3lb .v3obj,body.v3talk .v3obj{display:none}
+.v3obj.pulse{animation:objPulse 1.6s ease-in-out infinite}
+@keyframes objPulse{50%{box-shadow:0 0 0 7px rgba(255,210,94,.35),0 6px 18px rgba(0,0,0,.35)}}
+.v3pista{position:fixed;z-index:22;left:50%;transform:translate(-50%,10px);bottom:calc(150px + env(safe-area-inset-bottom,0px));display:flex;align-items:flex-start;gap:10px;width:max-content;max-width:min(420px,calc(100vw - 24px));padding:11px 12px 11px 12px;border-radius:16px;background:#FFF8EC;color:#2A2118;box-shadow:0 14px 34px rgba(0,0,0,.42);border:1px solid rgba(233,195,122,.7);font-family:"Nunito",sans-serif;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s}
+.v3pista.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.v3pista>i{font-style:normal;font-size:20px;line-height:1}
+.v3pista span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.v3pista b{font:800 15px/1.2 "Fraunces",Georgia,serif}
+.v3pista small{font:700 13.5px/1.4 "Nunito",sans-serif;color:#4A3C2E}
+.v3pista .pz-x{flex:none;border:0;background:rgba(42,33,24,.08);color:#5A4A38;width:26px;height:26px;border-radius:50%;font:900 12px "Nunito",sans-serif;cursor:pointer}
+body[data-branch="ados"] .v3pista{background:#17130D;color:#F3E6CC;border-color:rgba(233,195,122,.45)}
+body[data-branch="ados"] .v3pista small{color:#D9C9A8}
+body[data-branch="ados"] .v3pista .pz-x{background:rgba(255,255,255,.08);color:#E9D8B4}
+body:not(.v3on) .v3pista,body.v3lb .v3pista,body.v3talk .v3pista{display:none}
+.v3ring{position:fixed;z-index:23;border-radius:16px;pointer-events:none;border:3px solid #FFD25E;box-shadow:0 0 18px 4px rgba(255,210,94,.55);animation:ringP 1.2s ease-in-out infinite}
+.v3ring[hidden]{display:none}
+@keyframes ringP{50%{transform:scale(1.06);opacity:.7}}
+.gd-list{display:grid;gap:8px;margin-top:6px}
+.gd-r{align-items:center}
+.gd-r .gd-ic{flex:none;font-size:22px;width:34px;text-align:center}
+.gd-r.first{border-color:rgba(255,210,94,.7)!important;box-shadow:0 0 0 1px rgba(255,210,94,.35)}
+.gd-how{margin-top:12px;width:100%;border:0;border-radius:12px;padding:11px;font:900 14px "Nunito",sans-serif;background:rgba(255,255,255,.07);color:inherit;cursor:pointer}

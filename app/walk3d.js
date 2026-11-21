@@ -1163,7 +1163,7 @@ const KL = {};
   const n0 = g.NODES[g.P().pos], [ax, az] = toV(n0.x, n0.y); av.position.set(ax, 0, az); buildStep('estado');
   S = { renderer, scene, camera, hx, av, markers, edgePts, allPts, items, joy: { x: 0, y: 0 }, keys: {}, flies, ground, yaw: Math.PI, camYaw: 0, camDist: 2.4, camPitch: .4, walking: false, moving: false, t: 0, root, cv, sig: '', onStop: g.P().pos, W: HW, uGrass, KL, zEnd: zMax };
   // orientar al personaje hacia la próxima parada
-  buildStep('lugares'); buildPois(scene, pois, hx, HW, rng(77), ribbon); buildStep('pueblos'); S.pois = pois; buildTowns(scene, g, hx, HW, pois); buildStep('lugares de afuera'); try { olSitesBuild(scene, HW, hx); } catch (e) { console.warn('afuera', e); } buildStep('puertas y misiones'); ambReset(); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; setTimeout(() => tutOpen(), 1500); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); }, 0);
+  buildStep('lugares'); buildPois(scene, pois, hx, HW, rng(77), ribbon); buildStep('pueblos'); S.pois = pois; buildTowns(scene, g, hx, HW, pois); buildStep('lugares de afuera'); try { olSitesBuild(scene, HW, hx); } catch (e) { console.warn('afuera', e); } buildStep('puertas y misiones'); ambReset(); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; GUIA.t0 = performance.now(); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); }, 0);
   buildStep('hitos'); try { scatterNodes(g, HW); if (S.npos[g.P().pos]) { const q = S.npos[g.P().pos]; av.position.set(q[0], 0, q[1]); } } catch (e) { console.warn('hitos', e); } S.spawn = [av.position.x, av.position.z];
   try { fieldFinds(scene, hx, HW); } catch (e) { console.warn('hallazgos', e); }
   S0 = S; try { attrMigrate(); } catch (e) { console.warn('migración de atributos', e); } insMigrate(); setTimeout(glowUI, 400); S.mis = buildMissions(scene, g, hx, HW); try { vivoBuild(scene, hx); } catch (e) { console.warn('etapa viva', e); } try { ofiBuild(scene); } catch (e) { console.warn('oficios', e); } if (!hx && HW) setTimeout(() => { if (S) secBuild(scene, HW).catch(e => console.warn('sec', e)); }, 1500); try { bldBuild(scene); } catch (e) { console.warn('construir', e); } /* en Kids también hay lugares secretos */ { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
@@ -1675,8 +1675,8 @@ function hudLay() {
 /* Ningún cartel pisa a otro ni a los controles. Los de arriba (rumbo, sala, misión, estación, aldea, avisos…) se apilan de arriba hacia abajo
    y los de abajo (lugar, frase, ayuda) de abajo hacia arriba. Si un cartel chocaría con el panel del jugador, la cámara, el joystick
    o los botones de la derecha, se angosta para entrar en el hueco del medio; si igual no entra, baja (o sube) hasta quedar libre. */
-const BAN_TOP = ['.v3comp', '#v3timer', '#v3room', '.v3topics', '.v3mis', '.v3seas', '#v3vil', '.v3bagt', '.v3pop', '#toast'];
-const BAN_BOT = ['.v3place', '.v3say', '.v3hint'];
+const BAN_TOP = ['.v3comp', '#v3obj', '#v3timer', '#v3room', '.v3topics', '.v3mis', '.v3seas', '#v3vil', '.v3bagt', '.v3pop', '#toast'];
+const BAN_BOT = ['.v3pista', '.v3place', '.v3say', '.v3hint'];
 const BAN_OBS = ['#v3crest', '.hud', '.v3surv', '.v3mapbtn', '.v3baghud', '.v3mmbox', '.v3cam', '.v3joy', '#v3joy', '.v3fan .fan-tg', '.v3fan.open .fan-items button', '#v3acts > button', '.v3surv .sv-do', '#khPill', '#v3go', '.v3go', '#v3go button', '#v3go .v3k', '.v3act', '#wixheadless-banner-container'];
 const BAN_LEFT = new Set(['v3mis']);
 function topVis(e) { if (!e || e.hidden) return false; const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden' || cs.position !== 'fixed') return false; return +cs.opacity > .04 || e.classList.contains('on') || e.classList.contains('show'); }
@@ -1713,6 +1713,7 @@ function topStack() {
 }
 function compassTick(dt) {
   HUDL.t = (HUDL.t || 0) - dt; if (HUDL.t <= 0) { HUDL.t = .1; try { hudLay(); } catch (e) {} }
+  try { guiaTick(dt); } catch (e) { console.warn('guia', e); }
   if (!S || !S.hx) return; COMP.t -= dt; if (COMP.t > 0) return; COMP.t = .2;
   if (!COMP.el) { COMP.el = document.createElement('div'); COMP.el.className = 'v3comp'; COMP.el.innerHTML = '<i><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3l6 15-6-3.5L6 18Z" fill="currentColor"/></svg></i><span></span>'; COMP.el.onclick = () => openMap(); document.body.appendChild(COMP.el); }
   const a = S.av.position, bg = S.sv && S.sv.bag; if (bg && !S.walking && !sheetUp()) { const dx = bg.x - a.x, dz = bg.z - a.z, d = Math.hypot(dx, dz), C = S.yaw + S.camYaw, th = Math.atan2(dx * -Math.cos(C) + dz * Math.sin(C), dx * Math.sin(C) + dz * Math.cos(C)); COMP.el.hidden = d < 2; COMP.el.firstChild.style.transform = `rotate(${th}rad)`; COMP.el.lastChild.textContent = `Tu bolsa · ${Math.round(d)} m`; return; }
@@ -2051,7 +2052,7 @@ function misTick(t) {
   if (!S.mis) return; const p = misState(), a = S.av.position, ui = misUI(), d2 = (q) => (q[0] - a.x) ** 2 + (q[1] - a.z) ** 2;
   if (document.getElementById('view3d').hidden) { ui.hidden = true; return; }
   for (const id in S.mis) { const m = S.mis[id], open = misOpen(m, p), done = !!p.missions[id], act = p.mact && p.mact.id === id; m.bang.visible = open && !done && !act && !CINE.on; /* en las charlas no tapa las caras */ if (m.d.after) { const vis = open || done || act; m.giver.visible = vis; } m.bang.position.y = m.giver.position.y + 2.35 + Math.sin(t * 3) * .08; m.giver.visible = m.target ? true : true; }
-  const act = p.mact && S.mis[p.mact.id];
+  const act = p.mact && S.mis[p.mact.id]; S.misGoal = null;
   if (act) {
     const d = act.d, has = p.mact.has; let goal, txt;
     const cap = d.kind === 'record' || d.kind === 'photo';
@@ -2060,6 +2061,7 @@ function misTick(t) {
     else if (d.kind === 'deliver') { goal = act.tp; txt = `Llevale ${d.item.name} a ${d.target.name}`; }
     else if (!has) { goal = act.pp; txt = `Buscá ${d.item.name}`; if (act.pick) { act.pick.visible = true; act.pick.rotation.y = t; } }
     else { goal = act.gp; txt = `Volvé con ${d.item.name}`; }
+    S.misGoal = { gp: goal, txt, who: d.giver.name };
     if (act.ring) { act.ring.visible = !cap && (d.kind !== 'fetch' || !has); act.ring.material.opacity = .45 + Math.sin(t * 4) * .25; }
     if (!sheetUp()) {
       if (d.kind === 'fetch' && !has && d2(act.pp) < 1.6) { p.mact.has = true; G().save(); misCarry(act, true); if (act.ring) act.ring.visible = false; misPop('Conseguiste', d.item.name.replace(/^(el|la) /, '').replace(/^./, c => c.toUpperCase())); }
@@ -3727,7 +3729,7 @@ function wireActs() {
   let box = document.getElementById('v3acts');
   if (!box) { box = document.createElement('div'); box.id = 'v3acts'; box.className = 'v3acts';
     box.innerHTML = '<button data-a="jump" aria-label="Saltar" title="Saltar (barra espaciadora)"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 4l7 7h-4v6H9v-6H5Z" fill="currentColor"/><path d="M6 21h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><button data-a="pray" aria-label="Arrodillarse a orar" title="Orar (tecla O)">🙏</button><button data-a="wave" aria-label="Saludar" title="Saludar (tecla H)">👋</button><button data-a="glow" aria-label="Resplandor" title="Resplandor (tecla P)">🌟</button><button data-a="room" aria-label="Jugar con amigos" title="Jugar con amigos">👥</button><button data-a="help" aria-label="Cómo se juega" title="Cómo se juega">❔</button>';
-    document.body.appendChild(box); box.querySelectorAll('button').forEach(b => b.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); ({ jump: doJump, pray: doPray, wave: doWave, sit: doSit, glow: () => S && (S.hx ? poseMenu() : kidsShine()), room: mpPanel, help: () => tutOpen(true) })[b.dataset.a](); }); }
+    document.body.appendChild(box); box.querySelectorAll('button').forEach(b => b.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); ({ jump: doJump, pray: doPray, wave: doWave, sit: doSit, glow: () => S && (S.hx ? poseMenu() : kidsShine()), room: mpPanel, help: () => guiaPanel() })[b.dataset.a](); }); }
   addEventListener('keydown', e => { if (!S || document.getElementById('view3d').hidden || e.repeat || /INPUT|TEXTAREA/.test((e.target || {}).tagName || '')) return; const k = e.key.toLowerCase(); if (BLD.on && bldKey(k)) { e.preventDefault(); return; } if (k === ' ') { e.preventDefault(); doJump(); } else if (k === 'o') doPray(); else if (k === 'h') doWave(); else if (k === 't' && MP.code) talkStart(); else if (k === 'e') axHold(true); else if (k === 'c') svEat(); else if (k === 'b') svCraft(); else if (k === 'p' && S) (S.hx ? poseMenu() : kidsShine()); });
   addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 't') talkStop(); }); addEventListener('blur', () => talkStop());
 }
@@ -5366,38 +5368,95 @@ function doorSheet(d) {
 }
 const DOOR_LINK = '';
 
-/* ---------- guía rápida para los que arrancan ---------- */
-function tutSteps() {
-  const pc = !matchMedia('(pointer: coarse)').matches;
-  return [
-    [null, '¡Bienvenido al camino!', 'Vas a recorrer la vida de Jesús etapa por etapa. Te muestro en un minuto cómo se juega.'],
-    ['#v3joy', 'Caminar', pc ? 'Caminá con las flechas o con W A S D. Podés ir a donde quieras y explorar todo el escenario.' : 'Arrastrá este círculo para caminar. Podés ir a donde quieras y explorar todo el escenario.'],
-    ['.v3cam', 'La cámara', pc ? 'Arrastrá con el mouse para mirar para cualquier lado, también arriba y abajo. Con la rueda (o + y −) acercás y alejás. Q y E giran; ⌖ la vuelve atrás tuyo.' : 'Arrastrá con un dedo para mirar para cualquier lado, también arriba y abajo. Pellizcá con dos dedos para acercar o alejar. ⌖ la vuelve atrás tuyo.'],
-    [null, 'Los hitos del camino', 'Los círculos dorados que brillan en el piso son los hitos. Cuando pisás uno, entrás a un juego o a un desafío. Completalos para pasar a la etapa siguiente.'],
-    ['#mapView .hud-in', 'Tu nivel', 'Acá ves tu nivel, la etapa en la que estás y tus puntos. Cada curso tiene su propio nivel; tu perfil, tus medallas y el Cinturón de la verdad te acompañan a todos.'],
-    [null, 'Misiones ⭐', 'Algunos personajes tienen una estrella arriba: te piden ayuda para llevar algo, buscar algo, orar o grabar un salmo. Acercate y aceptá. La misión activa aparece arriba y cada una suma 50 puntos.'],
-    ['#v3bag', 'La mochila', 'Guarda lo que encontrás, tus grabaciones, tus fotos y la ropa de la época. Desde acá elegís sombrero, camiseta, pantalones, botas y guantes.'],
-    [null, 'Ropa de la época ✨', 'Muy de vez en cuando aparece un paquete brillante cerca del camino, y a veces llega ropa como premio de una misión. ¡Es difícil de conseguir!'],
-    ['#v3acts', 'Acciones', pc ? 'Saltar (barra espaciadora), arrodillarte a orar (O) y saludar (H). Al orar suena música tranquila y podés elegir versículos por tema.' : 'Saltar, arrodillarte a orar y saludar. Al orar suena música tranquila y podés elegir versículos por tema.'],
-    ['#viewToggle', 'El mapa', 'Mirá dónde estás. Si tocás un lugar del mapa, una flecha en el piso te guía hasta ahí.'],
-    ['#v3acts [data-a="room"]', 'Jugar con amigos', 'Creá una sala privada y pasale el código o el link solo a tus amigos (hasta 5). Para hablar, mantené apretado 🎙️' + (pc ? ' o la tecla T.' : '.')],
-    [null, 'Lugares para entrar', 'En Nazaret hay talleres de oficios, en Jerusalén está el templo y en Galilea el lago. Entrá y descubrí cómo se vivía en la época de Jesús.'],
-    [null, 'Puertas de otros cursos', 'En el escenario vas a ver puertas gigantes y una escalera al cielo: son otros cursos. Podés acercarte a mirarlos; para entrar hay que inscribirse.'],
-    ['#v3acts [data-a="help"]', '¡Listo para arrancar!', 'Si te olvidás de algo, tocá ❔ y esta guía vuelve a aparecer.']
-  ];
+/* ---------- guía en el momento: nadie se pierde, aunque haya salteado la explicación ----------
+   No frena el juego: pistas cortas con la voz del narrador la primera vez que pasa algo (con un aro sobre
+   el botón del que hablan) y un botón fijo «Tu próximo paso» que siempre dice qué sigue y te lleva. */
+const GUIA = { t0: 0, cine: 0, tk: 0, cur: null, until: 0, gT: 0, goals: [], chip: null, ring: null, el: null, last: 0 };
+const GUIA_TOUCH = () => matchMedia('(pointer: coarse)').matches;
+const GUIA_PISTAS = {
+  go: { sel: '#v3go button', t: 'Seguí la historia', tx: 'Tocá el botón dorado y caminás solo hasta la próxima parada de la historia.' },
+  obj: { sel: '#v3obj', t: 'Tu próximo paso', tx: 'Si no sabés qué hacer, tocá acá arriba. Siempre te digo qué sigue y te llevo.' },
+  do: { sel: '.v3surv:not([hidden]) .sv-do:not([hidden])', t: 'Hacé la acción', tx: 'Cuando aparece este botón, tocalo o apretá E para hacer lo que dice.', txT: 'Cuando aparece este botón, tocalo para hacer lo que dice.' },
+  ham: { sel: '.v3surv [data-a="eat"]', t: 'Tenés hambre', tx: 'Tocá el plato para comer algo de tu mochila. Si no tenés comida, cosechá o comprá pan en un puesto.' },
+  mis: { sel: '.v3mis:not([hidden])', t: 'Tu misión', tx: 'Acá arriba ves lo que te falta. Tocá «Tu próximo paso» y te marco el camino con una flecha.' }
+};
+/* la primera vez que tocás algo, el narrador te cuenta para qué sirve (con su voz y un cartel corto) */
+const GUIA_TOQUES = [
+  ['.cr-bag, .v3baghud, #v3bag', 'bag', 'Esta es tu mochila. Ahí está lo que juntás, tus herramientas, tus oficios y la ropa de la época.'],
+  ['.v3mapbtn, .v3comp, #viewToggle', 'map', 'Este es el mapa. Tocá cualquier lugar y una flecha en el piso te lleva hasta ahí.'],
+  ['.v3surv [data-a="eat"]', 'eat', 'Comer te vuelve a llenar la barra de alimento. Conviene llevar siempre algo de comida en la mochila.'],
+  ['.v3surv [data-a="craft"]', 'craft', 'Acá fabricás y construís con lo que juntaste: herramientas, muebles y hasta tu propia casa.'],
+  ['.v3fan .fan-tg', 'fan', 'Acá están tus acciones: orar, saludar, saltar y ver tu progreso. En «Más opciones» hay muchas más.']
+];
+document.addEventListener('pointerdown', e => { if (!S || !S.av || !e.target.closest) return; for (const [sel, k, tx] of GUIA_TOQUES) { if (!e.target.closest(sel)) continue; const gp = guiaP(); if (gp['t_' + k]) return; gp['t_' + k] = 1; G().save(); if (GUIA.cur) guiaHide(); setTimeout(() => { G().toast(tx, 0, 1); try { G().vo(tx, 'narrador'); } catch (er) {} }, 350); return; } }, true);
+/* si pasa un rato y no lo tocó, el narrador le pregunta */
+const GUIA_PREG = [
+  { k: 'bag', min: 1.5, sel: '.cr-bag, .v3baghud, #v3bag', t: '¿Ya viste tu mochila?', tx: 'Tocala: ahí guardás todo lo que vas juntando en el camino.' },
+  { k: 'map', min: 3, sel: '.v3mapbtn', t: '¿Ya abriste el mapa?', tx: 'Ahí ves las paradas, las misiones y los pueblos. Tocá un lugar y te llevo.' },
+  { k: 'fan', min: 5, sel: '.v3fan .fan-tg', t: '¿Ya probaste orar?', tx: 'Tocá este botón: podés orar, saludar a la gente y ver cómo vas.' },
+  { k: 'craft', min: 8, hx: 1, sel: '.v3surv [data-a="craft"]', t: '¿Sabías que podés fabricar?', tx: 'Con lo que juntás hacés herramientas, muebles y hasta tu casa. Tocá el martillo.' }
+];
+const guiaDef = k => GUIA_PISTAS[k] || GUIA_PREG.find(q => 'q_' + q.k === k);
+function guiaP() { const p = G().P(); p.guia = p.guia || {}; return p.guia; }
+function guiaVis(sel) { if (!sel) return null; for (const e of document.querySelectorAll(sel)) { if (e.hidden) continue; const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < .05) continue; const r = e.getBoundingClientRect(); if (r.width > 4 && r.height > 4 && r.bottom > 0 && r.top < innerHeight) return e; } return null; }
+function guiaReady() { const b = document.body.classList; if (!S || !b.contains('v3on') || b.contains('v3lb') || b.contains('v3talk') || b.contains('v3cine') || sheetUp()) return false; const v = document.getElementById('view3d'), m = document.getElementById('v3map'), mo = document.getElementById('v3more'); return !(v && v.hidden) && !(m && !m.hidden) && !(mo && !mo.hidden); }
+const aLp = l => /^el /i.test(l) ? 'al ' + l.slice(3) : 'a ' + l;
+function guiaWp(x, z, name) { S.wp = { x, z, name }; try { wpSync(); } catch (e) {} G().toast('Destino: ' + name + '. Seguí la flecha.', 0, 1); }
+function guiaEpPlace(at) { const p = epPlace(at); if (p) { const o = OL_PLAN.find(q => q.id === at); return { x: p.x, z: p.z, n: o ? o.name : at === 'pier' ? 'El muelle de Magdala' : 'El horno de Belén' }; } const m = (Z7.stalls || []).find(m => m.shop === at); return m ? { x: m.x, z: m.z, n: SHOPS[at] ? SHOPS[at].name : '' } : null; }
+/* lo que conviene hacer ahora, en orden: comer si hace falta, la misión aceptada, las épicas empezadas y la historia */
+function guiaGoals() {
+  const g = G(), out = [], hx = !!S.hx;
+  try { if (svOn() && svP().sat < SV.WARN) out.push({ ic: '🍞', t: 'Comé algo', sub: 'Tu alimento está bajo. Tocá el plato para comer de tu mochila; si no tenés comida, cosechá o comprá pan en un puesto.', b: 'Comer', fn: () => svEat() }); } catch (e) {}
+  if (S.misGoal) { const m = S.misGoal; out.push({ ic: '⭐', t: m.txt, sub: 'Misión de ' + m.who + '.', b: 'Llevarme', fn: m.gp ? () => guiaWp(m.gp[0], m.gp[1], m.txt) : null }); }
+  if (hx) try { for (const id in EPIC) { const st = epP()[id]; if (!st || st.done || !st.s) continue; const x = epStep(id); if (!x) continue; const pl = guiaEpPlace(x.sp.at);
+    out.push({ ic: '✨', t: x.E.name, sub: `Misión épica · paso ${x.st.s + 1} de ${x.E.steps.length}` + (x.today ? (pl && pl.n ? ' · en ' + pl.n : '') : ' · sigue mañana: volvé otro día de juego'), b: 'Llevarme', fn: pl && x.today ? () => guiaWp(pl.x, pl.z, pl.n || x.E.name) : null }); } } catch (e) {}
+  try { const id = nodeActive(); if (id) { const n = g.NODES[id], here = id === g.P().pos; out.push({ ic: '📖', t: here ? 'Entrá ' + aLp(n.label) : 'Caminá ' + aLp(n.label), sub: here ? 'Seguí la historia: te espera el pasaje y su desafío.' : 'Seguí la historia: es tu próxima parada. El botón dorado te lleva caminando.', b: here ? 'Entrar' : 'Caminar', fn: () => go(id) }); } } catch (e) {}
+  if (hx) out.push({ ic: '🔨', t: 'Trabajá en un oficio', sub: 'Cerca de los pueblos hay campos, árboles, piedras y agua. Lo que juntás sirve para comer, vender y subir de nivel.', fn: null });
+  else out.push({ ic: '🗺️', t: 'Explorá el mapa', sub: 'Abrí el mapa y tocá un lugar: una flecha en el piso te lleva.', b: 'Mapa', fn: () => openMap() });
+  return out;
 }
-function tutOpen(force) {
-  const key = 'tsp:tut:' + G().branch; let seen = false; try { seen = !!localStorage.getItem(key); } catch (e) {}
-  if (seen && !force) return; try { localStorage.setItem(key, '1'); } catch (e) {}
-  const steps = tutSteps(); let i = 0; S.joy.x = 0; S.joy.y = 0;
-  let el = document.getElementById('v3tut'); if (!el) { el = document.createElement('div'); el.id = 'v3tut'; el.className = 'v3tut'; document.body.appendChild(el); }
-  const draw = () => { const [sel, t, txt] = steps[i], tg = sel && document.querySelector(sel), r = tg && tg.offsetParent !== null ? tg.getBoundingClientRect() : null;
-    el.innerHTML = `<div class="tut-hole"${r ? ` style="left:${r.left - 8}px;top:${r.top - 8}px;width:${r.width + 16}px;height:${r.height + 16}px"` : ' data-none'}></div>
-      <div class="tut-card${r && r.top + r.height / 2 > innerHeight / 2 ? ' up' : ''}${r ? '' : ' mid'}"><small>${i + 1} de ${steps.length}</small><b>${esc(t)}</b><p>${esc(txt)}</p>
-      <div class="tut-b"><button class="tut-skip">${i === steps.length - 1 ? '' : 'Saltear'}</button>${i ? '<button class="tut-prev">Atrás</button>' : ''}<button class="tut-next">${i === steps.length - 1 ? '¡A jugar!' : 'Siguiente'}</button></div></div>`;
-    el.hidden = false; try { G().vo(txt); } catch (e) {} el.querySelector('.tut-next').onclick = () => { if (++i >= steps.length) { el.hidden = true; try { G().voStop(); } catch (e) {} } else draw(); };
-    const pv = el.querySelector('.tut-prev'); if (pv) pv.onclick = () => { i--; draw(); }; el.querySelector('.tut-skip').onclick = () => { el.hidden = true; }; };
-  draw();
+function guiaChip() {
+  if (GUIA.chip && document.body.contains(GUIA.chip)) return GUIA.chip;
+  const b = document.createElement('button'); b.id = 'v3obj'; b.className = 'v3obj'; b.type = 'button'; b.innerHTML = '<i>🧭</i><span><small>Tu próximo paso</small><b></b></span>';
+  b.onclick = e => { e.stopPropagation(); const p = guiaP(); if (!p.obj) { p.obj = 1; G().save(); } guiaHide(); guiaPanel(); }; document.body.appendChild(b); GUIA.chip = b; return b;
+}
+function guiaPanel() {
+  const L = guiaGoals(); S.joy.x = 0; S.joy.y = 0;
+  vilSheet(`<div class="inv-h"><b>🧭 ¿Qué hago ahora?</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="gd-list">${L.map((x, i) => `<div class="sv-rec gd-r${i ? '' : ' first'}"><span class="gd-ic">${x.ic}</span><div><b>${esc(x.t)}</b><small>${esc(x.sub)}</small></div>${x.fn ? `<button data-gi="${i}">${esc(x.b || 'Ir')}</button>` : ''}</div>`).join('')}</div>`);
+  const el = document.getElementById('v3sheet'), close = () => { el.hidden = true; };
+  el.querySelectorAll('[data-gi]').forEach(b => b.onclick = () => { close(); try { L[+b.dataset.gi].fn(); } catch (e) {} });
+}
+function guiaHide() { GUIA.cur = null; if (GUIA.el) GUIA.el.classList.remove('on'); if (GUIA.ring) GUIA.ring.hidden = true; }
+function guiaShow(k) {
+  const P = guiaDef(k), gp = guiaP(); gp[k] = 1; G().save(); const tx = GUIA_TOUCH() && P.txT ? P.txT : P.tx;
+  if (!GUIA.el) { const e = document.createElement('div'); e.className = 'v3pista'; e.setAttribute('role', 'status'); e.innerHTML = '<i>💡</i><span><b></b><small></small></span><button class="pz-x" type="button" aria-label="Cerrar la pista">✕</button>'; e.querySelector('.pz-x').onclick = ev => { ev.stopPropagation(); guiaHide(); try { G().voStop(); } catch (er) {} }; document.body.appendChild(e); GUIA.el = e; }
+  if (!GUIA.ring) { const r = document.createElement('div'); r.className = 'v3ring'; r.hidden = true; document.body.appendChild(r); GUIA.ring = r; }
+  GUIA.el.querySelector('i').textContent = /^q_/.test(k) ? '💬' : '💡'; GUIA.el.querySelector('b').textContent = P.t; GUIA.el.querySelector('small').textContent = tx; GUIA.el.classList.remove('on'); void GUIA.el.offsetWidth; GUIA.el.classList.add('on');
+  GUIA.cur = k; GUIA.until = performance.now() + Math.max(9000, tx.length * 75); GUIA.last = performance.now();
+  try { G().vo(tx, 'narrador'); } catch (e) {}
+  const tg = guiaVis(P.sel); if (tg) tg.addEventListener('pointerdown', () => { if (GUIA.cur === k) guiaHide(); }, { once: true });
+}
+function guiaRing() {
+  const r = GUIA.ring; if (!r) return; const e = GUIA.cur && guiaVis(guiaDef(GUIA.cur).sel); if (!e) { r.hidden = true; return; }
+  const q = e.getBoundingClientRect(); r.hidden = false; r.style.left = (q.left - 6) + 'px'; r.style.top = (q.top - 6) + 'px'; r.style.width = (q.width + 12) + 'px'; r.style.height = (q.height + 12) + 'px';
+}
+function guiaTick(dt) {
+  if (!S || !S.av) return; const ok = guiaReady(), chip = guiaChip(); chip.hidden = !ok;
+  if (!ok) { if (GUIA.cur) { GUIA.el.classList.remove('on'); GUIA.ring.hidden = true; GUIA.until += dt * 1000; } return; }
+  if (GUIA.cur) { GUIA.el.classList.add('on'); guiaRing(); if (performance.now() > GUIA.until) guiaHide(); }
+  GUIA.gT -= dt; if (GUIA.gT <= 0) { GUIA.gT = 1; GUIA.goals = guiaGoals(); const top = GUIA.goals[0], bt = chip.querySelector('b'); if (top && bt.textContent !== top.t) bt.textContent = top.t; }
+  GUIA.play = (GUIA.play || 0) + dt;
+  chip.classList.toggle('pulse', (S.idleT || 0) > 40 && !GUIA.cur);
+  GUIA.tk -= dt; if (GUIA.tk > 0 || GUIA.cur || S.walking) return; GUIA.tk = .5;
+  if (performance.now() - GUIA.last < 6000) return; /* entre una pista y la otra, un respiro */
+  const gp = guiaP(), now = performance.now(), may = k => !gp[k] && guiaVis(GUIA_PISTAS[k].sel);
+  const started = GUIA.cine || (GUIA.t0 && now - GUIA.t0 > 30000);
+  if (S.hx && !gp.ham && svP().sat < SV.WARN && may('ham')) return guiaShow('ham');
+  if (started && may('go')) return guiaShow('go');
+  if (may('do')) return guiaShow('do');
+  if (may('mis')) return guiaShow('mis');
+  if (gp.go && !gp.obj && now - GUIA.t0 > 45000 && may('obj')) return guiaShow('obj');
+  if (!started) return; for (const q of GUIA_PREG) { if (q.hx && !S.hx) continue; if (gp['t_' + q.k] || gp['q_' + q.k] || GUIA.play < q.min * 60) continue; if (guiaVis(q.sel)) return guiaShow('q_' + q.k); }
 }
 
 /* ---------- personajes 3D de Hero: modelos esculpidos con esqueleto y animaciones (Quaternius, CC0) ---------- */
@@ -9514,7 +9573,7 @@ function cineEnd() {
   const el = cineEl(); el.classList.remove('on'); document.body.classList.remove('v3talk'); try { G().voStop(); } catch (e) {}
   S.camYaw = 0; CINE.cam = { from: CINE.cam.cur || CINE.cam.from, to: null, t: 0, dur: .95, release: true }; CINE.face = null;
   const sc = CINE.sc, sp = CINE.spawned; setTimeout(() => { sp.forEach(o => { S && S.scene.remove(o); const i = H3.npcs.indexOf(o); if (i >= 0) H3.npcs.splice(i, 1); }); }, 950);
-  CINE.on = false; CINE.sc = null; try { sc.onDone && sc.onDone(); } catch (e) {}
+  CINE.on = false; CINE.sc = null; GUIA.cine = 1; GUIA.last = performance.now() - 3500; try { sc.onDone && sc.onDone(); } catch (e) {}
 }
 function cineTick(dt) {
   const C = CINE.cam; if (!C) return;
