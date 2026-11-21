@@ -24,7 +24,7 @@ OUT = os.path.join(AQUI, 'salida')
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
 DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet')
 
 
 def local(url):
@@ -161,7 +161,14 @@ BAILE = COMUN + r"""
       const ok=S.poseK==='d_david'&&S.actK==='D_david'; S.joy.y=1; await new Promise(r=>setTimeout(r,900)); S.joy.y=0; const fin=!S.poseK;
       return {ok:bs.length===4&&lock===2&&ok&&fin, d:`festejos en el menú: ${bs.length} (${lock} se ganan con el camino de 7 días) · festeja como David: ${ok} · al caminar termina el festejo: ${fin}`};"""
 
+FOTO = COMUN + r"""
+      d.danceBuild(); S.walking=false; S.freeMoving=false; d.poseSet('d_salmo'); let b=null; for(let i=0;i<40;i++){ await new Promise(r=>setTimeout(r,500)); b=document.getElementById('v3photo'); if(b&&!b.hidden) break; }
+      const vis=!!b&&!b.hidden; if(vis) b.click(); for(let i=0;i<30&&!document.querySelector('#v3sheet .ph-img');i++) await new Promise(r=>setTimeout(r,500)); const img=document.querySelector('#v3sheet .ph-img'), dl=!!document.querySelector('#v3sheet .cd-dl');
+      document.getElementById('v3sheet').hidden=true; S.joy.y=1; await new Promise(r=>setTimeout(r,700)); S.joy.y=0; S.freeMoving=false;
+      return {ok:vis&&!!img&&dl, d:`momento de foto al festejar: ${vis} · la foto se ve y se puede guardar o compartir: ${!!img&&dl}`};"""
+
 HERO = {
+    'foto': ('Momento de foto épica al festejar, con la foto para compartir', FOTO),
     'baile': ('Festejos bíblicos en el menú del Resplandor', BAILE),
     'video': ('Video para compartir: personaje bailando y logros (MP4 720×1280)', VIDEO),
     'resumen': ('Resumen de la semana: aparece solo, presentación con el narrador y tarjeta 1080×1920', RESU),
@@ -214,6 +221,7 @@ HERO = {
 }
 
 KIDS = {
+    'fotokids': ('Kids: momento de foto épica al festejar', FOTO),
     'bailekids': ('Kids: brillar o festejar desde la estrella', BAILE),
     'resukids': ('Kids: resumen de la semana', RESU),
     'tarjkids': ('Kids: tarjeta para compartir', TARJ),

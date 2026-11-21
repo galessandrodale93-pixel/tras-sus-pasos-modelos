@@ -1639,3 +1639,4 @@ body.lowmem *,body.lowmem *::before,body.lowmem *::after{-webkit-backdrop-filter
 .vd-p{height:8px;border-radius:9px;background:rgba(255,255,255,.15);overflow:hidden;margin:6px 0}.vd-p i{display:block;height:100%;background:linear-gradient(90deg,#FFD98A,#E8913A);transition:width .2s}
 .vd-v{display:block;width:100%;max-width:300px;max-height:56vh;margin:0 auto;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
 .rc-stage{overflow-y:auto;max-height:calc(100vh - 70px - env(safe-area-inset-top,0px))}
+.ph-img{max-width:min(520px,100%)!important}

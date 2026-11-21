@@ -7319,14 +7319,18 @@ function cineRays(on) {
 }
 function cineUI(on) {
   let b = document.getElementById('v3photo'); if (!b) { b = document.createElement('button'); b.id = 'v3photo'; b.className = 'v3photo'; b.textContent = '📸 Foto épica'; b.onclick = cinePhoto; document.body.appendChild(b); }
-  b.hidden = !on || !S || !S.hx; document.body.classList.toggle('v3cine', !!on);
+  b.hidden = !on || !S; document.body.classList.toggle('v3cine', !!on);
 }
 function cinePhoto() {
+  /* la foto del momento épico: se ve, se comparte directo en el celular o se descarga */
   const nm = 'resplandor-' + (G().P().name || 'heroe').replace(/[^\wáéíóúñ]+/gi, '-') + '.jpg', fail = () => G().toast('No se pudo guardar la foto en este aparato');
-  const save = url => { const a = document.createElement('a'); a.href = url; a.download = nm; document.body.appendChild(a); a.click(); a.remove(); G().toast('📸 Guardaste tu foto épica'); };
-  try { S.renderer.render(S.scene, S.camera);
-    if (S.cv.toBlob) S.cv.toBlob(b => { if (!b) return fail(); const u = URL.createObjectURL(b); save(u); setTimeout(() => URL.revokeObjectURL(u), 8000); }, 'image/jpeg', .92);
-    else save(S.cv.toDataURL('image/jpeg', .92)); } catch (e) { fail(); }
+  try { S.renderer.render(S.scene, S.camera); const url = S.cv.toDataURL('image/jpeg', .92);
+    S.cv.toBlob(b => { if (!b) return fail(); const file = new File([b], nm, { type: 'image/jpeg' }), can = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+      vilSheet(`<div class="inv-h"><b>📸 Tu foto épica</b><button class="bag-x" aria-label="Cerrar">✕</button></div><img class="cd-img ph-img" src="${url}" alt="Tu foto épica"><div class="cd-b">${can ? '<button type="button" class="cd-sh">Compartir</button>' : ''}<button type="button" class="cd-dl${can ? ' sec' : ''}">Descargar</button></div>`);
+      const el = document.getElementById('v3sheet'), sh = el.querySelector('.cd-sh'); if (sh) sh.onclick = async () => { try { await navigator.share({ files: [file], text: 'Mi Resplandor en Tras sus pasos ✨' }); } catch (e) {} };
+      el.querySelector('.cd-dl').onclick = () => { const a = document.createElement('a'); a.href = url; a.download = nm; document.body.appendChild(a); a.click(); a.remove(); G().toast('📸 Guardaste tu foto épica'); };
+    }, 'image/jpeg', .92);
+  } catch (e) { fail(); }
 }
 function cineSting() { try { if (!AU.ctx || !AU.on) return; const t = AU.ctx.currentTime + .05; [62, 66, 69, 74].forEach((m, i) => play('harp', m, t + i * .09, .16, 3, AU.adv)); play('horn', 62, t + .35, .24, 2.6, AU.adv, .9); play('horn', 69, t + .35, .18, 2.6, AU.adv, .9); } catch (e) {} }
 function poseTick(dt) {
@@ -7334,7 +7338,7 @@ function poseTick(dt) {
   if (!S.poseK) return; if (S.moving || S.freeMoving || S.walking || (S.jy || 0) > .02) { poseEnd(); return; }
   S.poseT += dt; const u = S.av.userData.h3;
   if (S.poseK === 'brazos' && u) { const B = u.bones, w = Math.min(1, S.poseT * 3); h3aim(S.av, B, 'upperarm_r', 'lowerarm_r', -.18, -.82, .5, w); h3aim(S.av, B, 'lowerarm_r', 'hand_r', .95, .2, .25, w); h3aim(S.av, B, 'upperarm_l', 'lowerarm_l', .18, -.82, .5, w); h3aim(S.av, B, 'lowerarm_l', 'hand_l', -.95, .28, .3, w); }
-  if (S.poseT > 3 && !POSE.cine && S.hx) { POSE.cine = 1; S.cineKeep = { d: S.camDist, p: S.camPitch }; cineRays(true); cineSting(); cineUI(true); }
+  if (S.poseT > 3 && !POSE.cine) { POSE.cine = 1; S.cineKeep = { d: S.camDist, p: S.camPitch }; cineRays(true); cineSting(); cineUI(true); }
   if (POSE.cine) { S.camYaw += dt * .28; S.camDist += (4.2 - S.camDist) * Math.min(1, dt); S.camPitch += (.16 - S.camPitch) * Math.min(1, dt); if (u) u.mixer.timeScale = .6; }
 }
 function poseOff() { if (POSE.cine) { POSE.cine = 0; cineRays(false); cineUI(false); if (S && S.cineKeep) { S.camDist = S.cineKeep.d; S.camPitch = S.cineKeep.p; } } const u = S && S.av.userData.h3; if (u) u.mixer.timeScale = 1; }
