@@ -1586,3 +1586,6 @@ body:not(.v3on) .v3pista,body.v3lb .v3pista,body.v3talk .v3pista{display:none}
 .nt-in button{align-self:flex-start;border:0;border-radius:12px;padding:9px 14px;font:900 13px "Nunito",sans-serif;background:linear-gradient(180deg,#FFD98A,#E8913A);color:#2B1D00;cursor:pointer}
 .nt-in .nt-off{background:rgba(255,255,255,.1);color:inherit}
 .nt-ok{color:#5FD39A}
+/* celulares con poca memoria: sin desenfoque detrás de los carteles (en iPhone, desenfocar sobre el 3D gasta mucha memoria) */
+body.lowmem *,body.lowmem *::before,body.lowmem *::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.v3pista.on:not([data-ts-y]){opacity:0}

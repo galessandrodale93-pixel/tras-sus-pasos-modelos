@@ -24,7 +24,7 @@ OUT = os.path.join(AQUI, 'salida')
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
 DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag')
 
 
 def local(url):
@@ -118,6 +118,16 @@ AVISOS = COMUN + r"""
       const okIcs=/RRULE:FREQ=DAILY/.test(ics)&&/DTSTART:\d{8}T180000/.test(ics)&&/jugar\.html/.test(ics);
       return {ok:st.jugado===hoy&&!!st.url&&!!cal&&okIcs&&n.cal===1, d:`el juego anota que hoy jugaste (así no avisa): ${st.jugado===hoy} · en esta compu ofrece el calendario: ${!!cal} · recordatorio diario a las 18 h: ${okIcs}`};"""
 
+MOCHI = COMUN + r"""
+      localStorage.setItem('tsp:lowmem','1'); S.lowm=null; await new Promise(r=>setTimeout(r,800));
+      let gl=0; const og=HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext=function(t,...a){ if(/webgl/.test(t)) gl++; return og.call(this,t,...a); };
+      d.openBag(); await new Promise(r=>setTimeout(r,2500)); const cv=document.querySelector('#v3sheet canvas'); let px=0;
+      if(cv){ const c=cv.getContext('2d'); if(c){ const D=c.getImageData(0,0,cv.width,cv.height).data; for(let i=3;i<D.length;i+=16) if(D[i]>200) px++; } }
+      const av=Object.assign({},(window.GAME&&GAME.P?GAME.P():null)?.avatar||{}); av._t=Date.now(); const spr=await W3.avSprites(av); let spx=0; if(spr&&spr.cv){ const D=spr.cv.getContext('2d').getImageData(0,0,spr.cv.width,spr.cv.height).data; for(let i=3;i<D.length;i+=16) if(D[i]>200) spx++; }
+      HTMLCanvasElement.prototype.getContext=og; const blur=getComputedStyle(document.querySelector('.v3obj')||document.body).backdropFilter;
+      const low=document.body.classList.contains('lowmem'); document.getElementById('v3sheet').hidden=true; localStorage.removeItem('tsp:lowmem'); S.lowm=null;
+      return {ok:!!cv&&gl===0&&px>300&&low&&spx>300, d:`modo poca memoria: ${low} · motores 3D nuevos (mochila y personaje de los minijuegos): ${gl} · personaje de los minijuegos dibujado: ${spx>300} · el personaje se ve en la mochila: ${px>300} (${px}) · desenfoque: ${blur}`};"""
+
 HERO = {
     'avisos': ('Avisos: «Avisarme cada día», recordatorio de calendario y estado para el aviso', AVISOS),
     'adviento': ('Adviento: ventana del día, días pasados, estrella sobre Belén y regalos de Navidad y Reyes', ADVI),
@@ -178,6 +188,7 @@ KIDS = {
 }
 
 CELU = {
+    'mochila': ('iPhone: la mochila abre sin un segundo motor 3D y sin desenfoques', MOCHI),
     'guiacel': ('Guía en el celular: pista y «Tu próximo paso» sin tapar nada', GUIA),
     'celular': ('Celular: sin zoom al tocar dos veces, botones sin taparse', COMUN + """
       const vp=document.querySelector('meta[name=viewport]').content; const o=d.Z7.nodes.find(o=>o.g==='trigo'&&o.t===1); if(o) tp(o.x+1,o.z);

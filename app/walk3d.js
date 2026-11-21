@@ -1202,13 +1202,13 @@ async function avSprites(av) {
     const key = JSON.stringify(av) + G().branch; if (AVS.key === key && AVS.p) return AVS.p; AVS.key = key;
     AVS.p = (async () => {
       const FW = 128, FH = 168, NF = 8, cv = document.createElement('canvas'); cv.width = FW * (NF + 1); cv.height = FH;
-      const R = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); R.setPixelRatio(1); R.setSize(FW, FH, false); R.outputColorSpace = THREE.SRGBColorSpace; R.toneMapping = THREE.ACESFilmicToneMapping;
+      const tc = document.createElement('canvas'), R = LOWMEM() && _r0 ? liteR(tc, 1) : new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); R.setPixelRatio(1); R.setSize(FW, FH, false); R.outputColorSpace = THREE.SRGBColorSpace; R.toneMapping = THREE.ACESFilmicToneMapping;
       const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#F4F0FF', '#6A5A48', 1.4)); const dl = new THREE.DirectionalLight('#FFF1DC', 2.4); dl.position.set(-2, 4, -3); sc.add(dl); const rl = new THREE.DirectionalLight('#BFD4FF', 1.1); rl.position.set(3, 2, 3); sc.add(rl);
       const o = buildHero3(Object.assign({}, av)); o.position.set(0, 0, 0); o.rotation.y = 0; sc.add(o); o.traverse(m => { if (m.isMesh && m.geometry && m.geometry.type === 'CircleGeometry') m.visible = false; if (m.isSprite) m.visible = false; });
       const u = o.userData.h3; if (u.lamp) u.lamp.visible = false;
       // cámara de atrás y un poco de arriba (como se ve el jugador en los minijuegos); encuadre fijo: el chico se ve más chico que el adolescente
       const cam = new THREE.OrthographicCamera(-.82, .82, 2.06, -.1, .1, 20); cam.position.set(1.1, 2.6, -3.4); cam.lookAt(0, .95, 0); cam.updateProjectionMatrix();
-      const x = cv.getContext('2d'), shot = (i, clip, tt) => { Object.values(u.act).forEach(a => a.stop()); const a = u.act[clip]; if (a) { a.reset(); a.play(); u.mixer.setTime(tt); } if (u.headS && u.bones.Head) u.bones.Head.scale.setScalar(u.headS); if (u.kidP) kidApply(u); o.updateMatrixWorld(true); R.render(sc, cam); x.drawImage(R.domElement, i * FW, 0); };
+      const x = cv.getContext('2d'), shot = (i, clip, tt) => { Object.values(u.act).forEach(a => a.stop()); const a = u.act[clip]; if (a) { a.reset(); a.play(); u.mixer.setTime(tt); } if (u.headS && u.bones.Head) u.bones.Head.scale.setScalar(u.headS); if (u.kidP) kidApply(u); o.updateMatrixWorld(true); R.render(sc, cam); x.drawImage(R.lite ? tc : R.domElement, i * FW, 0, FW, FH); };
       const run = H3.clips.Jog_Fwd_Loop ? 'Jog_Fwd_Loop' : 'Walk_Loop', dur = H3.clips[run] ? H3.clips[run].duration : 1;
       for (let i = 0; i < NF; i++) shot(i, run, i / NF * dur); shot(NF, u.idleK, .5);
       R.dispose(); R.forceContextLoss(); return { cv, FW, FH, NF };
@@ -1839,9 +1839,20 @@ function invEquip(body) {
     fly(from, to, it, () => { delete st.eq[s]; G().save(); reLook(); pv.set(); draw(); }); };
   draw();
 }
+/* en celulares con poca memoria (iPhone) el visor de la mochila usa el mismo motor 3D del juego y dibuja en un lienzo común:
+   abrir un segundo motor 3D volvía a subir todas las texturas del personaje y el iPhone cerraba la página */
+function liteR(cv, always) {
+  const R0 = _r0, ctx = cv.getContext('2d'), LUT = new Uint8ClampedArray(256), cc = new THREE.Color(); let W = 2, H = 2, rt = null, img = null, buf = null, t = 0;
+  for (let v = 0; v < 256; v++) { const x = v / 255 / .66, a = Math.min(1, Math.max(0, (x * (2.51 * x + .03)) / (x * (2.43 * x + .59) + .14))); LUT[v] = Math.round((a <= .0031308 ? 12.92 * a : 1.055 * Math.pow(a, 1 / 2.4) - .055) * 255); }
+  return { lite: 1, fast: 0, setPixelRatio() {}, setSize(w, h) { const k = always ? 1 : Math.min(1.5, devicePixelRatio || 1); W = Math.max(2, Math.round(w * k)); H = Math.max(2, Math.round(h * k)); cv.width = W; cv.height = H; if (rt) rt.dispose(); rt = new THREE.WebGLRenderTarget(W, H); img = ctx.createImageData(W, H); buf = new Uint8Array(W * H * 4); t = 0; },
+    render(sc, cam) { const n = performance.now(); if (!R0 || !rt || (!always && n - t < (this.fast ? 50 : 220))) return; t = n;
+      const pt = R0.getRenderTarget(), pa = R0.getClearAlpha(); R0.getClearColor(cc); R0.setRenderTarget(rt); R0.setClearColor(0x000000, 0); R0.clear(); R0.render(sc, cam); R0.readRenderTargetPixels(rt, 0, 0, W, H, buf); R0.setRenderTarget(pt); R0.setClearColor(cc, pa);
+      const D = img.data; for (let y = 0; y < H; y++) { let s = (H - 1 - y) * W * 4, d = y * W * 4; for (let x = 0; x < W; x++, s += 4, d += 4) { D[d] = LUT[buf[s]]; D[d + 1] = LUT[buf[s + 1]]; D[d + 2] = LUT[buf[s + 2]]; D[d + 3] = buf[s + 3]; } } ctx.putImageData(img, 0, 0); },
+    dispose() { if (rt) rt.dispose(); rt = null; }, forceContextLoss() {} };
+}
 // el personaje girando en 3D dentro de la mochila
 function invPreview(cv) {
-  const R = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true }), sc = new THREE.Scene(), cam = new THREE.PerspectiveCamera(24, 1, .1, 30);
+  const R = LOWMEM() && _r0 ? liteR(cv) : new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true }), sc = new THREE.Scene(), cam = new THREE.PerspectiveCamera(24, 1, .1, 30);
   R.setPixelRatio(Math.min(2, devicePixelRatio || 1)); R.outputColorSpace = THREE.SRGBColorSpace; R.toneMapping = THREE.ACESFilmicToneMapping;
   sc.add(new THREE.HemisphereLight('#FFF4E0', '#3A2A1C', 1.5)); const key = new THREE.DirectionalLight('#FFE2B8', 2.4); key.position.set(2, 4, 4); sc.add(key); const rim = new THREE.DirectionalLight('#9EC2FF', 1.6); rim.position.set(-3, 2.5, -3); sc.add(rim);
   const base = new THREE.Mesh(new THREE.CylinderGeometry(.62, .66, .06, 40), new THREE.MeshStandardMaterial({ color: '#3A2C1E', roughness: .7, metalness: .2 })); base.position.y = -.03; sc.add(base);
@@ -1854,7 +1865,7 @@ function invPreview(cv) {
   ['pointerup', 'pointercancel'].forEach(k => cv.addEventListener(k, () => { drag = null; }));
   set(); size();
   const loop = now => { if (!cv.isConnected || sheet.hidden) { R.dispose(); try { R.forceContextLoss(); } catch (e) {} return; } const dt = Math.min(.05, (now - last) / 1000); last = now;
-    if (drag === null) { rot += vel; vel *= .92; if (Math.abs(vel) < .0005) rot += dt * .35; }
+    if (drag === null) { rot += vel; vel *= .92; if (Math.abs(vel) < .0005 && !R.lite) rot += dt * .35; } R.fast = drag !== null || Math.abs(vel) > .0005;
     if (av) { av.rotation.y = rot; if (av.userData.h3) av.userData.h3.mixer.update(dt); else animAvatar(av, now / 1000, false, dt); }
     R.render(sc, cam); requestAnimationFrame(loop); };
   requestAnimationFrame(loop);
@@ -3825,6 +3836,8 @@ const MUS = window.MUS_URLS || {
   orar: ['https://music.wixstatic.com/mp3/43ca3b_538f7365d7e248f1bf574404060d1d65.mp3', 'https://music.wixstatic.com/mp3/43ca3b_b29f4283091e41ebb259f0338ad83024.mp3', 'https://music.wixstatic.com/mp3/43ca3b_0ec4648425c24a579ef24a9a0b7caa81.mp3', 'https://music.wixstatic.com/mp3/43ca3b_c88f06c8392149c2a87c327e80823a50.mp3']
 };
 const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+/* celulares con poca memoria: iPhone (Safari corta la página si pasa su límite), los que ya se cortaron dos veces y los de 4 GB o menos */
+function LOWMEM() { try { if (localStorage.getItem('tsp:lowmem') === '1') return true; } catch (e) {} return IOS || LIVIANO || (navigator.deviceMemory > 0 && navigator.deviceMemory <= 4); }
 // en iOS el volumen de un <audio> no se puede cambiar desde el código: la música pasa por el mismo AudioContext del ambiente
 // (un nodo de ganancia por pista), así el deslizador y los fundidos funcionan y todo se desbloquea con el mismo toque
 function auEl(url) { const a = new Audio(); if (IOS) a.crossOrigin = 'anonymous'; a.preload = 'auto'; if (url) a.src = url; return a; }
@@ -5440,7 +5453,7 @@ function guiaShow(k) {
   const P = guiaDef(k), gp = guiaP(); gp[k] = 1; G().save(); const tx = GUIA_TOUCH() && P.txT ? P.txT : P.tx;
   if (!GUIA.el) { const e = document.createElement('div'); e.className = 'v3pista'; e.setAttribute('role', 'status'); e.innerHTML = '<i>💡</i><span><b></b><small></small></span><button class="pz-x" type="button" aria-label="Cerrar la pista">✕</button>'; e.querySelector('.pz-x').onclick = ev => { ev.stopPropagation(); guiaHide(); try { G().voStop(); } catch (er) {} }; document.body.appendChild(e); GUIA.el = e; }
   if (!GUIA.ring) { const r = document.createElement('div'); r.className = 'v3ring'; r.hidden = true; document.body.appendChild(r); GUIA.ring = r; }
-  GUIA.el.querySelector('i').textContent = /^q_/.test(k) ? '💬' : '💡'; GUIA.el.querySelector('b').textContent = P.t; GUIA.el.querySelector('small').textContent = tx; GUIA.el.classList.remove('on'); void GUIA.el.offsetWidth; GUIA.el.classList.add('on');
+  GUIA.el.querySelector('i').textContent = /^q_/.test(k) ? '💬' : '💡'; GUIA.el.querySelector('b').textContent = P.t; GUIA.el.querySelector('small').textContent = tx; GUIA.el.classList.remove('on'); void GUIA.el.offsetWidth; GUIA.el.classList.add('on'); try { topStack(); } catch (e) {}
   GUIA.cur = k; GUIA.until = performance.now() + Math.max(9000, tx.length * 75); GUIA.last = performance.now();
   try { G().vo(tx, 'narrador'); } catch (e) {}
   const tg = guiaVis(P.sel); if (tg) tg.addEventListener('pointerdown', () => { if (GUIA.cur === k) guiaHide(); }, { once: true });
@@ -5450,7 +5463,7 @@ function guiaRing() {
   const q = e.getBoundingClientRect(); r.hidden = false; r.style.left = (q.left - 6) + 'px'; r.style.top = (q.top - 6) + 'px'; r.style.width = (q.width + 12) + 'px'; r.style.height = (q.height + 12) + 'px';
 }
 function guiaTick(dt) {
-  if (!S || !S.av) return; const ok = guiaReady(), chip = guiaChip(); chip.hidden = !ok;
+  if (!S || !S.av) return; if (S.lowm == null) { S.lowm = LOWMEM(); document.body.classList.toggle('lowmem', S.lowm); } const ok = guiaReady(), chip = guiaChip(); chip.hidden = !ok;
   if (!ok) { if (GUIA.cur) { GUIA.el.classList.remove('on'); GUIA.ring.hidden = true; GUIA.until += dt * 1000; } return; }
   if (GUIA.cur) { GUIA.el.classList.add('on'); guiaRing(); if (performance.now() > GUIA.until) guiaHide(); }
   GUIA.gT -= dt; if (GUIA.gT <= 0) { GUIA.gT = 1; GUIA.goals = guiaGoals(); const top = GUIA.goals[0], bt = chip.querySelector('b'); if (top && bt.textContent !== top.t) bt.textContent = top.t; }
@@ -7093,7 +7106,7 @@ function loop(now) {
   if (S.flies) { S.flies.visible = false; S.flies.material.opacity = .6 + Math.sin(t * 3) * .3; S.flies.rotation.y = Math.sin(t * .05) * .02; }
   cineTick(dt); if (window.__camFix) { const f = window.__camFix; S.camera.position.set(...f.p); S.camera.lookAt(...f.l); }
   fxWatch(now); if (S.W) { const u = S.W.sky.material.uniforms; u.inv.value = S.fx ? 1 : 0; u.ex.value = S.renderer.toneMappingExposure; }
-  const p5 = PF ? performance.now() : 0; if (S.fx) S.fx.render(dt); else S.renderer.render(S.scene, S.camera); const p6 = PF ? performance.now() : 0; QUAL.lastCalls = S.renderer.info.render.calls; QUAL.lastTris = S.renderer.info.render.triangles;
+  const p5 = PF ? performance.now() : 0; const cover = S.lowm && (!document.getElementById('v3sheet').hidden || !(document.getElementById('v3map') || { hidden: true }).hidden); if (cover && (S.rsk = (S.rsk || 0) + 1) % 8) { } else if (S.fx) S.fx.render(dt); else S.renderer.render(S.scene, S.camera); const p6 = PF ? performance.now() : 0; QUAL.lastCalls = S.renderer.info.render.calls; QUAL.lastTris = S.renderer.info.render.triangles;
   idle(dt); misTick(t); voiceTick(dt); wpTick(t); mpTick(t, dt); try { legTick(dt); } catch (e) {} dayTick(dt); seasonTick(dt); gearDropTick(dt, t); doorTick(t); try { wanderTick(dt); } catch (e) {} h3npcTick(dt); try { crowdLiveTick(dt); } catch (e) {} crowdTick(); roomTick(dt); survTick(dt, t); try { kidsTick(dt); } catch (e) {} prayTogetherTick(dt); axVerse(dt);
   if (PF) { const p7 = performance.now(); PROF.add(Object.assign({ mov: p1 - p0, zonas: p2 - p1, agua_fuego: p3 - p2, avatar: p4 - p3, escena: p5 - p4, render: p6 - p5, npc_misiones: p7 - p6 }, ZZ || {})); }
 }
