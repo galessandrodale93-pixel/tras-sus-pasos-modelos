@@ -5433,7 +5433,7 @@ const GUIA_PREG = [
 const guiaDef = k => GUIA_PISTAS[k] || GUIA_PREG.find(q => 'q_' + q.k === k);
 function guiaP() { const p = G().P(); p.guia = p.guia || {}; return p.guia; }
 function guiaVis(sel) { if (!sel) return null; for (const e of document.querySelectorAll(sel)) { if (e.hidden) continue; const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < .05) continue; const r = e.getBoundingClientRect(); if (r.width > 4 && r.height > 4 && r.bottom > 0 && r.top < innerHeight) return e; } return null; }
-function guiaReady() { const b = document.body.classList; if (!S || !b.contains('v3on') || b.contains('v3lb') || b.contains('v3talk') || b.contains('v3cine') || sheetUp()) return false; const v = document.getElementById('view3d'), m = document.getElementById('v3map'), mo = document.getElementById('v3more'); return !(v && v.hidden) && !(m && !m.hidden) && !(mo && !mo.hidden); }
+function guiaReady() { const b = document.body.classList; if (!S || !b.contains('v3on') || b.contains('v3lb') || b.contains('v3talk') || b.contains('v3cine') || sheetUp()) return false; const v = document.getElementById('view3d'), m = document.getElementById('v3map'), mo = document.getElementById('v3more'); return !(v && v.hidden) && !(m && !m.hidden) && !(mo && !mo.hidden) && !document.getElementById('v3recap'); }
 const aLp = l => /^el /i.test(l) ? 'al ' + l.slice(3) : 'a ' + l;
 function guiaWp(x, z, name) { S.wp = { x, z, name }; try { wpSync(); } catch (e) {} G().toast('Destino: ' + name + '. Seguí la flecha.', 0, 1); }
 function guiaEpPlace(at) { const p = epPlace(at); if (p) { const o = OL_PLAN.find(q => q.id === at); return { x: p.x, z: p.z, n: o ? o.name : at === 'pier' ? 'El muelle de Magdala' : 'El horno de Belén' }; } const m = (Z7.stalls || []).find(m => m.shop === at); return m ? { x: m.x, z: m.z, n: SHOPS[at] ? SHOPS[at].name : '' } : null; }
@@ -5459,8 +5459,8 @@ function guiaChip() {
 }
 function guiaPanel() {
   const L = guiaGoals(); S.joy.x = 0; S.joy.y = 0;
-  vilSheet(`<div class="inv-h"><b>🧭 ¿Qué hago ahora?</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="gd-list">${L.map((x, i) => `<div class="sv-rec gd-r${i ? '' : ' first'}"><span class="gd-ic">${x.ic}</span><div><b>${esc(x.t)}</b><small>${esc(x.sub)}</small></div>${x.fn ? `<button data-gi="${i}">${esc(x.b || 'Ir')}</button>` : ''}</div>`).join('')}</div><button class="gd-how cd-go" type="button">📸 Compartir mi camino</button>`);
-  const el = document.getElementById('v3sheet'), close = () => { el.hidden = true; }; el.querySelector('.cd-go').onclick = () => cardShow(cardCamino());
+  vilSheet(`<div class="inv-h"><b>🧭 ¿Qué hago ahora?</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="gd-list">${L.map((x, i) => `<div class="sv-rec gd-r${i ? '' : ' first'}"><span class="gd-ic">${x.ic}</span><div><b>${esc(x.t)}</b><small>${esc(x.sub)}</small></div>${x.fn ? `<button data-gi="${i}">${esc(x.b || 'Ir')}</button>` : ''}</div>`).join('')}</div><div class="cd-b"><button class="gd-how rc-go" type="button">✨ Mis resúmenes</button><button class="gd-how cd-go" type="button">📸 Compartir mi camino</button></div>`);
+  const el = document.getElementById('v3sheet'), close = () => { el.hidden = true; }; el.querySelector('.cd-go').onclick = () => cardShow(cardCamino()); el.querySelector('.rc-go').onclick = () => recapMenu();
   el.querySelectorAll('[data-gi]').forEach(b => b.onclick = () => { close(); try { L[+b.dataset.gi].fn(); } catch (e) {} });
 }
 function guiaHide() { GUIA.cur = null; if (GUIA.el) GUIA.el.classList.remove('on'); if (GUIA.ring) GUIA.ring.hidden = true; }
@@ -5483,6 +5483,7 @@ function guiaTick(dt) {
   if (GUIA.cur) { GUIA.el.classList.add('on'); guiaRing(); if (performance.now() > GUIA.until) guiaHide(); }
   GUIA.gT -= dt; if (GUIA.gT <= 0) { GUIA.gT = 1; GUIA.goals = guiaGoals(); const top = GUIA.goals[0], bt = chip.querySelector('b'); if (top && bt.textContent !== top.t) bt.textContent = top.t; }
   GUIA.play = (GUIA.play || 0) + dt;
+  if (!GUIA.hT || now0() > GUIA.hT) { GUIA.hT = now0() + 30000; try { histTick(); if (!GUIA.rc && GUIA.play > 25 && !CINE.on) { GUIA.rc = 1; const r = recapDue(); G().save(); if (r) setTimeout(() => { if (!sheetUp()) recapShow(r[0], r[1]); else GUIA.rc = 0; }, 400); } } catch (e) { console.warn('historial', e); } }
   if (!NOTI.sync || NOTI.sync !== notiHoy()) { NOTI.sync = notiHoy(); notiSync(); try { navigator.clearAppBadge && navigator.clearAppBadge().catch(() => {}); } catch (e) {} }
   if (!GUIA.star || GUIA.star < now0()) { GUIA.star = now0() + 5000; try { advStarSync(); } catch (e) {} }
   { const a = S.av.position, L = GUIA.lp; if (L) { const d = Math.hypot(a.x - L[0], a.z - L[1]); if (d > .05 && d < 8) { GUIA.dist = (GUIA.dist || 0) + d; if (GUIA.dist >= 10) { metaEv('camina', GUIA.dist); GUIA.dist = 0; } } } GUIA.lp = [a.x, a.z]; }
@@ -5604,24 +5605,56 @@ function cardAvatar(W, H) {
   R.render(sc, cam); R.dispose(); return cv;
 }
 function cardWrap(x, t, maxW) { const out = []; let line = ''; for (const w of String(t).split(/\s+/)) { const tt = line ? line + ' ' + w : w; if (x.measureText(tt).width > maxW && line) { out.push(line); line = w; } else line = tt; } if (line) out.push(line); return out; }
+/* diseño épico de las tarjetas: fondo con el mundo, un motivo según el período (sol, estrellas, olivo, fuegos), rayos de luz
+   detrás del personaje, marco dorado doble y títulos con degradé de oro */
+const CARD_TEMA = {
+  logro: { bg: '#1A140D', bgK: '#14204A', acc: '#FFD27A', acc2: '#FFF1C8', mot: 'rayos' },
+  semana: { bg: '#2A1806', acc: '#FFD27A', acc2: '#FFF3D0', mot: 'sol', nom: 'MI SEMANA' },
+  mes: { bg: '#0B1434', acc: '#C9DAFF', acc2: '#FFE7A6', mot: 'estrellas', nom: 'MI MES' },
+  semestre: { bg: '#121F0E', acc: '#D5EBA6', acc2: '#FFE7A6', mot: 'olivo', nom: 'MI SEMESTRE' },
+  anio: { bg: '#1C0C2C', acc: '#F5C96B', acc2: '#FFF0C8', mot: 'fuegos', nom: 'MI AÑO' }
+};
+function cardRng(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return () => { h = (Math.imul(h, 1103515245) + 12345) >>> 0; return h / 4294967296; }; }
+function cardMotivo(x, W, H, T, seed) {
+  const R = cardRng(seed); x.save();
+  if (T.mot === 'sol' || T.mot === 'rayos') { x.globalAlpha = .16; x.translate(W / 2, H * .3); for (let i = 0; i < 28; i++) { x.rotate(Math.PI * 2 / 28); const gr = x.createLinearGradient(0, 0, 0, -H); gr.addColorStop(0, T.acc); gr.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = gr; x.beginPath(); x.moveTo(-8, 0); x.lineTo(8, 0); x.lineTo(55, -H); x.lineTo(-55, -H); x.fill(); } }
+  else if (T.mot === 'estrellas') { for (let i = 0; i < 140; i++) { const sx = R() * W, sy = R() * H * .62, r = R() < .1 ? 3.2 : 1.1 + R() * 1.4; x.globalAlpha = .35 + R() * .6; x.fillStyle = '#FFFFFF'; x.beginPath(); x.arc(sx, sy, r, 0, 7); x.fill(); }
+    x.globalAlpha = .9; x.fillStyle = '#FFF1C8'; x.beginPath(); x.arc(W * .82, H * .12, 46, 0, 7); x.fill(); x.fillStyle = T.bg; x.beginPath(); x.arc(W * .82 + 20, H * .12 - 12, 42, 0, 7); x.fill(); }
+  else if (T.mot === 'olivo') { const rama = (ox, oy, ang, n, sc) => { x.save(); x.translate(ox, oy); x.rotate(ang); x.strokeStyle = 'rgba(213,235,166,.35)'; x.lineWidth = 4 * sc; x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(60 * sc, -150 * sc, 20 * sc, -320 * sc); x.stroke();
+      for (let i = 1; i <= n; i++) { const t = i / (n + 1), px = 60 * sc * 2 * t * (1 - t) + 20 * sc * t * t, py = -150 * sc * 2 * t * (1 - t) - 320 * sc * t * t; for (const s of [-1, 1]) { x.save(); x.translate(px, py); x.rotate(s * .9 - .2); x.fillStyle = `rgba(${s > 0 ? '190,220,140' : '160,196,120'},.42)`; x.beginPath(); x.ellipse(0, -24 * sc, 9 * sc, 26 * sc, 0, 0, 7); x.fill(); x.restore(); } } x.restore(); };
+    rama(110, H * .62, -.25, 7, 1.3); rama(W - 110, H * .62, .25, 7, 1.3); rama(200, H * .5, -.55, 5, .9); rama(W - 200, H * .5, .55, 5, .9); }
+  else if (T.mot === 'fuegos') { const cols = ['#F5C96B', '#FFE7A6', '#E59BFF', '#9BD0FF', '#FF9B7A']; for (let b = 0; b < 7; b++) { const cx = 120 + R() * (W - 240), cy = 120 + R() * H * .42, n = 26 + Math.floor(R() * 14), rr = 70 + R() * 90, c = cols[b % cols.length];
+      for (let i = 0; i < n; i++) { const a = i / n * 6.283, l = rr * (.75 + R() * .3); x.globalAlpha = .55; x.strokeStyle = c; x.lineWidth = 3; x.beginPath(); x.moveTo(cx + Math.cos(a) * l * .35, cy + Math.sin(a) * l * .35); x.lineTo(cx + Math.cos(a) * l, cy + Math.sin(a) * l); x.stroke(); x.globalAlpha = .9; x.fillStyle = c; x.beginPath(); x.arc(cx + Math.cos(a) * l, cy + Math.sin(a) * l, 3.2, 0, 7); x.fill(); } } }
+  x.restore();
+}
+function cardMarco(x, W, H, T) {
+  x.save(); x.strokeStyle = T.acc; x.globalAlpha = .75; x.lineWidth = 4; x.strokeRect(26, 26, W - 52, H - 52); x.globalAlpha = .4; x.lineWidth = 2; x.strokeRect(40, 40, W - 80, H - 80);
+  x.globalAlpha = .95; x.fillStyle = T.acc; for (const [cx, cy] of [[26, 26], [W - 26, 26], [26, H - 26], [W - 26, H - 26]]) { x.save(); x.translate(cx, cy); x.rotate(Math.PI / 4); x.fillRect(-11, -11, 22, 22); x.restore(); } x.restore();
+}
+function cardOro(x, T, y0, y1) { const g = x.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, T.acc2); g.addColorStop(.5, T.acc); g.addColorStop(1, '#C8892E'); return g; }
+function cardFondo(x, W, H, T, hx) {
+  x.fillStyle = hx ? T.bg : (T.bgK || T.bg); x.fillRect(0, 0, W, H);
+  try { const r = S.renderer; r.render(S.scene, S.camera); const src = r.domElement, sw = src.width, sh = src.height, k = Math.max(W / sw, H * .7 / sh); x.globalAlpha = .55; x.drawImage(src, (W - sw * k) / 2, 0, sw * k, sh * k); x.globalAlpha = 1; } catch (e) {}
+  const c = hx ? T.bg : (T.bgK || T.bg), g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, c + 'B0'); g.addColorStop(.35, c + '55'); g.addColorStop(.6, c + 'E6'); g.addColorStop(1, c); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  const v = x.createRadialGradient(W / 2, H * .4, W * .2, W / 2, H * .45, W * .95); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.55)'); x.fillStyle = v; x.fillRect(0, 0, W, H);
+}
+function cardPersonaje(x, W, T, top, w, h) {
+  const cx = W / 2, cy = top + h * .42, gl = x.createRadialGradient(cx, cy, 10, cx, cy, w * .75); gl.addColorStop(0, T.acc + 'AA'); gl.addColorStop(.45, T.acc + '33'); gl.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = gl; x.fillRect(cx - w, top - 40, w * 2, h + 80);
+  x.save(); x.translate(cx, cy); x.globalAlpha = .22; for (let i = 0; i < 16; i++) { x.rotate(Math.PI / 8); x.fillStyle = T.acc2; x.beginPath(); x.moveTo(-6, 0); x.lineTo(6, 0); x.lineTo(28, -w * .9); x.lineTo(-28, -w * .9); x.fill(); } x.restore();
+  x.save(); x.globalAlpha = .6; x.strokeStyle = T.acc; x.lineWidth = 4; x.beginPath(); x.ellipse(cx, top + h - 22, w * .34, 26, 0, 0, 7); x.stroke(); x.globalAlpha = .25; x.fillStyle = T.acc; x.fill(); x.restore();
+  const av = cardAvatar(Math.round(w), Math.round(h * 1.0)); if (av) { x.save(); x.shadowColor = 'rgba(0,0,0,.6)'; x.shadowBlur = 36; x.drawImage(av, cx - w / 2, top, w, h); x.restore(); }
+}
+function cardMarca(x, W, T, hx) { x.textAlign = 'center'; x.fillStyle = T.acc2; x.font = '900 26px Nunito'; x.fillText(('TRAS SUS PASOS · ' + (hx ? 'HERO' : 'KIDS')).split('').join(String.fromCharCode(8202)), W / 2, 92); }
+function cardPie(x, W, H, T) { x.fillStyle = T.acc; x.globalAlpha = .7; x.fillRect(W / 2 - 70, H - 118, 140, 3); x.globalAlpha = 1; x.font = '800 30px Nunito'; x.fillStyle = T.acc2; x.textAlign = 'center'; x.fillText('Jugá en habitat-cfm.org', W / 2, H - 70); }
+async function cardFonts() { try { await Promise.all(['700 64px Fraunces', 'italic 600 40px Fraunces', '800 30px Nunito', '900 24px Nunito'].map(f => document.fonts.load(f))); } catch (e) {} }
+/* tarjeta de un logro (1080×1350) */
 async function cardMake(o) {
-  try { await Promise.all(['700 64px Fraunces', '800 30px Nunito', '900 24px Nunito'].map(f => document.fonts.load(f))); } catch (e) {}
-  const W = 1080, H = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d'), hx = !!S.hx;
-  /* fondo: lo que se ve ahora en el juego */
-  x.fillStyle = hx ? '#1A140D' : '#1C2A55'; x.fillRect(0, 0, W, H);
-  try { const r = S.renderer; r.render(S.scene, S.camera); const src = r.domElement, sw = src.width, sh = src.height, k = Math.max(W / sw, H / sh); x.globalAlpha = .9; x.drawImage(src, (W - sw * k) / 2, (H - sh * k) / 2, sw * k, sh * k); x.globalAlpha = 1; } catch (e) {}
-  let g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, 'rgba(0,0,0,.35)'); g.addColorStop(.42, 'rgba(0,0,0,.08)'); g.addColorStop(.62, hx ? 'rgba(18,12,6,.82)' : 'rgba(14,22,52,.82)'); g.addColorStop(1, hx ? 'rgba(10,7,4,.97)' : 'rgba(8,14,38,.97)'); x.fillStyle = g; x.fillRect(0, 0, W, H);
-  /* el personaje, de frente */
-  const av = cardAvatar(560, 760); if (av) { x.save(); x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = 40; x.drawImage(av, (W - 540) / 2, 84, 540, 733); x.restore(); }
-  /* marca arriba */
-  x.textAlign = 'center'; x.fillStyle = '#FFE7A6'; x.font = '900 26px Nunito'; x.fillText(('TRAS SUS PASOS · ' + (hx ? 'HERO' : 'KIDS')).split('').join(String.fromCharCode(8202)), W / 2, 62);
-  /* el logro */
-  let y = 880; x.font = '700 68px Fraunces'; x.fillStyle = '#FFFFFF'; for (const l of cardWrap(x, o.t, W - 140)) { x.fillText(l, W / 2, y); y += 78; }
-  if (o.ref) { x.font = '900 26px Nunito'; x.fillStyle = '#E9C37A'; x.fillText(o.ref.toUpperCase(), W / 2, y + 6); y += 50; }
-  x.font = '700 34px Nunito'; x.fillStyle = 'rgba(255,248,232,.92)'; for (const l of (o.lines || [])) { for (const ll of cardWrap(x, l, W - 160)) { if (y > H - 130) break; x.fillText(ll, W / 2, y); y += 46; } y += 6; }
-  /* pie */
-  x.fillStyle = 'rgba(233,195,122,.55)'; x.fillRect(W / 2 - 60, H - 108, 120, 3); x.font = '800 28px Nunito'; x.fillStyle = '#FFE7A6'; x.fillText('Jugá en habitat-cfm.org', W / 2, H - 58);
-  return cv;
+  await cardFonts(); const W = 1080, H = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d'), hx = !!S.hx, T = CARD_TEMA.logro;
+  cardFondo(x, W, H, T, hx); cardMotivo(x, W, H, T, o.t); cardPersonaje(x, W, T, 118, 500, 680); cardMarco(x, W, H, T); cardMarca(x, W, T, hx);
+  let y = 900; x.textAlign = 'center'; x.font = '700 70px Fraunces'; x.shadowColor = 'rgba(0,0,0,.6)'; x.shadowBlur = 18; x.fillStyle = cardOro(x, T, y - 60, y + 90); for (const l of cardWrap(x, o.t, W - 160)) { x.fillText(l, W / 2, y); y += 80; } x.shadowBlur = 0;
+  if (o.ref) { x.font = '900 26px Nunito'; x.fillStyle = T.acc; x.fillText(o.ref.toUpperCase().split('').join(String.fromCharCode(8202)), W / 2, y + 4); y += 52; }
+  x.font = (o.ref ? 'italic 600 36px Fraunces' : '700 34px Nunito'); x.fillStyle = 'rgba(255,248,232,.94)'; for (const l of (o.lines || [])) { for (const ll of cardWrap(x, l, W - 190)) { if (y > H - 150) break; x.fillText(ll, W / 2, y); y += 48; } y += 6; }
+  cardPie(x, W, H, T); return cv;
 }
 async function cardShow(o) {
   svToast('📸 Armando tu tarjeta…'); const cv = await cardMake(o), url = cv.toDataURL('image/jpeg', .9);
@@ -5639,6 +5672,115 @@ function cardCamino() {
   const L = [`Nivel ${tx('lvN') || 1}` + (tx('lvT') ? ' · ' + tx('lvT') : ''), (paradas ? `${paradas} ${paradas === 1 ? 'parada' : 'paradas'} de la historia` : 'Recién empiezo el camino') + (m.total ? ` · ${m.total} ${m.total === 1 ? 'desafío cumplido' : 'desafíos cumplidos'}` : '')];
   try { const t = (svP().titles || []).slice(-1)[0]; if (S.hx && t) L.push('Título: «' + t + '»'); } catch (e) {}
   return { t: 'Mi camino tras los pasos de Jesús', lines: L, share: 'Así va mi camino en Tras sus pasos' };
+}
+
+/* ---------- resúmenes de crecimiento: semana, mes, semestre y año ----------
+   El juego guarda una foto chica del avance por día (los últimos 62 días) y la del primer día de cada mes (2 años). Cada
+   resumen compara el antes y el ahora y lo muestra como una presentación con el narrador y una tarjeta para compartir. */
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const p2 = n => String(n).padStart(2, '0'), dK = d => d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()), mK = d => d.getFullYear() + '-' + p2(d.getMonth() + 1);
+function stSnap() {
+  const g = G(), p = g.P(), o = { lv: 1, pts: 0, par: 0, meta: (p.meta && p.meta.total) || 0, ms: Math.round(p.playMs || 0), glow: 0 };
+  try { o.lv = g.level(); o.pts = Math.round(g.points()); } catch (e) {}
+  try { o.par = Object.keys(g.NODES).filter(k => g.NODES[k].kind === 'ch' && g.isDone(k)).length; } catch (e) {}
+  try { o.glow = Math.round(glowState().pts || 0); } catch (e) {}
+  if (S && S.hx) { try { o.ofi = Object.keys(OFI).reduce((a, k) => a + ofiLv(k), 0); } catch (e) {} try { o.fr = Object.keys(FRN).reduce((a, k) => a + ft(k), 0); } catch (e) {} }
+  return o;
+}
+function histP() { const p = G().P(); p.hist = p.hist || {}; const H = p.hist; H.d = H.d || {}; H.mo = H.mo || {}; H.dias = H.dias || {}; return H; }
+function histTick() {
+  const H = histP(), now = new Date(), k = dK(now), m = mK(now), snap = stSnap();
+  if (!H.d[k]) { H.dias[m] = (H.dias[m] || 0) + 1; const keys = Object.keys(H.d).sort(); while (keys.length > 62) delete H.d[keys.shift()]; }
+  if (!H.mo[m]) { const prev = Object.keys(H.d).sort().pop(); H.mo[m] = prev && prev < k ? H.d[prev] : snap; const mk = Object.keys(H.mo).sort(); while (mk.length > 26) delete H.mo[mk.shift()]; }
+  H.d[k] = snap;
+}
+const RECAP_NOM = { semana: 'Tu semana', mes: 'Tu mes', semestre: 'Tu semestre', anio: 'Tu año' };
+const RECAP_VERS = [['Jesús crecía en sabiduría y en estatura, y en gracia ante Dios y ante la gente.', 'Lucas 2:52'], ['Tu palabra es una lámpara para mis pies y una luz en mi camino.', 'Salmo 119:105'], ['El que empezó en ustedes la buena obra la va a completar.', 'Filipenses 1:6'], ['Crezcan en la gracia y en el conocimiento de nuestro Señor Jesucristo.', '2 Pedro 3:18'], ['Los que confían en el Señor renuevan sus fuerzas.', 'Isaías 40:31'], ['Arraigados en él, edificados en él y firmes en la fe.', 'Colosenses 2:7']];
+/* qué período abarca cada resumen: «prev» mira el período que acaba de terminar (los automáticos); si no, el que está en curso */
+function recapData(kind, prev) {
+  histTick(); const H = histP(), now = new Date(), cur = stSnap(); let a, b = new Date(now), base = null, dias = 0, nom = RECAP_NOM[kind];
+  const dayKeys = Object.keys(H.d).sort(), monKeys = Object.keys(H.mo).sort(), firstAfter = k => monKeys.find(x => x >= k);
+  if (kind === 'semana') { a = new Date(now); a.setDate(a.getDate() - 6); const ak = dK(a), bef = dayKeys.filter(k => k < ak).pop(); base = bef ? H.d[bef] : H.d[dayKeys.find(k => k >= ak)]; dias = dayKeys.filter(k => k >= ak).length; }
+  else { let y = now.getFullYear(), m = now.getMonth(), ms = 1;
+    if (kind === 'mes') { if (prev) { m--; if (m < 0) { m = 11; y--; } } a = new Date(y, m, 1); b = prev ? new Date(y, m + 1, 0) : b; nom = 'Tu ' + MESES[m]; }
+    if (kind === 'semestre') { ms = 6; if (prev) { const s0 = m < 6 ? 6 : 0; y = m < 6 ? y - 1 : y; a = new Date(y, s0, 1); b = new Date(y, s0 + 6, 0); } else { a = new Date(y, m < 6 ? 0 : 6, 1); } nom = a.getMonth() === 0 ? 'Tu primer semestre' : 'Tu segundo semestre'; }
+    if (kind === 'anio') { a = new Date(prev && m < 6 ? y - 1 : y, 0, 1); if (prev && m < 6) b = new Date(y - 1, 11, 31); nom = 'Tu ' + a.getFullYear(); }
+    const ak = mK(a), bk = mK(b), mk0 = firstAfter(ak); base = mk0 ? H.mo[mk0] : null; dias = Object.keys(H.dias).filter(k => k >= ak && k <= bk).reduce((s, k) => s + H.dias[k], 0);
+    if (prev) { const nx = monKeys.find(k => k > bk); if (nx) Object.assign(cur, H.mo[nx]); } }
+  base = base || cur; const d = k => Math.max(0, (cur[k] || 0) - (base[k] || 0)), hx = !!(S && S.hx), mins = Math.round(d('ms') / 60000);
+  const tiempo = mins >= 60 ? `${Math.floor(mins / 60)} h ${p2(mins % 60)}` : `${mins} min`;
+  const tiles = [['📖', d('par'), d('par') === 1 ? 'parada de la historia' : 'paradas de la historia', cur.par], ['☀️', d('meta'), d('meta') === 1 ? 'desafío cumplido' : 'desafíos cumplidos'], ['📅', dias, dias === 1 ? 'día jugado' : 'días jugados'],
+    [hx ? '✦' : '🌟', d('glow'), hx ? 'de Resplandor' : 'de luz'], hx ? ['🔨', d('ofi'), d('ofi') === 1 ? 'nivel de oficio' : 'niveles de oficio'] : ['⭐', d('pts'), 'puntos'], ['⏱️', tiempo, 'jugando', null, 1]];
+  const fmt = (x, y) => x.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' }) + ' al ' + y.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
+  const range = kind === 'semana' ? fmt(a, b) : kind === 'mes' ? MESES[a.getMonth()] + ' de ' + a.getFullYear() : kind === 'anio' ? 'Todo ' + a.getFullYear() : MESES[a.getMonth()] + ' a ' + MESES[Math.min(11, a.getMonth() + 5)] + ' de ' + a.getFullYear();
+  const wk = Math.floor(now.getTime() / 6048e5), v = kind === 'semana' ? RECAP_VERS[wk % RECAP_VERS.length] : RECAP_VERS[0];
+  return { kind, nom, range, tiles, lvA: base.lv || 1, lvB: cur.lv || 1, par: cur.par, fr: hx ? d('fr') : 0, verse: v, hx };
+}
+/* la tarjeta del resumen (1080×1920, formato historia) */
+async function recapCard(R) {
+  await cardFonts(); const W = 1080, H = 1920, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d'), T = CARD_TEMA[R.kind];
+  cardFondo(x, W, H, T, true); cardMotivo(x, W, H, T, R.kind + R.range); cardMarco(x, W, H, T); cardMarca(x, W, T, R.hx);
+  x.textAlign = 'center'; x.shadowColor = 'rgba(0,0,0,.6)'; x.shadowBlur = 20; x.font = '700 124px Fraunces'; x.fillStyle = cardOro(x, T, 140, 260); x.fillText(T.nom, W / 2, 246); x.shadowBlur = 0;
+  x.font = '800 34px Nunito'; x.fillStyle = T.acc2; x.fillText(R.range.charAt(0).toUpperCase() + R.range.slice(1), W / 2, 304);
+  cardPersonaje(x, W, T, 336, 470, 640);
+  /* cinta del nivel */
+  const lvT = R.lvB > R.lvA ? `NIVEL ${R.lvA}  →  ${R.lvB}` : `NIVEL ${R.lvB}`, ry = 1012; x.font = '900 46px Nunito'; const lw = x.measureText(lvT).width + 110;
+  x.fillStyle = cardOro(x, T, ry - 40, ry + 40); x.beginPath(); x.moveTo(W / 2 - lw / 2 - 30, ry); x.lineTo(W / 2 - lw / 2, ry - 40); x.lineTo(W / 2 + lw / 2, ry - 40); x.lineTo(W / 2 + lw / 2 + 30, ry); x.lineTo(W / 2 + lw / 2, ry + 40); x.lineTo(W / 2 - lw / 2, ry + 40); x.closePath(); x.fill();
+  x.fillStyle = '#2B1A04'; x.fillText(lvT, W / 2, ry + 16);
+  /* los números, de a seis */
+  const tw = 300, th = 232, gx = 30, x0 = (W - tw * 3 - gx * 2) / 2, y0 = 1084;
+  R.tiles.forEach(([ic, n, lab, tot, raw], i) => { const tx = x0 + (i % 3) * (tw + gx), ty = y0 + Math.floor(i / 3) * (th + 26);
+    x.fillStyle = 'rgba(255,255,255,.07)'; x.strokeStyle = T.acc + '88'; x.lineWidth = 2; x.beginPath(); x.roundRect ? x.roundRect(tx, ty, tw, th, 26) : x.rect(tx, ty, tw, th); x.fill(); x.stroke();
+    x.font = '46px Nunito'; x.fillStyle = '#FFFFFF'; x.fillText(ic, tx + tw / 2, ty + 62); x.font = '900 ' + (String(n).length > 6 ? 54 : 74) + 'px Nunito'; x.fillStyle = '#FFFFFF'; x.fillText((raw || !n ? '' : '+') + n, tx + tw / 2, ty + 142);
+    x.font = '800 25px Nunito'; x.fillStyle = T.acc2; const L = cardWrap(x, lab, tw - 30); L.slice(0, 2).forEach((l, j) => x.fillText(l, tx + tw / 2, ty + 180 + j * 30)); });
+  /* versículo */
+  x.font = 'italic 600 38px Fraunces'; x.fillStyle = 'rgba(255,248,232,.95)'; let vy = 1640; for (const l of cardWrap(x, '«' + R.verse[0] + '»', W - 200)) { x.fillText(l, W / 2, vy); vy += 50; }
+  x.font = '900 24px Nunito'; x.fillStyle = T.acc; x.fillText(R.verse[1].toUpperCase().split('').join(String.fromCharCode(8202)), W / 2, vy + 8);
+  cardPie(x, W, H, T); return cv;
+}
+/* la presentación: cuatro momentos con el narrador y al final la tarjeta */
+async function recapShow(kind, prev) {
+  const R = recapData(kind, prev), T = CARD_TEMA[kind]; let el = document.getElementById('v3recap'); if (el) el.remove();
+  el = document.createElement('div'); el.id = 'v3recap'; el.className = 'v3recap rc-' + kind; el.style.setProperty('--ra', T.acc); el.style.setProperty('--rb', T.bg); el.style.setProperty('--rc', T.acc2); document.body.appendChild(el); S.joy.x = 0; S.joy.y = 0;
+  const tl = R.tiles, n = i => tl[i][1], lab = i => tl[i][2];
+  const slides = [
+    { vo: kind === 'semana' ? '¡Llegó tu resumen de la semana!' : kind === 'mes' ? '¡Llegó tu resumen del mes!' : kind === 'semestre' ? '¡Llegó tu resumen del semestre!' : '¡Llegó tu resumen del año!', h: `<small>${esc(R.range)}</small><h2>${esc(R.nom)}</h2><p>Mirá todo lo que creciste.</p>` },
+    { vo: 'Mirá cuánto avanzaste en la historia.', h: `<span class="rc-ic">📖</span><b class="rc-n" data-n="${n(0)}">0</b><p>${esc(lab(0))}${R.par ? ` · vas por la parada ${R.par}` : ''}</p>` },
+    { vo: 'Y mirá qué constante fuiste.', h: `<div class="rc-two"><div><span class="rc-ic">📅</span><b class="rc-n" data-n="${n(2)}">0</b><p>${esc(lab(2))}</p></div><div><span class="rc-ic">☀️</span><b class="rc-n" data-n="${n(1)}">0</b><p>${esc(lab(1))}</p></div></div>` },
+    { vo: '¡Así creciste!', h: `<span class="rc-ic">${R.lvB > R.lvA ? '⬆️' : '✨'}</span><h2>${R.lvB > R.lvA ? `Nivel ${R.lvA} → ${R.lvB}` : `Nivel ${R.lvB}`}</h2><div class="rc-two"><div><b class="rc-n" data-n="${n(3)}">0</b><p>${esc(lab(3))}</p></div><div><b class="rc-n" data-n="${n(4)}">0</b><p>${esc(lab(4))}</p></div></div>${R.fr ? `<p>Y subiste ${R.fr} ${R.fr === 1 ? 'escalón' : 'escalones'} en tus frutos.</p>` : ''}` },
+    { vo: 'Compartilo con tus amigos.', h: `<div class="rc-card"><i class="rc-load">Armando tu tarjeta…</i></div><div class="cd-b rc-btns"></div>`, end: 1 }
+  ];
+  let i = -1, auto = null; const close = () => { clearTimeout(auto); el.classList.remove('on'); setTimeout(() => el.remove(), 300); try { G().voStop(); } catch (e) {} };
+  el.innerHTML = `<div class="rc-bg"></div><div class="rc-bar">${slides.map(() => '<i></i>').join('')}</div><button class="rc-x" type="button" aria-label="Cerrar">✕</button><div class="rc-stage"></div>`;
+  el.querySelector('.rc-x').onclick = e => { e.stopPropagation(); close(); };
+  const count = b => { const N = +b.dataset.n; if (!(N > 0)) { b.textContent = b.dataset.n; return; } const t0 = performance.now(), D = 1100, f = t => { const k = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - k, 3); b.textContent = '+' + Math.round(N * e); if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); };
+  const go = () => { if (i >= slides.length - 1) return; i++; const sl = slides[i], st = el.querySelector('.rc-stage'); el.querySelectorAll('.rc-bar i').forEach((b, j) => b.classList.toggle('on', j <= i));
+    st.innerHTML = `<div class="rc-sl">${sl.h}</div>`; st.querySelectorAll('.rc-n').forEach(count); try { G().vo(sl.vo, 'narrador'); } catch (e) {}
+    clearTimeout(auto); if (!sl.end) auto = setTimeout(go, 3600); else recapFin(R, st); };
+  el.onclick = e => { if (e.target.closest('button,.rc-card')) return; go(); };
+  requestAnimationFrame(() => el.classList.add('on')); go();
+}
+async function recapFin(R, st) {
+  try { const cv = await recapCard(R), url = cv.toDataURL('image/jpeg', .9), blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', .9)), file = new File([blob], 'tras-sus-pasos-' + R.kind + '.jpg', { type: 'image/jpeg' }); cv.width = cv.height = 1;
+    const can = !!(navigator.canShare && navigator.canShare({ files: [file] })), box = st.querySelector('.rc-card'), bt = st.querySelector('.rc-btns'); if (!box) return;
+    box.innerHTML = `<img src="${url}" alt="Tu resumen para compartir">`; bt.innerHTML = (can ? '<button type="button" class="cd-sh">Compartir</button>' : '') + `<button type="button" class="cd-dl${can ? ' sec' : ''}">Descargar</button>`;
+    const sh = bt.querySelector('.cd-sh'); if (sh) sh.onclick = async e => { e.stopPropagation(); try { await navigator.share({ files: [file], text: R.nom + ' en Tras sus pasos ✨' }); } catch (er) {} };
+    bt.querySelector('.cd-dl').onclick = e => { e.stopPropagation(); const a = document.createElement('a'); a.href = url; a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); }; } catch (e) { console.warn('resumen', e); }
+}
+function recapMenu() {
+  vilSheet(`<div class="inv-h"><b>✨ Mis resúmenes</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">Mirá cuánto creciste y compartilo. Cada domingo, cada mes, cada semestre y a fin de año aparece uno solo.</p><div class="rc-menu">${[['semana', '☀️', 'Mi semana'], ['mes', '🌙', 'Mi mes'], ['semestre', '🌿', 'Mi semestre'], ['anio', '🎆', 'Mi año']].map(([k, ic, t]) => `<button type="button" data-k="${k}"><span>${ic}</span>${t}</button>`).join('')}</div>`);
+  document.querySelectorAll('#v3sheet .rc-menu button').forEach(b => b.onclick = () => { document.getElementById('v3sheet').hidden = true; recapShow(b.dataset.k); });
+}
+/* cuándo aparece solo: a fin de año (26 de diciembre al 10 de enero), en julio el del primer semestre, al empezar cada mes el del mes que pasó y cada 7 días el de la semana. Uno por vez y solo si jugó algunos días */
+function recapDue() {
+  const H = histP(), now = new Date(), y = now.getFullYear(), m = now.getMonth(), d = now.getDate(), mk = mK(now), today = dK(now);
+  if (!H.inicio) { H.inicio = today; H.wl = today; H.ml = mk; H.sl = mk; H.yl = String(m === 0 ? y - 1 : y); return null; }
+  const yr = String((m === 0 && d <= 10) ? y - 1 : y), finAnio = (m === 11 && d >= 26) || (m === 0 && d <= 10);
+  if (finAnio && H.yl !== yr && Object.values(H.dias).reduce((a, b) => a + b, 0) >= 4) { H.yl = yr; H.ml = mk; H.wl = today; return ['anio', m === 0]; }
+  if (m === 6 && H.sl !== mk && H.inicio < y + '-06') { const n = Object.keys(H.dias).filter(k => k >= y + '-01' && k <= y + '-06').reduce((a, k) => a + H.dias[k], 0); H.sl = mk; if (n >= 4) { H.ml = mk; H.wl = today; return ['semestre', true]; } }
+  if (H.ml !== mk) { const pm = mK(new Date(y, m - 1, 1)); H.ml = mk; if ((H.dias[pm] || 0) >= 2) { H.wl = today; return ['mes', true]; } }
+  const dw = (new Date(today) - new Date(H.wl)) / 864e5; if (dw >= 7) { const ak = dK(new Date(now.getTime() - 6 * 864e5)), n = Object.keys(H.d).filter(k => k >= ak).length; H.wl = today; if (n >= 2) return ['semana', false]; }
+  return null;
 }
 
 /* ---------- Adviento y Navidad: una ventana por día del 1 al 25 de diciembre y la de Reyes el 6 de enero ----------
@@ -7167,7 +7309,7 @@ function loop(now) {
   if (S.flies) { S.flies.visible = false; S.flies.material.opacity = .6 + Math.sin(t * 3) * .3; S.flies.rotation.y = Math.sin(t * .05) * .02; }
   cineTick(dt); if (window.__camFix) { const f = window.__camFix; S.camera.position.set(...f.p); S.camera.lookAt(...f.l); }
   fxWatch(now); if (S.W) { const u = S.W.sky.material.uniforms; u.inv.value = S.fx ? 1 : 0; u.ex.value = S.renderer.toneMappingExposure; }
-  const p5 = PF ? performance.now() : 0; const cover = S.lowm && (!document.getElementById('v3sheet').hidden || !(document.getElementById('v3map') || { hidden: true }).hidden); if (cover && (S.rsk = (S.rsk || 0) + 1) % 8) { } else if (S.fx) S.fx.render(dt); else S.renderer.render(S.scene, S.camera); const p6 = PF ? performance.now() : 0; QUAL.lastCalls = S.renderer.info.render.calls; QUAL.lastTris = S.renderer.info.render.triangles;
+  const p5 = PF ? performance.now() : 0; const cover = S.lowm && (!document.getElementById('v3sheet').hidden || !(document.getElementById('v3map') || { hidden: true }).hidden || !!document.getElementById('v3recap')); if (cover && (S.rsk = (S.rsk || 0) + 1) % 8) { } else if (S.fx) S.fx.render(dt); else S.renderer.render(S.scene, S.camera); const p6 = PF ? performance.now() : 0; QUAL.lastCalls = S.renderer.info.render.calls; QUAL.lastTris = S.renderer.info.render.triangles;
   idle(dt); misTick(t); voiceTick(dt); wpTick(t); mpTick(t, dt); try { legTick(dt); } catch (e) {} dayTick(dt); seasonTick(dt); gearDropTick(dt, t); doorTick(t); try { wanderTick(dt); } catch (e) {} h3npcTick(dt); try { crowdLiveTick(dt); } catch (e) {} crowdTick(); roomTick(dt); survTick(dt, t); try { kidsTick(dt); } catch (e) {} prayTogetherTick(dt); axVerse(dt);
   if (PF) { const p7 = performance.now(); PROF.add(Object.assign({ mov: p1 - p0, zonas: p2 - p1, agua_fuego: p3 - p2, avatar: p4 - p3, escena: p5 - p4, render: p6 - p5, npc_misiones: p7 - p6 }, ZZ || {})); }
 }

@@ -24,7 +24,7 @@ OUT = os.path.join(AQUI, 'salida')
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
 DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue')
 
 
 def local(url):
@@ -138,7 +138,20 @@ TARJ = COMUN + r"""
       const btn=!!document.querySelector('#v3sheet .cd-dl'); document.getElementById('v3sheet').hidden=true;
       return {ok:c.width===1080&&c.height===1350&&cols.size>25&&gl===0&&btn, d:`tarjeta ${c.width}×${c.height} · colores en la zona del personaje: ${cols.size} · motores 3D nuevos: ${gl} · botón para guardar: ${btn}`};"""
 
+RESU = COMUN + r"""
+      const H=d.histP(); d.histTick(); const now=new Date(), dk=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+      for(let i=1;i<=3;i++){ const t=new Date(now.getTime()-i*864e5); H.d[dk(t)]=Object.assign({},H.d[dk(now)]); }
+      H.inicio=dk(new Date(now.getTime()-20*864e5)); H.wl=dk(new Date(now.getTime()-8*864e5)); H.ml=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'); H.yl=String(now.getFullYear()); H.sl=H.ml;
+      const due=d.recapDue(); const otra=d.recapDue();
+      d.recapShow('semana'); await new Promise(r=>setTimeout(r,600)); const ov=document.getElementById('v3recap'); if(!ov) return {ok:false,d:'no aparece el resumen'};
+      const t1=ov.querySelector('.rc-sl h2')?.textContent; for(let i=0;i<4;i++){ ov.click(); await new Promise(r=>setTimeout(r,400)); }
+      let img=null; for(let i=0;i<40&&!img;i++){ await new Promise(r=>setTimeout(r,500)); img=ov.querySelector('.rc-card img'); }
+      if(img) await new Promise(r=>{ if(img.complete) r(); else img.onload=r; });
+      const w=img?img.naturalWidth:0, h=img?img.naturalHeight:0, btn=!!ov.querySelector('.cd-dl'); ov.querySelector('.rc-x').click();
+      return {ok:due&&due[0]==='semana'&&!otra&&t1==='Tu semana'&&w===1080&&h===1920&&btn, d:`aparece solo a los 7 días: ${due&&due[0]} (y no se repite: ${!otra}) · presentación: ${t1} · tarjeta ${w}×${h} · botón para guardar: ${btn}`};"""
+
 HERO = {
+    'resumen': ('Resumen de la semana: aparece solo, presentación con el narrador y tarjeta 1080×1920', RESU),
     'tarjeta': ('Tarjeta para compartir: imagen 1080×1350 con el personaje y el logro', TARJ),
     'avisos': ('Avisos: «Avisarme cada día», recordatorio de calendario y estado para el aviso', AVISOS),
     'adviento': ('Adviento: ventana del día, días pasados, estrella sobre Belén y regalos de Navidad y Reyes', ADVI),
@@ -188,6 +201,7 @@ HERO = {
 }
 
 KIDS = {
+    'resukids': ('Kids: resumen de la semana', RESU),
     'tarjkids': ('Kids: tarjeta para compartir', TARJ),
     'advkids': ('Kids: calendario de Adviento', ADVI),
     'metakids': ('Kids: desafío del día y camino de 7 días', META),
@@ -200,6 +214,7 @@ KIDS = {
 }
 
 CELU = {
+    'resucel': ('Celular: resumen de la semana', RESU),
     'mochila': ('iPhone: la mochila abre sin un segundo motor 3D y sin desenfoques', MOCHI),
     'guiacel': ('Guía en el celular: pista y «Tu próximo paso» sin tapar nada', GUIA),
     'celular': ('Celular: sin zoom al tocar dos veces, botones sin taparse', COMUN + """

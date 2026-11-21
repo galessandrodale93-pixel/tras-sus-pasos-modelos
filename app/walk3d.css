@@ -1596,3 +1596,28 @@ body.lowmem *,body.lowmem *::before,body.lowmem *::after{-webkit-backdrop-filter
 .cd-sh,.cd-dl{border:0;border-radius:12px;padding:12px;font:900 14px "Nunito",sans-serif;background:linear-gradient(180deg,#FFD98A,#E8913A);color:#2B1D00;cursor:pointer}
 .cd-dl.sec{background:rgba(255,255,255,.1);color:inherit}
 @media (max-height:520px){.cd-img{max-width:200px}}
+/* resúmenes: semana, mes, semestre y año */
+.v3recap{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#FFF8EA;font-family:"Nunito",sans-serif;opacity:0;transition:opacity .3s;cursor:pointer;overflow:hidden;padding:calc(56px + env(safe-area-inset-top,0px)) 20px calc(20px + env(safe-area-inset-bottom,0px))}
+.v3recap.on{opacity:1}
+.rc-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 38%,color-mix(in srgb,var(--ra) 40%,transparent),transparent 70%),radial-gradient(ellipse at 50% 120%,color-mix(in srgb,var(--ra) 22%,transparent),transparent 60%),var(--rb)}
+.rc-bg::after{content:"";position:absolute;inset:-50%;background:repeating-conic-gradient(from 0deg at 50% 50%,color-mix(in srgb,var(--ra) 12%,transparent) 0 6deg,transparent 6deg 15deg);animation:rcSpin 60s linear infinite;mask-image:radial-gradient(circle at 50% 50%,#000 10%,transparent 60%);-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 10%,transparent 60%)}
+@keyframes rcSpin{to{transform:rotate(360deg)}}
+.rc-bar{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:16px;right:60px;display:flex;gap:6px;z-index:2}
+.rc-bar i{flex:1;height:4px;border-radius:9px;background:rgba(255,255,255,.22)}.rc-bar i.on{background:var(--ra)}
+.rc-x{position:absolute;top:calc(6px + env(safe-area-inset-top,0px));right:12px;z-index:3;width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;font:900 15px "Nunito",sans-serif;cursor:pointer}
+.rc-stage{position:relative;z-index:1;width:min(560px,100%);text-align:center;max-height:100%;display:flex;align-items:center;justify-content:center}
+.rc-sl{animation:rcIn .55s cubic-bezier(.2,1.2,.4,1) both;width:100%}
+@keyframes rcIn{from{opacity:0;transform:translateY(24px) scale(.94)}}
+.rc-sl small{display:block;font:900 13px "Nunito",sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--rc);opacity:.9}
+.rc-sl h2{margin:8px 0;font:700 clamp(40px,9vw,72px)/1.05 "Fraunces",Georgia,serif;background:linear-gradient(180deg,var(--rc),var(--ra) 55%,#C8892E);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 4px 30px color-mix(in srgb,var(--ra) 35%,transparent)}
+.rc-sl p{margin:6px 0 0;font:800 clamp(16px,3.6vw,22px)/1.35 "Nunito",sans-serif;color:rgba(255,248,234,.92)}
+.rc-ic{display:block;font-size:clamp(40px,9vw,64px);line-height:1;margin-bottom:6px;filter:drop-shadow(0 6px 18px rgba(0,0,0,.4))}
+.rc-n{display:block;font:900 clamp(72px,18vw,140px)/1 "Nunito",sans-serif;color:#fff;text-shadow:0 6px 40px color-mix(in srgb,var(--ra) 60%,transparent)}
+.rc-two{display:flex;gap:18px;justify-content:center;margin-top:10px}.rc-two>div{flex:1}.rc-two .rc-n{font-size:clamp(56px,13vw,104px)}
+.rc-card img{display:block;max-height:min(64vh,640px);max-width:100%;margin:0 auto;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 0 2px color-mix(in srgb,var(--ra) 60%,transparent)}
+.rc-load{display:block;padding:60px 0;font:800 16px "Nunito",sans-serif;opacity:.8}
+.rc-btns{max-width:360px;margin:14px auto 0}
+.rc-menu{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.rc-menu button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;border-radius:16px;border:1px solid rgba(233,195,122,.45);background:rgba(255,255,255,.05);color:inherit;font:900 15px "Nunito",sans-serif;cursor:pointer}
+.rc-menu button span{font-size:30px}
+@media (max-height:520px){.v3recap{padding-top:44px}.rc-card img{max-height:58vh}.rc-n{font-size:64px}.rc-two .rc-n{font-size:52px}.rc-sl h2{font-size:40px}}
