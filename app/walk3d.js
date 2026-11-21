@@ -1379,11 +1379,13 @@ const PROF = { on: /[?&#]prof=1/.test(location.href), acc: {}, n: 0, el: null,
     const i = S.renderer.info; this.el.textContent = `ms: ${t} · ${QUAL.lastCalls || 0} dib · ${((QUAL.lastTris || 0) / 1e6).toFixed(2)}M tri · ${i.memory.textures} tex · ${i.programs ? i.programs.length : 0} prog`; this.last = t; } };
 /* ---------- calidad gráfica: Auto (detecta la placa de video y mide los cuadros), Ultra, Alto, Medio, Bajo; contador con ?fps=1 ---------- */
 /* si la página se reinició sola mientras jugabas (Safari la corta cuando se pasa de memoria), la próxima vez abre en Baja */
-const CRASH = (() => { try { const v = +(sessionStorage.getItem('tsp:vivo') || 0); sessionStorage.removeItem('tsp:vivo'); return v && Date.now() - v < 10 * 60e3 ? 1 : 0; } catch (e) { return 0; } })();
+const CRASH = (() => { try { const v = +(sessionStorage.getItem('tsp:vivo') || 0); sessionStorage.removeItem('tsp:vivo'); const c = v && Date.now() - v < 10 * 60e3 ? 1 : 0; if (c) localStorage.setItem('tsp:cortes', String(+(localStorage.getItem('tsp:cortes') || 0) + 1)); return c; } catch (e) { return 0; } })();
+const LIVIANO = (() => { try { return +(localStorage.getItem('tsp:cortes') || 0) >= 2; } catch (e) { return false; } })(); /* si se cortó dos veces: menos distancia, menos plantas y menos resolución */
 function vivoStart() { if (vivoStart.on) return; vivoStart.on = 1; const mark = () => { try { sessionStorage.setItem('tsp:vivo', String(Date.now())); } catch (e) {} }; mark(); setInterval(mark, 15000); addEventListener('pagehide', () => { try { sessionStorage.removeItem('tsp:vivo'); } catch (e) {} }); }
 const QUAL = { mode: 'auto', lv: 2, max: 3, dpr: 1, cap: 1.5, ema: 16, slow: 0, fast: 0, cool: 0, fr: 0, ft: new Float32Array(300), fi: 0, el: null, acc: 0, gpu: '' };
 const QN = { auto: 'Auto', ultra: 'Ultra', alto: 'Alto', medio: 'Medio', bajo: 'Bajo' }, QL = ['Bajo', 'Medio', 'Alto', 'Ultra'], QOLD = { alta: 'alto', media: 'medio', baja: 'bajo' };
 const QT = { dpr: [.75, 1, 1.25, 1.5], sh: [1024, 1024, 2048, 2048], shEvery: [4, 3, 2, 1], far: [36, 60, 110, 140], dens: [.12, .45, 1, 1], see: [.42, .62, 1, 1.25], near: [0, .5, 1, 1] };
+if (LIVIANO) { QT.dpr[0] = .6; QT.far[0] = 28; QT.dens[0] = .05; QT.see[0] = .32; QT.sh[0] = 512; }
 // nivel según la placa de video (si el navegador lo informa) y el tipo de aparato
 function qDetect() { let g = ''; try { const gl = S.renderer.getContext(), e = gl.getExtension('WEBGL_debug_renderer_info'); g = e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); } catch (e) {} QUAL.gpu = g || ''; return qLevelFor(QUAL.gpu); }
 function qInit() {
@@ -1850,7 +1852,7 @@ function invPreview(cv) {
   cv.addEventListener('pointermove', e => { if (drag === null) return; const d = (e.clientX - drag) * .012; rot += d; vel = d; drag = e.clientX; });
   ['pointerup', 'pointercancel'].forEach(k => cv.addEventListener(k, () => { drag = null; }));
   set(); size();
-  const loop = now => { if (!cv.isConnected || sheet.hidden) { R.dispose(); return; } const dt = Math.min(.05, (now - last) / 1000); last = now;
+  const loop = now => { if (!cv.isConnected || sheet.hidden) { R.dispose(); try { R.forceContextLoss(); } catch (e) {} return; } const dt = Math.min(.05, (now - last) / 1000); last = now;
     if (drag === null) { rot += vel; vel *= .92; if (Math.abs(vel) < .0005) rot += dt * .35; }
     if (av) { av.rotation.y = rot; if (av.userData.h3) av.userData.h3.mixer.update(dt); else animAvatar(av, now / 1000, false, dt); }
     R.render(sc, cam); requestAnimationFrame(loop); };
@@ -5153,7 +5155,7 @@ function buildDoors(scene, doors, hx, HW) {
 let S_stair = null;
 /* ---------- Maranata: «Sube acá» (Apocalipsis 4:1). Una placa al pie, trompeta al acercarse, escalones que se encienden al subir y versículos que aparecen en el camino ---------- */
 function marPlaque(lines, w, h, opt) {
-  const c = document.createElement('canvas'), W = 2048, H = Math.round(W * h / w); c.width = W; c.height = H; const x = c.getContext('2d'), o = opt || {}; x.scale(2, 2); const Hh = H / 2;
+  const LO = qEarly() <= 0, K2 = LO ? 1 : 2, c = document.createElement('canvas'), W = 1024 * K2, H = Math.round(W * h / w); c.width = W; c.height = H; const x = c.getContext('2d'), o = opt || {}; x.scale(K2, K2); const Hh = H / K2; /* en calidad Baja, la mitad de resolución: un cuarto de memoria */
   const gr = x.createLinearGradient(0, 0, 0, Hh); gr.addColorStop(0, o.bg0 || 'rgba(255,250,236,.97)'); gr.addColorStop(1, o.bg1 || 'rgba(244,230,196,.97)'); x.fillStyle = gr; x.beginPath(); x.roundRect ? x.roundRect(8, 8, 1008, Hh - 16, 36) : x.rect(8, 8, 1008, Hh - 16); x.fill();
   x.lineWidth = 14; x.strokeStyle = '#D9A93A'; x.stroke(); x.lineWidth = 3; x.strokeStyle = '#8A6418'; x.beginPath(); x.roundRect ? x.roundRect(30, 30, 964, Hh - 60, 24) : x.rect(30, 30, 964, Hh - 60); x.stroke();
   x.textAlign = 'center'; x.textBaseline = 'middle'; let y = Hh * (o.y0 || .2);
@@ -6939,7 +6941,7 @@ export async function avatarPreview(host, getLook) {
     const w = host.clientWidth, hh = host.clientHeight; if (w && hh && (cv.width !== Math.round(w * r.getPixelRatio()) || cv.height !== Math.round(hh * r.getPixelRatio()))) { r.setSize(w, hh, false); cam.aspect = w / hh; cam.updateProjectionMatrix(); }
     const dt = Math.min(.05, clk.getDelta()); yaw += dt * .45 * spin; if (av) { const u = av.userData.h3; av.rotation.y = yaw; u.mixer.update(dt); if (u.headS && u.bones.Head) u.bones.Head.scale.setScalar(u.headS); if (u.kidP) kidApply(u); } r.render(sc, cam);
   };
-  const stop = () => { alive = false; try { r.dispose(); } catch (e) {} cv.remove(); };
+  const stop = () => { alive = false; try { r.dispose(); r.forceContextLoss(); } catch (e) {} cv.remove(); }; /* soltar el contexto de video enseguida: en iPhone cada uno ocupa memoria aparte */
   // foto de la cara (cuadrada, chica) para el perfil y el HUD
   const face = () => { try { if (!av) return ''; const b = av.userData.h3.bones.Head, p = new THREE.Vector3(), hs = av.userData.h3.headS || 1; av.rotation.y = 0; av.updateMatrixWorld(true); b.getWorldPosition(p); const c2 = new THREE.PerspectiveCamera(24, 1, .02, 10); c2.position.set(p.x, p.y + .1 * av.scale.y * hs, p.z + .9 * av.scale.y * hs); c2.lookAt(p.x, p.y + .09 * av.scale.y * hs, p.z); const sz = r.getSize(new THREE.Vector2()), pr = r.getPixelRatio(); r.setPixelRatio(1); r.setSize(96, 96, false); r.render(sc, c2); const u = cv.toDataURL('image/webp', .82); r.setPixelRatio(pr); r.setSize(sz.x, sz.y, false); av.rotation.y = yaw; return u.length < 14000 ? u : ''; } catch (e) { return ''; } };
   set(); loop();
