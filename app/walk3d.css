@@ -1544,3 +1544,23 @@ body:not(.v3on) .v3pista,body.v3lb .v3pista,body.v3talk .v3pista{display:none}
 .gd-r .gd-ic{flex:none;font-size:22px;width:34px;text-align:center}
 .gd-r.first{border-color:rgba(255,210,94,.7)!important;box-shadow:0 0 0 1px rgba(255,210,94,.35)}
 .gd-how{margin-top:12px;width:100%;border:0;border-radius:12px;padding:11px;font:900 14px "Nunito",sans-serif;background:rgba(255,255,255,.07);color:inherit;cursor:pointer}
+/* desafío del día y camino de 7 días */
+.md-k{margin:4px 0 6px;font:700 13.5px/1.45 "Nunito",sans-serif;opacity:.85}
+.md-r>div{flex:1;min-width:0}
+.md-r b{display:block}
+.md-bar{display:block;height:7px;margin:6px 0 3px;border-radius:99px;background:rgba(127,127,127,.25);overflow:hidden}
+.md-bar>i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#FFD25E,#E8913A);transition:width .4s}
+.md-r.ok{border-color:rgba(95,211,154,.6)!important}
+.md-r.ok .md-bar>i{background:#5FD39A}
+.md-h{margin:16px 0 8px;font:800 16px "Fraunces",Georgia,serif}
+.md-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.md-d{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;border-radius:12px;border:1px solid rgba(127,127,127,.3);text-align:center;min-width:0}
+.md-d span{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:17px;background:rgba(127,127,127,.15)}
+.md-d small{font:900 10px "Nunito",sans-serif;letter-spacing:.06em;text-transform:uppercase;opacity:.75}
+.md-d em{font:700 10.5px/1.2 "Nunito",sans-serif;font-style:normal;opacity:.85}
+.md-d.on span{background:#5FD39A;color:#08321F;font-weight:900}
+.md-d.hoy{border-color:#FFD25E;box-shadow:0 0 0 2px rgba(255,210,94,.3)}
+.md-d.big span{background:linear-gradient(180deg,#FFE29A,#E8A640)}
+.md-d.big.on span{background:#5FD39A}
+@media (max-width:520px),(max-height:520px){.md-d em{display:none}.md-d span{width:28px;height:28px;font-size:14px}}
+.gd-list .sv-rec{margin:0}.gd-list .gd-ic{font-size:22px!important}

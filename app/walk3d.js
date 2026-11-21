@@ -3721,9 +3721,9 @@ function openMap() {
 
 /* ---------- movimientos: saltar, orar y saludar ---------- */
 function doJump() { if (!S || S.walking || sheetUp()) return; if (S.pose === 'pray') { S.pose = null; return; } if (S.jy <= .01 && S.sv && S.hx) { AXS.jumps = (AXS.jumps || 0) + 1; if (AXS.jumps % 5 === 0) axGain('agi', 1); } if (S.jy > .01) return; S.jv = 6.2 * Math.sqrt(agiMul()); S.jy = .001; wake(); }
-function doPray() { if (!S || S.walking || sheetUp()) return; poseEnd(); S.pose = S.pose === 'pray' ? null : 'pray'; S.prayT = 0; S.joy.x = 0; S.joy.y = 0; wake(); actUI(); }
+function doPray() { if (!S || S.walking || sheetUp()) return; poseEnd(); S.pose = S.pose === 'pray' ? null : 'pray'; if (S.pose === 'pray') try { metaEv('ora'); } catch (e) {} S.prayT = 0; S.joy.x = 0; S.joy.y = 0; wake(); actUI(); }
 function doSit() { if (!S || S.walking || sheetUp() || !S.hx) return; poseEnd(); if (S.pose === 'pray') S.pose = null; S.sit = !S.sit; S.joy.x = 0; S.joy.y = 0; wake(); actUI(); }
-function doWave() { if (!S || S.walking || sheetUp()) return; if (S.pose === 'pray') S.pose = null; S.waveT = 2.2; wake(); actUI(); }
+function doWave() { if (!S || S.walking || sheetUp()) return; try { metaEv('saluda'); } catch (e) {} if (S.pose === 'pray') S.pose = null; S.waveT = 2.2; wake(); actUI(); }
 function actUI() { const b = document.querySelector('#v3acts [data-a="pray"]'); if (b) b.classList.toggle('on', S && S.pose === 'pray'); const bs = document.querySelector('#v3acts [data-a="sit"]'); if (bs) { bs.classList.toggle('on', !!(S && S.sit)); bs.hidden = !(S && S.hx); } document.body.classList.toggle('v3pray', !!(S && S.pose === 'pray')); }
 function wireActs() {
   let box = document.getElementById('v3acts');
@@ -4402,6 +4402,7 @@ function dayTick(dt) {
 const SLOTS = [['hat', 'Cabeza'], ['shirt', 'Túnica'], ['pants', 'Mano'], ['boots', 'Sandalias'], ['gloves', 'Muñequeras']]; /* ropa de la época: los ids de siempre, así nadie pierde lo que tiene */
 const RAR = { c: ['Común', '#C9C2B4', 70], r: ['Rara', '#6FB6FF', 20], e: ['Épica', '#C77DFF', 7], l: ['Legendaria', '#FFB13B', 3], u: ['Única · nunca se pierde', '#4FD1C5', 0] };
 const GEAR = [
+  { id: 'cam7', s: 'shirt', r: 'u', t: 'plain', c: '#9C7A4E', name: 'Manto del caminante', desc: 'Premio del camino de 7 días. «Lámpara es a mis pies tu palabra, y lumbrera a mi camino» (Salmo 119:105).' },
   { id: 'vil_nazaret', s: 'gloves', r: 'u', t: 'glove', c: '#8A6A4A', name: 'Guantes del taller de Nazaret', desc: 'Regalo de Nazaret para los de la familia. En este pueblo creció Jesús, en el taller de José.' },
   { id: 'vil_belen', s: 'shirt', r: 'u', t: 'plain', c: '#C8B89A', name: 'Manto de pastor de Belén', desc: 'Regalo de Belén para los de la familia. Así se abrigaban los pastores que vieron a los ángeles (Lucas 2:8).' },
   { id: 'vil_cana', s: 'boots', r: 'u', t: 'sandal', c: '#B07A4A', name: 'Sandalias de la boda de Caná', desc: 'Regalo de Caná para los de la familia, el pueblo donde Jesús convirtió el agua en vino (Juan 2:1-11).' },
@@ -5378,6 +5379,7 @@ const GUIA_PISTAS = {
   obj: { sel: '#v3obj', t: 'Tu próximo paso', tx: 'Si no sabés qué hacer, tocá acá arriba. Siempre te digo qué sigue y te llevo.' },
   do: { sel: '.v3surv:not([hidden]) .sv-do:not([hidden])', t: 'Hacé la acción', tx: 'Cuando aparece este botón, tocalo o apretá E para hacer lo que dice.', txT: 'Cuando aparece este botón, tocalo para hacer lo que dice.' },
   ham: { sel: '.v3surv [data-a="eat"]', t: 'Tenés hambre', tx: 'Tocá el plato para comer algo de tu mochila. Si no tenés comida, cosechá o comprá pan en un puesto.' },
+  dia: { sel: '#v3obj', t: 'Desafío de hoy', tx: 'Hoy tenés un desafío nuevo. Tocá «Tu próximo paso» para verlo.' },
   mis: { sel: '.v3mis:not([hidden])', t: 'Tu misión', tx: 'Acá arriba ves lo que te falta. Tocá «Tu próximo paso» y te marco el camino con una flecha.' }
 };
 /* la primera vez que tocás algo, el narrador te cuenta para qué sirve (con su voz y un cartel corto) */
@@ -5411,6 +5413,7 @@ function guiaGoals() {
   if (hx) try { for (const id in EPIC) { const st = epP()[id]; if (!st || st.done || !st.s) continue; const x = epStep(id); if (!x) continue; const pl = guiaEpPlace(x.sp.at);
     out.push({ ic: '✨', t: x.E.name, sub: `Misión épica · paso ${x.st.s + 1} de ${x.E.steps.length}` + (x.today ? (pl && pl.n ? ' · en ' + pl.n : '') : ' · sigue mañana: volvé otro día de juego'), b: 'Llevarme', fn: pl && x.today ? () => guiaWp(pl.x, pl.z, pl.n || x.E.name) : null }); } } catch (e) {}
   try { const id = nodeActive(); if (id) { const n = g.NODES[id], here = id === g.P().pos; out.push({ ic: '📖', t: here ? 'Entrá ' + aLp(n.label) : 'Caminá ' + aLp(n.label), sub: here ? 'Seguí la historia: te espera el pasaje y su desafío.' : 'Seguí la historia: es tu próxima parada. El botón dorado te lleva caminando.', b: here ? 'Entrar' : 'Caminar', fn: () => go(id) }); } } catch (e) {}
+  try { out.push(metaGoal()); } catch (e) {}
   if (hx) out.push({ ic: '🔨', t: 'Trabajá en un oficio', sub: 'Cerca de los pueblos hay campos, árboles, piedras y agua. Lo que juntás sirve para comer, vender y subir de nivel.', fn: null });
   else out.push({ ic: '🗺️', t: 'Explorá el mapa', sub: 'Abrí el mapa y tocá un lugar: una flecha en el piso te lleva.', b: 'Mapa', fn: () => openMap() });
   return out;
@@ -5446,6 +5449,7 @@ function guiaTick(dt) {
   if (GUIA.cur) { GUIA.el.classList.add('on'); guiaRing(); if (performance.now() > GUIA.until) guiaHide(); }
   GUIA.gT -= dt; if (GUIA.gT <= 0) { GUIA.gT = 1; GUIA.goals = guiaGoals(); const top = GUIA.goals[0], bt = chip.querySelector('b'); if (top && bt.textContent !== top.t) bt.textContent = top.t; }
   GUIA.play = (GUIA.play || 0) + dt;
+  { const a = S.av.position, L = GUIA.lp; if (L) { const d = Math.hypot(a.x - L[0], a.z - L[1]); if (d > .05 && d < 8) { GUIA.dist = (GUIA.dist || 0) + d; if (GUIA.dist >= 10) { metaEv('camina', GUIA.dist); GUIA.dist = 0; } } } GUIA.lp = [a.x, a.z]; }
   chip.classList.toggle('pulse', (S.idleT || 0) > 40 && !GUIA.cur);
   GUIA.tk -= dt; if (GUIA.tk > 0 || GUIA.cur || S.walking) return; GUIA.tk = .5;
   if (performance.now() - GUIA.last < 6000) return; /* entre una pista y la otra, un respiro */
@@ -5456,7 +5460,56 @@ function guiaTick(dt) {
   if (may('do')) return guiaShow('do');
   if (may('mis')) return guiaShow('mis');
   if (gp.go && !gp.obj && now - GUIA.t0 > 45000 && may('obj')) return guiaShow('obj');
+  if (started && gp.go && now - GUIA.t0 > 20000) { const m = metaP(); if (m.vis !== m.d && guiaVis('#v3obj')) { m.vis = m.d; return guiaShow('dia'); } }
   if (!started) return; for (const q of GUIA_PREG) { if (q.hx && !S.hx) continue; if (gp['t_' + q.k] || gp['q_' + q.k] || GUIA.play < q.min * 60) continue; if (guiaVis(q.sel)) return guiaShow('q_' + q.k); }
+}
+
+/* ---------- desafío del día y camino de 7 días ----------
+   Tres metas chicas por día (las mismas para todos ese día, sin sorteo a la vista). Cada día cumplido suma un paso en el
+   camino de 7; los días no tienen que ser seguidos y faltar no hace perder nada. El séptimo paso trae una prenda única. */
+const META_POOL = {
+  ora: ['🙏', 'Orá un momento', 1], saluda: ['👋', 'Saludá 2 veces', 2], parada: ['📖', 'Completá una parada de la historia', 1],
+  junta: ['🧺', 'Juntá 10 cosas trabajando', 10], come: ['🍞', 'Comé algo', 1, 'hx'], camina: ['🚶', 'Caminá 300 metros', 300],
+  charla: ['💬', 'Charlá con alguien', 1], brilla: ['🌟', 'Hacé brillar tu lámpara', 1, 'kids']
+};
+const META_PREMIO = { hx: [['🪙', '20 denarios', { money: 20 }], ['🍞', '3 panes', { bread: 3 }], ['✦', '15 de Resplandor', { glow: 15 }], ['🪙', '40 denarios', { money: 40 }], ['🍞', '5 panes', { bread: 5 }], ['✦', '25 de Resplandor', { glow: 25 }], ['🎁', 'El Manto del caminante', { gear: 'cam7' }]],
+  kids: [['⭐', '20 puntos', { pts: 20 }], ['🌟', '10 de luz', { glow: 10 }], ['⭐', '30 puntos', { pts: 30 }], ['🌟', '15 de luz', { glow: 15 }], ['⭐', '40 puntos', { pts: 40 }], ['🌟', '20 de luz', { glow: 20 }], ['🎁', 'El Manto del caminante', { gear: 'cam7' }]] };
+function metaHoy() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function metaP() {
+  const p = G().P(); p.meta = p.meta || { cal: 0, vueltas: 0, total: 0 }; const m = p.meta, hoy = metaHoy();
+  if (m.d !== hoy) { const md = S && S.hx ? 'hx' : 'kids', ok = k => { const q = META_POOL[k][3]; if (q && q !== md) return false; if (k === 'parada') { try { return !!nodeActive(); } catch (e) { return false; } } return true; };
+    let h = 0x811c9dc5; for (const c of hoy + '|' + md) { h ^= c.charCodeAt(0); h = Math.imul(h, 0x01000193) >>> 0; }
+    const L = Object.keys(META_POOL).filter(ok); for (let i = L.length - 1; i > 0; i--) { h = (Math.imul(h, 1103515245) + 12345) >>> 0; const j = h % (i + 1); [L[i], L[j]] = [L[j], L[i]]; }
+    m.d = hoy; m.g = L.slice(0, 3); m.c = {}; m.ok = 0; }
+  return m;
+}
+const metaN = (m, k) => Math.min(META_POOL[k][2], Math.floor(m.c[k] || 0));
+function metaEv(k, n) {
+  if (!S || !S.av || !G().P()) return; const m = metaP(); if (m.ok || !m.g.includes(k)) return; const T = META_POOL[k][2], was = metaN(m, k); if (was >= T) return;
+  m.c[k] = (m.c[k] || 0) + (n || 1); const now = metaN(m, k); if (now < T) { if (k === 'camina' ? Math.floor(now / 100) > Math.floor(was / 100) : false) G().save(); return; }
+  const hechas = m.g.filter(x => metaN(m, x) >= META_POOL[x][2]).length; G().save();
+  if (hechas < 3) { svToast(`✅ ${META_POOL[k][1]} · desafío del día ${hechas} de 3`, '¡Cumpliste una parte del desafío del día!'); return; }
+  m.ok = 1; m.total = (m.total || 0) + 1; m.cal = (m.cal || 0) + 1; const md = S.hx ? 'hx' : 'kids', pr = META_PREMIO[md][m.cal - 1]; metaDar(pr[2]);
+  if (m.cal >= 7) { m.cal = 0; m.vueltas = (m.vueltas || 0) + 1; }
+  G().save(); try { pkPop('☀️ ¡Desafío del día cumplido!'); tone3d(); } catch (e) {}
+  setTimeout(() => svToast(pr[2].gear ? `🎁 ¡Completaste el camino de 7 días! Ganaste ${pr[1]}.` : `☀️ ¡Desafío del día cumplido! Ganaste ${pr[1]}.`, pr[2].gear ? '¡Completaste el camino de siete días! Ganaste un premio único.' : '¡Cumpliste el desafío del día! Sumaste un paso en tu camino de siete días.'), 900);
+}
+function metaDar(r) {
+  try { if (r.money) svAdd('money', r.money); if (r.bread) svAdd('bread', r.bread); if (r.glow) glowAdd(r.glow, 'desafio'); if (r.pts) { const p = G().P(); p.bonus = (p.bonus || 0) + r.pts; G().refreshHud && G().refreshHud(); }
+    if (r.gear) { const it = GEAR.find(x => x.id === r.gear); if (it && !gearState().own.includes(it.id)) setTimeout(() => gearGive(it, 'Camino de 7 días'), 2600); else if (S.hx) svAdd('money', 100); else { const p = G().P(); p.bonus = (p.bonus || 0) + 100; } }
+    svUI && svUI(); } catch (e) { console.warn('meta premio', e); }
+}
+function metaGoal() {
+  const m = metaP(), hechas = m.g.filter(x => metaN(m, x) >= META_POOL[x][2]).length;
+  if (m.ok) return { ic: '☀️', t: 'Desafío de hoy cumplido', sub: `Mañana hay otro. Tu camino de 7 días va ${m.cal === 0 && m.vueltas ? 'completo: arranca otra vuelta' : m.cal + ' de 7'}.`, b: 'Ver', fn: metaOpen };
+  return { ic: '☀️', t: `Desafío del día · ${hechas} de 3`, sub: m.g.filter(x => metaN(m, x) < META_POOL[x][2]).map(x => META_POOL[x][1]).join(' · '), b: 'Ver', fn: metaOpen };
+}
+function metaOpen() {
+  const m = metaP(), md = S.hx ? 'hx' : 'kids', P7 = META_PREMIO[md], cal = m.ok && m.cal === 0 && m.vueltas ? 7 : m.cal;
+  const rows = m.g.map(k => { const [ic, t, T] = META_POOL[k], n = metaN(m, k), done = n >= T; return `<div class="sv-rec md-r${done ? ' ok' : ''}"><span class="gd-ic">${done ? '✅' : ic}</span><div><b>${esc(t)}</b><i class="md-bar"><i style="width:${Math.round(n / T * 100)}%"></i></i><small>${k === 'camina' ? n + ' de ' + T + ' metros' : n + ' de ' + T}</small></div></div>`; }).join('');
+  const steps = P7.map((r, i) => `<div class="md-d${i < cal ? ' on' : ''}${i === cal && !m.ok ? ' hoy' : ''}${i === 6 ? ' big' : ''}"><span>${i < cal ? '✓' : r[0]}</span><small>Día ${i + 1}</small><em>${esc(r[1])}</em></div>`).join('');
+  vilSheet(`<div class="inv-h"><b>☀️ Desafío del día</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">${m.ok ? 'Ya lo cumpliste. Mañana hay un desafío nuevo.' : 'Cumplí las tres y sumás un paso en tu camino de 7 días.'}</p><div class="gd-list">${rows}</div>
+    <h4 class="md-h">Camino de 7 días</h4><div class="md-cal">${steps}</div><p class="md-k">Los días no tienen que ser seguidos: cada desafío cumplido suma un paso, y el séptimo trae una prenda única.</p>`);
 }
 
 /* ---------- personajes 3D de Hero: modelos esculpidos con esqueleto y animaciones (Quaternius, CC0) ---------- */
@@ -6754,7 +6807,7 @@ function poseMenu(show) {
   el.querySelectorAll('[data-p]').forEach(b => b.onclick = () => poseSet(b.dataset.p)); el.hidden = false;
 }
 // Kids: un solo botón que brilla con chispas
-function kidsShine() { if (!S || S.walking) return; poseSet('lampara'); S.shineT = 4.5; sparkBurst(); setTimeout(() => { if (S && S.poseK === 'lampara') poseEnd(); }, 4600); }
+function kidsShine() { if (!S || S.walking) return; try { metaEv('brilla'); } catch (e) {} poseSet('lampara'); S.shineT = 4.5; sparkBurst(); setTimeout(() => { if (S && S.poseK === 'lampara') poseEnd(); }, 4600); }
 let _spk = null;
 function sparkTex() { if (_spk) return _spk; const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.25, 'rgba(255,240,200,.8)'); g.addColorStop(1, 'rgba(255,220,150,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); x.fillStyle = 'rgba(255,255,255,.9)'; x.fillRect(30, 4, 4, 56); x.fillRect(4, 30, 56, 4); _spk = new THREE.CanvasTexture(c); return _spk; }
 function sparkBurst() {
@@ -7647,7 +7700,7 @@ function t7Tick(dt) {
   if (w.k === 'fish') { S.catchT = iv; h3do(['M_Fishing_Idle', 'M_Holding_Idle'], iv + .2); } else svSwing(w.k);
   axGain(T.at, 1); AXS.workT = 6;
   if (w.brk) { if (w.hits >= w.brk) { t7Wear(w.type, w.tl, 1e9); t7Stop(`💥 Se rompió tu ${lc1(t7Name(w.type, w.tl))}. Para esto hace falta una herramienta mejor.`); } return; }
-  if (w.hits < w.need) return; w.hits = 0; w.need = t7Need(w.d, w.tier); w.n++;
+  if (w.hits < w.need) return; w.hits = 0; w.need = t7Need(w.d, w.tier); w.n++; try { metaEv('junta'); } catch (e) {}
   const g = T.res, key = r7k(g, w.tier), lv = ofiLv(T.of); let amt = (w.tier <= 2 ? 2 : 1) + (lv >= 22 ? 1 : 0);
   if (w.k === 'fish' && legOn('pescahombres')) amt *= 2;
   if (w.k === 'fish' && ft('pac') >= 4 && w.n % (ft('pac') >= 7 ? 3 : 5) === 0) amt += 1;
@@ -7859,7 +7912,7 @@ function kidsTick(dt) {
   if (S.freeMoving || S.walking || sheetUp()) { kStop(); return; }
   w.tt += dt; if (w.tt < 1.3) return; w.tt = 0; w.hits++;
   if (w.k === 'fish') h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 1.7); else if (w.k === 'grain') h3do(['PickUp_Table', 'M_Kneeling_Idle'], 1.6); else svSwing(w.k);
-  if (w.hits < w.need) return; w.hits = 0; w.need = kNeed(w.t); w.n++;
+  if (w.hits < w.need) return; w.hits = 0; w.need = kNeed(w.t); w.n++; try { metaEv('junta'); } catch (e) {}
   const P = kP(), G3 = K3[w.g], key = w.g + w.t; P.got[key] = (P.got[key] || 0) + 1; P.n = (P.n || 0) + 1; svXP(w.t * 2);
   try { pkPop(`${G3.ic} +1 ${lc1(G3.n[w.t - 1])}`); } catch (e) {}
   { const id = G3.card[w.t - 1], c = id && ALB.find(x => x.id === id); if (c && !albP().have[c.id]) { albAdd(c); albBtn(true); albToast(c); } }
@@ -8133,7 +8186,7 @@ function svFishTap() { const f = S.sv.fishing; if (!f || f.mode !== 'rod') retur
 function svEat() {
   if (!svOn() || S.down) return; const s = svP(), k = (s.inv.panezeq || 0) > 0 ? 'panezeq' : (s.inv.torta || 0) > 0 ? 'torta' : (s.inv.cooked || 0) > 0 ? 'cooked' : (s.inv.pantrigo || 0) > 0 ? 'pantrigo' : (s.inv.bread || 0) > 0 ? 'bread' : (s.inv.pancebada || 0) > 0 ? 'pancebada' : (s.inv.azimo || 0) > 0 ? 'azimo' : (s.inv.fruit || 0) > 0 ? 'fruit' : (s.inv.pasas || 0) > 0 ? 'pasas' : (s.inv.lemon || 0) > 0 ? 'lemon' : null;
   if (!k) { svToast((s.inv.fish || 0) > 0 ? 'El pescado crudo hay que cocinarlo primero en una fogata.' : 'No tenés comida. Buscá granados o pescá.'); return; }
-  h3do(['M_Drinking', 'PickUp_Table'], 2.4, .6, 1.2); svAdd(k, -1); s.sat = Math.min(SV.FULL, s.sat + FOOD[k] * (S.hx && fv('dom') >= 20 ? 1.25 : 1) * (/^(bread|azimo|torta|pancebada|pantrigo|panezeq)$/.test(k) && ofiLv('pan') >= 18 ? 1.4 : 1)); s.warned = 0; G().save(); if (humV() >= 1 && MP.code) xSend({ k: 'share', by: meInfo().name, x: S.av.position.x, z: S.av.position.z }); svToast(RES[k] && /^pan(cebada|trigo|ezeq)$/.test(k) ? `${RES[k][1]} Comiste ${RES[k][0].toLowerCase()}.` : k === 'cooked' ? '🍢 Comiste pescado asado. ¡Recuperaste fuerzas!' : k === 'bread' ? '🥖 Comiste pan.' : k === 'torta' ? '🥮 Comiste una torta dulce. ¡Quedaste lleno!' : k === 'azimo' ? '🫓 Comiste pan sin levadura.' : k === 'pasas' ? '🫐 Comiste pasas de uva.' : k === 'lemon' ? '🍋 Comiste un limón. ¡Qué ácido!' : '🍎 Comiste una granada.'); svUI();
+  h3do(['M_Drinking', 'PickUp_Table'], 2.4, .6, 1.2); try { metaEv('come'); } catch (e) {} svAdd(k, -1); s.sat = Math.min(SV.FULL, s.sat + FOOD[k] * (S.hx && fv('dom') >= 20 ? 1.25 : 1) * (/^(bread|azimo|torta|pancebada|pantrigo|panezeq)$/.test(k) && ofiLv('pan') >= 18 ? 1.4 : 1)); s.warned = 0; G().save(); if (humV() >= 1 && MP.code) xSend({ k: 'share', by: meInfo().name, x: S.av.position.x, z: S.av.position.z }); svToast(RES[k] && /^pan(cebada|trigo|ezeq)$/.test(k) ? `${RES[k][1]} Comiste ${RES[k][0].toLowerCase()}.` : k === 'cooked' ? '🍢 Comiste pescado asado. ¡Recuperaste fuerzas!' : k === 'bread' ? '🥖 Comiste pan.' : k === 'torta' ? '🥮 Comiste una torta dulce. ¡Quedaste lleno!' : k === 'azimo' ? '🫓 Comiste pan sin levadura.' : k === 'pasas' ? '🫐 Comiste pasas de uva.' : k === 'lemon' ? '🍋 Comiste un limón. ¡Qué ácido!' : '🍎 Comiste una granada.'); svUI();
 }
 
 /* ---------- fabricar y construir ---------- */
@@ -9516,7 +9569,7 @@ function cine(sc) {
   const ids = Object.keys(sc.cast || {}), spawnIds = ids.filter(k => !sc.cast[k].o && CMP_CAST[k]);
   const spawned = spawnIds.length ? cineSpawn(spawnIds) : []; spawnIds.forEach((k, i) => { sc.cast[k] = Object.assign({}, CMP_CAST[k], sc.cast[k], { o: spawned[i] }); });
   ids.forEach(k => { if (!sc.cast[k].o) delete sc.cast[k]; });
-  const actors = Object.keys(sc.cast); if (!actors.length && !sc.steps.some(s => s.who === 'nar')) return false;
+  const actors = Object.keys(sc.cast); if (!actors.length && !sc.steps.some(s => s.who === 'nar')) return false; if (actors.length) try { metaEv('charla'); } catch (e) {}
   // el jugador mira al grupo; los personajes se giran para mirarse
   CINE.on = true; CINE.sc = sc; CINE.q = sc.steps.slice(); CINE.spawned = spawned; CINE.fov0 = S.camera.fov; CINE.side = Math.random() < .5 ? 1 : -1; CINE.face = null;
   S.joy.x = 0; S.joy.y = 0; S.keys = {}; S.sprint = false;
@@ -10221,7 +10274,7 @@ function examReq(r, kids) { try { if (!S || !S.pois) return []; const pz = S.poi
   return L.filter(x => x.need > 0); } catch (e) { return []; } }
 /* premio por aprobar una etapa por primera vez: una prenda asegurada de rara para arriba y un poco de Resplandor */
 function examPrize(name) { try { const st = gearState(), left = GEAR.filter(x => !st.own.includes(x.id) && x.r !== 'u' && !x.x && x.r !== 'c'); if (left.length) { const u = Math.random() * 30, k = u < 3 ? 'l' : u < 10 ? 'e' : 'r'; let L = left.filter(x => x.r === k); if (!L.length) L = left.filter(x => x.r === 'r'); if (!L.length) L = left; gearGive(L[Math.floor(Math.random() * L.length)], 'Por superar el desafío de ' + (name || 'la etapa')); } glowAdd(5, 'Desafío superado'); } catch (e) {} }
-window.W3 = { rec: { mood: (m, t) => { S.moodForce = m ? [m, t ?? 1] : null; S.daySig = ''; }, svAct: () => svAct(), bldStart: t => bldStart(t), bldPlace: () => bldPlace(), BLD: () => BLD, tool: t => svGiveTool(t, ''), add: (k, n) => { svAdd(k, n); svUI(); }, keys: () => S.keys, olR: r => { OL.R = r; OL.acc = 0; return OL.R; } }, qForce: (lv, dpr) => { QUAL.mode = 'ultra'; QUAL.max = 3; QUAL.lv = lv; QUAL.dpr = 0; qApply(); if (dpr) { QUAL.dpr = dpr; S.renderer.setPixelRatio(dpr); } resize(); return { lv: QUAL.lv, dpr: QUAL.dpr }; }, fx: () => ({ waterWet, desertK, spDist, pgOpen, blockedAt, pgNoise, canyonAt, quarryAt }), HUE, hueP: () => hueP(), albOpen: p => albOpen(p), albGetSobre: n => albGetSobre(n), albP: () => albP(), ALB, BARR, FARM, ORCH, WOOL, LIFE, examReq, examPrize, ofi: () => ({ lv: Object.fromEntries(Object.keys(OFI).map(k => [k, ofiLv(k)])), st: ofiP(), m: (S.ofi || []).map(x => [x.k, Math.round(x.o.position.x), Math.round(x.o.position.z)]) }), sec: () => ({ why: SEC.why, L: SEC.list.map(e => [e.d.id, Math.round(e.x), Math.round(e.z)]) }), misNames: () => Object.fromEntries(MISSIONS.map(d => [d.id, d.title || ((d.giver && d.giver.name ? d.giver.name + ': ' : '') + (d.item && d.item.name ? d.item.name : d.id))])), grot: () => grotEnter(), phDbg: () => { const o = { near: PH.near, lv: QUAL.lv, see: QT.see[QUAL.lv], ema: QUAL.ema, slow: PH.slow, n: PH.bands.length, unb: PH.bands.filter(b => !b.built).length }; PH.near = 0; try { phTick(.016); o.tick = 'ok'; } catch (e) { o.tick = String(e && e.stack || e).slice(0, 400); } o.unb2 = PH.bands.filter(b => !b.built).length; return o; }, ph: id => PH.bands.filter(b => b.id === id).map(b => [b.list.length, b.built, !!b.ok, b.zc, !!(b.g && b.g.visible), b.ims.length, JSON.stringify(b.o)]), poiProps: () => (FLORA.poiProps || []).map(q => [q[0], q[1].length]), trails: () => TRL, side: () => SP, path: (x, z) => findPath(S.av.position.x, S.av.position.z, x, z), walk: (x, z) => walkLine(x, z), ground: (x, z) => groundAt(x, z, S.gy), merge: f => worldMerge(S.scene, f || 2), scene: () => S && S.scene, S: () => S, pois: () => S && S.pois.map(p => ({ k: p.k, id: p.id, x: Math.round(p.x), z: Math.round(p.z) })), tp: (x, z) => { S.av.position.set(x, S.W ? S.W.hAt(x, z) : 0, z); S.sig = ""; S.quiet = false; }, state: () => S, sceneStats: () => { const by = {}; try { S.scene.traverse(o => { if (!o.isMesh && !o.isSprite && !o.isPoints && !o.isLine) return; let lab = ''; for (let p = o; p && p !== S.scene; p = p.parent) { const k = Object.keys(p.userData || {}).filter(k => typeof p.userData[k] !== 'object').slice(0, 2).join(','); if (k) { lab = k; break; } if (p.name) { lab = p.name; break; } } const key = (o.isInstancedMesh ? 'inst:' : o.isSprite ? 'sprite:' : o.isSkinnedMesh ? 'skin:' : 'mesh:') + (o.material && (o.material.name || o.material.type) || '?') + ' [' + lab + ']'; by[key] = (by[key] || 0) + 1; }); } catch (e) {} return Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 40); }, renderInfo: () => { try { const i = S.renderer.info; return { calls: i.render.calls, tris: i.render.triangles, tex: i.memory.textures, geo: i.memory.geometries, ms: QUAL.ema, lv: QUAL.lv, gpu: QUAL.gpu }; } catch (e) { return null; } }, dbgHero: () => ({ VIL, SEC, MAT, AU, SND, MIX, GRP, PH, AN, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineOk2, cineBusy, crossScene, dawnScene, dawnBuild, diaryOpen, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf: r => qProf(r), axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
+window.W3 = { metaEv: (k, n) => { try { metaEv(k, n); } catch (e) {} }, rec: { mood: (m, t) => { S.moodForce = m ? [m, t ?? 1] : null; S.daySig = ''; }, svAct: () => svAct(), bldStart: t => bldStart(t), bldPlace: () => bldPlace(), BLD: () => BLD, tool: t => svGiveTool(t, ''), add: (k, n) => { svAdd(k, n); svUI(); }, keys: () => S.keys, olR: r => { OL.R = r; OL.acc = 0; return OL.R; } }, qForce: (lv, dpr) => { QUAL.mode = 'ultra'; QUAL.max = 3; QUAL.lv = lv; QUAL.dpr = 0; qApply(); if (dpr) { QUAL.dpr = dpr; S.renderer.setPixelRatio(dpr); } resize(); return { lv: QUAL.lv, dpr: QUAL.dpr }; }, fx: () => ({ waterWet, desertK, spDist, pgOpen, blockedAt, pgNoise, canyonAt, quarryAt }), HUE, hueP: () => hueP(), albOpen: p => albOpen(p), albGetSobre: n => albGetSobre(n), albP: () => albP(), ALB, BARR, FARM, ORCH, WOOL, LIFE, examReq, examPrize, ofi: () => ({ lv: Object.fromEntries(Object.keys(OFI).map(k => [k, ofiLv(k)])), st: ofiP(), m: (S.ofi || []).map(x => [x.k, Math.round(x.o.position.x), Math.round(x.o.position.z)]) }), sec: () => ({ why: SEC.why, L: SEC.list.map(e => [e.d.id, Math.round(e.x), Math.round(e.z)]) }), misNames: () => Object.fromEntries(MISSIONS.map(d => [d.id, d.title || ((d.giver && d.giver.name ? d.giver.name + ': ' : '') + (d.item && d.item.name ? d.item.name : d.id))])), grot: () => grotEnter(), phDbg: () => { const o = { near: PH.near, lv: QUAL.lv, see: QT.see[QUAL.lv], ema: QUAL.ema, slow: PH.slow, n: PH.bands.length, unb: PH.bands.filter(b => !b.built).length }; PH.near = 0; try { phTick(.016); o.tick = 'ok'; } catch (e) { o.tick = String(e && e.stack || e).slice(0, 400); } o.unb2 = PH.bands.filter(b => !b.built).length; return o; }, ph: id => PH.bands.filter(b => b.id === id).map(b => [b.list.length, b.built, !!b.ok, b.zc, !!(b.g && b.g.visible), b.ims.length, JSON.stringify(b.o)]), poiProps: () => (FLORA.poiProps || []).map(q => [q[0], q[1].length]), trails: () => TRL, side: () => SP, path: (x, z) => findPath(S.av.position.x, S.av.position.z, x, z), walk: (x, z) => walkLine(x, z), ground: (x, z) => groundAt(x, z, S.gy), merge: f => worldMerge(S.scene, f || 2), scene: () => S && S.scene, S: () => S, pois: () => S && S.pois.map(p => ({ k: p.k, id: p.id, x: Math.round(p.x), z: Math.round(p.z) })), tp: (x, z) => { S.av.position.set(x, S.W ? S.W.hAt(x, z) : 0, z); S.sig = ""; S.quiet = false; }, state: () => S, sceneStats: () => { const by = {}; try { S.scene.traverse(o => { if (!o.isMesh && !o.isSprite && !o.isPoints && !o.isLine) return; let lab = ''; for (let p = o; p && p !== S.scene; p = p.parent) { const k = Object.keys(p.userData || {}).filter(k => typeof p.userData[k] !== 'object').slice(0, 2).join(','); if (k) { lab = k; break; } if (p.name) { lab = p.name; break; } } const key = (o.isInstancedMesh ? 'inst:' : o.isSprite ? 'sprite:' : o.isSkinnedMesh ? 'skin:' : 'mesh:') + (o.material && (o.material.name || o.material.type) || '?') + ' [' + lab + ']'; by[key] = (by[key] || 0) + 1; }); } catch (e) {} return Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 40); }, renderInfo: () => { try { const i = S.renderer.info; return { calls: i.render.calls, tris: i.render.triangles, tex: i.memory.textures, geo: i.memory.geometries, ms: QUAL.ema, lv: QUAL.lv, gpu: QUAL.gpu }; } catch (e) { return null; } }, dbgHero: () => ({ VIL, SEC, MAT, AU, SND, MIX, GRP, PH, AN, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineOk2, cineBusy, crossScene, dawnScene, dawnBuild, diaryOpen, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf: r => qProf(r), axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
 
 /* En el celular se juega solo apaisado: si está en vertical, un cartel pide girarlo (en Android, al pasar a pantalla completa, además se traba en horizontal). */
 (() => {

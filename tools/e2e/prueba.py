@@ -22,9 +22,9 @@ THREE = os.path.join(AQUI, 'node_modules', 'three', 'build', 'three.module.js')
 OUT = os.path.join(AQUI, 'salida')
 
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
-DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, gearState, epReqTxt, '
+DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState')
 
 
 def local(url):
@@ -87,7 +87,18 @@ GUIA = COMUN + """
       chip&&chip.click(); await new Promise(r=>setTimeout(r,500)); const rows=[...document.querySelectorAll('#v3sheet .gd-r b')].map(b=>b.textContent); document.getElementById('v3sheet').hidden=true;
       return {ok:!!k&&!!pz&&!!ring&&!tapa.length&&!ctapa.length&&rows.length>=2&&!!paso&&narra, d:`pista: ${k} · el narrador explica la mochila al tocarla: ${narra} · aro sobre el botón: ${!!ring} · la pista tapa: ${tapa.join(',')||'nada'} · «Tu próximo paso» tapa: ${ctapa.join(',')||'nada'} · dice: ${paso} · lista: ${rows.join(' / ')}`};"""
 
+META = COMUN + """
+      const m=d.metaP(); m.g=['ora','saluda','camina']; m.c={}; m.ok=0; m.cal=5; m.vueltas=0; const own=d.gearState().own, gi=own.indexOf('cam7'); if(gi>=0) own.splice(gi,1);
+      d.metaEv('ora'); d.metaEv('saluda'); const parcial=m.ok; d.metaEv('saluda'); d.metaEv('camina',300); const dia6=m.ok===1&&m.cal===6;
+      m.ok=0; m.c={}; d.metaEv('ora'); d.metaEv('saluda',2); d.metaEv('camina',300); const vuelta=m.cal===0&&m.vueltas===1;
+      await new Promise(r=>setTimeout(r,4000)); document.querySelectorAll('.gear-rev,.v3gear,.gr-ov').forEach(e=>e.remove?.());
+      const prenda=d.gearState().own.includes('cam7');
+      d.metaOpen(); const dias=document.querySelectorAll('#v3sheet .md-d').length, metas=document.querySelectorAll('#v3sheet .md-r').length; document.getElementById('v3sheet').hidden=true;
+      const g=d.guiaGoals().map(x=>x.t);
+      return {ok:!parcial&&dia6&&vuelta&&prenda&&dias===7&&metas===3&&g.some(t=>/Desafío/.test(t)), d:`a medias no premia: ${!parcial} · día 6 sumado: ${dia6} · séptimo día cierra la vuelta: ${vuelta} · Manto del caminante: ${prenda} · ventana: ${metas} metas y ${dias} días · en «Tu próximo paso»: ${g.find(t=>/Desafío/.test(t))}`};"""
+
 HERO = {
+    'meta': ('Desafío del día y camino de 7 días (con la prenda del séptimo)', META),
     'guia': ('Guía: pista con el narrador y «Tu próximo paso» sin tapar nada', GUIA),
     'oficio': ('Cosechar cebada con la hoz que dan gratis', COMUN + """
       const o=d.Z7.nodes.find(o=>o.g==='trigo'&&o.t===1); if(!o) return {ok:false,d:'no hay campos de cebada'};
@@ -133,6 +144,7 @@ HERO = {
 }
 
 KIDS = {
+    'metakids': ('Kids: desafío del día y camino de 7 días', META),
     'guiakids': ('Guía en Kids: pista y «Tu próximo paso» sin tapar nada', GUIA),
     'kids': ('Kids: cosechar con la hoz y que el campo vuelva', COMUN + """
       const o=(S.kgr||[])[0]; if(!o) return {ok:false,d:'no hay campos de trigo en Kids'}; tp(o.x+1,o.z);

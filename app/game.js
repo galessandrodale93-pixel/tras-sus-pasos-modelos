@@ -1123,7 +1123,7 @@ let pendingMedals=[];
 function resolve(ok,extra){
   const n=active,c=n.ch,p=P(),R=REGIONS[n.r].id;let pts=0;p.regions[R]=p.regions[R]||{};
   if(ok){p.streak++;p.best=Math.max(p.best,p.streak);pts=Math.round(100*mult(p.streak));p.trivia+=pts;p.regions[R].trivia=(p.regions[R].trivia||0)+pts;award('primer');if(p.streak>=5)award('racha5');}else p.streak=0;
-  p.done[n.id]=ok;
+  p.done[n.id]=ok;try{window.W3&&W3.metaEv&&W3.metaEv('parada');}catch(e){}
   if(isDone(`${R}-fA`)&&isDone(`${R}-fB`))award('explorador');
   if(p.maps.length>=3)award('cartografo');if(p.verses.length>=3)award('memoria');
   save();
