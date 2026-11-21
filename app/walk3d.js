@@ -5856,7 +5856,7 @@ async function vidMake(o, clip, prog, dur) {
 function vidPick(o, box) {
   if (!vidOk() || !H3.ok) { box.innerHTML = '<small class="md-k">Este aparato no puede armar video: compartí la tarjeta.</small>'; return; }
   const vu = (() => { try { return metaP().vueltas || 0; } catch (e) { return 0; } })(), L = POSES.filter(p => p.dance && (p.need || 0) <= vu);
-  box.innerHTML = `<b class="vd-h">🎬 Video con tu personaje bailando</b><div class="vd-l">${L.map(p => `<button type="button" data-c="${p.clip}">${p.ico} ${p.name}</button>`).join('')}</div>`;
+  box.innerHTML = `<b class="vd-h">🎬 Video con tu personaje festejando</b><div class="vd-l">${L.map(p => `<button type="button" data-c="${p.clip}">${p.ico} ${p.name}</button>`).join('')}</div>`;
   box.querySelectorAll('[data-c]').forEach(b => b.onclick = async e => { e.stopPropagation(); if (VID.busy) return; VID.busy = true; const clip = b.dataset.c;
     box.innerHTML = '<div class="vd-p"><i style="width:0%"></i></div><small class="md-k">Armando tu video… dejá el juego abierto unos segundos.</small>'; const bar = box.querySelector('.vd-p i');
     try { const blob = await vidMake(o, clip, k => { bar.style.width = Math.round(k * 100) + '%'; }), file = new File([blob], 'tras-sus-pasos.mp4', { type: 'video/mp4' }), url = URL.createObjectURL(blob), can = !!(navigator.canShare && navigator.canShare({ files: [file] }));
@@ -7238,10 +7238,10 @@ function danceBuild() {
 
 /* ---------- Resplandor: poses quietas, modo cinemático y la luz que crece con las buenas obras ----------
    No es vanidad: es reflejar a Dios (como el rostro de Moisés que brillaba después de estar con el Señor, Éxodo 34)
-   y dejar que las buenas obras alumbren a otros (Mateo 5). Nada de bailes. */
+   y dejar que las buenas obras alumbren a otros (Mateo 5). Los festejos son de alegría, como en la Biblia. */
 const POSES = [
-  { id: 'd_david', dance: 1, name: 'La danza de David', ico: '🙌', clip: 'D_david', ref: '2 Samuel 6:14' }, { id: 'd_salmo', dance: 1, name: 'Salmo 150', ico: '👏', clip: 'D_salmo', ref: 'Salmo 150' },
-  { id: 'd_ronda', dance: 1, need: 1, name: 'La ronda de la cosecha', ico: '🌾', clip: 'D_ronda' }, { id: 'd_fiesta', dance: 1, need: 2, name: 'La fiesta del hijo que volvió', ico: '🎉', clip: 'D_fiesta', ref: 'Lucas 15:25' },
+  { id: 'd_david', dance: 1, name: 'Festejo de David', ico: '🙌', clip: 'D_david', ref: '2 Samuel 6:14' }, { id: 'd_salmo', dance: 1, name: 'Festejo del Salmo 150', ico: '👏', clip: 'D_salmo', ref: 'Salmo 150' },
+  { id: 'd_ronda', dance: 1, need: 1, name: 'Festejo de la cosecha', ico: '🌾', clip: 'D_ronda' }, { id: 'd_fiesta', dance: 1, need: 2, name: 'Festejo del hijo que volvió', ico: '🎉', clip: 'D_fiesta', ref: 'Lucas 15:25' },
   { id: 'brazos', name: 'Brazos cruzados', ico: '🙅', clip: 'M_Idle' },
   { id: 'capa', name: 'Capa al viento', ico: '🧣', clip: 'Idle_Loop', cape: 1 },
   { id: 'horizonte', name: 'Mirar el horizonte', ico: '🌅', clip: 'M_Looking' },
@@ -7296,7 +7296,7 @@ function poseMenu(show) {
   const tab = POSE.tab || 'p', vu = (() => { try { return metaP().vueltas || 0; } catch (e) { return 0; } })();
   const poses = S.hx ? POSES.filter(p => !p.dance && (!p.fr || ft(p.fr) >= 6)) : [], bailes = POSES.filter(p => p.dance);
   const btn = p => { const lock = (p.need || 0) > vu; return `<button data-p="${p.id}"${lock ? ' disabled class="off"' : ''}><span>${lock ? '🔒' : p.ico}</span><em>${p.name}${lock ? `<i>Se gana con ${p.need === 1 ? 'tu primer' : 'tu segundo'} camino de 7 días</i>` : p.ref ? `<i>${p.ref}</i>` : ''}</em></button>`; };
-  el.innerHTML = `<div class="ps-tabs"><button data-t="p" class="${tab === 'p' ? 'on' : ''}">${S.hx ? '✦ Poses' : '✨ Brillar'}</button><button data-t="b" class="${tab === 'b' ? 'on' : ''}">🎶 Bailes</button></div><div class="ps-list">${tab === 'b' ? bailes.map(btn).join('') : S.hx ? poses.map(btn).join('') : '<button data-k="shine"><span>✨</span><em>Brillar con la lámpara</em></button>'}</div><small>${tab === 'b' ? 'Bailes de alegría como en la Biblia. Caminá para dejar de bailar.' : 'Quedate quieto unos segundos y la cámara te rodea. La luz que tenés crece con tus buenas obras.'}</small>`;
+  el.innerHTML = `<div class="ps-tabs"><button data-t="p" class="${tab === 'p' ? 'on' : ''}">${S.hx ? '✦ Poses' : '✨ Brillar'}</button><button data-t="b" class="${tab === 'b' ? 'on' : ''}">🎉 Festejos</button></div><div class="ps-list">${tab === 'b' ? bailes.map(btn).join('') : S.hx ? poses.map(btn).join('') : '<button data-k="shine"><span>✨</span><em>Brillar con la lámpara</em></button>'}</div><small>${tab === 'b' ? 'Festejos de alegría como en la Biblia. Caminá para terminar el festejo.' : 'Quedate quieto unos segundos y la cámara te rodea. La luz que tenés crece con tus buenas obras.'}</small>`;
   el.querySelectorAll('[data-p]').forEach(b => b.onclick = () => poseSet(b.dataset.p)); el.querySelectorAll('[data-t]').forEach(b => b.onclick = e => { e.stopPropagation(); POSE.tab = b.dataset.t; poseMenu(true); });
   const sh = el.querySelector('[data-k="shine"]'); if (sh) sh.onclick = () => { poseMenu(false); kidsShine(); }; el.hidden = false;
 }

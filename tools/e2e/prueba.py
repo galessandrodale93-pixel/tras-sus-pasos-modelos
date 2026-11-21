@@ -159,10 +159,10 @@ BAILE = COMUN + r"""
       d.danceBuild(); d.poseMenu(true); const m=document.querySelector('.v3poses'); m.querySelector('[data-t="b"]').click(); await new Promise(r=>setTimeout(r,200));
       const bs=[...document.querySelectorAll('.v3poses [data-p]')], lock=bs.filter(b=>b.disabled).length; const dv=bs.find(b=>b.dataset.p==='d_david'); dv&&dv.click(); await new Promise(r=>setTimeout(r,1500));
       const ok=S.poseK==='d_david'&&S.actK==='D_david'; S.joy.y=1; await new Promise(r=>setTimeout(r,900)); S.joy.y=0; const fin=!S.poseK;
-      return {ok:bs.length===4&&lock===2&&ok&&fin, d:`bailes en el menú: ${bs.length} (${lock} se ganan con el camino de 7 días) · baila la danza de David: ${ok} · al caminar deja de bailar: ${fin}`};"""
+      return {ok:bs.length===4&&lock===2&&ok&&fin, d:`festejos en el menú: ${bs.length} (${lock} se ganan con el camino de 7 días) · festeja como David: ${ok} · al caminar termina el festejo: ${fin}`};"""
 
 HERO = {
-    'baile': ('Bailes bíblicos en el menú del Resplandor', BAILE),
+    'baile': ('Festejos bíblicos en el menú del Resplandor', BAILE),
     'video': ('Video para compartir: personaje bailando y logros (MP4 720×1280)', VIDEO),
     'resumen': ('Resumen de la semana: aparece solo, presentación con el narrador y tarjeta 1080×1920', RESU),
     'tarjeta': ('Tarjeta para compartir: imagen 1080×1350 con el personaje y el logro', TARJ),
@@ -214,7 +214,7 @@ HERO = {
 }
 
 KIDS = {
-    'bailekids': ('Kids: brillar o bailar desde la estrella', BAILE),
+    'bailekids': ('Kids: brillar o festejar desde la estrella', BAILE),
     'resukids': ('Kids: resumen de la semana', RESU),
     'tarjkids': ('Kids: tarjeta para compartir', TARJ),
     'advkids': ('Kids: calendario de Adviento', ADVI),
