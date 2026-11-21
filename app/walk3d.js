@@ -7481,7 +7481,7 @@ svHide.store = new Map();
 const T7 = {
   axe: { of: 'car', at: 'fue', res: 'wood', ic: '🪓', verb: 'Talar', ing: 'Talando', names: ['Hacha de pedernal', 'Hacha de cobre', 'Hacha de bronce', 'Hacha de hierro', 'Hacha del carpintero', 'Hacha de doble filo', 'Hacha de Hiram'] },
   pick: { of: 'can', at: 'fue', res: 'stone', ic: '⛏️', verb: 'Picar', ing: 'Picando', names: ['Pico de asta', 'Pico de cobre', 'Pico de bronce', 'Pico de hierro', 'Pico del cantero', 'Pico del minero', 'Pico de Timna'] },
-  rod: { of: 'pes', at: 'pac', res: 'fish', ic: '🎣', verb: 'Pescar', ing: 'Pescando', names: ['Caña de junco', 'Caña de sauce', 'Caña con anzuelo de bronce', 'Red de mano', 'Red de los pescadores de Betsaida', 'Red de arrastre de barca', 'Red de la pesca milagrosa'] },
+  rod: { of: 'pes', at: 'pac', res: 'fish', ic: '🎣', free: 1, verb: 'Pescar', ing: 'Pescando', names: ['Caña de junco', 'Caña de sauce', 'Caña con anzuelo de bronce', 'Red de mano', 'Red de los pescadores de Betsaida', 'Red de arrastre de barca', 'Red de la pesca milagrosa'] },
   pala: { of: 'alf', at: 'fue', res: 'barro', ic: '🪏', free: 1, verb: 'Sacar', ing: 'Sacando', names: ['Pala de madera', 'Pala de cobre', 'Pala de bronce', 'Azada de hierro', 'Azada del alfarero', 'Azada de los mercaderes', 'Torno de Jeremías'] },
   hoz: { of: 'agr', at: 'pac', res: 'trigo', ic: '🌾', free: 1, verb: 'Cosechar', ing: 'Cosechando', names: ['Hoz de pedernal', 'Hoz de cobre', 'Hoz de bronce', 'Hoz de hierro', 'Hoz del segador', 'Hoz de doble filo', 'Hoz de Booz'] },
   vara: { of: 'oli', at: 'fue', res: 'aceitunas', ic: '🫒', free: 1, verb: 'Varear', ing: 'Vareando', names: ['Vara de caña', 'Vara de olivo', 'Vara de cedro', 'Prensa de piedra', 'Prensa de viga', 'Prensa de dos piedras', 'Prensa de Getsemaní'] },
@@ -7516,7 +7516,9 @@ const R7_COOK = [1, 1, 2, 2, 3, 3, 4]; /* pescado asado que da cada pez según s
 const fishAll = () => { const s = svP(); return R7_POOL.fish.reduce((a, k) => a + (s.inv[k] || 0), 0); };
 /* inventario con la madera, la piedra y el pescado de todos los niveles sumados (para recetas y construcciones) */
 function t7Inv(inv, hide) { return new Proxy(inv, { get: (o, k) => R7_POOL[k] ? R7_POOL[k].reduce((a, x) => a + (o[x] || 0), 0) : hide && R7_OF[k] && R7_OF[k][1] > 1 ? 0 : o[k] }); }
-function t7P() { const s = svP(); if (s.t7) Object.keys(T7).forEach(ty => { if (!s.t7[ty]) { s.t7[ty] = {}; if (T7[ty].free) s.t7[ty][1] = T7_DUR[0]; } }); if (!s.t7) { s.t7 = {}; Object.keys(T7).forEach(ty => { s.t7[ty] = {}; if (T7[ty].free) s.t7[ty][1] = T7_DUR[0]; }); const T = s.tools || []; if (T.includes('axe')) s.t7.axe[1] = T7_DUR[0]; if (T.includes('pick')) s.t7.pick[1] = T7_DUR[0]; if (T.includes('rod')) s.t7.rod[1] = T7_DUR[0]; if (T.includes('net')) s.t7.rod[2] = T7_DUR[1]; } return s.t7; }
+function t7P() { const s = svP(); if (s.t7) Object.keys(T7).forEach(ty => { if (!s.t7[ty]) { s.t7[ty] = {}; if (T7[ty].free) s.t7[ty][1] = T7_DUR[0]; } }); if (!s.t7) { s.t7 = {}; Object.keys(T7).forEach(ty => { s.t7[ty] = {}; if (T7[ty].free) s.t7[ty][1] = T7_DUR[0]; }); const T = s.tools || []; if (T.includes('axe')) s.t7.axe[1] = T7_DUR[0]; if (T.includes('pick')) s.t7.pick[1] = T7_DUR[0]; if (T.includes('rod')) s.t7.rod[1] = T7_DUR[0]; if (T.includes('net')) s.t7.rod[2] = T7_DUR[1]; }
+  if (!s.t7rod1) { s.t7rod1 = 1; if (!Object.keys(s.t7.rod || {}).length) { s.t7.rod = s.t7.rod || {}; s.t7.rod[1] = T7_DUR[0]; } } /* la caña de junco ahora se da de entrada, como la hoz y el hacha: también a los que ya venían jugando sin caña */
+  return s.t7; }
 const t7Type = t => t === 'net' ? 'rod' : T7[t] ? t : null;
 const t7Has = type => Object.keys(t7P()[type]).length > 0;
 const t7Ok = (type, t) => ofiLv(T7[type].of) >= T7_LV[t - 1] && fv(T7[type].at) >= T7_AT[t - 1];
