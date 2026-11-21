@@ -24,7 +24,7 @@ OUT = os.path.join(AQUI, 'salida')
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
 DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta')
 
 
 def local(url):
@@ -128,7 +128,18 @@ MOCHI = COMUN + r"""
       const low=document.body.classList.contains('lowmem'); document.getElementById('v3sheet').hidden=true; localStorage.removeItem('tsp:lowmem'); S.lowm=null;
       return {ok:!!cv&&gl===0&&px>300&&low&&spx>300, d:`modo poca memoria: ${low} · motores 3D nuevos (mochila y personaje de los minijuegos): ${gl} · personaje de los minijuegos dibujado: ${spx>300} · el personaje se ve en la mochila: ${px>300} (${px}) · desenfoque: ${blur}`};"""
 
+TARJ = COMUN + r"""
+      let gl=0; const og=HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext=function(t,...a){ if(/webgl/.test(t)) gl++; return og.call(this,t,...a); };
+      await d.cardShow(d.cardCamino()); HTMLCanvasElement.prototype.getContext=og;
+      const img=document.querySelector('#v3sheet .cd-img'); if(!img) return {ok:false,d:'no aparece la tarjeta'};
+      await new Promise(r=>{ if(img.complete) r(); else img.onload=r; });
+      const c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; const x=c.getContext('2d'); x.drawImage(img,0,0);
+      const pj=(X,Y)=>Array.from(x.getImageData(X,Y,1,1).data.slice(0,3)); const mid=x.getImageData(380,200,320,500).data; let cols=new Set(); for(let i=0;i<mid.length;i+=400) cols.add(mid[i]>>4|((mid[i+1]>>4)<<4)|((mid[i+2]>>4)<<8));
+      const btn=!!document.querySelector('#v3sheet .cd-dl'); document.getElementById('v3sheet').hidden=true;
+      return {ok:c.width===1080&&c.height===1350&&cols.size>25&&gl===0&&btn, d:`tarjeta ${c.width}×${c.height} · colores en la zona del personaje: ${cols.size} · motores 3D nuevos: ${gl} · botón para guardar: ${btn}`};"""
+
 HERO = {
+    'tarjeta': ('Tarjeta para compartir: imagen 1080×1350 con el personaje y el logro', TARJ),
     'avisos': ('Avisos: «Avisarme cada día», recordatorio de calendario y estado para el aviso', AVISOS),
     'adviento': ('Adviento: ventana del día, días pasados, estrella sobre Belén y regalos de Navidad y Reyes', ADVI),
     'meta': ('Desafío del día y camino de 7 días (con la prenda del séptimo)', META),
@@ -177,6 +188,7 @@ HERO = {
 }
 
 KIDS = {
+    'tarjkids': ('Kids: tarjeta para compartir', TARJ),
     'advkids': ('Kids: calendario de Adviento', ADVI),
     'metakids': ('Kids: desafío del día y camino de 7 días', META),
     'guiakids': ('Guía en Kids: pista y «Tu próximo paso» sin tapar nada', GUIA),

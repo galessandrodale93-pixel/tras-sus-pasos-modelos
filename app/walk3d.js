@@ -5444,8 +5444,8 @@ function guiaChip() {
 }
 function guiaPanel() {
   const L = guiaGoals(); S.joy.x = 0; S.joy.y = 0;
-  vilSheet(`<div class="inv-h"><b>🧭 ¿Qué hago ahora?</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="gd-list">${L.map((x, i) => `<div class="sv-rec gd-r${i ? '' : ' first'}"><span class="gd-ic">${x.ic}</span><div><b>${esc(x.t)}</b><small>${esc(x.sub)}</small></div>${x.fn ? `<button data-gi="${i}">${esc(x.b || 'Ir')}</button>` : ''}</div>`).join('')}</div>`);
-  const el = document.getElementById('v3sheet'), close = () => { el.hidden = true; };
+  vilSheet(`<div class="inv-h"><b>🧭 ¿Qué hago ahora?</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="gd-list">${L.map((x, i) => `<div class="sv-rec gd-r${i ? '' : ' first'}"><span class="gd-ic">${x.ic}</span><div><b>${esc(x.t)}</b><small>${esc(x.sub)}</small></div>${x.fn ? `<button data-gi="${i}">${esc(x.b || 'Ir')}</button>` : ''}</div>`).join('')}</div><button class="gd-how cd-go" type="button">📸 Compartir mi camino</button>`);
+  const el = document.getElementById('v3sheet'), close = () => { el.hidden = true; }; el.querySelector('.cd-go').onclick = () => cardShow(cardCamino());
   el.querySelectorAll('[data-gi]').forEach(b => b.onclick = () => { close(); try { L[+b.dataset.gi].fn(); } catch (e) {} });
 }
 function guiaHide() { GUIA.cur = null; if (GUIA.el) GUIA.el.classList.remove('on'); if (GUIA.ring) GUIA.ring.hidden = true; }
@@ -5530,8 +5530,9 @@ function metaOpen() {
   const m = metaP(), md = S.hx ? 'hx' : 'kids', P7 = META_PREMIO[md], cal = m.ok && m.cal === 0 && m.vueltas ? 7 : m.cal;
   const rows = m.g.map(k => { const [ic, t, T] = META_POOL[k], n = metaN(m, k), done = n >= T; return `<div class="sv-rec md-r${done ? ' ok' : ''}"><span class="gd-ic">${done ? '✅' : ic}</span><div><b>${esc(t)}</b><i class="md-bar"><i style="width:${Math.round(n / T * 100)}%"></i></i><small>${k === 'camina' ? n + ' de ' + T + ' metros' : n + ' de ' + T}</small></div></div>`; }).join('');
   const steps = P7.map((r, i) => `<div class="md-d${i < cal ? ' on' : ''}${i === cal && !m.ok ? ' hoy' : ''}${i === 6 ? ' big' : ''}"><span>${i < cal ? '✓' : r[0]}</span><small>Día ${i + 1}</small><em>${esc(r[1])}</em></div>`).join('');
-  vilSheet(`<div class="inv-h"><b>☀️ Desafío del día</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">${m.ok ? 'Ya lo cumpliste. Mañana hay un desafío nuevo.' : 'Cumplí las tres y sumás un paso en tu camino de 7 días.'}</p><div class="gd-list">${rows}</div>
+  vilSheet(`<div class="inv-h"><b>☀️ Desafío del día</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">${m.ok ? 'Ya lo cumpliste. Mañana hay un desafío nuevo.' : 'Cumplí las tres y sumás un paso en tu camino de 7 días.'}</p>${m.ok ? '<button type="button" class="gd-how cd-go">📸 Compartir mi desafío cumplido</button>' : ''}<div class="gd-list">${rows}</div>
     <h4 class="md-h">Camino de 7 días</h4><div class="md-cal">${steps}</div><p class="md-k">Los días no tienen que ser seguidos: cada desafío cumplido suma un paso, y el séptimo trae una prenda única.</p>`);
+  { const b = document.querySelector('#v3sheet .cd-go'); if (b) b.onclick = () => cardShow(cardMeta()); }
   notiInto();
 }
 
@@ -5575,6 +5576,55 @@ function notiBind(box) { if (!box) return; const on = box.querySelector('.nt-on'
 function notiInto(sel) { const el = document.querySelector('#v3sheet .inv'); if (!el) return; const box = document.createElement('div'); box.className = 'nt-box'; box.innerHTML = notiHTML(); el.appendChild(box); notiBind(box); }
 /* el ícono de la app instalada muestra un 1 si el desafío de hoy quedó pendiente al salir */
 document.addEventListener('visibilitychange', () => { try { if (!navigator.setAppBadge || !S || !S.av) return; if (document.hidden) { const m = metaP(); if (!m.ok) navigator.setAppBadge(1).catch(() => {}); else navigator.clearAppBadge().catch(() => {}); } else navigator.clearAppBadge().catch(() => {}); } catch (e) {} });
+
+/* ---------- tarjetas para compartir ----------
+   Una imagen de 1080×1350 con la vista del mundo de fondo, tu personaje de frente y el logro. Sin nombres ni fotos reales:
+   solo el personaje del juego. En el celular se comparte directo (WhatsApp, Instagram); en la compu se descarga. */
+function cardAvatar(W, H) {
+  const R0 = _r0; if (!R0 || !THREE) return null; const cv = document.createElement('canvas'), R = liteR(cv, 1); R.setSize(W, H);
+  const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#FFF4E0', '#3A2A1C', 1.6)); const k = new THREE.DirectionalLight('#FFE2B8', 2.6); k.position.set(2, 4, 4); sc.add(k); const rim = new THREE.DirectionalLight('#9EC2FF', 1.8); rim.position.set(-3, 2.5, -3); sc.add(rim);
+  let av; try { const look = lookOf(G().P()); av = (S.hx || H3.ok) ? buildHeroAvatar(look) : buildAvatar(look, false); } catch (e) { return null; }
+  av.traverse(o => { if (o.isPointLight) o.intensity = 0; if (o.isSprite) o.visible = false; }); if (av.userData.h3) { av.userData.h3.lamp.visible = false; try { av.userData.h3.mixer.update(.6); } catch (e) {} } av.rotation.y = -.35; sc.add(av);
+  const h = av.userData.h3 ? 1.85 * av.scale.y : 2.1, cam = new THREE.PerspectiveCamera(22, W / H, .1, 40); cam.position.set(0, h * .58, h * 3.1); cam.lookAt(0, h * .5, 0);
+  R.render(sc, cam); R.dispose(); return cv;
+}
+function cardWrap(x, t, maxW) { const out = []; let line = ''; for (const w of String(t).split(/\s+/)) { const tt = line ? line + ' ' + w : w; if (x.measureText(tt).width > maxW && line) { out.push(line); line = w; } else line = tt; } if (line) out.push(line); return out; }
+async function cardMake(o) {
+  try { await Promise.all(['700 64px Fraunces', '800 30px Nunito', '900 24px Nunito'].map(f => document.fonts.load(f))); } catch (e) {}
+  const W = 1080, H = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d'), hx = !!S.hx;
+  /* fondo: lo que se ve ahora en el juego */
+  x.fillStyle = hx ? '#1A140D' : '#1C2A55'; x.fillRect(0, 0, W, H);
+  try { const r = S.renderer; r.render(S.scene, S.camera); const src = r.domElement, sw = src.width, sh = src.height, k = Math.max(W / sw, H / sh); x.globalAlpha = .9; x.drawImage(src, (W - sw * k) / 2, (H - sh * k) / 2, sw * k, sh * k); x.globalAlpha = 1; } catch (e) {}
+  let g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, 'rgba(0,0,0,.35)'); g.addColorStop(.42, 'rgba(0,0,0,.08)'); g.addColorStop(.62, hx ? 'rgba(18,12,6,.82)' : 'rgba(14,22,52,.82)'); g.addColorStop(1, hx ? 'rgba(10,7,4,.97)' : 'rgba(8,14,38,.97)'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  /* el personaje, de frente */
+  const av = cardAvatar(560, 760); if (av) { x.save(); x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = 40; x.drawImage(av, (W - 540) / 2, 84, 540, 733); x.restore(); }
+  /* marca arriba */
+  x.textAlign = 'center'; x.fillStyle = '#FFE7A6'; x.font = '900 26px Nunito'; x.fillText(('TRAS SUS PASOS · ' + (hx ? 'HERO' : 'KIDS')).split('').join(String.fromCharCode(8202)), W / 2, 62);
+  /* el logro */
+  let y = 880; x.font = '700 68px Fraunces'; x.fillStyle = '#FFFFFF'; for (const l of cardWrap(x, o.t, W - 140)) { x.fillText(l, W / 2, y); y += 78; }
+  if (o.ref) { x.font = '900 26px Nunito'; x.fillStyle = '#E9C37A'; x.fillText(o.ref.toUpperCase(), W / 2, y + 6); y += 50; }
+  x.font = '700 34px Nunito'; x.fillStyle = 'rgba(255,248,232,.92)'; for (const l of (o.lines || [])) { for (const ll of cardWrap(x, l, W - 160)) { if (y > H - 130) break; x.fillText(ll, W / 2, y); y += 46; } y += 6; }
+  /* pie */
+  x.fillStyle = 'rgba(233,195,122,.55)'; x.fillRect(W / 2 - 60, H - 108, 120, 3); x.font = '800 28px Nunito'; x.fillStyle = '#FFE7A6'; x.fillText('Jugá en habitat-cfm.org', W / 2, H - 58);
+  return cv;
+}
+async function cardShow(o) {
+  svToast('📸 Armando tu tarjeta…'); const cv = await cardMake(o), url = cv.toDataURL('image/jpeg', .9);
+  const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', .9)), file = new File([blob], 'tras-sus-pasos.jpg', { type: 'image/jpeg' }); cv.width = cv.height = 1;
+  const can = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+  vilSheet(`<div class="inv-h"><b>📸 Tu tarjeta</b><button class="bag-x" aria-label="Cerrar">✕</button></div><img class="cd-img" src="${url}" alt="Tarjeta para compartir"><div class="cd-b">${can ? '<button type="button" class="cd-sh">Compartir</button>' : ''}<button type="button" class="cd-dl${can ? ' sec' : ''}">Descargar</button></div><p class="md-k">La tarjeta muestra tu personaje del juego, sin tu nombre ni fotos tuyas.</p>`);
+  const el = document.getElementById('v3sheet'), sh = el.querySelector('.cd-sh'), dl = el.querySelector('.cd-dl');
+  if (sh) sh.onclick = async () => { try { await navigator.share({ files: [file], text: o.share || 'Tras sus pasos · habitat-cfm.org' }); } catch (e) {} };
+  dl.onclick = () => { const a = document.createElement('a'); a.href = url; a.download = 'tras-sus-pasos.jpg'; document.body.appendChild(a); a.click(); a.remove(); };
+}
+function cardMeta() { const m = metaP(); return { t: '☀️ Cumplí el desafío del día', lines: [m.g.map(k => '✓ ' + META_POOL[k][1]).join('   '), m.cal === 0 && m.vueltas ? 'Completé el camino de 7 días' : `Camino de 7 días: ${m.cal} de 7`], share: 'Cumplí el desafío del día en Tras sus pasos ☀️' }; }
+function cardAdv(n) { const [ref, tx] = ADV[n - 1]; return { t: n === 26 ? '👑 Reyes' : n === 25 ? '⭐ ¡Feliz Navidad!' : `🎄 ${n} de diciembre`, ref, lines: [tx], share: 'Mi ventana de Adviento en Tras sus pasos 🎄' }; }
+function cardCamino() {
+  const g = G(), p = g.P(), tx = id => ((document.getElementById(id) || {}).textContent || '').trim(), m = p.meta || {}; let paradas = 0; try { paradas = Object.keys(g.NODES).filter(k => g.NODES[k].kind === 'ch' && g.isDone(k)).length; } catch (e) {}
+  const L = [`Nivel ${tx('lvN') || 1}` + (tx('lvT') ? ' · ' + tx('lvT') : ''), (paradas ? `${paradas} ${paradas === 1 ? 'parada' : 'paradas'} de la historia` : 'Recién empiezo el camino') + (m.total ? ` · ${m.total} ${m.total === 1 ? 'desafío cumplido' : 'desafíos cumplidos'}` : '')];
+  try { const t = (svP().titles || []).slice(-1)[0]; if (S.hx && t) L.push('Título: «' + t + '»'); } catch (e) {}
+  return { t: 'Mi camino tras los pasos de Jesús', lines: L, share: 'Así va mi camino en Tras sus pasos' };
+}
 
 /* ---------- Adviento y Navidad: una ventana por día del 1 al 25 de diciembre y la de Reyes el 6 de enero ----------
    Cada ventana cuenta un tramo de la historia (lo lee el narrador) y trae un regalito. Las ventanas de días que pasaron
@@ -5642,8 +5692,8 @@ function advOpen() {
 function advRead(n) {
   const h = advHoy(); if (!advAbre(n, h)) return; const A = advP(), [ref, tx] = ADV[n - 1], nuevo = !A.o[n], pr = nuevo ? advPremio(n) : null;
   if (nuevo) { A.o[n] = 1; G().save(); metaDar(pr[2]); try { advStarSync(); } catch (e) {} }
-  vilSheet(`<div class="inv-h"><b>${n === 26 ? '👑 6 de enero · Reyes' : n === 25 ? '⭐ 25 de diciembre · Navidad' : '🎄 ' + n + ' de diciembre'}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="adv-card"><small>${esc(ref)}</small><p>${esc(tx)}</p>${pr ? `<div class="adv-gift">${pr[0]} Ganaste ${esc(pr[1])}</div>` : ''}</div><button class="gd-how adv-back" type="button">Ver el calendario</button>`);
-  document.querySelector('#v3sheet .adv-back').onclick = advOpen;
+  vilSheet(`<div class="inv-h"><b>${n === 26 ? '👑 6 de enero · Reyes' : n === 25 ? '⭐ 25 de diciembre · Navidad' : '🎄 ' + n + ' de diciembre'}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="adv-card"><small>${esc(ref)}</small><p>${esc(tx)}</p>${pr ? `<div class="adv-gift">${pr[0]} Ganaste ${esc(pr[1])}</div>` : ''}</div><div class="cd-b"><button class="gd-how adv-back" type="button">Ver el calendario</button><button class="gd-how cd-go" type="button">📸 Compartir</button></div>`);
+  document.querySelector('#v3sheet .adv-back').onclick = advOpen; document.querySelector('#v3sheet .cd-go').onclick = () => cardShow(cardAdv(n));
   try { G().vo(tx, 'narrador'); } catch (e) {} if (pr) try { tone3d(); } catch (e) {}
 }
 /* la estrella sobre Belén: tenue el primer día, plena en Nochebuena; queda hasta el 10 de enero */

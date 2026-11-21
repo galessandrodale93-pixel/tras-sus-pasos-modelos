@@ -1589,3 +1589,10 @@ body:not(.v3on) .v3pista,body.v3lb .v3pista,body.v3talk .v3pista{display:none}
 /* celulares con poca memoria: sin desenfoque detrás de los carteles (en iPhone, desenfocar sobre el 3D gasta mucha memoria) */
 body.lowmem *,body.lowmem *::before,body.lowmem *::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 .v3pista.on:not([data-ts-y]){opacity:0}
+/* tarjetas para compartir */
+.cd-img{display:block;width:100%;max-width:340px;margin:8px auto 0;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.cd-b{display:flex;gap:8px;margin-top:12px}
+.cd-b>button{flex:1;margin-top:0!important}
+.cd-sh,.cd-dl{border:0;border-radius:12px;padding:12px;font:900 14px "Nunito",sans-serif;background:linear-gradient(180deg,#FFD98A,#E8913A);color:#2B1D00;cursor:pointer}
+.cd-dl.sec{background:rgba(255,255,255,.1);color:inherit}
+@media (max-height:520px){.cd-img{max-width:200px}}
