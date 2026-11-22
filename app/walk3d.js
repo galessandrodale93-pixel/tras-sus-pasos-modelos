@@ -1291,7 +1291,7 @@ function qLevelFor(g) {
   if (/SwiftShader|llvmpipe|Software/i.test(g)) return { lv: 0, max: 1 };
   if (/Intel.*HD Graphics( [2-5]\d{3})?$|Intel.*HD Graphics [2-5]\d{3}|Intel.*Iris(?!.*Xe)|GeForce GT ?[67]\d\dM|Radeon R9 M2\d\d|Radeon HD [5-8]\d{3}M/i.test(g)) return { lv: /HD Graphics( [2-5]\d{3})?$/i.test(g) ? 0 : 1, max: 2 }; // compus de 2012 a 2016 (como una Mac de 2014)
   if (/iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return { lv: 0, max: 1 }; // iPhone y iPad: Safari corta la página si se pasa de memoria, así que arrancan en Bajo
-  if (coarse) return { lv: 1, max: 1 }; // celulares y tablets: Medio como máximo (memoria de WebGL limitada, sobre todo en iPhone)
+  if (coarse) return (mem <= 4 || !good) ? { lv: 0, max: 1 } : { lv: 1, max: 1 }; // celulares y tablets: Medio como máximo; los de 4 GB o con placa común (Moto G, Samsung A) arrancan en Bajo
   // compus modestas: poca RAM, pocos núcleos o video integrado en el procesador (Vega/Radeon Graphics de Ryzen, Intel UHD)
   const cores = navigator.hardwareConcurrency || 4, igpu = /Vega \d+ Graphics|Radeon\(TM\) Graphics|Radeon Graphics|Radeon\(TM\) (Vega|R[457])|Intel.*UHD/i.test(g) && !discrete;
   if (mem <= 4 || cores <= 4) return { lv: 0, max: 1 };
@@ -1385,7 +1385,10 @@ const PROF = { on: /[?&#]prof=1/.test(location.href), acc: {}, n: 0, el: null,
 /* ---------- calidad gráfica: Auto (detecta la placa de video y mide los cuadros), Ultra, Alto, Medio, Bajo; contador con ?fps=1 ---------- */
 /* si la página se reinició sola mientras jugabas (Safari la corta cuando se pasa de memoria), la próxima vez abre en Baja */
 const CRASH = (() => { try { const v = +(sessionStorage.getItem('tsp:vivo') || 0); sessionStorage.removeItem('tsp:vivo'); const c = v && Date.now() - v < 10 * 60e3 ? 1 : 0; if (c) localStorage.setItem('tsp:cortes', String(+(localStorage.getItem('tsp:cortes') || 0) + 1)); return c; } catch (e) { return 0; } })();
-const LIVIANO = (() => { try { return +(localStorage.getItem('tsp:cortes') || 0) >= 2; } catch (e) { return false; } })(); /* si se cortó dos veces: menos distancia, menos plantas y menos resolución */
+/* modo liviano (menos distancia, menos plantas y menos resolución): si el juego ya se cortó, y de entrada en los celulares
+   con poca memoria: iPhone de pantalla común (11, XR, SE: los de 4 GB o menos) y Android de 4 GB o menos (Moto G, Samsung A) */
+const LIVIANO = (() => { try { if (localStorage.getItem('tsp:q') && localStorage.getItem('tsp:q') !== 'auto' && localStorage.getItem('tsp:q') !== 'bajo') return false; const cortes = +(localStorage.getItem('tsp:cortes') || 0), ua = navigator.userAgent, ios = /iP(hone|ad|od)/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1), coarse = matchMedia('(pointer: coarse)').matches, mem = navigator.deviceMemory || 0;
+  return cortes >= 2 || (cortes >= 1 && (ios || (mem && mem <= 4))) || (ios && (devicePixelRatio || 2) < 3) || (coarse && !ios && mem > 0 && mem <= 4); } catch (e) { return false; } })();
 function vivoStart() { if (vivoStart.on) return; vivoStart.on = 1; const mark = () => { try { sessionStorage.setItem('tsp:vivo', String(Date.now())); } catch (e) {} }; mark(); setInterval(mark, 15000); addEventListener('pagehide', () => { try { sessionStorage.removeItem('tsp:vivo'); } catch (e) {} }); }
 const QUAL = { mode: 'auto', lv: 2, max: 3, dpr: 1, cap: 1.5, ema: 16, slow: 0, fast: 0, cool: 0, fr: 0, ft: new Float32Array(300), fi: 0, el: null, acc: 0, gpu: '' };
 const QN = { auto: 'Auto', ultra: 'Ultra', alto: 'Alto', medio: 'Medio', bajo: 'Bajo' }, QL = ['Bajo', 'Medio', 'Alto', 'Ultra'], QOLD = { alta: 'alto', media: 'medio', baja: 'bajo' };
@@ -5408,6 +5411,20 @@ function doorSheet(d) {
 }
 const DOOR_LINK = '';
 
+/* ---------- celulares con poca memoria: texturas a 512 ----------
+   Cada textura de 1024 ocupa 5,6 MB en la placa de video; a 512 ocupa 1,4 MB. En los aparatos con poca memoria se achican
+   todas las texturas grandes (personajes, objetos, carteles) apenas aparecen en la escena y se libera la versión grande. */
+const TXS = { done: new WeakSet(), t: 0, n: 0 };
+function txShrink(force) {
+  if (!S || !S.scene || !(S.lowm || force)) return; const MAX = 512;
+  const fix = tx => { if (!tx || !tx.isTexture || TXS.done.has(tx)) return; TXS.done.add(tx); if (tx.isCompressedTexture || tx.isDataTexture || tx.isRenderTargetTexture || tx.isVideoTexture || tx.isCubeTexture) return;
+    const im = tx.image; if (!im) return; const w = im.width || 0, h = im.height || 0; if (Math.max(w, h) <= MAX) return; if (!(im instanceof HTMLCanvasElement || im instanceof HTMLImageElement || (typeof ImageBitmap !== 'undefined' && im instanceof ImageBitmap))) return;
+    const k = MAX / Math.max(w, h), c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k)); try { c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); } catch (e) { return; }
+    if (typeof ImageBitmap !== 'undefined' && im instanceof ImageBitmap) tx.flipY = false; /* WebGL no da vuelta los ImageBitmap: el lienzo nuevo tiene que quedar igual */
+    tx.dispose(); tx.image = c; tx.needsUpdate = true; TXS.n++; if (im.close && typeof ImageBitmap !== 'undefined' && im instanceof ImageBitmap) { /* puede estar compartida: no se cierra */ } };
+  S.scene.traverse(o => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : null; if (!ms) return; for (const m of ms) { for (const k in m) { const v = m[k]; if (v && v.isTexture) fix(v); } if (m.uniforms) for (const k in m.uniforms) { const v = m.uniforms[k] && m.uniforms[k].value; if (v && v.isTexture) fix(v); } } });
+}
+
 /* ---------- guía en el momento: nadie se pierde, aunque haya salteado la explicación ----------
    No frena el juego: pistas cortas con la voz del narrador la primera vez que pasa algo (con un aro sobre
    el botón del que hablan) y un botón fijo «Tu próximo paso» que siempre dice qué sigue y te lleva. */
@@ -5489,7 +5506,7 @@ function guiaRing() {
   const q = e.getBoundingClientRect(); r.hidden = false; r.style.left = (q.left - 6) + 'px'; r.style.top = (q.top - 6) + 'px'; r.style.width = (q.width + 12) + 'px'; r.style.height = (q.height + 12) + 'px';
 }
 function guiaTick(dt) {
-  if (!S || !S.av) return; if (S.lowm == null) { S.lowm = LOWMEM(); document.body.classList.toggle('lowmem', S.lowm); } const ok = guiaReady(), chip = guiaChip(); chip.hidden = !ok;
+  if (!S || !S.av) return; if (S.lowm == null) { S.lowm = LOWMEM(); document.body.classList.toggle('lowmem', S.lowm); } TXS.t -= dt; if (TXS.t <= 0) { TXS.t = 3; try { txShrink(); } catch (e) {} } const ok = guiaReady(), chip = guiaChip(); chip.hidden = !ok;
   if (!ok) { if (GUIA.cur) { GUIA.el.classList.remove('on'); GUIA.ring.hidden = true; GUIA.until += dt * 1000; } return; }
   if (GUIA.cur) { GUIA.el.classList.add('on'); guiaRing(); if (performance.now() > GUIA.until) guiaHide(); }
   GUIA.gT -= dt; if (GUIA.gT <= 0) { GUIA.gT = 1; GUIA.goals = guiaGoals(); const top = GUIA.goals[0], bt = chip.querySelector('b'); if (top && bt.textContent !== top.t) bt.textContent = top.t; }
