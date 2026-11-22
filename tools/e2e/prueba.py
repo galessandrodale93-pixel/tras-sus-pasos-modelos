@@ -374,7 +374,7 @@ CAMINOS2 = COMUN + """
       const tk=()=>{ d.CAM.t=0; d.camTick(performance.now()/1000+Math.random()); };
       try {
         P.inicio={fin:1};
-        for (const rid of ['infancia','bautismo','galilea']) { const C=d.CAMS[rid];
+        for (const rid of (window.__CR||['infancia','bautismo','galilea'])) { const C=d.CAMS[rid];
           const keys=Object.keys(C.br).filter(k=>S.hx?!C.br[k].kids:!C.br[k].hx);
           for (const b of keys) { const D=C.br[b]; reset(); P.cam[rid]={b,s:'go'}; tk();
             if(!ok(d.CAM.npc[rid],rid+'/'+b+': aparece '+(typeof D.who==='string'?D.who:D.who.name))) { todo=false; continue; }
@@ -390,6 +390,7 @@ CAMINOS2 = COMUN + """
       return {ok:!!todo, d:L.join(' · ')};"""
 
 HERO = {
+    'caminos3': ('Hero: caminos de Milagros, Parábolas y Jerusalén', "window.__CR=['milagros','parabolas','jerusalen'];"+CAMINOS2),
     'caminos2': ('Hero: caminos de Infancia, Bautismo y Galilea', CAMINOS2),
     'caminos': ('Hero: caminos de la historia (Nacimiento)', CAMINOS),
     'inicio': ('Hero: tu primer camino (primeros 5 minutos)', INICIO),
@@ -451,6 +452,7 @@ HERO = {
 }
 
 KIDS = {
+    'caminos3kids': ('Kids: caminos de Milagros, Parábolas y Jerusalén', "window.__CR=['milagros','parabolas','jerusalen'];"+CAMINOS2),
     'caminos2kids': ('Kids: caminos de Infancia, Bautismo y Galilea', CAMINOS2),
     'caminoskids': ('Kids: caminos de la historia (Nacimiento)', CAMINOS),
     'iniciokids': ('Kids: tu primer camino (primeros 5 minutos)', INICIO),
