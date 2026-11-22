@@ -1486,7 +1486,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 async function go(id) {
   const g = G(), p = g.P(); if (S.walking) return;
   if (id === p.pos) { g.arrive(id); return; }
-  if (!g.reachable(id)) { g.toast('Esa parada todavía está cerrada. Seguí el camino que brilla.'); return; }
+  if (!g.reachable(id)) { const gl = puertaLock(id); g.toast(gl ? 'Antes de esta parada, ayudá a ' + gl.who + ' con su misión (❗).' : 'Esa parada todavía está cerrada. Seguí el camino que brilla.'); return; }
   const path = g.bfs(p.pos, id); if (!path) return;
   S.walking = true; S.quiet = false; wake(); ui();
   const h = g.NODES[p.pos], [hx0, hz0] = toV(h.x, h.y); if (Math.hypot(S.av.position.x - hx0, S.av.position.z - hz0) > .3) await walkLine(hx0, hz0);
@@ -1923,7 +1923,7 @@ function invMemories(body) {
 /* ---------- misiones en el escenario ---------- */
 const MIS_PTS = 50;
 export const MISSIONS = [
-  { id: 'tunica', r: 2, serv: 3, kind: 'deliver', giver: { name: 'Un seguidor de Juan', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#3A2A1A', outfit: '#7A6A4A' } }, target: { name: 'un hombre sin abrigo', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#6A6A6A', outfit: '#7A6A5A' } },
+  { id: 'tunicapobre', r: 2, serv: 3, kind: 'deliver', giver: { name: 'Un seguidor de Juan', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#3A2A1A', outfit: '#7A6A4A' } }, target: { name: 'un hombre sin abrigo', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#6A6A6A', outfit: '#7A6A5A' } },
     item: { name: 'una túnica de abrigo', k: 'cloth', c: '#8A6A44' }, ask: 'Juan el Bautista nos enseñó que el que tiene dos túnicas comparta con el que no tiene. Tengo una de más: ¿se la llevás a ese hombre que pasa frío?', done: '¡Gracias! Compartir lo que tenemos es una forma de prepararle el camino al Señor.', ref: 'Lucas 3:10-11' },
   { id: 'viuda', r: 6, serv: 3, kind: 'deliver', giver: { name: 'Una vendedora del mercado', look: { g: 'chica', age: 18, skin: '#D6A57C', hair: '#2A1B14', outfit: '#8E2E22' } }, target: { name: 'una viuda pobre', look: { g: 'chica', age: 18, skin: '#B98A62', hair: '#9A9A9A', outfit: '#5A4A6A' } },
     item: { name: 'una canasta con pan', k: 'cloth', c: '#D9A25A' }, ask: 'Esa viuda dio todo lo que tenía en el templo y hoy no tiene qué comer. ¿Le llevás esta canasta con pan?', done: 'Dios ve cada gesto de amor hecho en silencio. ¡Gracias por servir!', ref: 'Marcos 12:41-44 · Santiago 1:27' },
@@ -2006,7 +2006,16 @@ export const MISSIONS = [
   { id: 'perfumes', r: 7, kind: 'deliver', at: 'La tumba del huerto', after: 'lienzo', giver: { name: 'Salomé', look: { g: 'chica', age: 17, skin: '#C99A72', hair: '#2A1B14', outfit: '#4A5A6A' } }, target: { name: 'María Magdalena', look: { g: 'chica', age: 17, skin: '#D6A57C', hair: '#3A2A1A', outfit: '#8E2E22' } }, item: { name: 'los perfumes', k: 'jar', c: '#C9A877' }, ask: 'Compramos perfumes para ir a la tumba bien temprano el domingo. ¿Se los llevás a María Magdalena?', done: '¡Ella fue la primera en ver la tumba vacía y en encontrarse con Jesús resucitado!', ref: 'Marcos 16:1-2' },
   { id: 'lena', r: 8, kind: 'fetch', at: 'La orilla del lago', after: 'pez', giver: { name: 'Pedro', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#4A4A4A', outfit: '#5A4A6A' } }, item: { name: 'leña para el fuego', k: 'cloth', c: '#6A4A2E' }, ask: 'Jesús nos espera en la orilla con un fuego encendido. Quiero sumar más leña. ¿Me ayudás a juntarla?', done: '¡Gracias! Jesús preparó el desayuno para nosotros: pescado y pan sobre las brasas.', ref: 'Juan 21:9-12' },
   { id: 'corderos', r: 8, kind: 'deliver', at: 'La orilla del lago', giver: { name: 'Tomás', look: { g: 'chico', age: 18, skin: '#A87A52', hair: '#9A9A9A', outfit: '#9A7A52' } }, target: { name: 'un pescador de la orilla', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#1E1410', outfit: '#7A6A4A' } }, item: { name: 'pan y pescado', k: 'fish' }, ask: 'Jesús le pidió a Pedro: «Cuida de mis corderos». Empecemos por acá: ¿le llevás pan y pescado a ese pescador?', done: 'Amar a Jesús es cuidar a los demás. Así se lo enseñó a Pedro en esta orilla.', ref: 'Juan 21:15-17' },
-  { id: 'lampemaus', r: 8, kind: 'deliver', at: 'Emaús', after: 'emaus', giver: { name: 'El otro discípulo de Emaús', look: { g: 'chico', age: 18, skin: '#D6A57C', hair: '#6A6A6A', outfit: '#5A6E8A' } }, target: { name: 'un vecino de Emaús', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#2A1B14', outfit: '#8A5A44' } }, item: { name: 'una lámpara para la noche', k: 'jar', c: '#B5764A' }, ask: '¡Tenemos que volver a Jerusalén a contarlo! Se hizo de noche. ¿Le llevás esta lámpara a nuestro vecino para que venga con nosotros?', done: 'Esa misma noche volvieron a Jerusalén y contaron cómo lo habían reconocido al partir el pan.', ref: 'Lucas 24:33-35' }
+  { id: 'lampemaus', r: 8, kind: 'deliver', at: 'Emaús', after: 'emaus', giver: { name: 'El otro discípulo de Emaús', look: { g: 'chico', age: 18, skin: '#D6A57C', hair: '#6A6A6A', outfit: '#5A6E8A' } }, target: { name: 'un vecino de Emaús', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#2A1B14', outfit: '#8A5A44' } }, item: { name: 'una lámpara para la noche', k: 'jar', c: '#B5764A' }, ask: '¡Tenemos que volver a Jerusalén a contarlo! Se hizo de noche. ¿Le llevás esta lámpara a nuestro vecino para que venga con nosotros?', done: 'Esa misma noche volvieron a Jerusalén y contaron cómo lo habían reconocido al partir el pan.', ref: 'Lucas 24:33-35' },
+  /* terceras misiones de las cadenas (hasta 3 seguidas): se abren al terminar la segunda */
+  { id: 'pesebre', r: 0, kind: 'fetch', at: 'Belén', after: 'panbelen', giver: { name: 'El cuidador del establo', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#3A2A1A', outfit: '#7A6A4A' } }, item: { name: 'un atado de paja limpia', k: 'cloth', c: '#D9C27A' }, ask: 'En el pesebre del establo hace falta paja limpia y seca. ¿Me ayudás a encontrar un atado?', done: '¡Gracias! María envolvió al bebé en tiras de tela y lo acostó en un pesebre.', ref: 'Lucas 2:7' },
+  { id: 'yugo', r: 1, kind: 'deliver', at: 'Taller de José', after: 'clavos', giver: { name: 'José, el carpintero', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#2A1B14', outfit: '#8A6A44' } }, target: { name: 'un campesino de Nazaret', look: { g: 'chico', age: 18, skin: '#A87A52', hair: '#6A6A6A', outfit: '#6A5A3A' } }, item: { name: 'un yugo nuevo', k: 'stool', c: '#8A6238' }, ask: 'Con los clavos que trajiste terminamos este yugo para los bueyes. ¿Se lo llevás al campesino que lo encargó?', done: 'Jesús creció en el taller de José. Un día diría: «Mi yugo es fácil de llevar».', ref: 'Mateo 11:30' },
+  { id: 'mantoseco', r: 2, kind: 'deliver', at: 'Río Jordán', after: 'bautizados', giver: { name: 'Un discípulo de Juan', look: { g: 'chico', age: 17, skin: '#C99A72', hair: '#2A1B14', outfit: '#6A5A4A' } }, target: { name: 'un hombre recién bautizado', look: { g: 'chico', age: 18, skin: '#A87A52', hair: '#1E1410', outfit: '#7A7A6A' } }, item: { name: 'un manto seco', k: 'cloth', c: '#B9A27C' }, ask: 'Ese hombre acaba de salir del río empapado. ¿Le llevás este manto seco?', done: 'Cuando Jesús salió del agua, el cielo se abrió y se oyó una voz: «Tú eres mi Hijo muy amado».', ref: 'Marcos 1:10-11' },
+  { id: 'remo', r: 3, kind: 'fetch', at: 'Mar de Galilea', after: 'redrota', giver: { name: 'Juan, hijo de Zebedeo', look: { g: 'chico', age: 17, skin: '#C99A72', hair: '#2A1B14', outfit: '#3E5A6A' } }, item: { name: 'el remo de la barca', k: 'stool', c: '#7A5532' }, ask: 'Ya tenemos la red, ¡pero ahora falta un remo! Quedó por la orilla. ¿Lo buscás?', done: '¡Gracias! Ese día Santiago y yo dejamos la barca con nuestro padre y seguimos a Jesús.', ref: 'Marcos 1:19-20' },
+  { id: 'muchacho', r: 4, kind: 'deliver', at: 'La colina de los cinco mil', after: 'pedazos', giver: { name: 'Andrés', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#1E1410', outfit: '#5A4A6A' } }, target: { name: 'el muchacho de los cinco panes', look: { g: 'chico', age: 13, skin: '#C99A72', hair: '#2A1B14', outfit: '#8A7A5A' } }, item: { name: 'una canasta con pan y pescado', k: 'fish' }, ask: 'Este muchacho compartió sus cinco panes y dos pescados. ¿Le llevás una canasta para su familia?', done: 'Jesús tomó lo poco que dio el muchacho, dio gracias, y alcanzó para miles.', ref: 'Juan 6:9-11' },
+  { id: 'levadura', r: 5, kind: 'deliver', at: 'El campo del sembrador', after: 'mostaza', giver: { name: 'Un sembrador', look: { g: 'chico', age: 18, skin: '#A87A52', hair: '#3A2A1A', outfit: '#6A7A4A' } }, target: { name: 'una mujer que amasa pan', look: { g: 'chica', age: 17, skin: '#B98A62', hair: '#2A1B14', outfit: '#9A6A5A' } }, item: { name: 'un poco de levadura', k: 'jar', c: '#E8DCC0' }, ask: 'Jesús contó que el reino es como la levadura. ¿Le llevás un poco a la mujer que está amasando?', done: 'Una pizca de levadura hace crecer toda la masa. Así crece el reino de Dios.', ref: 'Mateo 13:33' },
+  { id: 'lampara', r: 6, kind: 'deliver', at: 'El aposento alto', after: 'toalla', giver: { name: 'Juan, el discípulo', look: { g: 'chico', age: 17, skin: '#D6A57C', hair: '#3A2A1A', outfit: '#5A6E8A' } }, target: { name: 'el que cuida la puerta', look: { g: 'chico', age: 18, skin: '#A87A52', hair: '#3A2A1A', outfit: '#6A5A4A' } }, item: { name: 'una lámpara de aceite', k: 'jar', c: '#B88A50' }, ask: 'Ya es de noche. ¿Le llevás esta lámpara al que cuida la puerta de la casa?', done: 'Jesús dijo: «Yo soy la luz del mundo».', ref: 'Juan 8:12' },
+  { id: 'panbrasas', r: 8, kind: 'deliver', at: 'La orilla del lago', after: 'lena', giver: { name: 'Juan, el discípulo', look: { g: 'chico', age: 17, skin: '#D6A57C', hair: '#3A2A1A', outfit: '#5A6E8A' } }, target: { name: 'Tomás', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#2A1B14', outfit: '#6A6A4A' } }, item: { name: 'pan caliente de las brasas', k: 'honey', c: '#D9A25A' }, ask: 'El fuego ya está fuerte y Jesús sirve el desayuno. ¿Le llevás este pan a Tomás?', done: 'Jesús los invitó a desayunar y les dio el pan y el pescado con sus propias manos.', ref: 'Juan 21:12-13' },
 ];
 function misMesh(it) {
   if (it.k === 'jar' || it.k === 'honey') { const m = itemMesh(it.k); m.remove(m.userData.halo); return m; }
@@ -2056,10 +2065,43 @@ function buildMissions(scene, g, hx, HW, rr) {
   });
   return M;
 }
+
+/* ---------- minijuegos y misiones se alternan (pedido de Gui): en cada etapa, después de una parada se abre una misión,
+   y al cumplirla se abre la parada siguiente. Las demás misiones siguen sueltas por el escenario. Igual en Kids y en Hero.
+   Ninguna puerta pide Humildad, grabar ni sacar fotos, para que nadie quede trabado. ---------- */
+const MIS_PUERTA = [['posada', 'oveja', 'adorar', 'leche'], ['taller', 'pozo', 'ana', 'clavos'], ['miel', 'tunica', 'orilla', 'odre'], ['cantaro', 'peces', 'lago', 'velaremendada'], ['canasta', 'amigos', 'soga', 'sopa'],
+  ['perdida', 'semillas', 'moneda', 'mostaza'], ['viuda', 'cantaro2', 'cantarohombre', 'aceitelagar'], ['especias', 'cirene', 'lienzo', 'perfumes'], ['pez', 'emaus', 'corderos', 'lena']];
+const PUERTA_ANTES = ['n1', 'n2', 'n3', 'n4'], PUERTA_ABRE = { n2: 0, n3: 1, fA: 2, fB: 2, n5: 3 };
+const MIS_BY = {}; MISSIONS.forEach(d => { MIS_BY[d.id] = MIS_BY[d.id] || d; });
+function puertaDe(misId) { for (let r = 0; r < MIS_PUERTA.length; r++) { const i = MIS_PUERTA[r].indexOf(misId); if (i >= 0) return { r, i }; } return null; }
+/* ¿qué misión falta para abrir esta parada? (null si nada) */
+function puertaLock(id) {
+  try { const g = G(), n = g.NODES[id]; if (!n || n.kind !== 'ch' || !(n.k in PUERTA_ABRE)) return null; const L = MIS_PUERTA[n.r]; if (!L) return null; const mid = L[PUERTA_ABRE[n.k]], d = MIS_BY[mid]; if (!d) return null;
+    const p = g.P(); if (p.missions && p.missions[mid]) return null;
+    return { mis: mid, who: d.giver.name, item: d.item && d.item.name }; } catch (e) { return null; }
+}
+window.KH_GATE = puertaLock;
+/* la misión puerta se ofrece cuando ya hiciste la parada de antes */
+function puertaAbierta(d) { const q = puertaDe(d.id); if (!q) return true; const g = G(), R = g.REGIONS[q.r]; if (!R) return true; return g.visited(R.id + '-' + PUERTA_ANTES[q.i]) || !!(g.P().missions || {})[d.id]; }
+/* avisos: al terminar una parada se abre su misión; al cumplirla, la parada siguiente */
+function puertaTick() {
+  if (!S || !S.mis || CINE.on) return; const p = misState(), seen = p.puertaVista = p.puertaVista || {};
+  for (const id in S.mis) { const m = S.mis[id], q = puertaDe(id); if (!q || seen[id] || p.missions[id] || !misOpen(m, p)) continue; seen[id] = 1; G().save();
+    setTimeout(() => { misPop('¡Se abrió una misión!', m.d.giver.name + ' te necesita'); svToast(`❗ ${m.d.giver.name} te necesita. Ayudalo y se abre la próxima parada.`, m.d.giver.name + ' te necesita. Ayudalo y se abre la próxima parada.'); }, 1800); break; }
+}
+function puertaGoal() {
+  if (!S || !S.mis || S.misGoal) return null; const g = G(), p = g.P(), cur = g.NODES[p.pos]; if (cur && cur.kind === 'ch' && !g.isDone(cur.id)) return null;
+  const nx = (g.ADJ[p.pos] || []).filter(id => !g.visited(id)), lk = nx.map(puertaLock).find(Boolean); if (!lk || nx.some(id => g.reachable(id))) return null; const m = S.mis[lk.mis]; if (!m) return null;
+  return { hot: 1, ic: '❗', t: 'Ayudá a ' + lk.who, sub: 'Su misión abre la próxima parada de la historia.', b: 'Llevarme', fn: () => guiaWp(m.gp[0], m.gp[1], lk.who) };
+}
+function puertaHecha(d) {
+  const q = puertaDe(d.id); if (!q) return; const g = G(), R = g.REGIONS[q.r], ks = Object.keys(PUERTA_ABRE).filter(k => PUERTA_ABRE[k] === q.i), n = ks.map(k => g.NODES[R.id + '-' + k]).filter(Boolean);
+  if (!n.length) return; setTimeout(() => { misPop('🔓 Se abrió la próxima parada', n.map(x => x.label).join(' o ')); svToast('🔓 Se abrió ' + (n.length > 1 ? 'el camino: ' + n.map(x => x.label).join(' o ') : aLp(n[0].label)) + '. Seguí el camino que brilla.'); try { g.refreshMap && g.refreshMap(); } catch (e) {} }, 3900);
+}
 let S0 = null, S_poiPts = null;
 function misState() { const p = G().P(); p.missions = p.missions || {}; return p; }
 /* una misión se ofrece si su etapa está abierta y, si es parte de una cadena, cuando ya terminaste la anterior */
-function misOpen(m, p) { return regionOpen(m.d.r) && (!m.d.after || !!(p && p.missions && p.missions[m.d.after])); }
+function misOpen(m, p) { return regionOpen(m.d.r) && (!m.d.after || !!(p && p.missions && p.missions[m.d.after])) && puertaAbierta(m.d); }
 function regionOpen(r) { const g = G(); return Object.keys(g.NODES).some(id => id.startsWith(g.REGIONS[r].id + '-') && g.reachable(id)); }
 function misUI() {
   if (!S.misEl) { S.misEl = document.createElement('div'); S.misEl.className = 'v3mis'; S.misEl.hidden = true; S.misEl.innerHTML = '<i><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3l7 16-7-4-7 4Z" fill="currentColor"/></svg></i><button class="mis-x" aria-label="Achicar el cartel">✕</button><span></span>'; document.body.appendChild(S.misEl);
@@ -2081,7 +2123,7 @@ function misCarry(m, on) {
   if (m.pick) m.pick.visible = !on && !!misState().mact; 
 }
 function misDone(m) {
-  const p = misState(), d = m.d; p.missions[d.id] = true; p.mact = null; G().save(); G().refreshHud && G().refreshHud(); misCarry(m, false); if (m.ring) m.ring.visible = false; if (m.pick) m.pick.visible = false;
+  const p = misState(), d = m.d; p.missions[d.id] = true; p.mact = null; G().save(); try { puertaHecha(d); } catch (e) {} G().refreshHud && G().refreshHud(); misCarry(m, false); if (m.ring) m.ring.visible = false; if (m.pick) m.pick.visible = false;
   if (S.hx) { const help = ['deliver', 'fetch', 'act'].includes(d.kind); if (help) { axGain('amor', 3); const b = [0, 5, 5, 10, 10, 10, 15, 20][ft('amor')]; if (b) { const pp = G().P(); pp.bonus = (pp.bonus || 0) + b; } } axGain('ale', 2); axGain('fid', 1); if (fv('ale') >= 40) { S.boostT = 30; setTimeout(() => svToast('😊 ¡Alegría! 30 segundos de paso rápido.'), 2200); } behav('misiones'); }
   misPop('¡Misión cumplida! +' + MIS_PTS, d.done); tone3d(); try { const who = d.target || d.giver; G().vo(d.done, who.look && who.look.g === 'chica' ? 'mujer' : 'varon'); } catch (e) {} glowAdd(10, 'mision'); h3npcPlay(m.target || m.giver, ['M_Thankful', 'M_Cheering'], 3); if (m.target && m.giver) setTimeout(() => h3npcPlay(m.giver, ['M_Clapping', 'M_Thankful'], 2.5), 600);
   if (Math.random() < .5) setTimeout(() => gearGive(gearRoll(), 'Recompensa de la misión'), 3400);
@@ -2092,7 +2134,7 @@ function misDone(m) {
 function fxCtx() { let A = (typeof AU !== 'undefined' && AU.ctx) || fxCtx.A; if (!A) A = fxCtx.A = new (window.AudioContext || window.webkitAudioContext)(); if (A.state === 'suspended') { try { A.resume(); } catch (e) {} } return A; }
 function tone3d() { try { const A = fxCtx(); [660, 880, 1100].forEach((f, i) => { const o = A.createOscillator(), gn = A.createGain(); o.frequency.value = f; o.type = 'triangle'; gn.gain.setValueAtTime(.0001, A.currentTime + i * .12); gn.gain.exponentialRampToValueAtTime(.15, A.currentTime + i * .12 + .02); gn.gain.exponentialRampToValueAtTime(.0001, A.currentTime + i * .12 + .3); o.connect(gn); gn.connect(A.destination); o.start(A.currentTime + i * .12); o.stop(A.currentTime + i * .12 + .35); }); } catch (e) {} }
 function misTick(t) {
-  if (!S.mis) return; const p = misState(), a = S.av.position, ui = misUI(), d2 = (q) => (q[0] - a.x) ** 2 + (q[1] - a.z) ** 2;
+  if (!S.mis) return; if (!(S.ptT > t)) { S.ptT = t + 1.2; try { puertaTick(); } catch (e) {} } const p = misState(), a = S.av.position, ui = misUI(), d2 = (q) => (q[0] - a.x) ** 2 + (q[1] - a.z) ** 2;
   if (document.getElementById('view3d').hidden) { ui.hidden = true; return; }
   for (const id in S.mis) { const m = S.mis[id], open = misOpen(m, p), done = !!p.missions[id], act = p.mact && p.mact.id === id; m.bang.visible = open && !done && !act && !CINE.on; /* en las charlas no tapa las caras */ if (m.d.after) { const vis = open || done || act; m.giver.visible = vis; } m.bang.position.y = m.giver.position.y + 2.35 + Math.sin(t * 3) * .08; m.giver.visible = m.target ? true : true; }
   const act = p.mact && S.mis[p.mact.id]; S.misGoal = null;
@@ -5643,6 +5685,7 @@ function guiaGoals() {
     out.push({ ic: '✨', t: x.E.name, sub: `Misión épica · paso ${x.st.s + 1} de ${x.E.steps.length}` + (x.today ? (pl && pl.n ? ' · en ' + pl.n : '') : ' · sigue mañana: volvé otro día de juego'), b: 'Llevarme', fn: pl && x.today ? () => guiaWp(pl.x, pl.z, pl.n || x.E.name) : null }); } } catch (e) {}
   let am = []; try { am = amGoals(); am.filter(x => x.hot).forEach(x => out.push(x)); } catch (e) {}
   let adv = null; try { adv = advGoal(); if (adv && adv.hot) out.push(adv); } catch (e) {}
+  try { const pg = puertaGoal(); if (pg) out.push(pg); } catch (e) {}
   try { const id = nodeActive(); if (id) { const n = g.NODES[id], here = id === g.P().pos; out.push({ ic: '📖', t: here ? 'Entrá ' + aLp(n.label) : 'Caminá ' + aLp(n.label), sub: here ? 'Seguí la historia: te espera el pasaje y su desafío.' : 'Seguí la historia: es tu próxima parada. El botón dorado te lleva caminando.', b: here ? 'Entrar' : 'Caminar', fn: () => go(id) }); } } catch (e) {}
   try { out.push(metaGoal()); } catch (e) {}
   am.filter(x => !x.hot).forEach(x => out.push(x));

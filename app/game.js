@@ -974,7 +974,8 @@ function buildWorld(){
 
 const isDone=id=>{const p=P();return id in p.done;};
 const visited=id=>{const n=NODES[id];return n.kind==='ch'?isDone(id):P().visited.includes(id);};
-const reachable=id=>visited(id)||id===P().pos||(ADJ[id]||[]).some(visited);
+const gateLock=id=>{try{return window.KH_GATE?window.KH_GATE(id):null;}catch(e){return null;}};
+const reachable=id=>visited(id)||id===P().pos||((ADJ[id]||[]).some(visited)&&!gateLock(id));
 function regionReq(r){const R=REGIONS[r].id,ids=k=>`${R}-${k}`;const main=['n1','n2','n3','n4','n5'].filter(k=>isDone(ids(k))).length,forks=['fA','fB'].filter(k=>isDone(ids(k))).length;return {done:main+Math.min(1,forks),total:6};}
 const curRegion=()=>{const n=NODES[P().pos];return n.kind==='start'?0:n.r;};
 /* títulos por rango de nivel (1 a 75) */
@@ -1030,7 +1031,7 @@ function walkEdge(a,b){
 async function tapNode(id){
   if(walking)return;const p=P();
   if(id===p.pos){arrive(id);return;}
-  if(!reachable(id)){toast('Esa parada todavía está cerrada. Seguí el camino que brilla.');return;}
+  if(!reachable(id)){const gl=gateLock(id);toast(gl?'Antes de esta parada, ayudá a '+gl.who+' con su misión (❗).':'Esa parada todavía está cerrada. Seguí el camino que brilla.');return;}
   const path=bfs(p.pos,id);if(!path)return;
   walking=true;const g=$('#avBody').firstElementChild;g.classList.add('walking');g.classList.remove('idle');
   for(let i=0;i<path.length-1;i++)await walkEdge(path[i],path[i+1]);
@@ -3227,7 +3228,7 @@ setInterval(()=>{try{
 }catch(e){}},5000);
 addEventListener('pagehide',()=>{try{ksSend();}catch(e){}});document.addEventListener('visibilitychange',()=>{if(document.hidden)try{ksSend();}catch(e){}});
 {const _sa=startArcade;startArcade=function(n){try{const k=String((n&&n.game&&(n.game.title||n.game.type))||(n&&n.id)||'juego').slice(0,60);KS.games[k]=(KS.games[k]||0)+1;}catch(e){}return _sa.apply(this,arguments);};}
-window.GAME={amId:()=>{try{const u=khUid(),p=P();return u&&p&&!p.demo&&!/^demo-/.test(String(p.id))&&/^[a-zA-Z0-9-]{8,60}$/.test(String(p.id))?{perfil:String(p.id),socio:u}:null;}catch(e){return null;}},khLocked:()=>khLocked(),khPill,playMat:(def,done)=>{if(ar)return false;startArcade({id:'mat-'+def.type,game:def},done||null);return true;},hstTest:r=>HST.q.push(['close',r]),hstScroll:()=>hstScroll(false),hstHas:()=>branch==='ados'&&hstP().scroll.length>0,stageLine,lobbyLines,lobbyStage:()=>{try{const r=curRegion();return {n:r+1,total:REGIONS.length,name:REGIONS[r].name,names:REGIONS.map(x=>x.name)};}catch(e){return null;}},vo:(t,v,o)=>vo(t,v,o),voState:()=>({log:VO.log.slice(-12),on:VO.on,src:VO.el&&VO.el.src,paused:VO.el?VO.el.paused:null,cur:VO.cur&&VO.cur.t,q:VO.q.length}),voStop:()=>voStop(),voOn:()=>VO.on,NODES,EDGES,ADJ,REGIONS,VIGN,TOP,RH,WIDTH,get branch(){return branch},level:()=>lvOf(total(P())),points:()=>total(P()),EXAMS,P,reachable,visited,isDone,bfs,arrive,save,toast,refreshHud,syncMap(){refreshMap();const n=NODES[P().pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));}};
+window.GAME={gateLock:id=>gateLock(id),amId:()=>{try{const u=khUid(),p=P();return u&&p&&!p.demo&&!/^demo-/.test(String(p.id))&&/^[a-zA-Z0-9-]{8,60}$/.test(String(p.id))?{perfil:String(p.id),socio:u}:null;}catch(e){return null;}},khLocked:()=>khLocked(),khPill,playMat:(def,done)=>{if(ar)return false;startArcade({id:'mat-'+def.type,game:def},done||null);return true;},hstTest:r=>HST.q.push(['close',r]),hstScroll:()=>hstScroll(false),hstHas:()=>branch==='ados'&&hstP().scroll.length>0,stageLine,lobbyLines,lobbyStage:()=>{try{const r=curRegion();return {n:r+1,total:REGIONS.length,name:REGIONS[r].name,names:REGIONS.map(x=>x.name)};}catch(e){return null;}},vo:(t,v,o)=>vo(t,v,o),voState:()=>({log:VO.log.slice(-12),on:VO.on,src:VO.el&&VO.el.src,paused:VO.el?VO.el.paused:null,cur:VO.cur&&VO.cur.t,q:VO.q.length}),voStop:()=>voStop(),voOn:()=>VO.on,NODES,EDGES,ADJ,REGIONS,VIGN,TOP,RH,WIDTH,get branch(){return branch},level:()=>lvOf(total(P())),points:()=>total(P()),EXAMS,P,reachable,visited,isDone,bfs,arrive,save,toast,refreshHud,syncMap(){refreshMap();const n=NODES[P().pos];placeAv(n.x,n.y);requestAnimationFrame(()=>camTo(n.x,n.y,false));}};
 function enterMap(){
   khCheck().then(()=>{try{khEval();if(khLocked()&&!KH.shown){KH.shown=true;KH.want='lock';khEval();}}catch(e){}});
   if(worldFor!==branch)buildWorld();

@@ -24,7 +24,7 @@ OUT = os.path.join(AQUI, 'salida')
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
 DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink, AM, amOpen, amSync, amEv, amGoals, amReqIn, amDraw, GBY, guiaGoals: () => guiaGoals()')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink, AM, amOpen, amSync, amEv, amGoals, amReqIn, amDraw, GBY, guiaGoals: () => guiaGoals(), puertaLock, puertaGoal, puertaTick, misOpen, misDone, MISSIONS, MIS_PUERTA')
 
 
 def local(url):
@@ -231,7 +231,40 @@ AMIGOS = COMUN + """
       window.fetch=of;
       return {ok:!!todo, d:L.join(' · ')};"""
 
+
+PUERTAS = COMUN + """
+      const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return c;}; let todo=true;
+      const keep={done:{...P.done},missions:{...(P.missions||{})},visited:[...P.visited],pos:P.pos};
+      try {
+        P.done={}; P.missions={}; P.visited=['start']; P.pos='start';
+        const R=G_.REGIONS[0].id, n=k=>R+'-'+k;
+        P.done[n('n1')]={s:1}; P.pos=n('n1');
+        todo&=ok(!G_.reachable(n('n2')),'después de la parada 1, la 2 espera una misión');
+        const lk=d.puertaLock(n('n2')); todo&=ok(lk&&lk.mis==='posada','la puerta es la misión del posadero');
+        todo&=ok(d.misOpen(S.mis.posada,P),'la misión se abrió al terminar la parada');
+        todo&=ok(!d.misOpen(S.mis.oveja,P),'la misión de la puerta siguiente todavía no');
+        const g1=d.puertaGoal(); todo&=ok(g1&&/Ayudá a El posadero/.test(g1.t),'«Tu próximo paso» lleva a la misión');
+        P.mact=null; d.misDone(S.mis.posada);
+        todo&=ok(G_.reachable(n('n2')),'al cumplirla se abre la parada 2');
+        P.done[n('n2')]={s:1}; P.pos=n('n2');
+        todo&=ok(d.misOpen(S.mis.oveja,P) && !G_.reachable(n('n3')),'parada 2 → misión de la oveja → parada 3 cerrada');
+        P.missions.oveja=true; P.done[n('n3')]={s:1}; P.pos=n('n3');
+        todo&=ok(!G_.reachable(n('fA')) && !G_.reachable(n('fB')),'las dos del desvío esperan su misión');
+        P.missions.adorar=true; todo&=ok(G_.reachable(n('fA')) && G_.reachable(n('fB')),'con la misión, se abren las dos');
+        /* cadenas de 3 */
+        P.missions.leche=true; todo&=ok(d.misOpen(S.mis.panbelen,P) && !d.misOpen(S.mis.pesebre,P),'cadena: leche → pan, el pesebre espera');
+        P.missions.panbelen=true; todo&=ok(d.misOpen(S.mis.pesebre,P),'cadena de 3: se abre el pesebre');
+        const ids=d.MISSIONS.map(x=>x.id); todo&=ok(new Set(ids).size===ids.length,'ningún id de misión repetido');
+        const bad=d.MIS_PUERTA.flat().filter(id=>{const m=d.MISSIONS.find(x=>x.id===id);return !m||m.hum||['record','photo'].includes(m.kind)||!S.mis[id];});
+        todo&=ok(!bad.length,'todas las puertas existen, sin Humildad ni grabar/foto '+bad.join(','));
+        const nuevas=['pesebre','yugo','mantoseco','remo','muchacho','levadura','lampara','panbrasas'].filter(id=>!S.mis[id]);
+        todo&=ok(!nuevas.length,'las misiones nuevas tienen su lugar en el mapa '+nuevas.join(','));
+      } catch(e){ L.push('ERROR '+e.message); todo=false; }
+      Object.assign(P,keep); G_.save();
+      return {ok:!!todo, d:L.join(' · ')};"""
+
 HERO = {
+    'puertas': ('Hero: minijuegos y misiones alternados, cadenas de 3', PUERTAS),
     'amigos': ('Hero: amigos del camino, regalos y desafío en equipo', AMIGOS),
     'sala': ('Sala: sin barra arriba, micrófono junto al botón de amigos, modos y frases en la ventana', SALA),
     'foto': ('Momento de foto épica al festejar, con la foto para compartir', FOTO),
@@ -287,6 +320,7 @@ HERO = {
 }
 
 KIDS = {
+    'puertaskids': ('Kids: minijuegos y misiones alternados, cadenas de 3', PUERTAS),
     'amigoskids': ('Kids: amigos del camino, regalos y desafío en equipo', AMIGOS),
     'fotokids': ('Kids: momento de foto épica al festejar', FOTO),
     'bailekids': ('Kids: brillar o festejar desde la estrella', BAILE),
