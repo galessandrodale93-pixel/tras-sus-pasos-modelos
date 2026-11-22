@@ -4656,6 +4656,13 @@ const RAR = { c: ['Común', '#C9C2B4', 70], r: ['Rara', '#6FB6FF', 20], e: ['Ép
 const GEAR = [
   { id: 'nav_gloria', s: 'shirt', r: 'u', t: 'plain', c: '#F1ECDF', name: 'Túnica de Nochebuena', desc: 'Regalo de Navidad. «¡Gloria a Dios en las alturas, y en la tierra paz!» (Lucas 2:14).' },
   { id: 'nav_magos', s: 'hat', r: 'u', t: 'turban', c: '#6E3A86', name: 'Turbante de los magos', desc: 'Regalo de Reyes. Los sabios de oriente siguieron la estrella hasta Belén para adorar al niño (Mateo 2:1-11).' },
+  { id: 'manostaller', s: 'gloves', r: 'u', t: 'wrap', c: '#A8865A', name: 'Vendas del taller de Nazaret', desc: 'Camino del taller: llevaste el banco hasta la casa de la vecina.' },
+  { id: 'cintatemplo', s: 'hat', r: 'u', t: 'cloth', c: '#E8DDC6', c2: '#3E5A8A', name: 'Cinta del templo', desc: 'Camino del templo: te animaste a preguntar, como Jesús a los doce años.' },
+  { id: 'velodesierto', s: 'hat', r: 'u', t: 'cloth', c: '#D9C8A0', c2: '#8A6A44', name: 'Velo de Débora', desc: 'Camino del agua: le llevaste agua del Jordán a una peregrina.' },
+  { id: 'panueloazul', s: 'hat', r: 'u', t: 'cloth', c: '#3E6A9A', c2: '#E8DDC6', name: 'Pañuelo azul', desc: 'Camino del Jordán: ayudaste a un nene a encontrar a su mamá.' },
+  { id: 'segundamilla', s: 'gloves', r: 'u', t: 'bracer', c: '#6A4528', c2: '#C9A04A', name: 'Brazaletes de la segunda milla', desc: 'Camino de Caná: llevaste la carga una milla más.' },
+  { id: 'redjoel', s: 'gloves', r: 'u', t: 'glove', c: '#C8B48A', name: 'Guantes de red de Joel', desc: 'Camino de la orilla: ayudaste a Joel con las redes.' },
+  { id: 'bodacana', s: 'hat', r: 'u', t: 'turban', c: '#8A3A4A', name: 'Turbante de la boda de Caná', desc: 'Camino de Caná: ayudaste a llenar las tinajas.' },
   { id: 'tocescriba', s: 'hat', r: 'u', t: 'cloth', c: '#D8CBA8', c2: '#2A2A4A', name: 'Tocado del escriba', desc: 'Camino del rollo de Miqueas: copiaste letra por letra con Eleazar.' },
   { id: 'lanapastor', s: 'gloves', r: 'u', t: 'glove', c: '#E8DDC6', name: 'Guantes de lana de Natán', desc: 'Camino de la oveja: cargaste a Tamar hasta el corral.' },
   { id: 'turbmensajero', s: 'hat', r: 'u', t: 'turban', c: '#5A6EA8', name: 'Turbante del mensajero', desc: 'Camino del mensaje: la buena noticia llegó a Capernaúm.' },
@@ -6023,9 +6030,150 @@ const CAMS = {
           prize: { kidsPts: 10 }, done: 'Rut siguió buscando mantas sola.' },
         ecoK: { good: 'Rut te manda saludos desde Belén: dice que nunca se va a olvidar de la noche del bebé y tu manta.', meh: 'Te enteraste de que Rut consiguió una manta muy tarde esa noche. La próxima vez, ¡a ayudar!' } }
     }
+  },
+  infancia: {
+    r: 1,
+    hero: { servicio: 'A', profeta: 'B', maestro: 'C' },
+    kids: { t: 'Jesús creció en Nazaret ayudando a su familia, y a los doce años asombró a los maestros del templo con sus preguntas.', ask: '¿Qué querés hacer hoy?', o: [['Ayudar en el taller de carpintería', 'K'], ['Ir al templo a escuchar a los maestros', 'L']] },
+    br: {
+      A: { hx: 1, name: 'La mesa de la viuda', goal: 'Buscá a Jacobo, el carpintero, cerca del taller de José', who: { name: 'Jacobo', sub: 'carpintero de Nazaret', voice: 'varon', look: { g: 'chico', age: 18, skin: '#A87A52', hair: '#9A9A9A', outfit: '#8A6A44', anim: ['M_Standing_Idle', 'M_Holding_Idle'] } }, at: 'Taller de José', off: [10, -8],
+        hi: [['p', 'Yo trabajé al lado de José muchos años. Su hijo aprendió el oficio en este taller, tabla por tabla.'], ['p', 'Le prometí una mesa a la viuda de la casa de piedra, y se me hizo tarde. Me falta llevarle el banco que va con la mesa.']],
+        ask: ['p', '¿Me das una mano? Es un trabajo chiquito, pero ella lo está esperando.'],
+        good: { t: 'Claro. Se lo llevo yo.', task: { carry: { k: 'stool' }, at: 'Taller de José', off: [-14, 12], label: 'la casa de la viuda' }, then: [['p', 'Gracias. Es la casa de piedra, del otro lado de la calle.']],
+          arrive: [['nar', 'La viuda prueba el banco junto a su mesa nueva y se ríe como una chica.'], ['nar', 'Desde la puerta del taller, Jacobo te saluda con la mano llena de aserrín.']],
+          prize: { gear: 'manostaller', att: { esc: 1 }, title: 'Manos del taller', glow: 6 }, done: 'Le llevaste el banco a la viuda de Nazaret.' },
+        meh: { t: 'Ahora no puedo, tengo cosas más importantes.', then: [['p', 'Las cosas importantes, a veces, son chiquitas. Bueno, ya lo llevaré yo.']],
+          prize: { glow: 1 }, done: 'Jacobo se quedó con el banco de la viuda.' },
+        eco: { good: [['esc', 'Me contaron en Nazaret que la viuda come todos los días en su mesa nueva, sentada en el banco que le llevaste.']], meh: [['nar', 'En Nazaret, la mesa de la viuda sigue sin su banco. Jacobo dice que el sábado se lo lleva.']] } },
+      B: { hx: 1, name: 'Los de Séforis', goal: 'Encontrate con Asher a la salida del taller', who: 'zel', at: 'Taller de José', off: [-12, -10],
+        hi: [['zel', '¿Escuchaste lo que dicen los de Séforis? Que de Nazaret no puede salir nada bueno.'], ['zel', 'Ahí vienen dos de ellos, riéndose. Te juro que tengo ganas de borrarles la sonrisa.']],
+        ask: ['zel', '¿Les respondemos?'],
+        good: { t: 'Sí: invitémoslos a ver el taller. Que vean lo que se hace en Nazaret.', then: [['nar', 'Los dos muchachos se miran, sorprendidos. Uno pasa la mano por una mesa recién lijada y asiente despacio.'], ['zel', 'No sé cómo hiciste eso. Yo iba a pelear… y terminamos mostrando el taller.']],
+          prize: { att: { zel: 2 }, title: 'Hacedor de paz', glow: 8 }, done: 'Invitaste a los de Séforis a ver el taller, y Asher no peleó.' },
+        meh: { t: 'Que digan lo que quieran. Vámonos.', then: [['zel', 'Siempre lo mismo: agachar la cabeza y seguir.'], ['nar', 'Asher camina rápido, sin hablarte en todo el camino.']],
+          prize: { att: { zel: -1 } }, done: 'Se fueron sin responder, y Asher se quedó enojado.' },
+        eco: { good: [['zel', '¿Te acordás de los de Séforis? Uno volvió a Nazaret a aprender carpintería. Nunca lo hubiera creído.']], meh: [['zel', 'Todavía me hierve la sangre cuando pienso en los de Séforis.']] } },
+      C: { hx: 1, name: 'Las preguntas del templo', goal: 'Buscá al rabí Matías en el templo', who: { name: 'Rabí Matías', sub: 'maestro de la ley', voice: 'esc', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#BDBDBD', outfit: '#E8DDC6', anim: ['M_Standing_Idle', 'M_Holding_Idle'] } }, at: 'Templo de Jerusalén', off: [-10, 9],
+        hi: [['p', 'Hace muchos años, en este mismo patio, un chico de doce años se quedó tres días escuchando a los maestros y haciéndoles preguntas.'], ['p', 'Todos se asombraban de lo que entendía y de sus respuestas. Yo era joven y estaba entre los que escuchaban.']],
+        ask: ['p', 'Y vos, muchacho, ¿qué venís a buscar al templo?'],
+        good: { t: 'Vengo a aprender. ¿Me enseña a hacer buenas preguntas?', then: [['p', 'Una buena pregunta abre la puerta; la Palabra te espera adentro. Tomá: este salmo es para que lo leas despacio.'], ['nar', 'El rabí te da una tablilla con un salmo escrito con letra prolija.']],
+          prize: { sab: 3, title: 'Discípulo de preguntas', glow: 6, att: { esc: 1 } }, done: 'El rabí Matías te enseñó a preguntar y te dio un salmo.' },
+        meh: { t: 'Nada, ya sé bastante. Solo estoy mirando.', then: [['p', 'El que cree que ya sabe todo deja de aprender. Que tengas buen día.']],
+          prize: { sab: 1 }, done: 'Te fuiste del templo sin preguntar nada.' },
+        eco: { good: [['esc', 'El rabí Matías preguntó por vos. Dice que hacés buenas preguntas, y eso no lo dice de cualquiera.']], meh: [['esc', 'Pasé a saludar al rabí Matías. No se acordaba de tu nombre… una pena.']] } },
+      K: { kids: 1, name: 'El banquito de la vecina', goal: 'Buscá a Jacobo, el carpintero, en el taller', who: { name: 'Jacobo', sub: 'carpintero de Nazaret', voice: 'varon', look: { g: 'chico', age: 18, skin: '#A87A52', hair: '#9A9A9A', outfit: '#8A6A44' } }, at: 'Taller de José', off: [10, -8],
+        hi: [['p', '¡Hola! Acá Jesús aprendió a ser carpintero, ayudando a José todos los días.'], ['p', 'Terminé un banquito para una vecina, pero tengo las manos ocupadas.']],
+        ask: ['p', '¿Se lo llevás vos?'],
+        good: { t: '¡Sí! Yo se lo llevo.', task: { carry: { k: 'stool' }, at: 'Taller de José', off: [-14, 12], label: 'la casa de la vecina' }, then: [['p', '¡Gracias! Es la casa de piedra, del otro lado.']],
+          arrive: [['nar', 'La vecina se sienta en su banquito nuevo y te da las gracias con una sonrisa enorme.']],
+          prize: { gear: 'manostaller', kidsPts: 30, sobre: 1 }, done: 'Le llevaste el banquito a la vecina.' },
+        meh: { t: 'Ahora no, quiero jugar.', then: [['p', 'Bueno… se lo llevo más tarde.']], prize: { kidsPts: 10 }, done: 'Jacobo se quedó con el banquito.' },
+        ecoK: { good: 'La vecina de Nazaret les cuenta a todos que su banquito se lo llevó un chico muy amable: ¡vos!', meh: 'La vecina de Nazaret todavía espera su banquito. ¡La próxima vez podés ayudar!' } },
+      L: { kids: 1, name: 'Una pregunta en el templo', goal: 'Buscá al rabí Matías en el templo', who: { name: 'Rabí Matías', sub: 'maestro de la ley', voice: 'esc', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#BDBDBD', outfit: '#E8DDC6' } }, at: 'Templo de Jerusalén', off: [-10, 9],
+        hi: [['p', '¡Shalom! Cuando Jesús tenía doce años, se quedó acá escuchando a los maestros y haciéndoles preguntas.'], ['p', '¡Todos estaban asombrados de lo que sabía!']],
+        ask: ['p', '¿Vos tenés alguna pregunta para hacerme?'],
+        good: { t: 'Sí: ¿cómo puedo conocer más a Dios?', then: [['p', '¡Qué buena pregunta! Leyendo su Palabra, hablando con él y ayudando a los demás. Tomá, esto es para vos.']],
+          prize: { gear: 'cintatemplo', kidsPts: 30, sobre: 1 }, done: 'Hiciste una pregunta en el templo, como Jesús.' },
+        meh: { t: 'No, me da vergüenza.', then: [['p', 'Está bien. Cuando quieras preguntar, acá voy a estar.']], prize: { kidsPts: 10 }, done: 'Te dio vergüenza preguntar en el templo.' },
+        ecoK: { good: 'El rabí Matías todavía se acuerda de tu pregunta. ¡Dice que fue de las mejores!', meh: 'El rabí Matías te espera en el templo. ¡La próxima vez animate a preguntar!' } }
+    }
+  },
+  bautismo: {
+    r: 2,
+    hero: { profeta: 'A', maestro: 'B', servicio: 'C' },
+    kids: { t: 'Mucha gente llegaba cansada al río Jordán para escuchar a Juan el Bautista.', ask: '¿A quién querés ayudar?', o: [['A una abuela que tiene sed', 'C'], ['A un nene que perdió a su mamá entre la gente', 'L']] },
+    br: {
+      A: { hx: 1, name: 'La honda de Asher', goal: 'Encontrate con Asher en la orilla del Jordán', who: 'zel', at: 'Río Jordán', off: [-9, -12],
+        hi: [['zel', 'Escuché a Juan todo el día. Dice que hay que dejar atrás lo que nos aleja de Dios.'], ['zel', 'Mirá esto: mi honda. La llevo desde chico por si hay que pelear contra los romanos.']],
+        ask: ['zel', 'Si me bautizo… ¿tengo que dejar esto también?'],
+        good: { t: 'Dejala en el río. Yo me quedo con vos mientras lo hacés.', then: [['nar', 'Asher mira la honda un largo rato. Después la deja ir con la corriente.'], ['zel', 'Pesaba más de lo que parecía. Gracias por quedarte.']],
+          prize: { att: { zel: 2 }, title: 'Compañero de Asher', glow: 8 }, done: 'Asher dejó su honda en el Jordán, con vos al lado.' },
+        meh: { t: 'Eso es cosa tuya, Asher.', then: [['zel', 'Sí… cosa mía.'], ['nar', 'Asher guarda la honda en la bolsa y se queda callado mirando el agua.']],
+          prize: { att: { zel: -1 } }, done: 'Asher se quedó con su honda y no te habló más ese día.' },
+        eco: { good: [['zel', 'Desde que dejé la honda en el Jordán duermo más tranquilo. No sé cómo explicarlo.']], meh: [['zel', 'Todavía tengo la honda en la bolsa. No sé por qué la sigo llevando.']] } },
+      B: { hx: 1, name: 'Lo que devolvió Zabdi', goal: 'Buscá a Zabdi, el cobrador de impuestos, junto al Jordán', who: { name: 'Zabdi', sub: 'cobrador de impuestos', voice: 'varon', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#2A1B14', outfit: '#5A4A6A', anim: ['M_Standing_Idle', 'M_Holding_Idle'] } }, at: 'Río Jordán', off: [10, 9],
+        hi: [['p', 'Le pregunté a Juan qué tenía que hacer yo, que cobro impuestos. Me dijo que no cobre más de lo que corresponde.'], ['p', 'Y yo… a una familia del desierto le cobré de más. Acá está la bolsa con lo que les saqué.']],
+        ask: ['p', 'Me da vergüenza ir solo. ¿Me acompañás a devolvérselo?'],
+        good: { t: 'Te acompaño. Vamos juntos.', task: { carry: { k: 'jar', c: '#B88A50' }, at: 'Desierto de Judea', off: [11, -8], label: 'la carpa de la familia' }, then: [['p', 'Llevá vos la bolsa, que a mí me tiemblan las manos.']],
+          arrive: [['nar', 'La familia no lo puede creer. La mamá cuenta las monedas dos veces y abraza a Zabdi.'], ['p', 'Juan tenía razón: el cambio se ve en las manos. Tomá, esto es para vos.']],
+          prize: { money: 15, title: 'Testigo del cambio', att: { esc: 1 }, glow: 6 }, done: 'Acompañaste a Zabdi a devolver lo que había cobrado de más.' },
+        meh: { t: 'Hacelo vos. No es asunto mío.', then: [['p', 'Tenés razón… es asunto mío.'], ['nar', 'Zabdi mira la bolsa un largo rato. No sabés si al final la devolvió.']],
+          prize: { glow: 1 }, done: 'Zabdi se fue solo con la bolsa.' },
+        eco: { good: [['esc', 'Zabdi devolvió todo, y un poco más. Juan lo dijo bien: frutos que muestren el cambio.']], meh: [['esc', 'Nadie sabe si Zabdi devolvió el dinero. Dicen que lo vieron dudando en el camino.']] } },
+      C: { name: 'Agua para Débora', goal: 'Buscá a Débora, la peregrina, en el borde del desierto', who: { name: 'Débora', sub: 'peregrina anciana', voice: 'mujer', look: { g: 'chica', age: 18, skin: '#A87A52', hair: '#CFCFCF', outfit: '#7A6A5A', anim: ['M_Sad_Idle', 'M_Standing_Idle'] } }, at: 'Desierto de Judea', off: [-10, 10],
+        hi: [['p', 'Caminé tres días para escuchar al profeta Juan. Pero el sol me ganó, y se me terminó el agua.'], ['p', 'El río está tan cerca… y yo ya no puedo dar un paso más.']],
+        ask: ['p', '¿Me ayudás, hijo?'],
+        good: { t: 'Le traigo agua del río. Espéreme acá.', task: { carry: { k: 'jar', c: '#8C6A4A' }, at: 'Río Jordán', off: [-6, 4], label: 'el río (y volvé con Débora)', back: 1 }, then: [['p', '¡Dios te bendiga! Acá te espero.']],
+          arrive: [['nar', 'Llenás el cántaro en el río y volvés con Débora. Ella toma despacio, con los ojos cerrados.'], ['p', 'Esta agua sabe a bendición. Tomá, mi velo para el sol: a vos te va a servir más que a mí.']],
+          prize: { gear: 'velodesierto', kidsPts: 30, sobre: 1, glow: 6 }, done: 'Le llevaste agua a Débora, la peregrina.' },
+        meh: { t: 'El río está por allá, señora. Siga derecho.', then: [['p', 'Gracias… voy despacito.'], ['nar', 'Débora sigue caminando, muy lento, apoyada en su bastón.']],
+          prize: { kidsPts: 10, glow: 1 }, done: 'Le indicaste a Débora el camino al río.' },
+        eco: { good: [['nar', 'En el Jordán, Débora le cuenta a todos del muchacho que le trajo agua del río.']], meh: [['nar', 'Débora llegó al río al caer la tarde, muy cansada, cuando Juan ya había terminado de hablar.']] },
+        ecoK: { good: 'Débora, la abuela peregrina, le cuenta a todos que un chico le trajo agua del río: ¡vos!', meh: 'Débora llegó al río muy cansada. ¡La próxima vez podés ayudarla!' } },
+      L: { kids: 1, name: 'La mamá de Samuelito', goal: 'Buscá a Samuelito junto al Jordán', who: { name: 'Samuelito', sub: 'un nene perdido', voice: 'varon', look: { g: 'chico', age: 7, skin: '#C99A72', hair: '#2A1B14', outfit: '#5A7A9A' } }, at: 'Río Jordán', off: [10, 9],
+        hi: [['p', 'Había tanta gente escuchando a Juan… ¡y no encuentro a mi mamá!'], ['p', 'Ella tiene un pañuelo azul.']],
+        ask: ['p', '¿Me ayudás a buscarla?'],
+        good: { t: '¡Sí! Vamos juntos a buscarla.', task: { at: 'Río Jordán', off: [-12, -10], label: 'la mamá del pañuelo azul' }, then: [['p', '¡Vamos! Creo que estaba del otro lado.']],
+          arrive: [['nar', '¡Ahí está! La mamá del pañuelo azul corre a abrazar a Samuelito.'], ['nar', 'Te da las gracias y te regala un pañuelo igual al suyo.']],
+          prize: { gear: 'panueloazul', kidsPts: 30, sobre: 1 }, done: 'Ayudaste a Samuelito a encontrar a su mamá.' },
+        meh: { t: 'Esperala acá, seguro que viene.', then: [['p', 'Bueno… espero acá.'], ['nar', 'Samuelito se sienta en una piedra, un poco asustado, hasta que por fin llega su mamá.']],
+          prize: { kidsPts: 10 }, done: 'Samuelito esperó solo a su mamá.' },
+        ecoK: { good: 'Samuelito y su mamá te mandan saludos desde el Jordán. ¡Nunca se van a olvidar de tu ayuda!', meh: 'Samuelito encontró a su mamá, pero estuvo un rato asustado. ¡La próxima vez podés acompañarlo!' } }
+    }
+  },
+  galilea: {
+    r: 3,
+    hero: { evangelista: 'A', profeta: 'B', misericordia: 'C' },
+    kids: { t: 'Jesús caminaba por la orilla del Mar de Galilea y llamó a unos pescadores para que lo siguieran.', ask: '¿Adónde querés ir?', o: [['A la orilla, a ayudar con las redes', 'K'], ['A Caná, que hay una boda', 'L']] },
+    br: {
+      A: { hx: 1, name: 'Lucio sin casco', goal: 'Encontrate con Lucio en la orilla del Mar de Galilea', who: 'rom', at: 'Mar de Galilea', off: [-14, -10],
+        hi: [['rom', 'Vine, galileo. Sin casco, como dije. Quiero escuchar a tu maestro con mis propios oídos.'], ['nar', 'Unos pescadores lo miran de reojo y se corren para no tenerlo cerca.']],
+        ask: ['rom', 'Me parece que no soy bienvenido. ¿Me voy?'],
+        good: { t: 'Sentate con nosotros, Lucio. Te presento a los pescadores.', then: [['nar', 'Los pescadores dudan… hasta que uno le pasa a Lucio un pedazo de pan y un pescado asado.'], ['rom', 'Hace años que nadie me convida pan. Gracias, galileo.']],
+          prize: { att: { rom: 2 }, title: 'Puente entre dos mundos', glow: 8 }, done: 'Lucio se sentó con los pescadores a escuchar.' },
+        meh: { t: 'Mejor quedate atrás, que te miran mal.', then: [['rom', 'Entiendo.'], ['nar', 'Lucio escucha un rato desde lejos y se va antes de que termine.']],
+          prize: { att: { rom: -1 } }, done: 'Lucio escuchó de lejos y se fue antes del final.' },
+        eco: { good: [['rom', 'Todavía me acuerdo de la orilla y del pan que me convidaron. Nadie me había dejado sentarme con ellos.']], meh: [['rom', 'Aquel día en la orilla me fui antes de que terminara. Me quedé con ganas de escuchar el final.']] } },
+      B: { hx: 1, name: 'La segunda milla', goal: 'Andá a Caná: Asher y un soldado están discutiendo', who: 'zel', at: 'Caná', off: [12, -9],
+        hi: [['zel', '¿Viste eso? Un soldado obliga a la gente a cargar su bolsa una milla. La ley de Roma se lo permite.'], ['zel', 'Ahora te señala a vos. ¡No le hagas caso!']],
+        ask: ['zel', '¿Qué vas a hacer?'],
+        good: { t: 'La llevo una milla… y después una más.', task: { carry: { k: 'cloth', c: '#6A4A2E' }, at: 'Caná', off: [-16, 14], label: 'el final de la segunda milla' }, then: [['zel', '¿Una más? ¿Estás loco?']],
+          arrive: [['nar', 'El soldado no entiende nada. Al final de la segunda milla te devuelve la mano y se va pensativo.'], ['zel', 'Jesús dijo eso, ¿no? Si te obligan a llevar la carga una milla, llevala dos. Nunca pensé que alguien lo iba a hacer.']],
+          prize: { gear: 'segundamilla', att: { rom: 1, zel: 1 }, title: 'El de la segunda milla' }, done: 'Llevaste la bolsa del soldado dos millas.' },
+        meh: { t: 'Que la lleve otro.', then: [['nar', 'El soldado agarra a un viejo que pasaba y le carga la bolsa.'], ['zel', 'Pobre viejo. Podríamos haberlo ayudado.']],
+          prize: { att: { zel: -1 } }, done: 'Un viejo terminó cargando la bolsa del soldado.' },
+        eco: { good: [['zel', 'Te vi llevar la bolsa de ese soldado dos millas. Todavía no lo entiendo… pero no puedo dejar de pensarlo.']], meh: [['zel', 'Me acuerdo del viejo que cargó la bolsa del soldado en Caná. Podríamos haberlo ayudado.']] } },
+      C: { hx: 1, name: 'El hijo del funcionario', goal: 'Buscá al funcionario del rey a la entrada de Caná', who: { name: 'Abiel', sub: 'funcionario del rey, de Capernaúm', voice: 'varon', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#2A1B14', outfit: '#6A3A5A', anim: ['M_Sad_Idle', 'M_Standing_Idle'] } }, at: 'Caná', off: [-11, -9],
+        hi: [['p', 'Vengo desde Capernaúm. Mi hijo está muy enfermo, con una fiebre que no baja.'], ['p', 'Me dijeron que el maestro de Nazaret está en Caná. Pero no conozco el pueblo.']],
+        ask: ['p', '¿Sabés dónde está? Por favor.'],
+        good: { t: 'Sí. Sígame, lo llevo hasta donde está Jesús.', task: { at: 'Caná', off: [6, 13], label: 'donde está Jesús' }, then: [['p', '¡Gracias! Vamos rápido.']],
+          arrive: [['nar', 'El funcionario le ruega a Jesús que baje a Capernaúm. Jesús le dice que vuelva tranquilo a su casa: su hijo va a vivir.'], ['nar', 'El hombre le cree y se pone en camino. Más tarde se entera de que la fiebre se fue a la misma hora en que Jesús le habló.'], ['p', 'Gracias por traerme. Nunca voy a olvidar este día.']],
+          prize: { title: 'Guía de Caná', att: { rom: 1 }, glow: 10, sab: 1 }, done: 'Llevaste al funcionario hasta Jesús, y su hijo sanó.' },
+        meh: { t: 'No sé, pregúntele a otro.', then: [['p', 'Está bien… seguiré preguntando.'], ['nar', 'El funcionario sigue buscando solo. Esa tarde, en el pueblo, se habla de un milagro que vos no llegaste a ver.']],
+          prize: { glow: 1 }, done: 'El funcionario encontró a Jesús solo, y te perdiste el milagro.' },
+        eco: { good: [['rom', 'El funcionario de Caná llegó a su casa y su hijo estaba sano. Me lo contó uno de mi cohorte. Tu maestro… no es un hombre común.']], meh: [['rom', 'Dicen que el hijo del funcionario se sanó en Capernaúm. Me hubiera gustado que estuvieras ahí para contármelo.']] } },
+      K: { kids: 1, name: 'Las redes de Joel', goal: 'Buscá a Joel en la orilla del Mar de Galilea', who: { name: 'Joel', sub: 'hijo de un pescador', voice: 'varon', look: { g: 'chico', age: 10, skin: '#B98A62', hair: '#1E1410', outfit: '#3E5A6A' } }, at: 'Mar de Galilea', off: [-14, -10],
+        hi: [['p', '¡Hola! Jesús llamó a Pedro y a Andrés, ¡y dejaron las redes para seguirlo!'], ['p', 'Ahora a mí me toca guardarlas… y están todas enredadas.']],
+        ask: ['p', '¿Me ayudás a llevarlas a la barca?'],
+        good: { t: '¡Sí! Las llevo yo.', task: { carry: { k: 'cloth', c: '#C8B48A' }, at: 'Mar de Galilea', off: [-6, -16], label: 'la barca' }, then: [['p', '¡Gracias! La barca está por allá.']],
+          arrive: [['nar', 'Dejás las redes en la barca. Joel salta de alegría.'], ['p', '¡Sos un gran pescador! Tomá, un regalo.']],
+          prize: { gear: 'redjoel', kidsPts: 30, sobre: 1 }, done: 'Ayudaste a Joel con las redes.' },
+        meh: { t: 'Ahora no, quiero jugar.', then: [['p', 'Bueno… las llevo solo.']], prize: { kidsPts: 10 }, done: 'Joel llevó las redes solo.' },
+        ecoK: { good: 'Joel te manda saludos desde la orilla: ¡ya aprendió a desenredar las redes solito!', meh: 'Joel tardó un montón en llevar las redes solo. ¡La próxima vez podés ayudarlo!' } },
+      L: { kids: 1, name: 'Agua para las tinajas', goal: 'Buscá a Ana, la ayudante de la boda, en Caná', who: { name: 'Ana', sub: 'ayudante de la boda', voice: 'mujer', look: { g: 'chica', age: 11, skin: '#B98A62', hair: '#2A1B14', outfit: '#9A6A5A' } }, at: 'Caná', off: [12, -9],
+        hi: [['p', '¡Hay una boda en Caná! Jesús pidió que llenen de agua las tinajas grandes.'], ['p', 'Todos ayudan a cargar agua del pozo.']],
+        ask: ['p', '¿Cargás un cántaro con nosotros?'],
+        good: { t: '¡Sí! Yo llevo uno.', task: { carry: { k: 'jar', c: '#A8784A' }, at: 'Caná', off: [6, 13], label: 'las tinajas' }, then: [['p', '¡Gracias! Las tinajas están junto a la casa.']],
+          arrive: [['nar', 'Echás el agua en la tinaja. Un rato después, ¡el agua se convierte en un vino riquísimo! Fue la primera señal de Jesús.'], ['p', '¡Viste! ¡Ayudaste en un milagro!']],
+          prize: { gear: 'bodacana', kidsPts: 30, sobre: 1 }, done: 'Ayudaste a llenar las tinajas de Caná.' },
+        meh: { t: 'Que lo lleve otro.', then: [['p', 'Bueno… voy yo.'], ['nar', 'Te quedás mirando de lejos cómo llenan las tinajas.']], prize: { kidsPts: 10 }, done: 'Miraste de lejos cómo llenaban las tinajas.' },
+        ecoK: { good: 'En Caná todos hablan del milagro de la boda… ¡y vos ayudaste a llenar las tinajas!', meh: 'En Caná todos hablan del milagro de la boda. ¡La próxima vez podés ayudar a cargar el agua!' } }
+    }
   }
 };
 const CAM = { npc: {}, ring: null, carry: null, t: 0 };
+const camWho = d => typeof d.who === 'string' ? Object.assign({ key: d.who }, CMP_CAST[d.who]) : Object.assign({ key: 'p' }, d.who);
+const camCast = (d, o) => { const w = camWho(d); return { [w.key]: { o, name: w.name, sub: w.sub, voice: w.voice, pitch: w.pitch, rate: w.rate } }; };
 function camP() { const p = G().P(); p.cam = p.cam || {}; return p.cam; }
 const camRid = r => { try { return G().REGIONS[r].id; } catch (e) { return null; } };
 const camDef = (rid, b) => CAMS[rid] && CAMS[rid].br[b];
@@ -6039,18 +6187,21 @@ function camAskKids(rid) { const C = CAMS[rid], K = C && C.kids; if (!K) return;
 function camAskHero(rid) { const A = P3.mod.HASK[rid]; camRun({ [A.who]: {} }, [{ who: A.who, ask: A.q, o: A.o.map(([t, tag, att, rep]) => ({ t, fn: () => { const p = G().P(); p.story = p.story || {}; const a = p.story.att = p.story.att || { esc: 0, zel: 0, rom: 0 }; for (const k in att) a[k] = (a[k] || 0) + att[k]; p.dones = p.dones || {}; p.dones[tag] = (p.dones[tag] || 0) + 1; p.story.ans = p.story.ans || {}; p.story.ans[rid] = tag; G().save(); camStart(rid, tag); }, then: [{ who: rep[0], t: rep[1] }] })) }]); }
 /* el lugar del camino: la persona, el signo de exclamación y el cartel para hablar */
 function camShow(rid) {
-  const st = camP()[rid]; if (!st || !st.b || st.s === 'done' || !S || !S.scene) return; const d = camDef(rid, st.b); if (!d || CAM.npc[rid]) return; const pos = vivoAt(d.at, d.off); if (!pos) return;
-  const look = d.who === 'esc' ? CMP_CAST.esc.look : d.who.look, rig = S.hx || H3.ok, o = rig ? buildHeroAvatar(Object.assign({}, look)) : buildAvatar(look, false); o.userData.stay = 1; if (!rig) o.scale.setScalar(1.08);
+  const st = camP()[rid]; if (!st || !st.b || st.s === 'done' || !S || !S.scene) return; const d = camDef(rid, st.b); if (!d || CAM.npc[rid]) return; const pos = camSpot(d.at, d.off); if (!pos) return;
+  const look = camWho(d).look, rig = S.hx || H3.ok, o = rig ? buildHeroAvatar(Object.assign({}, look)) : buildAvatar(look, false); o.userData.stay = 1; if (!rig) o.scale.setScalar(1.08);
   const y = Math.max(0, S.W.hAt(pos[0], pos[1])); o.position.set(pos[0], y, pos[1]); const q = (S.pois || []).find(x => x.name === d.at); o.rotation.y = q ? Math.atan2(q.x - pos[0], q.z - pos[1]) : 0; o.traverse(m => { if (m.isMesh) m.castShadow = true; if (m.isPointLight) m.intensity = 0; }); S.scene.add(o);
-  const bang = bangSprite(); bang.position.set(pos[0], y + 2.5, pos[1]); S.scene.add(bang); const nm = d.who === 'esc' ? 'Eleazar' : d.who.name;
+  const bang = bangSprite(); bang.position.set(pos[0], y + 2.5, pos[1]); S.scene.add(bang); const nm = camWho(d).name;
   const lore = { x: pos[0] + Math.sin(o.rotation.y) * 1.1, z: pos[1] + Math.cos(o.rotation.y) * 1.1, r: 2.2, label: 'Hablar con ' + nm, act: () => camScene(rid) }; S.lore.push(lore);
   CAM.npc[rid] = { o, bang, lore, x: pos[0], z: pos[1], nm };
 }
+function camSpot(at, off) { const busy = (x, z) => (S.lore || []).some(l => l.label && /^Hablar|^Saludar/.test(l.label) && (l.x - x) ** 2 + (l.z - z) ** 2 < 30);
+  for (let k = 0; k < 8; k++) { const a = k * .8, f = 1 + k * .25, o = [off[0] * f * Math.cos(a) - off[1] * f * Math.sin(a), off[0] * f * Math.sin(a) + off[1] * f * Math.cos(a)], p = vivoAt(at, o); if (p && !busy(p[0], p[1])) return p; }
+  return vivoAt(at, off); }
 function camWp(rid) { const n = CAM.npc[rid]; if (n) guiaWp(n.x, n.z, n.nm); }
 /* la escena del camino */
 function camScene(rid) {
   const st = camP()[rid], d = st && camDef(rid, st.b), N = CAM.npc[rid]; if (!d || !N || st.s !== 'go') return;
-  const cast = d.who === 'esc' ? { esc: { o: N.o, name: 'Eleazar', sub: 'anciano escriba', voice: 'esc', pitch: .78, rate: .92 } } : { p: { o: N.o, name: d.who.name, sub: d.who.sub, voice: d.who.voice } };
+  const cast = camCast(d, N.o);
   const mk = L => L.map(([who, t]) => ({ who, t }));
   const opt = (k) => { const R = d[k]; return { t: R.t, fn: () => camPick(rid, k), then: mk(R.then) }; };
   camRun(cast, mk(d.hi).concat([{ who: d.ask[0], ask: d.ask[1], o: [opt('good'), opt('meh')] }]), () => camAfter(rid));
@@ -6060,13 +6211,13 @@ function camPay() { try { if (S.hx) { const s = svP(); if ((s.inv.bread || 0) > 
 function camAfter(rid) { const st = camP()[rid]; if (!st) return; const d = camDef(rid, st.b), R = d && d[st.r]; if (!R) return;
   if (st.s === 'task') { camTask(rid); return; } camEnd(rid); }
 /* la tarea: llevar algo hasta un lugar (la oveja al corral, la manta al establo) */
-function camTask(rid) { const st = camP()[rid], d = camDef(rid, st.b), T = d.good.task, pos = vivoAt(T.at, T.off); if (!pos) { camEnd(rid); return; }
-  const c = misMesh(T.carry); c.scale.setScalar(.7); c.position.y = 2.25; if (S.av.userData.h3 && H3.clips && H3.clips.M_Holding_Idle) { c.scale.setScalar(.45); c.position.set(0, 1.08, .34); } S.av.add(c); CAM.carry = c;
+function camTask(rid) { const st = camP()[rid], d = camDef(rid, st.b), T = d.good.task, pos = st.tp || camSpot(T.at, T.off); if (!pos) { camEnd(rid); return; }
+  if (T.carry) { const c = misMesh(T.carry); c.scale.setScalar(.7); c.position.y = 2.25; if (S.av.userData.h3 && H3.clips && H3.clips.M_Holding_Idle) { c.scale.setScalar(.45); c.position.set(0, 1.08, .34); } S.av.add(c); CAM.carry = c; } else CAM.carry = null;
   const ring = new THREE.Mesh(new THREE.RingGeometry(.9, 1.1, 36), new THREE.MeshBasicMaterial({ color: '#FFD873', transparent: true, opacity: .75, side: THREE.DoubleSide, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.set(pos[0], Math.max(0, S.W.hAt(pos[0], pos[1])) + .06, pos[1]); S.scene.add(ring);
   CAM.ring = { m: ring, x: pos[0], z: pos[1], rid, label: T.label }; st.tp = pos; G().save(); guiaWp(pos[0], pos[1], 'Hasta ' + T.label); }
 function camEnd(rid) {
   const st = camP()[rid]; if (!st || st.s === 'done') return; const d = camDef(rid, st.b), R = d[st.r]; st.s = 'done'; st.d = vday(); G().save(); camPrize(R.prize || {}, d);
-  const N = CAM.npc[rid]; if (N) { N.bang.visible = false; N.lore.label = 'Saludar a ' + N.nm; N.lore.act = () => { try { G().vo('¡Gracias otra vez!', d.who === 'esc' ? 'esc' : d.who.voice); } catch (e) {} svToast(N.nm + ': ¡Gracias otra vez!'); }; }
+  const N = CAM.npc[rid]; if (N) { N.bang.visible = false; N.lore.label = 'Saludar a ' + N.nm; N.lore.act = () => { try { G().vo('¡Gracias otra vez!', camWho(d).voice || 'varon'); } catch (e) {} svToast(N.nm + ': ¡Gracias otra vez!'); }; }
   setTimeout(() => { misPop(st.r === 'good' ? '🧭 Camino cumplido' : '🧭 Camino terminado', R.done); if (st.r === 'good') { try { tone3d(); h3do(['M_Cheering', 'M_Thankful'], 2.4); } catch (e) {} } svToast((st.r === 'good' ? '✨ ' : '🍂 ') + R.done + (st.r === 'good' ? '' : ' Lo que elegiste también cuenta: más adelante alguien se va a acordar.'), R.done); try { sello('camino-' + rid + '-' + st.b + st.r[0], d.name); } catch (e) {} }, 700);
 }
 function camPrize(P, d) { const g = G(), p = g.P(); try {
@@ -6082,12 +6233,16 @@ function camEcoKids(r) { const g = G(), rid = camRid(r), prev = camRid(r - 1), s
 function camTick(t) {
   if (!S || !S.av || CAM.t > t) return; CAM.t = t + .5; const g = G(), st = camP();
   for (const rid in CAMS) { const s = st[rid]; if (s && s.b && s.s !== 'done') camShow(rid); }
-  if (CAM.ring) { const R = CAM.ring; R.m.rotation.z = t; if (Math.hypot(S.av.position.x - R.x, S.av.position.z - R.z) < 1.8) { S.scene.remove(R.m); if (CAM.carry) { S.av.remove(CAM.carry); CAM.carry = null; } const rid = R.rid; CAM.ring = null;
-      const d = camDef(rid, st[rid].b), N = CAM.npc[rid], cast = d.who === 'esc' ? { esc: { o: N && N.o, name: 'Eleazar' } } : { p: { o: N ? N.o : null, name: d.who.name, sub: d.who.sub, voice: d.who.voice } }; if (!cast.p || !cast.p.o) { delete cast.p; }
+  if (CAM.ring) { const R = CAM.ring; R.m.rotation.z = t; if (Math.hypot(S.av.position.x - R.x, S.av.position.z - R.z) < 1.8) { const T0 = camDef(R.rid, st[R.rid].b).good.task, N0 = CAM.npc[R.rid];
+      if (T0.back && !st[R.rid].half && N0) { st[R.rid].half = 1; G().save(); R.x = N0.x + 1.2; R.z = N0.z + 1.2; R.label = N0.nm; R.m.position.set(R.x, Math.max(0, S.W.hAt(R.x, R.z)) + .06, R.z); svToast('💧 ¡Listo! Ahora volvé con ' + N0.nm + '.'); guiaWp(R.x, R.z, N0.nm); return; }
+      S.scene.remove(R.m); if (CAM.carry) { S.av.remove(CAM.carry); CAM.carry = null; } const rid = R.rid; CAM.ring = null;
+      const d = camDef(rid, st[rid].b), N = CAM.npc[rid], cast = camCast(d, N && N.o);
       st[rid].s = 'fin'; G().save(); camRun(cast, d.good.arrive.map(([who, tx]) => ({ who, t: tx })), () => camEnd(rid)); } }
-  else { for (const rid in CAMS) { const s = st[rid]; if (s && s.s === 'task' && !CAM.carry && CAM.npc[rid]) { camTask(rid); break; } } }
+  else { if (!CAM.ring) for (const rid in CAMS) { const s = st[rid]; if (s && s.s === 'task' && CAM.npc[rid]) { camTask(rid); break; } } }
+  /* si la charla quedó cortada (otra ventana tapó la hoja), se da por terminada y el camino se cierra igual */
+  { const sh = document.getElementById('v3sheet'); if (CAM.run && !CINE.on && (sh.hidden || !sh.querySelector('.cam-sh'))) CAM.run = 0; }
+  if (!CAM.run && !CINE.on) for (const rid in CAMS) { const s = st[rid]; if (!s) continue; if (s.s === 'fin') camEnd(rid); else if (s.s === 'ask') { delete st[rid]; G().save(); } }
   if (CINE.on || sheetUp()) return;
-  for (const rid in CAMS) { const s = st[rid]; if (!s) continue; if (s.s === 'fin') camEnd(rid); else if (s.s === 'ask') { delete st[rid]; G().save(); } }
   if (S.hx) { const ps = g.P().story || {}; for (const rid in CAMS) { if (st[rid]) continue; if (ps.ans && ps.ans[rid]) { camStart(rid, ps.ans[rid]); return; }
       /* si el capítulo se abrió en tarjetas (sin la pregunta), la pregunta llega igual, un rato después */
       if (ps.open && ps.open[rid] && P3.mod && P3.mod.HASK && P3.mod.HASK[rid]) { CAM.askW = CAM.askW || t + 25; if (t > CAM.askW) { CAM.askW = t + 600; camAskHero(rid); return; } } } }
@@ -6096,16 +6251,17 @@ function camTick(t) {
 }
 /* para «Tu próximo paso» */
 function camGoal() { const st = camP(); for (const rid in CAMS) { const s = st[rid]; if (!s || !s.b || s.s === 'done') continue; const d = camDef(rid, s.b), N = CAM.npc[rid];
-  if (s.s === 'task' && CAM.ring) return { hot: 1, ic: '🧭', t: 'Tu camino: ' + d.name, sub: 'Llevalo hasta ' + CAM.ring.label + '. El aro dorado marca el lugar.', b: 'Llevarme', fn: () => guiaWp(CAM.ring.x, CAM.ring.z, 'Hasta ' + CAM.ring.label) };
+  if (s.s === 'task' && CAM.ring) return { hot: 1, ic: '🧭', t: 'Tu camino: ' + d.name, sub: (CAM.carry ? 'Llevalo hasta ' : 'Andá hasta ') + CAM.ring.label + '. El aro dorado marca el lugar.', b: 'Llevarme', fn: () => guiaWp(CAM.ring.x, CAM.ring.z, 'Hasta ' + CAM.ring.label) };
   if (s.s === 'go' && N) return { hot: 1, ic: '🧭', t: 'Tu camino: ' + d.name, sub: d.goal + '. Elegiste este camino; los otros quedan para otra partida.', b: 'Llevarme', fn: () => camWp(rid) }; } return null; }
 /* charla: en Hero con la cámara de cine; en Kids (o si no se puede) en una hoja con voz */
 function camRun(cast, steps, onDone) {
+  CAM.run = 1; const done0 = onDone; onDone = () => { CAM.run = 0; done0 && done0(); };
   const c2 = {}; for (const k in cast) if (cast[k] && (cast[k].o || CMP_CAST[k])) c2[k] = cast[k];
   if (S.hx && cineOk() && cine({ cast: c2, steps, onDone })) return;
   const q = steps.slice(), NM = k => k === 'nar' ? '' : k === 'me' ? (G().P().name || 'Vos') : (cast[k] && cast[k].name) || (CMP_CAST[k] && CMP_CAST[k].name) || '', VC = k => k === 'nar' ? 'narrador' : (cast[k] && cast[k].voice) || (CMP_CAST[k] && CMP_CAST[k].voice) || 'varon';
   const next = () => { const st = q.shift(); try { G().voStop(); } catch (e) {} if (!st) { const el = document.getElementById('v3sheet'); el.hidden = true; try { onDone && onDone(); } catch (e) {} return; }
     const nm = NM(st.who), t = String(st.ask || st.t || '').replace(/\{name\}/g, G().P().name || '');
-    const el0 = vilSheet(`<div class="inv-h"><b>${nm ? esc(nm) : '🧭 Tu camino'}</b></div>${nm && cast[st.who] && cast[st.who].sub ? `<small class="vil-k">${esc(cast[st.who].sub)}</small>` : ''}<p class="vil-p${st.who === 'nar' ? ' cam-nar' : ''}">${esc(t)}</p>${st.o ? `<div class="vivo-o">${st.o.map((o, i) => `<button data-i="${i}">${esc(o.t)}</button>`).join('')}</div>` : '<div class="mis-btns"><button class="mis-yes cam-go">Seguir</button></div>'}`, el => {
+    const el0 = vilSheet(`<div class="inv-h cam-sh"><b>${nm ? esc(nm) : '🧭 Tu camino'}</b></div>${nm && cast[st.who] && cast[st.who].sub ? `<small class="vil-k">${esc(cast[st.who].sub)}</small>` : ''}<p class="vil-p${st.who === 'nar' ? ' cam-nar' : ''}">${esc(t)}</p>${st.o ? `<div class="vivo-o">${st.o.map((o, i) => `<button data-i="${i}">${esc(o.t)}</button>`).join('')}</div>` : '<div class="mis-btns"><button class="mis-yes cam-go">Seguir</button></div>'}`, el => {
       if (st.who !== 'me') try { G().vo(t, VC(st.who)); } catch (e) {}
       if (st.o) el.querySelectorAll('.vivo-o button').forEach(b => b.onclick = () => { const o = st.o[+b.dataset.i]; try { o.fn && o.fn(); } catch (e) {} q.unshift(...(o.then || [])); next(); });
       else el.querySelector('.cam-go').onclick = next; }); el0.onclick = null; };
@@ -10622,7 +10778,7 @@ const CMP_CAST = {
 };
 function cineBusy() { return !!(S && (CINE.on || S.walking)); }
 function cineOk() { return !!(S && S.hx && H3.ok && !CINE.on && !S.walking && document.getElementById('view3d') && !document.getElementById('view3d').hidden); }
-const cineEye = o => o.position.y + (o.userData && o.userData.h3 ? 1.6 * o.scale.y : 1.45);
+const cineEye = o => !o ? (S && S.av ? S.av.position.y + 1.45 : 1.45) : o.position.y + (o.userData && o.userData.h3 ? 1.6 * o.scale.y : 1.45);
 function cineSpawn(ids) {
   // ubica a los compañeros delante del jugador, en semicírculo, mirándolo; prueba varias direcciones hasta encontrar lugar libre
   const a = S.av.position, n = ids.length, ok = (x, z) => !blockedAt(x, z) && waterWet(x, z, null) < .05; let best = null;
@@ -10657,12 +10813,12 @@ function cine(sc) {
 }
 function cinePose(kind, spk, ask) {
   // devuelve {p,l,f}: 'ots' sobre el hombro del que escucha hacia el que habla; 'wide' plano de dos/grupo de costado
-  const pl = S.av, cast = CINE.sc.cast, os = Object.keys(cast).map(k => cast[k].o);
+  const pl = S.av, cast = CINE.sc.cast, os = Object.keys(cast).map(k => cast[k].o).filter(Boolean);
   const c = os.length ? os.reduce((m, o) => (m[0] += o.position.x / os.length, m[1] += o.position.z / os.length, m), [0, 0]) : [pl.position.x + Math.sin(S.yaw) * 2.5, pl.position.z + Math.cos(S.yaw) * 2.5];
   const N = spk && spk !== pl ? spk : os[0];
   let dx = (N ? N.position.x : c[0]) - pl.position.x, dz = (N ? N.position.z : c[1]) - pl.position.z; const L = Math.hypot(dx, dz) || 1; dx /= L; dz /= L; const s = CINE.side, rx = dz * s, rz = -dx * s;
   const ph = innerHeight > innerWidth ? .7 : 1, f = innerHeight > innerWidth ? 46 : 36;
-  if (kind === 'wide' || !N) { const mx = (pl.position.x + c[0]) / 2, mz = (pl.position.z + c[1]) / 2, my = pl.position.y; return { p: [mx + rx * 3.6 - dx * .8, my + 1.75, mz + rz * 3.6 - dz * .8], l: [mx, my + 1.25, mz], f: f + 8 }; }
+  if (kind === 'wide' || !N || !spk) { const mx = (pl.position.x + c[0]) / 2, mz = (pl.position.z + c[1]) / 2, my = pl.position.y; return { p: [mx + rx * 3.6 - dx * .8, my + 1.75, mz + rz * 3.6 - dz * .8], l: [mx, my + 1.25, mz], f: f + 8 }; }
   if (spk === pl) { const e = cineEye(N), ep = cineEye(pl), sh = ask ? .8 : 0; return { p: [N.position.x + dx * .95 * ph + rx * .55, e + .06, N.position.z + dz * .95 * ph + rz * .55], l: [pl.position.x - rx * .1 + dz * sh, ep - .04, pl.position.z - rz * .1 - dx * sh], f }; }
   const e = cineEye(pl), en = cineEye(spk); return { p: [pl.position.x - dx * .95 * ph + rx * .55, e + .06, pl.position.z - dz * .95 * ph + rz * .55], l: [spk.position.x - rx * .1, en - .04, spk.position.z - rz * .1], f };
 }

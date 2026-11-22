@@ -361,7 +361,36 @@ CAMINOS = COMUN + """
       reset(); Object.assign(P,keep); G_.save();
       return {ok:!!todo, d:L.join(' · ')};"""
 
+
+CAMINOS2 = COMUN + """
+      const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return !!c;}; let todo=true; const wait=ms=>new Promise(r=>setTimeout(r,ms));
+      const keep={cam:P.cam, story:JSON.parse(JSON.stringify(P.story||{}))};
+      const sh=()=>document.getElementById('v3sheet');
+      const talk=async(pick)=>{ for(let i=0;i<90;i++){ await wait(300);
+          if(d.CINE.on){ const b=document.querySelectorAll('.cine-ui .cine-opts button'); if(b.length){ b[Math.min(pick,b.length-1)].click(); continue; } document.querySelector('.cine-ui').click(); continue; }
+          const s0=sh(); if(s0&&!s0.hidden){ const o=s0.querySelectorAll('.vivo-o button'); if(o.length){ o[Math.min(pick,o.length-1)].click(); continue; } const g=s0.querySelector('.cam-go'); if(g){ g.click(); continue; } }
+          return true; } return false; };
+      const reset=()=>{ P.cam={}; Object.values(d.CAM.npc).forEach(n=>{S.scene.remove(n.o);S.scene.remove(n.bang);}); d.CAM.npc={}; if(d.CAM.ring){S.scene.remove(d.CAM.ring.m);d.CAM.ring=null;} if(d.CAM.carry){S.av.remove(d.CAM.carry);d.CAM.carry=null;} sh().hidden=true; };
+      const tk=()=>{ d.CAM.t=0; d.camTick(performance.now()/1000+Math.random()); };
+      try {
+        P.inicio={fin:1};
+        for (const rid of ['infancia','bautismo','galilea']) { const C=d.CAMS[rid];
+          const keys=Object.keys(C.br).filter(k=>S.hx?!C.br[k].kids:!C.br[k].hx);
+          for (const b of keys) { const D=C.br[b]; reset(); P.cam[rid]={b,s:'go'}; tk();
+            if(!ok(d.CAM.npc[rid],rid+'/'+b+': aparece '+(typeof D.who==='string'?D.who:D.who.name))) { todo=false; continue; }
+            d.camScene(rid); await talk(0);
+            if (D.good.task) { for(let k=0;k<3&&d.CAM.ring;k++){ tp(d.CAM.ring.x,d.CAM.ring.z); tk(); await wait(200); } await talk(0); }
+            await wait(600); tk(); await wait(2600);
+            const st=P.cam[rid]; let g=true; if(D.good.prize.gear) g=d.gearState().own.includes(D.good.prize.gear);
+            todo&=ok(st.s==='done'&&st.r==='good'&&g, rid+'/'+b+' «'+D.name+'» cumplido'+(D.good.prize.gear?' + prenda':'')); }
+        }
+        if (S.hx) { P.cam={nacimiento:{b:'C',s:'done',r:'good'},infancia:{b:'B',s:'done',r:'meh'}}; const e=d.camEco('bautismo'); todo&=ok(e.length&&/Séforis/.test(e[0].t),'el capítulo del Bautismo recuerda lo de Séforis'); }
+      } catch(e){ L.push('ERROR '+e.message+' '+(e.stack||'').split('\\n')[1]); todo=false; }
+      reset(); Object.assign(P,keep); G_.save();
+      return {ok:!!todo, d:L.join(' · ')};"""
+
 HERO = {
+    'caminos2': ('Hero: caminos de Infancia, Bautismo y Galilea', CAMINOS2),
     'caminos': ('Hero: caminos de la historia (Nacimiento)', CAMINOS),
     'inicio': ('Hero: tu primer camino (primeros 5 minutos)', INICIO),
     'pueblos': ('Hero: pueblos que cambian con lo que hacés', PUEBLOS),
@@ -422,6 +451,7 @@ HERO = {
 }
 
 KIDS = {
+    'caminos2kids': ('Kids: caminos de Infancia, Bautismo y Galilea', CAMINOS2),
     'caminoskids': ('Kids: caminos de la historia (Nacimiento)', CAMINOS),
     'iniciokids': ('Kids: tu primer camino (primeros 5 minutos)', INICIO),
     'pueblokids': ('Kids: pueblos que cambian con lo que hacés', PUEBLOS),
