@@ -1679,3 +1679,16 @@ body.lowmem *,body.lowmem *::before,body.lowmem *::after{-webkit-backdrop-filter
 .am-nota{margin-top:14px;font-size:12px!important;opacity:.65!important}
 .am-salir{margin-top:4px}
 .vil .am-sm.am-q,.vil .am-sm:not(.am-ok){background:rgba(127,127,127,.2);color:inherit}
+/* «Te falta poco»: ocupa el lugar de «Tu próximo paso» mientras se ve, así no se pisan */
+#v3casi{position:fixed;z-index:7;left:50%;top:calc(48px + env(safe-area-inset-top,0px));transform:translate(-50%,-14px) scale(.96);opacity:0;display:flex;align-items:center;gap:10px;padding:7px 16px 7px 7px;border-radius:18px;border:1px solid rgba(255,240,200,.85);background:linear-gradient(180deg,rgba(255,221,140,.98),rgba(232,160,64,.98));color:#2B1D00;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.4),0 0 0 4px rgba(255,210,94,.18);max-width:min(86vw,420px);transition:opacity .3s,transform .35s cubic-bezier(.2,1.4,.4,1);font-family:"Nunito",sans-serif;text-align:left}
+#v3casi.on{opacity:1;transform:translate(-50%,0) scale(1)}
+#v3casi[hidden]{display:none}
+#v3casi .ca-ic{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(255,255,255,.5);animation:caPulse 1.1s ease-in-out infinite}
+#v3casi .ca-tx{display:flex;flex-direction:column;min-width:0;gap:3px}
+#v3casi small{font:900 9.5px "Nunito",sans-serif;letter-spacing:.14em;text-transform:uppercase;opacity:.75}
+#v3casi b{font:900 13.5px/1.2 "Nunito",sans-serif}
+#v3casi .ca-bar{display:block;height:7px;border-radius:9px;background:rgba(43,29,0,.18);overflow:hidden}
+#v3casi .ca-bar>i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#3E9A5A,#5FD39A);box-shadow:0 0 8px rgba(95,211,154,.8)}
+body:has(#v3casi.on) .v3obj{display:none}
+body:has(#v3sheet:not([hidden])) #v3casi,body.v3talk #v3casi,body:not(.v3on) #v3casi{display:none}
+@keyframes caPulse{50%{transform:scale(1.1)}}

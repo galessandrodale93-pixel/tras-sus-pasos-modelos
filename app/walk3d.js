@@ -2134,7 +2134,7 @@ function misDone(m) {
 function fxCtx() { let A = (typeof AU !== 'undefined' && AU.ctx) || fxCtx.A; if (!A) A = fxCtx.A = new (window.AudioContext || window.webkitAudioContext)(); if (A.state === 'suspended') { try { A.resume(); } catch (e) {} } return A; }
 function tone3d() { try { const A = fxCtx(); [660, 880, 1100].forEach((f, i) => { const o = A.createOscillator(), gn = A.createGain(); o.frequency.value = f; o.type = 'triangle'; gn.gain.setValueAtTime(.0001, A.currentTime + i * .12); gn.gain.exponentialRampToValueAtTime(.15, A.currentTime + i * .12 + .02); gn.gain.exponentialRampToValueAtTime(.0001, A.currentTime + i * .12 + .3); o.connect(gn); gn.connect(A.destination); o.start(A.currentTime + i * .12); o.stop(A.currentTime + i * .12 + .35); }); } catch (e) {} }
 function misTick(t) {
-  if (!S.mis) return; if (!(S.ptT > t)) { S.ptT = t + 1.2; try { puertaTick(); } catch (e) {} } const p = misState(), a = S.av.position, ui = misUI(), d2 = (q) => (q[0] - a.x) ** 2 + (q[1] - a.z) ** 2;
+  if (!S.mis) return; if (!(S.ptT > t)) { S.ptT = t + 1.2; try { puertaTick(); } catch (e) {} try { casiTick(t); } catch (e) {} } const p = misState(), a = S.av.position, ui = misUI(), d2 = (q) => (q[0] - a.x) ** 2 + (q[1] - a.z) ** 2;
   if (document.getElementById('view3d').hidden) { ui.hidden = true; return; }
   for (const id in S.mis) { const m = S.mis[id], open = misOpen(m, p), done = !!p.missions[id], act = p.mact && p.mact.id === id; m.bang.visible = open && !done && !act && !CINE.on; /* en las charlas no tapa las caras */ if (m.d.after) { const vis = open || done || act; m.giver.visible = vis; } m.bang.position.y = m.giver.position.y + 2.35 + Math.sin(t * 3) * .08; m.giver.visible = m.target ? true : true; }
   const act = p.mact && S.mis[p.mact.id]; S.misGoal = null;
@@ -5686,6 +5686,7 @@ function guiaGoals() {
   let am = []; try { am = amGoals(); am.filter(x => x.hot).forEach(x => out.push(x)); } catch (e) {}
   let adv = null; try { adv = advGoal(); if (adv && adv.hot) out.push(adv); } catch (e) {}
   try { const pg = puertaGoal(); if (pg) out.push(pg); } catch (e) {}
+  try { const cg = casiGoal(); if (cg) out.push(cg); } catch (e) {}
   try { const id = nodeActive(); if (id) { const n = g.NODES[id], here = id === g.P().pos; out.push({ ic: '📖', t: here ? 'Entrá ' + aLp(n.label) : 'Caminá ' + aLp(n.label), sub: here ? 'Seguí la historia: te espera el pasaje y su desafío.' : 'Seguí la historia: es tu próxima parada. El botón dorado te lleva caminando.', b: here ? 'Entrar' : 'Caminar', fn: () => go(id) }); } } catch (e) {}
   try { out.push(metaGoal()); } catch (e) {}
   am.filter(x => !x.hot).forEach(x => out.push(x));
@@ -5780,6 +5781,44 @@ function metaDar(r) {
     if (r.gear) { const it = GEAR.find(x => x.id === r.gear); if (it && !gearState().own.includes(it.id)) setTimeout(() => gearGive(it, 'Camino de 7 días'), 2600); else if (S.hx) svAdd('money', 100); else { const p = G().P(); p.bonus = (p.bonus || 0) + 100; } }
     svUI && svUI(); } catch (e) { console.warn('meta premio', e); }
 }
+/* =====================================================================
+   «TE FALTA POCO» (Kids y Hero): cuando estás cerca de algo (subir de nivel, cerrar el desafío del día o el camino
+   de 7 días, ganar una prenda con estrellas o con Servicio, completar una página del álbum, terminar la etapa o la
+   misión que llevás), aparece un aviso con su barra y queda primero en «Tu próximo paso». Cada aviso sale una sola vez.
+   ===================================================================== */
+const CASI = { t: 0, last: 0, L: [] };
+function casiList() {
+  const g = G(), p = g.P(), out = [], hx = !!(S && S.hx); if (!p) return out;
+  const add = (key, ic, t, sub, k, fn, b) => out.push({ key, ic, t, sub, k: Math.max(0, Math.min(1, k)), fn, b });
+  try { const lv = g.level(), pts = g.points(); if (g.lvNeed && lv < 75) { const a = g.lvNeed(lv), b = g.lvNeed(lv + 1), f = b - pts, k = (pts - a) / (b - a);
+    if (k >= .8 && f > 0) add('lv' + (lv + 1), '⬆️', `Te faltan ${amNum(f)} puntos para el nivel ${lv + 1}`, 'Una misión da ' + MIS_PTS + ' puntos, y cada estrella nueva en un minijuego da 10.', k); } } catch (e) {}
+  try { const m = metaP(); if (!m.ok) { const fal = m.g.filter(x => metaN(m, x) < META_POOL[x][2]); if (fal.length === 1) { const x = fal[0], T = META_POOL[x][2], n = metaN(m, x), md = hx ? 'hx' : 'kids', pr = META_PREMIO[md][m.cal];
+    add('meta' + m.d, pr && pr[2].gear ? '🎁' : '☀️', pr && pr[2].gear ? 'Te falta una meta para el Manto del caminante' : 'Te falta una meta del desafío del día', META_POOL[x][1] + (T > 1 ? ` (vas ${n} de ${T})` : '') + (pr ? ' · premio: ' + pr[1] : ''), (2 + n / T) / 3, () => metaOpen(), 'Ver'); } } } catch (e) {}
+  try { if (g.mgStarsTotal) { const t = g.mgStarsTotal(), got = p.mgPrize || [], nx = (g.MG_PRIZE || []).find(x => x > t && !got.includes(x)); if (nx && nx - t <= 3 && t > 0) add('st' + nx, '⭐', `Te ${nx - t === 1 ? 'falta 1 estrella' : 'faltan ' + (nx - t) + ' estrellas'} para ganar una prenda`, 'Volvé a jugar un minijuego y superá tu marca: cada estrella nueva suma.', t / nx); } } catch (e) {}
+  try { if (hx && GBY.servidor && !gearState().own.includes('servidor')) { const v = servV(); if (v >= 12 && v < 15) add('serv', '🤝', `Te ${15 - v === 1 ? 'falta 1 punto' : 'faltan ' + (15 - v) + ' puntos'} de Servicio para el Pañuelo del servidor`, 'El Servicio crece ayudando: misiones de ayuda y pedidos de la gente del camino.', v / 15); } } catch (e) {}
+  try { if (!hx) { const a = albP(); for (const pg of ALB_PAGES) { const L = ALB.filter(c => c.pg === pg[0]), f = L.filter(c => !a.have[c.id]).length; if (f > 0 && f <= 2 && L.length > 3) { add('alb' + pg[0], pg[1], `Te ${f === 1 ? 'falta 1 figurita' : 'faltan ' + f + ' figuritas'} para completar «${pg[2]}»`, 'Los sobres llegan con misiones, desafíos y regalos de amigos.', 1 - f / L.length); break; } } } } catch (e) {}
+  try { const cur = g.NODES[p.pos], r = cur ? cur.r : null; if (r != null && g.REGIONS[r]) { const R = g.REGIONS[r].id, need = ['n1', 'n2', 'n3', ['fA', 'fB'], 'n4', 'n5'], fal = need.filter(k => Array.isArray(k) ? !k.some(x => g.isDone(R + '-' + x)) : !g.isDone(R + '-' + k));
+    if (fal.length === 1) add('etapa' + R, '🏁', 'Te falta 1 parada para terminar la etapa ' + g.REGIONS[r].name, 'Después te espera el Desafío de la etapa.', 5 / 6); } } catch (e) {}
+  try { if (S && S.misGoal && S.misGoal.gp && S.av) { const m = S.misGoal, d = Math.hypot(m.gp[0] - S.av.position.x, m.gp[1] - S.av.position.z); if (d < 28) add('mis' + (misState().mact || {}).id, '⭐', '¡Ya casi terminás la misión!', m.txt, 1 - d / 60, () => guiaWp(m.gp[0], m.gp[1], m.txt), 'Llevarme'); } } catch (e) {}
+  return out.sort((a, b) => b.k - a.k);
+}
+function casiTick(t) {
+  if (!S || !S.av || (CASI.t > t)) return; CASI.t = t + 6; const L = CASI.L = casiList(); if (!L.length) return;
+  const p = G().P(), vis = p.casi = p.casi || {}, busy = (document.getElementById('v3sheet') && !document.getElementById('v3sheet').hidden) || (typeof CINE !== 'undefined' && CINE.on) || document.getElementById('view3d').hidden;
+  if (busy || Date.now() - CASI.last < 75e3) return; const c = L.find(x => !vis[x.key]); if (!c) return;
+  vis[c.key] = metaHoy(); const ks = Object.keys(vis); if (ks.length > 80) ks.slice(0, ks.length - 60).forEach(k => delete vis[k]); G().save(); CASI.last = Date.now(); casiPop(c);
+}
+function casiPop(c) {
+  let el = document.getElementById('v3casi'); if (!el) { el = document.createElement('button'); el.id = 'v3casi'; el.type = 'button'; document.body.appendChild(el); }
+  el.innerHTML = `<span class="ca-ic">${c.ic}</span><span class="ca-tx"><small>Te falta poco</small><b>${esc(c.t)}</b><i class="ca-bar"><i style="width:${Math.round(c.k * 100)}%"></i></i></span>`;
+  el.onclick = () => { el.classList.remove('on'); if (c.fn) c.fn(); else guiaPanel(); };
+  el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); clearTimeout(casiPop.t); casiPop.t = setTimeout(() => { el.classList.remove('on'); setTimeout(() => { el.hidden = true; }, 400); }, 6000);
+  try { const A = fxCtx(), o = A.createOscillator(), gn = A.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(740, A.currentTime); o.frequency.exponentialRampToValueAtTime(990, A.currentTime + .18); gn.gain.setValueAtTime(.0001, A.currentTime); gn.gain.exponentialRampToValueAtTime(.1, A.currentTime + .03); gn.gain.exponentialRampToValueAtTime(.0001, A.currentTime + .35); o.connect(gn); gn.connect(A.destination); o.start(); o.stop(A.currentTime + .4); } catch (e) {}
+  try { G().vo && G().vo('¡Te falta poco! ' + c.t.replace(/^¡|!$/g, '') + '.', 'narrador'); } catch (e) {}
+}
+/* para «Tu próximo paso»: lo más cercano va arriba */
+function casiGoal() { const c = (CASI.L.length ? CASI.L : casiList())[0]; if (!c) return null; return { hot: 1, ic: c.ic, t: c.t, sub: c.sub + ' ¡Te falta poco!', b: c.b || (c.fn ? 'Ver' : ''), fn: c.fn || null }; }
+
 function metaGoal() {
   const m = metaP(), hechas = m.g.filter(x => metaN(m, x) >= META_POOL[x][2]).length;
   if (m.ok) return { ic: '☀️', t: 'Desafío de hoy cumplido', sub: `Mañana hay otro. Tu camino de 7 días va ${m.cal === 0 && m.vueltas ? 'completo: arranca otra vuelta' : m.cal + ' de 7'}.`, b: 'Ver', fn: metaOpen };

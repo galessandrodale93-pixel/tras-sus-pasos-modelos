@@ -24,7 +24,7 @@ OUT = os.path.join(AQUI, 'salida')
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
 DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink, AM, amOpen, amSync, amEv, amGoals, amReqIn, amDraw, GBY, guiaGoals: () => guiaGoals(), puertaLock, puertaGoal, puertaTick, misOpen, misDone, MISSIONS, MIS_PUERTA')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink, AM, amOpen, amSync, amEv, amGoals, amReqIn, amDraw, GBY, guiaGoals: () => guiaGoals(), puertaLock, puertaGoal, puertaTick, misOpen, misDone, MISSIONS, MIS_PUERTA, CASI, casiList, casiTick, casiGoal, metaP, META_POOL')
 
 
 def local(url):
@@ -263,7 +263,25 @@ PUERTAS = COMUN + """
       Object.assign(P,keep); G_.save();
       return {ok:!!todo, d:L.join(' · ')};"""
 
+
+CASI = COMUN + """
+      const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return c;}; let todo=true; const b0=P.bonus||0, casi0=P.casi;
+      try {
+        P.casi={}; const lv=G_.level(), a=G_.lvNeed(lv), b=G_.lvNeed(lv+1); P.bonus=(P.bonus||0)+Math.ceil(a+.9*(b-a)-G_.points());
+        const l1=d.casiList(); todo&=ok(l1.some(x=>/para el nivel/.test(x.t)),'cerca de subir de nivel: '+(l1[0]||{}).t);
+        const m=d.metaP(); m.ok=0; m.c={}; m.g.slice(0,2).forEach(k=>m.c[k]=d.META_POOL[k][2]);
+        const l2=d.casiList(); todo&=ok(l2.some(x=>/desafío del día|Manto/.test(x.t)),'falta una meta del desafío del día');
+        d.CASI.t=0; d.CASI.last=0; document.getElementById('v3sheet').hidden=true; d.casiTick(performance.now()/1000);
+        const el=document.getElementById('v3casi'); todo&=ok(el&&el.classList.contains('on')&&/Te falta poco/.test(el.textContent),'aparece el aviso «Te falta poco»');
+        const k1=Object.keys(P.casi).length; d.CASI.t=0; d.CASI.last=0; d.casiTick(performance.now()/1000+20); todo&=ok(Object.keys(P.casi).length===k1+1,'sale el siguiente, y el primero no se repite');
+        const gg=d.guiaGoals(); todo&=ok(gg.some(x=>/Te falta poco/.test(x.sub||'')),'queda en «Tu próximo paso»');
+        const r=el.getBoundingClientRect(), o=document.querySelector('.v3obj'); todo&=ok(!o||getComputedStyle(o).display==='none'||o.hidden,'no se pisa con «Tu próximo paso»');
+      } catch(e){ L.push('ERROR '+e.message); todo=false; }
+      P.bonus=b0; P.casi=casi0||{}; G_.save();
+      return {ok:!!todo, d:L.join(' · ')};"""
+
 HERO = {
+    'casi': ('Hero: «Te falta poco»', CASI),
     'puertas': ('Hero: minijuegos y misiones alternados, cadenas de 3', PUERTAS),
     'amigos': ('Hero: amigos del camino, regalos y desafío en equipo', AMIGOS),
     'sala': ('Sala: sin barra arriba, micrófono junto al botón de amigos, modos y frases en la ventana', SALA),
@@ -320,6 +338,7 @@ HERO = {
 }
 
 KIDS = {
+    'casikids': ('Kids: «Te falta poco»', CASI),
     'puertaskids': ('Kids: minijuegos y misiones alternados, cadenas de 3', PUERTAS),
     'amigoskids': ('Kids: amigos del camino, regalos y desafío en equipo', AMIGOS),
     'fotokids': ('Kids: momento de foto épica al festejar', FOTO),
