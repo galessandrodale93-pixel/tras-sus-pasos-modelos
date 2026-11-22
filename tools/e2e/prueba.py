@@ -24,7 +24,7 @@ OUT = os.path.join(AQUI, 'salida')
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
 DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink, AM, amOpen, amSync, amEv, amGoals, amReqIn, amDraw, GBY, guiaGoals: () => guiaGoals(), puertaLock, puertaGoal, puertaTick, misOpen, misDone, MISSIONS, MIS_PUERTA, CASI, casiList, casiTick, casiGoal, metaP, META_POOL')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink, AM, amOpen, amSync, amEv, amGoals, amReqIn, amDraw, GBY, guiaGoals: () => guiaGoals(), puertaLock, puertaGoal, puertaTick, misOpen, misDone, MISSIONS, MIS_PUERTA, CASI, casiList, casiTick, casiGoal, metaP, META_POOL, PUE, pueTick, pueOpen, pueLv, pueSpot, blockedAt, waterWet')
 
 
 def local(url):
@@ -280,7 +280,26 @@ CASI = COMUN + """
       P.bonus=b0; P.casi=casi0||{}; G_.save();
       return {ok:!!todo, d:L.join(' · ')};"""
 
+
+PUEBLOS = COMUN + """
+      const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return c;}; let todo=true; const keep={missions:{...(P.missions||{})},pue:{...(P.pue||{})}};
+      try {
+        todo&=ok(d.PUE.list.length>=5,'pueblos: '+d.PUE.list.map(v=>v.name).join(', '));
+        const v=d.PUE.list.find(x=>x.name==='Belén')||d.PUE.list[0]; const n0=S.scene.children.length, l0=v.lv;
+        d.MISSIONS.filter(m=>m.r===v.r).forEach(m=>P.missions[m.id]=true);
+        d.PUE.t=0; d.pueTick(performance.now()/1000+100);
+        todo&=ok(v.lv>l0 && v.lv>=3,'con las misiones de la etapa, '+v.name+' sube a '+v.lv);
+        todo&=ok(S.scene.children.length>n0+5,'aparecen cosas nuevas en el pueblo ('+(S.scene.children.length-n0)+')');
+        todo&=ok(P.pue[v.name]===v.lv,'queda guardado para avisar una sola vez');
+        tp(v.x+3, v.z+3);
+        d.pueOpen(); const sh=document.getElementById('v3sheet'); todo&=ok(/Los pueblos/.test(sh.textContent)&&new RegExp(v.name).test(sh.textContent),'ventana «Los pueblos»');
+        sh.hidden=true;
+      } catch(e){ L.push('ERROR '+e.message); todo=false; }
+      P.missions=keep.missions; P.pue=keep.pue; G_.save();
+      return {ok:!!todo, d:L.join(' · ')};"""
+
 HERO = {
+    'pueblos': ('Hero: pueblos que cambian con lo que hacés', PUEBLOS),
     'casi': ('Hero: «Te falta poco»', CASI),
     'puertas': ('Hero: minijuegos y misiones alternados, cadenas de 3', PUERTAS),
     'amigos': ('Hero: amigos del camino, regalos y desafío en equipo', AMIGOS),
@@ -338,6 +357,7 @@ HERO = {
 }
 
 KIDS = {
+    'pueblokids': ('Kids: pueblos que cambian con lo que hacés', PUEBLOS),
     'casikids': ('Kids: «Te falta poco»', CASI),
     'puertaskids': ('Kids: minijuegos y misiones alternados, cadenas de 3', PUERTAS),
     'amigoskids': ('Kids: amigos del camino, regalos y desafío en equipo', AMIGOS),

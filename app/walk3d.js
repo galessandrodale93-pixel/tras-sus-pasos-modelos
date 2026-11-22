@@ -1168,7 +1168,7 @@ const KL = {};
   const n0 = g.NODES[g.P().pos], [ax, az] = toV(n0.x, n0.y); av.position.set(ax, 0, az); buildStep('estado');
   S = { renderer, scene, camera, hx, av, markers, edgePts, allPts, items, joy: { x: 0, y: 0 }, keys: {}, flies, ground, yaw: Math.PI, camYaw: 0, camDist: 2.4, camPitch: .4, walking: false, moving: false, t: 0, root, cv, sig: '', onStop: g.P().pos, W: HW, uGrass, KL, zEnd: zMax };
   // orientar al personaje hacia la próxima parada
-  buildStep('lugares'); buildPois(scene, pois, hx, HW, rng(77), ribbon); buildStep('pueblos'); S.pois = pois; buildTowns(scene, g, hx, HW, pois); buildStep('lugares de afuera'); try { olSitesBuild(scene, HW, hx); } catch (e) { console.warn('afuera', e); } buildStep('puertas y misiones'); ambReset(); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; GUIA.t0 = performance.now(); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); try { amStart(); } catch (e) {} }, 0);
+  buildStep('lugares'); buildPois(scene, pois, hx, HW, rng(77), ribbon); buildStep('pueblos'); S.pois = pois; buildTowns(scene, g, hx, HW, pois); buildStep('lugares de afuera'); try { olSitesBuild(scene, HW, hx); } catch (e) { console.warn('afuera', e); } buildStep('puertas y misiones'); ambReset(); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; GUIA.t0 = performance.now(); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); try { amStart(); } catch (e) {} try { pueBuild(); } catch (e) { console.warn('pueblos', e); } }, 0);
   buildStep('hitos'); try { scatterNodes(g, HW); if (S.npos[g.P().pos]) { const q = S.npos[g.P().pos]; av.position.set(q[0], 0, q[1]); } } catch (e) { console.warn('hitos', e); } S.spawn = [av.position.x, av.position.z];
   try { fieldFinds(scene, hx, HW); } catch (e) { console.warn('hallazgos', e); }
   S0 = S; try { attrMigrate(); } catch (e) { console.warn('migración de atributos', e); } insMigrate(); setTimeout(glowUI, 400); S.mis = buildMissions(scene, g, hx, HW); try { vivoBuild(scene, hx); } catch (e) { console.warn('etapa viva', e); } try { ofiBuild(scene); } catch (e) { console.warn('oficios', e); } if (!hx && HW) setTimeout(() => { if (S) secBuild(scene, HW).catch(e => console.warn('sec', e)); }, 1500); try { bldBuild(scene); } catch (e) { console.warn('construir', e); } /* en Kids también hay lugares secretos */ { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
@@ -1588,6 +1588,7 @@ function fanAll() {
   const acts = document.getElementById('v3acts'); if (acts) acts.querySelectorAll('button[data-a]').forEach(b => { if (b.dataset.a === 'room') return; L.push([b.innerHTML, b.title || b.getAttribute('aria-label') || b.dataset.a, () => fanFire(b), b.dataset.a, FAN_ACT[b.dataset.a] || 'acc', b.classList.contains('off')]); });
   try { if (G().hstHas && G().hstHas()) L.push(['📜', 'Rollo de Isaías', () => G().hstScroll(), 'scroll', 'pj']); } catch (e) {}
   L.push(['🎁', 'Amigos, regalos y equipo', () => amOpen(), 'amigos', 'acc']);
+  L.push(['🏘️', 'Los pueblos', () => pueOpen(), 'pueblos', 'acc']);
   L.push(['⭐', 'Mi progreso', () => { const h = document.getElementById('hudLv'); if (h) h.click(); }, 'prog', 'ayu']);
   L.push(['☰', 'Menú y ajustes', () => { const m = document.getElementById('menuBtn'); if (m) m.click(); }, 'menu', 'ayu']);
   return L;
@@ -2134,7 +2135,7 @@ function misDone(m) {
 function fxCtx() { let A = (typeof AU !== 'undefined' && AU.ctx) || fxCtx.A; if (!A) A = fxCtx.A = new (window.AudioContext || window.webkitAudioContext)(); if (A.state === 'suspended') { try { A.resume(); } catch (e) {} } return A; }
 function tone3d() { try { const A = fxCtx(); [660, 880, 1100].forEach((f, i) => { const o = A.createOscillator(), gn = A.createGain(); o.frequency.value = f; o.type = 'triangle'; gn.gain.setValueAtTime(.0001, A.currentTime + i * .12); gn.gain.exponentialRampToValueAtTime(.15, A.currentTime + i * .12 + .02); gn.gain.exponentialRampToValueAtTime(.0001, A.currentTime + i * .12 + .3); o.connect(gn); gn.connect(A.destination); o.start(A.currentTime + i * .12); o.stop(A.currentTime + i * .12 + .35); }); } catch (e) {} }
 function misTick(t) {
-  if (!S.mis) return; if (!(S.ptT > t)) { S.ptT = t + 1.2; try { puertaTick(); } catch (e) {} try { casiTick(t); } catch (e) {} } const p = misState(), a = S.av.position, ui = misUI(), d2 = (q) => (q[0] - a.x) ** 2 + (q[1] - a.z) ** 2;
+  if (!S.mis) return; if (!(S.ptT > t)) { S.ptT = t + 1.2; try { puertaTick(); } catch (e) {} try { casiTick(t); } catch (e) {} try { pueTick(t); } catch (e) {} } const p = misState(), a = S.av.position, ui = misUI(), d2 = (q) => (q[0] - a.x) ** 2 + (q[1] - a.z) ** 2;
   if (document.getElementById('view3d').hidden) { ui.hidden = true; return; }
   for (const id in S.mis) { const m = S.mis[id], open = misOpen(m, p), done = !!p.missions[id], act = p.mact && p.mact.id === id; m.bang.visible = open && !done && !act && !CINE.on; /* en las charlas no tapa las caras */ if (m.d.after) { const vis = open || done || act; m.giver.visible = vis; } m.bang.position.y = m.giver.position.y + 2.35 + Math.sin(t * 3) * .08; m.giver.visible = m.target ? true : true; }
   const act = p.mact && S.mis[p.mact.id]; S.misGoal = null;
@@ -5818,6 +5819,88 @@ function casiPop(c) {
 }
 /* para «Tu próximo paso»: lo más cercano va arriba */
 function casiGoal() { const c = (CASI.L.length ? CASI.L : casiList())[0]; if (!c) return null; return { hot: 1, ic: c.ic, t: c.t, sub: c.sub + ' ¡Te falta poco!', b: c.b || (c.fn ? 'Ver' : ''), fn: c.fn || null }; }
+
+/* =====================================================================
+   PUEBLOS QUE CAMBIAN CON LO QUE HACÉS (Kids y Hero). Cada pueblo tiene 4 escalones que se ganan con lo que hacés
+   en su etapa: misiones cumplidas, paradas de la historia y, en Hero, la relación con la aldea. Cada escalón se ve
+   en el mundo: 1 · el mercado se llena (cántaros, canastas y un toldo) y llega gente; 2 · faroles encendidos y más
+   vecinos; 3 · telas de colores entre las casas y el pozo arreglado; 4 · fiesta: mesa larga con comida y vecinos
+   festejando. Sin flores (pedido de Gui para el paisaje). Al subir un escalón, aviso con el nombre del pueblo.
+   ===================================================================== */
+const PUE_K = { village: null, taller: 'Nazaret', roofhouse: 'Capernaúm', inn: 'Jericó', upper: 'Jerusalén' };
+const PUE_TH = [3, 6, 10, 14], PUE_N = ['Tranquilo', 'Con mercado', 'Con faroles', 'Con colores', '¡De fiesta!'];
+const PUE_TX = ['La gente sigue con lo suyo.', 'El mercado se llenó y llegaron vecinos.', 'Encendieron faroles en las calles.', 'Colgaron telas de colores entre las casas y arreglaron el pozo.', 'Hicieron una fiesta con una mesa larga para todos.'];
+const PUE = { list: [], t: 0 };
+function puePts(v) {
+  const g = G(), p = g.P(), R = g.REGIONS[v.r]; if (!R) return 0; let n = 0;
+  MISSIONS.forEach(d => { if (d.r === v.r && p.missions && p.missions[d.id]) n += 2; });
+  ['n1', 'n2', 'n3', 'fA', 'fB', 'n4', 'n5'].forEach(k => { try { if (g.isDone(R.id + '-' + k)) n += 1; } catch (e) {} });
+  try { if (S.hx && typeof repLv === 'function') n += (repLv(v.name) - 1) * 2; } catch (e) {}
+  return n;
+}
+const pueLv = v => { const n = puePts(v); let l = 0; PUE_TH.forEach(t => { if (n >= t) l++; }); return l; };
+function pueBuild() {
+  if (!S || !S.pois || !S.scene) return; const p = G().P(), seen = p.pue = p.pue || {};
+  PUE.list = S.pois.filter(q => q.k in PUE_K && q.r != null).map((q, i) => ({ name: PUE_K[q.k] || q.name || 'Aldea', x: q.x, z: q.z, r: q.r, side: q.side || 1, seed: 7000 + i * 31, lv: 0, used: [] }));
+  PUE.list.forEach(v => { const L = pueLv(v); for (let k = 1; k <= L; k++) pueAdd(v, k); v.lv = L; if (seen[v.name] == null) seen[v.name] = L; });
+}
+function pueSpot(v, rMin, rMax, avoid) {
+  const R = rng(v.seed + v.used.length * 17), W = S.W;
+  /* primero lejos del camino; si el pueblo está muy lleno, se acepta el borde del camino y un poco más de radio */
+  for (let t = 0; t < 240; t++) { const pass = t < 120 ? 0 : 1, a = R() * Math.PI * 2, d = rMin + R() * (rMax + pass * 9 - rMin), x = v.x + Math.cos(a) * d, z = v.z + Math.sin(a) * d;
+    if (blockedAt(x, z) || waterWet(x, z, null) > .04 || (W.dAt && W.dAt(x, z) < (avoid || 3.2) * (pass ? .35 : 1)) || v.used.some(([a2, b2]) => (a2 - x) ** 2 + (b2 - z) ** 2 < 16)) continue;
+    v.used.push([x, z]); return [x, z, a]; }
+  return null;
+}
+function pueNpc(v, look, anim) {
+  const s = pueSpot(v, 7, 17, 2.2); if (!s) return null; const hx = S.hx, rig = hx || H3.ok, o = rig ? buildHeroAvatar(Object.assign({ anim }, look)) : buildAvatar(look, false);
+  if (!rig) o.scale.setScalar(1.08); o.position.set(s[0], S.W.hAt(s[0], s[1]), s[1]); o.rotation.y = Math.atan2(v.x - s[0], v.z - s[1]); if (rig) o.traverse(q => { if (q.isMesh) q.castShadow = true; }); o.traverse(q => { if (q.isPointLight) q.intensity = 0; }); S.scene.add(o); return o;
+}
+const PUE_LOOK = [{ g: 'chica', age: 17, skin: '#A87A52', hair: '#2A1B14', outfit: '#9A6A5A' }, { g: 'chico', age: 18, skin: '#B98A62', hair: '#1E1410', outfit: '#6A7A4A' }, { g: 'chico', age: 13, skin: '#C99A72', hair: '#2A1B14', outfit: '#8A7A5A' }, { g: 'chica', age: 12, skin: '#B98A62', hair: '#3A2A1A', outfit: '#5A7A9A' }, { g: 'chico', age: 18, skin: '#A87A52', hair: '#9A9A9A', outfit: '#7A5A3A' }, { g: 'chica', age: 18, skin: '#C99A72', hair: '#1E1410', outfit: '#8A5A6A' }];
+function pueAdd(v, k) {
+  const sc = S.scene, W = S.W, M = (c, r, e) => tm('pue' + c + (e || ''), c, Object.assign({ roughness: r == null ? .9 : r }, e ? { emissive: new THREE.Color(e), emissiveIntensity: .9 } : {}));
+  const grp = (x, z, rot) => { const g = new THREE.Group(); g.position.set(x, Math.max(0, W.hAt(x, z)), z); g.rotation.y = rot || 0; g.userData.keep = 1; sc.add(g); return g; };
+  const add = (g, geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
+  const L = PUE_LOOK, ofs = v.seed % L.length;
+  try {
+    if (k === 1) { // mercado: toldo con cántaros y canastas, y llega gente
+      const s = pueSpot(v, 8, 15); if (s) { const g = grp(s[0], s[1], s[2] + Math.PI / 2), wd = M('#7A5532'); [[-1, -.7], [1, -.7], [-1, .7], [1, .7]].forEach(([x, z]) => add(g, new THREE.CylinderGeometry(.05, .05, 2, 6), wd, x, 1, z));
+        const cl = add(g, new THREE.PlaneGeometry(2.3, 1.7), M(['#B5543A', '#3E6A8A', '#C9973A'][v.seed % 3], .95), 0, 2.05, 0); cl.rotation.x = -Math.PI / 2 + .12; cl.material.side = THREE.DoubleSide;
+        add(g, new THREE.BoxGeometry(1.9, .08, 1), wd, 0, .75, 0); for (let i = 0; i < 5; i++) add(g, new THREE.SphereGeometry(.18, 10, 8), M('#A8784A', .8), -.7 + i * .35, .95, (i % 2) * .2 - .1);
+        for (let i = 0; i < 3; i++) add(g, new THREE.CylinderGeometry(.22, .17, .28, 10), M('#B08A52', 1), -.7 + i * .7, .14, .8); phCyl(s[0], s[1], 1.2); }
+      pueNpc(v, L[ofs], ['M_Standing_Idle', 'M_Talking']);
+    }
+    if (k === 2) { // faroles encendidos (sin luces de verdad: brillan solos, así no pesa en el celular)
+      for (let i = 0; i < 4; i++) { const s = pueSpot(v, 6, 16, 2); if (!s) continue; const g = grp(s[0], s[1]); add(g, new THREE.CylinderGeometry(.05, .07, 2.1, 6), M('#4A3A2A'), 0, 1.05, 0); add(g, new THREE.BoxGeometry(.26, .3, .26), M('#3A2A1A'), 0, 2.2, 0); add(g, new THREE.SphereGeometry(.11, 10, 8), new THREE.MeshBasicMaterial({ color: '#FFC870' }), 0, 2.2, 0); phCyl(s[0], s[1], .2); }
+      pueNpc(v, L[(ofs + 1) % L.length], ['M_Standing_Idle', 'M_Talking']);
+    }
+    if (k === 3) { // telas de colores entre postes y el pozo arreglado (brocal nuevo de piedra clara)
+      for (let j = 0; j < 2; j++) { const s = pueSpot(v, 5, 12, 2.5); if (!s) continue; const g = grp(s[0], s[1], s[2]); const len = 7; add(g, new THREE.CylinderGeometry(.06, .07, 3, 6), M('#6A4A2E'), -len / 2, 1.5, 0); add(g, new THREE.CylinderGeometry(.06, .07, 3, 6), M('#6A4A2E'), len / 2, 1.5, 0);
+        const C = ['#B5543A', '#E0B04A', '#3E7A6A', '#5A6EA8', '#A05A8A']; for (let i = 0; i < 9; i++) { const x = -len / 2 + (i + .5) * len / 9, y = 2.85 - Math.sin((i + .5) / 9 * Math.PI) * .5, f = add(g, new THREE.ConeGeometry(.2, .42, 3), M(C[(i + j) % C.length], .95), x, y - .2, 0); f.rotation.x = Math.PI; f.castShadow = false; } phCyl(s[0], s[1], .3); }
+      const s = pueSpot(v, 4, 10, 2.5); if (s) { const g = grp(s[0], s[1]); add(g, new THREE.CylinderGeometry(.75, .82, .7, 16), M('#C9B894', 1), 0, .35, 0); add(g, new THREE.CircleGeometry(.66, 16), M('#2E5A66', .1), 0, .71, 0).rotation.x = -Math.PI / 2;
+        add(g, new THREE.CylinderGeometry(.05, .05, 1.5, 6), M('#6A4A2E'), -.7, 1.1, 0); add(g, new THREE.CylinderGeometry(.05, .05, 1.5, 6), M('#6A4A2E'), .7, 1.1, 0); add(g, new THREE.CylinderGeometry(.05, .05, 1.5, 6), M('#6A4A2E'), 0, 1.8, 0).rotation.z = Math.PI / 2; phCyl(s[0], s[1], .9); }
+      pueNpc(v, L[(ofs + 2) % L.length], ['M_Standing_Idle', 'M_Clapping']);
+    }
+    if (k === 4) { // la fiesta: mesa larga con pan, fruta y cántaros, y vecinos festejando
+      const s = pueSpot(v, 6, 13, 3); if (s) { const g = grp(s[0], s[1], s[2]), wd = M('#7A5532'); add(g, new THREE.BoxGeometry(4.2, .1, 1.1), wd, 0, .78, 0); [[-1.9, -.45], [1.9, -.45], [-1.9, .45], [1.9, .45]].forEach(([x, z]) => add(g, new THREE.BoxGeometry(.1, .76, .1), wd, x, .38, z));
+        add(g, new THREE.BoxGeometry(4.25, .02, .7), M('#EFE6D2', 1), 0, .84, 0); for (let i = 0; i < 6; i++) { add(g, new THREE.SphereGeometry(.13, 8, 6), M(i % 2 ? '#D9A25A' : '#8A3A4A', .8), -1.7 + i * .68, .93, (i % 2) * .2 - .1); }
+        for (let i = 0; i < 3; i++) add(g, new THREE.CylinderGeometry(.09, .12, .32, 10), M('#A8784A', .8), -1.2 + i * 1.2, 1, .25); [-2.6, 2.6].forEach(x => add(g, new THREE.BoxGeometry(.5, .45, 1), wd, x, .22, 0)); phCyl(s[0], s[1], 2.2); }
+      pueNpc(v, L[(ofs + 3) % L.length], ['M_Cheering', 'M_Clapping']); pueNpc(v, L[(ofs + 4) % L.length], ['M_Clapping', 'M_Cheering']);
+    }
+  } catch (e) { console.warn('pueblo', v.name, e); }
+}
+function pueTick(t) {
+  if (!S || !PUE.list.length || PUE.t > t) return; PUE.t = t + 4; const p = G().P(), seen = p.pue = p.pue || {};
+  for (const v of PUE.list) { const L = pueLv(v); while (v.lv < L) { v.lv++; pueAdd(v, v.lv); }
+    if (L > (seen[v.name] || 0)) { seen[v.name] = L; G().save(); const nm = v.name; setTimeout(() => { misPop('🏘️ ' + nm + ' está cambiando', PUE_N[L]); svToast(`🏘️ Gracias a lo que hiciste, ${nm} cambió: ${PUE_TX[L].charAt(0).toLowerCase() + PUE_TX[L].slice(1)}`, 'Gracias a lo que hiciste, ' + nm + ' está cambiando.'); try { tone3d(); } catch (e) {} }, 2600); break; } }
+}
+/* la ventana «Los pueblos»: cómo está cada uno y cuánto falta para el próximo cambio */
+function pueOpen() {
+  const g = G(), rows = PUE.list.slice().sort((a, b) => a.r - b.r).map(v => { const n = puePts(v), L = pueLv(v), nx = PUE_TH[L], prev = L ? PUE_TH[L - 1] : 0, open = (() => { try { return regionOpen(v.r); } catch (e) { return true; } })();
+    if (!open) return `<div class="sv-rec md-r off"><span class="gd-ic">🏘️</span><div><b>${esc(v.name)}</b><small>Se abre más adelante en la historia.</small></div></div>`;
+    return `<div class="sv-rec md-r${L >= 4 ? ' ok' : ''}"><span class="gd-ic">${['🏘️', '🧺', '🏮', '🎏', '🎉'][L]}</span><div><b>${esc(v.name)} · ${esc(PUE_N[L])}</b><i class="md-bar"><i style="width:${nx ? Math.round((n - prev) / (nx - prev) * 100) : 100}%"></i></i><small>${esc(PUE_TX[L])}${nx ? ` Para el próximo cambio: ${nx - n} más (misiones y paradas de ${esc(g.REGIONS[v.r] ? g.REGIONS[v.r].name : 'su etapa')}${S.hx ? ', y tu relación con la aldea' : ''}).` : ''}</small></div></div>`; }).join('');
+  vilSheet(`<div class="inv-h"><b>🏘️ Los pueblos</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">Lo que hacés cambia los pueblos: cada misión y cada parada de su etapa los ayuda a crecer, y se ve en el mapa.</p><div class="gd-list">${rows}</div>`);
+}
 
 function metaGoal() {
   const m = metaP(), hechas = m.g.filter(x => metaN(m, x) >= META_POOL[x][2]).length;
