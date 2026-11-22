@@ -4657,7 +4657,7 @@ const GEAR = [
   { id: 'nav_gloria', s: 'shirt', r: 'u', t: 'plain', c: '#F1ECDF', name: 'Túnica de Nochebuena', desc: 'Regalo de Navidad. «¡Gloria a Dios en las alturas, y en la tierra paz!» (Lucas 2:14).' },
   { id: 'nav_magos', s: 'hat', r: 'u', t: 'turban', c: '#6E3A86', name: 'Turbante de los magos', desc: 'Regalo de Reyes. Los sabios de oriente siguieron la estrella hasta Belén para adorar al niño (Mateo 2:1-11).' },
   { id: 'tocescriba', s: 'hat', r: 'u', t: 'cloth', c: '#D8CBA8', c2: '#2A2A4A', name: 'Tocado del escriba', desc: 'Camino del rollo de Miqueas: copiaste letra por letra con Eleazar.' },
-  { id: 'lanapastor', s: 'gloves', r: 'u', t: 'glove', c: '#E8DDC6', name: 'Guantes de lana de Natán', desc: 'Camino de la corderita: cargaste a Tamar hasta el corral.' },
+  { id: 'lanapastor', s: 'gloves', r: 'u', t: 'glove', c: '#E8DDC6', name: 'Guantes de lana de Natán', desc: 'Camino de la oveja: cargaste a Tamar hasta el corral.' },
   { id: 'turbmensajero', s: 'hat', r: 'u', t: 'turban', c: '#5A6EA8', name: 'Turbante del mensajero', desc: 'Camino del mensaje: la buena noticia llegó a Capernaúm.' },
   { id: 'panueloposada', s: 'hat', r: 'u', t: 'cloth', c: '#C9973A', c2: '#7A3A2A', name: 'Pañuelo de la posada', desc: 'Camino de las mantas: abrigaste al bebé del establo.' },
   { id: 'primerpaso', s: 'boots', r: 'u', t: 'sandal', hi: 1, c: '#C9973A', name: 'Sandalias del primer paso', desc: 'Regalo de bienvenida. «¡Qué hermosos son los pies de los mensajeros que traen buenas noticias!» (Romanos 10:15).' },
@@ -5995,16 +5995,16 @@ const CAMS = {
         meh: { t: 'Mejor contámelo vos, que es más rápido.', then: [['esc', 'Lo que se aprende rápido, rápido se olvida. Bueno… otro día será.'], ['nar', 'Eleazar enrolla el pergamino sin mostrarte lo que estaba escrito en el margen.']],
           prize: { sab: 1 }, done: 'Eleazar te contó el rollo, pero te quedaste sin ver la nota del margen.' },
         eco: { good: [['esc', '¿Te acordás de la nota del margen, la de la casa del pan? Desde ese día leo el rollo con otros ojos.']], meh: [['esc', 'Todavía tengo guardado el rollo de Miqueas. Algún día, cuando tengas paciencia, te muestro lo que dice el margen.']] } },
-      B: { name: 'La corderita de Natán', goal: 'Buscá a Natán en los campos de los pastores', who: { name: 'Natán', sub: 'pastor joven de Belén', voice: 'past', look: { g: 'chico', age: 15, skin: '#A87A52', hair: '#1E1410', outfit: '#8A7A5A' } }, at: 'Campos de los pastores', off: [-12, -9],
-        hi: [['p', '¡Shalom! Qué bueno que viniste. Una de mis corderitas se lastimó la pata entre las piedras y no puede caminar.'], ['p', 'Mi papá dice que un buen pastor conoce a cada oveja por su nombre. Esta se llama Tamar.']],
+      B: { name: 'La oveja de Natán', goal: 'Buscá a Natán en los campos de los pastores', who: { name: 'Natán', sub: 'pastor joven de Belén', voice: 'past', look: { g: 'chico', age: 15, skin: '#A87A52', hair: '#1E1410', outfit: '#8A7A5A' } }, at: 'Campos de los pastores', off: [-12, -9],
+        hi: [['p', '¡Shalom! Qué bueno que viniste. Una de mis ovejas se lastimó la pata entre las piedras y no puede caminar.'], ['p', 'Mi papá dice que un buen pastor conoce a cada oveja por su nombre. Esta se llama Tamar.']],
         ask: ['p', 'El corral está del otro lado de la loma. ¿Me ayudás?'],
         good: { t: 'Yo la llevo en los hombros hasta el corral.', task: { carry: { k: 'sheep' }, at: 'Campos de los pastores', off: [14, 10], label: 'el corral' }, then: [['p', '¡Gracias! Llevala despacito, que tiene miedo.']],
           arrive: [['p', '¡Llegaron! Mirala, ya está tranquila.'], ['p', 'Así es un buen pastor: deja a las demás en un lugar seguro y va a buscar a la que se lastimó. Esto es para vos.']],
           prize: { gear: 'lanapastor', att: { zel: 1 }, title: 'Amigo de los pastores', kidsPts: 30, sobre: 1 }, done: 'Cargaste a Tamar hasta el corral de Natán.' },
-        meh: { t: 'Le aviso a tu hermano y sigo mi camino.', then: [['p', 'Está bien… gracias igual.'], ['nar', 'Un rato después ves a Natán subiendo la loma solo, despacio, con la corderita en brazos.']],
+        meh: { t: 'Le aviso a tu hermano y sigo mi camino.', then: [['p', 'Está bien… gracias igual.'], ['nar', 'Un rato después ves a Natán subiendo la loma solo, despacio, con la oveja en brazos.']],
           prize: { money: 10, kidsPts: 10, att: { zel: -1 } }, done: 'Le avisaste al hermano de Natán y seguiste tu camino.' },
-        eco: { good: [['zel', 'Todavía me acuerdo de la corderita que cargaste en Belén. Eso no lo hace cualquiera.']], meh: [['zel', 'Ese pastorcito de Belén tardó toda la tarde en llegar al corral. Podríamos haberlo ayudado.']] },
-        ecoK: { good: 'Natán te manda saludos desde Belén: Tamar, la corderita, ya corre por el campo.', meh: 'Te enteraste de que Natán tardó toda la tarde en llevar a Tamar al corral. La próxima vez, ¡a ayudar!' } },
+        eco: { good: [['zel', 'Todavía me acuerdo de la oveja que cargaste en Belén. Eso no lo hace cualquiera.']], meh: [['zel', 'Ese pastorcito de Belén tardó toda la tarde en llegar al corral. Podríamos haberlo ayudado.']] },
+        ecoK: { good: 'Natán te manda saludos desde Belén: Tamar, la oveja, ya corre por el campo.', meh: 'Te enteraste de que Natán tardó toda la tarde en llevar a Tamar al corral. La próxima vez, ¡a ayudar!' } },
       C: { hx: 1, name: 'Un mensaje para tu papá', goal: 'Buscá a Jonás, el arriero, en Belén', who: { name: 'Jonás', sub: 'arriero de una caravana', voice: 'varon', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#3A2A1A', outfit: '#7A5A3A', anim: ['M_Standing_Idle', 'M_Holding_Idle'] } }, at: 'Belén', off: [11, -10],
         hi: [['p', 'Mañana al amanecer salgo con la caravana para Galilea. Paso por Capernaúm.'], ['p', 'Me contaron que tenés a tu papá enfermo allá.']],
         ask: ['p', '¿Querés que le lleve un mensaje?'],
@@ -6059,7 +6059,7 @@ function camPick(rid, k) { const st = camP()[rid], d = camDef(rid, st.b), R = d[
 function camPay() { try { if (S.hx) { const s = svP(); if ((s.inv.bread || 0) > 0) svAdd('bread', -1); else if ((s.inv.money || 0) >= 5) svAdd('money', -5); } } catch (e) {} }
 function camAfter(rid) { const st = camP()[rid]; if (!st) return; const d = camDef(rid, st.b), R = d && d[st.r]; if (!R) return;
   if (st.s === 'task') { camTask(rid); return; } camEnd(rid); }
-/* la tarea: llevar algo hasta un lugar (la corderita al corral, la manta al establo) */
+/* la tarea: llevar algo hasta un lugar (la oveja al corral, la manta al establo) */
 function camTask(rid) { const st = camP()[rid], d = camDef(rid, st.b), T = d.good.task, pos = vivoAt(T.at, T.off); if (!pos) { camEnd(rid); return; }
   const c = misMesh(T.carry); c.scale.setScalar(.7); c.position.y = 2.25; if (S.av.userData.h3 && H3.clips && H3.clips.M_Holding_Idle) { c.scale.setScalar(.45); c.position.set(0, 1.08, .34); } S.av.add(c); CAM.carry = c;
   const ring = new THREE.Mesh(new THREE.RingGeometry(.9, 1.1, 36), new THREE.MeshBasicMaterial({ color: '#FFD873', transparent: true, opacity: .75, side: THREE.DoubleSide, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.set(pos[0], Math.max(0, S.W.hAt(pos[0], pos[1])) + .06, pos[1]); S.scene.add(ring);

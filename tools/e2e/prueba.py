@@ -332,15 +332,15 @@ CAMINOS = COMUN + """
         reset(); P.story=P.story||{}; P.story.ans={}; P.story.att={esc:0,zel:0,rom:0}; P.inicio={fin:1};
         if (S.hx) {
           window.W3.camStart('nacimiento','misericordia'); tk();
-          todo&=ok(P.cam.nacimiento&&P.cam.nacimiento.b==='B'&&d.CAM.npc.nacimiento,'la respuesta del capítulo abre el camino de la corderita y aparece Natán');
-          const g1=d.camGoal(); todo&=ok(g1&&/corderita/.test(g1.t),'«Tu próximo paso»: '+(g1&&g1.t));
+          todo&=ok(P.cam.nacimiento&&P.cam.nacimiento.b==='B'&&d.CAM.npc.nacimiento,'la respuesta del capítulo abre el camino de la oveja y aparece Natán');
+          const g1=d.camGoal(); todo&=ok(g1&&/oveja/.test(g1.t),'«Tu próximo paso»: '+(g1&&g1.t));
           d.camScene('nacimiento'); await talk(0);
-          todo&=ok(P.cam.nacimiento.s==='task'&&d.CAM.carry&&d.CAM.ring,'elegís cargarla: llevás la corderita y aparece el aro del corral');
+          todo&=ok(P.cam.nacimiento.s==='task'&&d.CAM.carry&&d.CAM.ring,'elegís cargarla: llevás la oveja y aparece el aro del corral');
           tp(d.CAM.ring.x,d.CAM.ring.z); tk(); await talk(0); await wait(3200);
           todo&=ok(P.cam.nacimiento.s==='done'&&P.cam.nacimiento.r==='good','al llegar al corral, camino cumplido');
           todo&=ok(d.gearState().own.includes('lanapastor'),'premio: Guantes de lana de Natán');
           todo&=ok((P.story.att.zel||0)===1,'Asher te mira con buenos ojos');
-          const e1=d.camEco('infancia'); todo&=ok(e1.length&&/corderita/.test(e1[0].t),'en el capítulo siguiente lo recuerdan');
+          const e1=d.camEco('infancia'); todo&=ok(e1.length&&/oveja/.test(e1[0].t),'en el capítulo siguiente lo recuerdan');
           reset(); window.W3.camStart('nacimiento','evangelista'); tk(); d.camScene('nacimiento'); await talk(1); await wait(800);
           todo&=ok(P.cam.nacimiento.r==='meh'&&P.cam.nacimiento.s==='done','el mensaje sin pan: camino menos lindo');
           const e2=d.camEco('infancia'); todo&=ok(e2.length&&/se olvidó/.test(e2[0].t),'después: el arriero se olvidó del mensaje');
