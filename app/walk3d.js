@@ -1680,9 +1680,9 @@ function hudLay() {
 /* Ningún cartel pisa a otro ni a los controles. Los de arriba (rumbo, sala, misión, estación, aldea, avisos…) se apilan de arriba hacia abajo
    y los de abajo (lugar, frase, ayuda) de abajo hacia arriba. Si un cartel chocaría con el panel del jugador, la cámara, el joystick
    o los botones de la derecha, se angosta para entrar en el hueco del medio; si igual no entra, baja (o sube) hasta quedar libre. */
-const BAN_TOP = ['.v3comp', '#v3obj', '#v3timer', '#v3room', '.v3topics', '.v3mis', '.v3seas', '#v3vil', '.v3bagt', '.v3pop', '#toast'];
+const BAN_TOP = ['.v3comp', '#v3obj', '#v3timer', '.v3topics', '.v3mis', '.v3seas', '#v3vil', '.v3bagt', '.v3pop', '#toast'];
 const BAN_BOT = ['.v3pista', '.v3place', '.v3say', '.v3hint'];
-const BAN_OBS = ['#v3crest', '.hud', '.v3surv', '.v3mapbtn', '.v3baghud', '.v3mmbox', '.v3cam', '.v3joy', '#v3joy', '.v3fan .fan-tg', '.v3fan.open .fan-items button', '#v3acts > button', '.v3surv .sv-do', '#khPill', '#v3go', '.v3go', '#v3go button', '#v3go .v3k', '.v3act', '#wixheadless-banner-container'];
+const BAN_OBS = ['#v3crest', '.v3mic:not([hidden])', '.hud', '.v3surv', '.v3mapbtn', '.v3baghud', '.v3mmbox', '.v3cam', '.v3joy', '#v3joy', '.v3fan .fan-tg', '.v3fan.open .fan-items button', '#v3acts > button', '.v3surv .sv-do', '#khPill', '#v3go', '.v3go', '#v3go button', '#v3go .v3k', '.v3act', '#wixheadless-banner-container'];
 const BAN_LEFT = new Set(['v3mis']);
 function topVis(e) { if (!e || e.hidden) return false; const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden' || cs.position !== 'fixed') return false; return +cs.opacity > .04 || e.classList.contains('on') || e.classList.contains('show'); }
 function banReset(e) { if (e.dataset.tsY == null) return; ['top', 'bottom', 'left', 'max-width'].forEach(k => e.style.removeProperty(k)); delete e.dataset.tsY; }
@@ -1717,7 +1717,7 @@ function topStack() {
   run(BAN_TOP, true); run(BAN_BOT, false);
 }
 function compassTick(dt) {
-  HUDL.t = (HUDL.t || 0) - dt; if (HUDL.t <= 0) { HUDL.t = .1; try { hudLay(); } catch (e) {} }
+  HUDL.t = (HUDL.t || 0) - dt; if (HUDL.t <= 0) { HUDL.t = .1; try { hudLay(); micPlace(); } catch (e) {} }
   try { guiaTick(dt); } catch (e) { console.warn('guia', e); }
   if (!S || !S.hx) return; COMP.t -= dt; if (COMP.t > 0) return; COMP.t = .2;
   if (!COMP.el) { COMP.el = document.createElement('div'); COMP.el.className = 'v3comp'; COMP.el.innerHTML = '<i><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3l6 15-6-3.5L6 18Z" fill="currentColor"/></svg></i><span></span>'; COMP.el.onclick = () => openMap(); document.body.appendChild(COMP.el); }
@@ -3757,7 +3757,7 @@ function wireActs() {
     box.innerHTML = '<button data-a="jump" aria-label="Saltar" title="Saltar (barra espaciadora)"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 4l7 7h-4v6H9v-6H5Z" fill="currentColor"/><path d="M6 21h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><button data-a="pray" aria-label="Arrodillarse a orar" title="Orar (tecla O)">🙏</button><button data-a="wave" aria-label="Saludar" title="Saludar (tecla H)">👋</button><button data-a="glow" aria-label="Resplandor" title="Resplandor (tecla P)">🌟</button><button data-a="room" aria-label="Jugar con amigos" title="Jugar con amigos">👥</button><button data-a="help" aria-label="Cómo se juega" title="Cómo se juega">❔</button>';
     document.body.appendChild(box); box.querySelectorAll('button').forEach(b => b.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); ({ jump: doJump, pray: doPray, wave: doWave, sit: doSit, glow: () => S && poseMenu(), room: mpPanel, help: () => guiaPanel() })[b.dataset.a](); }); }
   addEventListener('keydown', e => { if (!S || document.getElementById('view3d').hidden || e.repeat || /INPUT|TEXTAREA/.test((e.target || {}).tagName || '')) return; const k = e.key.toLowerCase(); if (BLD.on && bldKey(k)) { e.preventDefault(); return; } if (k === ' ') { e.preventDefault(); doJump(); } else if (k === 'o') doPray(); else if (k === 'h') doWave(); else if (k === 't' && MP.code) talkStart(); else if (k === 'e') axHold(true); else if (k === 'c') svEat(); else if (k === 'b') svCraft(); else if (k === 'p' && S) (S.hx ? poseMenu() : kidsShine()); });
-  addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 't') talkStop(); }); addEventListener('blur', () => talkStop());
+  addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 't' && !TALK.open) talkStop(); }); addEventListener('blur', () => { if (!TALK.open) talkStop(); });
 }
 function lerpR(o, k, v, w) { o[k] += (v - o[k]) * w; }
 function applyPose(av, t, dt, st) {
@@ -4288,7 +4288,7 @@ async function mpJoin(code) {
 }
 
 /* micrófono: se habla solo mientras se mantiene apretado (tecla T o el botón) */
-const TALK = { stream: null, calls: {}, aus: {}, on: false, want: false };
+const TALK = { stream: null, calls: {}, aus: {}, on: false, want: false, open: false };
 function talkPeer(peer) {
   peer.on('call', c => { if (!MP.players[c.peer]) { c.close(); return; } c.answer(); c.on('stream', st => { let a = TALK.aus[c.peer]; if (!a) { a = TALK.aus[c.peer] = new Audio(); a.autoplay = true; } a.srcObject = st; a.play().catch(() => {}); }); });
 }
@@ -4305,8 +4305,10 @@ async function talkStart() {
   mpSend({ t: 'talk', id: MP.peer && MP.peer.id, on: 1 }); talkUI();
 }
 function talkStop() { TALK.want = false; if (!TALK.on) return; TALK.on = false; if (TALK.stream) TALK.stream.getAudioTracks().forEach(t => t.enabled = false); mpSend({ t: 'talk', id: MP.peer && MP.peer.id, on: 0 }); talkUI(); }
-function talkEnd() { TALK.on = false; TALK.want = false; for (const id in TALK.calls) try { TALK.calls[id].close(); } catch (e) {} for (const id in TALK.aus) { TALK.aus[id].srcObject = null; } if (TALK.stream) TALK.stream.getTracks().forEach(t => t.stop()); TALK.stream = null; TALK.calls = {}; TALK.aus = {}; talkUI(); }
-function talkUI() { const b = document.querySelector('#v3room .r-mic'); if (b) { b.classList.toggle('on', TALK.on); b.textContent = TALK.on ? '🎙️ Hablando…' : '🎙️ Hablar'; } }
+function talkEnd() { TALK.on = false; TALK.want = false; TALK.open = false; for (const id in TALK.calls) try { TALK.calls[id].close(); } catch (e) {} for (const id in TALK.aus) { TALK.aus[id].srcObject = null; } if (TALK.stream) TALK.stream.getTracks().forEach(t => t.stop()); TALK.stream = null; TALK.calls = {}; TALK.aus = {}; talkUI(); }
+function talkUI() { const b = document.querySelector('.v3mic'); if (b) { b.classList.toggle('on', TALK.on); b.classList.toggle('open', !!TALK.open); b.innerHTML = '🎙️<small>' + (TALK.open ? (TALK.on ? 'Abierto' : 'Silencio') : TALK.on ? 'Hablando' : 'Mantené') + '</small>'; b.setAttribute('aria-label', TALK.open ? 'Micrófono abierto: tocá para silenciar o volver a abrir' : 'Mantené apretado para hablar'); } }
+/* micrófono abierto: se habla sin apretar; el botón silencia o vuelve a abrir */
+function talkOpen(on) { TALK.open = !!on; if (on) talkStart(); else talkStop(); talkUI(); }
 function mpLeave(silent) {
   talkEnd();
   try { for (const id in MP.conns) MP.conns[id].close(); if (MP.conn) MP.conn.close(); if (MP.peer) MP.peer.destroy(); } catch (e) {}
@@ -4338,13 +4340,15 @@ function mpTick(t, dt) {
   const now = performance.now(); if (now - MP.last > 110) { const a = S.av.position, s = [+a.x.toFixed(2), +a.y.toFixed(2), +a.z.toFixed(2), +S.yaw.toFixed(2), (S.moving || S.freeMoving) ? 1 : 0, S.pose || null, S.waveT > 1.8 ? 1 : 0, +(S.jy || 0).toFixed(2)], sig = JSON.stringify(s); if (sig !== MP.sig || now - MP.last > 1500) { MP.sig = sig; MP.last = now; mpSend({ t: 'st', id: MP.peer && MP.peer.id, s }); } }
 }
 function mpUI() {
-  let el = document.getElementById('v3room'); if (!el) { el = document.createElement('div'); el.id = 'v3room'; el.className = 'v3room'; el.innerHTML = '<button class="r-who"></button><button class="r-mic">🎙️ Hablar</button><button class="r-say" aria-label="Frases rápidas">💬</button><div class="r-phr" hidden></div>';
-    { const m = el.querySelector('.r-mic'); m.addEventListener('pointerdown', e => { e.preventDefault(); try { m.setPointerCapture(e.pointerId); } catch (x) {} talkStart(); }); ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => m.addEventListener(ev, talkStop)); m.addEventListener('contextmenu', e => e.preventDefault()); if (!matchMedia('(pointer: coarse)').matches) m.title = 'También podés mantener apretada la tecla T'; } document.body.appendChild(el);
-    el.querySelector('.r-who').onclick = mpPanel; el.querySelector('.r-say').onclick = () => { const b = el.querySelector('.r-phr'); b.hidden = !b.hidden; };
-    el.querySelector('.r-phr').innerHTML = PHR.map((p, i) => `<button data-k="${i}">${p}</button>`).join(''); el.querySelectorAll('.r-phr button').forEach(b => b.onclick = () => { mpSay(+b.dataset.k); el.querySelector('.r-phr').hidden = true; }); }
-  el.hidden = !MP.code; el.querySelector('.r-who').textContent = `👥 Sala ${MP.code || ''} · ${1 + Object.keys(MP.players).length}/5`;
+  const old = document.getElementById('v3room'); if (old) old.remove();
+  let m = document.querySelector('.v3mic'); if (!m) { m = document.createElement('button'); m.type = 'button'; m.className = 'v3mic'; document.body.appendChild(m);
+    m.addEventListener('pointerdown', e => { e.preventDefault(); if (TALK.open) { if (TALK.on) talkStop(); else talkStart(); return; } try { m.setPointerCapture(e.pointerId); } catch (x) {} talkStart(); });
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => m.addEventListener(ev, () => { if (!TALK.open) talkStop(); })); m.addEventListener('contextmenu', e => e.preventDefault()); }
+  m.hidden = !MP.code; talkUI(); micPlace();
   const b = document.querySelector('#v3acts [data-a="room"]'); if (b) b.classList.toggle('on', !!MP.code);
 }
+/* el micrófono queda pegado arriba del botón de amigos */
+function micPlace() { const m = document.querySelector('.v3mic'), b = document.querySelector('#v3acts [data-a="room"]'); if (!m || m.hidden) return; const r = b && b.getBoundingClientRect(); if (!r || !r.width) { m.style.right = '18px'; m.style.left = 'auto'; m.style.bottom = '150px'; return; } m.style.left = (r.left + r.width / 2) + 'px'; m.style.right = 'auto'; m.style.bottom = (innerHeight - r.top + 10) + 'px'; }
 function mpPanel() {
   const el = document.getElementById('v3sheet'); if (!el) return; S.joy.x = 0; S.joy.y = 0; const close = () => { el.hidden = true; };
   if (!MP.code) {
@@ -4362,8 +4366,13 @@ function mpPanel() {
   el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>Sala ${MP.code}</b><span>${1 + Object.keys(MP.players).length} de 5 personas</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
     <div class="r-big">${MP.code}</div><ul class="r-list">${list}</ul>
     <div class="x-acts"><button class="r-esp1">⚔️ Espadeo mano a mano</button><button class="r-espA">📖 Espadeo todos contra todos</button><button class="r-quien">🕵️ ¿Quién soy?</button><button class="r-cad">🔗 Versículo en cadena</button><button class="r-race">🏁 Carrera a un lugar</button>${S.hx ? '<button class="r-trade">🤝 Intercambiar o regalar</button><button class="r-gift">🙏 Dar un punto (humildad)</button>' : ''}</div>
+    <div class="r-micbox"><b>🎙️ Hablar con la sala</b><div class="r-mode"><button class="r-m1${TALK.open ? '' : ' on'}">Mantener para hablar</button><button class="r-m2${TALK.open ? ' on' : ''}">Micrófono abierto</button></div>
+      <small>${TALK.open ? 'Te escuchan todo el tiempo. Tocá el 🎙️ de abajo para silenciarte o volver a hablar.' : `Mantené apretado el 🎙️ de abajo${matchMedia('(pointer: coarse)').matches ? '' : ' (o la tecla T)'} mientras hablás; al soltarlo se apaga.`}</small></div>
+    <div class="r-micbox"><b>💬 Frases rápidas</b><div class="r-phr2">${PHR.map((p, i) => `<button data-k="${i}">${p}</button>`).join('')}</div></div>
     <div class="mis-btns"><button class="mis-yes r-share">📨 Invitar con el link</button><button class="mis-no r-leave">Salir de la sala</button></div>
-    <p class="cap-note">🙏 Si se arrodillan a orar juntos, cerca, reciben una bendición una vez por día.</p><p class="cap-note">Mandá el link solo a personas que conocés. Para hablar mantené apretado 🎙️${matchMedia('(pointer: coarse)').matches ? '' : ' o la tecla T'}; al soltar se apaga el micrófono. ${MP.host ? 'Si salís, la sala se cierra para todos.' : ''}</p></div>`;
+    <p class="cap-note">🙏 Si se arrodillan a orar juntos, cerca, reciben una bendición una vez por día.</p><p class="cap-note">Mandá el link solo a personas que conocés. ${MP.host ? 'Si salís, la sala se cierra para todos.' : ''}</p></div>`;
+  el.querySelector('.r-m1').onclick = () => { talkOpen(false); mpPanel(); }; el.querySelector('.r-m2').onclick = () => { talkOpen(true); mpPanel(); };
+  el.querySelectorAll('.r-phr2 button').forEach(b => b.onclick = () => { mpSay(+b.dataset.k); close(); });
   el.hidden = false; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   el.querySelector('.r-leave').onclick = () => { close(); mpLeave(); };
   el.querySelector('.r-esp1').onclick = () => espStart('1v1'); el.querySelector('.r-espA').onclick = () => espStart('all'); el.querySelector('.r-quien').onclick = () => gmInvite('quien', '¿Quién soy?'); el.querySelector('.r-cad').onclick = () => gmInvite('cadena', 'Versículo en cadena'); el.querySelector('.r-race').onclick = () => gmInvite('carrera', 'Carrera a un lugar'); if (S.hx) { el.querySelector('.r-trade').onclick = xTrade; el.querySelector('.r-gift').onclick = xGift; }
@@ -5411,6 +5420,7 @@ const GUIA_PISTAS = {
   do: { sel: '.v3surv:not([hidden]) .sv-do:not([hidden])', t: 'Hacé la acción', tx: 'Cuando aparece este botón, tocalo o apretá E para hacer lo que dice.', txT: 'Cuando aparece este botón, tocalo para hacer lo que dice.' },
   ham: { sel: '.v3surv [data-a="eat"]', t: 'Tenés hambre', tx: 'Tocá el plato para comer algo de tu mochila. Si no tenés comida, cosechá o comprá pan en un puesto.' },
   adv: { sel: '#v3obj', t: '¡Empezó el Adviento!', tx: 'Cada día de diciembre se abre una ventana con la historia de la Navidad. Tocá «Tu próximo paso» para abrir la de hoy.' },
+  mic: { sel: '.v3mic:not([hidden])', t: 'Hablar con tu sala', tx: 'Mantené apretado el micrófono para hablar con tu sala. Si querés dejarlo abierto, tocá el botón de amigos y elegí micrófono abierto.' },
   dia: { sel: '#v3obj', t: 'Desafío de hoy', tx: 'Hoy tenés un desafío nuevo. Tocá «Tu próximo paso» para verlo.' },
   mis: { sel: '.v3mis:not([hidden])', t: 'Tu misión', tx: 'Acá arriba ves lo que te falta. Tocá «Tu próximo paso» y te marco el camino con una flecha.' }
 };
@@ -5497,6 +5507,7 @@ function guiaTick(dt) {
   if (started && may('go')) return guiaShow('go');
   if (may('do')) return guiaShow('do');
   if (may('mis')) return guiaShow('mis');
+  if (MP.code && may('mic')) return guiaShow('mic');
   if (gp.go && !gp.obj && now - GUIA.t0 > 45000 && may('obj')) return guiaShow('obj');
   if (started && gp.go && now - GUIA.t0 > 12000) { const h = advHoy(); if (h.on) { const A = advP(); if (!A.vis && guiaVis('#v3obj')) { A.vis = 1; G().save(); return guiaShow('adv'); } } }
   if (started && gp.go && now - GUIA.t0 > 20000) { const m = metaP(); if (m.vis !== m.d && guiaVis('#v3obj')) { m.vis = m.d; return guiaShow('dia'); } }

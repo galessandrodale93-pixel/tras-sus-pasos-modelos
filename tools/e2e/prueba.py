@@ -24,7 +24,7 @@ OUT = os.path.join(AQUI, 'salida')
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
 DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK')
 
 
 def local(url):
@@ -167,7 +167,16 @@ FOTO = COMUN + r"""
       document.getElementById('v3sheet').hidden=true; S.joy.y=1; await new Promise(r=>setTimeout(r,700)); S.joy.y=0; S.freeMoving=false;
       return {ok:vis&&!!img&&dl, d:`momento de foto al festejar: ${vis} · la foto se ve y se puede guardar o compartir: ${!!img&&dl}`};"""
 
+SALA = COMUN + r"""
+      d.MP.code='PRUEBA'; d.mpUI(); await new Promise(r=>setTimeout(r,600));
+      const top=document.getElementById('v3room'), m=document.querySelector('.v3mic'), rb=document.querySelector('#v3acts [data-a="room"]');
+      const mr=m.getBoundingClientRect(), br=rb?rb.getBoundingClientRect():null, arriba=!!br&&mr.bottom<=br.top+2&&Math.abs((mr.left+mr.width/2)-(br.left+br.width/2))<6;
+      d.mpPanel(); const modos=document.querySelectorAll('#v3sheet .r-mode button').length, frases=document.querySelectorAll('#v3sheet .r-phr2 button').length; document.getElementById('v3sheet').hidden=true;
+      d.MP.code=null; d.mpUI(); const fuera=m.hidden;
+      return {ok:!top&&arriba&&modos===2&&frases>3&&fuera, d:`barra de la sala arriba: ${top?'sigue':'no está'} · micrófono arriba del botón de amigos: ${arriba} · en la ventana de la sala: ${modos} modos de micrófono y ${frases} frases rápidas · sin sala se esconde: ${fuera}`};"""
+
 HERO = {
+    'sala': ('Sala: sin barra arriba, micrófono junto al botón de amigos, modos y frases en la ventana', SALA),
     'foto': ('Momento de foto épica al festejar, con la foto para compartir', FOTO),
     'baile': ('Festejos bíblicos en el menú del Resplandor', BAILE),
     'video': ('Video para compartir: personaje bailando y logros (MP4 720×1280)', VIDEO),
@@ -236,6 +245,7 @@ KIDS = {
 }
 
 CELU = {
+    'salacel': ('Celular: micrófono de la sala junto al botón de amigos', SALA),
     'resucel': ('Celular: resumen de la semana', RESU),
     'mochila': ('iPhone: la mochila abre sin un segundo motor 3D y sin desenfoques', MOCHI),
     'guiacel': ('Guía en el celular: pista y «Tu próximo paso» sin tapar nada', GUIA),

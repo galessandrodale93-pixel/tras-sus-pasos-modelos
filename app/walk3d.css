@@ -1640,3 +1640,14 @@ body.lowmem *,body.lowmem *::before,body.lowmem *::after{-webkit-backdrop-filter
 .vd-v{display:block;width:100%;max-width:300px;max-height:56vh;margin:0 auto;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
 .rc-stage{overflow-y:auto;max-height:calc(100vh - 70px - env(safe-area-inset-top,0px))}
 .ph-img{max-width:min(520px,100%)!important}
+/* micrófono de la sala: pegado arriba del botón de amigos */
+.v3mic{position:fixed;z-index:12;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:58px;height:58px;border-radius:50%;border:2px solid rgba(255,255,255,.45);background:rgba(14,18,30,.82);color:#fff;font-size:22px;line-height:1;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.35)}
+.v3mic small{font:900 9px "Nunito",sans-serif;letter-spacing:.04em;text-transform:uppercase;opacity:.85}
+.v3mic.on{background:rgba(224,76,76,.92);border-color:#FF9A9A;box-shadow:0 0 0 7px rgba(224,76,76,.25)}
+.v3mic.open:not(.on){background:rgba(60,60,70,.9);border-color:rgba(255,255,255,.3)}
+.v3mic[hidden],body:not(.v3on) .v3mic,body:has(#v3sheet:not([hidden])) .v3mic,body.v3talk .v3mic{display:none}
+.r-micbox{margin:10px 0;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);display:flex;flex-direction:column;gap:7px}
+.r-micbox small{font:700 12.5px/1.4 "Nunito",sans-serif;opacity:.85}
+.r-mode{display:flex;gap:6px}.r-mode button{flex:1;border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:9px 6px;background:rgba(255,255,255,.06);color:inherit;font:800 13px "Nunito",sans-serif;cursor:pointer}
+.r-mode button.on{background:linear-gradient(180deg,#FFD98A,#E8913A);color:#2B1D00;border-color:transparent}
+.r-phr2{display:flex;flex-wrap:wrap;gap:6px}.r-phr2 button{border:1px solid rgba(255,255,255,.2);border-radius:99px;padding:7px 11px;background:rgba(255,255,255,.06);color:inherit;font:700 13px "Nunito",sans-serif;cursor:pointer}
