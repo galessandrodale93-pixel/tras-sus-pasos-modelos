@@ -1291,7 +1291,7 @@ function qLevelFor(g) {
   if (/SwiftShader|llvmpipe|Software/i.test(g)) return { lv: 0, max: 1 };
   if (/Intel.*HD Graphics( [2-5]\d{3})?$|Intel.*HD Graphics [2-5]\d{3}|Intel.*Iris(?!.*Xe)|GeForce GT ?[67]\d\dM|Radeon R9 M2\d\d|Radeon HD [5-8]\d{3}M/i.test(g)) return { lv: /HD Graphics( [2-5]\d{3})?$/i.test(g) ? 0 : 1, max: 2 }; // compus de 2012 a 2016 (como una Mac de 2014)
   if (/iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return { lv: 0, max: 1 }; // iPhone y iPad: Safari corta la página si se pasa de memoria, así que arrancan en Bajo
-  if (coarse) return (mem <= 4 || !good) ? { lv: 0, max: 1 } : { lv: 1, max: 1 }; // celulares y tablets: Medio como máximo; los de 4 GB o con placa común (Moto G, Samsung A) arrancan en Bajo
+  if (coarse) { const t = gpuTier(g); if (t === 'buena' && mem > 4) return { lv: 1, max: 1 }; return { lv: 0, max: t === 'debil' ? 0 : 1, liv: t === 'debil' || (t === '?' && mem <= 4) }; } // celulares: Medio solo con placa buena y más de 4 GB; las débiles (Moto G, Samsung A, Redmi) en Bajo y liviano
   // compus modestas: poca RAM, pocos núcleos o video integrado en el procesador (Vega/Radeon Graphics de Ryzen, Intel UHD)
   const cores = navigator.hardwareConcurrency || 4, igpu = /Vega \d+ Graphics|Radeon\(TM\) Graphics|Radeon Graphics|Radeon\(TM\) (Vega|R[457])|Intel.*UHD/i.test(g) && !discrete;
   if (mem <= 4 || cores <= 4) return { lv: 0, max: 1 };
@@ -1387,19 +1387,31 @@ const PROF = { on: /[?&#]prof=1/.test(location.href), acc: {}, n: 0, el: null,
 const CRASH = (() => { try { const v = +(sessionStorage.getItem('tsp:vivo') || 0); sessionStorage.removeItem('tsp:vivo'); const c = v && Date.now() - v < 10 * 60e3 ? 1 : 0; if (c) localStorage.setItem('tsp:cortes', String(+(localStorage.getItem('tsp:cortes') || 0) + 1)); return c; } catch (e) { return 0; } })();
 /* modo liviano (menos distancia, menos plantas y menos resolución): si el juego ya se cortó, y de entrada en los celulares
    con poca memoria: iPhone de pantalla común (11, XR, SE: los de 4 GB o menos) y Android de 4 GB o menos (Moto G, Samsung A) */
-const LIVIANO = (() => { try { if (localStorage.getItem('tsp:q') && localStorage.getItem('tsp:q') !== 'auto' && localStorage.getItem('tsp:q') !== 'bajo') return false; const cortes = +(localStorage.getItem('tsp:cortes') || 0), ua = navigator.userAgent, ios = /iP(hone|ad|od)/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1), coarse = matchMedia('(pointer: coarse)').matches, mem = navigator.deviceMemory || 0;
+let LIVIANO = (() => { try { if (localStorage.getItem('tsp:liv') === '1') return true; if (localStorage.getItem('tsp:q') && localStorage.getItem('tsp:q') !== 'auto' && localStorage.getItem('tsp:q') !== 'bajo') return false; const cortes = +(localStorage.getItem('tsp:cortes') || 0), ua = navigator.userAgent, ios = /iP(hone|ad|od)/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1), coarse = matchMedia('(pointer: coarse)').matches, mem = navigator.deviceMemory || 0;
   return cortes >= 2 || (cortes >= 1 && (ios || (mem && mem <= 4))) || (ios && (devicePixelRatio || 2) < 3) || (coarse && !ios && mem > 0 && mem <= 4); } catch (e) { return false; } })();
 function vivoStart() { if (vivoStart.on) return; vivoStart.on = 1; const mark = () => { try { sessionStorage.setItem('tsp:vivo', String(Date.now())); } catch (e) {} }; mark(); setInterval(mark, 15000); addEventListener('pagehide', () => { try { sessionStorage.removeItem('tsp:vivo'); } catch (e) {} }); }
 const QUAL = { mode: 'auto', lv: 2, max: 3, dpr: 1, cap: 1.5, ema: 16, slow: 0, fast: 0, cool: 0, fr: 0, ft: new Float32Array(300), fi: 0, el: null, acc: 0, gpu: '' };
 const QN = { auto: 'Auto', ultra: 'Ultra', alto: 'Alto', medio: 'Medio', bajo: 'Bajo' }, QL = ['Bajo', 'Medio', 'Alto', 'Ultra'], QOLD = { alta: 'alto', media: 'medio', baja: 'bajo' };
 const QT = { dpr: [.75, 1, 1.25, 1.5], sh: [1024, 1024, 2048, 2048], shEvery: [4, 3, 2, 1], far: [36, 60, 110, 140], dens: [.12, .45, 1, 1], see: [.42, .62, 1, 1.25], near: [0, .5, 1, 1] };
-if (LIVIANO) { QT.dpr[0] = .6; QT.far[0] = 28; QT.dens[0] = .05; QT.see[0] = .32; QT.sh[0] = 512; }
+function livSet() { QT.dpr[0] = .6; QT.far[0] = 28; QT.dens[0] = .05; QT.see[0] = .32; QT.sh[0] = 512; }
+if (LIVIANO) livSet();
+/* pasar a liviano en pleno juego (la placa no da) y recordarlo para la próxima vez */
+function livOn(why) { if (LIVIANO) return; LIVIANO = true; livSet(); try { localStorage.setItem('tsp:liv', '1'); } catch (e) {} if (S) { S.lowm = true; document.body.classList.add('lowmem'); } if (QUAL.lv === 0) { QUAL.dpr = 0; qApply(); try { resize(); } catch (e) {} } r2log('modo liviano: ' + why); }
+/* placas de video de Android: las débiles van a Baja y liviano, las medias a Baja y las buenas a Media */
+function gpuTier(g) {
+  if (!g) return '?'; if (/Apple GPU/i.test(g)) return 'apple';
+  if (/Adreno \(TM\) (7\d\d|6[5-9]\d)|Mali-G7[1-9]\d|Mali-G6[1-9]\d|Mali-G7[01]\b|Immortalis|Xclipse [9]\d\d/i.test(g)) return 'buena';
+  if (/Adreno \(TM\) (61[5-9]|62\d|63\d|64\d)|Mali-G57 MC[3-9]|Mali-G6[89]\b|Mali-G7[2-8]\b|Xclipse [5]\d\d/i.test(g)) return 'media';
+  if (/Mali-(4\d\d|T\d+|G31|G51|G52|G57)|Adreno \(TM\) ([1-5]\d\d|60\d|61[0-4])|PowerVR|IMG |GE8\d{3}|GM9\d{3}|Vivante|Mali-G5[0-9]/i.test(g)) return 'debil';
+  return '?';
+}
 // nivel según la placa de video (si el navegador lo informa) y el tipo de aparato
 function qDetect() { let g = ''; try { const gl = S.renderer.getContext(), e = gl.getExtension('WEBGL_debug_renderer_info'); g = e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); } catch (e) {} QUAL.gpu = g || ''; return qLevelFor(QUAL.gpu); }
 function qInit() {
   try { QUAL.mode = localStorage.getItem('tsp:q') || 'auto'; } catch (e) {} QUAL.mode = QOLD[QUAL.mode] || QUAL.mode; if (!QN[QUAL.mode]) QUAL.mode = 'auto';
   if (CRASH && QUAL.mode !== 'bajo') { QUAL.mode = 'bajo'; try { localStorage.setItem('tsp:q', 'bajo'); } catch (e) {} r2log('la sesión anterior se cortó: calidad Baja'); setTimeout(() => { try { svToast('La última vez el juego se cortó por falta de memoria. Lo abrimos en calidad Baja para que no vuelva a pasar; la podés cambiar en Calidad.'); } catch (e) {} }, 9000); }
   const D = qDetect(); QUAL.max = D.max; QUAL.lv = QUAL.mode === 'auto' ? D.lv : Math.min(D.max, { ultra: 3, alto: 2, medio: 1, bajo: 0 }[QUAL.mode]);
+  if (D.liv && (QUAL.mode === 'auto' || QUAL.mode === 'bajo')) livOn('placa ' + QUAL.gpu);
   QUAL.dpr = 0; qApply(); try { if (localStorage.getItem('tsp:fps') === '1') qOverlay(); } catch (e) {}
 }
 function qApply() {
@@ -1423,9 +1435,10 @@ function qLabel() { return QN[QUAL.mode] + (QUAL.mode === 'auto' ? ' · ' + QL[Q
 function qFrame(raw) {
   QUAL.fr++; QUAL.ft[QUAL.fi++ % 300] = raw; QUAL.ema += (Math.min(raw, 100) - QUAL.ema) * .05;
   if (QUAL.mode === 'auto' && !window.__fxKeep) { QUAL.cool -= raw;
+    if (QUAL.lv === 0 && !LIVIANO && QUAL.fr > 90 && QUAL.ema > 36) { QUAL.livT = (QUAL.livT || 0) + raw; if (QUAL.livT > 3000) { QUAL.livT = 0; livOn('lento en Baja (' + QUAL.ema.toFixed(0) + ' ms)'); return; } } else QUAL.livT = 0;
     if (QUAL.ema > 33) { QUAL.vslow = (QUAL.vslow || 0) + raw; if (QUAL.vslow > 2500 && QUAL.lv > 0) { QUAL.vslow = 0; QUAL.slow = 0; QUAL.cool = 12000; QUAL.lv--; QUAL.dpr = 0; qApply(); return; } } else QUAL.vslow = 0;
     if (QUAL.ema > 20) { QUAL.slow += raw; QUAL.fast = 0; } else if (QUAL.ema < 12.5) { QUAL.fast += raw; QUAL.slow = 0; } else { QUAL.slow = 0; QUAL.fast = 0; }
-    if (QUAL.slow > (QUAL.fr < 900 ? 700 : 2000)) { QUAL.slow = 0; QUAL.cool = 8000; if (QUAL.dpr > QUAL.cap * .8 + .01) { QUAL.dpr = Math.max(.75, QUAL.dpr - .15); S.renderer.setPixelRatio(QUAL.dpr); resize(); } else if (QUAL.lv > 0) { QUAL.lv--; QUAL.dpr = 0; qApply(); } else if (QUAL.dpr > .76) { QUAL.dpr = Math.max(.75, QUAL.dpr - .15); S.renderer.setPixelRatio(QUAL.dpr); resize(); } }
+    if (QUAL.slow > (QUAL.fr < 900 ? 700 : 2000)) { QUAL.slow = 0; QUAL.cool = 8000; if (QUAL.dpr > QUAL.cap * .8 + .01) { QUAL.dpr = Math.max(LIVIANO ? .5 : .75, QUAL.dpr - .15); S.renderer.setPixelRatio(QUAL.dpr); resize(); } else if (QUAL.lv > 0) { QUAL.lv--; QUAL.dpr = 0; qApply(); } else if (QUAL.dpr > (LIVIANO ? .51 : .76)) { QUAL.dpr = Math.max(LIVIANO ? .5 : .75, QUAL.dpr - .15); S.renderer.setPixelRatio(QUAL.dpr); resize(); } }
     else if (QUAL.fast > 7000 && QUAL.cool <= 0) { QUAL.fast = 0; QUAL.cool = 6000; if (QUAL.dpr < QUAL.cap - .01) { QUAL.dpr = Math.min(QUAL.cap, QUAL.dpr + .1); S.renderer.setPixelRatio(QUAL.dpr); resize(); } else if (QUAL.lv < QUAL.max) { QUAL.lv++; QUAL.dpr = 0; qApply(); } } }
   const every = QT.shEvery[QUAL.lv]; if (QUAL.fr % every === 0) S.renderer.shadowMap.needsUpdate = true;
   if (QUAL.el && (QUAL.acc += raw) > 500) { QUAL.acc = 0; const a = Array.from(QUAL.ft.slice(0, Math.min(300, QUAL.fi))).sort((x, y) => x - y), n = a.length, avg = a.reduce((x, y) => x + y, 0) / Math.max(1, n), p99 = a[Math.floor(n * .99)] || 0, i = S.renderer.info;
