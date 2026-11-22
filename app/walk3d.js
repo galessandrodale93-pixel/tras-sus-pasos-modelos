@@ -2136,7 +2136,7 @@ function fxCtx() { let A = (typeof AU !== 'undefined' && AU.ctx) || fxCtx.A; if 
 function tone3d() { try { const A = fxCtx(); [660, 880, 1100].forEach((f, i) => { const o = A.createOscillator(), gn = A.createGain(); o.frequency.value = f; o.type = 'triangle'; gn.gain.setValueAtTime(.0001, A.currentTime + i * .12); gn.gain.exponentialRampToValueAtTime(.15, A.currentTime + i * .12 + .02); gn.gain.exponentialRampToValueAtTime(.0001, A.currentTime + i * .12 + .3); o.connect(gn); gn.connect(A.destination); o.start(A.currentTime + i * .12); o.stop(A.currentTime + i * .12 + .35); }); } catch (e) {} }
 function misTick(t) {
   if (!S.mis) return; if (!(S.ptT > t)) { S.ptT = t + 1.2; try { puertaTick(); } catch (e) {} try { casiTick(t); } catch (e) {} try { pueTick(t); } catch (e) {} }
-  try { iniTick(t); } catch (e) {} const p = misState(), a = S.av.position, ui = misUI(), d2 = (q) => (q[0] - a.x) ** 2 + (q[1] - a.z) ** 2;
+  try { iniTick(t); } catch (e) {} try { camTick(t); } catch (e) {} const p = misState(), a = S.av.position, ui = misUI(), d2 = (q) => (q[0] - a.x) ** 2 + (q[1] - a.z) ** 2;
   if (document.getElementById('view3d').hidden) { ui.hidden = true; return; }
   for (const id in S.mis) { const m = S.mis[id], open = misOpen(m, p), done = !!p.missions[id], act = p.mact && p.mact.id === id; m.bang.visible = open && !done && !act && !CINE.on; /* en las charlas no tapa las caras */ if (m.d.after) { const vis = open || done || act; m.giver.visible = vis; } m.bang.position.y = m.giver.position.y + 2.35 + Math.sin(t * 3) * .08; m.giver.visible = m.target ? true : true; }
   const act = p.mact && S.mis[p.mact.id]; S.misGoal = null;
@@ -4656,6 +4656,10 @@ const RAR = { c: ['Común', '#C9C2B4', 70], r: ['Rara', '#6FB6FF', 20], e: ['Ép
 const GEAR = [
   { id: 'nav_gloria', s: 'shirt', r: 'u', t: 'plain', c: '#F1ECDF', name: 'Túnica de Nochebuena', desc: 'Regalo de Navidad. «¡Gloria a Dios en las alturas, y en la tierra paz!» (Lucas 2:14).' },
   { id: 'nav_magos', s: 'hat', r: 'u', t: 'turban', c: '#6E3A86', name: 'Turbante de los magos', desc: 'Regalo de Reyes. Los sabios de oriente siguieron la estrella hasta Belén para adorar al niño (Mateo 2:1-11).' },
+  { id: 'tocescriba', s: 'hat', r: 'u', t: 'cloth', c: '#D8CBA8', c2: '#2A2A4A', name: 'Tocado del escriba', desc: 'Camino del rollo de Miqueas: copiaste letra por letra con Eleazar.' },
+  { id: 'lanapastor', s: 'gloves', r: 'u', t: 'glove', c: '#E8DDC6', name: 'Guantes de lana de Natán', desc: 'Camino de la corderita: cargaste a Tamar hasta el corral.' },
+  { id: 'turbmensajero', s: 'hat', r: 'u', t: 'turban', c: '#5A6EA8', name: 'Turbante del mensajero', desc: 'Camino del mensaje: la buena noticia llegó a Capernaúm.' },
+  { id: 'panueloposada', s: 'hat', r: 'u', t: 'cloth', c: '#C9973A', c2: '#7A3A2A', name: 'Pañuelo de la posada', desc: 'Camino de las mantas: abrigaste al bebé del establo.' },
   { id: 'primerpaso', s: 'boots', r: 'u', t: 'sandal', hi: 1, c: '#C9973A', name: 'Sandalias del primer paso', desc: 'Regalo de bienvenida. «¡Qué hermosos son los pies de los mensajeros que traen buenas noticias!» (Romanos 10:15).' },
   { id: 'equipo4', s: 'hat', r: 'u', t: 'wrap', c: '#2F6A5A', c2: '#E8C27A', name: 'Turbante de los compañeros de camino', desc: 'Premio por cumplir 4 desafíos en equipo. «Es mejor ser dos que uno» (Eclesiastés 4:9).' },
   { id: 'cam7', s: 'shirt', r: 'u', t: 'plain', c: '#9C7A4E', name: 'Manto del caminante', desc: 'Premio del camino de 7 días. «Lámpara es a mis pies tu palabra, y lumbrera a mi camino» (Salmo 119:105).' },
@@ -5689,6 +5693,7 @@ function guiaGoals() {
   let am = []; try { am = amGoals(); am.filter(x => x.hot).forEach(x => out.push(x)); } catch (e) {}
   let adv = null; try { adv = advGoal(); if (adv && adv.hot) out.push(adv); } catch (e) {}
   try { const ig = iniGoal(); if (ig) out.unshift(ig); } catch (e) {}
+  try { const cg2 = camGoal(); if (cg2) out.push(cg2); } catch (e) {}
   try { const pg = puertaGoal(); if (pg) out.push(pg); } catch (e) {}
   try { const cg = casiGoal(); if (cg) out.push(cg); } catch (e) {}
   try { const id = nodeActive(); if (id) { const n = g.NODES[id], here = id === g.P().pos; out.push({ ic: '📖', t: here ? 'Entrá ' + aLp(n.label) : 'Caminá ' + aLp(n.label), sub: here ? 'Seguí la historia: te espera el pasaje y su desafío.' : 'Seguí la historia: es tu próxima parada. El botón dorado te lleva caminando.', b: here ? 'Entrar' : 'Caminar', fn: () => go(id) }); } } catch (e) {}
@@ -5963,6 +5968,148 @@ function iniGoal() {
   if (!st.l) return { hot: 1, ic: '🌟', t: `Tu primer camino · ${n} de 3`, sub: S.hx ? 'Hacé brillar tu Resplandor: elegí una pose y quedate quieto unos segundos.' : 'Hacé brillar tu lámpara: tocá la estrella.', b: 'Brillar', fn: () => { try { S.hx ? poseMenu(true) : kidsShine(); } catch (e) {} } };
   if (!st.s) { const id = nodeActive(); return { hot: 1, ic: '📖', t: `Tu primer camino · ${n} de 3`, sub: 'Jugá tu primera parada de la historia. El botón dorado te lleva caminando.', b: 'Ir', fn: id ? () => go(id) : null }; }
   return null;
+}
+
+/* =====================================================================
+   CAMINOS DE LA HISTORIA: lo que decidís te lleva a lugares distintos (Kids y Hero).
+   En cada etapa elegís un camino (en Hero, con la respuesta del capítulo; en Kids, con la pregunta del narrador).
+   Cada camino te lleva a un lugar del mapa, con su persona, su escena hablada y una decisión adentro:
+   una respuesta buena (premio propio: prenda única, título, figuritas) y otra menos linda pero nunca grave
+   (te perdés algo, alguien se queda triste o te mira distinto). Lo que pasó se arrastra: en la etapa siguiente
+   alguien lo recuerda. Cada jugador ve un solo camino por etapa; los otros quedan para otra partida.
+   Piloto: Nacimiento. Citas: paráfrasis sin comillas, salvo NTV verificada.
+   ===================================================================== */
+const CAMS = {
+  nacimiento: {
+    r: 0,
+    /* Hero: la respuesta del capítulo elige el camino */
+    hero: { maestro: 'A', misericordia: 'B', evangelista: 'C' },
+    /* Kids: el narrador pregunta después de tu primera parada */
+    kids: { t: 'Esa noche, Belén estaba llena de gente que venía de todas partes. Todos necesitaban una mano.', ask: '¿A quién querés ayudar?', o: [['A los pastores, que cuidan sus ovejas en el campo', 'B'], ['A la posada, que está llena y necesita ayuda', 'K']] },
+    br: {
+      A: { hx: 1, name: 'El rollo de Miqueas', goal: 'Encontrate con Eleazar en Belén', who: 'esc', at: 'Belén', off: [-9, 7],
+        hi: [['esc', 'Llegaste. Acá, en esta aldea chiquita, se cumplió algo que estaba escrito hace setecientos años.'], ['esc', 'El profeta Miqueas escribió que de Belén, una de las aldeas más pequeñas de Judá, iba a salir un gobernante para Israel. Alguien cuyo origen viene desde la eternidad.']],
+        ask: ['esc', 'Los escribas copiamos cada letra con mucho cuidado. ¿Querés copiar esta línea conmigo?'],
+        good: { t: 'Sí. Despacio, letra por letra.', then: [['esc', 'Así se aprende: con paciencia. Mirá acá, en el margen… alguien escribió una nota: «Belén, la casa del pan».'], ['esc', 'El pan de vida nació en la casa del pan. Guardá esto en tu corazón, muchacho.']],
+          prize: { gear: 'tocescriba', sab: 3, att: { esc: 1 }, title: 'Aprendiz del rollo' }, done: 'Copiaste el rollo con Eleazar y encontraste la nota del margen.' },
+        meh: { t: 'Mejor contámelo vos, que es más rápido.', then: [['esc', 'Lo que se aprende rápido, rápido se olvida. Bueno… otro día será.'], ['nar', 'Eleazar enrolla el pergamino sin mostrarte lo que estaba escrito en el margen.']],
+          prize: { sab: 1 }, done: 'Eleazar te contó el rollo, pero te quedaste sin ver la nota del margen.' },
+        eco: { good: [['esc', '¿Te acordás de la nota del margen, la de la casa del pan? Desde ese día leo el rollo con otros ojos.']], meh: [['esc', 'Todavía tengo guardado el rollo de Miqueas. Algún día, cuando tengas paciencia, te muestro lo que dice el margen.']] } },
+      B: { name: 'La corderita de Natán', goal: 'Buscá a Natán en los campos de los pastores', who: { name: 'Natán', sub: 'pastor joven de Belén', voice: 'past', look: { g: 'chico', age: 15, skin: '#A87A52', hair: '#1E1410', outfit: '#8A7A5A' } }, at: 'Campos de los pastores', off: [-12, -9],
+        hi: [['p', '¡Shalom! Qué bueno que viniste. Una de mis corderitas se lastimó la pata entre las piedras y no puede caminar.'], ['p', 'Mi papá dice que un buen pastor conoce a cada oveja por su nombre. Esta se llama Tamar.']],
+        ask: ['p', 'El corral está del otro lado de la loma. ¿Me ayudás?'],
+        good: { t: 'Yo la llevo en los hombros hasta el corral.', task: { carry: { k: 'sheep' }, at: 'Campos de los pastores', off: [14, 10], label: 'el corral' }, then: [['p', '¡Gracias! Llevala despacito, que tiene miedo.']],
+          arrive: [['p', '¡Llegaron! Mirala, ya está tranquila.'], ['p', 'Así es un buen pastor: deja a las demás en un lugar seguro y va a buscar a la que se lastimó. Esto es para vos.']],
+          prize: { gear: 'lanapastor', att: { zel: 1 }, title: 'Amigo de los pastores', kidsPts: 30, sobre: 1 }, done: 'Cargaste a Tamar hasta el corral de Natán.' },
+        meh: { t: 'Le aviso a tu hermano y sigo mi camino.', then: [['p', 'Está bien… gracias igual.'], ['nar', 'Un rato después ves a Natán subiendo la loma solo, despacio, con la corderita en brazos.']],
+          prize: { money: 10, kidsPts: 10, att: { zel: -1 } }, done: 'Le avisaste al hermano de Natán y seguiste tu camino.' },
+        eco: { good: [['zel', 'Todavía me acuerdo de la corderita que cargaste en Belén. Eso no lo hace cualquiera.']], meh: [['zel', 'Ese pastorcito de Belén tardó toda la tarde en llegar al corral. Podríamos haberlo ayudado.']] },
+        ecoK: { good: 'Natán te manda saludos desde Belén: Tamar, la corderita, ya corre por el campo.', meh: 'Te enteraste de que Natán tardó toda la tarde en llevar a Tamar al corral. La próxima vez, ¡a ayudar!' } },
+      C: { hx: 1, name: 'Un mensaje para tu papá', goal: 'Buscá a Jonás, el arriero, en Belén', who: { name: 'Jonás', sub: 'arriero de una caravana', voice: 'varon', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#3A2A1A', outfit: '#7A5A3A', anim: ['M_Standing_Idle', 'M_Holding_Idle'] } }, at: 'Belén', off: [11, -10],
+        hi: [['p', 'Mañana al amanecer salgo con la caravana para Galilea. Paso por Capernaúm.'], ['p', 'Me contaron que tenés a tu papá enfermo allá.']],
+        ask: ['p', '¿Querés que le lleve un mensaje?'],
+        good: { t: 'Sí: decile que el Mesías nació en Belén. Y tomá, pan para el viaje.', pay: 1, then: [['p', 'Con pan en la bolsa, el camino es más corto. En tres días tu papá lo va a saber, palabra de arriero.']],
+          prize: { title: 'Mensajero de buenas noticias', gear: 'turbmensajero', glow: 6 }, done: 'Mandaste a tu papá la noticia con Jonás, el arriero.' },
+        meh: { t: 'Llevaselo, pero no tengo nada para darte.', then: [['p', 'Bueno… veré si me acuerdo.'], ['nar', 'Jonás se aleja silbando. No estás seguro de que se acuerde.']],
+          prize: { glow: 2 }, done: 'Le diste el mensaje a Jonás, pero no estás seguro de que llegue.' },
+        eco: { good: [['nar', 'Llega una noticia de Capernaúm: tu papá recibió tu mensaje. Dicen que sonrió por primera vez en semanas.']], meh: [['nar', 'Llega una noticia de Capernaúm: el arriero se olvidó de tu mensaje. Vas a tener que contárselo vos mismo.']] } },
+      K: { kids: 1, name: 'Mantas para el pesebre', goal: 'Buscá a Rut en la posada de Belén', who: { name: 'Rut', sub: 'la hija del posadero', voice: 'mujer', look: { g: 'chica', age: 10, skin: '#B98A62', hair: '#2A1B14', outfit: '#9A6A5A' } }, at: 'Belén', off: [8, 9],
+        hi: [['p', '¡Hola! La posada está llenísima. Una familia tuvo que quedarse en el establo… ¡y acaba de nacer un bebé!'], ['p', 'Hace frío esta noche y no tienen mantas.']],
+        ask: ['p', '¿Me ayudás a llevarles una?'],
+        good: { t: '¡Sí! Les llevo mi manta.', task: { carry: { k: 'cloth', c: '#B9A27C' }, at: 'Belén', off: [-6, 13], label: 'el establo' }, then: [['p', '¡Gracias! El establo está por allá.']],
+          arrive: [['nar', 'María toma la manta con una sonrisa y envuelve al bebé. Afuera, Rut aplaude.'], ['p', '¡Ese bebé es especial! Tomá, esto es para vos.']],
+          prize: { gear: 'panueloposada', kidsPts: 30, sobre: 1 }, done: 'Le llevaste tu manta al bebé del establo.' },
+        meh: { t: 'Mejor que busque en otro lado.', then: [['p', 'Ah… bueno. Voy a seguir buscando.'], ['nar', 'Rut se va con la cabeza gacha a golpear otras puertas.']],
+          prize: { kidsPts: 10 }, done: 'Rut siguió buscando mantas sola.' },
+        ecoK: { good: 'Rut te manda saludos desde Belén: dice que nunca se va a olvidar de la noche del bebé y tu manta.', meh: 'Te enteraste de que Rut consiguió una manta muy tarde esa noche. La próxima vez, ¡a ayudar!' } }
+    }
+  }
+};
+const CAM = { npc: {}, ring: null, carry: null, t: 0 };
+function camP() { const p = G().P(); p.cam = p.cam || {}; return p.cam; }
+const camRid = r => { try { return G().REGIONS[r].id; } catch (e) { return null; } };
+const camDef = (rid, b) => CAMS[rid] && CAMS[rid].br[b];
+/* elegir un camino (Hero, desde la respuesta del capítulo) */
+function camStart(rid, tag) { const C = CAMS[rid]; if (!C || !S || !S.hx) return; const b = C.hero[tag], st = camP(); if (!b || st[rid]) return; st[rid] = { b, s: 'go' }; G().save(); camShow(rid);
+  setTimeout(() => { const d = camDef(rid, b); misPop('🧭 Tu camino: ' + d.name, d.goal); svToast('🧭 Elegiste un camino: ' + d.goal + '. La flecha te lleva.', 'Elegiste un camino. ' + d.goal + '.'); try { camWp(rid); } catch (e) {} }, 1600); }
+/* Kids: el narrador pregunta a quién ayudar (después de la primera parada de la etapa) */
+function camAskKids(rid) { const C = CAMS[rid], K = C && C.kids; if (!K) return; const st = camP(); if (st[rid]) return; st[rid] = { b: null, s: 'ask' }; G().save();
+  const pick = b => { st[rid] = { b, s: 'go' }; G().save(); camShow(rid); const d = camDef(rid, b); setTimeout(() => { misPop('🧭 Tu camino: ' + d.name, d.goal); svToast('🧭 ' + d.goal + '. ¡La flecha te lleva!', d.goal + '. La flecha te lleva.'); camWp(rid); }, 600); };
+  camRun({}, [{ who: 'nar', t: K.t }, { who: 'nar', ask: K.ask, o: K.o.map(([t, b]) => ({ t, fn: () => pick(b) })) }], () => { if (!camP()[rid].b) pick(K.o[0][1]); }); }
+function camAskHero(rid) { const A = P3.mod.HASK[rid]; camRun({ [A.who]: {} }, [{ who: A.who, ask: A.q, o: A.o.map(([t, tag, att, rep]) => ({ t, fn: () => { const p = G().P(); p.story = p.story || {}; const a = p.story.att = p.story.att || { esc: 0, zel: 0, rom: 0 }; for (const k in att) a[k] = (a[k] || 0) + att[k]; p.dones = p.dones || {}; p.dones[tag] = (p.dones[tag] || 0) + 1; p.story.ans = p.story.ans || {}; p.story.ans[rid] = tag; G().save(); camStart(rid, tag); }, then: [{ who: rep[0], t: rep[1] }] })) }]); }
+/* el lugar del camino: la persona, el signo de exclamación y el cartel para hablar */
+function camShow(rid) {
+  const st = camP()[rid]; if (!st || !st.b || st.s === 'done' || !S || !S.scene) return; const d = camDef(rid, st.b); if (!d || CAM.npc[rid]) return; const pos = vivoAt(d.at, d.off); if (!pos) return;
+  const look = d.who === 'esc' ? CMP_CAST.esc.look : d.who.look, rig = S.hx || H3.ok, o = rig ? buildHeroAvatar(Object.assign({}, look)) : buildAvatar(look, false); o.userData.stay = 1; if (!rig) o.scale.setScalar(1.08);
+  const y = Math.max(0, S.W.hAt(pos[0], pos[1])); o.position.set(pos[0], y, pos[1]); const q = (S.pois || []).find(x => x.name === d.at); o.rotation.y = q ? Math.atan2(q.x - pos[0], q.z - pos[1]) : 0; o.traverse(m => { if (m.isMesh) m.castShadow = true; if (m.isPointLight) m.intensity = 0; }); S.scene.add(o);
+  const bang = bangSprite(); bang.position.set(pos[0], y + 2.5, pos[1]); S.scene.add(bang); const nm = d.who === 'esc' ? 'Eleazar' : d.who.name;
+  const lore = { x: pos[0] + Math.sin(o.rotation.y) * 1.1, z: pos[1] + Math.cos(o.rotation.y) * 1.1, r: 2.2, label: 'Hablar con ' + nm, act: () => camScene(rid) }; S.lore.push(lore);
+  CAM.npc[rid] = { o, bang, lore, x: pos[0], z: pos[1], nm };
+}
+function camWp(rid) { const n = CAM.npc[rid]; if (n) guiaWp(n.x, n.z, n.nm); }
+/* la escena del camino */
+function camScene(rid) {
+  const st = camP()[rid], d = st && camDef(rid, st.b), N = CAM.npc[rid]; if (!d || !N || st.s !== 'go') return;
+  const cast = d.who === 'esc' ? { esc: { o: N.o, name: 'Eleazar', sub: 'anciano escriba', voice: 'esc', pitch: .78, rate: .92 } } : { p: { o: N.o, name: d.who.name, sub: d.who.sub, voice: d.who.voice } };
+  const mk = L => L.map(([who, t]) => ({ who, t }));
+  const opt = (k) => { const R = d[k]; return { t: R.t, fn: () => camPick(rid, k), then: mk(R.then) }; };
+  camRun(cast, mk(d.hi).concat([{ who: d.ask[0], ask: d.ask[1], o: [opt('good'), opt('meh')] }]), () => camAfter(rid));
+}
+function camPick(rid, k) { const st = camP()[rid], d = camDef(rid, st.b), R = d[k]; st.r = k; if (R.pay) camPay(); st.s = R.task ? 'task' : 'fin'; G().save(); }
+function camPay() { try { if (S.hx) { const s = svP(); if ((s.inv.bread || 0) > 0) svAdd('bread', -1); else if ((s.inv.money || 0) >= 5) svAdd('money', -5); } } catch (e) {} }
+function camAfter(rid) { const st = camP()[rid]; if (!st) return; const d = camDef(rid, st.b), R = d && d[st.r]; if (!R) return;
+  if (st.s === 'task') { camTask(rid); return; } camEnd(rid); }
+/* la tarea: llevar algo hasta un lugar (la corderita al corral, la manta al establo) */
+function camTask(rid) { const st = camP()[rid], d = camDef(rid, st.b), T = d.good.task, pos = vivoAt(T.at, T.off); if (!pos) { camEnd(rid); return; }
+  const c = misMesh(T.carry); c.scale.setScalar(.7); c.position.y = 2.25; if (S.av.userData.h3 && H3.clips && H3.clips.M_Holding_Idle) { c.scale.setScalar(.45); c.position.set(0, 1.08, .34); } S.av.add(c); CAM.carry = c;
+  const ring = new THREE.Mesh(new THREE.RingGeometry(.9, 1.1, 36), new THREE.MeshBasicMaterial({ color: '#FFD873', transparent: true, opacity: .75, side: THREE.DoubleSide, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.set(pos[0], Math.max(0, S.W.hAt(pos[0], pos[1])) + .06, pos[1]); S.scene.add(ring);
+  CAM.ring = { m: ring, x: pos[0], z: pos[1], rid, label: T.label }; st.tp = pos; G().save(); guiaWp(pos[0], pos[1], 'Hasta ' + T.label); }
+function camEnd(rid) {
+  const st = camP()[rid]; if (!st || st.s === 'done') return; const d = camDef(rid, st.b), R = d[st.r]; st.s = 'done'; st.d = vday(); G().save(); camPrize(R.prize || {}, d);
+  const N = CAM.npc[rid]; if (N) { N.bang.visible = false; N.lore.label = 'Saludar a ' + N.nm; N.lore.act = () => { try { G().vo('¡Gracias otra vez!', d.who === 'esc' ? 'esc' : d.who.voice); } catch (e) {} svToast(N.nm + ': ¡Gracias otra vez!'); }; }
+  setTimeout(() => { misPop(st.r === 'good' ? '🧭 Camino cumplido' : '🧭 Camino terminado', R.done); if (st.r === 'good') { try { tone3d(); h3do(['M_Cheering', 'M_Thankful'], 2.4); } catch (e) {} } svToast((st.r === 'good' ? '✨ ' : '🍂 ') + R.done + (st.r === 'good' ? '' : ' Lo que elegiste también cuenta: más adelante alguien se va a acordar.'), R.done); try { sello('camino-' + rid + '-' + st.b + st.r[0], d.name); } catch (e) {} }, 700);
+}
+function camPrize(P, d) { const g = G(), p = g.P(); try {
+  if (P.gear && GBY[P.gear] && !gearState().own.includes(P.gear)) setTimeout(() => gearGive(GBY[P.gear], d.name), 2400);
+  if (S.hx) { if (P.sab) axGain('sab', P.sab); if (P.money) svAdd('money', P.money); if (P.title) { const s = svP(); s.titles = s.titles || []; if (!s.titles.includes(P.title)) s.titles.push(P.title); } }
+  else { if (P.kidsPts) p.bonus = (p.bonus || 0) + P.kidsPts; if (P.sobre) setTimeout(() => { try { albGetSobre(P.sobre, '¡Un sobre de figuritas por tu camino!'); } catch (e) {} }, 3600); }
+  if (P.glow) glowAdd(P.glow, 'camino'); if (P.att) { p.story = p.story || {}; const a = p.story.att = p.story.att || { esc: 0, zel: 0, rom: 0 }; for (const k in P.att) a[k] = (a[k] || 0) + P.att[k]; }
+  g.save(); g.refreshHud && g.refreshHud(); } catch (e) { console.warn('camino premio', e); } }
+/* lo que pasó se recuerda en la etapa siguiente (Hero: en la apertura del capítulo; Kids: un aviso del narrador) */
+function camEco(rid) { try { const g = G(), i = g.REGIONS.findIndex(R => R.id === rid); if (i < 1) return []; const prev = g.REGIONS[i - 1].id, st = camP()[prev]; if (!st || st.s !== 'done') return []; const d = camDef(prev, st.b); if (!d || !d.eco) return []; return (d.eco[st.r] || []).map(([who, t]) => ({ who, t })); } catch (e) { return []; } }
+function camEcoKids(r) { const g = G(), rid = camRid(r), prev = camRid(r - 1), st = prev && camP()[prev]; if (!st || st.s !== 'done' || st.eco) return; const d = camDef(prev, st.b); if (!d || !d.ecoK) return; st.eco = 1; G().save(); const t = d.ecoK[st.r]; if (t) setTimeout(() => { say(t, 'Lo que pasó en tu camino'); }, 2500); }
+/* el ciclo: carga lo que falta, pregunta en Kids, la tarea en curso y el recuerdo en la etapa siguiente */
+function camTick(t) {
+  if (!S || !S.av || CAM.t > t) return; CAM.t = t + .5; const g = G(), st = camP();
+  for (const rid in CAMS) { const s = st[rid]; if (s && s.b && s.s !== 'done') camShow(rid); }
+  if (CAM.ring) { const R = CAM.ring; R.m.rotation.z = t; if (Math.hypot(S.av.position.x - R.x, S.av.position.z - R.z) < 1.8) { S.scene.remove(R.m); if (CAM.carry) { S.av.remove(CAM.carry); CAM.carry = null; } const rid = R.rid; CAM.ring = null;
+      const d = camDef(rid, st[rid].b), N = CAM.npc[rid], cast = d.who === 'esc' ? { esc: { o: N && N.o, name: 'Eleazar' } } : { p: { o: N ? N.o : null, name: d.who.name, sub: d.who.sub, voice: d.who.voice } }; if (!cast.p || !cast.p.o) { delete cast.p; }
+      st[rid].s = 'fin'; G().save(); camRun(cast, d.good.arrive.map(([who, tx]) => ({ who, t: tx })), () => camEnd(rid)); } }
+  else { for (const rid in CAMS) { const s = st[rid]; if (s && s.s === 'task' && !CAM.carry && CAM.npc[rid]) { camTask(rid); break; } } }
+  if (CINE.on || sheetUp()) return;
+  for (const rid in CAMS) { const s = st[rid]; if (!s) continue; if (s.s === 'fin') camEnd(rid); else if (s.s === 'ask') { delete st[rid]; G().save(); } }
+  if (S.hx) { const ps = g.P().story || {}; for (const rid in CAMS) { if (st[rid]) continue; if (ps.ans && ps.ans[rid]) { camStart(rid, ps.ans[rid]); return; }
+      /* si el capítulo se abrió en tarjetas (sin la pregunta), la pregunta llega igual, un rato después */
+      if (ps.open && ps.open[rid] && P3.mod && P3.mod.HASK && P3.mod.HASK[rid]) { CAM.askW = CAM.askW || t + 25; if (t > CAM.askW) { CAM.askW = t + 600; camAskHero(rid); return; } } } }
+  if (!S.hx) { for (const rid in CAMS) { const C = CAMS[rid]; if (st[rid] || !C.kids) continue; const R = g.REGIONS[C.r]; if (!R) continue; const any = ['n1', 'n2', 'n3'].some(k => g.isDone(R.id + '-' + k)); let ok = true; try { ok = iniP().fin; } catch (e) {} if (any && ok) { camAskKids(rid); return; } }
+    const r = (g.NODES[g.P().pos] || {}).r; if (r > 0) camEcoKids(r); }
+}
+/* para «Tu próximo paso» */
+function camGoal() { const st = camP(); for (const rid in CAMS) { const s = st[rid]; if (!s || !s.b || s.s === 'done') continue; const d = camDef(rid, s.b), N = CAM.npc[rid];
+  if (s.s === 'task' && CAM.ring) return { hot: 1, ic: '🧭', t: 'Tu camino: ' + d.name, sub: 'Llevalo hasta ' + CAM.ring.label + '. El aro dorado marca el lugar.', b: 'Llevarme', fn: () => guiaWp(CAM.ring.x, CAM.ring.z, 'Hasta ' + CAM.ring.label) };
+  if (s.s === 'go' && N) return { hot: 1, ic: '🧭', t: 'Tu camino: ' + d.name, sub: d.goal + '. Elegiste este camino; los otros quedan para otra partida.', b: 'Llevarme', fn: () => camWp(rid) }; } return null; }
+/* charla: en Hero con la cámara de cine; en Kids (o si no se puede) en una hoja con voz */
+function camRun(cast, steps, onDone) {
+  const c2 = {}; for (const k in cast) if (cast[k] && (cast[k].o || CMP_CAST[k])) c2[k] = cast[k];
+  if (S.hx && cineOk() && cine({ cast: c2, steps, onDone })) return;
+  const q = steps.slice(), NM = k => k === 'nar' ? '' : k === 'me' ? (G().P().name || 'Vos') : (cast[k] && cast[k].name) || (CMP_CAST[k] && CMP_CAST[k].name) || '', VC = k => k === 'nar' ? 'narrador' : (cast[k] && cast[k].voice) || (CMP_CAST[k] && CMP_CAST[k].voice) || 'varon';
+  const next = () => { const st = q.shift(); try { G().voStop(); } catch (e) {} if (!st) { const el = document.getElementById('v3sheet'); el.hidden = true; try { onDone && onDone(); } catch (e) {} return; }
+    const nm = NM(st.who), t = String(st.ask || st.t || '').replace(/\{name\}/g, G().P().name || '');
+    const el0 = vilSheet(`<div class="inv-h"><b>${nm ? esc(nm) : '🧭 Tu camino'}</b></div>${nm && cast[st.who] && cast[st.who].sub ? `<small class="vil-k">${esc(cast[st.who].sub)}</small>` : ''}<p class="vil-p${st.who === 'nar' ? ' cam-nar' : ''}">${esc(t)}</p>${st.o ? `<div class="vivo-o">${st.o.map((o, i) => `<button data-i="${i}">${esc(o.t)}</button>`).join('')}</div>` : '<div class="mis-btns"><button class="mis-yes cam-go">Seguir</button></div>'}`, el => {
+      if (st.who !== 'me') try { G().vo(t, VC(st.who)); } catch (e) {}
+      if (st.o) el.querySelectorAll('.vivo-o button').forEach(b => b.onclick = () => { const o = st.o[+b.dataset.i]; try { o.fn && o.fn(); } catch (e) {} q.unshift(...(o.then || [])); next(); });
+      else el.querySelector('.cam-go').onclick = next; }); el0.onclick = null; };
+  next();
 }
 
 function metaGoal() {
@@ -11201,7 +11348,7 @@ function examReq(r, kids) { try { if (!S || !S.pois) return []; const pz = S.poi
   return L.filter(x => x.need > 0); } catch (e) { return []; } }
 /* premio por aprobar una etapa por primera vez: una prenda asegurada de rara para arriba y un poco de Resplandor */
 function examPrize(name) { try { const st = gearState(), left = GEAR.filter(x => !st.own.includes(x.id) && x.r !== 'u' && !x.x && x.r !== 'c'); if (left.length) { const u = Math.random() * 30, k = u < 3 ? 'l' : u < 10 ? 'e' : 'r'; let L = left.filter(x => x.r === k); if (!L.length) L = left.filter(x => x.r === 'r'); if (!L.length) L = left; gearGive(L[Math.floor(Math.random() * L.length)], 'Por superar el desafío de ' + (name || 'la etapa')); } glowAdd(5, 'Desafío superado'); } catch (e) {} }
-window.W3 = { metaEv: (k, n) => { try { metaEv(k, n); } catch (e) {} }, rec: { mood: (m, t) => { S.moodForce = m ? [m, t ?? 1] : null; S.daySig = ''; }, svAct: () => svAct(), bldStart: t => bldStart(t), bldPlace: () => bldPlace(), BLD: () => BLD, tool: t => svGiveTool(t, ''), add: (k, n) => { svAdd(k, n); svUI(); }, keys: () => S.keys, olR: r => { OL.R = r; OL.acc = 0; return OL.R; } }, qForce: (lv, dpr) => { QUAL.mode = 'ultra'; QUAL.max = 3; QUAL.lv = lv; QUAL.dpr = 0; qApply(); if (dpr) { QUAL.dpr = dpr; S.renderer.setPixelRatio(dpr); } resize(); return { lv: QUAL.lv, dpr: QUAL.dpr }; }, fx: () => ({ waterWet, desertK, spDist, pgOpen, blockedAt, pgNoise, canyonAt, quarryAt }), HUE, hueP: () => hueP(), albOpen: p => albOpen(p), albGetSobre: n => albGetSobre(n), albP: () => albP(), ALB, BARR, FARM, ORCH, WOOL, LIFE, examReq, examPrize, ofi: () => ({ lv: Object.fromEntries(Object.keys(OFI).map(k => [k, ofiLv(k)])), st: ofiP(), m: (S.ofi || []).map(x => [x.k, Math.round(x.o.position.x), Math.round(x.o.position.z)]) }), sec: () => ({ why: SEC.why, L: SEC.list.map(e => [e.d.id, Math.round(e.x), Math.round(e.z)]) }), misNames: () => Object.fromEntries(MISSIONS.map(d => [d.id, d.title || ((d.giver && d.giver.name ? d.giver.name + ': ' : '') + (d.item && d.item.name ? d.item.name : d.id))])), grot: () => grotEnter(), phDbg: () => { const o = { near: PH.near, lv: QUAL.lv, see: QT.see[QUAL.lv], ema: QUAL.ema, slow: PH.slow, n: PH.bands.length, unb: PH.bands.filter(b => !b.built).length }; PH.near = 0; try { phTick(.016); o.tick = 'ok'; } catch (e) { o.tick = String(e && e.stack || e).slice(0, 400); } o.unb2 = PH.bands.filter(b => !b.built).length; return o; }, ph: id => PH.bands.filter(b => b.id === id).map(b => [b.list.length, b.built, !!b.ok, b.zc, !!(b.g && b.g.visible), b.ims.length, JSON.stringify(b.o)]), poiProps: () => (FLORA.poiProps || []).map(q => [q[0], q[1].length]), trails: () => TRL, side: () => SP, path: (x, z) => findPath(S.av.position.x, S.av.position.z, x, z), walk: (x, z) => walkLine(x, z), ground: (x, z) => groundAt(x, z, S.gy), merge: f => worldMerge(S.scene, f || 2), scene: () => S && S.scene, S: () => S, pois: () => S && S.pois.map(p => ({ k: p.k, id: p.id, x: Math.round(p.x), z: Math.round(p.z) })), tp: (x, z) => { S.av.position.set(x, S.W ? S.W.hAt(x, z) : 0, z); S.sig = ""; S.quiet = false; }, state: () => S, sceneStats: () => { const by = {}; try { S.scene.traverse(o => { if (!o.isMesh && !o.isSprite && !o.isPoints && !o.isLine) return; let lab = ''; for (let p = o; p && p !== S.scene; p = p.parent) { const k = Object.keys(p.userData || {}).filter(k => typeof p.userData[k] !== 'object').slice(0, 2).join(','); if (k) { lab = k; break; } if (p.name) { lab = p.name; break; } } const key = (o.isInstancedMesh ? 'inst:' : o.isSprite ? 'sprite:' : o.isSkinnedMesh ? 'skin:' : 'mesh:') + (o.material && (o.material.name || o.material.type) || '?') + ' [' + lab + ']'; by[key] = (by[key] || 0) + 1; }); } catch (e) {} return Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 40); }, renderInfo: () => { try { const i = S.renderer.info; return { calls: i.render.calls, tris: i.render.triangles, tex: i.memory.textures, geo: i.memory.geometries, ms: QUAL.ema, lv: QUAL.lv, gpu: QUAL.gpu }; } catch (e) { return null; } }, dbgHero: () => ({ VIL, SEC, MAT, AU, SND, MIX, GRP, PH, AN, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineOk2, cineBusy, crossScene, dawnScene, dawnBuild, diaryOpen, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf: r => qProf(r), axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
+window.W3 = { camStart: (rid, tag) => { try { camStart(rid, tag); } catch (e) { console.warn('camino', e); } }, camEco: rid => camEco(rid), metaEv: (k, n) => { try { metaEv(k, n); } catch (e) {} }, rec: { mood: (m, t) => { S.moodForce = m ? [m, t ?? 1] : null; S.daySig = ''; }, svAct: () => svAct(), bldStart: t => bldStart(t), bldPlace: () => bldPlace(), BLD: () => BLD, tool: t => svGiveTool(t, ''), add: (k, n) => { svAdd(k, n); svUI(); }, keys: () => S.keys, olR: r => { OL.R = r; OL.acc = 0; return OL.R; } }, qForce: (lv, dpr) => { QUAL.mode = 'ultra'; QUAL.max = 3; QUAL.lv = lv; QUAL.dpr = 0; qApply(); if (dpr) { QUAL.dpr = dpr; S.renderer.setPixelRatio(dpr); } resize(); return { lv: QUAL.lv, dpr: QUAL.dpr }; }, fx: () => ({ waterWet, desertK, spDist, pgOpen, blockedAt, pgNoise, canyonAt, quarryAt }), HUE, hueP: () => hueP(), albOpen: p => albOpen(p), albGetSobre: n => albGetSobre(n), albP: () => albP(), ALB, BARR, FARM, ORCH, WOOL, LIFE, examReq, examPrize, ofi: () => ({ lv: Object.fromEntries(Object.keys(OFI).map(k => [k, ofiLv(k)])), st: ofiP(), m: (S.ofi || []).map(x => [x.k, Math.round(x.o.position.x), Math.round(x.o.position.z)]) }), sec: () => ({ why: SEC.why, L: SEC.list.map(e => [e.d.id, Math.round(e.x), Math.round(e.z)]) }), misNames: () => Object.fromEntries(MISSIONS.map(d => [d.id, d.title || ((d.giver && d.giver.name ? d.giver.name + ': ' : '') + (d.item && d.item.name ? d.item.name : d.id))])), grot: () => grotEnter(), phDbg: () => { const o = { near: PH.near, lv: QUAL.lv, see: QT.see[QUAL.lv], ema: QUAL.ema, slow: PH.slow, n: PH.bands.length, unb: PH.bands.filter(b => !b.built).length }; PH.near = 0; try { phTick(.016); o.tick = 'ok'; } catch (e) { o.tick = String(e && e.stack || e).slice(0, 400); } o.unb2 = PH.bands.filter(b => !b.built).length; return o; }, ph: id => PH.bands.filter(b => b.id === id).map(b => [b.list.length, b.built, !!b.ok, b.zc, !!(b.g && b.g.visible), b.ims.length, JSON.stringify(b.o)]), poiProps: () => (FLORA.poiProps || []).map(q => [q[0], q[1].length]), trails: () => TRL, side: () => SP, path: (x, z) => findPath(S.av.position.x, S.av.position.z, x, z), walk: (x, z) => walkLine(x, z), ground: (x, z) => groundAt(x, z, S.gy), merge: f => worldMerge(S.scene, f || 2), scene: () => S && S.scene, S: () => S, pois: () => S && S.pois.map(p => ({ k: p.k, id: p.id, x: Math.round(p.x), z: Math.round(p.z) })), tp: (x, z) => { S.av.position.set(x, S.W ? S.W.hAt(x, z) : 0, z); S.sig = ""; S.quiet = false; }, state: () => S, sceneStats: () => { const by = {}; try { S.scene.traverse(o => { if (!o.isMesh && !o.isSprite && !o.isPoints && !o.isLine) return; let lab = ''; for (let p = o; p && p !== S.scene; p = p.parent) { const k = Object.keys(p.userData || {}).filter(k => typeof p.userData[k] !== 'object').slice(0, 2).join(','); if (k) { lab = k; break; } if (p.name) { lab = p.name; break; } } const key = (o.isInstancedMesh ? 'inst:' : o.isSprite ? 'sprite:' : o.isSkinnedMesh ? 'skin:' : 'mesh:') + (o.material && (o.material.name || o.material.type) || '?') + ' [' + lab + ']'; by[key] = (by[key] || 0) + 1; }); } catch (e) {} return Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 40); }, renderInfo: () => { try { const i = S.renderer.info; return { calls: i.render.calls, tris: i.render.triangles, tex: i.memory.textures, geo: i.memory.geometries, ms: QUAL.ema, lv: QUAL.lv, gpu: QUAL.gpu }; } catch (e) { return null; } }, dbgHero: () => ({ VIL, SEC, MAT, AU, SND, MIX, GRP, PH, AN, svAct, svNear, fv, ft, openBag, CINE, svFaint, fireTalk, openMap }), cine, cineOk, cineOk2, cineBusy, crossScene, dawnScene, dawnBuild, diaryOpen, fvOf: k => { try { return fv(k); } catch (e) { return 0; } }, fruitVals: () => { try { return Object.fromEntries(FRUITS.map(f => [f[1], fv(f[0])])); } catch (e) { return {}; } }, qProf: r => qProf(r), axGain, enter, MP, qLabel, qFpsToggle, fpsOn: () => { try { return localStorage.getItem('tsp:fps') === '1'; } catch (e) { return false; } }, dlWorld, attrSync, attrOpen, ptsFree: () => { try { return ptsFree(); } catch (e) { return 0; } }, avSprites, stageShots, qCycle, qSet, qStats, get quality() { return QN[QUAL.mode]; }, room: () => { if (S) mpPanel(); }, get state() { return S; }, AU, sv: { act: svAct, eat: svEat, craft: svCraft, P: svP, give: svGiveTool, faint: svFaint, near: svNear, FLORA, mpX, espIn, espPool, gmIn, GM, svShop: k => svShop(k), svGive: b => svGive(b) }, openBag, gearGive: id => id === 'tsp' ? insGive('tsp') : gearGive(GBY[id], 'Regalo'), insGive: id => insGive(id), insMigrate, PH, glowAdd: (n, w) => glowAdd(n, w), glowLv: () => glowLv(glowState().pts), poseSet: id => poseSet(id), poseMenu: () => poseMenu(true), kidsShine: () => kidsShine(), mpAdd: (id, info) => mpAdd(id, info), GEAR, reLook };
 
 /* En el celular se juega solo apaisado: si está en vertical, un cartel pide girarlo (en Android, al pasar a pantalla completa, además se traba en horizontal). */
 (() => {

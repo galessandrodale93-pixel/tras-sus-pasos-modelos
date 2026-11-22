@@ -24,7 +24,7 @@ OUT = os.path.join(AQUI, 'salida')
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
 DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink, AM, amOpen, amSync, amEv, amGoals, amReqIn, amDraw, GBY, guiaGoals: () => guiaGoals(), puertaLock, puertaGoal, puertaTick, misOpen, misDone, MISSIONS, MIS_PUERTA, CASI, casiList, casiTick, casiGoal, metaP, META_POOL, PUE, pueTick, pueOpen, pueLv, pueSpot, blockedAt, waterWet, INI, iniTick, iniGoal, nodeActive')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink, AM, amOpen, amSync, amEv, amGoals, amReqIn, amDraw, GBY, guiaGoals: () => guiaGoals(), puertaLock, puertaGoal, puertaTick, misOpen, misDone, MISSIONS, MIS_PUERTA, CASI, casiList, casiTick, casiGoal, metaP, META_POOL, PUE, pueTick, pueOpen, pueLv, pueSpot, blockedAt, waterWet, INI, iniTick, iniGoal, nodeActive, CAM, CAMS, camTick, camScene, camGoal, camEco, CINE')
 
 
 def local(url):
@@ -317,7 +317,52 @@ INICIO = COMUN + """
       Object.assign(P,keep); G_.save();
       return {ok:!!todo, d:L.join(' · ')};"""
 
+
+CAMINOS = COMUN + """
+      const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return !!c;}; let todo=true; const wait=ms=>new Promise(r=>setTimeout(r,ms));
+      const keep={cam:P.cam, story:JSON.parse(JSON.stringify(P.story||{})), done:{...P.done}, pos:P.pos, inicio:P.inicio};
+      const sh=()=>document.getElementById('v3sheet');
+      const talk=async(pick)=>{ for(let i=0;i<80;i++){ await wait(350);
+          if(d.CINE.on){ const b=document.querySelectorAll('.cine-ui .cine-opts button'); if(b.length){ b[Math.min(pick,b.length-1)].click(); continue; } document.querySelector('.cine-ui').click(); continue; }
+          const s0=sh(); if(s0&&!s0.hidden){ const o=s0.querySelectorAll('.vivo-o button'); if(o.length){ o[Math.min(pick,o.length-1)].click(); continue; } const g=s0.querySelector('.cam-go'); if(g){ g.click(); continue; } }
+          return true; } return false; };
+      const reset=()=>{ P.cam={}; Object.values(d.CAM.npc).forEach(n=>{S.scene.remove(n.o);S.scene.remove(n.bang);}); d.CAM.npc={}; if(d.CAM.ring){S.scene.remove(d.CAM.ring.m);d.CAM.ring=null;} if(d.CAM.carry){S.av.remove(d.CAM.carry);d.CAM.carry=null;} sh().hidden=true; };
+      const tk=()=>{ d.CAM.t=0; d.camTick(performance.now()/1000+Math.random()); };
+      try {
+        reset(); P.story=P.story||{}; P.story.ans={}; P.story.att={esc:0,zel:0,rom:0}; P.inicio={fin:1};
+        if (S.hx) {
+          window.W3.camStart('nacimiento','misericordia'); tk();
+          todo&=ok(P.cam.nacimiento&&P.cam.nacimiento.b==='B'&&d.CAM.npc.nacimiento,'la respuesta del capítulo abre el camino de la corderita y aparece Natán');
+          const g1=d.camGoal(); todo&=ok(g1&&/corderita/.test(g1.t),'«Tu próximo paso»: '+(g1&&g1.t));
+          d.camScene('nacimiento'); await talk(0);
+          todo&=ok(P.cam.nacimiento.s==='task'&&d.CAM.carry&&d.CAM.ring,'elegís cargarla: llevás la corderita y aparece el aro del corral');
+          tp(d.CAM.ring.x,d.CAM.ring.z); tk(); await talk(0); await wait(3200);
+          todo&=ok(P.cam.nacimiento.s==='done'&&P.cam.nacimiento.r==='good','al llegar al corral, camino cumplido');
+          todo&=ok(d.gearState().own.includes('lanapastor'),'premio: Guantes de lana de Natán');
+          todo&=ok((P.story.att.zel||0)===1,'Asher te mira con buenos ojos');
+          const e1=d.camEco('infancia'); todo&=ok(e1.length&&/corderita/.test(e1[0].t),'en el capítulo siguiente lo recuerdan');
+          reset(); window.W3.camStart('nacimiento','evangelista'); tk(); d.camScene('nacimiento'); await talk(1); await wait(800);
+          todo&=ok(P.cam.nacimiento.r==='meh'&&P.cam.nacimiento.s==='done','el mensaje sin pan: camino menos lindo');
+          const e2=d.camEco('infancia'); todo&=ok(e2.length&&/se olvidó/.test(e2[0].t),'después: el arriero se olvidó del mensaje');
+          reset(); P.story.ans={nacimiento:'maestro'}; tk(); todo&=ok(P.cam.nacimiento&&P.cam.nacimiento.b==='A','si ya habías respondido, el camino arranca igual (Eleazar)');
+        } else {
+          const R0=G_.REGIONS[0].id; P.done[R0+'-n1']={s:1}; tk(); await wait(300);
+          todo&=ok(P.cam.nacimiento&&/Belén estaba llena|A quién querés ayudar/.test(sh().textContent),'Kids: después de la primera parada, el narrador pregunta');
+          await talk(1); tk();
+          todo&=ok(P.cam.nacimiento.b==='K'&&d.CAM.npc.nacimiento,'elegís la posada y aparece Rut');
+          d.camScene('nacimiento'); await talk(0);
+          todo&=ok(P.cam.nacimiento.s==='task'&&d.CAM.ring,'llevás la manta al establo');
+          tp(d.CAM.ring.x,d.CAM.ring.z); tk(); await talk(0); await wait(3200);
+          todo&=ok(P.cam.nacimiento.s==='done'&&d.gearState().own.includes('panueloposada'),'camino cumplido: Pañuelo de la posada');
+          const n1=Object.keys(G_.NODES).find(k=>G_.NODES[k].r===1&&G_.NODES[k].kind==='ch'); P.pos=n1; tk(); await wait(100);
+          todo&=ok(P.cam.nacimiento.eco===1,'en la etapa siguiente, el narrador lo recuerda');
+        }
+      } catch(e){ L.push('ERROR '+e.message+' '+(e.stack||'').split('\\n')[1]); todo=false; }
+      reset(); Object.assign(P,keep); G_.save();
+      return {ok:!!todo, d:L.join(' · ')};"""
+
 HERO = {
+    'caminos': ('Hero: caminos de la historia (Nacimiento)', CAMINOS),
     'inicio': ('Hero: tu primer camino (primeros 5 minutos)', INICIO),
     'pueblos': ('Hero: pueblos que cambian con lo que hacés', PUEBLOS),
     'casi': ('Hero: «Te falta poco»', CASI),
@@ -377,6 +422,7 @@ HERO = {
 }
 
 KIDS = {
+    'caminoskids': ('Kids: caminos de la historia (Nacimiento)', CAMINOS),
     'iniciokids': ('Kids: tu primer camino (primeros 5 minutos)', INICIO),
     'pueblokids': ('Kids: pueblos que cambian con lo que hacés', PUEBLOS),
     'casikids': ('Kids: «Te falta poco»', CASI),

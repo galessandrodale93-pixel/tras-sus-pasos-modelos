@@ -2814,8 +2814,8 @@ const hstSay=(M,list)=>list.map(([k,t])=>{const c=M.HCOMP[k];return `<div class=
 const hstCast=(steps)=>{const c={};steps.forEach(x=>{if(['esc','zel','rom'].includes(x.who))c[x.who]={};(x.o||[]).forEach(o=>(o.then||[]).forEach(y=>{if(['esc','zel','rom'].includes(y.who))c[y.who]={};}));});return c;};
 async function hstCineOpen(M,R,C){const W=window.W3;if(!W||!W.cine||!W.cineOk||!W.cineOk())return false;const nm=P().name||'';
   if(R.id==='resurreccion'&&W.dawnScene){HST.busy=true;const st0=hstP();if(await W.dawnScene()){st0.dawn=1;save();}HST.busy=false;if(!W.cineOk())await new Promise(r=>setTimeout(r,800));}
-  const steps=C.open.map(t=>({who:'nar',t:t.replace('{name}',nm)})).concat(C.say.slice(0,2).map(([k,t],i)=>({who:k,t,g:i?null:'point'})));
-  const A=M.HASK&&M.HASK[R.id];if(A)steps.push({who:A.who,ask:A.q,o:A.o.map(([t,tag,att,rep])=>({t,fn:()=>{const st=hstP();st.att=st.att||{esc:0,zel:0,rom:0};for(const k in att)st.att[k]=(st.att[k]||0)+att[k];const p=P();p.dones=p.dones||{};p.dones[tag]=(p.dones[tag]||0)+1;st.ans=st.ans||{};st.ans[R.id]=tag;save();},then:[{who:rep[0],t:rep[1],g:'nod'}]}))});
+  const eco=(window.W3&&W3.camEco)?W3.camEco(R.id):[];const steps=C.open.map(t=>({who:'nar',t:t.replace('{name}',nm)})).concat(eco,C.say.slice(0,2).map(([k,t],i)=>({who:k,t,g:i?null:'point'})));
+  const A=M.HASK&&M.HASK[R.id];if(A)steps.push({who:A.who,ask:A.q,o:A.o.map(([t,tag,att,rep])=>({t,fn:()=>{const st=hstP();st.att=st.att||{esc:0,zel:0,rom:0};for(const k in att)st.att[k]=(st.att[k]||0)+att[k];const p=P();p.dones=p.dones||{};p.dones[tag]=(p.dones[tag]||0)+1;st.ans=st.ans||{};st.ans[R.id]=tag;save();try{window.W3&&W3.camStart&&W3.camStart(R.id,tag);}catch(e){}},then:[{who:rep[0],t:rep[1],g:'nod'}]}))});
   HST.busy=true;const ok=W.cine({cast:hstCast(steps),steps,onDone:()=>{HST.busy=false;setTimeout(hstPump,1500);}});if(!ok)HST.busy=false;return ok;}
 async function hstCineClose(M,R,C,extra,got,st){const W=window.W3;if(!W||!W.cine||!W.cineOk||!W.cineOk())return false;
   if(R.id==='cruz'&&W.crossScene){HST.busy=true;await W.crossScene(false);HST.busy=false;await new Promise(r=>setTimeout(r,900));if(!W.cineOk())return false;}

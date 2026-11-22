@@ -1696,3 +1696,4 @@ body:has(#v3sheet:not([hidden])) #v3casi,body.v3talk #v3casi,body:not(.v3on) #v3
 .ini-win span{font-size:44px;animation:caPulse 1.2s ease-in-out infinite}
 .ini-win b{font:900 26px "Nunito",sans-serif}
 .ini-win small{font:800 13px "Nunito",sans-serif;opacity:.8}
+.vil .cam-nar{font-style:italic;opacity:.92}
