@@ -24,7 +24,7 @@ OUT = os.path.join(AQUI, 'salida')
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
 DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink, AM, amOpen, amSync, amEv, amGoals, amReqIn, amDraw, GBY, guiaGoals: () => guiaGoals(), puertaLock, puertaGoal, puertaTick, misOpen, misDone, MISSIONS, MIS_PUERTA, CASI, casiList, casiTick, casiGoal, metaP, META_POOL, PUE, pueTick, pueOpen, pueLv, pueSpot, blockedAt, waterWet')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink, AM, amOpen, amSync, amEv, amGoals, amReqIn, amDraw, GBY, guiaGoals: () => guiaGoals(), puertaLock, puertaGoal, puertaTick, misOpen, misDone, MISSIONS, MIS_PUERTA, CASI, casiList, casiTick, casiGoal, metaP, META_POOL, PUE, pueTick, pueOpen, pueLv, pueSpot, blockedAt, waterWet, INI, iniTick, iniGoal, nodeActive')
 
 
 def local(url):
@@ -195,7 +195,7 @@ AMIGOS = COMUN + """
         return {error:'k'}; };
       const of=window.fetch; window.fetch=async(u,o)=>{ if(String(u).includes('/api/kh-amigos')){ const j=await api(JSON.parse(o.body)); return new Response(JSON.stringify(j),{status:j.ok?200:400}); } return of(u,o); };
       const G_=window.GAME; G_.amId=()=>({perfil:YO,socio:'socio-yo-0001'});
-      const L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t); return c;}, wait=ms=>new Promise(r=>setTimeout(r,ms)), sheet=()=>document.getElementById('v3sheet'), until=async(f,ms)=>{for(let i=0;i<(ms||8000)/200;i++){if(f())return true;await wait(200);}return false;}, btn=sel=>{const b=sheet().querySelector(sel); if(b) b.click(); return !!b;};
+      const L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t); return !!c;}, wait=ms=>new Promise(r=>setTimeout(r,ms)), sheet=()=>document.getElementById('v3sheet'), until=async(f,ms)=>{for(let i=0;i<(ms||8000)/200;i++){if(f())return true;await wait(200);}return false;}, btn=sel=>{const b=sheet().querySelector(sel); if(b) b.click(); return !!b;};
       let todo=true; try {
       /* 1. sala: Lucía pide ser amiga y se acepta */
       d.MP.players['p-lu']={info:{name:'Lucía',pid:LU},av:null}; d.amReqIn({id:'p-lu'}); await wait(100);
@@ -233,7 +233,7 @@ AMIGOS = COMUN + """
 
 
 PUERTAS = COMUN + """
-      const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return c;}; let todo=true;
+      const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return !!c;}; let todo=true;
       const keep={done:{...P.done},missions:{...(P.missions||{})},visited:[...P.visited],pos:P.pos};
       try {
         P.done={}; P.missions={}; P.visited=['start']; P.pos='start';
@@ -265,7 +265,7 @@ PUERTAS = COMUN + """
 
 
 CASI = COMUN + """
-      const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return c;}; let todo=true; const b0=P.bonus||0, casi0=P.casi;
+      const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return !!c;}; let todo=true; const b0=P.bonus||0, casi0=P.casi;
       try {
         P.casi={}; const lv=G_.level(), a=G_.lvNeed(lv), b=G_.lvNeed(lv+1); P.bonus=(P.bonus||0)+Math.ceil(a+.9*(b-a)-G_.points());
         const l1=d.casiList(); todo&=ok(l1.some(x=>/para el nivel/.test(x.t)),'cerca de subir de nivel: '+(l1[0]||{}).t);
@@ -282,7 +282,7 @@ CASI = COMUN + """
 
 
 PUEBLOS = COMUN + """
-      const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return c;}; let todo=true; const keep={missions:{...(P.missions||{})},pue:{...(P.pue||{})}};
+      const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return !!c;}; let todo=true; const keep={missions:{...(P.missions||{})},pue:{...(P.pue||{})}};
       try {
         todo&=ok(d.PUE.list.length>=5,'pueblos: '+d.PUE.list.map(v=>v.name).join(', '));
         const v=d.PUE.list.find(x=>x.name==='Belén')||d.PUE.list[0]; const n0=S.scene.children.length, l0=v.lv;
@@ -298,7 +298,27 @@ PUEBLOS = COMUN + """
       P.missions=keep.missions; P.pue=keep.pue; G_.save();
       return {ok:!!todo, d:L.join(' · ')};"""
 
+
+INICIO = COMUN + """
+      const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return !!c;}; let todo=true; const keep={done:{...P.done},inicio:P.inicio,bonus:P.bonus||0,pos:P.pos,visited:[...P.visited]};
+      const wait=ms=>new Promise(r=>setTimeout(r,ms));
+      try {
+        P.done={}; P.visited=['start']; P.pos='start'; delete P.inicio; d.INI.gift=null; S.poseK=null; S.shineT=0;
+        d.iniTick(1); todo&=ok(P.inicio&&P.inicio.on&&d.INI.gift,'jugador nuevo: aparece el regalo de bienvenida');
+        const gd=Math.hypot(d.INI.gift.x-S.av.position.x,d.INI.gift.z-S.av.position.z); todo&=ok(gd>6&&gd<20,'está unos pasos adelante ('+gd.toFixed(1)+' m)');
+        const g0=d.iniGoal(); todo&=ok(g0&&/0 de 3/.test(g0.t),'«Tu próximo paso»: '+(g0&&g0.t));
+        tp(d.INI.gift.x, d.INI.gift.z); d.iniTick(2); todo&=ok(P.inicio.g&&!d.INI.gift,'al pasar por el regalo, se abre');
+        await wait(2600); todo&=ok(d.gearState().own.includes('primerpaso'),'ganás las Sandalias del primer paso');
+        S.poseK='x'; d.iniTick(3); S.poseK=null; todo&=ok(P.inicio.l,'Resplandor: paso 2');
+        P.done[G_.REGIONS[0].id+'-n1']={s:1}; d.iniTick(4); todo&=ok(P.inicio.fin&&G_.level()>=2,'primera parada: primera victoria y nivel '+G_.level());
+        await wait(3000); todo&=ok(/Primera victoria/.test(document.getElementById('v3sheet').textContent),'aparece «¡Primera victoria!»');
+        P.done={a:1}; delete P.inicio; d.iniTick(5); todo&=ok(P.inicio.fin,'quien ya venía jugando no lo ve');
+      } catch(e){ L.push('ERROR '+e.message); todo=false; }
+      Object.assign(P,keep); G_.save();
+      return {ok:!!todo, d:L.join(' · ')};"""
+
 HERO = {
+    'inicio': ('Hero: tu primer camino (primeros 5 minutos)', INICIO),
     'pueblos': ('Hero: pueblos que cambian con lo que hacés', PUEBLOS),
     'casi': ('Hero: «Te falta poco»', CASI),
     'puertas': ('Hero: minijuegos y misiones alternados, cadenas de 3', PUERTAS),
@@ -357,6 +377,7 @@ HERO = {
 }
 
 KIDS = {
+    'iniciokids': ('Kids: tu primer camino (primeros 5 minutos)', INICIO),
     'pueblokids': ('Kids: pueblos que cambian con lo que hacés', PUEBLOS),
     'casikids': ('Kids: «Te falta poco»', CASI),
     'puertaskids': ('Kids: minijuegos y misiones alternados, cadenas de 3', PUERTAS),

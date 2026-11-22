@@ -2135,7 +2135,8 @@ function misDone(m) {
 function fxCtx() { let A = (typeof AU !== 'undefined' && AU.ctx) || fxCtx.A; if (!A) A = fxCtx.A = new (window.AudioContext || window.webkitAudioContext)(); if (A.state === 'suspended') { try { A.resume(); } catch (e) {} } return A; }
 function tone3d() { try { const A = fxCtx(); [660, 880, 1100].forEach((f, i) => { const o = A.createOscillator(), gn = A.createGain(); o.frequency.value = f; o.type = 'triangle'; gn.gain.setValueAtTime(.0001, A.currentTime + i * .12); gn.gain.exponentialRampToValueAtTime(.15, A.currentTime + i * .12 + .02); gn.gain.exponentialRampToValueAtTime(.0001, A.currentTime + i * .12 + .3); o.connect(gn); gn.connect(A.destination); o.start(A.currentTime + i * .12); o.stop(A.currentTime + i * .12 + .35); }); } catch (e) {} }
 function misTick(t) {
-  if (!S.mis) return; if (!(S.ptT > t)) { S.ptT = t + 1.2; try { puertaTick(); } catch (e) {} try { casiTick(t); } catch (e) {} try { pueTick(t); } catch (e) {} } const p = misState(), a = S.av.position, ui = misUI(), d2 = (q) => (q[0] - a.x) ** 2 + (q[1] - a.z) ** 2;
+  if (!S.mis) return; if (!(S.ptT > t)) { S.ptT = t + 1.2; try { puertaTick(); } catch (e) {} try { casiTick(t); } catch (e) {} try { pueTick(t); } catch (e) {} }
+  try { iniTick(t); } catch (e) {} const p = misState(), a = S.av.position, ui = misUI(), d2 = (q) => (q[0] - a.x) ** 2 + (q[1] - a.z) ** 2;
   if (document.getElementById('view3d').hidden) { ui.hidden = true; return; }
   for (const id in S.mis) { const m = S.mis[id], open = misOpen(m, p), done = !!p.missions[id], act = p.mact && p.mact.id === id; m.bang.visible = open && !done && !act && !CINE.on; /* en las charlas no tapa las caras */ if (m.d.after) { const vis = open || done || act; m.giver.visible = vis; } m.bang.position.y = m.giver.position.y + 2.35 + Math.sin(t * 3) * .08; m.giver.visible = m.target ? true : true; }
   const act = p.mact && S.mis[p.mact.id]; S.misGoal = null;
@@ -4655,6 +4656,7 @@ const RAR = { c: ['Común', '#C9C2B4', 70], r: ['Rara', '#6FB6FF', 20], e: ['Ép
 const GEAR = [
   { id: 'nav_gloria', s: 'shirt', r: 'u', t: 'plain', c: '#F1ECDF', name: 'Túnica de Nochebuena', desc: 'Regalo de Navidad. «¡Gloria a Dios en las alturas, y en la tierra paz!» (Lucas 2:14).' },
   { id: 'nav_magos', s: 'hat', r: 'u', t: 'turban', c: '#6E3A86', name: 'Turbante de los magos', desc: 'Regalo de Reyes. Los sabios de oriente siguieron la estrella hasta Belén para adorar al niño (Mateo 2:1-11).' },
+  { id: 'primerpaso', s: 'boots', r: 'u', t: 'sandal', hi: 1, c: '#C9973A', name: 'Sandalias del primer paso', desc: 'Regalo de bienvenida. «¡Qué hermosos son los pies de los mensajeros que traen buenas noticias!» (Romanos 10:15).' },
   { id: 'equipo4', s: 'hat', r: 'u', t: 'wrap', c: '#2F6A5A', c2: '#E8C27A', name: 'Turbante de los compañeros de camino', desc: 'Premio por cumplir 4 desafíos en equipo. «Es mejor ser dos que uno» (Eclesiastés 4:9).' },
   { id: 'cam7', s: 'shirt', r: 'u', t: 'plain', c: '#9C7A4E', name: 'Manto del caminante', desc: 'Premio del camino de 7 días. «Lámpara es a mis pies tu palabra, y lumbrera a mi camino» (Salmo 119:105).' },
   { id: 'vil_nazaret', s: 'gloves', r: 'u', t: 'glove', c: '#8A6A4A', name: 'Guantes del taller de Nazaret', desc: 'Regalo de Nazaret para los de la familia. En este pueblo creció Jesús, en el taller de José.' },
@@ -5686,6 +5688,7 @@ function guiaGoals() {
     out.push({ ic: '✨', t: x.E.name, sub: `Misión épica · paso ${x.st.s + 1} de ${x.E.steps.length}` + (x.today ? (pl && pl.n ? ' · en ' + pl.n : '') : ' · sigue mañana: volvé otro día de juego'), b: 'Llevarme', fn: pl && x.today ? () => guiaWp(pl.x, pl.z, pl.n || x.E.name) : null }); } } catch (e) {}
   let am = []; try { am = amGoals(); am.filter(x => x.hot).forEach(x => out.push(x)); } catch (e) {}
   let adv = null; try { adv = advGoal(); if (adv && adv.hot) out.push(adv); } catch (e) {}
+  try { const ig = iniGoal(); if (ig) out.unshift(ig); } catch (e) {}
   try { const pg = puertaGoal(); if (pg) out.push(pg); } catch (e) {}
   try { const cg = casiGoal(); if (cg) out.push(cg); } catch (e) {}
   try { const id = nodeActive(); if (id) { const n = g.NODES[id], here = id === g.P().pos; out.push({ ic: '📖', t: here ? 'Entrá ' + aLp(n.label) : 'Caminá ' + aLp(n.label), sub: here ? 'Seguí la historia: te espera el pasaje y su desafío.' : 'Seguí la historia: es tu próxima parada. El botón dorado te lleva caminando.', b: here ? 'Entrar' : 'Caminar', fn: () => go(id) }); } } catch (e) {}
@@ -5900,6 +5903,66 @@ function pueOpen() {
     if (!open) return `<div class="sv-rec md-r off"><span class="gd-ic">🏘️</span><div><b>${esc(v.name)}</b><small>Se abre más adelante en la historia.</small></div></div>`;
     return `<div class="sv-rec md-r${L >= 4 ? ' ok' : ''}"><span class="gd-ic">${['🏘️', '🧺', '🏮', '🎏', '🎉'][L]}</span><div><b>${esc(v.name)} · ${esc(PUE_N[L])}</b><i class="md-bar"><i style="width:${nx ? Math.round((n - prev) / (nx - prev) * 100) : 100}%"></i></i><small>${esc(PUE_TX[L])}${nx ? ` Para el próximo cambio: ${nx - n} más (misiones y paradas de ${esc(g.REGIONS[v.r] ? g.REGIONS[v.r].name : 'su etapa')}${S.hx ? ', y tu relación con la aldea' : ''}).` : ''}</small></div></div>`; }).join('');
   vilSheet(`<div class="inv-h"><b>🏘️ Los pueblos</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">Lo que hacés cambia los pueblos: cada misión y cada parada de su etapa los ayuda a crecer, y se ve en el mapa.</p><div class="gd-list">${rows}</div>`);
+}
+
+/* =====================================================================
+   TU PRIMER CAMINO (primeros 5 minutos, Kids y Hero): solo para quien recién empieza. Tres pasos cortos que dan
+   una victoria rápida: 1 · un regalo de bienvenida brillando unos pasos adelante (con una prenda única),
+   2 · hacer brillar tu Resplandor y 3 · tu primera parada de la historia. Al terminar: subís al nivel 2,
+   «¡Primera victoria!» con tarjeta para compartir. Quien ya venía jugando no lo ve.
+   ===================================================================== */
+const INI = { gift: null };
+function iniP() { const p = G().P(); if (!p.inicio) p.inicio = Object.keys(p.done || {}).length ? { fin: 1 } : { on: 1 }; return p.inicio; }
+function iniBuild() {
+  const st = iniP(); if (st.fin || st.g || !S || !S.av) return; const g = G(), id = nodeActive(), mk = id && S.markers[id], a = S.av.position;
+  let tx = a.x + Math.sin(S.yaw || 0) * 12, tz = a.z + Math.cos(S.yaw || 0) * 12;
+  if (mk) { const dx = mk.position.x - a.x, dz = mk.position.z - a.z, d = Math.hypot(dx, dz) || 1, k = Math.min(.45, Math.max(8, Math.min(18, d * .35)) / d); tx = a.x + dx * k; tz = a.z + dz * k; }
+  const grp = new THREE.Group(), gold = new THREE.MeshStandardMaterial({ color: '#E8B04A', roughness: .35, metalness: .4, emissive: new THREE.Color('#7A4A10'), emissiveIntensity: .5 }), rib = new THREE.MeshStandardMaterial({ color: '#B53A3A', roughness: .6 });
+  const box = new THREE.Mesh(new THREE.BoxGeometry(.7, .55, .7), gold); box.position.y = .55; grp.add(box);
+  const lid = new THREE.Mesh(new THREE.BoxGeometry(.78, .14, .78), gold); lid.position.y = .9; grp.add(lid);
+  [[.12, .72, .72], [.72, .72, .12]].forEach(([w, h, d]) => { const r = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), rib); r.position.y = .62; grp.add(r); });
+  const bow = new THREE.Mesh(new THREE.TorusGeometry(.14, .05, 6, 14), rib); bow.position.y = 1.02; bow.rotation.x = Math.PI / 2; grp.add(bow);
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(.45, .7, 9, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#FFE3A0', transparent: true, opacity: .22, depthWrite: false, side: THREE.DoubleSide })); beam.position.y = 4.5; grp.add(beam);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(.9, 1.05, 36), new THREE.MeshBasicMaterial({ color: '#FFD873', transparent: true, opacity: .7, side: THREE.DoubleSide, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.y = .05; grp.add(ring);
+  const lb = textSprite('🎁', S.hx); lb.scale.multiplyScalar(.35); lb.position.y = 1.9; grp.add(lb);
+  box.castShadow = lid.castShadow = true; grp.position.set(tx, S.W.hAt(tx, tz), tz); S.scene.add(grp); INI.gift = { grp, box, lid, bow, lb, x: tx, z: tz };
+}
+function iniTick(t) {
+  const st = iniP(); if (st.fin || !S || !S.av) return; const g = G();
+  if (!st.g) { if (!INI.gift) iniBuild(); const G0 = INI.gift; if (G0) { G0.grp.rotation.y = t * .8; G0.lb.position.y = 1.9 + Math.sin(t * 3) * .1; G0.lid.position.y = .9 + Math.max(0, Math.sin(t * 4)) * .04;
+    if (Math.hypot(S.av.position.x - G0.x, S.av.position.z - G0.z) < 1.9) iniGift(); } }
+  if (!st.l && (S.poseK || S.shineT > 0)) { st.l = 1; g.save(); setTimeout(() => iniStep('🌟 ¡Tu Resplandor brilla!', 'Ese brillo crece con cada buena obra.'), 1200); }
+  if (!st.s) { const R0 = g.REGIONS[0].id; if (['n1', 'n2', 'n3'].some(k => g.isDone(R0 + '-' + k))) { st.s = 1; g.save(); } }
+  if (st.g && st.l && st.s && !st.fin) iniFin();
+}
+function iniStep(title, sub) { const st = iniP(), n = (st.g ? 1 : 0) + (st.l ? 1 : 0) + (st.s ? 1 : 0); misPop(title, sub); if (n < 3) setTimeout(() => svToast(`✅ Tu primer camino · ${n} de 3`, n === 2 ? '¡Ya casi! Te falta un paso de tu primer camino.' : 'Primer paso hecho.'), 1400); try { tone3d(); } catch (e) {} }
+function iniGift() {
+  const st = iniP(); if (st.g) return; st.g = 1; const G0 = INI.gift; if (G0) { S.scene.remove(G0.grp); INI.gift = null; }
+  const it = GBY.primerpaso; try { h3do(['M_Cheering', 'M_Thankful'], 2.4); } catch (e) {}
+  if (S.hx) { try { svAdd('money', 30); svAdd('bread', 2); } catch (e) {} } else { const p = G().P(); p.bonus = (p.bonus || 0) + 30; }
+  G().save(); G().refreshHud && G().refreshHud(); try { G().vo('¡Bienvenido al camino! Este regalo es para vos: unas sandalias para tu primer paso.', 'narrador'); } catch (e) {}
+  iniStep('🎁 ¡Regalo de bienvenida!', S.hx ? '30 denarios, 2 panes y una prenda única' : '30 puntos y una prenda única');
+  if (it && !gearState().own.includes(it.id)) setTimeout(() => gearGive(it, 'Regalo de bienvenida'), 2200);
+}
+function iniFin() {
+  const st = iniP(); st.fin = 1; st.win = vday(); const g = G(), p = g.P();
+  try { const need = g.lvNeed ? g.lvNeed(2) : 120, f = need - g.points(); if (f > 0) p.bonus = (p.bonus || 0) + f; } catch (e) {}
+  g.save(); g.refreshHud && g.refreshHud(); try { sello('primer-camino', 'Primer camino'); } catch (e) {} glowAdd(10, 'inicio');
+  setTimeout(() => { try { pkPop('🏆 ¡Primera victoria!'); tone3d(); h3do(['M_Cheering', 'M_Clapping'], 3); } catch (e) {}
+    try { G().vo('¡Primera victoria! Ya sos parte del camino. Ahora llegás al nivel dos.', 'narrador'); } catch (e) {}
+    vilSheet(`<div class="inv-h"><b>🏆 ¡Primera victoria!</b><button class="bag-x" aria-label="Cerrar">✕</button></div>
+      <div class="ini-win"><span>⭐</span><b>Nivel ${g.level()}</b><small>Completaste tu primer camino</small></div>
+      <div class="gd-list"><div class="sv-rec md-r ok"><span class="gd-ic">🎁</span><div><b>Regalo de bienvenida</b><small>Sandalias del primer paso</small></div></div><div class="sv-rec md-r ok"><span class="gd-ic">🌟</span><div><b>Tu Resplandor</b><small>Ya sabés cómo hacerlo brillar</small></div></div><div class="sv-rec md-r ok"><span class="gd-ic">📖</span><div><b>Tu primera parada</b><small>La historia de Jesús empezó</small></div></div></div>
+      <p class="md-k">Lo que sigue: una misión te espera para abrir la próxima parada, y cada día hay un desafío nuevo.</p>
+      <div class="mis-btns"><button class="mis-yes ini-sh">📸 Compartir mi tarjeta</button><button class="mis-no ini-ok">¡Seguir!</button></div>`);
+    const el = document.getElementById('v3sheet'); el.querySelector('.ini-ok').onclick = () => { el.hidden = true; }; el.querySelector('.ini-sh').onclick = () => { el.hidden = true; try { cardShow(cardCamino()); } catch (e) {} }; }, 2600);
+}
+function iniGoal() {
+  const st = iniP(); if (st.fin) return null; const n = (st.g ? 1 : 0) + (st.l ? 1 : 0) + (st.s ? 1 : 0);
+  if (!st.g && INI.gift) return { hot: 1, ic: '🎁', t: `Tu primer camino · ${n} de 3`, sub: 'Hay un regalo de bienvenida brillando unos pasos adelante. ¡Andá a buscarlo!', b: 'Llevarme', fn: () => guiaWp(INI.gift.x, INI.gift.z, 'Tu regalo de bienvenida') };
+  if (!st.l) return { hot: 1, ic: '🌟', t: `Tu primer camino · ${n} de 3`, sub: S.hx ? 'Hacé brillar tu Resplandor: elegí una pose y quedate quieto unos segundos.' : 'Hacé brillar tu lámpara: tocá la estrella.', b: 'Brillar', fn: () => { try { S.hx ? poseMenu(true) : kidsShine(); } catch (e) {} } };
+  if (!st.s) { const id = nodeActive(); return { hot: 1, ic: '📖', t: `Tu primer camino · ${n} de 3`, sub: 'Jugá tu primera parada de la historia. El botón dorado te lleva caminando.', b: 'Ir', fn: id ? () => go(id) : null }; }
+  return null;
 }
 
 function metaGoal() {
