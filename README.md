@@ -32,3 +32,11 @@ Las de `app/lobby` y `promo` son viejas. Para sacar nuevas: abrir el juego en el
 ## Pase Kids & Hero
 
 Gratis hasta 4 horas de juego o hasta aprobar la etapa 6 (Parábolas). Después, modo recorrido: se recorre lo ya jugado, pero experiencia, niveles, atributos y denarios quedan congelados; los puntos quedan en espera y se acreditan al activar. Etapas nuevas cerradas. Hero: botón Pagar directo; Kids: detrás de una pregunta para grandes. El pago es una suscripción de Mercado Pago (plan "Kids & Hero · Pase familiar", $12.000/mes, cuenta 1 de Habitat) y el estado lo da `https://www.habitat-cfm.org/api/kh-pase` (colección KhPases del sitio Habitat). En Finanzas entra como tipo "Kids & Hero".
+
+## Amigos del camino, regalos y desafío en equipo
+
+`app/walk3d.js` (sección AMIGOS) + `habitat-astro/src/pages/api/kh-amigos.ts`, colecciones KhAmigos, KhRegalos y KhEquipos (solo administrador).
+Una amistad nace solo en una sala, cuando los dos aceptan. Entre amigos: un regalo por día a cada uno (hasta 5 por día) que llega al buzón,
+con frases de una lista fija (sin texto libre). Equipos de hasta 5 amigos con un desafío por semana (cambia los lunes, el mismo para todos);
+cuenta desde 2 integrantes y cada uno suma como mucho el doble de su parte. Premio semanal, extra si todos aportaron, y a las 4 semanas el
+Turbante de los compañeros de camino. Igual en Kids y en Hero. Prueba: `python3 tools/e2e/prueba.py amigos amigoskids`.

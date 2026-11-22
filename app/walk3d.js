@@ -1168,7 +1168,7 @@ const KL = {};
   const n0 = g.NODES[g.P().pos], [ax, az] = toV(n0.x, n0.y); av.position.set(ax, 0, az); buildStep('estado');
   S = { renderer, scene, camera, hx, av, markers, edgePts, allPts, items, joy: { x: 0, y: 0 }, keys: {}, flies, ground, yaw: Math.PI, camYaw: 0, camDist: 2.4, camPitch: .4, walking: false, moving: false, t: 0, root, cv, sig: '', onStop: g.P().pos, W: HW, uGrass, KL, zEnd: zMax };
   // orientar al personaje hacia la próxima parada
-  buildStep('lugares'); buildPois(scene, pois, hx, HW, rng(77), ribbon); buildStep('pueblos'); S.pois = pois; buildTowns(scene, g, hx, HW, pois); buildStep('lugares de afuera'); try { olSitesBuild(scene, HW, hx); } catch (e) { console.warn('afuera', e); } buildStep('puertas y misiones'); ambReset(); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; GUIA.t0 = performance.now(); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); }, 0);
+  buildStep('lugares'); buildPois(scene, pois, hx, HW, rng(77), ribbon); buildStep('pueblos'); S.pois = pois; buildTowns(scene, g, hx, HW, pois); buildStep('lugares de afuera'); try { olSitesBuild(scene, HW, hx); } catch (e) { console.warn('afuera', e); } buildStep('puertas y misiones'); ambReset(); S_stair = null; S.doors = buildDoors(scene, doors, hx, HW); S.stair = S_stair; GUIA.t0 = performance.now(); setTimeout(() => { if (MP.code) { const keep = Object.entries(MP.players).map(([id, p]) => [id, p.info]); MP.players = {}; keep.forEach(([id, info]) => mpAdd(id, info)); } mpUI(); mpAuto(); try { amStart(); } catch (e) {} }, 0);
   buildStep('hitos'); try { scatterNodes(g, HW); if (S.npos[g.P().pos]) { const q = S.npos[g.P().pos]; av.position.set(q[0], 0, q[1]); } } catch (e) { console.warn('hitos', e); } S.spawn = [av.position.x, av.position.z];
   try { fieldFinds(scene, hx, HW); } catch (e) { console.warn('hallazgos', e); }
   S0 = S; try { attrMigrate(); } catch (e) { console.warn('migración de atributos', e); } insMigrate(); setTimeout(glowUI, 400); S.mis = buildMissions(scene, g, hx, HW); try { vivoBuild(scene, hx); } catch (e) { console.warn('etapa viva', e); } try { ofiBuild(scene); } catch (e) { console.warn('oficios', e); } if (!hx && HW) setTimeout(() => { if (S) secBuild(scene, HW).catch(e => console.warn('sec', e)); }, 1500); try { bldBuild(scene); } catch (e) { console.warn('construir', e); } /* en Kids también hay lugares secretos */ { const pm = misState(); if (pm.mact && S.mis[pm.mact.id]) misCarry(S.mis[pm.mact.id], pm.mact.has); }
@@ -1587,6 +1587,7 @@ function fanAll() {
   // Atributos, comer, fabricar y monedas ya están en la mochila: no se repiten acá
   const acts = document.getElementById('v3acts'); if (acts) acts.querySelectorAll('button[data-a]').forEach(b => { if (b.dataset.a === 'room') return; L.push([b.innerHTML, b.title || b.getAttribute('aria-label') || b.dataset.a, () => fanFire(b), b.dataset.a, FAN_ACT[b.dataset.a] || 'acc', b.classList.contains('off')]); });
   try { if (G().hstHas && G().hstHas()) L.push(['📜', 'Rollo de Isaías', () => G().hstScroll(), 'scroll', 'pj']); } catch (e) {}
+  L.push(['🎁', 'Amigos, regalos y equipo', () => amOpen(), 'amigos', 'acc']);
   L.push(['⭐', 'Mi progreso', () => { const h = document.getElementById('hudLv'); if (h) h.click(); }, 'prog', 'ayu']);
   L.push(['☰', 'Menú y ajustes', () => { const m = document.getElementById('menuBtn'); if (m) m.click(); }, 'menu', 'ayu']);
   return L;
@@ -4248,7 +4249,7 @@ const ID_OK = v => typeof v === 'string' && /^[\w\-]{1,64}$/.test(v);
 const numOk = (v, a, b) => { v = +v; return Number.isFinite(v) ? Math.max(a, Math.min(b, v)) : 0; };
 const strOk = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f<>]/g, '').slice(0, n);
 const resOk = o => { const r = {}; if (o && typeof o === 'object') for (const k of XRES) if (Object.prototype.hasOwnProperty.call(o, k)) { const n = Math.floor(numOk(o[k], 0, 99)); if (n > 0) r[k] = n; } return r; };
-const infoOk = i => { i = i && typeof i === 'object' ? i : {}; return { name: strOk(i.name, 16) || 'Invitado', avatar: i.avatar && typeof i.avatar === 'object' && !Array.isArray(i.avatar) ? i.avatar : {}, branch: strOk(i.branch, 12), hum: numOk(i.hum, 0, 999) }; };
+const infoOk = i => { i = i && typeof i === 'object' ? i : {}; return { name: strOk(i.name, 16) || 'Invitado', avatar: i.avatar && typeof i.avatar === 'object' && !Array.isArray(i.avatar) ? i.avatar : {}, branch: strOk(i.branch, 12), hum: numOk(i.hum, 0, 999), pid: typeof i.pid === 'string' && /^[a-zA-Z0-9-]{8,60}$/.test(i.pid) ? i.pid : '' }; };
 function mpClean(m, c) {
   if (!m || typeof m !== 'object' || typeof m.t !== 'string') return null;
   try { if (JSON.stringify(m).length > 12000) return null; } catch (e) { return null; }
@@ -4263,7 +4264,7 @@ function mpClean(m, c) {
   if (m.t === 'x') { if (typeof m.k !== 'string') return null; if ('give' in m) m.give = resOk(m.give); if ('want' in m) m.want = resOk(m.want); if ('by' in m) m.by = strOk(m.by, 16); if ('name' in m) m.name = strOk(m.name, 40); if ('label' in m) m.label = strOk(m.label, 60); if ('x' in m) m.x = numOk(m.x, -5e3, 5e3); if ('z' in m) m.z = numOk(m.z, -5e3, 5e3); }
   return m;
 }
-const meInfo = () => { const p = G().P(); return { name: (p.name || 'Invitado').slice(0, 16), avatar: lookOf(p), branch: G().branch, hum: (p.attr && p.attr.hum) || 0 }; };
+const meInfo = () => { const p = G().P(); return { name: (p.name || 'Invitado').slice(0, 16), avatar: lookOf(p), branch: G().branch, hum: (p.attr && p.attr.hum) || 0, pid: (amId() || {}).perfil || '' }; };
 const roomLink = () => location.origin + location.pathname + '#sala-' + (G().branch === 'ados' ? 'hero' : 'kids') + '-' + MP.code;
 function mpSend(msg, except) { const d = msg; if (MP.host) { for (const id in MP.conns) if (id !== except && MP.conns[id].open) MP.conns[id].send(d); } else if (MP.conn && MP.conn.open) MP.conn.send(d); }
 async function mpCreate() {
@@ -4371,30 +4372,184 @@ function mpPanel() {
     el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>Jugar con amigos</b><span>Salas privadas de hasta 5 personas</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
       <p class="mis-ask">Cada uno juega con su propio perfil y conserva su nivel. En la sala se ven caminando juntos por el mismo mundo.</p>
       <div class="mis-btns"><button class="mis-yes r-new">Crear una sala</button></div>
+      <button type="button" class="gd-how r-amg">🎁 Amigos, regalos y equipo</button>
       <p class="cap-note" style="margin-top:16px">¿Te pasaron un código?</p><div class="r-join"><input class="r-code" maxlength="6" placeholder="CÓDIGO" autocapitalize="characters" autocomplete="off" spellcheck="false"><button class="mis-no r-go">Entrar</button></div>
       <p class="cap-note">Solo entra quien tenga el código o el link. Adentro pueden hablar manteniendo apretado 🎙️ (o la tecla T en la compu) y usar frases rápidas.</p></div>`;
     el.hidden = false; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
     el.querySelector('.r-new').onclick = () => { el.querySelector('.r-new').textContent = 'Creando…'; mpCreate(); };
     el.querySelector('.r-go').onclick = () => { close(); mpJoin(el.querySelector('.r-code').value); };
+    el.querySelector('.r-amg').onclick = () => amOpen();
     return;
   }
-  const list = [`<li>${esc(meInfo().name)} <small>(vos${MP.host ? ', creaste la sala' : ''})</small></li>`].concat(Object.values(MP.players).map(p => `<li>${esc(p.info.name)}</li>`)).join('');
+  const list = [`<li>${esc(meInfo().name)} <small>(vos${MP.host ? ', creaste la sala' : ''})</small></li>`].concat(Object.entries(MP.players).map(([id, p]) => `<li>${esc(p.info.name)}${p.info.pid && amId() ? (amEsAmigo(p.info.pid) ? ' <small>· amigo del camino</small>' : ` <button class="am-sm am-ok r-am" data-id="${esc(id)}">🤝 Ser amigos</button>`) : ''}</li>`)).join('');
   el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>Sala ${MP.code}</b><span>${1 + Object.keys(MP.players).length} de 5 personas</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
     <div class="r-big">${MP.code}</div><ul class="r-list">${list}</ul>
     <div class="x-acts"><button class="r-esp1">⚔️ Espadeo mano a mano</button><button class="r-espA">📖 Espadeo todos contra todos</button><button class="r-quien">🕵️ ¿Quién soy?</button><button class="r-cad">🔗 Versículo en cadena</button><button class="r-race">🏁 Carrera a un lugar</button>${S.hx ? '<button class="r-trade">🤝 Intercambiar o regalar</button><button class="r-gift">🙏 Dar un punto (humildad)</button>' : ''}</div>
     <div class="r-micbox"><b>🎙️ Hablar con la sala</b><div class="r-mode"><button class="r-m1${TALK.open ? '' : ' on'}">Mantener para hablar</button><button class="r-m2${TALK.open ? ' on' : ''}">Micrófono abierto</button></div>
       <small>${TALK.open ? 'Te escuchan todo el tiempo. Tocá el 🎙️ de abajo para silenciarte o volver a hablar.' : `Mantené apretado el 🎙️ de abajo${matchMedia('(pointer: coarse)').matches ? '' : ' (o la tecla T)'} mientras hablás; al soltarlo se apaga.`}</small></div>
     <div class="r-micbox"><b>💬 Frases rápidas</b><div class="r-phr2">${PHR.map((p, i) => `<button data-k="${i}">${p}</button>`).join('')}</div></div>
+    <button type="button" class="gd-how r-amg">🎁 Amigos, regalos y equipo</button>
     <div class="mis-btns"><button class="mis-yes r-share">📨 Invitar con el link</button><button class="mis-no r-leave">Salir de la sala</button></div>
     <p class="cap-note">🙏 Si se arrodillan a orar juntos, cerca, reciben una bendición una vez por día.</p><p class="cap-note">Mandá el link solo a personas que conocés. ${MP.host ? 'Si salís, la sala se cierra para todos.' : ''}</p></div>`;
   el.querySelector('.r-m1').onclick = () => { talkOpen(false); mpPanel(); }; el.querySelector('.r-m2').onclick = () => { talkOpen(true); mpPanel(); };
   el.querySelectorAll('.r-phr2 button').forEach(b => b.onclick = () => { mpSay(+b.dataset.k); close(); });
   el.hidden = false; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   el.querySelector('.r-leave').onclick = () => { close(); mpLeave(); };
+  el.querySelector('.r-amg').onclick = () => amOpen(); el.querySelectorAll('.r-am').forEach(b => b.onclick = () => { b.disabled = true; amPedir(b.dataset.id); });
   el.querySelector('.r-esp1').onclick = () => espStart('1v1'); el.querySelector('.r-espA').onclick = () => espStart('all'); el.querySelector('.r-quien').onclick = () => gmInvite('quien', '¿Quién soy?'); el.querySelector('.r-cad').onclick = () => gmInvite('cadena', 'Versículo en cadena'); el.querySelector('.r-race').onclick = () => gmInvite('carrera', 'Carrera a un lugar'); if (S.hx) { el.querySelector('.r-trade').onclick = xTrade; el.querySelector('.r-gift').onclick = xGift; }
   el.querySelector('.r-share').onclick = async () => { const url = roomLink(), text = `¡Sumate a mi sala en Tras Sus Pasos! Código ${MP.code}`; try { if (navigator.share) { await navigator.share({ title: 'Tras Sus Pasos', text, url }); return; } } catch (e) { if (e && e.name === 'AbortError') return; } try { await navigator.clipboard.writeText(text + ' ' + url); G().toast('Link copiado. Pegalo en WhatsApp para invitar.'); } catch (e) { G().toast(url); } };
 }
 function mpAuto() { let j = null; try { j = sessionStorage.getItem('tsp:join'); sessionStorage.removeItem('tsp:join'); } catch (e) {} if (j) setTimeout(() => mpJoin(j), 800); }
+
+/* =====================================================================
+   AMIGOS DEL CAMINO · REGALOS · DESAFÍO EN EQUIPO (Kids y Hero por igual)
+   La amistad nace en una sala: los dos tienen que aceptarla estando juntos. Entre amigos hay un regalo por día
+   (hasta 5 por día) que llega al buzón aunque el otro no esté jugando, con una frase de una lista fija.
+   Un equipo junta hasta 5 amigos y cada semana tiene un desafío común (el mismo para todos, cambia los lunes):
+   lo que cada uno hace suma a la barra del equipo y, al cumplirlo, cada integrante cobra su premio.
+   Sin texto libre en ninguna parte. Hace falta cuenta; el servidor es /api/kh-amigos de la web de Habitat.
+   ===================================================================== */
+const AM_API = 'https://www.habitat-cfm.org/api/kh-amigos';
+const AM = { st: null, t: 0, pend: 0, pendT: 0, busy: false, warn: '' };
+const AM_EQN = ['Los de la barca', 'Los pescadores de Galilea', 'Los del techo abierto', 'Los caminantes de Emaús', 'Los doce canastos', 'Los sembradores', 'Los vigías de Sion', 'Los del pozo de Jacob', 'Los de la colina', 'Los del sicómoro', 'Los de la red llena', 'Los de la lámpara', 'Los del monte de los Olivos', 'Los peregrinos de Belén'];
+const AM_FR = ['¡Que Dios te bendiga!', 'Me alegra caminar con vos 🙌', 'Hoy oré por vos 🙏', '¡Vamos, que falta poco!', '«Que el Señor te bendiga y te proteja» (Números 6:24)', '«Un amigo es siempre leal» (Proverbios 17:17)', '«Cada vez que pienso en ustedes, le doy gracias a mi Dios» (Filipenses 1:3)', '«¡Sé fuerte y valiente!» (Josué 1:9)'];
+const AM_REG = {
+  hx: { canasta: ['🧺', 'Canasta de pan y fruta', { bread: 2, fruit: 3 }], denarios: ['🪙', 'Bolsita de denarios', { money: 15 }], pescado: ['🐟', 'Pescado asado', { cooked: 2 }] },
+  kids: { estrella: ['⭐', 'Estrellita', { pts: 15 }], luz: ['🌟', 'Un poco de luz', { glow: 5 }], sobre: ['🎴', 'Sobre de figuritas', { sobre: 1 }] }
+};
+const AM_PREMIO = { hx: [{ money: 50, glow: 20 }, { money: 30 }, '50 denarios y 20 de Resplandor', '30 denarios más'], kids: [{ pts: 50, glow: 10 }, { pts: 30 }, '50 puntos y 10 de luz', '30 puntos más'] };
+const AM_PRENDA = 4; // semanas cumplidas en equipo para la prenda
+const amMd = () => (S && S.hx ? 'hx' : 'kids');
+const amId = () => { try { return G().amId ? G().amId() : null; } catch (e) { return null; } };
+const amNum = n => Math.round(n).toLocaleString('es-AR');
+async function amCall(k, data) {
+  const id = amId(); if (!id) throw new Error('cuenta');
+  const r = await fetch(AM_API, { method: 'POST', body: JSON.stringify(Object.assign({ k }, id, data || {})), headers: { 'Content-Type': 'text/plain' }, credentials: 'omit', mode: 'cors' });
+  const j = await r.json().catch(() => ({})); if (!r.ok || !j.ok) { const e = new Error(j.error || 'red'); e.code = j.error || 'red'; throw e; } return j;
+}
+const AM_ERR = { limite: 'Hoy ya mandaste 5 regalos. Mañana podés mandar más.', hoy: 'Hoy ya le mandaste un regalo. Mañana podés mandarle otro.', amigo: 'Solo se puede con amigos del camino.', lleno: 'El equipo ya tiene 5 personas.', ya: 'Ya estás en un equipo.', yaesta: 'Ya está en tu equipo.', falta: 'Todavía falta para cumplir el desafío.', cobrado: 'Ya cobraste el premio de esta semana.', rama: 'Kids y Hero tienen amigos aparte.', cuenta: 'Para tener amigos y equipo hace falta entrar con tu cuenta.' };
+const amErr = e => G().toast(AM_ERR[e && e.code] || 'No se pudo conectar. Probá de nuevo en un ratito.');
+function amSync(force) {
+  if (!amId()) return Promise.resolve(AM.st); if (AM.busy) return AM.busy; if (!force && AM.st && Date.now() - AM.t < 60e3) return Promise.resolve(AM.st);
+  AM.busy = (async () => { try { await amFlush(); const j = await amCall('estado'); AM.st = j; AM.t = Date.now(); amBadge(); } catch (e) {} AM.busy = false; return AM.st; })(); return AM.busy;
+}
+function amStart() { if (amStart.on) return; amStart.on = 1; setTimeout(() => amSync(true), 9000); setInterval(() => { amFlush(); if (!document.hidden) amSync(); }, 4 * 60e3); document.addEventListener('visibilitychange', () => { if (document.hidden) amFlush(); }); }
+/* lo que hacés jugando suma al desafío del equipo si es lo que pide esta semana */
+function amEv(k, n) {
+  const e = AM.st && AM.st.equipo; if (!e || e.meta.k !== k || e.cobrado) return;
+  const me = e.miembros.find(m => m.id === (amId() || {}).perfil); if (!me) return; const cap = e.meta.por * 2, add = Math.max(0, Math.min(n || 1, cap - me.n)); if (!add) return;
+  const was = e.hecho / e.meta.total; me.n += add; AM.pend += add; e.hecho = Math.min(e.meta.total, e.miembros.reduce((a, m) => a + Math.min(m.n, cap), 0)); const now = e.hecho / e.meta.total;
+  if (now >= 1 && !e.cumplido && e.miembros.length >= 2) { e.cumplido = true; amFlush(); setTimeout(() => { svToast('🏆 ¡Tu equipo cumplió el desafío de la semana! Cobrá tu premio en Amigos.', '¡Tu equipo cumplió el desafío de la semana! Cobrá tu premio.'); try { tone3d(); } catch (x) {} }, 600); }
+  else if (was < .8 && now >= .8) svToast(`👥 ¡A tu equipo le falta poco! ${amFalta(e)}`, '¡A tu equipo le falta poco para cumplir el desafío de la semana!');
+  else if (k !== 'camina' && add) svToast(`👥 +${add} para tu equipo · ${amNum(e.hecho)} de ${amNum(e.meta.total)}`);
+  if (Date.now() - AM.pendT > 90e3) amFlush();
+}
+const amFalta = e => `Faltan ${amNum(e.meta.total - e.hecho)} ${e.meta.u}.`;
+async function amFlush() { const e = AM.st && AM.st.equipo; if (!AM.pend || !e) return; const n = AM.pend; AM.pend = 0; AM.pendT = Date.now(); try { const j = await amCall('aporte', { ev: e.meta.k, n, semana: e.semana }); if (j.equipo) { AM.st.equipo = j.equipo; } } catch (x) { AM.pend += n; } }
+function amBadge() { const b = document.querySelector('#v3acts [data-a="room"]'); if (!b) return; const st = AM.st, n = st ? st.buzon.length + (st.equipo && st.equipo.cumplido && !st.equipo.cobrado ? 1 : 0) : 0; if (n) b.dataset.n = n > 9 ? '9+' : n; else delete b.dataset.n; }
+function amDar(r) {
+  try { const p = G().P(); if (r.bread && svOn()) svAdd('bread', r.bread); if (r.fruit && svOn()) svAdd('fruit', r.fruit); if (r.cooked && svOn()) svAdd('cooked', r.cooked); if (r.money && svOn()) svAdd('money', r.money);
+    if (r.glow) glowAdd(r.glow, 'amigos'); if (r.pts) { p.bonus = (p.bonus || 0) + r.pts; G().refreshHud && G().refreshHud(); } if (r.sobre) albGetSobre(r.sobre, '🎴 ¡Un sobre de figuritas de regalo!');
+    G().save(); svUI && svUI(); } catch (e) { console.warn('amigos premio', e); }
+}
+/* para «Tu próximo paso» */
+function amGoals() {
+  const st = AM.st, out = []; if (!st) return out; const reg = st.buzon.filter(b => b.tipo === 'regalo'), inv = st.buzon.filter(b => b.tipo === 'equipo'), e = st.equipo;
+  if (reg.length) out.push({ hot: 1, ic: '🎁', t: reg.length > 1 ? `Te llegaron ${reg.length} regalos` : 'Te llegó un regalo de ' + reg[0].deNom, sub: 'Abrilo en Amigos y, si querés, devolvele un regalo.', b: 'Abrir', fn: () => amOpen() });
+  if (inv.length) out.push({ hot: 1, ic: '👥', t: inv[0].deNom + ' te invita a su equipo', sub: '«' + (AM_EQN[inv[0].frase] || 'Equipo') + '». Juntos cumplen un desafío cada semana.', b: 'Ver', fn: () => amOpen() });
+  if (e && e.cumplido && !e.cobrado) out.push({ hot: 1, ic: '🏆', t: '¡Tu equipo cumplió el desafío!', sub: 'Cobrá tu premio de la semana.', b: 'Cobrar', fn: () => amOpen() });
+  else if (e && !e.cumplido) { const k = e.hecho / e.meta.total; out.push({ hot: k >= .6 ? 1 : 0, ic: e.meta.ic, t: `Desafío en equipo · ${Math.floor(k * 100)}%`, sub: e.meta.t + '. ' + amFalta(e) + (k >= .6 ? ' ¡Les falta poco!' : ''), b: 'Ver', fn: () => amOpen() }); }
+  return out;
+}
+/* ---------- en la sala: pedir y aceptar amistad ---------- */
+function amEsAmigo(pid) { return !!(AM.st && AM.st.amigos.some(a => a.id === pid)); }
+function amPedir(id) { const p = MP.players[id]; if (!p || !p.info.pid) return; xSend({ k: 'amReq', to: id }); G().toast('Le preguntaste a ' + p.info.name + ' si quiere ser tu amigo del camino.'); }
+function amReqIn(m) {
+  const p = MP.players[m.id]; if (!p || !p.info.pid || !amId()) return; if (amEsAmigo(p.info.pid)) { xSend({ k: 'amOk', to: m.id }); return; }
+  vilSheet(`<div class="inv-h"><b>🤝 Amigos del camino</b></div><p class="md-k"><b>${esc(p.info.name)}</b> quiere ser tu amigo del camino. Así se pueden mandar regalos y armar un equipo, aunque no estén jugando al mismo tiempo.</p><div class="mis-btns"><button class="mis-yes am-si">¡Sí, seamos amigos!</button><button class="mis-no am-no">Ahora no</button></div>`);
+  const el = document.getElementById('v3sheet'); el.querySelector('.am-no').onclick = () => { el.hidden = true; };
+  el.querySelector('.am-si').onclick = async () => { el.hidden = true; try { const j = await amCall('amigo', { otro: p.info.pid }); xSend({ k: 'amOk', to: m.id }); if (j.mutuo) amHecho(p.info.name); } catch (e) { amErr(e); } };
+}
+async function amOkIn(m) { const p = MP.players[m.id]; if (!p || !p.info.pid || !amId()) return; try { const j = await amCall('amigo', { otro: p.info.pid }); if (j.mutuo) amHecho(p.info.name); } catch (e) { amErr(e); } }
+function amHecho(nom) { pkPop('🤝 ¡' + nom + ' y vos son amigos del camino!'); try { tone3d(); } catch (e) {} amSync(true).then(() => { try { if (MP.code) mpPanel(); } catch (e) {} }); }
+/* ---------- la ventana de Amigos ---------- */
+async function amOpen(tab) {
+  if (!amId()) { vilSheet(`<div class="inv-h"><b>🎁 Amigos, regalos y equipo</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">Para tener amigos del camino, mandar regalos y armar un equipo hace falta entrar con tu cuenta.</p><p class="md-k">En una sala con código igual podés jugar con quien quieras.</p>`); return; }
+  if (!AM.st) vilSheet(`<div class="inv-h"><b>🎁 Amigos, regalos y equipo</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">Cargando…</p>`);
+  await amSync(true); if (!AM.st) { vilSheet(`<div class="inv-h"><b>🎁 Amigos, regalos y equipo</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">No se pudo conectar. Probá de nuevo en un ratito.</p>`); return; }
+  amDraw(tab);
+}
+function amDraw(tab) {
+  const st = AM.st, md = amMd(), e = st.equipo, yo = (amId() || {}).perfil, reg = st.buzon.filter(b => b.tipo === 'regalo'), inv = st.buzon.filter(b => b.tipo === 'equipo');
+  const quedan = Math.max(0, st.maxReg - st.enviados.length);
+  // buzón
+  let h = `<div class="inv-h"><b>🎁 Amigos, regalos y equipo</b><button class="bag-x" aria-label="Cerrar">✕</button></div>`;
+  if (reg.length || inv.length) {
+    h += `<h4 class="md-h">📬 Tu buzón</h4><div class="gd-list">` + reg.map(b => { const R = AM_REG[md][b.regalo] || ['🎁', 'Un regalo']; return `<div class="sv-rec am-r"><span class="gd-ic">${R[0]}</span><div><b>${esc(R[1])}</b><small>De ${esc(b.deNom)} · ${esc(AM_FR[b.frase] || '')}</small></div></div>`; }).join('')
+      + inv.map(b => `<div class="sv-rec am-r"><span class="gd-ic">👥</span><div><b>${esc(b.deNom)} te invita a su equipo</b><small>«${esc(AM_EQN[b.frase] || 'Equipo')}»${e ? ' · Si aceptás, dejás tu equipo de ahora.' : ''}</small><div class="am-bt"><button class="am-sm am-ok" data-inv="${esc(b.id)}" data-si="1">Unirme</button><button class="am-sm" data-inv="${esc(b.id)}">Ahora no</button></div></div></div>`).join('') + `</div>`;
+    if (reg.length) h += `<button type="button" class="gd-how am-abrir">🎁 Abrir ${reg.length > 1 ? 'los ' + reg.length + ' regalos' : 'el regalo'}</button>`;
+  }
+  // equipo
+  h += `<h4 class="md-h">👥 Desafío en equipo</h4>`;
+  if (!e) h += `<p class="md-k">Armá un equipo con hasta 5 amigos del camino. Cada semana tienen un desafío juntos: lo que hace cada uno suma a la barra de todos, y al cumplirlo cada integrante gana ${esc(AM_PREMIO[md][2])}. Si todos ponen su parte, ${esc(AM_PREMIO[md][3])}.</p><p class="md-k">Esta semana: ${st.meta.ic} ${esc(st.meta.t)}.</p><button type="button" class="gd-how am-crear">✨ Crear mi equipo</button>`;
+  else { const k = Math.min(1, e.hecho / e.meta.total), cap = e.meta.por * 2;
+    h += `<div class="sv-rec md-r am-eq${e.cumplido ? ' ok' : ''}"><span class="gd-ic">${e.cumplido ? '🏆' : e.meta.ic}</span><div><b>«${esc(AM_EQN[e.nombre] || 'Equipo')}»</b><small>${esc(e.meta.t)}: ${amNum(e.hecho)} de ${amNum(e.meta.total)} ${esc(e.meta.u)}</small><i class="md-bar"><i style="width:${Math.round(k * 100)}%"></i></i><small>${e.cumplido ? (e.cobrado ? '¡Cumplido! El lunes llega un desafío nuevo.' : '¡Cumplieron! Cobrá tu premio.') : amFalta(e) + (k >= .6 ? ' ¡Les falta poco!' : '') + ' Se renueva el lunes.'}</small></div></div>`;
+    h += `<div class="am-mi">` + e.miembros.map(m => `<div class="am-m${m.n >= e.meta.por ? ' ok' : m.n > 0 ? ' va' : ''}"><b>${esc(m.nom)}${m.id === yo ? ' (vos)' : ''}</b><i class="md-bar"><i style="width:${Math.round(Math.min(1, m.n / e.meta.por) * 100)}%"></i></i><small>${m.n > 0 ? amNum(m.n) + (m.n >= e.meta.por ? ' · ¡puso su parte!' : '') : 'todavía no sumó'}</small></div>`).join('') + `</div>`;
+    if (e.miembros.length < 2 && !e.cumplido) h += `<p class="md-k">Para que cuente, sumá al menos un amigo al equipo (abajo, en tus amigos, tocá ➕).</p>`;
+    if (e.cumplido && !e.cobrado) h += `<button type="button" class="gd-how am-cobrar">🏆 Cobrar mi premio</button>`;
+    const sem = e.semanas || 0; h += `<p class="md-k">Desafíos cumplidos en equipo: <b>${sem}</b>${sem < AM_PRENDA ? ` · con ${AM_PRENDA} ganan el Turbante de los compañeros de camino` : ''}.</p><button type="button" class="am-sm am-salir">Salir del equipo</button>`; }
+  // amigos
+  h += `<h4 class="md-h">🤝 Tus amigos del camino</h4>`;
+  if (!st.amigos.length) h += `<p class="md-k">Todavía no tenés amigos del camino. Entrá a una sala con alguien que conocés (botón 👥) y tocá «🤝 Ser amigos» al lado de su nombre: cuando los dos aceptan, quedan amigos.</p>`;
+  else { const enEq = id => !!(e && e.miembros.some(m => m.id === id));
+    h += `<p class="md-k">Podés mandar un regalo por día a cada amigo (te quedan ${quedan} hoy). Le llega aunque no esté jugando.</p><div class="gd-list">` + st.amigos.map(a => { const ya = st.enviados.includes(a.id); return `<div class="sv-rec am-r"><span class="gd-ic">🙂</span><div><b>${esc(a.nom)}</b><small>${enEq(a.id) ? 'En tu equipo' : 'Amigo del camino'}${ya ? ' · ya le mandaste un regalo hoy' : ''}</small><div class="am-bt"><button class="am-sm am-ok" data-reg="${esc(a.id)}"${ya || !quedan ? ' disabled' : ''}>🎁 Regalar</button>${e && !enEq(a.id) && e.miembros.length < 5 ? `<button class="am-sm" data-eq="${esc(a.id)}">➕ Al equipo</button>` : ''}<button class="am-sm am-q" data-q="${esc(a.id)}" aria-label="Dejar de ser amigos">✕</button></div></div></div>`; }).join('') + `</div>`; }
+  h += `<p class="md-k am-nota">Acá no hay mensajes escritos: los regalos van con frases elegidas de una lista. Solo se suman amigos que estuvieron juntos en una sala.</p>`;
+  vilSheet(h); const el = document.getElementById('v3sheet'), $ = s => el.querySelector(s);
+  if ($('.am-abrir')) $('.am-abrir').onclick = () => amAbrir();
+  el.querySelectorAll('[data-inv]').forEach(b => b.onclick = async () => { b.disabled = true; try { const j = await amCall('equipo-responder', { id: b.dataset.inv, si: !!b.dataset.si }); if (b.dataset.si && j.equipo) pkPop('👥 ¡Te sumaste a «' + (AM_EQN[j.equipo.nombre] || 'el equipo') + '»!'); } catch (x) { amErr(x); } await amSync(true); amDraw(); });
+  if ($('.am-crear')) $('.am-crear').onclick = () => amCrear();
+  if ($('.am-cobrar')) $('.am-cobrar').onclick = () => amCobrar();
+  if ($('.am-salir')) $('.am-salir').onclick = () => amConfirm('¿Salir del equipo? Lo que sumaste esta semana queda para ellos.', async () => { try { await amCall('equipo-salir'); } catch (x) { amErr(x); } await amSync(true); amDraw(); });
+  el.querySelectorAll('[data-reg]').forEach(b => b.onclick = () => amRegalar(b.dataset.reg));
+  el.querySelectorAll('[data-eq]').forEach(b => b.onclick = async () => { b.disabled = true; try { await amCall('equipo-invitar', { para: b.dataset.eq }); G().toast('Invitación enviada. Le aparece en su buzón.'); } catch (x) { amErr(x); b.disabled = false; } });
+  el.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { const a = st.amigos.find(x => x.id === b.dataset.q); amConfirm(`¿Dejar de ser amigos de ${a ? a.nom : 'esta persona'}?`, async () => { try { await amCall('quitar', { otro: b.dataset.q }); } catch (x) { amErr(x); } await amSync(true); amDraw(); }); });
+}
+function amConfirm(txt, si) { vilSheet(`<div class="inv-h"><b>Amigos</b></div><p class="md-k">${esc(txt)}</p><div class="mis-btns"><button class="mis-yes am-c1">Sí</button><button class="mis-no am-c0">No, volver</button></div>`); const el = document.getElementById('v3sheet'); el.querySelector('.am-c1').onclick = si; el.querySelector('.am-c0').onclick = () => amDraw(); }
+function amRegalar(para, back) {
+  const md = amMd(), a = AM.st.amigos.find(x => x.id === para) || { nom: 'tu amigo' }; let reg = Object.keys(AM_REG[md])[0], fr = 0;
+  const draw = () => { vilSheet(`<div class="inv-h"><b>🎁 Un regalo para ${esc(a.nom)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">Elegí el regalo. A vos no te cuesta nada: compartir hace crecer tu ${md === 'hx' ? 'Resplandor' : 'luz'}.</p>
+    <div class="am-pick">${Object.entries(AM_REG[md]).map(([k, R]) => `<button class="${k === reg ? 'on' : ''}" data-r="${k}"><span>${R[0]}</span>${esc(R[1])}</button>`).join('')}</div>
+    <p class="md-k">Y una frase para acompañarlo:</p><div class="am-fr">${AM_FR.map((f, i) => `<button class="${i === fr ? 'on' : ''}" data-f="${i}">${esc(f)}</button>`).join('')}</div>
+    <div class="mis-btns"><button class="mis-yes am-env">Mandar el regalo</button><button class="mis-no am-vol">Volver</button></div>`);
+    const el = document.getElementById('v3sheet'); el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { reg = b.dataset.r; draw(); }); el.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { fr = +b.dataset.f; draw(); });
+    el.querySelector('.am-vol').onclick = () => amDraw();
+    el.querySelector('.am-env').onclick = async ev => { ev.target.disabled = true; try { await amCall('regalo', { para, regalo: reg, frase: fr }); AM.st.enviados.push(para); amDar({ glow: md === 'hx' ? 3 : 2 }); pkPop('🎁 ¡Le mandaste un regalo a ' + a.nom + '!'); try { metaEv('saluda'); } catch (x) {} amDraw(); } catch (x) { amErr(x); ev.target.disabled = false; } }; };
+  draw();
+}
+async function amAbrir() {
+  const md = amMd(), ids = AM.st.buzon.filter(b => b.tipo === 'regalo').map(b => b.id); let j; try { j = await amCall('abrir', { ids }); } catch (x) { amErr(x); return; }
+  const got = j.abiertos || []; got.forEach(g => { const R = AM_REG[md][g.regalo]; if (R) amDar(R[2]); });
+  await amSync(true); const de = [...new Map(got.map(g => [g.de, g.deNom])).entries()];
+  vilSheet(`<div class="inv-h"><b>🎁 ¡Regalos abiertos!</b><button class="bag-x" aria-label="Cerrar">✕</button></div><div class="gd-list">${got.map(g => { const R = AM_REG[md][g.regalo] || ['🎁', 'Un regalo']; return `<div class="sv-rec am-r ok"><span class="gd-ic">${R[0]}</span><div><b>${esc(R[1])}</b><small>De ${esc(g.deNom)} · ${esc(AM_FR[g.frase] || '')}</small></div></div>`; }).join('')}</div>
+    ${de.length ? `<p class="md-k">¿Le devolvés un regalo?</p><div class="am-bt">${de.map(([id, n]) => `<button class="am-sm am-ok" data-dev="${esc(id)}"${AM.st.enviados.includes(id) || !AM.st.amigos.some(a => a.id === id) ? ' disabled' : ''}>🎁 A ${esc(n)}</button>`).join('')}</div>` : ''}<button type="button" class="gd-how am-vol">Volver a Amigos</button>`);
+  try { pkPop('🎁 ¡Abriste ' + (got.length > 1 ? got.length + ' regalos' : 'tu regalo') + '!'); tone3d(); } catch (x) {}
+  const el = document.getElementById('v3sheet'); el.querySelector('.am-vol').onclick = () => amDraw(); el.querySelectorAll('[data-dev]').forEach(b => b.onclick = () => amRegalar(b.dataset.dev));
+}
+function amCrear() {
+  let n = 0; const draw = () => { vilSheet(`<div class="inv-h"><b>✨ Tu equipo</b><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="md-k">Elegí el nombre del equipo. Después invitá a tus amigos del camino (hasta 5 en total).</p><div class="am-fr">${AM_EQN.map((t, i) => `<button class="${i === n ? 'on' : ''}" data-n="${i}">${esc(t)}</button>`).join('')}</div><div class="mis-btns"><button class="mis-yes am-ok2">Crear «${esc(AM_EQN[n])}»</button><button class="mis-no am-vol">Volver</button></div>`);
+    const el = document.getElementById('v3sheet'); el.querySelectorAll('[data-n]').forEach(b => b.onclick = () => { n = +b.dataset.n; draw(); }); el.querySelector('.am-vol').onclick = () => amDraw();
+    el.querySelector('.am-ok2').onclick = async ev => { ev.target.disabled = true; try { await amCall('equipo-crear', { nombre: n }); pkPop('👥 ¡Nació «' + AM_EQN[n] + '»!'); } catch (x) { amErr(x); } await amSync(true); amDraw(); }; };
+  draw();
+}
+async function amCobrar() {
+  const md = amMd(); let j; try { j = await amCall('cobrar'); } catch (x) { amErr(x); await amSync(true); amDraw(); return; }
+  const P = AM_PREMIO[md]; amDar(P[0]); if (j.todos) amDar(P[1]);
+  let prenda = false; if ((j.semanas || 0) >= AM_PRENDA && GBY.equipo4 && !gearState().own.includes('equipo4')) { prenda = true; setTimeout(() => gearGive(GBY.equipo4, 'Desafíos en equipo'), 2400); }
+  AM.st.equipo = j.equipo; amBadge();
+  try { pkPop('🏆 ¡Desafío en equipo cumplido!'); tone3d(); } catch (x) {}
+  svToast(`🏆 Ganaste ${P[2]}${j.todos ? ' y ' + P[3] + ', porque todos pusieron su parte' : ''}.`, '¡Tu equipo cumplió el desafío de la semana!');
+  amDraw(); if (prenda) G().toast('Por ' + AM_PRENDA + ' desafíos en equipo: ¡una prenda única!');
+}
 
 /* ---------- amanecer y mediodía: cambia solo cada 5 minutos (igual para todos en una sala); del mediodía vuelve a un amanecer nuevo ---------- */
 const DAYP = 5 * 60e3, DAYX = 50e3, DAYN = ['Amanecer', 'Mediodía'];
@@ -4457,6 +4612,7 @@ const RAR = { c: ['Común', '#C9C2B4', 70], r: ['Rara', '#6FB6FF', 20], e: ['Ép
 const GEAR = [
   { id: 'nav_gloria', s: 'shirt', r: 'u', t: 'plain', c: '#F1ECDF', name: 'Túnica de Nochebuena', desc: 'Regalo de Navidad. «¡Gloria a Dios en las alturas, y en la tierra paz!» (Lucas 2:14).' },
   { id: 'nav_magos', s: 'hat', r: 'u', t: 'turban', c: '#6E3A86', name: 'Turbante de los magos', desc: 'Regalo de Reyes. Los sabios de oriente siguieron la estrella hasta Belén para adorar al niño (Mateo 2:1-11).' },
+  { id: 'equipo4', s: 'hat', r: 'u', t: 'wrap', c: '#2F6A5A', c2: '#E8C27A', name: 'Turbante de los compañeros de camino', desc: 'Premio por cumplir 4 desafíos en equipo. «Es mejor ser dos que uno» (Eclesiastés 4:9).' },
   { id: 'cam7', s: 'shirt', r: 'u', t: 'plain', c: '#9C7A4E', name: 'Manto del caminante', desc: 'Premio del camino de 7 días. «Lámpara es a mis pies tu palabra, y lumbrera a mi camino» (Salmo 119:105).' },
   { id: 'vil_nazaret', s: 'gloves', r: 'u', t: 'glove', c: '#8A6A4A', name: 'Guantes del taller de Nazaret', desc: 'Regalo de Nazaret para los de la familia. En este pueblo creció Jesús, en el taller de José.' },
   { id: 'vil_belen', s: 'shirt', r: 'u', t: 'plain', c: '#C8B89A', name: 'Manto de pastor de Belén', desc: 'Regalo de Belén para los de la familia. Así se abrigaban los pastores que vieron a los ángeles (Lucas 2:8).' },
@@ -5485,9 +5641,11 @@ function guiaGoals() {
   if (S.misGoal) { const m = S.misGoal; out.push({ ic: '⭐', t: m.txt, sub: 'Misión de ' + m.who + '.', b: 'Llevarme', fn: m.gp ? () => guiaWp(m.gp[0], m.gp[1], m.txt) : null }); }
   if (hx) try { for (const id in EPIC) { const st = epP()[id]; if (!st || st.done || !st.s) continue; const x = epStep(id); if (!x) continue; const pl = guiaEpPlace(x.sp.at);
     out.push({ ic: '✨', t: x.E.name, sub: `Misión épica · paso ${x.st.s + 1} de ${x.E.steps.length}` + (x.today ? (pl && pl.n ? ' · en ' + pl.n : '') : ' · sigue mañana: volvé otro día de juego'), b: 'Llevarme', fn: pl && x.today ? () => guiaWp(pl.x, pl.z, pl.n || x.E.name) : null }); } } catch (e) {}
+  let am = []; try { am = amGoals(); am.filter(x => x.hot).forEach(x => out.push(x)); } catch (e) {}
   let adv = null; try { adv = advGoal(); if (adv && adv.hot) out.push(adv); } catch (e) {}
   try { const id = nodeActive(); if (id) { const n = g.NODES[id], here = id === g.P().pos; out.push({ ic: '📖', t: here ? 'Entrá ' + aLp(n.label) : 'Caminá ' + aLp(n.label), sub: here ? 'Seguí la historia: te espera el pasaje y su desafío.' : 'Seguí la historia: es tu próxima parada. El botón dorado te lleva caminando.', b: here ? 'Entrar' : 'Caminar', fn: () => go(id) }); } } catch (e) {}
   try { out.push(metaGoal()); } catch (e) {}
+  am.filter(x => !x.hot).forEach(x => out.push(x));
   if (adv && !adv.hot) out.push(adv);
   if (hx) out.push({ ic: '🔨', t: 'Trabajá en un oficio', sub: 'Cerca de los pueblos hay campos, árboles, piedras y agua. Lo que juntás sirve para comer, vender y subir de nivel.', fn: null });
   else out.push({ ic: '🗺️', t: 'Explorá el mapa', sub: 'Abrí el mapa y tocá un lugar: una flecha en el piso te lleva.', b: 'Mapa', fn: () => openMap() });
@@ -5565,7 +5723,7 @@ function metaP() {
 }
 const metaN = (m, k) => Math.min(META_POOL[k][2], Math.floor(m.c[k] || 0));
 function metaEv(k, n) {
-  if (!S || !S.av || !G().P()) return; const m = metaP(); if (m.ok || !m.g.includes(k)) return; const T = META_POOL[k][2], was = metaN(m, k); if (was >= T) return;
+  if (!S || !S.av || !G().P()) return; try { amEv(k, n || 1); } catch (e) {} const m = metaP(); if (m.ok || !m.g.includes(k)) return; const T = META_POOL[k][2], was = metaN(m, k); if (was >= T) return;
   m.c[k] = (m.c[k] || 0) + (n || 1); const now = metaN(m, k); if (now < T) { if (k === 'camina' ? Math.floor(now / 100) > Math.floor(was / 100) : false) G().save(); return; }
   const hechas = m.g.filter(x => metaN(m, x) >= META_POOL[x][2]).length; G().save();
   if (hechas < 3) { svToast(`✅ ${META_POOL[k][1]} · desafío del día ${hechas} de 3`, '¡Cumpliste una parte del desafío del día!'); return; }
@@ -9304,6 +9462,8 @@ function mpX(m) {
   if (m.k === 'offerOk') return xOfferOk(m);
   if (m.k === 'offerNo') { const pd = MP.pend && MP.pend[m.id]; if (!pd) return; delete MP.pend[m.id]; Object.entries(pd.give).forEach(([k, n]) => svAdd(k, n)); G().save(); svUI && svUI(); G().toast(pName(m.id) + ' no aceptó el intercambio. Te devolvimos tus cosas.'); return; }
   if (m.k === 'gift') return xGiftIn(m);
+  if (m.k === 'amReq') return amReqIn(m);
+  if (m.k === 'amOk') return amOkIn(m);
   if (m.k === 'esp') return espIn(m);
   if (m.k === 'g') return gmIn(m);
   if (m.k === 'share' && svOn() && !S.down && (S.av.position.x - m.x) ** 2 + (S.av.position.z - m.z) ** 2 < 100) { const s = svP(); s.sat = Math.min(SV.FULL, s.sat + 300); G().save(); svUI(); G().toast('🍞 ' + m.by + ' compartió su comida: +5 minutos de alimento.'); }

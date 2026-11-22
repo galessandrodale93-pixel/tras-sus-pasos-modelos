@@ -1651,3 +1651,31 @@ body.lowmem *,body.lowmem *::before,body.lowmem *::after{-webkit-backdrop-filter
 .r-mode{display:flex;gap:6px}.r-mode button{flex:1;border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:9px 6px;background:rgba(255,255,255,.06);color:inherit;font:800 13px "Nunito",sans-serif;cursor:pointer}
 .r-mode button.on{background:linear-gradient(180deg,#FFD98A,#E8913A);color:#2B1D00;border-color:transparent}
 .r-phr2{display:flex;flex-wrap:wrap;gap:6px}.r-phr2 button{border:1px solid rgba(255,255,255,.2);border-radius:99px;padding:7px 11px;background:rgba(255,255,255,.06);color:inherit;font:700 13px "Nunito",sans-serif;cursor:pointer}
+/* amigos del camino, regalos y desafío en equipo */
+#v3acts [data-a="room"]{position:relative}
+#v3acts [data-a="room"][data-n]::after{content:attr(data-n);position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:99px;background:#E8463A;color:#fff;font:900 11px/18px "Nunito",sans-serif;box-shadow:0 0 0 2px rgba(0,0,0,.35)}
+.am-r>div,.am-eq>div{flex:1;min-width:0}
+.am-r b,.am-eq b{display:block}
+.am-r small,.am-eq small{display:block;opacity:.85}
+.am-r.ok{border-color:rgba(95,211,154,.6)!important}
+.am-bt{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.am-sm{border:0;border-radius:10px;padding:7px 11px;font:900 12.5px "Nunito",sans-serif;background:rgba(127,127,127,.2);color:inherit;cursor:pointer}
+.am-sm.am-ok{background:linear-gradient(180deg,#FFD25E,#E8913A);color:#2A1A08}
+.am-sm:disabled{opacity:.45;cursor:default}
+.am-sm.am-q{padding:7px 9px}
+.r-list .am-sm{margin-left:6px;padding:4px 9px;font-size:11.5px}
+.am-mi{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin:8px 0}
+.am-m{padding:8px 10px;border-radius:12px;border:1px solid rgba(127,127,127,.3);min-width:0}
+.am-m b{display:block;font:900 13px "Nunito",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.am-m small{font:700 11px "Nunito",sans-serif;opacity:.8}
+.am-m.ok{border-color:rgba(95,211,154,.6)}
+.am-m.ok .md-bar>i{background:#5FD39A}
+.am-pick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 10px}
+.am-pick button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:14px;border:2px solid rgba(127,127,127,.3);background:rgba(127,127,127,.1);color:inherit;font:800 12.5px/1.2 "Nunito",sans-serif;cursor:pointer}
+.am-pick button span{font-size:26px}
+.am-pick button.on,.am-fr button.on{border-color:#FFD25E;background:rgba(255,210,94,.16)}
+.am-fr{display:grid;gap:6px;margin:6px 0 12px;max-height:38vh;overflow:auto}
+.am-fr button{text-align:left;padding:9px 12px;border-radius:12px;border:2px solid rgba(127,127,127,.25);background:rgba(127,127,127,.08);color:inherit;font:700 13px/1.35 "Nunito",sans-serif;cursor:pointer}
+.am-nota{margin-top:14px;font-size:12px!important;opacity:.65!important}
+.am-salir{margin-top:4px}
+.vil .am-sm.am-q,.vil .am-sm:not(.am-ok){background:rgba(127,127,127,.2);color:inherit}

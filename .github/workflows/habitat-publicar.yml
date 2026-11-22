@@ -6,7 +6,7 @@ name: Publicar web Habitat
 on:
   push:
     branches: [main]
-    paths: ['habitat-juego/public/**', 'habitat-astro/src/pages/api/kh-version.ts']
+    paths: ['habitat-juego/public/**', 'habitat-astro/src/pages/api/kh-*.ts']
   workflow_dispatch:
     inputs:
       comentario:

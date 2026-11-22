@@ -24,7 +24,7 @@ OUT = os.path.join(AQUI, 'salida')
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
 DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink, AM, amOpen, amSync, amEv, amGoals, amReqIn, amDraw, GBY, guiaGoals: () => guiaGoals()')
 
 
 def local(url):
@@ -175,7 +175,64 @@ SALA = COMUN + r"""
       d.MP.code=null; d.mpUI(); const fuera=m.hidden;
       return {ok:!top&&arriba&&modos===2&&frases>3&&fuera, d:`barra de la sala arriba: ${top?'sigue':'no está'} · micrófono arriba del botón de amigos: ${arriba} · en la ventana de la sala: ${modos} modos de micrófono y ${frases} frases rápidas · sin sala se esconde: ${fuera}`};"""
 
+
+AMIGOS = COMUN + """
+      /* servidor de mentira con las mismas reglas básicas que /api/kh-amigos */
+      const YO='perfil-yo-0001', LU='perfil-lu-0001', md=S.hx?'hx':'kids', SV={amig:{}, buz:[], env:[], eq:null};
+      const sem=(()=>{const d=new Date(Date.now()-3*3600e3),k=(d.getUTCDay()+6)%7;return new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()-k)).toISOString().slice(0,10);})();
+      const meta={k:'camina',ic:'🚶',t:'Caminen juntos por la tierra de Jesús',por:S.hx?1500:800,u:'metros'};
+      const vista=()=>{if(!SV.eq)return null;const e=SV.eq,tot=meta.por*Math.max(2,e.mi.length),h=e.mi.reduce((a,m)=>a+Math.min(m.n,meta.por*2),0);return {id:'eq1',nombre:e.nombre,semana:sem,miembros:e.mi.map(m=>({...m})),meta:{...meta,total:tot},hecho:Math.min(h,tot),cumplido:h>=tot&&e.mi.length>=2,cobrado:e.cob.includes(YO),semanas:e.semanas};};
+      const regs=S.hx?['canasta','denarios','pescado']:['estrella','luz','sobre'];
+      const api=async b=>{ const k=b.k;
+        if(k==='estado') return {ok:true,amigos:Object.entries(SV.amig).filter(([,v])=>v.a&&v.b).map(([id,v])=>({id,nom:v.nom})),buzon:SV.buz.filter(x=>!x.abierto),enviados:SV.env,maxReg:5,equipo:vista(),meta};
+        if(k==='amigo'){const f=SV.amig[b.otro]||(SV.amig[b.otro]={nom:'Lucía',a:0,b:1});f.a=1;return {ok:true,mutuo:!!(f.a&&f.b)};}
+        if(k==='regalo'){if(!regs.includes(b.regalo))return {error:'datos'};if(SV.env.includes(b.para))return {error:'hoy'};SV.env.push(b.para);return {ok:true};}
+        if(k==='abrir'){const o=SV.buz.filter(x=>b.ids.includes(x.id)&&!x.abierto);o.forEach(x=>x.abierto=1);return {ok:true,abiertos:o.map(x=>({id:x.id,regalo:x.regalo,deNom:x.deNom,frase:x.frase,de:x.de}))};}
+        if(k==='equipo-crear'){SV.eq={nombre:b.nombre,mi:[{id:YO,nom:'Yo',n:0}],cob:[],semanas:0};return {ok:true,equipo:vista()};}
+        if(k==='equipo-invitar'){if(!SV.eq.mi.some(m=>m.id===b.para))SV.eq.mi.push({id:b.para,nom:'Lucía',n:0});return {ok:true};}
+        if(k==='aporte'){const m=SV.eq.mi.find(x=>x.id===YO);if(b.ev===meta.k&&b.semana===sem)m.n=Math.min(meta.por*2,m.n+b.n);return {ok:true,equipo:vista()};}
+        if(k==='cobrar'){const v=vista();if(!v.cumplido)return {error:'falta'};if(v.cobrado)return {error:'cobrado'};SV.eq.cob.push(YO);SV.eq.semanas=4;return {ok:true,todos:true,semanas:4,equipo:vista()};}
+        return {error:'k'}; };
+      const of=window.fetch; window.fetch=async(u,o)=>{ if(String(u).includes('/api/kh-amigos')){ const j=await api(JSON.parse(o.body)); return new Response(JSON.stringify(j),{status:j.ok?200:400}); } return of(u,o); };
+      const G_=window.GAME; G_.amId=()=>({perfil:YO,socio:'socio-yo-0001'});
+      const L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t); return c;}, wait=ms=>new Promise(r=>setTimeout(r,ms)), sheet=()=>document.getElementById('v3sheet'), until=async(f,ms)=>{for(let i=0;i<(ms||8000)/200;i++){if(f())return true;await wait(200);}return false;}, btn=sel=>{const b=sheet().querySelector(sel); if(b) b.click(); return !!b;};
+      let todo=true; try {
+      /* 1. sala: Lucía pide ser amiga y se acepta */
+      d.MP.players['p-lu']={info:{name:'Lucía',pid:LU},av:null}; d.amReqIn({id:'p-lu'}); await wait(100);
+      todo&=ok(/quiere ser tu amigo/.test(sheet().textContent),'pedido de amistad en la sala'); btn('.am-si'); await until(()=>d.AM.st&&d.AM.st.amigos.length);
+      delete d.MP.players['p-lu'];
+      todo&=ok(d.AM.st && d.AM.st.amigos.length===1,'quedan amigos (los dos aceptaron)');
+      /* 2. ventana de amigos y equipo */
+      await d.amOpen(); todo&=ok(/Crear mi equipo/.test(sheet().textContent),'sin equipo ofrece crear');
+      btn('.am-crear'); await wait(50); sheet().querySelectorAll('[data-n]')[2].click(); await wait(30); btn('.am-ok2'); await until(()=>!!sheet().querySelector('.am-eq'));
+      todo&=ok(/Los del techo abierto/.test((sheet().querySelector('.am-eq')||{}).textContent||''),'equipo creado con el nombre elegido');
+      todo&=ok(!!sheet().querySelector('[data-eq]'),'botón para sumar al amigo al equipo'); btn('[data-eq]'); await wait(300); await d.amSync(true); todo&=ok(d.AM.st.equipo.miembros.length===2,'Lucía se suma al equipo'); await d.amOpen();
+      /* 3. regalo */
+      btn('[data-reg]'); await wait(50); todo&=ok(sheet().querySelectorAll('.am-pick button').length===3 && sheet().querySelectorAll('.am-fr button').length===8,'3 regalos y 8 frases fijas');
+      btn('.am-env'); await until(()=>d.AM.st.enviados.includes(LU)&&sheet().querySelector('[data-reg]')); todo&=ok(d.AM.st.enviados.includes(LU) && sheet().querySelector('[data-reg]').disabled,'regalo enviado: hoy no se repite');
+      /* 4. buzón */
+      SV.buz.push({id:'r1',tipo:'regalo',de:LU,deNom:'Lucía',regalo:regs[0],frase:5,dia:'x'}); await d.amSync(true);
+      const g1=d.guiaGoals(); todo&=ok(g1.some(x=>/regalo de Lucía/.test(x.t)),'«Tu próximo paso» avisa del regalo');
+      todo&=ok(document.querySelector('#v3acts [data-a="room"]').dataset.n==='1','número en el botón de amigos');
+      const snap=()=>JSON.stringify([s&&s.inv,G_.P().bonus,(G_.P().alb||{}).sob,JSON.stringify(G_.P()).length]),p0=snap(); await d.amOpen(); btn('.am-abrir'); await until(()=>/Regalos abiertos/.test(sheet().textContent));
+      todo&=ok(/Regalos abiertos/.test(sheet().textContent) && /Un amigo es siempre leal/.test(sheet().textContent),'se abre el regalo con su frase');
+      todo&=ok(snap()!==p0,'el regalo se suma');
+      /* 5. desafío en equipo */
+      const mine=()=>d.AM.st.equipo.miembros.find(m=>m.id===YO).n; d.amEv('camina', 300); todo&=ok(mine()===300,'caminar suma al equipo');
+      d.amEv('ora', 1); todo&=ok(mine()===300,'lo que no pide la semana no suma');
+      const st0=d.AM.st.equipo; d.amEv('camina', st0.meta.por*2); todo&=ok(d.AM.st.equipo.cumplido,'con lo de los dos se cumple');
+      await wait(300); await d.amSync(true);
+      const g2=d.guiaGoals(); todo&=ok(g2.some(x=>/cumplió el desafío/.test(x.t)),'«Tu próximo paso» avisa que hay premio');
+      await d.amOpen(); btn('.am-cobrar'); await until(()=>d.AM.st.equipo.cobrado); await until(()=>d.gearState().own.includes('equipo4'),10000);
+      todo&=ok(d.AM.st.equipo.cobrado,'premio cobrado');
+      todo&=ok(d.gearState().own.includes('equipo4'),'a las 4 semanas, la prenda del equipo');
+      document.querySelectorAll('#v3sheet').forEach(e=>e.hidden=false); await d.amOpen(); await wait(200);
+      } catch(e) { L.push('ERROR '+e.message+' · '+sheet().textContent.slice(0,300)); todo=false; }
+      window.fetch=of;
+      return {ok:!!todo, d:L.join(' · ')};"""
+
 HERO = {
+    'amigos': ('Hero: amigos del camino, regalos y desafío en equipo', AMIGOS),
     'sala': ('Sala: sin barra arriba, micrófono junto al botón de amigos, modos y frases en la ventana', SALA),
     'foto': ('Momento de foto épica al festejar, con la foto para compartir', FOTO),
     'baile': ('Festejos bíblicos en el menú del Resplandor', BAILE),
@@ -230,6 +287,7 @@ HERO = {
 }
 
 KIDS = {
+    'amigoskids': ('Kids: amigos del camino, regalos y desafío en equipo', AMIGOS),
     'fotokids': ('Kids: momento de foto épica al festejar', FOTO),
     'bailekids': ('Kids: brillar o festejar desde la estrella', BAILE),
     'resukids': ('Kids: resumen de la semana', RESU),
