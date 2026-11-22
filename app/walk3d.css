@@ -1697,3 +1697,10 @@ body:has(#v3sheet:not([hidden])) #v3casi,body.v3talk #v3casi,body:not(.v3on) #v3
 .ini-win b{font:900 26px "Nunito",sans-serif}
 .ini-win small{font:800 13px "Nunito",sans-serif;opacity:.8}
 .vil .cam-nar{font-style:italic;opacity:.92}
+/* arriba, un solo cartel de guía por vez: la flecha manda; si no hay flecha, la misión; si no, «Tu próximo paso» */
+body.v3on:has(#v3wp:not([hidden])) .v3mis:not(.v3wp),body.v3on:has(#v3wp:not([hidden])) .v3obj{display:none!important}
+body.v3on:has(.v3mis:not(.v3wp):not([hidden])) .v3obj{display:none!important}
+/* abajo: si aparece la acción del lugar (Saludar, Mirar…), el botón dorado del camino se corre de la vista */
+body.v3on:has(.v3surv:not([hidden]) .sv-do:not([hidden])) #v3go,body.v3on:has(#v3kids:not([hidden]) .sv-do:not([hidden])) #v3go{display:none}
+/* pistas más chicas en pantallas bajas (celular acostado) */
+@media (max-height:520px){.v3pista{max-width:min(340px,calc(100vw - 24px));padding:7px 9px;gap:7px;border-radius:13px}.v3pista>i{font-size:16px}.v3pista b{font-size:13px}.v3pista small{font-size:11.5px;line-height:1.3}.v3pista .pz-x{width:22px;height:22px}}

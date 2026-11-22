@@ -2093,7 +2093,7 @@ function puertaTick() {
 function puertaGoal() {
   if (!S || !S.mis || S.misGoal) return null; const g = G(), p = g.P(), cur = g.NODES[p.pos]; if (cur && cur.kind === 'ch' && !g.isDone(cur.id)) return null;
   const nx = (g.ADJ[p.pos] || []).filter(id => !g.visited(id)), lk = nx.map(puertaLock).find(Boolean); if (!lk || nx.some(id => g.reachable(id))) return null; const m = S.mis[lk.mis]; if (!m) return null;
-  return { hot: 1, ic: '❗', t: 'Ayudá a ' + lk.who, sub: 'Su misión abre la próxima parada de la historia.', b: 'Llevarme', fn: () => guiaWp(m.gp[0], m.gp[1], lk.who) };
+  return { hot: 1, ic: '❗', t: 'Ayudá a ' + lk.who, sub: 'Su misión abre la próxima parada de la historia.', b: 'Ver camino', fn: () => guiaWp(m.gp[0], m.gp[1], lk.who) };
 }
 function puertaHecha(d) {
   const q = puertaDe(d.id); if (!q) return; const g = G(), R = g.REGIONS[q.r], ks = Object.keys(PUERTA_ABRE).filter(k => PUERTA_ABRE[k] === q.i), n = ks.map(k => g.NODES[R.id + '-' + k]).filter(Boolean);
@@ -5688,22 +5688,23 @@ function guiaP() { const p = G().P(); p.guia = p.guia || {}; return p.guia; }
 function guiaVis(sel) { if (!sel) return null; for (const e of document.querySelectorAll(sel)) { if (e.hidden) continue; const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < .05) continue; const r = e.getBoundingClientRect(); if (r.width > 4 && r.height > 4 && r.bottom > 0 && r.top < innerHeight) return e; } return null; }
 function guiaReady() { const b = document.body.classList; if (!S || !b.contains('v3on') || b.contains('v3lb') || b.contains('v3talk') || b.contains('v3cine') || sheetUp()) return false; const v = document.getElementById('view3d'), m = document.getElementById('v3map'), mo = document.getElementById('v3more'); return !(v && v.hidden) && !(m && !m.hidden) && !(mo && !mo.hidden) && !document.getElementById('v3recap'); }
 const aLp = l => /^el /i.test(l) ? 'al ' + l.slice(3) : 'a ' + l;
-function guiaWp(x, z, name) { S.wp = { x, z, name }; try { wpSync(); } catch (e) {} G().toast('Destino: ' + name + '. Seguí la flecha.', 0, 1); }
+function nodeWp(id) { const m = S.markers && S.markers[id], n = G().NODES[id]; if (m) guiaWp(m.position.x, m.position.z, n ? n.label : 'Tu próxima parada'); }
+function guiaWp(x, z, name) { S.wp = { x, z, name }; try { wpSync(); } catch (e) {} }
 function guiaEpPlace(at) { const p = epPlace(at); if (p) { const o = OL_PLAN.find(q => q.id === at); return { x: p.x, z: p.z, n: o ? o.name : at === 'pier' ? 'El muelle de Magdala' : 'El horno de Belén' }; } const m = (Z7.stalls || []).find(m => m.shop === at); return m ? { x: m.x, z: m.z, n: SHOPS[at] ? SHOPS[at].name : '' } : null; }
 /* lo que conviene hacer ahora, en orden: comer si hace falta, la misión aceptada, las épicas empezadas y la historia */
 function guiaGoals() {
   const g = G(), out = [], hx = !!S.hx;
   try { if (svOn() && svP().sat < SV.WARN) out.push({ ic: '🍞', t: 'Comé algo', sub: 'Tu alimento está bajo. Tocá el plato para comer de tu mochila; si no tenés comida, cosechá o comprá pan en un puesto.', b: 'Comer', fn: () => svEat() }); } catch (e) {}
-  if (S.misGoal) { const m = S.misGoal; out.push({ ic: '⭐', t: m.txt, sub: 'Misión de ' + m.who + '.', b: 'Llevarme', fn: m.gp ? () => guiaWp(m.gp[0], m.gp[1], m.txt) : null }); }
+  if (S.misGoal) { const m = S.misGoal; out.push({ ic: '⭐', t: m.txt, sub: 'Misión de ' + m.who + '.', b: 'Ver camino', fn: m.gp ? () => guiaWp(m.gp[0], m.gp[1], m.txt) : null }); }
   if (hx) try { for (const id in EPIC) { const st = epP()[id]; if (!st || st.done || !st.s) continue; const x = epStep(id); if (!x) continue; const pl = guiaEpPlace(x.sp.at);
-    out.push({ ic: '✨', t: x.E.name, sub: `Misión épica · paso ${x.st.s + 1} de ${x.E.steps.length}` + (x.today ? (pl && pl.n ? ' · en ' + pl.n : '') : ' · sigue mañana: volvé otro día de juego'), b: 'Llevarme', fn: pl && x.today ? () => guiaWp(pl.x, pl.z, pl.n || x.E.name) : null }); } } catch (e) {}
+    out.push({ ic: '✨', t: x.E.name, sub: `Misión épica · paso ${x.st.s + 1} de ${x.E.steps.length}` + (x.today ? (pl && pl.n ? ' · en ' + pl.n : '') : ' · sigue mañana: volvé otro día de juego'), b: 'Ver camino', fn: pl && x.today ? () => guiaWp(pl.x, pl.z, pl.n || x.E.name) : null }); } } catch (e) {}
   let am = []; try { am = amGoals(); am.filter(x => x.hot).forEach(x => out.push(x)); } catch (e) {}
   let adv = null; try { adv = advGoal(); if (adv && adv.hot) out.push(adv); } catch (e) {}
   try { const ig = iniGoal(); if (ig) out.unshift(ig); } catch (e) {}
   try { const cg2 = camGoal(); if (cg2) out.push(cg2); } catch (e) {}
   try { const pg = puertaGoal(); if (pg) out.push(pg); } catch (e) {}
   try { const cg = casiGoal(); if (cg) out.push(cg); } catch (e) {}
-  try { const id = nodeActive(); if (id) { const n = g.NODES[id], here = id === g.P().pos; out.push({ ic: '📖', t: here ? 'Entrá ' + aLp(n.label) : 'Caminá ' + aLp(n.label), sub: here ? 'Seguí la historia: te espera el pasaje y su desafío.' : 'Seguí la historia: es tu próxima parada. El botón dorado te lleva caminando.', b: here ? 'Entrar' : 'Caminar', fn: () => go(id) }); } } catch (e) {}
+  try { const id = nodeActive(); if (id) { const n = g.NODES[id], here = id === g.P().pos; out.push({ ic: '📖', t: here ? 'Entrá ' + aLp(n.label) : 'Caminá ' + aLp(n.label), sub: here ? 'Seguí la historia: te espera el pasaje y su desafío.' : 'Seguí la historia: es tu próxima parada. Te marco el camino con una flecha.', b: here ? 'Entrar' : 'Ver camino', fn: here ? () => go(id) : () => nodeWp(id) }); } } catch (e) {}
   try { out.push(metaGoal()); } catch (e) {}
   am.filter(x => !x.hot).forEach(x => out.push(x));
   if (adv && !adv.hot) out.push(adv);
@@ -5749,6 +5750,7 @@ function guiaTick(dt) {
   chip.classList.toggle('pulse', (S.idleT || 0) > 40 && !GUIA.cur);
   GUIA.tk -= dt; if (GUIA.tk > 0 || GUIA.cur || S.walking) return; GUIA.tk = .5;
   if (performance.now() - GUIA.last < 6000) return; /* entre una pista y la otra, un respiro */
+  try { const ip = iniP(); if (!ip.fin && !ip.g) return; } catch (e) {}
   const gp = guiaP(), now = performance.now(), may = k => !gp[k] && guiaVis(GUIA_PISTAS[k].sel);
   const started = GUIA.cine || (GUIA.t0 && now - GUIA.t0 > 30000);
   if (S.hx && !gp.ham && svP().sat < SV.WARN && may('ham')) return guiaShow('ham');
@@ -5815,7 +5817,7 @@ function casiList() {
   try { if (!hx) { const a = albP(); for (const pg of ALB_PAGES) { const L = ALB.filter(c => c.pg === pg[0]), f = L.filter(c => !a.have[c.id]).length; if (f > 0 && f <= 2 && L.length > 3) { add('alb' + pg[0], pg[1], `Te ${f === 1 ? 'falta 1 figurita' : 'faltan ' + f + ' figuritas'} para completar «${pg[2]}»`, 'Los sobres llegan con misiones, desafíos y regalos de amigos.', 1 - f / L.length); break; } } } } catch (e) {}
   try { const cur = g.NODES[p.pos], r = cur ? cur.r : null; if (r != null && g.REGIONS[r]) { const R = g.REGIONS[r].id, need = ['n1', 'n2', 'n3', ['fA', 'fB'], 'n4', 'n5'], fal = need.filter(k => Array.isArray(k) ? !k.some(x => g.isDone(R + '-' + x)) : !g.isDone(R + '-' + k));
     if (fal.length === 1) add('etapa' + R, '🏁', 'Te falta 1 parada para terminar la etapa ' + g.REGIONS[r].name, 'Después te espera el Desafío de la etapa.', 5 / 6); } } catch (e) {}
-  try { if (S && S.misGoal && S.misGoal.gp && S.av) { const m = S.misGoal, d = Math.hypot(m.gp[0] - S.av.position.x, m.gp[1] - S.av.position.z); if (d < 28) add('mis' + (misState().mact || {}).id, '⭐', '¡Ya casi terminás la misión!', m.txt, 1 - d / 60, () => guiaWp(m.gp[0], m.gp[1], m.txt), 'Llevarme'); } } catch (e) {}
+  try { if (S && S.misGoal && S.misGoal.gp && S.av) { const m = S.misGoal, d = Math.hypot(m.gp[0] - S.av.position.x, m.gp[1] - S.av.position.z); if (d < 28) add('mis' + (misState().mact || {}).id, '⭐', '¡Ya casi terminás la misión!', m.txt, 1 - d / 60, () => guiaWp(m.gp[0], m.gp[1], m.txt), 'Ver camino'); } } catch (e) {}
   return out.sort((a, b) => b.k - a.k);
 }
 function casiTick(t) {
@@ -5971,9 +5973,9 @@ function iniFin() {
 }
 function iniGoal() {
   const st = iniP(); if (st.fin) return null; const n = (st.g ? 1 : 0) + (st.l ? 1 : 0) + (st.s ? 1 : 0);
-  if (!st.g && INI.gift) return { hot: 1, ic: '🎁', t: `Tu primer camino · ${n} de 3`, sub: 'Hay un regalo de bienvenida brillando unos pasos adelante. ¡Andá a buscarlo!', b: 'Llevarme', fn: () => guiaWp(INI.gift.x, INI.gift.z, 'Tu regalo de bienvenida') };
+  if (!st.g && INI.gift) return { hot: 1, ic: '🎁', t: `Tu primer camino · ${n} de 3`, sub: 'Hay un regalo de bienvenida brillando unos pasos adelante. ¡Andá a buscarlo!', b: 'Ver camino', fn: () => guiaWp(INI.gift.x, INI.gift.z, 'Tu regalo de bienvenida') };
   if (!st.l) return { hot: 1, ic: '🌟', t: `Tu primer camino · ${n} de 3`, sub: S.hx ? 'Hacé brillar tu Resplandor: elegí una pose y quedate quieto unos segundos.' : 'Hacé brillar tu lámpara: tocá la estrella.', b: 'Brillar', fn: () => { try { S.hx ? poseMenu(true) : kidsShine(); } catch (e) {} } };
-  if (!st.s) { const id = nodeActive(); return { hot: 1, ic: '📖', t: `Tu primer camino · ${n} de 3`, sub: 'Jugá tu primera parada de la historia. El botón dorado te lleva caminando.', b: 'Ir', fn: id ? () => go(id) : null }; }
+  if (!st.s) { const id = nodeActive(); return { hot: 1, ic: '📖', t: `Tu primer camino · ${n} de 3`, sub: 'Jugá tu primera parada de la historia. Te marco el camino con una flecha.', b: 'Ver camino', fn: id ? () => (id === G().P().pos ? go(id) : nodeWp(id)) : null }; }
   return null;
 }
 
@@ -6179,10 +6181,12 @@ const camRid = r => { try { return G().REGIONS[r].id; } catch (e) { return null;
 const camDef = (rid, b) => CAMS[rid] && CAMS[rid].br[b];
 /* elegir un camino (Hero, desde la respuesta del capítulo) */
 function camStart(rid, tag) { const C = CAMS[rid]; if (!C || !S || !S.hx) return; const b = C.hero[tag], st = camP(); if (!b || st[rid]) return; st[rid] = { b, s: 'go' }; G().save(); camShow(rid);
-  setTimeout(() => { const d = camDef(rid, b); misPop('🧭 Tu camino: ' + d.name, d.goal); svToast('🧭 Elegiste un camino: ' + d.goal + '. La flecha te lleva.', 'Elegiste un camino. ' + d.goal + '.'); try { camWp(rid); } catch (e) {} }, 1600); }
+  camAnn(rid); }
+function camAnn(rid) { const st = camP()[rid]; if (!st || st.ann) return; try { if (!iniP().fin) return; } catch (e) {} st.ann = 1; G().save(); const d = camDef(rid, st.b);
+  setTimeout(() => { misPop('🧭 Tu camino: ' + d.name, d.goal); try { G().vo('Elegiste un camino. ' + d.goal + '.', 'narrador'); } catch (e) {} }, 1600); }
 /* Kids: el narrador pregunta a quién ayudar (después de la primera parada de la etapa) */
 function camAskKids(rid) { const C = CAMS[rid], K = C && C.kids; if (!K) return; const st = camP(); if (st[rid]) return; st[rid] = { b: null, s: 'ask' }; G().save();
-  const pick = b => { st[rid] = { b, s: 'go' }; G().save(); camShow(rid); const d = camDef(rid, b); setTimeout(() => { misPop('🧭 Tu camino: ' + d.name, d.goal); svToast('🧭 ' + d.goal + '. ¡La flecha te lleva!', d.goal + '. La flecha te lleva.'); camWp(rid); }, 600); };
+  const pick = b => { st[rid] = { b, s: 'go' }; G().save(); camShow(rid); camAnn(rid); };
   camRun({}, [{ who: 'nar', t: K.t }, { who: 'nar', ask: K.ask, o: K.o.map(([t, b]) => ({ t, fn: () => pick(b) })) }], () => { if (!camP()[rid].b) pick(K.o[0][1]); }); }
 function camAskHero(rid) { const A = P3.mod.HASK[rid]; camRun({ [A.who]: {} }, [{ who: A.who, ask: A.q, o: A.o.map(([t, tag, att, rep]) => ({ t, fn: () => { const p = G().P(); p.story = p.story || {}; const a = p.story.att = p.story.att || { esc: 0, zel: 0, rom: 0 }; for (const k in att) a[k] = (a[k] || 0) + att[k]; p.dones = p.dones || {}; p.dones[tag] = (p.dones[tag] || 0) + 1; p.story.ans = p.story.ans || {}; p.story.ans[rid] = tag; G().save(); camStart(rid, tag); }, then: [{ who: rep[0], t: rep[1] }] })) }]); }
 /* el lugar del camino: la persona, el signo de exclamación y el cartel para hablar */
@@ -6232,7 +6236,7 @@ function camEcoKids(r) { const g = G(), rid = camRid(r), prev = camRid(r - 1), s
 /* el ciclo: carga lo que falta, pregunta en Kids, la tarea en curso y el recuerdo en la etapa siguiente */
 function camTick(t) {
   if (!S || !S.av || CAM.t > t) return; CAM.t = t + .5; const g = G(), st = camP();
-  for (const rid in CAMS) { const s = st[rid]; if (s && s.b && s.s !== 'done') camShow(rid); }
+  for (const rid in CAMS) { const s = st[rid]; if (s && s.b && s.s !== 'done') { camShow(rid); if (s.s === 'go' && !s.ann) camAnn(rid); } }
   if (CAM.ring) { const R = CAM.ring; R.m.rotation.z = t; if (Math.hypot(S.av.position.x - R.x, S.av.position.z - R.z) < 1.8) { const T0 = camDef(R.rid, st[R.rid].b).good.task, N0 = CAM.npc[R.rid];
       if (T0.back && !st[R.rid].half && N0) { st[R.rid].half = 1; G().save(); R.x = N0.x + 1.2; R.z = N0.z + 1.2; R.label = N0.nm; R.m.position.set(R.x, Math.max(0, S.W.hAt(R.x, R.z)) + .06, R.z); svToast('💧 ¡Listo! Ahora volvé con ' + N0.nm + '.'); guiaWp(R.x, R.z, N0.nm); return; }
       S.scene.remove(R.m); if (CAM.carry) { S.av.remove(CAM.carry); CAM.carry = null; } const rid = R.rid; CAM.ring = null;
@@ -6250,9 +6254,9 @@ function camTick(t) {
     const r = (g.NODES[g.P().pos] || {}).r; if (r > 0) camEcoKids(r); }
 }
 /* para «Tu próximo paso» */
-function camGoal() { const st = camP(); for (const rid in CAMS) { const s = st[rid]; if (!s || !s.b || s.s === 'done') continue; const d = camDef(rid, s.b), N = CAM.npc[rid];
-  if (s.s === 'task' && CAM.ring) return { hot: 1, ic: '🧭', t: 'Tu camino: ' + d.name, sub: (CAM.carry ? 'Llevalo hasta ' : 'Andá hasta ') + CAM.ring.label + '. El aro dorado marca el lugar.', b: 'Llevarme', fn: () => guiaWp(CAM.ring.x, CAM.ring.z, 'Hasta ' + CAM.ring.label) };
-  if (s.s === 'go' && N) return { hot: 1, ic: '🧭', t: 'Tu camino: ' + d.name, sub: d.goal + '. Elegiste este camino; los otros quedan para otra partida.', b: 'Llevarme', fn: () => camWp(rid) }; } return null; }
+function camGoal() { try { if (!iniP().fin) return null; } catch (e) {} const st = camP(); for (const rid in CAMS) { const s = st[rid]; if (!s || !s.b || s.s === 'done') continue; const d = camDef(rid, s.b), N = CAM.npc[rid];
+  if (s.s === 'task' && CAM.ring) return { hot: 1, ic: '🧭', t: 'Tu camino: ' + d.name, sub: (CAM.carry ? 'Llevalo hasta ' : 'Andá hasta ') + CAM.ring.label + '. El aro dorado marca el lugar.', b: 'Ver camino', fn: () => guiaWp(CAM.ring.x, CAM.ring.z, 'Hasta ' + CAM.ring.label) };
+  if (s.s === 'go' && N) return { hot: 1, ic: '🧭', t: 'Tu camino: ' + d.name, sub: d.goal + '. Elegiste este camino; los otros quedan para otra partida.', b: 'Ver camino', fn: () => camWp(rid) }; } return null; }
 /* charla: en Hero con la cámara de cine; en Kids (o si no se puede) en una hoja con voz */
 function camRun(cast, steps, onDone) {
   CAM.run = 1; const done0 = onDone; onDone = () => { CAM.run = 0; done0 && done0(); };
@@ -7006,7 +7010,7 @@ function h3pose(av, t, dt, st) {
       h3aim(av, B, 'lowerarm_' + sd, 'hand_' + sd, L(sx * .6, sx * (.08 - .25 * up), sk), L(-.1, c + .9 * up, sk), L(.7 + .2 * sn, .9 * dn + .35 * up, sk), k);
       h3aim(av, B, 'thigh_' + sd, 'calf_' + sd, sx * L(.16, .08, sk), -1, L(.16, .22, sk) * kk, k); h3aim(av, B, 'calf_' + sd, 'foot_' + sd, sx * .05, -1, L(-.1, -.2, sk) + .25 * kk, k); }); h3aim(av, B, 'neck_01', 'head', 0, .62, -.78, k * sk * .9); /* la cabeza levantada, fuera del agua */ av.updateMatrixWorld(true); } /* brazada y patada al nadar */
   if (me && u.talkT > -.4 && u.talkAge != null) { talkLayer(av, u, dt, null); if (u.talkT <= -.4) u.talkAge = null; }
-  if (u.lamp.visible && B.hand_l) { const busy = (u.tools && Object.values(u.tools).some(g2 => g2.visible)) || p > .3 || (me && S && S.swim) || /Swim|Sitting|Kneel|Fixing|Sleep|Lying|Fishing|Pick|Chop|Carry/i.test(u.cur || ''), ud = u.lamp.userData; const mov = /Jog|Run|Sprint/i.test(u.cur || '') ? .5 : /Walk/i.test(u.cur || '') ? .68 : .85; ud.w = (ud.w || 0) + ((busy ? 0 : 1) - (ud.w || 0)) * Math.min(1, dt * 8); ud.k = (ud.k ?? .85) + (mov - (ud.k ?? .85)) * Math.min(1, dt * 5); /* al caminar y correr el brazo conserva parte de su vaivén */
+  if (u.lamp.visible && B.hand_l) { const busy = (u.tools && Object.values(u.tools).some(g2 => g2.visible)) || p > .3 || (me && S && (S.swim || (S.poseK && /^d_/.test(S.poseK)))) || /Swim|Sitting|Kneel|Fixing|Sleep|Lying|Fishing|Pick|Chop|Carry/i.test(u.cur || ''), ud = u.lamp.userData; const mov = /Jog|Run|Sprint/i.test(u.cur || '') ? .5 : /Walk/i.test(u.cur || '') ? .68 : .85; ud.w = (ud.w || 0) + ((busy ? 0 : 1) - (ud.w || 0)) * Math.min(1, dt * 8); ud.k = (ud.k ?? .85) + (mov - (ud.k ?? .85)) * Math.min(1, dt * 5); /* al caminar y correr el brazo conserva parte de su vaivén */
     /* el codo se dobla y el antebrazo va hacia adelante: el objeto queda agarrado en el puño, a la vista */
     if (ud.w > .02) { const wk = ud.w * ud.k; h3aim(av, B, 'upperarm_l', 'lowerarm_l', .34, -.93, -.06, wk); h3aim(av, B, 'lowerarm_l', 'hand_l', .2, ud.lampY ? -.1 : -.38, .9, wk); av.updateMatrixWorld(true); } /* codo abierto hacia afuera: de atrás se ve el brazo */
     const V = h3vec(); B.hand_l.getWorldPosition(V.a); if (B.lowerarm_l) { B.lowerarm_l.getWorldPosition(V.b); V.b.subVectors(V.a, V.b).normalize(); const ws = av.getWorldScale(V.d).y; V.a.addScaledVector(V.b, .085 * ws); } /* del hueso de la muñeca al centro del puño: la lámpara queda en la mano */ av.worldToLocal(V.a); u.lamp.position.copy(V.a); u.lamp.position.z += (ud.lampY ? .05 : .015) / av.scale.z; u.lamp.position.y += (ud.lampY ? .035 : 0) / av.scale.y; u.lamp.rotation.set(ud.up ? .1 : 0, 0, 0); u.lamp.scale.setScalar(Math.max(.001, ud.w > .5 ? 1 : ud.w * 2));
@@ -7923,13 +7927,13 @@ const DANZAS = {
   /* 2 Samuel 6:14 — saltos de alegría con los brazos en alto */
   D_david: { dur: 2.4, f: t => { const b = (t % .6) / .6, hop = Math.sin(b * Math.PI), land = 1 - hop, w = sn(t, 1.2);
     return { py: .11 * hop, pz: 0, R: { spine_01: [['x', -6]], spine_03: [['x', -6]], Head: [['x', -14]], neck_01: [['x', -4]],
-      upperarm_l: [['z', 148 + 12 * w], ['x', -10]], upperarm_r: [['z', -(148 - 12 * w)], ['x', -10]], lowerarm_l: [['x', -12]], lowerarm_r: [['x', -12]], hand_l: [['y', 20 * w]], hand_r: [['y', 20 * w]],
+      upperarm_l: [['z', 126 + 10 * w], ['x', -14]], upperarm_r: [['z', -(126 - 10 * w)], ['x', -14]], clavicle_l: [['z', 16]], clavicle_r: [['z', -16]], lowerarm_l: [['x', -12]], lowerarm_r: [['x', -12]], hand_l: [['y', 20 * w]], hand_r: [['y', 20 * w]],
       thigh_l: [['x', -14 * land - 6]], thigh_r: [['x', -14 * land - 6]], calf_l: [['x', 26 * land + 6]], calf_r: [['x', 26 * land + 6]], foot_l: [['x', -10 * land]], foot_r: [['x', -10 * land]] } }; } },
   /* Salmo 150 — palmas, un paso a cada lado y los brazos al cielo */
   D_salmo: { dur: 4.8, f: t => { const a = sm(t / .4) * (1 - sm((t - 1.1) / .3)), st = sm((t - 1.2) / .3) * (1 - sm((t - 2.3) / .3)), up = sm((t - 2.4) / .9) * (1 - sm((t - 4.3) / .5)), clap = (Math.sin((t / .3) * Math.PI * 2) + 1) / 2;
     const lk = st * Math.max(0, sn(t - 1.2, 1.2, .25)), rk = st * Math.max(0, -sn(t - 1.2, 1.2, .25));
     return { py: .03 * Math.abs(sn(t, .6)) * (st + up * .5), px: .05 * st * sn(t - 1.2, 1.2), R: {
-      upperarm_l: [['x', -62 * a - 20 * st], ['y', -(16 + 10 * clap) * a], ['z', 168 * up + 25 * st]], upperarm_r: [['x', -62 * a - 20 * st], ['y', (16 + 10 * clap) * a], ['z', -(168 * up + 25 * st)]],
+      upperarm_l: [['x', -62 * a - 20 * st - 14 * up], ['y', -(16 + 10 * clap) * a], ['z', 128 * up + 25 * st]], upperarm_r: [['x', -62 * a - 20 * st - 14 * up], ['y', (16 + 10 * clap) * a], ['z', -(128 * up + 25 * st)]], clavicle_l: [['z', 16 * up]], clavicle_r: [['z', -16 * up]],
       lowerarm_l: [['x', -62 * a - 25 * st]], lowerarm_r: [['x', -62 * a - 25 * st]], Head: [['x', -18 * up]], spine_03: [['x', -6 * up]],
       thigh_l: [['x', -38 * lk]], thigh_r: [['x', -38 * rk]], calf_l: [['x', 55 * lk]], calf_r: [['x', 55 * rk]] } }; } },
   /* ronda de la cosecha — brazos abiertos como tomados de los hombros, pasos cruzados y patadas suaves */
@@ -7939,7 +7943,7 @@ const DANZAS = {
       thigh_l: [['x', -40 * k1], ['z', -6 * k1]], thigh_r: [['x', -40 * k2], ['z', 6 * k2]], calf_l: [['x', 20 * k1 * (1 - k1) * 4]], calf_r: [['x', 20 * k2 * (1 - k2) * 4]], foot_l: [['x', 20 * k1]], foot_r: [['x', 20 * k2]] } }; } },
   /* Lucas 15:25 — la fiesta del hijo que volvió: dos palmas, un giro con los brazos abiertos y un salto de alegría */
   D_fiesta: { dur: 3.6, f: t => { const c = 1 - sm((t - 1.1) / .2), sp = sm((t - 1.2) / 1.2), j = t > 2.4 ? Math.sin(Math.min(1, (t - 2.6) / .5) * Math.PI) * (t > 2.6 ? 1 : 0) : 0, open = sm((t - 1.1) / .25) * (1 - sm((t - 2.4) / .25)), hi = sm((t - 2.4) / .3) * (1 - sm((t - 3.3) / .3)), clap = (Math.sin((t / .3) * Math.PI * 2) + 1) / 2;
-    return { py: .12 * j, yaw: 360 * sp, R: { upperarm_l: [['x', -60 * c], ['y', -(16 + 12 * clap) * c], ['z', 95 * open + 160 * hi]], upperarm_r: [['x', -60 * c], ['y', (16 + 12 * clap) * c], ['z', -(95 * open + 160 * hi)]],
+    return { py: .12 * j, yaw: 360 * sp, R: { upperarm_l: [['x', -60 * c - 14 * hi], ['y', -(16 + 12 * clap) * c], ['z', 95 * open + 128 * hi]], upperarm_r: [['x', -60 * c - 14 * hi], ['y', (16 + 12 * clap) * c], ['z', -(95 * open + 128 * hi)]], clavicle_l: [['z', 16 * hi]], clavicle_r: [['z', -16 * hi]],
       lowerarm_l: [['x', -64 * c - 10 * open]], lowerarm_r: [['x', -64 * c - 10 * open]], Head: [['x', -12 * hi]], spine_03: [['x', -5 * hi]],
       thigh_l: [['x', -10 * (1 - j) * hi]], thigh_r: [['x', -10 * (1 - j) * hi]], calf_l: [['x', 20 * (1 - j) * hi]], calf_r: [['x', 20 * (1 - j) * hi]] } }; } }
 };
