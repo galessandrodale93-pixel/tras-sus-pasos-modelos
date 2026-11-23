@@ -24,7 +24,7 @@ async def rama_fotos(b, rama, keys, ramas_ok):
                 await pg.evaluate(SALTAR); await pg.wait_for_timeout(800)
             shots = await pg.evaluate(f"""(()=>{{const S=__dbg.S(),c=S.camera,r=S.renderer,tx={p['x']},tz={p['z']},ty=S.W.hAt(tx,tz),out=[];
               const V=[[0,14,4.5,1.5],[1.57,14,4.5,1.5],[3.14,14,4.5,1.5],[4.71,14,4.5,1.5],[.8,38,26,0],[2.4,6,2.2,1.4],[5.5,6,2.2,1.4]];
-              for(const [a,d,h,ly] of V){{const px=tx+Math.sin(a)*d,pz=tz+Math.cos(a)*d,gy=S.W.hAt(px,pz);c.position.set(px,Math.max(gy+1.2,ty+h),pz);c.fov=50;c.updateProjectionMatrix();c.lookAt(tx,ty+ly,tz);r.shadowMap.needsUpdate=true;if(S.fx)S.fx.render(0);else r.render(S.scene,c);out.push(r.domElement.toDataURL('image/jpeg',.8));}}
+              for(const [a,d,h,ly] of V){{const px=tx+Math.sin(a)*d,pz=tz+Math.cos(a)*d,gy=S.W.hAt(px,pz);c.position.set(px,Math.max(gy+1.2,ty+h),pz);c.fov=50;c.updateProjectionMatrix();c.lookAt(tx,ty+ly,tz);c.updateMatrixWorld();if(S.W&&S.W.sky)S.W.sky.position.copy(c.position);r.shadowMap.needsUpdate=true;if(S.fx)S.fx.render(0);else r.render(S.scene,c);out.push(r.domElement.toDataURL('image/jpeg',.8));}}
               return out;}})()""")
             import base64
             for i, u in enumerate(shots):
