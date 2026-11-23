@@ -24,7 +24,7 @@ OUT = os.path.join(AQUI, 'salida')
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
 DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
-       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink, AM, amOpen, amSync, amEv, amGoals, amReqIn, amDraw, GBY, guiaGoals: () => guiaGoals(), puertaLock, puertaGoal, puertaTick, misOpen, misDone, MISSIONS, MIS_PUERTA, CASI, casiList, casiTick, casiGoal, metaP, META_POOL, PUE, pueTick, pueOpen, pueLv, pueSpot, blockedAt, waterWet, INI, iniTick, iniGoal, nodeActive, CAM, CAMS, camTick, camScene, camGoal, camEco, CINE, poseSet')
+       'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink, AM, amOpen, amSync, amEv, amGoals, amReqIn, amDraw, GBY, guiaGoals: () => guiaGoals(), puertaLock, puertaGoal, puertaTick, misOpen, misDone, MISSIONS, MIS_PUERTA, CASI, casiList, casiTick, casiGoal, metaP, META_POOL, PUE, pueTick, pueOpen, pueLv, pueSpot, blockedAt, waterWet, INI, iniTick, iniGoal, nodeActive, CAM, CAMS, camTick, camScene, camGoal, camEco, CINE, poseSet, camFinTick, camRecap')
 
 
 def local(url):
@@ -389,7 +389,32 @@ CAMINOS2 = COMUN + """
       reset(); Object.assign(P,keep); G_.save();
       return {ok:!!todo, d:L.join(' · ')};"""
 
+
+CAMFIN = COMUN + """
+      const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return !!c;}; let todo=true; const wait=ms=>new Promise(r=>setTimeout(r,ms));
+      const keep={cam:P.cam, regions:JSON.parse(JSON.stringify(P.regions||{})), camFin:P.camFin, story:JSON.parse(JSON.stringify(P.story||{}))};
+      const sh=()=>document.getElementById('v3sheet');
+      const talk=async(pick)=>{ for(let i=0;i<60;i++){ await wait(300);
+          if(d.CINE.on){ const b=document.querySelectorAll('.cine-ui .cine-opts button'); if(b.length){ b[0].click(); continue; } document.querySelector('.cine-ui').click(); continue; }
+          const s0=sh(); if(s0&&!s0.hidden){ const g=s0.querySelector('.cam-go'); if(g){ g.click(); continue; } }
+          return true; } return false; };
+      try {
+        P.inicio={fin:1}; delete P.camFin; P.cam={}; const ids=Object.keys(d.CAMS); ids.forEach((rid,i)=>{ const C=d.CAMS[rid]; const b=Object.keys(C.br).find(k=>S.hx?!C.br[k].kids:!C.br[k].hx); P.cam[rid]={b,s:'done',r:i<7?'good':'meh'}; });
+        P.story=P.story||{}; P.story.att={esc:3,zel:1,rom:-1};
+        P.regions=P.regions||{}; G_.REGIONS.forEach(R=>{P.regions[R.id]=Object.assign({},P.regions[R.id],{complete:true});});
+        sh().hidden=true; d.camFinTick(); await talk(0); await wait(3200);
+        todo&=ok(P.camFin&&P.camFin.n===7,'al terminar todas las etapas llega el final (7 de 9 caminos buenos)');
+        todo&=ok(/Tu camino completo/.test(sh().textContent)&&/Discípulo del camino/.test(sh().textContent),'resumen final: Discípulo del camino');
+        todo&=ok(d.gearState().own.includes('cintacamino'),'prenda: Cinta del camino completo');
+        todo&=ok(sh().querySelectorAll('.sv-rec').length===9,'el resumen muestra las 9 etapas');
+        sh().hidden=true; d.camFinTick(); todo&=ok(sh().hidden,'el final sale una sola vez');
+      } catch(e){ L.push('ERROR '+e.message+' '+(e.stack||'').split('\\n')[1]); todo=false; }
+      Object.assign(P,keep); if(!keep.camFin) delete P.camFin; G_.save();
+      return {ok:!!todo, d:L.join(' · ')};"""
+
 HERO = {
+    'caminos4': ('Hero: caminos de la Cruz y la Resurrección', "window.__CR=['cruz','resurreccion'];"+CAMINOS2),
+    'camfin': ('Hero: el final de los caminos', CAMFIN),
     'caminos3': ('Hero: caminos de Milagros, Parábolas y Jerusalén', "window.__CR=['milagros','parabolas','jerusalen'];"+CAMINOS2),
     'caminos2': ('Hero: caminos de Infancia, Bautismo y Galilea', CAMINOS2),
     'caminos': ('Hero: caminos de la historia (Nacimiento)', CAMINOS),
@@ -452,6 +477,8 @@ HERO = {
 }
 
 KIDS = {
+    'caminos4kids': ('Kids: caminos de la Cruz y la Resurrección', "window.__CR=['cruz','resurreccion'];"+CAMINOS2),
+    'camfinkids': ('Kids: el final de los caminos', CAMFIN),
     'caminos3kids': ('Kids: caminos de Milagros, Parábolas y Jerusalén', "window.__CR=['milagros','parabolas','jerusalen'];"+CAMINOS2),
     'caminos2kids': ('Kids: caminos de Infancia, Bautismo y Galilea', CAMINOS2),
     'caminoskids': ('Kids: caminos de la historia (Nacimiento)', CAMINOS),

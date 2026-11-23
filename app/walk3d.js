@@ -1589,6 +1589,7 @@ function fanAll() {
   try { if (G().hstHas && G().hstHas()) L.push(['📜', 'Rollo de Isaías', () => G().hstScroll(), 'scroll', 'pj']); } catch (e) {}
   L.push(['🎁', 'Amigos, regalos y equipo', () => amOpen(), 'amigos', 'acc']);
   L.push(['🏘️', 'Los pueblos', () => pueOpen(), 'pueblos', 'acc']);
+  L.push(['🧭', 'Tus caminos', () => camRecap(!!G().P().camFin), 'caminos', 'acc']);
   L.push(['⭐', 'Mi progreso', () => { const h = document.getElementById('hudLv'); if (h) h.click(); }, 'prog', 'ayu']);
   L.push(['☰', 'Menú y ajustes', () => { const m = document.getElementById('menuBtn'); if (m) m.click(); }, 'menu', 'ayu']);
   return L;
@@ -4669,6 +4670,11 @@ const GEAR = [
   { id: 'vendasprojimo', s: 'gloves', r: 'u', t: 'wrap', c: '#E8DDC6', c2: '#9A3A2A', name: 'Vendas del prójimo', desc: 'Camino de la posada: no pasaste de largo.' },
   { id: 'palma', s: 'hat', r: 'u', t: 'cloth', c: '#5A8A3A', c2: '#E8C27A', name: 'Cinta de palmas', desc: 'Camino de Jerusalén: recibiste a Jesús con ramas de palmera.' },
   { id: 'toallaservicio', s: 'gloves', r: 'u', t: 'wrap', c: '#F0E8D8', name: 'Toalla del servicio', desc: 'Camino del aposento alto: llevaste el agua de la última cena.' },
+  { id: 'velonoemi', s: 'hat', r: 'u', t: 'cloth', c: '#7A6A9A', c2: '#E8DDC6', name: 'Velo de Noemí', desc: 'Camino del Gólgota: acompañaste a Noemí en un día triste.' },
+  { id: 'cantarohuerto', s: 'gloves', r: 'u', t: 'wrap', c: '#B08A5A', name: 'Vendas del huerto', desc: 'Camino del huerto: les llevaste agua a las mujeres junto a la tumba.' },
+  { id: 'panemaus', s: 'gloves', r: 'u', t: 'glove', c: '#C9A04A', name: 'Guantes de Emaús', desc: 'Camino de Emaús: invitaste al forastero, y al partir el pan reconociste a Jesús.' },
+  { id: 'buenanoticia', s: 'hat', r: 'u', t: 'turban', c: '#E8C27A', c2: '#FFFFFF', name: 'Turbante de la buena noticia', desc: 'Camino de la orilla: corriste a contar que Jesús está vivo.' },
+  { id: 'cintacamino', s: 'hat', r: 'u', t: 'cloth', c: '#E8C27A', c2: '#7A2A3A', name: 'Cinta del camino completo', desc: 'Al final del curso: elegiste ayudar en casi todos tus caminos. «Síganme», dijo Jesús, y lo seguiste.' },
   { id: 'tocescriba', s: 'hat', r: 'u', t: 'cloth', c: '#D8CBA8', c2: '#2A2A4A', name: 'Tocado del escriba', desc: 'Camino del rollo de Miqueas: copiaste letra por letra con Eleazar.' },
   { id: 'lanapastor', s: 'gloves', r: 'u', t: 'glove', c: '#E8DDC6', name: 'Guantes de lana de Natán', desc: 'Camino de la oveja: cargaste a Tamar hasta el corral.' },
   { id: 'turbmensajero', s: 'hat', r: 'u', t: 'turban', c: '#5A6EA8', name: 'Turbante del mensajero', desc: 'Camino del mensaje: la buena noticia llegó a Capernaúm.' },
@@ -6303,6 +6309,88 @@ const CAMS = {
         meh: { t: 'Estoy cansado.', then: [['p', 'Bueno… lo subo yo.']], prize: { kidsPts: 10 }, done: 'Rebeca subió el agua sola.' },
         ecoK: { good: 'Rebeca te manda saludos: dice que el agua que llevaste sirvió para algo muy especial.', meh: 'Rebeca subió el agua sola. ¡La próxima vez podés ayudarla!' } }
     }
+  },
+  cruz: {
+    r: 7,
+    hero: { misericordia: 'A', pastor: 'B', profeta: 'C' },
+    kids: { t: 'Jesús murió en la cruz por amor a todos. Fue un día muy triste para sus amigos, pero él había prometido que al tercer día iba a volver a vivir.', ask: '¿Qué querés hacer?', o: [['Acompañar a una nena que está triste', 'K'], ['Llevarle agua a las mujeres que esperan cerca de la tumba', 'L']] },
+    br: {
+      A: { hx: 1, name: 'El que se quedó', goal: 'Subí al Gólgota: una mujer de Galilea está sola', who: { name: 'Una mujer de Galilea', sub: 'siguió a Jesús desde Galilea', voice: 'mujer', look: { g: 'chica', age: 18, skin: '#A87A52', hair: '#1E1410', outfit: '#5A4A5A', anim: ['M_Sad_Idle', 'M_Standing_Idle'] } }, at: 'El Gólgota', off: [-12, 10],
+        hi: [['p', 'Lo seguí desde Galilea. Le di de comer a él y a sus amigos con lo poco que tenía.'], ['p', 'Y ahora… casi todos se fueron. Me tiemblan las piernas.']],
+        ask: ['p', '¿Te quedás un rato conmigo?'],
+        good: { t: 'Me quedo a su lado, hasta el final.', then: [['nar', 'Te quedás cerca de la cruz. Desde ahí, Jesús le encarga a Juan que cuide a su madre como si fuera la suya.'], ['nar', 'Hasta en el peor momento, sigue amando y cuidando a los suyos.'], ['p', 'Gracias por quedarte. No me olvido de tu cara.']],
+          prize: { title: 'El que se quedó', glow: 10, att: { esc: 1 } }, done: 'Te quedaste cerca de la cruz hasta el final.' },
+        meh: { t: 'No puedo mirar. Me voy.', then: [['nar', 'Bajás la colina sin mirar atrás. A lo lejos, el cielo se oscurece en pleno mediodía.']],
+          prize: { glow: 1 }, done: 'Bajaste del Gólgota antes del final.' },
+        eco: { good: [['nar', 'Te quedaste cerca de la cruz hasta el final. Por eso esta mañana la noticia te toca el corazón de una manera distinta.']], meh: [['nar', 'Te fuiste del Gólgota antes del final. Esta mañana, la noticia te encuentra con ganas de volver a empezar.']] } },
+      B: { hx: 1, name: 'La mano en el hombro', goal: 'Encontrate con Asher al pie del Gólgota', who: 'zel', at: 'El Gólgota', off: [12, -9],
+        hi: [['zel', 'Todo este tiempo esperé que peleara. Que llamara a un ejército. Y se dejó clavar…'], ['zel', 'No entiendo nada. Estoy enojado y no sé con quién.']],
+        ask: ['zel', 'Decime algo. Lo que sea.'],
+        good: { t: 'No tengo palabras, Asher. Pero me quedo con vos.', then: [['nar', 'Le ponés la mano en el hombro. Asher llora en silencio, como un chico.'], ['zel', 'Gracias por no irte. Eso… eso sí lo entiendo.']],
+          prize: { att: { zel: 2 }, title: 'Hombro de Asher', glow: 8 }, done: 'Te quedaste con Asher en el peor día.' },
+        meh: { t: 'Ahora no es momento de hablar.', then: [['zel', 'Tenés razón. Mejor me voy.'], ['nar', 'Asher se aleja solo, con los puños apretados.']],
+          prize: { att: { zel: -1 } }, done: 'Asher se fue solo del Gólgota.' },
+        eco: { good: [['zel', 'Aquella tarde en el Gólgota me sostuviste. Hoy… hoy te quiero contar algo increíble.']], meh: [['zel', 'Aquella tarde me fui solo del Gólgota. Pero hoy… hoy todo cambió.']] } },
+      C: { hx: 1, name: 'El rollo de Isaías', goal: 'Encontrate con Eleazar cerca de la tumba del huerto', who: 'esc', at: 'La tumba del huerto', off: [-11, -9],
+        hi: [['esc', 'Traje el rollo de Isaías. Lo leí cien veces en mi vida… y hoy las palabras me queman.'], ['esc', 'Habla de un siervo herido por nuestras rebeliones, y dice que por sus heridas nosotros somos sanados.']],
+        ask: ['esc', '¿Lo leemos juntos?'],
+        good: { t: 'Sí. Leámoslo juntos, despacio.', then: [['nar', 'Leen en voz baja, línea por línea. Eleazar se detiene varias veces para secarse los ojos.'], ['esc', 'Todo estaba escrito, muchacho. Él cargó lo nuestro. Esto no termina acá: lo dice el mismo rollo.']],
+          prize: { sab: 3, title: 'Lector de Isaías', att: { esc: 1 }, glow: 6 }, done: 'Leíste el rollo de Isaías con Eleazar.' },
+        meh: { t: 'Hoy no quiero leer nada.', then: [['esc', 'Lo entiendo. Lo dejo abierto, por si cambiás de idea.'], ['nar', 'Eleazar lee solo, en un susurro.']],
+          prize: { sab: 1 }, done: 'Eleazar leyó solo el rollo de Isaías.' },
+        eco: { good: [['esc', '¿Te acordás de Isaías junto a la tumba? Lo leímos llorando. Hoy lo leo cantando.']], meh: [['esc', 'Aquella tarde no quisiste leer. Hoy el rollo te espera abierto, y tiene buenas noticias.']] } },
+      K: { kids: 1, name: 'La mano de Noemí', goal: 'Buscá a Noemí cerca del Gólgota', who: { name: 'Noemí', sub: 'una nena de Jerusalén', voice: 'mujer', look: { g: 'chica', age: 9, skin: '#B98A62', hair: '#2A1B14', outfit: '#7A6A9A', anim: ['M_Sad_Idle', 'M_Standing_Idle'] } }, at: 'El Gólgota', off: [-12, 10],
+        hi: [['p', 'Jesús me abrazó una vez, cuando era más chiquita. Y ahora… estoy muy triste.']],
+        ask: ['p', '¿Te quedás un ratito conmigo?'],
+        good: { t: 'Sí. Me siento con vos y te doy la mano.', then: [['nar', 'Le contás a Noemí que Jesús había prometido que al tercer día iba a volver a vivir.'], ['p', '¿De verdad? Entonces… voy a esperar el domingo. Tomá, para que te acuerdes de hoy.']],
+          prize: { gear: 'velonoemi', kidsPts: 30, sobre: 1 }, done: 'Acompañaste a Noemí en un día triste.' },
+        meh: { t: 'Mejor me voy.', then: [['nar', 'Noemí se queda sola, mirando el cielo oscuro.']], prize: { kidsPts: 10 }, done: 'Noemí se quedó sola ese día.' },
+        ecoK: { good: 'Noemí te manda un mensaje: «¡Era verdad! ¡Esperé el domingo y Jesús resucitó!»', meh: 'Noemí ya sabe que Jesús resucitó. ¡La próxima vez podés acompañarla!' } },
+      L: { kids: 1, name: 'Agua junto a la tumba', goal: 'Buscá a Sara cerca de la tumba del huerto', who: { name: 'Sara', sub: 'ayuda a las mujeres', voice: 'mujer', look: { g: 'chica', age: 11, skin: '#B98A62', hair: '#3A2A1A', outfit: '#8A6A5A' } }, at: 'La tumba del huerto', off: [-11, -9],
+        hi: [['p', 'Las mujeres que querían mucho a Jesús están esperando cerca de la tumba. Están cansadas y tienen sed.']],
+        ask: ['p', '¿Les llevás un cántaro de agua?'],
+        good: { t: '¡Sí! Se lo llevo yo.', task: { carry: { k: 'jar', c: '#A8784A' }, at: 'La tumba del huerto', off: [9, 10], label: 'las mujeres' }, then: [['p', '¡Gracias! Están allá, junto a las piedras.']],
+          arrive: [['nar', 'Las mujeres toman agua y te sonríen. El domingo, bien temprano, van a volver a la tumba… ¡y van a encontrar una sorpresa enorme!'], ['p', 'Tomá, esto es para vos.']],
+          prize: { gear: 'cantarohuerto', kidsPts: 30, sobre: 1 }, done: 'Le llevaste agua a las mujeres junto a la tumba.' },
+        meh: { t: 'Que lo lleve otro.', then: [['p', 'Bueno… lo llevo yo.']], prize: { kidsPts: 10 }, done: 'Sara llevó el agua sola.' },
+        ecoK: { good: 'Las mujeres de la tumba fueron las primeras en saber que Jesús resucitó. ¡Y vos les llevaste agua!', meh: 'Sara te manda saludos desde el huerto. ¡La próxima vez podés ayudar!' } }
+    }
+  },
+  resurreccion: {
+    r: 8,
+    hero: { evangelista: 'A', apostol: 'B', maestro: 'C' },
+    kids: { t: '¡Jesús resucitó! La tumba está vacía, y la noticia corre por todas partes.', ask: '¿A quién querés contárselo?', o: [['A dos amigos que caminan tristes hacia Emaús', 'C'], ['A Joel y los pescadores de la orilla', 'L']] },
+    br: {
+      A: { hx: 1, name: 'La noticia para tu papá', goal: 'Tu papá llegó hasta la orilla del lago: andá a verlo', who: { name: 'Tu papá', sub: 'pescador de Capernaúm', voice: 'past', look: { g: 'chico', age: 18, skin: '#A87A52', hair: '#9A9A9A', outfit: '#6A5A4A', anim: ['M_Standing_Idle', 'M_Holding_Idle'] } }, at: 'La orilla del lago', off: [-12, 9],
+        hi: [['p', '¡Hijo! Abigail me ayudó a caminar hasta la orilla. Quería ver el lago… y verte a vos.'], ['p', 'En el pueblo dicen cosas raras. Que el maestro de Nazaret murió… y que alguien lo vio vivo.']],
+        ask: ['p', '¿Qué pasó, hijo? Contame.'],
+        good: { t: 'Te cuento todo, papá: desde Belén hasta la tumba vacía.', then: [['nar', 'Se sientan en la arena. Le contás todo: los pastores, el taller, el río, la colina, la cruz… y la tumba vacía.'], ['p', 'Entonces la esperanza no se terminó… Hijo, me trajiste la mejor noticia de mi vida.']],
+          prize: { title: 'Testigo de la resurrección', glow: 12, att: { zel: 1 } }, done: 'Le contaste a tu papá que Jesús resucitó.' },
+        meh: { t: 'Después te cuento, papá. Ahora estoy apurado.', then: [['p', 'Bueno… acá voy a estar.'], ['nar', 'Tu papá se queda mirando el lago, solo, con la noticia a medias.']],
+          prize: { glow: 2 }, done: 'Dejaste para después la noticia para tu papá.' } },
+      B: { hx: 1, name: 'Pescadores de personas', goal: 'Buscá a Simón Pedro en la orilla del lago', who: { name: 'Simón Pedro', sub: 'pescador y discípulo', voice: 'varon', look: { g: 'chico', age: 18, skin: '#A87A52', hair: '#3A2A1A', outfit: '#4A5A6A', anim: ['M_Sad_Idle', 'M_Standing_Idle'] } }, at: 'La orilla del lago', off: [12, -10],
+        hi: [['p', 'Tres veces dije que no lo conocía. Tres veces. Y él me miró.'], ['p', 'Ahora está vivo… pero yo no sé si todavía me quiere entre los suyos.']],
+        ask: ['p', 'Vos sos pescador como yo. ¿Qué harías?'],
+        good: { t: 'Sentate conmigo, Pedro. Jesús te sigue llamando.', then: [['nar', 'Junto al fuego, Jesús le pregunta a Pedro tres veces si lo ama. Tres veces Pedro le dice que sí, y Jesús le encarga cuidar a sus ovejas.'], ['p', 'Me volvió a llamar… Y vos, aprendiz de pescador, vas a pescar personas conmigo.']],
+          prize: { title: 'Pescador de personas', att: { esc: 1, zel: 1 }, glow: 10 }, done: 'Acompañaste a Pedro hasta el fuego donde Jesús lo esperaba.' },
+        meh: { t: 'Mejor te dejo solo, Pedro.', then: [['nar', 'Pedro se queda sentado en la barca, solo, hasta que una voz lo llama desde la orilla.']],
+          prize: { glow: 2 }, done: 'Dejaste solo a Pedro en la barca.' } },
+      C: { name: 'El camino a Emaús', goal: 'Encontrate con Cleofas en el camino a Emaús', who: { name: 'Cleofas', sub: 'discípulo, camino a Emaús', voice: 'varon', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#2A1B14', outfit: '#6A5A3A', anim: ['M_Sad_Idle', 'M_Standing_Idle'] } }, at: 'Emaús', off: [-11, 10],
+        hi: [['p', 'Volvemos a casa, a Emaús. Esperábamos que él fuera el que iba a liberar a Israel…'], ['p', 'En el camino se nos unió un forastero. Nos explicó todo lo que decían de él Moisés y los profetas, y el corazón nos ardía.']],
+        ask: ['p', 'Ya se hace de noche. El forastero quiere seguir de largo. ¿Qué hacemos?'],
+        good: { t: 'Invitémoslo: quedate con nosotros, que ya es tarde.', then: [['nar', 'El forastero entra con ustedes. En la mesa, toma el pan, lo bendice, lo parte… y ahí lo reconocen: ¡es Jesús!'], ['p', '¿No nos ardía el corazón mientras nos hablaba en el camino? ¡Vamos ya mismo a Jerusalén a contarlo!']],
+          prize: { sab: 3, title: 'Corazón ardiente', glow: 10, att: { esc: 1 }, gear: 'panemaus', kidsPts: 30, sobre: 1 }, done: 'Invitaste al forastero a la mesa y reconociste a Jesús al partir el pan.' },
+        meh: { t: 'Que siga su camino; estamos cansados.', then: [['nar', 'El forastero sigue de largo. Esa noche, en Jerusalén, alguien cuenta que Jesús caminó con dos discípulos hacia Emaús… y vos estabas tan cerca.']],
+          prize: { sab: 1, kidsPts: 10 }, done: 'El forastero siguió de largo.' },
+        ecoK: { good: '¡Cleofas te manda saludos! Dice que nunca va a olvidar la cena en Emaús.', meh: 'Cleofas ya sabe que el forastero era Jesús. ¡La próxima vez invitalo a quedarse!' } },
+      L: { kids: 1, name: '¡Desayuno con Jesús!', goal: 'Buscá a Joel en la orilla del lago', who: { name: 'Joel', sub: 'hijo de un pescador', voice: 'varon', look: { g: 'chico', age: 10, skin: '#B98A62', hair: '#1E1410', outfit: '#3E5A6A' } }, at: 'La orilla del lago', off: [12, -10],
+        hi: [['p', '¡Hola otra vez! Los pescadores no pescaron nada en toda la noche…'], ['p', 'Pero un hombre en la orilla les dijo que tiraran la red del otro lado, ¡y está llenísima!']],
+        ask: ['p', '¿Venís conmigo a ver quién es?'],
+        good: { t: '¡Sí! ¡Joel, es Jesús! ¡Está vivo!', task: { at: 'La orilla del lago', off: [-6, -15], label: 'el fuego de la orilla' }, then: [['p', '¿En serio? ¡Corramos!']],
+          arrive: [['nar', 'Junto al fuego, Jesús preparó pan y pescado para todos. ¡Está vivo de verdad!'], ['p', '¡Es el mejor desayuno de mi vida! Tomá, esto es para vos.']],
+          prize: { gear: 'buenanoticia', kidsPts: 40, sobre: 2 }, done: '¡Desayunaste con Jesús y con Joel en la orilla!' },
+        meh: { t: 'Mejor me quedo acá.', then: [['p', 'Bueno… ¡voy yo!'], ['nar', 'Joel corre por la arena. Desde lejos ves el humo del fuego en la orilla.']], prize: { kidsPts: 10 }, done: 'Joel corrió solo hasta el fuego.' } }
+    }
   }
 };
 const CAM = { npc: {}, ring: null, carry: null, t: 0 };
@@ -6379,12 +6467,41 @@ function camTick(t) {
   { const sh = document.getElementById('v3sheet'); if (CAM.run && !CINE.on && (sh.hidden || !sh.querySelector('.cam-sh'))) CAM.run = 0; }
   if (!CAM.run && !CINE.on) for (const rid in CAMS) { const s = st[rid]; if (!s) continue; if (s.s === 'fin') camEnd(rid); else if (s.s === 'ask') { delete st[rid]; G().save(); } }
   if (CINE.on || sheetUp()) return;
+  camFinTick(); if (CINE.on || sheetUp()) return;
   if (S.hx) { const ps = g.P().story || {}; for (const rid in CAMS) { if (st[rid]) continue; if (ps.ans && ps.ans[rid]) { camStart(rid, ps.ans[rid]); return; }
       /* si el capítulo se abrió en tarjetas (sin la pregunta), la pregunta llega igual, un rato después */
       if (ps.open && ps.open[rid] && P3.mod && P3.mod.HASK && P3.mod.HASK[rid]) { CAM.askW = CAM.askW || t + 25; if (t > CAM.askW) { CAM.askW = t + 600; camAskHero(rid); return; } } } }
   if (!S.hx) { for (const rid in CAMS) { const C = CAMS[rid]; if (st[rid] || !C.kids) continue; const R = g.REGIONS[C.r]; if (!R) continue; const any = ['n1', 'n2', 'n3'].some(k => g.isDone(R.id + '-' + k)); let ok = true; try { ok = iniP().fin; } catch (e) {} if (any && ok) { camAskKids(rid); return; } }
     const r = (g.NODES[g.P().pos] || {}).r; if (r > 0) camEcoKids(r); }
 }
+/* ---------- el final: quién terminó caminando con vos (Hero) y a quiénes ayudaste (Kids), con el resumen de tus caminos ---------- */
+const CAM_FIN = {
+  esc: ['Muchacho, empecé este camino con un rollo bajo el brazo. Lo termino con un amigo. Caminemos juntos lo que sigue.', 'Aprendimos mucho los dos. El rollo sigue abierto: cuando quieras, seguimos leyendo.', 'No siempre nos entendimos, muchacho. Pero el Mesías nos encontró a los dos, y eso es lo que importa.'],
+  zel: ['Yo quería una espada y encontré un camino. Y un hermano. Adonde vayas, voy.', 'Todavía tengo mucho que aprender. Pero ya no estoy enojado. Gracias por eso.', 'Me costó entenderte. Me costó entenderlo a él. Pero hoy creo. Quizás algún día caminemos más cerca.'],
+  rom: ['Un soldado de Roma y un pescador de Galilea, amigos. Tu maestro hace cosas imposibles.', 'Volví a escuchar a tu maestro varias veces. Algo cambió en mí, galileo.', 'No hablamos mucho en este camino. Pero vi lo que vi en la cruz, y no lo voy a olvidar.']
+};
+const CAM_TIER = [[7, 'Discípulo del camino', 'Elegiste ayudar casi siempre. Así se camina tras sus pasos.'], [4, 'Peregrino que aprende', 'Algunas veces elegiste ayudar y otras no. El camino sigue, y siempre se puede volver a elegir.'], [0, 'Peregrino en camino', 'Este camino recién empieza. La próxima vez, animate a ayudar más: cada decisión deja huella.']];
+function camResumen() { const st = camP(), g = G(); return Object.keys(CAMS).map(rid => { const C = CAMS[rid], s = st[rid], d = s && s.b && C.br[s.b], R = g.REGIONS[C.r]; return { rid, et: R ? R.name : rid, name: d ? d.name : null, r: s && s.s === 'done' ? s.r : null, done: d && s && s.r && d[s.r] ? d[s.r].done : '', who: d ? camWho(d).name : '' }; }); }
+function camTier(n) { return CAM_TIER.find(t => n >= t[0]); }
+function camFinal() {
+  const p = G().P(); if (p.camFin) return; const L = camResumen(), n = L.filter(x => x.r === 'good').length, T = camTier(n); p.camFin = { d: vday(), n }; G().save();
+  const a = (p.story && p.story.att) || {}, lv = k => (a[k] || 0) >= 2 ? 0 : (a[k] || 0) >= 0 ? 1 : 2;
+  const steps = S.hx ? [{ who: 'nar', t: 'Llegaste al final de este camino. Mirás hacia atrás: Belén, Nazaret, el Jordán, Galilea… y la tumba vacía.' }, { who: 'esc', t: CAM_FIN.esc[lv('esc')] }, { who: 'zel', t: CAM_FIN.zel[lv('zel')] }, { who: 'rom', t: CAM_FIN.rom[lv('rom')] }, { who: 'nar', t: T[2] }]
+    : [{ who: 'nar', t: '¡Llegaste al final del camino de Jesús! Lo acompañaste desde Belén hasta la tumba vacía.' }, { who: 'nar', t: 'Mirá a cuántos amigos ayudaste en el camino.' }];
+  camRun(S.hx ? { esc: {}, zel: {}, rom: {} } : {}, steps, () => { const s = svP && S.hx ? svP() : null; if (s) { s.titles = s.titles || []; if (!s.titles.includes(T[1])) s.titles.push(T[1]); }
+    if (n >= 6 && GBY.cintacamino && !gearState().own.includes('cintacamino')) setTimeout(() => gearGive(GBY.cintacamino, 'El final del camino'), 2600);
+    try { sello('camino-final', T[1]); tone3d(); } catch (e) {} G().save(); camRecap(true); });
+}
+function camRecap(fin) {
+  const L = camResumen(), n = L.filter(x => x.r === 'good').length, T = camTier(n), hx = S.hx;
+  const rows = L.map(x => `<div class="sv-rec md-r${x.r === 'good' ? ' ok' : x.r ? '' : ' off'}"><span class="gd-ic">${x.r === 'good' ? '✨' : x.r === 'meh' ? '🍂' : x.name ? '🧭' : '·'}</span><div><b>${esc(x.et)}${x.name ? ' · ' + esc(x.name) : ''}</b><small>${x.r ? esc(x.done) : x.name ? 'En camino…' : 'Todavía no elegiste este camino.'}</small></div></div>`).join('');
+  const amigos = L.filter(x => x.r === 'good' && x.who).map(x => x.who);
+  vilSheet(`<div class="inv-h"><b>🧭 ${fin ? 'Tu camino completo' : 'Tus caminos'}</b><button class="bag-x" aria-label="Cerrar">✕</button></div>
+    ${fin ? `<div class="ini-win"><span>${n >= 7 ? '👑' : '🧭'}</span><b>${esc(T[1])}</b><small>${n} de ${L.length} caminos en los que elegiste ayudar</small></div>` : `<p class="md-k">Lo que elegiste en cada etapa. ✨ elegiste ayudar · 🍂 elegiste otra cosa. Cada jugador vive un camino por etapa: los otros quedan para otra partida.</p>`}
+    ${!hx && amigos.length ? `<p class="md-k">Ayudaste a: <b>${amigos.map(esc).join(', ')}</b>.</p>` : ''}
+    <div class="gd-list">${rows}</div>${fin && n >= 6 ? '<p class="md-k">Por tantos caminos en los que elegiste ayudar: ¡una prenda única!</p>' : ''}`);
+}
+function camFinTick() { const g = G(), p = g.P(); if (p.camFin || CINE.on || sheetUp()) return; try { if (g.REGIONS.every(R => p.regions && p.regions[R.id] && p.regions[R.id].complete)) camFinal(); } catch (e) {} }
 /* para «Tu próximo paso» */
 function camGoal() { try { if (!iniP().fin) return null; } catch (e) {} const st = camP(); for (const rid in CAMS) { const s = st[rid]; if (!s || !s.b || s.s === 'done') continue; const d = camDef(rid, s.b), N = CAM.npc[rid];
   if (s.s === 'task' && CAM.ring) return { hot: 1, ic: '🧭', t: 'Tu camino: ' + d.name, sub: (CAM.carry ? 'Llevalo hasta ' : 'Andá hasta ') + CAM.ring.label + '. El aro dorado marca el lugar.', b: 'Ver camino', fn: () => guiaWp(CAM.ring.x, CAM.ring.z, 'Hasta ' + CAM.ring.label) };

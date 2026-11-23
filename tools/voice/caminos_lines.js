@@ -17,4 +17,8 @@ for(const rid in CAMS){const C=CAMS[rid];if(C.kids){add('narrador',C.kids.t);add
 // puertas de las misiones
 const MIS=eval(lit(W,'export const MISSIONS ='));const PU=eval(lit(W,'const MIS_PUERTA ='));PU.flat().forEach(id=>{const m=MIS.find(x=>x.id===id);if(m)add('narrador',m.giver.name+' te necesita. Ayudalo y se abre la próxima parada.');});
 add('narrador','¡Tu equipo cumplió el desafío de la semana! Cobrá tu premio.');add('narrador','¡A tu equipo le falta poco para cumplir el desafío de la semana!');
+// el final de los caminos
+const FIN=eval('('+lit(W,'const CAM_FIN =')+')');for(const k in FIN)FIN[k].forEach(t=>add(CMP[k],t));
+eval(lit(W,'const CAM_TIER =')).forEach(t=>add('narrador',t[2]));
+['Llegaste al final de este camino. Mirás hacia atrás: Belén, Nazaret, el Jordán, Galilea… y la tumba vacía.','¡Llegaste al final del camino de Jesús! Lo acompañaste desde Belén hasta la tumba vacía.','Mirá a cuántos amigos ayudaste en el camino.'].forEach(t=>add('narrador',t));
 console.log(JSON.stringify([...out.values()]));
