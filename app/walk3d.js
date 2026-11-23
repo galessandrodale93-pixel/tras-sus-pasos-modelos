@@ -530,7 +530,8 @@ function waterMat(hx, flow) {
 // lago: un disco con el dato "shore" (0 en la orilla, 1 en el centro) y UV en metros
 function waterLake(scene, cx, cz, r, hx, hf) {
   const g = new THREE.RingGeometry(.01, r, 72, 18); g.rotateX(-Math.PI / 2); const P = g.attributes.position, uv = g.attributes.uv, sh = new Float32Array(P.count);
-  for (let i = 0; i < P.count; i++) { const x = P.getX(i), z = P.getZ(i); sh[i] = hf ? Math.max(0, Math.min(1, (WATER.WL - hf(x + cx, z + cz)) / .7)) : 1 - Math.hypot(x, z) / r; uv.setXY(i, (x + cx) * .06, (z + cz) * .06); }
+  for (let i = 0; i < P.count; i++) { const x = P.getX(i), z = P.getZ(i); sh[i] = hf ? Math.max(0, Math.min(1, (WATER.WL - hf(x + cx, z + cz)) / .7)) : 1 - Math.hypot(x, z) / r; uv.setXY(i, (x + cx) * .06, (z + cz) * .06);
+    /* donde la tierra queda por encima del agua, el borde se hunde bajo el suelo: así el agua no se ve en escalones sobre la playa */ if (hf) { const hg = hf(x + cx, z + cz); if (hg > WATER.WL + .02) P.setY(i, Math.min(0, hg - WATER.WL - .6)); } }
   g.setAttribute('shore', new THREE.BufferAttribute(sh, 1)); const m = new THREE.Mesh(g, waterMat(hx, 0)); m.position.set(cx, WATER.WL, cz); m.renderOrder = 2; m.receiveShadow = true; scene.add(m); return m;
 }
 // río: cinta a lo largo del cauce; UV.y avanza con la corriente
@@ -2693,7 +2694,7 @@ function shoreScene(scene, p, yAt, poiProp, hx, HW) {
   const y = yAt(p.x, p.z), sd = p.side, cx = p.x + sd * 8, R = rng(2121), W = (u, v) => [p.x + u * sd, p.z + v], WR = 10.5;
   waterLake(scene, cx, p.z, WR * 1.25, hx, yAt); S.cols.push({ x0: cx - WR, x1: cx + WR, z0: p.z - WR, z1: p.z + WR, cx, cz: p.z, r: WR - 1.8 });
   /* el mar abierto detrás de la orilla, entre los cerros, hasta el horizonte (como en el lago de Galilea) */
-  { const sx = p.x + sd * 80, sz = p.z + 6, SR = 66, HWm = HW; waterLake(scene, sx, sz, 92, hx, (x, z) => HWm && HWm.mtnH && Math.abs(x) > HWm.X1 ? HWm.mtnH(x, z) : yAt(x, z)); S.cols.push({ x0: sx - SR, x1: sx + SR, z0: sz - SR, z1: sz + SR, cx: sx, cz: sz, r: SR * .84 }); }
+  { const sx = p.x + sd * 80, sz = p.z + 6, SR = 66, HWm = HW; /* radio apenas mayor que la cuenca: con 92 el agua pasaba por encima de la playa y se veía en escalones */ waterLake(scene, sx, sz, 71, hx, (x, z) => HWm && HWm.mtnH && Math.abs(x) > HWm.X1 ? HWm.mtnH(x, z) : yAt(x, z)); S.cols.push({ x0: sx - SR, x1: sx + SR, z0: sz - SR, z1: sz + SR, cx: sx, cz: sz, r: SR * .84 }); }
   // playa: una franja de arena clara entre el pasto y el agua
   { const sand = new THREE.Mesh(new THREE.RingGeometry(WR - 1.5, WR + 5.5, 48, 1, Math.PI * .45, Math.PI * 1.1), new THREE.MeshStandardMaterial({ map: (() => { const t = texL('dirt.jpg', 4); t.repeat.set(5, 5); return t; })(), color: '#E6D5AE', roughness: 1, transparent: true, opacity: .96, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 })); sand.rotation.x = -Math.PI / 2; sand.rotation.z = sd > 0 ? 0 : Math.PI; sand.position.set(cx, y + .035, p.z); sand.receiveShadow = true; sand.renderOrder = 1; scene.add(sand); }
   // barcas: una flotando, dos varadas en la arena con la vela recogida

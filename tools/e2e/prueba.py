@@ -72,6 +72,7 @@ async def entrar(pg, rama):
 COMUN = "const d=__dbg;try{d.CINE.on=false;}catch(e){}try{const gp=d.guiaP();['go','obj','do','ham','mis','t_bag','t_map','t_eat','t_craft','t_fan','t_glow'].forEach(k=>gp[k]=1);d.GUIA.cur=null;}catch(e){}document.body.classList.remove('v3talk');document.querySelectorAll('#v3sheet,.sheet').forEach(e=>e.hidden=true);document.body.classList.remove('v3cine');const S=d.S(),s=d.svP?d.svP():null,tp=(x,z)=>S.av.position.set(x,S.W.hAt(x,z),z),tick=(n,dt)=>{for(let i=0;i<n;i++)d.t7Tick(dt||1)};"
 
 GUIA = COMUN + """
+      try{const pp=window.GAME.P();pp.inicio={fin:1};pp.cam=pp.cam||{};window.GAME.REGIONS.forEach(R=>{pp.cam[R.id]=Object.assign({},pp.cam[R.id],{ann:1});});document.getElementById('v3sheet').hidden=true;}catch(e){} /* las pistas esperan a que termine «Tu primer camino» */
       const gp=d.guiaP(); for(const k in gp) delete gp[k]; d.GUIA.cine=1; d.GUIA.last=0; d.GUIA.cur=null; S.walking=false; S.freeMoving=false; S.quiet=false; try{d.ui();}catch(e){}
       for(let i=0;i<25&&!d.GUIA.cur;i++) await new Promise(r=>setTimeout(r,700));
       d.GUIA.until=performance.now()+120000; await new Promise(r=>setTimeout(r,600));
