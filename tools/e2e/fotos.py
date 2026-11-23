@@ -18,7 +18,7 @@ async def rama_fotos(b, rama, keys, ramas_ok):
     for k in keys:
         info = await pg.evaluate(f"(()=>{{const S=__dbg.S();const p=S.pois.filter(q=>q.k==='{k}');return p.map(q=>({{x:q.k==='river'?q.pts[Math.floor(q.pts.length/2)][0]:q.x,z:q.z,n:q.name,sd:q.side||1}}))}})()")
         for j, p in enumerate(info):
-            await pg.evaluate(f"(()=>{{const S=__dbg.S();const a=S.av.position;a.x={p['x']};a.z={p['z']}+3;a.y=S.W.hAt(a.x,a.z);}})()")
+            await pg.evaluate(f"(()=>{{const S=__dbg.S();const a=S.av.position;a.x={p['x']};a.z={p['z']+float(os.environ.get('OFF','3'))};a.y=S.W.hAt(a.x,a.z);}})()")
             await pg.wait_for_timeout(14000)
             for _ in range(3):
                 await pg.evaluate(SALTAR); await pg.wait_for_timeout(800)
