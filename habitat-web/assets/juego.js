@@ -65,6 +65,14 @@
       card('Desde dónde juegan', '', rows(D.aparatos.disp.map(function (x) { return [x[0] === 'pc' ? 'Computadora' : x[0] === 'celular' ? 'Celular o tablet' : x[0], x[1]]; })) + rows(D.aparatos.so)) +
       card('Cómo les anda', 'Cuadros por segundo (mediana) y calidad gráfica que elige el juego.', rows(fps, function (v) { return v + ' fps'; }) + rows(D.aparatos.calidad)) +
       '</div>';
+    var M = D.modelos || [];
+    var ap = !M.length ? '<p class="kj-none">Todavía no hay datos de aparatos (se juntan solos desde esta versión del juego).</p>' :
+      '<div class="kj-ap"><div class="kj-ap-r kj-h"><span>Aparato</span><span class="kj-x">Sistema y navegador</span><b>Cuadros</b><b>Sesiones</b><span>Cómo le anda</span></div>' +
+      M.map(function (a) {
+        var st = (a.cortes || a.caidas) ? '<span class="kj-mal">Se cortó ' + (a.cortes + a.caidas) + (a.cortes + a.caidas === 1 ? ' vez' : ' veces') + '</span>' : !a.fps ? '<span>–</span>' : a.fps < 20 ? '<span class="kj-lento">Lento</span>' : '<span class="kj-ok">Anda bien</span>';
+        return '<div class="kj-ap-r"><span>' + esc(a.modelo) + '<small>' + esc([a.placa, a.mem ? a.mem + ' GB' : ''].filter(Boolean).join(' · ')) + '</small></span><span class="kj-x">' + esc(a.so || '–') + '<small>' + esc(a.nav || '') + '</small></span><b>' + (a.fps ? a.fps + ' fps' : '–') + '</b><b>' + num(a.ses) + '</b>' + st + '</div>';
+      }).join('') + '</div>';
+    out += card('Cada aparato', 'Lo manda el juego solo, sin preguntar nada: modelo, sistema, placa de video y cuadros por segundo. «Se cortó» cuenta las veces que la pantalla se reinició o el juego se cerró de golpe.', ap);
     $('#kOut').innerHTML = out;
     $('#kUpd').textContent = 'Actualizado ' + new Date(D.actualizado).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
   }

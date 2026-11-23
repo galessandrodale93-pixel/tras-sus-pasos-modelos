@@ -304,6 +304,12 @@ PUNTOS = COMUN + """
       P.bonus=b0; G_.save();
       return {ok:!!todo, d:L.join(' · ')};"""
 
+APARATO = COMUN + """
+      const L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return !!c;}; let todo=true;
+      const d0=window.GAME.dev(); todo&=ok(d0&&d0.modelo&&d0.soVer!==undefined&&d0.placa,'el juego sabe el aparato solo: '+JSON.stringify(d0));
+      todo&=ok(/@/.test(d0.pantalla)&&d0.nucleos>0,'pantalla y núcleos: '+d0.pantalla+' · '+d0.nucleos);
+      return {ok:!!todo, d:L.join(' · ')};"""
+
 CASI = COMUN + """
       const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return !!c;}; let todo=true; const b0=P.bonus||0, casi0=P.casi;
       try {
@@ -462,6 +468,7 @@ HERO = {
     'pueblos': ('Hero: pueblos que cambian con lo que hacés', PUEBLOS),
     'casi': ('Hero: «Te falta poco»', CASI),
     'puertas': ('Hero: minijuegos y misiones alternados, cadenas de 3', PUERTAS),
+    'aparato': ('Datos del aparato para el panel, automáticos', APARATO),
     'puntos': ('Hero: puntos con una cifra más, mismos niveles', PUNTOS),
     'juegos3': ('Hero: los juegos de las etapas I a III se abren con las misiones', JUEGOS3),
     'amigos': ('Hero: amigos del camino, regalos y desafío en equipo', AMIGOS),

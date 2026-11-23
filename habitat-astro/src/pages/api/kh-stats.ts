@@ -31,6 +31,7 @@ export const POST: APIRoute = async ({ request }) => {
     _id: sid, title: s(x.u, 60), cuenta: x.cuenta === true, perfil: s(x.perfil, 60), rama: x.rama === "hero" ? "hero" : "kids",
     inicio, fin, fecha: ar.toISOString().slice(0, 10), hora: ar.getUTCHours(), dia: ar.getUTCDay(), minutos: Math.round(n(x.seg, 86400) / 6) / 10,
     disp: s(x.disp, 12), so: s(x.so, 12), calidad: s(x.calidad, 30), fps: n(x.fps, 240),
+    modelo: s(x.modelo, 50), soVer: s(x.soVer, 24), nav: s(x.nav, 24), placa: s(x.placa, 60), mem: n(x.mem, 64), nucleos: n(x.nucleos, 64), pantalla: s(x.pantalla, 24), cortes: n(x.cortes, 99), corteAntes: x.corteAntes === true,
     etapaIni: s(x.etapaIni, 30), lugarIni: s(x.lugarIni, 60), etapa: s(x.etapa, 30), etapaMax: s(x.etapaMax, 30),
     lugares: JSON.stringify(arr(x.lugares)), misiones: JSON.stringify(arr(x.misiones, 40, 70)), examenes: JSON.stringify(arr(x.examenes, 12, 30)), juegos: JSON.stringify(juegos),
     lore: n(x.lore, 999), sellos: n(x.sellos, 999), sala: x.sala === true, amigos: n(x.amigos, 50), nivelIni: n(x.nivelIni, 200), nivelFin: n(x.nivelFin, 200), horas: n(x.horas, 5000),
@@ -41,7 +42,7 @@ export const POST: APIRoute = async ({ request }) => {
   catch (e) { console.error("kh-stats guardar", e); return json({ error: "guardar" }, 500, true); }
 };
 
-type Fila = { _id: string; title?: string; cuenta?: boolean; perfil?: string; rama?: string; inicio?: string; fin?: string; fecha?: string; hora?: number; dia?: number; minutos?: number; disp?: string; so?: string; calidad?: string; fps?: number; etapaIni?: string; lugarIni?: string; etapa?: string; etapaMax?: string; lugares?: string; misiones?: string; examenes?: string; juegos?: string; lore?: number; sellos?: number; sala?: boolean; amigos?: number; nivelIni?: number; nivelFin?: number; horas?: number; pase?: string; cierre?: boolean; cierreAt?: string; pagoAt?: string; cierreVeces?: number; nuevo?: boolean; tester?: boolean };
+type Fila = { _id: string; title?: string; cuenta?: boolean; perfil?: string; rama?: string; inicio?: string; fin?: string; fecha?: string; hora?: number; dia?: number; minutos?: number; disp?: string; so?: string; calidad?: string; fps?: number; modelo?: string; soVer?: string; nav?: string; placa?: string; mem?: number; nucleos?: number; pantalla?: string; cortes?: number; corteAntes?: boolean; etapaIni?: string; lugarIni?: string; etapa?: string; etapaMax?: string; lugares?: string; misiones?: string; examenes?: string; juegos?: string; lore?: number; sellos?: number; sala?: boolean; amigos?: number; nivelIni?: number; nivelFin?: number; horas?: number; pase?: string; cierre?: boolean; cierreAt?: string; pagoAt?: string; cierreVeces?: number; nuevo?: boolean; tester?: boolean };
 
 async function acceso(request: Request) {
   const token = request.headers.get("x-habitat-auth");
@@ -76,6 +77,9 @@ function calcular(F: Fila[]) {
   const arr0: Record<string, number> = {}, lug0: Record<string, number> = {}, disp: Record<string, number> = {}, so: Record<string, number> = {}, cal: Record<string, number> = {};
   const fpsD: Record<string, number[]> = {};
   let sala = 0, amigosMax = 0, hero = 0;
+  // cada aparato: cuántas sesiones, cómo le anda y si se corta (la placa se reinició o la sesión anterior terminó sin cerrarse)
+  type Ap = { ses: number; jug: Set<string>; fps: number[]; cortes: number; caidas: number; so: string; nav: string; placa: string; mem: number; disp: string };
+  const apar: Record<string, Ap> = {};
   ses.forEach((f) => {
     horas[f.hora || 0] += f.minutos || 0; dias[f.dia || 0] += f.minutos || 0;
     const pf = (porFecha[f.fecha || ""] = porFecha[f.fecha || ""] || { s: 0, j: new Set() }); pf.s++; pf.j.add(f.title || "?");
@@ -83,6 +87,8 @@ function calcular(F: Fila[]) {
     Object.entries(J<Record<string, number>>(f.juegos, {})).forEach(([k, v]) => inc(jue, k, v || 1));
     inc(disp, f.disp || "?"); inc(so, f.so || "?"); inc(cal, (f.calidad || "?").replace(/^Auto · /, ""));
     if (f.fps) (fpsD[f.disp || "?"] = fpsD[f.disp || "?"] || []).push(f.fps);
+    { const k = f.modelo || (f.disp === "pc" ? "Computadora" : "Celular") + " sin modelo"; const a = (apar[k] = apar[k] || { ses: 0, jug: new Set(), fps: [], cortes: 0, caidas: 0, so: "", nav: "", placa: "", mem: 0, disp: f.disp || "" });
+      a.ses++; a.jug.add(f.title || "?"); if (f.fps) a.fps.push(f.fps); a.cortes += f.cortes || 0; if (f.corteAntes) a.caidas++; a.so = f.soVer || a.so || f.so || ""; a.nav = f.nav || a.nav; a.placa = f.placa || a.placa; a.mem = f.mem || a.mem; }
     if (f.sala) sala++; amigosMax = Math.max(amigosMax, f.amigos || 0); if (f.rama === "hero") hero++;
   });
   // por dónde arrancan: la primera sesión de cada jugador
@@ -104,6 +110,7 @@ function calcular(F: Fila[]) {
     arranque: { etapa: top(arr0, 9), lugar: top(lug0, 8) }, lugares: top(lug, 15), misiones: top(mis, 15), juegos: top(jue, 12), examenes: top(exa, 9),
     embudo, niveles: top(niveles, 10),
     pase: { llegaron: cierre.length, pagaron: pagos.length, horasHastaPagarMed: r1(med(demoras)), pagaronEn24h: demoras.filter((h) => h <= 24).length, dejaron: sinVolver, esperando, vistasProm: r1(cierre.length ? cierre.reduce((a, x) => a + x.vistas, 0) / cierre.length : 0) },
+    modelos: Object.entries(apar).sort((a, b) => b[1].ses - a[1].ses).slice(0, 40).map(([k, a]) => ({ modelo: k, disp: a.disp, ses: a.ses, jugadores: a.jug.size, fps: Math.round(med(a.fps)), cortes: a.cortes, caidas: a.caidas, so: a.so, nav: a.nav, placa: a.placa, mem: a.mem })),
     aparatos: { disp: top(disp, 4), so: top(so, 6), calidad: top(cal, 6), fps: Object.fromEntries(Object.entries(fpsD).map(([k, L]) => [k, Math.round(med(L))])) },
   };
 }
