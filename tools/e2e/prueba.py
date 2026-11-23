@@ -22,7 +22,7 @@ THREE = os.path.join(AQUI, 'node_modules', 'three', 'build', 'three.module.js')
 OUT = os.path.join(AQUI, 'salida')
 
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
-DBG = ('jueLock, jueLit, jueGoal, jueTick, jueOpen, MAT, kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
+DBG = ('openMission, jueLock, jueLit, jueGoal, jueTick, jueOpen, MAT, kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
        'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink, AM, amOpen, amSync, amEv, amGoals, amReqIn, amDraw, GBY, guiaGoals: () => guiaGoals(), puertaLock, puertaGoal, puertaTick, misOpen, misDone, MISSIONS, MIS_PUERTA, CASI, casiList, casiTick, casiGoal, metaP, META_POOL, PUE, pueTick, pueOpen, pueLv, pueSpot, blockedAt, waterWet, INI, iniTick, iniGoal, nodeActive, CAM, CAMS, camTick, camScene, camGoal, camEco, CINE, poseSet, camFinTick, camRecap')
 
@@ -289,10 +289,24 @@ JUEGOS3 = COMUN + """
       Object.assign(P,keep); G_.save();
       return {ok:!!todo, d:L.join(' · ')};"""
 
+PUNTOS = COMUN + """
+      const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return !!c;}; let todo=true; const b0=P.bonus||0;
+      try {
+        todo&=ok(G_.PX===10&&G_.lvNeed(2)===1200&&G_.lvNeed(10)===54000,'nivel 2 pide 1.200 y el 10 pide 54.000');
+        P.bonus=b0; const lv=G_.level(), t=G_.points(); todo&=ok(t%10===0,'los puntos van con una cifra más: '+t);
+        P.bonus=b0+(G_.lvNeed(lv+1)-t)/10; G_.save(); todo&=ok(G_.level()===lv+1,'sumar lo justo por dentro sube exactamente un nivel');
+        P.bonus=b0; G_.save(); todo&=ok(G_.level()===lv,'vuelve al nivel de antes');
+        const txt=document.getElementById('score')?document.getElementById('score').textContent:''; todo&=ok(/\d/.test(txt),'el contador muestra '+txt);
+        const m=d.MISSIONS[0]; d.openMission(S.mis[m.id]||m); await new Promise(r=>setTimeout(r,300)); const sh=document.getElementById('v3sheet'); const tx=sh?sh.textContent:'';
+        todo&=ok(/\+500 puntos/.test(tx),'la misión dice +500 puntos'); if(sh) sh.hidden=true;
+      } catch(e){ L.push('ERROR '+e.message); todo=false; }
+      P.bonus=b0; G_.save();
+      return {ok:!!todo, d:L.join(' · ')};"""
+
 CASI = COMUN + """
       const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return !!c;}; let todo=true; const b0=P.bonus||0, casi0=P.casi;
       try {
-        P.casi={}; const lv=G_.level(), a=G_.lvNeed(lv), b=G_.lvNeed(lv+1); P.bonus=(P.bonus||0)+Math.ceil(a+.9*(b-a)-G_.points());
+        P.casi={}; const lv=G_.level(), a=G_.lvNeed(lv), b=G_.lvNeed(lv+1); P.bonus=(P.bonus||0)+Math.ceil((a+.9*(b-a)-G_.points())/(G_.PX||1));
         const l1=d.casiList(); todo&=ok(l1.some(x=>/para el nivel/.test(x.t)),'cerca de subir de nivel: '+(l1[0]||{}).t);
         const m=d.metaP(); m.ok=0; m.c={}; m.g.slice(0,2).forEach(k=>m.c[k]=d.META_POOL[k][2]);
         const l2=d.casiList(); todo&=ok(l2.some(x=>/desafío del día|Manto/.test(x.t)),'falta una meta del desafío del día');
@@ -447,6 +461,7 @@ HERO = {
     'pueblos': ('Hero: pueblos que cambian con lo que hacés', PUEBLOS),
     'casi': ('Hero: «Te falta poco»', CASI),
     'puertas': ('Hero: minijuegos y misiones alternados, cadenas de 3', PUERTAS),
+    'puntos': ('Hero: puntos con una cifra más, mismos niveles', PUNTOS),
     'juegos3': ('Hero: los juegos de las etapas I a III se abren con las misiones', JUEGOS3),
     'amigos': ('Hero: amigos del camino, regalos y desafío en equipo', AMIGOS),
     'sala': ('Sala: sin barra arriba, micrófono junto al botón de amigos, modos y frases en la ventana', SALA),
@@ -512,6 +527,7 @@ KIDS = {
     'pueblokids': ('Kids: pueblos que cambian con lo que hacés', PUEBLOS),
     'casikids': ('Kids: «Te falta poco»', CASI),
     'puertaskids': ('Kids: minijuegos y misiones alternados, cadenas de 3', PUERTAS),
+    'puntoskids': ('Kids: puntos con una cifra más, mismos niveles', PUNTOS),
     'juegos3kids': ('Kids: los juegos de las etapas I a III se abren con las misiones', JUEGOS3),
     'amigoskids': ('Kids: amigos del camino, regalos y desafío en equipo', AMIGOS),
     'fotokids': ('Kids: momento de foto épica al festejar', FOTO),

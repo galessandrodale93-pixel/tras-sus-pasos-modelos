@@ -995,14 +995,14 @@ function lifeTick(dt, t) {
   for (let i = lo; i < L.length && L[i].z < a.z + 1.6; i++) { const it = L[i]; if (it.got || Math.hypot(it.x - a.x, it.z - a.z) > 1.5) continue;
     it.got = true; const p = G().P(); if (!p.pk || p.pk.d !== vday()) p.pk = { d: vday(), got: [] }; p.pk.got.push(it.id); const im = LIFE.ims[it.k]; if (im) { im.setMatrixAt(it.i, new THREE.Matrix4().makeScale(0, 0, 0)); im.instanceMatrix.needsUpdate = true; }
     const pa = LIFE.pts.geometry.attributes.position; pa.setXYZ(LIFE.pk.indexOf(it), 0, -999, 0); pa.needsUpdate = true; const d = PK[it.k];
-    if (it.k === 'sobre') { try { albGetSobre(1); } catch (e) {} continue; } if (FIND_W.some(f => f[0] === it.k)) { try { if (svOn()) findGive(it); else kidsFind(it); G().save(); } catch (e) { console.warn('hallazgo', e); } try { tone3d(); } catch (e) {} continue; } if (S.hx && d[0] && svOn()) { svAdd(d[0], 1); svUI(); pkPop('+1 ' + d[1] + ' ' + d[2]); } else { const n = it.k === 'estrella' ? 3 : 1; svXP(n); try { G().refreshHud && G().refreshHud(); } catch (e) {} pkPop(d[1] + ' +' + n + (n > 1 ? ' puntos' : ' punto')); } try { tone3d(); } catch (e) {} }
+    if (it.k === 'sobre') { try { albGetSobre(1); } catch (e) {} continue; } if (FIND_W.some(f => f[0] === it.k)) { try { if (svOn()) findGive(it); else kidsFind(it); G().save(); } catch (e) { console.warn('hallazgo', e); } try { tone3d(); } catch (e) {} continue; } if (S.hx && d[0] && svOn()) { svAdd(d[0], 1); svUI(); pkPop('+1 ' + d[1] + ' ' + d[2]); } else { const n = it.k === 'estrella' ? 3 : 1; svXP(n); try { G().refreshHud && G().refreshHud(); } catch (e) {} pkPop(d[1] + ' +' + ptsV(n) + ' puntos'); } try { tone3d(); } catch (e) {} }
 }
 /* Kids: lo que se encuentra en el camino también da algo (ropa para el personaje, figuritas o puntos) */
 function kidsFind(it) {
   const own = gearState().own, of = rs => GEAR.filter(g => rs.includes(g.r) && !g.x && !own.includes(g.id));
   if (it.k === 'ropa' || it.k === 'rara') { const L = it.k === 'rara' && of(['r']).length ? of(['r']) : of(['c']); if (L.length) { const g = L[Math.floor(it.r * L.length) % L.length]; gearGive(g, 'Lo encontraste en el camino'); pkPop('👘 ¡Ropa nueva! ' + (g.name || '')); return; } }
   if (it.k === 'otro' && it.r < .35) { try { albGetSobre(1, 'Lo encontraste en el camino'); pkPop('🎴 ¡Un sobre de figuritas!'); return; } catch (e) {} }
-  const n = it.k === 'rara' ? 10 : 5; svXP(n); try { G().refreshHud && G().refreshHud(); } catch (e) {} pkPop((PK[it.k] || [0, '⭐'])[1] + ' +' + n + ' puntos');
+  const n = it.k === 'rara' ? 10 : 5; svXP(n); try { G().refreshHud && G().refreshHud(); } catch (e) {} pkPop((PK[it.k] || [0, '⭐'])[1] + ' +' + ptsV(n) + ' puntos');
 }
 function pkPop(t) { const el = document.createElement('div'); el.className = 'pkpop'; el.textContent = t; document.body.appendChild(el); setTimeout(() => el.remove(), 1400); }
 
@@ -1924,6 +1924,8 @@ function invMemories(body) {
 
 /* ---------- misiones en el escenario ---------- */
 const MIS_PTS = 50;
+/* los puntos se ven con una cifra más (×10), igual que en game.js: lo que se suma por dentro no cambia */
+const PXF = () => { try { return (G() && G().PX) || 10; } catch (e) { return 10; } }, ptsV = n => amNum(Math.round(n * PXF()));
 export const MISSIONS = [
   { id: 'tunicapobre', r: 2, serv: 3, kind: 'deliver', giver: { name: 'Un seguidor de Juan', look: { g: 'chico', age: 18, skin: '#C99A72', hair: '#3A2A1A', outfit: '#7A6A4A' } }, target: { name: 'un hombre sin abrigo', look: { g: 'chico', age: 18, skin: '#B98A62', hair: '#6A6A6A', outfit: '#7A6A5A' } },
     item: { name: 'una túnica de abrigo', k: 'cloth', c: '#8A6A44' }, ask: 'Juan el Bautista nos enseñó que el que tiene dos túnicas comparta con el que no tiene. Tengo una de más: ¿se la llevás a ese hombre que pasa frío?', done: '¡Gracias! Compartir lo que tenemos es una forma de prepararle el camino al Señor.', ref: 'Lucas 3:10-11' },
@@ -2116,7 +2118,7 @@ function misPop(title, sub) { const el = document.getElementById('v3pop'); if (!
 function openMission(m) {
   const el = document.getElementById('v3sheet'), d = m.d; if (!el) return;
   const hNeed = S.hx && d.hum ? d.hum : 0, hOk = humV() >= hNeed;
-  el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>${esc(d.giver.name)}</b><span>Misión · +${MIS_PTS} puntos${hNeed ? ' · Humildad ' + hNeed : ''}</span><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="mis-ask">“${esc(d.ask)}”</p><small class="mis-ref">${esc(d.ref)}</small>${hOk ? '' : `<p class="cap-note">Esta misión pide <b>Humildad ${hNeed}</b> (tenés ${humV()}). La humildad crece cuando le das puntos de tus atributos a otros en una sala con amigos.</p>`}<div class="mis-btns">${hOk ? '<button class="mis-yes">¡Dale!</button>' : ''}<button class="mis-no">Ahora no</button></div></div>`;
+  el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>${esc(d.giver.name)}</b><span>Misión · +${ptsV(MIS_PTS)} puntos${hNeed ? ' · Humildad ' + hNeed : ''}</span><button class="bag-x" aria-label="Cerrar">✕</button></div><p class="mis-ask">“${esc(d.ask)}”</p><small class="mis-ref">${esc(d.ref)}</small>${hOk ? '' : `<p class="cap-note">Esta misión pide <b>Humildad ${hNeed}</b> (tenés ${humV()}). La humildad crece cuando le das puntos de tus atributos a otros en una sala con amigos.</p>`}<div class="mis-btns">${hOk ? '<button class="mis-yes">¡Dale!</button>' : ''}<button class="mis-no">Ahora no</button></div></div>`;
   el.hidden = false; const close = () => { el.hidden = true; S.misSkip = d.id; try { G().voStop(); } catch (e) {} }; try { G().vo(d.ask, d.giver.look && d.giver.look.g === 'chica' ? 'mujer' : 'varon'); } catch (e) {}
   el.querySelector('.bag-x').onclick = close; el.querySelector('.mis-no').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   if (hOk) el.querySelector('.mis-yes').onclick = () => { const p = misState(); p.mact = { id: d.id, has: d.kind !== 'fetch' }; G().save(); el.hidden = true; misCarry(m, p.mact.has); if (d.kind === 'record' || d.kind === 'photo') setTimeout(() => openCapture(m), 250); };
@@ -4224,7 +4226,7 @@ function openCapture(m) {
   const el = document.getElementById('v3sheet'), d = m.d, kids = !S.hx; if (!el) return; S.joy.x = 0; S.joy.y = 0;
   const close = () => { el.hidden = true; if (el._rec && el._rec.state === 'recording') { el._rec.onstop = () => { AU.on = AU.wasOn; }; el._rec.stop(); } if (el._stream) { el._stream.getTracks().forEach(t => t.stop()); el._stream = null; } };
   if (d.kind === 'record') {
-    el.innerHTML = `<div class="bag-in mis-in cap"><div class="bag-h"><b>${esc(d.title)}</b><span>Lectura en voz alta · +${MIS_PTS} puntos</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
+    el.innerHTML = `<div class="bag-in mis-in cap"><div class="bag-h"><b>${esc(d.title)}</b><span>Lectura en voz alta · +${ptsV(MIS_PTS)} puntos</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
       <p class="mis-ask">Abrí tu Biblia en <b>${esc(d.ref)}</b> y leelo completo en voz alta. Te vamos a pedir permiso para usar el micrófono.</p>
       <p class="cap-note">La grabación queda guardada solo en este ${kids ? 'aparato' : 'celular'}. Nadie más la escucha.</p>
       <div class="cap-rec"><span class="cap-dot"></span><b class="cap-t">0:00</b></div><audio class="cap-audio" controls hidden></audio><p class="cap-err" hidden></p>
@@ -4243,7 +4245,7 @@ function openCapture(m) {
     };
     save.onclick = async () => { if (!blob) return; const v = { kind: 'audio', blob, ref: d.ref, at: Date.now() }; try { await mput(mkey(d.id), v); } catch (e) {} close(); misDone(m); setTimeout(() => shareAsk(el, v, d), 1400); };
   } else {
-    el.innerHTML = `<div class="bag-in mis-in cap"><div class="bag-h"><b>${esc(d.title)}</b><span>Testimonio · +${MIS_PTS} puntos</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
+    el.innerHTML = `<div class="bag-in mis-in cap"><div class="bag-h"><b>${esc(d.title)}</b><span>Testimonio · +${ptsV(MIS_PTS)} puntos</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
       <p class="mis-ask">Contale a un compañero o compañera de tu ${kids ? 'grado' : 'curso'} quién es Jesús${kids ? '. Pedile a un adulto que te acompañe' : ''}. Si tu compañero o compañera está de acuerdo, sacate una foto con él o ella.</p>
       ${capHow(kids)}
       <p class="cap-note">Te vamos a pedir permiso para usar la cámara. La foto queda guardada solo en este ${kids ? 'aparato' : 'celular'}.</p>
@@ -4464,7 +4466,7 @@ const AM_REG = {
   hx: { canasta: ['🧺', 'Canasta de pan y fruta', { bread: 2, fruit: 3 }], denarios: ['🪙', 'Bolsita de denarios', { money: 15 }], pescado: ['🐟', 'Pescado asado', { cooked: 2 }] },
   kids: { estrella: ['⭐', 'Estrellita', { pts: 15 }], luz: ['🌟', 'Un poco de luz', { glow: 5 }], sobre: ['🎴', 'Sobre de figuritas', { sobre: 1 }] }
 };
-const AM_PREMIO = { hx: [{ money: 50, glow: 20 }, { money: 30 }, '50 denarios y 20 de Resplandor', '30 denarios más'], kids: [{ pts: 50, glow: 10 }, { pts: 30 }, '50 puntos y 10 de luz', '30 puntos más'] };
+const AM_PREMIO = { hx: [{ money: 50, glow: 20 }, { money: 30 }, '50 denarios y 20 de Resplandor', '30 denarios más'], kids: [{ pts: 50, glow: 10 }, { pts: 30 }, '500 puntos y 10 de luz', '300 puntos más'] };
 const AM_PRENDA = 4; // semanas cumplidas en equipo para la prenda
 const amMd = () => (S && S.hx ? 'hx' : 'kids');
 const amId = () => { try { return G().amId ? G().amId() : null; } catch (e) { return null; } };
@@ -5788,7 +5790,7 @@ const META_POOL = {
   charla: ['💬', 'Charlá con alguien', 1], brilla: ['🌟', 'Hacé brillar tu lámpara', 1, 'kids']
 };
 const META_PREMIO = { hx: [['🪙', '20 denarios', { money: 20 }], ['🍞', '3 panes', { bread: 3 }], ['✦', '15 de Resplandor', { glow: 15 }], ['🪙', '40 denarios', { money: 40 }], ['🍞', '5 panes', { bread: 5 }], ['✦', '25 de Resplandor', { glow: 25 }], ['🎁', 'El Manto del caminante', { gear: 'cam7' }]],
-  kids: [['⭐', '20 puntos', { pts: 20 }], ['🌟', '10 de luz', { glow: 10 }], ['⭐', '30 puntos', { pts: 30 }], ['🌟', '15 de luz', { glow: 15 }], ['⭐', '40 puntos', { pts: 40 }], ['🌟', '20 de luz', { glow: 20 }], ['🎁', 'El Manto del caminante', { gear: 'cam7' }]] };
+  kids: [['⭐', '200 puntos', { pts: 20 }], ['🌟', '10 de luz', { glow: 10 }], ['⭐', '300 puntos', { pts: 30 }], ['🌟', '15 de luz', { glow: 15 }], ['⭐', '400 puntos', { pts: 40 }], ['🌟', '20 de luz', { glow: 20 }], ['🎁', 'El Manto del caminante', { gear: 'cam7' }]] };
 function metaHoy() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function metaP() {
   const p = G().P(); p.meta = p.meta || { cal: 0, vueltas: 0, total: 0 }; const m = p.meta, hoy = metaHoy();
@@ -5824,7 +5826,7 @@ function casiList() {
   const g = G(), p = g.P(), out = [], hx = !!(S && S.hx); if (!p) return out;
   const add = (key, ic, t, sub, k, fn, b) => out.push({ key, ic, t, sub, k: Math.max(0, Math.min(1, k)), fn, b });
   try { const lv = g.level(), pts = g.points(); if (g.lvNeed && lv < 75) { const a = g.lvNeed(lv), b = g.lvNeed(lv + 1), f = b - pts, k = (pts - a) / (b - a);
-    if (k >= .8 && f > 0) add('lv' + (lv + 1), '⬆️', `Te faltan ${amNum(f)} puntos para el nivel ${lv + 1}`, 'Una misión da ' + MIS_PTS + ' puntos, y cada estrella nueva en un minijuego da 10.', k); } } catch (e) {}
+    if (k >= .8 && f > 0) add('lv' + (lv + 1), '⬆️', `Te faltan ${amNum(f)} puntos para el nivel ${lv + 1}`, 'Una misión da ' + ptsV(MIS_PTS) + ' puntos, y cada estrella nueva en un minijuego da 10.', k); } } catch (e) {}
   try { const m = metaP(); if (!m.ok) { const fal = m.g.filter(x => metaN(m, x) < META_POOL[x][2]); if (fal.length === 1) { const x = fal[0], T = META_POOL[x][2], n = metaN(m, x), md = hx ? 'hx' : 'kids', pr = META_PREMIO[md][m.cal];
     add('meta' + m.d, pr && pr[2].gear ? '🎁' : '☀️', pr && pr[2].gear ? 'Te falta una meta para el Manto del caminante' : 'Te falta una meta del desafío del día', META_POOL[x][1] + (T > 1 ? ` (vas ${n} de ${T})` : '') + (pr ? ' · premio: ' + pr[1] : ''), (2 + n / T) / 3, () => metaOpen(), 'Ver'); } } } catch (e) {}
   try { if (g.mgStarsTotal) { const t = g.mgStarsTotal(), got = p.mgPrize || [], nx = (g.MG_PRIZE || []).find(x => x > t && !got.includes(x)); if (nx && nx - t <= 3 && t > 0) add('st' + nx, '⭐', `Te ${nx - t === 1 ? 'falta 1 estrella' : 'faltan ' + (nx - t) + ' estrellas'} para ganar una prenda`, 'Volvé a jugar un minijuego y superá tu marca: cada estrella nueva suma.', t / nx); } } catch (e) {}
@@ -5970,12 +5972,12 @@ function iniGift() {
   const it = GBY.primerpaso; try { h3do(['M_Cheering', 'M_Thankful'], 2.4); } catch (e) {}
   if (S.hx) { try { svAdd('money', 30); svAdd('bread', 2); } catch (e) {} } else { const p = G().P(); p.bonus = (p.bonus || 0) + 30; }
   G().save(); G().refreshHud && G().refreshHud(); try { G().vo('¡Bienvenido al camino! Este regalo es para vos: unas sandalias para tu primer paso.', 'narrador'); } catch (e) {}
-  iniStep('🎁 ¡Regalo de bienvenida!', S.hx ? '30 denarios, 2 panes y una prenda única' : '30 puntos y una prenda única');
+  iniStep('🎁 ¡Regalo de bienvenida!', S.hx ? '30 denarios, 2 panes y una prenda única' : '300 puntos y una prenda única');
   if (it && !gearState().own.includes(it.id)) setTimeout(() => gearGive(it, 'Regalo de bienvenida'), 2200);
 }
 function iniFin() {
   const st = iniP(); st.fin = 1; st.win = vday(); const g = G(), p = g.P();
-  try { const need = g.lvNeed ? g.lvNeed(2) : 120, f = need - g.points(); if (f > 0) p.bonus = (p.bonus || 0) + f; } catch (e) {}
+  try { const need = g.lvNeed ? g.lvNeed(2) : 1200, f = (need - g.points()) / PXF(); if (f > 0) p.bonus = (p.bonus || 0) + Math.ceil(f); } catch (e) {}
   g.save(); g.refreshHud && g.refreshHud(); try { sello('primer-camino', 'Primer camino'); } catch (e) {} glowAdd(10, 'inicio');
   setTimeout(() => { try { pkPop('🏆 ¡Primera victoria!'); tone3d(); h3do(['M_Cheering', 'M_Clapping'], 3); } catch (e) {}
     try { G().vo('¡Primera victoria! Ya sos parte del camino. Ahora llegás al nivel dos.', 'narrador'); } catch (e) {}
@@ -6675,7 +6677,7 @@ const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', '
 const p2 = n => String(n).padStart(2, '0'), dK = d => d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()), mK = d => d.getFullYear() + '-' + p2(d.getMonth() + 1);
 function stSnap() {
   const g = G(), p = g.P(), o = { lv: 1, pts: 0, par: 0, meta: (p.meta && p.meta.total) || 0, ms: Math.round(p.playMs || 0), glow: 0 };
-  try { o.lv = g.level(); o.pts = Math.round(g.points()); } catch (e) {}
+  try { o.lv = g.level(); o.pts = Math.round(g.points() / PXF()); } catch (e) {}
   try { o.par = Object.keys(g.NODES).filter(k => g.NODES[k].kind === 'ch' && g.isDone(k)).length; } catch (e) {}
   try { o.glow = Math.round(glowState().pts || 0); } catch (e) {}
   if (S && S.hx) { try { o.ofi = Object.keys(OFI).reduce((a, k) => a + ofiLv(k), 0); } catch (e) {} try { o.fr = Object.keys(FRN).reduce((a, k) => a + ft(k), 0); } catch (e) {} }
@@ -6704,7 +6706,7 @@ function recapData(kind, prev) {
   base = base || cur; const d = k => Math.max(0, (cur[k] || 0) - (base[k] || 0)), hx = !!(S && S.hx), mins = Math.round(d('ms') / 60000);
   const tiempo = mins >= 60 ? `${Math.floor(mins / 60)} h ${p2(mins % 60)}` : `${mins} min`;
   const tiles = [['📖', d('par'), d('par') === 1 ? 'parada de la historia' : 'paradas de la historia', cur.par], ['☀️', d('meta'), d('meta') === 1 ? 'desafío cumplido' : 'desafíos cumplidos'], ['📅', dias, dias === 1 ? 'día jugado' : 'días jugados'],
-    [hx ? '✦' : '🌟', d('glow'), hx ? 'de Resplandor' : 'de luz'], hx ? ['🔨', d('ofi'), d('ofi') === 1 ? 'nivel de oficio' : 'niveles de oficio'] : ['⭐', d('pts'), 'puntos'], ['⏱️', tiempo, 'jugando', null, 1]];
+    [hx ? '✦' : '🌟', d('glow'), hx ? 'de Resplandor' : 'de luz'], hx ? ['🔨', d('ofi'), d('ofi') === 1 ? 'nivel de oficio' : 'niveles de oficio'] : ['⭐', Math.round(d('pts') * PXF()), 'puntos'], ['⏱️', tiempo, 'jugando', null, 1]];
   const fmt = (x, y) => x.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' }) + ' al ' + y.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
   const range = kind === 'semana' ? fmt(a, b) : kind === 'mes' ? MESES[a.getMonth()] + ' de ' + a.getFullYear() : kind === 'anio' ? 'Todo ' + a.getFullYear() : MESES[a.getMonth()] + ' a ' + MESES[Math.min(11, a.getMonth() + 5)] + ' de ' + a.getFullYear();
   const wk = Math.floor(now.getTime() / 6048e5), v = kind === 'semana' ? RECAP_VERS[wk % RECAP_VERS.length] : RECAP_VERS[0];
@@ -6897,10 +6899,10 @@ function advP() { const p = G().P(), h = advHoy(); if (!p.adv || p.adv.y !== h.y
 const advAbre = (n, h) => n <= 25 ? n <= h.d : h.reyes; /* n 26 es la ventana de Reyes */
 function advPremio(n) {
   const hx = !!(S && S.hx), own = id => gearState().own.includes(id);
-  if (n === 25) return own('nav_gloria') ? (hx ? ['🪙', '50 denarios', { money: 50 }] : ['⭐', '50 puntos', { pts: 50 }]) : ['🎁', 'La túnica de Nochebuena', { gear: 'nav_gloria' }];
-  if (n === 26) return own('nav_magos') ? (hx ? ['🪙', '50 denarios', { money: 50 }] : ['⭐', '50 puntos', { pts: 50 }]) : ['👑', 'El turbante de los magos', { gear: 'nav_magos' }];
+  if (n === 25) return own('nav_gloria') ? (hx ? ['🪙', '50 denarios', { money: 50 }] : ['⭐', '500 puntos', { pts: 50 }]) : ['🎁', 'La túnica de Nochebuena', { gear: 'nav_gloria' }];
+  if (n === 26) return own('nav_magos') ? (hx ? ['🪙', '50 denarios', { money: 50 }] : ['⭐', '500 puntos', { pts: 50 }]) : ['👑', 'El turbante de los magos', { gear: 'nav_magos' }];
   if (hx) return [['🪙', '10 denarios', { money: 10 }], ['🍞', '2 panes', { bread: 2 }], ['✦', '5 de Resplandor', { glow: 5 }]][n % 3];
-  return n % 2 ? ['⭐', '10 puntos', { pts: 10 }] : ['🌟', '5 de luz', { glow: 5 }];
+  return n % 2 ? ['⭐', '100 puntos', { pts: 10 }] : ['🌟', '5 de luz', { glow: 5 }];
 }
 function advGoal() {
   const h = advHoy(); if (!h.on) return null; const A = advP(), hoy = h.reyes && !A.o[26] ? 26 : Math.min(h.d, 25), n = Object.keys(A.o).length;
@@ -8835,7 +8837,7 @@ const AXS = {};
 // contadores de comportamiento (para el futuro descubrimiento de dones)
 function behav(k, n) { try { const p = G().P(); p.behav = p.behav || {}; p.behav[k] = (p.behav[k] || 0) + (n || 1); } catch (e) {} }
 function fidDaily() { try { if (!S || !S.hx) return; const p = G().P(), d = new Date().toISOString().slice(0, 10); if (p.fidDay === d) return; const prev = p.fidDay; p.fidDay = d; const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10), y2 = new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10);
-  p.fidRun = prev === y || (prev === y2 && fv('fid') >= 20) ? (p.fidRun || 0) + 1 : 1; axGain('fid', 4); const b = fv('fid') >= 30 ? 10 : fv('fid') >= 10 ? 5 : 0; if (b && p.fidRun > 1) { p.bonus = (p.bonus || 0) + b * Math.min(7, p.fidRun); setTimeout(() => svToast(`📅 Volviste ${p.fidRun} días seguidos: +${b * Math.min(7, p.fidRun)} puntos por tu Fidelidad.`, 'Volviste otro día seguido. Tu fidelidad suma puntos.'), 4000); }
+  p.fidRun = prev === y || (prev === y2 && fv('fid') >= 20) ? (p.fidRun || 0) + 1 : 1; axGain('fid', 4); const b = fv('fid') >= 30 ? 10 : fv('fid') >= 10 ? 5 : 0; if (b && p.fidRun > 1) { p.bonus = (p.bonus || 0) + b * Math.min(7, p.fidRun); setTimeout(() => svToast(`📅 Volviste ${p.fidRun} días seguidos: +${ptsV(b * Math.min(7, p.fidRun))} puntos por tu Fidelidad.`, 'Volviste otro día seguido. Tu fidelidad suma puntos.'), 4000); }
   if (fv('fid') >= 50) { const w = Math.floor(Date.now() / 6048e5); if (p.fidWeek !== w) { p.fidWeek = w; setTimeout(() => { svAdd('bread', 3); svAdd('money', 10); svToast('🎁 Cofre semanal de la Fidelidad: 3 panes y 10 denarios.'); }, 6000); } } behav('dias'); G().save(); } catch (e) {} }
 function axFloat(t, big) { const d = document.createElement('div'); d.className = 'v3ax' + (big ? ' up' : ''); d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 1700); }
 // mantener apretada la acción (E o el botón) repite el trabajo: talar, picar, pescar
@@ -10338,7 +10340,7 @@ function espIn(m) {
     el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { if (done) return; done = true; b.classList.add('pick'); const msg = { k: 'esp', ev: 'ans', i: m.i, a: +b.dataset.i, ms: performance.now() - t0 }; if (ESP.on && ESP.on.host) espIn(Object.assign({ id: myId() }, msg)); else xSend(Object.assign({ to: ESP.on && ESP.on.from }, msg)); }); return; }
   if (m.ev === 'res') { const el = document.getElementById('v3sheet'); el.querySelectorAll('.esp-o button').forEach((b, i) => { b.disabled = true; b.classList.toggle('ok', i === m.a); }); const box = document.createElement('div'); box.className = 'esp-exp'; box.innerHTML = `${m.first ? `<p><b>${esc(m.first)}</b> respondió bien primero.</p>` : '<p>Nadie acertó esta vez.</p>'}<p>${esc(m.exp || '')}</p><p class="esp-ref">${esc(m.ref || '')}</p>`; el.querySelector('.esp') && el.querySelector('.esp').appendChild(box); return; }
   if (m.ev === 'end') { const rows = Object.entries(m.score).sort((a, b) => b[1] - a[1]); const mine = m.score[myId()] || 0, xp = mine * 4 * (humV() >= 30 ? 2 : 1); const p = G().P(); p.bonus = (p.bonus || 0) + xp; G().save(); G().refreshHud && G().refreshHud(); ESP.on = null;
-    espSheet(`<p class="sv-tip">¡Terminó el espadeo! Cada respuesta te ayuda a conocer más la Palabra.</p><ol class="esp-rank">${rows.map(([id, n]) => `<li><span>${esc(m.names[id] || 'Alguien')}</span><b>${n}</b></li>`).join('')}</ol><p class="sv-tip">Ganaste <b>${xp}</b> puntos de experiencia.</p>`, true); return; }
+    espSheet(`<p class="sv-tip">¡Terminó el espadeo! Cada respuesta te ayuda a conocer más la Palabra.</p><ol class="esp-rank">${rows.map(([id, n]) => `<li><span>${esc(m.names[id] || 'Alguien')}</span><b>${n}</b></li>`).join('')}</ol><p class="sv-tip">Ganaste <b>${ptsV(xp)}</b> puntos de experiencia.</p>`, true); return; }
 }
 
 
@@ -10395,7 +10397,7 @@ const GMH = {
         el.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { if (E.mine) return; E.mine = b.dataset.o; el.querySelectorAll('[data-o]').forEach(x => { x.disabled = true; }); b.classList.add('pick'); gmUp({ ev: 'guess', o: E.mine }); }); return; }
       if (m.ev === 'guess' && E.host) { const c = E.cur; if (!c || c.out[m.id]) return; c.out[m.id] = 1; if (m.o === c.who) { E.score[m.id] = (E.score[m.id] || 0) + (c.won ? 1 : 5 - c.k); if (!c.won) c.won = m.id; } if (E.who.every(id => c.out[id])) this.reveal(E); return; }
       if (m.ev === 'res') { const el = document.getElementById('v3sheet'); el.querySelectorAll('[data-o]').forEach(b => b.classList.toggle('ok', b.dataset.o === m.who)); const box = document.createElement('div'); box.className = 'esp-exp'; box.innerHTML = `<p>Era <b>${esc(m.who)}</b>. ${m.first ? esc(m.first) + ' lo adivinó primero.' : 'Nadie lo adivinó.'}</p><p class="esp-ref">Leelo en ${esc(m.ref)}</p>`; el.querySelector('.esp').appendChild(box); return; }
-      if (m.ev === 'end') { const xp = (m.score[myId()] || 0) * 4; gmXP(xp); GM.on = null; gmSheet(`<p class="sv-tip">¡Terminó ¿Quién soy?! Ahora conocés mejor a las personas que se encontraron con Jesús.</p>${gmRank(m.score, m.names)}<p class="sv-tip">Ganaste <b>${xp}</b> puntos de experiencia.</p>`, true, '¿Quién soy?'); } }
+      if (m.ev === 'end') { const xp = (m.score[myId()] || 0) * 4; gmXP(xp); GM.on = null; gmSheet(`<p class="sv-tip">¡Terminó ¿Quién soy?! Ahora conocés mejor a las personas que se encontraron con Jesús.</p>${gmRank(m.score, m.names)}<p class="sv-tip">Ganaste <b>${ptsV(xp)}</b> puntos de experiencia.</p>`, true, '¿Quién soy?'); } }
   },
   /* Versículo en cadena: en equipo, cada uno a su turno toca la palabra que sigue */
   cadena: {
@@ -10407,7 +10409,7 @@ const GMH = {
       if (m.ev === 'st') { const mine = m.turn === myId() && !m.ref; const el = gmSheet(`<div class="esp-top"><span>Versículo ${m.v + 1} de ${m.tot} · errores del equipo: ${m.errs}</span></div><p class="vc-done">${esc(m.done) || '<i>Empiecen por la primera palabra…</i>'}</p>${m.ref ? `<p class="esp-ref">${esc(m.ref)} · ¡Lo armaron juntos!</p>` : `<p class="sv-tip">${mine ? '<b>¡Es tu turno!</b> Tocá la palabra que sigue.' : 'Turno de <b>' + esc(m.tname) + '</b>.'}</p>`}<div class="vc-bank">${m.bank.map(b => `<button data-i="${b.i}" ${b.u || !mine ? 'disabled' : ''} class="${b.u ? 'used' : ''}">${esc(b.t)}</button>`).join('')}</div>`, false, 'Versículo en cadena');
         el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { gmUp({ ev: 'pick', i: +b.dataset.i }); el.querySelectorAll('[data-i]').forEach(x => { x.disabled = true; }); }); return; }
       if (m.ev === 'pick' && E.host) { if (m.id !== E.who[E.turn % E.who.length]) return; const want = E.words[E.done], got = E.bank.find(b => b.i === m.i); if (got && (got.i === E.done || got.t === want)) { if (got.i !== E.done) { const real = E.bank.find(b => b.i === E.done); real.i = got.i; got.i = E.done; } E.done++; } else E.errs++; E.turn++; this.push(E); if (E.done >= E.words.length) setTimeout(() => this.next(E), 4500); return; }
-      if (m.ev === 'end') { const xp = Math.max(10, 40 * m.n - m.errs * 5); gmXP(xp); GM.on = null; gmSheet(`<p class="sv-tip">¡Armaron ${m.n} versículos en equipo! Repetir la Palabra juntos ayuda a guardarla en el corazón.</p><p class="sv-tip">Errores del equipo: ${m.errs}. Cada uno ganó <b>${xp}</b> puntos de experiencia.</p>`, true, 'Versículo en cadena'); } }
+      if (m.ev === 'end') { const xp = Math.max(10, 40 * m.n - m.errs * 5); gmXP(xp); GM.on = null; gmSheet(`<p class="sv-tip">¡Armaron ${m.n} versículos en equipo! Repetir la Palabra juntos ayuda a guardarla en el corazón.</p><p class="sv-tip">Errores del equipo: ${m.errs}. Cada uno ganó <b>${ptsV(xp)}</b> puntos de experiencia.</p>`, true, 'Versículo en cadena'); } }
   },
   /* Carrera a un lugar: todos ven el destino con la flecha del piso */
   carrera: {
@@ -10417,7 +10419,7 @@ const GMH = {
     on(m) { const E = GM.on;
       if (m.ev === 'go') { E.goal = { x: m.x, z: m.z, name: m.name }; E.t0 = performance.now(); E.sent = 0; S.wp = { x: m.x, z: m.z, name: m.name }; wpSync(); document.getElementById('v3sheet').hidden = true; G().toast('🏁 ¡Carrera hasta ' + m.name + '! Seguí la flecha del piso.'); clearInterval(E.ck); E.ck = setInterval(() => { if (!GM.on || E.sent) { clearInterval(E.ck); return; } const a = S.av.position; if (Math.hypot(a.x - m.x, a.z - m.z) < 9) { E.sent = 1; clearInterval(E.ck); gmUp({ ev: 'arr', ms: performance.now() - E.t0 }); G().toast('¡Llegaste a ' + m.name + '! Esperá a los demás.'); } }, 300); return; }
       if (m.ev === 'arr' && E.host) { if (E.arr[m.id] == null) E.arr[m.id] = m.ms; if (E.who.every(id => E.arr[id] != null)) this.finish(E); return; }
-      if (m.ev === 'end') { const xp = (m.score[myId()] || 0) * 4; gmXP(xp); GM.on = null; gmSheet(`<p class="sv-tip">Carrera hasta <b>${esc(m.name)}</b>.</p>${gmRank(m.score, m.names)}<p class="sv-tip">Ganaste <b>${xp}</b> puntos de experiencia. Mirá la tarjeta del lugar para saber qué pasó ahí.</p>`, true, 'Carrera'); } }
+      if (m.ev === 'end') { const xp = (m.score[myId()] || 0) * 4; gmXP(xp); GM.on = null; gmSheet(`<p class="sv-tip">Carrera hasta <b>${esc(m.name)}</b>.</p>${gmRank(m.score, m.names)}<p class="sv-tip">Ganaste <b>${ptsV(xp)}</b> puntos de experiencia. Mirá la tarjeta del lugar para saber qué pasó ahí.</p>`, true, 'Carrera'); } }
   }
 };
 /* Orar juntos: si dos o más de la sala se arrodillan cerca, reciben una bendición (una vez por día de juego) */
