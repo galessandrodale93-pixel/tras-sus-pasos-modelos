@@ -1156,7 +1156,7 @@ const KL = {};
     const ring = new THREE.Mesh(new THREE.TorusGeometry(.62, .05, 8, 32), new THREE.MeshBasicMaterial({ color: '#E9B44C' })); ring.rotation.x = Math.PI / 2; ring.position.y = .19; grp.add(ring);
     const orbM = new THREE.MeshStandardMaterial({ color: '#FFD873', emissive: '#FFB43C', emissiveIntensity: .9, roughness: .3 });
     const orb = new THREE.Mesh(n.kind === 'gate' ? new THREE.TorusGeometry(.42, .1, 10, 24, Math.PI) : new THREE.OctahedronGeometry(.28, 0), orbM); orb.position.y = n.kind === 'gate' ? .2 : 1.05; grp.add(orb);
-    const beam = new THREE.Mesh(new THREE.CylinderGeometry(.04, .3, 3.2, 12, 1, true), new THREE.MeshBasicMaterial({ color: '#FFD873', transparent: true, opacity: .18, depthWrite: false, blending: THREE.AdditiveBlending })); beam.position.y = 1.6; grp.add(beam);
+    const beam = softBeam(new THREE.Mesh(new THREE.CylinderGeometry(.04, .3, 3.2, 12, 1, true), new THREE.MeshBasicMaterial({ color: '#FFD873', transparent: true, opacity: .18, depthWrite: false, blending: THREE.AdditiveBlending })), 3.2); beam.position.y = 1.6; grp.add(beam);
     const label = textSprite(n.label, hx); label.position.y = 2.25; grp.add(label);
     const hit = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.25, 3, 10), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })); hit.position.y = 1.4; grp.add(hit);
     grp.userData = { id: n.id, ring, orb, orbM, beam, label, base };
@@ -2470,9 +2470,10 @@ function bigTemple0(scene, x, z, side, hx, yAt) {
   const inc = new THREE.Group(); bx(.7, 1.1, .7, gold, 0, .55, 0, inc); const sm = new THREE.Mesh(new THREE.SphereGeometry(.2, 8, 6), new THREE.MeshBasicMaterial({ color: '#FFFFFF', transparent: true, opacity: .25, depthWrite: false })); sm.position.y = 1.5; sm.name = 'smoke'; inc.add(sm); inc.position.set(0, 0, veilZ + 1.5); sanc.add(inc);
   const glowL = new THREE.Mesh(new THREE.PlaneGeometry(sw - 1, sd - 5), new THREE.MeshBasicMaterial({ color: '#FFD27A', transparent: true, opacity: .06, depthWrite: false })); glowL.rotation.x = -Math.PI / 2; glowL.position.set(0, .05, veilZ + (sd / 2 - veilZ) / 2 + 1); sanc.add(glowL);
   // altar de los holocaustos y fuente de bronce, delante del santuario
-  const alt = new THREE.Group(); bx(3.6, 1.6, 3.6, tm('alt', '#9A8F7C'), 0, .8, 0, alt); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => bx(.3, .35, .3, tm('alt', '#9A8F7C'), a * 1.65, 1.75, b * 1.65, alt)); const emb = new THREE.Mesh(new THREE.BoxGeometry(2.4, .1, 2.4), tm('fire', '#FF8A3A', { emissive: '#FF5A1A', emissiveIntensity: 1.6 })); emb.position.y = 1.62; alt.add(emb); bx(1.2, .6, 3, stD, 0, .3, 3.3, alt).rotation.x = -.25;
+  /* piedras sin labrar (Éxodo 20:25): la misma piedra oscura del atrio, no un bloque liso */ const alt = new THREE.Group(); bx(3.6, 1.6, 3.6, stD, 0, .8, 0, alt); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => bx(.3, .35, .3, stD, a * 1.65, 1.75, b * 1.65, alt)); /* brasas: carbón oscuro que brilla apenas (antes era una placa naranja que con el brillo se veía blanca) y leños encima */ const emb = new THREE.Mesh(new THREE.BoxGeometry(2.4, .1, 2.4), tm('brasa', '#24160F', { emissive: '#C8380A', emissiveIntensity: .22, roughness: 1 })); emb.position.y = 1.62; alt.add(emb);
+  { const lg = tm('lenia', '#4A3020', { roughness: 1 }); [[-.5, .2, .4], [.3, -.3, -.5], [.1, .5, 1.2], [-.2, -.6, 2]].forEach(([a, b, r]) => { const l = cy(.11, .13, 1.6, lg, a, 1.76, b, alt, 7); l.rotation.z = Math.PI / 2; l.rotation.y = r; }); } bx(1.2, .6, 3, stD, 0, .3, 3.3, alt).rotation.x = -.25;
   alt.position.set(-5.5, P, 7.5); g.add(alt);
-  const lav = new THREE.Group(); cy(1.1, .6, .9, tm('brz', '#B07A3A', { metalness: .7, roughness: .35 }), 0, 1.5, 0, lav, 20); cy(.25, .4, 1, tm('brz', '#B07A3A', { metalness: .7, roughness: .35 }), 0, .5, 0, lav, 12); const lw = new THREE.Mesh(new THREE.CircleGeometry(1.02, 20), tm('wa', '#2E5A66', { roughness: .1, metalness: .3 })); lw.rotation.x = -Math.PI / 2; lw.position.y = 1.9; lav.add(lw); lav.position.set(5.5, P, 7.5); g.add(lav);
+  const lav = new THREE.Group(); cy(1.1, .6, .9, tm('brz2', '#7E6038', { metalness: .55, roughness: .55 }), 0, 1.5, 0, lav, 20); cy(.25, .4, 1, tm('brz2', '#7E6038', { metalness: .55, roughness: .55 }), 0, .5, 0, lav, 12); const lw = new THREE.Mesh(new THREE.CircleGeometry(1.02, 20), tm('wa', '#2E5A66', { roughness: .1, metalness: .3 })); lw.rotation.x = -Math.PI / 2; lw.position.y = 1.9; lav.add(lw); lav.position.set(5.5, P, 7.5); g.add(lav);
   // rincón de los maestros, bajo el pórtico: bancos y rollos
   const tc = new THREE.Group(); for (let i = 0; i < 3; i++) bx(3.4, .45, .6, stD, 0, .22, i * 1.2, tc); for (let i = 0; i < 5; i++) { const sc = cy(.08, .08, .5, tm('sc', '#EADBB4'), -1.2 + i * .6, .52, (i % 3) * 1.2, tc, 8); sc.rotation.z = Math.PI / 2; } tc.position.set(-W / 2 + 4.5, P, -4); g.add(tc);
   g.position.set(x, y0, z); g.rotation.y = rot; g.traverse(o => { if (o.isMesh && hx) { o.castShadow = o.castShadow !== false; o.receiveShadow = true; } }); scene.add(g);
@@ -2719,6 +2720,13 @@ function shoreScene(scene, p, yAt, poiProp, hx, HW) {
 }
 // ---------- multitudes: un personaje real se posa una vez (sentado, de pie…) y se "hornea" en geometría fija; después se repite con instancias ----------
 // así cien personas cuestan como un puñado de objetos, sin esqueletos ni animación por cada una (importante en el celular)
+/* columna de luz suave: se desvanece en los bordes y en las puntas, así no se ve como una placa recortada */
+function softBeam(mesh, h) {
+  const m = mesh.material; m.onBeforeCompile = sh => { sh.uniforms.uHalf = { value: (h || 10) / 2 };
+    sh.vertexShader = 'varying vec3 vSbN; varying vec3 vSbV; varying float vSbY; uniform float uHalf;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vSbN = normalize(normalMatrix * normal); vSbV = normalize(-mvPosition.xyz); vSbY = position.y / uHalf;');
+    sh.fragmentShader = 'varying vec3 vSbN; varying vec3 vSbV; varying float vSbY;\n' + sh.fragmentShader.replace('#include <opaque_fragment>', 'diffuseColor.a *= pow(abs(dot(normalize(vSbN), normalize(vSbV))), 2.2) * (1.0 - smoothstep(.45, 1.0, abs(vSbY)));\n#include <opaque_fragment>'); };
+  m.customProgramCacheKey = () => 'softBeam'; m.needsUpdate = true; return mesh;
+}
 const CROWD = { cache: new Map(), ppl: [], live: [], t: 0 };
 /* pose de multitud (sentado en el piso, arrodillado, de costado o de pie) aplicada a un personaje; sirve para hornear y para la gente con vida */
 function crowdPoseApply(o, anim, t) {
@@ -2765,6 +2773,8 @@ function crowdSimple(scene, list, looks, anim, sh) {
   return true;
 }
 function crowdPlace(scene, list, looks, anim, sh) {
+  /* nadie sentado con las piernas cruzadas (parece posición de loto): se reparte entre sentado sobre los talones y con las piernas a un costado */
+  if (anim === 'cross') { const a = crowdPlace(scene, list.filter((q, i) => i % 2 === 0), looks, 'kneel', sh), b = crowdPlace(scene, list.filter((q, i) => i % 2 === 1), looks, 'side', sh); return a || b; }
   if (!list.length) return false; if (!H3.ok) return crowdSimple(scene, list, looks, anim, sh); const by = looks.map(() => []); list.forEach((p, i) => by[(p.v ?? i) % looks.length].push(p)); const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
   looks.forEach((lk, li) => { const L = by[li]; if (!L.length) return; const parts = crowdBake(lk, anim, .4 + li * .37); if (!parts) { crowdSimple(scene, L, [lk], anim, sh); return; }
     const ims = []; parts.forEach(pt => { crowdSway(pt.mat); const im = new THREE.InstancedMesh(pt.g, pt.mat, L.length); L.forEach((p, i) => { E.set(0, p.ry, 0); M.compose(V.set(p.x, p.y, p.z), Q.setFromEuler(E), SC.setScalar(p.s || 1)); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.castShadow = !!sh && QUAL.lv >= 2; im.receiveShadow = true; im.computeBoundingSphere(); crowdReg(im); scene.add(im); ims.push(im); });
@@ -3395,7 +3405,7 @@ function jordanLife(scene, p, yAt, hx) {
   [[2.2, -1.6, 'chico', '#6A5A44'], [2.6, 1.9, 'chica', '#5A4A6A'], [3.1, -3.2, 'chico', '#3E5A6A']].forEach(([u, v, g2, c], i) => mk({ g: g2, age: 20 + i * 9, skin: ['#C99A72', '#B98A62', '#D6A57C'][i], hair: '#2A1B14', outfit: c, anim: ['M_Praying', 'M_Sad_Idle', 'Idle_Loop'] }, rx + sb * u, rz + v, rx + sb * 1.4, rz, u < 3.4));
   { const L = [], R = rng(3838); for (let i = 0; i < 22; i++) { const a = (R() - .5) * 2.2, r = 8 + R() * 5, x = rx + sb * Math.cos(a) * r, z = rz + Math.sin(a) * r * 1.4; if (blockedAt(x, z)) continue; L.push({ x, y: Math.max(yAt(x, z), WL - .62), z, ry: Math.atan2(rx - x, rz - z), s: .95 + R() * .1, v: i }); } /* el que quedó dentro del cauce tiene el agua a la cintura, nunca hasta la cabeza */
     crowdPlace(scene, L.filter((q, i) => i % 3), CROWD_LOOKS, 'M_Standing_Idle', true); crowdPlace(scene, L.filter((q, i) => !(i % 3)), CROWD_LOOKS, 'cross', true); }
-  { const bm = new THREE.Mesh(new THREE.CylinderGeometry(.9, 1.8, 44, 20, 1, true), new THREE.MeshBasicMaterial({ color: '#FFF4D6', transparent: true, opacity: .08, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); bm.position.set(rx, 22, rz); scene.add(bm); J.beam = bm; }
+  { const bm = new THREE.Mesh(new THREE.CylinderGeometry(.9, 1.8, 44, 20, 1, true), new THREE.MeshBasicMaterial({ color: '#FFF4D6', transparent: true, opacity: .08, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); bm.position.set(rx, 22, rz); softBeam(bm, 44); scene.add(bm); J.beam = bm; }
   { const g = new THREE.Group(), wm = new THREE.MeshStandardMaterial({ color: '#FFFFFF', emissive: '#FFF6E0', emissiveIntensity: .6, side: THREE.DoubleSide, roughness: .6 }), b = new THREE.Mesh(new THREE.SphereGeometry(.16, 10, 8), wm); b.scale.set(.8, .8, 1.6); g.add(b); const hd = new THREE.Mesh(new THREE.SphereGeometry(.09, 8, 6), wm); hd.position.set(0, .08, .26); g.add(hd);
     const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, .14, 0, 0, -.16, .75, .04, -.06], 3)); wg.computeVertexNormals(); const wl = new THREE.Mesh(wg, wm), wr = wl.clone(); wr.scale.x = -1; g.add(wl, wr); g.scale.setScalar(1.4); const gl = glowSpr('#FFF6DA', 1.6, .5); g.add(gl); scene.add(g); J.dove = { g, wl, wr, y0: 20 }; }
   const LE = S.loreEarly = S.loreEarly || [];
@@ -3673,7 +3683,7 @@ function buildTowns(scene, g, hx, HW, pois) {
 /* destino marcado en el mapa: columna de luz y flecha en el piso */
 function wpSync() {
   if (!S) return; const yAt = (x, z) => S.W ? S.W.hAt(x, z) : 0;
-  if (!S.wpObj) { const g = new THREE.Group(); const beam = new THREE.Mesh(new THREE.CylinderGeometry(.05, .16, 12, 10, 1, true), new THREE.MeshBasicMaterial({ color: '#E8A070', transparent: true, opacity: .2, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, fog: true })); beam.position.y = 6; g.add(beam); const ring = new THREE.Mesh(new THREE.RingGeometry(1, 1.3, 40), new THREE.MeshBasicMaterial({ color: '#FF6A4A', transparent: true, opacity: .85, side: THREE.DoubleSide, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.y = .1; g.add(ring); g.userData.ring = ring; S.scene.add(g); S.wpObj = g;
+  if (!S.wpObj) { const g = new THREE.Group(); const beam = softBeam(new THREE.Mesh(new THREE.CylinderGeometry(.05, .16, 12, 10, 1, true), new THREE.MeshBasicMaterial({ color: '#E8A070', transparent: true, opacity: .2, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, fog: true })), 12); beam.position.y = 6; g.add(beam); const ring = new THREE.Mesh(new THREE.RingGeometry(1, 1.3, 40), new THREE.MeshBasicMaterial({ color: '#FF6A4A', transparent: true, opacity: .85, side: THREE.DoubleSide, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.y = .1; g.add(ring); g.userData.ring = ring; S.scene.add(g); S.wpObj = g;
     const sh = new THREE.Shape(); sh.moveTo(0, .9); sh.lineTo(.55, .1); sh.lineTo(.2, .1); sh.lineTo(.2, -.6); sh.lineTo(-.2, -.6); sh.lineTo(-.2, .1); sh.lineTo(-.55, .1); sh.closePath(); const ag = new THREE.ShapeGeometry(sh); ag.rotateX(Math.PI / 2); /* la punta mira a +Z, hacia donde apunta rotation.y = atan2(dx, dz) */ const ar = new THREE.Mesh(ag, new THREE.MeshBasicMaterial({ color: '#FFD25E', transparent: true, opacity: .9, depthWrite: false, side: THREE.DoubleSide })); const ap = new THREE.Group(); ar.scale.setScalar(1.5); ap.add(ar); ar.position.z = 0; S.scene.add(ap); S.wpArrow = ap; }
   S.wpObj.visible = S.wpArrow.visible = !!S.wp; if (S.wp) S.wpObj.position.set(S.wp.x, yAt(S.wp.x, S.wp.z), S.wp.z);
   let el = document.getElementById('v3wp'); if (!el) { el = document.createElement('div'); el.id = 'v3wp'; el.className = 'v3mis v3wp'; el.innerHTML = '<i><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3l7 16-7-4-7 4Z" fill="currentColor"/></svg></i><span></span><button aria-label="Quitar destino">✕</button>'; document.body.appendChild(el); el.querySelector('button').onclick = () => { S.wp = null; wpSync(); }; }
@@ -5018,7 +5028,7 @@ function gearDropTick(dt, t) {
   if (!okp) return; const y = S.W ? Math.max(0, S.W.hAt(x, z)) : 0, R = RAR[it.r][1], m = new THREE.Group(), cm = new THREE.MeshStandardMaterial({ color: it.c, roughness: .8, emissive: R, emissiveIntensity: .25 });
   const bun = new THREE.Mesh(new THREE.SphereGeometry(.3, 14, 10), cm); bun.scale.set(1.2, .75, 1); m.add(bun); const knot = new THREE.Mesh(new THREE.ConeGeometry(.12, .22, 8), cm); knot.position.y = .26; m.add(knot);
   const tie = new THREE.Mesh(new THREE.TorusGeometry(.1, .025, 6, 14), new THREE.MeshStandardMaterial({ color: R, emissive: R, emissiveIntensity: .8 })); tie.rotation.x = Math.PI / 2; tie.position.y = .16; m.add(tie);
-  const beam = new THREE.Mesh(new THREE.CylinderGeometry(.04, .14, 7, 10, 1, true), new THREE.MeshBasicMaterial({ color: R, transparent: true, opacity: .22, depthWrite: false, side: THREE.DoubleSide, fog: true })); beam.position.y = 3.3; m.add(beam);
+  const beam = softBeam(new THREE.Mesh(new THREE.CylinderGeometry(.04, .14, 7, 10, 1, true), new THREE.MeshBasicMaterial({ color: R, transparent: true, opacity: .22, depthWrite: false, side: THREE.DoubleSide, fog: true })), 7); beam.position.y = 3.3; m.add(beam);
   const halo = new THREE.Mesh(new THREE.RingGeometry(.5, .62, 32), new THREE.MeshBasicMaterial({ color: R, transparent: true, opacity: .6, side: THREE.DoubleSide, depthWrite: false })); halo.rotation.x = -Math.PI / 2; halo.position.y = -.85; m.add(halo);
   m.position.set(x, y + .9, z); S.scene.add(m); S.gdrop = { m, beam, it, y, life: 240 };
   G().toast('✨ Algo brilla cerca del camino… ¡andá a buscarlo antes de que desaparezca!');
@@ -5953,7 +5963,7 @@ function iniBuild() {
   const lid = new THREE.Mesh(new THREE.BoxGeometry(.78, .14, .78), gold); lid.position.y = .9; grp.add(lid);
   [[.12, .72, .72], [.72, .72, .12]].forEach(([w, h, d]) => { const r = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), rib); r.position.y = .62; grp.add(r); });
   const bow = new THREE.Mesh(new THREE.TorusGeometry(.14, .05, 6, 14), rib); bow.position.y = 1.02; bow.rotation.x = Math.PI / 2; grp.add(bow);
-  const beam = new THREE.Mesh(new THREE.CylinderGeometry(.45, .7, 9, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#FFE3A0', transparent: true, opacity: .22, depthWrite: false, side: THREE.DoubleSide })); beam.position.y = 4.5; grp.add(beam);
+  const beam = softBeam(new THREE.Mesh(new THREE.CylinderGeometry(.45, .7, 9, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#FFE3A0', transparent: true, opacity: .22, depthWrite: false, side: THREE.DoubleSide })), 9); beam.position.y = 4.5; grp.add(beam);
   const ring = new THREE.Mesh(new THREE.RingGeometry(.9, 1.05, 36), new THREE.MeshBasicMaterial({ color: '#FFD873', transparent: true, opacity: .7, side: THREE.DoubleSide, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.y = .05; grp.add(ring);
   const lb = textSprite('🎁', S.hx); lb.scale.multiplyScalar(.35); lb.position.y = 1.9; grp.add(lb);
   box.castShadow = lid.castShadow = true; grp.position.set(tx, S.W.hAt(tx, tz), tz); S.scene.add(grp); INI.gift = { grp, box, lid, bow, lb, x: tx, z: tz };
@@ -8918,7 +8928,7 @@ function svBuild(scene, W) {
   const start = S.allPts[0] || [0, 0];
   [['flint', [start[0] + 4, start[1] - 10]], ['axe', spot('taller', -10, 3)], ['rod', spot('lake', -30, 14)], ['net', spot('lake', -34, -10)], ['pick', spot('temple', -14, 8)]].forEach(([t, at]) => {
     if (!S.hx || !at || svTool(t)) return; const g = new THREE.Group(), el = textSprite(TOOLS[t][1] + ' ' + TOOLS[t][0], true); el.position.y = 1.6; el.scale.multiplyScalar(.7); g.add(el); g.add(svToolMesh(t));
-    const beam = new THREE.Mesh(new THREE.CylinderGeometry(.08, .5, 7, 12, 1, true), new THREE.MeshBasicMaterial({ color: '#FFD25E', transparent: true, opacity: .25, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide })); beam.position.y = 3.4; g.add(beam);
+    const beam = softBeam(new THREE.Mesh(new THREE.CylinderGeometry(.08, .5, 7, 12, 1, true), new THREE.MeshBasicMaterial({ color: '#FFD25E', transparent: true, opacity: .25, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide })), 7); beam.position.y = 3.4; g.add(beam);
     g.position.set(at[0], yAt(at[0], at[1]), at[1]); g.userData = { t, y: yAt(at[0], at[1]) }; scene.add(g); st.picks.push(g); });
   // luz reutilizable para la fogata (se crea una vez para no recompilar sombreadores)
   st.fl = new THREE.PointLight('#FF9A3C', 0, 10, 1.6); scene.add(st.fl);
@@ -10141,7 +10151,7 @@ function svFaint() {
 }
 function svDropBag(bag, silent) {
   const y = S.W.hAt(bag.x, bag.z), g = new THREE.Group(), cm = tm('sack', '#8A6A44'); const b = new THREE.Mesh(new THREE.SphereGeometry(.35, 14, 10), cm); b.scale.set(1.1, .8, 1); b.position.y = .28; g.add(b); const k = new THREE.Mesh(new THREE.ConeGeometry(.12, .25, 8), cm); k.position.y = .62; g.add(k);
-  const beam = new THREE.Mesh(new THREE.CylinderGeometry(.1, .6, 9, 12, 1, true), new THREE.MeshBasicMaterial({ color: '#FF6A4A', transparent: true, opacity: .3, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide })); beam.position.y = 4.5; g.add(beam);
+  const beam = softBeam(new THREE.Mesh(new THREE.CylinderGeometry(.1, .6, 9, 12, 1, true), new THREE.MeshBasicMaterial({ color: '#FF6A4A', transparent: true, opacity: .3, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide })), 9); beam.position.y = 4.5; g.add(beam);
   g.position.set(bag.x, y, bag.z); S.scene.add(g); S.sv.bag = { ...bag, g };
 }
 
@@ -11472,13 +11482,13 @@ function jueBuild(scene, W, spot, list) {
     const lb = textSprite('🧩', true); lb.scale.multiplyScalar(.3); /* sin dados: el juego no es de azar */ lb.position.set(0, 1.55, 0); g.add(lb);
     const lk = textSprite('🔒', true); lk.scale.multiplyScalar(.26); lk.position.set(0, 1.55, 0); g.add(lk); g.userData.keep = 1; scene.add(g); const e = { d, x, z, g, ring, lb, lk }; MAT.jue.push(e); jueLit(e); phCyl(x, z, .7); });
 }
-/* Kids: los juegos del material de las etapas I a III (la carpa, las cuatro raíces y las tres voces), con su tiempo más largo de Kids.
+/* Kids: los juegos del material de cada etapa (la carpa, las cuatro raíces, las tres voces…), con su tiempo más largo de Kids.
    No se carga el resto del material de Hero: solo los puestos. */
 async function kidsJueBuild(scene, W) {
   if (S.hx) return; const M = await import('./story/material.js').catch(() => null); if (!M || !S || !M.JUEGOS) return; const R = rng(8844);
   const used = (S.avoidPts || []).slice(), ok = (x, z) => !blockedAt(x, z) && waterWet(x, z, null) < .05 && Math.abs(x) < XB * .9 && W.dAt(x, z) > 2.2 && !used.some(([a, b]) => (a - x) ** 2 + (b - z) ** 2 < 16);
   const spot = d => { const poi = (S.pois || []).find(q => q.r === d.r && q.k === d.near); if (!poi) return null; for (let t = 0; t < 220; t++) { const a = R() * 6.283, rr = 8 + R() * (t < 60 ? 12 : 26), x = poi.x + Math.cos(a) * rr, z = poi.z + Math.sin(a) * rr; if (ok(x, z)) { used.push([x, z]); return [x, z]; } } return null; };
-  jueBuild(scene, W, spot, M.JUEGOS.filter(d => d.r <= 2));
+  jueBuild(scene, W, spot, M.JUEGOS);
 }
 /* el puesto de cada etapa entra en la cadena parada → misión → minijuego: se abre al cumplir la primera misión de su etapa
    (la misma que abre la segunda parada). Si ya lo jugaste, o ya pasaste esa parada con una versión anterior, queda abierto. */
