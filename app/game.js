@@ -376,7 +376,7 @@ const total=p=>{const t=totalRaw(p),c=khCap(p);return c==null?t:Math.min(t,c);};
 function shade(hex,amt){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const t=amt<0?0:255,k=Math.abs(amt);r=Math.round(r+(t-r)*k);g=Math.round(g+(t-g)*k);b=Math.round(b+(t-b)*k);return '#'+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);}
 const STAR=on=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z" fill="${on?'#F2B33D':'#DCE6F7'}" stroke="${on?'#FFE39A':'#C9D6EC'}" stroke-width="1"/></svg>`;
 /* estrellas de los minijuegos: 1, 2 o 3 según tu mejor marca. Kids pide menos. Cada estrella nueva suma puntos y, al juntar varias, llega un premio */
-const MG_ST={slide:[200,450,800],blocks:[150,350,600],run:[150,350,600],hop:[160,380,650]};
+const MG_ST={slide:[200,450,800],blocks:[150,350,600],run:[150,350,600],hop:[160,380,650],voices:[80,160,240]};
 const mgT=type=>{const b=MG_ST[type]||[100,220,350],k=branch==='ados'?1:.65;return b.map(v=>Math.round(v*k/5)*5);};
 const mgStars=(type,sc)=>{const t=mgT(type);return sc>=t[2]?3:sc>=t[1]?2:sc>=t[0]?1:0;};
 const mgNext=(type,sc)=>{const t=mgT(type);return t.find(v=>sc<v);};
@@ -2466,14 +2466,18 @@ function Roots(th, f) {
 function Voices(th, f) {
   const R = [['Si sos el Hijo de Dios, convertí estas piedras en pan.', ['La gente vive de cada palabra que sale de la boca de Dios, además del pan (Deuteronomio 8:3).', 1], ['Está escrito que Dios mandará a sus ángeles para cuidarte: usalo a tu favor.', 0], ['Tenés hambre: usá tu poder para vos.', 0]],
     ['Tirate desde lo más alto del templo: los ángeles te van a sostener.', ['No hay que poner a prueba al Señor (Deuteronomio 6:16).', 1], ['Si un versículo lo dice, hacelo aunque sea para probar a Dios.', 0], ['Así todos van a ver que sos especial.', 0]],
-    ['Todo esto te doy si me adorás.', ['Solo a Dios hay que adorar y servir (Deuteronomio 6:13).', 1], ['Es un atajo para llegar al trono sin la cruz.', 0], ['Una vez no cuenta.', 0]]];
-  let i = 0, score = 0, lives = 3, over = false, opts = [], fb = '', fT = 0, order = [0, 1, 2];
+    ['Todo esto te doy si me adorás.', ['Solo a Dios hay que adorar y servir (Deuteronomio 6:13).', 1], ['Es un atajo para llegar al trono sin la cruz.', 0], ['Una vez no cuenta.', 0]],
+    // las mismas tres voces, hoy: la respuesta de Jesús sigue sirviendo
+    ['Necesitás tener más cosas para ser alguien.', ['La gente vive de cada palabra que sale de la boca de Dios (Deuteronomio 8:3). Lo que soy viene de Él.', 1], ['Primero conseguí todo, después pensá en Dios.', 0], ['Lo que tenés muestra cuánto valés.', 0]],
+    ['Si Dios de verdad te quiere, que te lo demuestre ahora con lo que le pediste.', ['No hay que poner a prueba al Señor (Deuteronomio 6:16). Su amor ya se mostró en Jesús.', 1], ['Ponele una fecha: si no responde, no existe.', 0], ['Buscá un versículo que te prometa lo que querés y exigíselo.', 0]],
+    ['Todos en el grupo lo hacen. Si no lo hacés, te vas a quedar solo.', ['Solo a Dios hay que adorar y servir (Deuteronomio 6:13). Lo que Él dice vale más que lo que dice el grupo.', 1], ['Hacelo y después pedí perdón: Dios entiende.', 0], ['Si es para pertenecer, una vez no cuenta.', 0]]];
+  let i = 0, score = 0, lives = 3, over = false, opts = [], fb = '', fT = 0, order = [0, 1, 2, 3, 4, 5];
   const deal = () => { const r = R[order[i]]; opts = shuffle(r.slice(1).map((o, k) => ({ t: o[0], ok: o[1] }))).map((o, k) => Object.assign(o, { x: 16, y: 256 + k * 86, w: GW - 32, h: 76 })); };
   deal();
   return { get score() { return score }, get over() { return over },
-    input(k, d) { if (over || k !== 'tap' || fT > 0) return; const b = opts.find(o => mgHit(o, d)); if (!b) return; if (b.ok) { score += 40; fb = '✔ Así respondió Jesús, con la Escritura bien entendida.'; burstAt(b.x + b.w / 2, b.y); } else { lives--; fb = '✖ Esa voz no viene de Dios. La identidad de Hijo amado va primero.'; } fT = 1.6; },
+    input(k, d) { if (over || k !== 'tap' || fT > 0) return; const b = opts.find(o => mgHit(o, d)); if (!b) return; const hoy = order[i] >= 3; if (b.ok) { score += 40; fb = hoy ? '✔ La misma respuesta de Jesús sirve hoy.' : '✔ Así respondió Jesús, con la Escritura bien entendida.'; burstAt(b.x + b.w / 2, b.y); } else { lives--; fb = hoy ? '✖ Esa voz no viene de Dios. Sos hijo amado de Dios: eso va primero.' : '✖ Esa voz no viene de Dios. La identidad de Hijo amado va primero.'; } fT = 1.8; },
     update(dt) { if (over) return; if (fT > 0) { fT -= dt; if (fT <= 0) { i++; if (i >= order.length || lives <= 0) { over = true; return; } deal(); } } },
-    draw(c, t) { skyBg(c, th, t); lab(c, th, 'TRES VOCES EN EL DESIERTO · ' + '❤'.repeat(Math.max(0, lives)), 16, 27); c.fillStyle = MG_CARD(th); rr(c, 16, 50, GW - 32, 140, 16); c.fill(); lab(c, th, 'LA TENTACIÓN', 30, 76); mgText(c, th, R[order[Math.min(i, order.length - 1)]][0], 30, 104, GW - 60, 17);
+    draw(c, t) { skyBg(c, th, t); lab(c, th, 'TRES VOCES EN EL DESIERTO · ' + '❤'.repeat(Math.max(0, lives)), 16, 27); c.fillStyle = MG_CARD(th); rr(c, 16, 50, GW - 32, 140, 16); c.fill(); lab(c, th, order[Math.min(i, order.length - 1)] >= 3 ? 'LA MISMA VOZ, HOY · ' + (i + 1) + ' DE ' + order.length : 'LA TENTACIÓN · ' + (i + 1) + ' DE ' + order.length, 30, 76); mgText(c, th, R[order[Math.min(i, order.length - 1)]][0], 30, 104, GW - 60, 17);
       opts.forEach(o => mgBtn(c, th, o, fT > 0 && o.ok)); if (fT > 0) { c.fillStyle = th.hx ? 'rgba(14,10,4,.9)' : 'rgba(255,255,255,.95)'; rr(c, 16, 196, GW - 32, 48, 12); c.fill(); mgText(c, th, fb, 28, 214, GW - 56, 12); } } };
 }
 // IV · Semilla de mostaza: el reino ya llegó y todavía no del todo; tu semilla crece de una partida a la otra

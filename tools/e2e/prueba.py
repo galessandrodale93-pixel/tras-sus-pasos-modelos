@@ -22,7 +22,7 @@ THREE = os.path.join(AQUI, 'node_modules', 'three', 'build', 'three.module.js')
 OUT = os.path.join(AQUI, 'salida')
 
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
-DBG = ('kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
+DBG = ('jueLock, jueLit, jueGoal, jueTick, jueOpen, MAT, kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
        'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink, AM, amOpen, amSync, amEv, amGoals, amReqIn, amDraw, GBY, guiaGoals: () => guiaGoals(), puertaLock, puertaGoal, puertaTick, misOpen, misDone, MISSIONS, MIS_PUERTA, CASI, casiList, casiTick, casiGoal, metaP, META_POOL, PUE, pueTick, pueOpen, pueLv, pueSpot, blockedAt, waterWet, INI, iniTick, iniGoal, nodeActive, CAM, CAMS, camTick, camScene, camGoal, camEco, CINE, poseSet, camFinTick, camRecap')
 
@@ -243,7 +243,7 @@ PUERTAS = COMUN + """
         const lk=d.puertaLock(n('n2')); todo&=ok(lk&&lk.mis==='posada','la puerta es la misión del posadero');
         todo&=ok(d.misOpen(S.mis.posada,P),'la misión se abrió al terminar la parada');
         todo&=ok(!d.misOpen(S.mis.oveja,P),'la misión de la puerta siguiente todavía no');
-        const g1=d.puertaGoal(); todo&=ok(g1&&/Ayudá a El posadero/.test(g1.t),'«Tu próximo paso» lleva a la misión');
+        const g1=d.puertaGoal(); todo&=ok(g1&&/Ayudá al posadero/.test(g1.t),'«Tu próximo paso» lleva a la misión');
         P.mact=null; d.misDone(S.mis.posada);
         todo&=ok(G_.reachable(n('n2')),'al cumplirla se abre la parada 2');
         P.done[n('n2')]={s:1}; P.pos=n('n2');
@@ -263,6 +263,31 @@ PUERTAS = COMUN + """
       Object.assign(P,keep); G_.save();
       return {ok:!!todo, d:L.join(' · ')};"""
 
+
+JUEGOS3 = COMUN + """
+      const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return !!c;}; let todo=true;
+      const keep={done:{...P.done},missions:{...(P.missions||{})},visited:[...P.visited],pos:P.pos,mat:JSON.parse(JSON.stringify(P.mat||{}))};
+      try {
+        for(let i=0;i<40&&!(d.MAT.jue&&d.MAT.jue.length);i++) await new Promise(r=>setTimeout(r,500));
+        const J=d.MAT.jue||[], tipos=J.map(e=>e.d.type).join(',');
+        todo&=ok(J.filter(e=>e.d.r<=2).length===3,'los tres puestos de las etapas I a III: '+tipos);
+        P.done={}; P.missions={}; P.visited=['start']; P.pos='start'; P.mat=P.mat||{}; P.mat.jue={};
+        const R0=G_.REGIONS[0].id, e0=J.find(e=>e.d.r===0); d.jueLit(e0);
+        todo&=ok(d.jueLock(e0.d)&&!e0.open&&e0.lk.visible&&!e0.ring.visible,'al empezar, la carpa está con candado');
+        S.av.position.set(e0.x,S.av.position.y,e0.z); d.jueOpen(e0); await new Promise(r=>setTimeout(r,300));
+        todo&=ok(document.getElementById('arcade').hidden!==false,'con candado no se abre el juego');
+        P.done[R0+'-n1']={s:1}; P.visited.push(R0+'-n1'); P.missions.posada=true; d.jueTick();
+        todo&=ok(e0.open&&e0.ring.visible&&!e0.lk.visible,'al ayudar al posadero se abre la carpa');
+        P.pos=R0+'-n1'; const g=d.jueGoal(); todo&=ok(g&&/La carpa/.test(g.t),'«Tu próximo paso» la muestra: '+(g&&g.t));
+        const e2=J.find(e=>e.d.r===2); P.done[G_.REGIONS[2].id+'-n2']={s:1}; d.jueTick(); todo&=ok(e2.open,'si ya pasaste la parada 2 (partida vieja) queda abierto');
+        const e1=J.find(e=>e.d.r===1); todo&=ok(!e1.open,'la de la etapa II sigue esperando a José');
+        /* jugar las tres voces y ver que se puedan sacar las tres estrellas */
+        G_.playMat(e2.d); await new Promise(r=>setTimeout(r,500)); document.getElementById('arGo').click(); await new Promise(r=>setTimeout(r,300));
+        todo&=ok(!document.getElementById('arcade').hidden,'se abre «Tres voces en el desierto»');
+        document.querySelector('#arcade .ar-x, #arClose').click(); await new Promise(r=>setTimeout(r,400));
+      } catch(e){ L.push('ERROR '+e.message); todo=false; }
+      Object.assign(P,keep); G_.save();
+      return {ok:!!todo, d:L.join(' · ')};"""
 
 CASI = COMUN + """
       const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return !!c;}; let todo=true; const b0=P.bonus||0, casi0=P.casi;
@@ -422,6 +447,7 @@ HERO = {
     'pueblos': ('Hero: pueblos que cambian con lo que hacés', PUEBLOS),
     'casi': ('Hero: «Te falta poco»', CASI),
     'puertas': ('Hero: minijuegos y misiones alternados, cadenas de 3', PUERTAS),
+    'juegos3': ('Hero: los juegos de las etapas I a III se abren con las misiones', JUEGOS3),
     'amigos': ('Hero: amigos del camino, regalos y desafío en equipo', AMIGOS),
     'sala': ('Sala: sin barra arriba, micrófono junto al botón de amigos, modos y frases en la ventana', SALA),
     'foto': ('Momento de foto épica al festejar, con la foto para compartir', FOTO),
@@ -486,6 +512,7 @@ KIDS = {
     'pueblokids': ('Kids: pueblos que cambian con lo que hacés', PUEBLOS),
     'casikids': ('Kids: «Te falta poco»', CASI),
     'puertaskids': ('Kids: minijuegos y misiones alternados, cadenas de 3', PUERTAS),
+    'juegos3kids': ('Kids: los juegos de las etapas I a III se abren con las misiones', JUEGOS3),
     'amigoskids': ('Kids: amigos del camino, regalos y desafío en equipo', AMIGOS),
     'fotokids': ('Kids: momento de foto épica al festejar', FOTO),
     'bailekids': ('Kids: brillar o festejar desde la estrella', BAILE),

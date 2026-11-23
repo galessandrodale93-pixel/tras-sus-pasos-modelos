@@ -2074,6 +2074,7 @@ function buildMissions(scene, g, hx, HW, rr) {
 const MIS_PUERTA = [['posada', 'oveja', 'adorar', 'leche'], ['taller', 'pozo', 'ana', 'clavos'], ['miel', 'tunica', 'orilla', 'odre'], ['cantaro', 'peces', 'lago', 'velaremendada'], ['canasta', 'amigos', 'soga', 'sopa'],
   ['perdida', 'semillas', 'moneda', 'mostaza'], ['viuda', 'cantaro2', 'cantarohombre', 'aceitelagar'], ['especias', 'cirene', 'lienzo', 'perfumes'], ['pez', 'emaus', 'corderos', 'lena']];
 const PUERTA_ANTES = ['n1', 'n2', 'n3', 'n4'], PUERTA_ABRE = { n2: 0, n3: 1, fA: 2, fB: 2, n5: 3 };
+const aQuien = n => ('a ' + String(n).replace(/^(El|La|Los|Las|Un|Una) /, m => m.toLowerCase())).replace(/^a el /, 'al ');
 const MIS_BY = {}; MISSIONS.forEach(d => { MIS_BY[d.id] = MIS_BY[d.id] || d; });
 function puertaDe(misId) { for (let r = 0; r < MIS_PUERTA.length; r++) { const i = MIS_PUERTA[r].indexOf(misId); if (i >= 0) return { r, i }; } return null; }
 /* ¿qué misión falta para abrir esta parada? (null si nada) */
@@ -2094,11 +2095,12 @@ function puertaTick() {
 function puertaGoal() {
   if (!S || !S.mis || S.misGoal) return null; const g = G(), p = g.P(), cur = g.NODES[p.pos]; if (cur && cur.kind === 'ch' && !g.isDone(cur.id)) return null;
   const nx = (g.ADJ[p.pos] || []).filter(id => !g.visited(id)), lk = nx.map(puertaLock).find(Boolean); if (!lk || nx.some(id => g.reachable(id))) return null; const m = S.mis[lk.mis]; if (!m) return null;
-  return { hot: 1, ic: '❗', t: 'Ayudá a ' + lk.who, sub: 'Su misión abre la próxima parada de la historia.', b: 'Ver camino', fn: () => guiaWp(m.gp[0], m.gp[1], lk.who) };
+  return { hot: 1, ic: '❗', t: 'Ayudá ' + aQuien(lk.who), sub: 'Su misión abre la próxima parada de la historia.', b: 'Ver camino', fn: () => guiaWp(m.gp[0], m.gp[1], lk.who) };
 }
 function puertaHecha(d) {
   const q = puertaDe(d.id); if (!q) return; const g = G(), R = g.REGIONS[q.r], ks = Object.keys(PUERTA_ABRE).filter(k => PUERTA_ABRE[k] === q.i), n = ks.map(k => g.NODES[R.id + '-' + k]).filter(Boolean);
   if (!n.length) return; setTimeout(() => { misPop('🔓 Se abrió la próxima parada', n.map(x => x.label).join(' o ')); svToast('🔓 Se abrió ' + (n.length > 1 ? 'el camino: ' + n.map(x => x.label).join(' o ') : aLp(n[0].label)) + '. Seguí el camino que brilla.'); try { g.refreshMap && g.refreshMap(); } catch (e) {} }, 3900);
+  const j = q.i === 0 && (MAT.jue || []).find(e => e.d.r === q.r && !(matP().jue || {})[e.d.type]); if (j) setTimeout(() => { try { jueLit(j); svToast(`🧩 También se abrió un juego especial: «${j.d.title}». Buscá el puesto que brilla.`, `También se abrió un juego especial: ${j.d.title}. Buscá el puesto que brilla.`); } catch (e) {} }, 8200);
 }
 let S0 = null, S_poiPts = null;
 function misState() { const p = G().P(); p.missions = p.missions || {}; return p; }
@@ -2136,7 +2138,7 @@ function misDone(m) {
 function fxCtx() { let A = (typeof AU !== 'undefined' && AU.ctx) || fxCtx.A; if (!A) A = fxCtx.A = new (window.AudioContext || window.webkitAudioContext)(); if (A.state === 'suspended') { try { A.resume(); } catch (e) {} } return A; }
 function tone3d() { try { const A = fxCtx(); [660, 880, 1100].forEach((f, i) => { const o = A.createOscillator(), gn = A.createGain(); o.frequency.value = f; o.type = 'triangle'; gn.gain.setValueAtTime(.0001, A.currentTime + i * .12); gn.gain.exponentialRampToValueAtTime(.15, A.currentTime + i * .12 + .02); gn.gain.exponentialRampToValueAtTime(.0001, A.currentTime + i * .12 + .3); o.connect(gn); gn.connect(A.destination); o.start(A.currentTime + i * .12); o.stop(A.currentTime + i * .12 + .35); }); } catch (e) {} }
 function misTick(t) {
-  if (!S.mis) return; if (!(S.ptT > t)) { S.ptT = t + 1.2; try { puertaTick(); } catch (e) {} try { casiTick(t); } catch (e) {} try { pueTick(t); } catch (e) {} }
+  if (!S.mis) return; if (!(S.ptT > t)) { S.ptT = t + 1.2; try { puertaTick(); } catch (e) {} try { jueTick(); } catch (e) {} try { casiTick(t); } catch (e) {} try { pueTick(t); } catch (e) {} }
   try { iniTick(t); } catch (e) {} try { camTick(t); } catch (e) {} const p = misState(), a = S.av.position, ui = misUI(), d2 = (q) => (q[0] - a.x) ** 2 + (q[1] - a.z) ** 2;
   if (document.getElementById('view3d').hidden) { ui.hidden = true; return; }
   for (const id in S.mis) { const m = S.mis[id], open = misOpen(m, p), done = !!p.missions[id], act = p.mact && p.mact.id === id; m.bang.visible = open && !done && !act && !CINE.on; /* en las charlas no tapa las caras */ if (m.d.after) { const vis = open || done || act; m.giver.visible = vis; } m.bang.position.y = m.giver.position.y + 2.35 + Math.sin(t * 3) * .08; m.giver.visible = m.target ? true : true; }
@@ -5716,6 +5718,7 @@ function guiaGoals() {
   try { const cg2 = camGoal(); if (cg2) out.push(cg2); } catch (e) {}
   try { const pg = puertaGoal(); if (pg) out.push(pg); } catch (e) {}
   try { const cg = casiGoal(); if (cg) out.push(cg); } catch (e) {}
+  try { const jg = jueGoal(); if (jg) out.push(jg); } catch (e) {}
   try { const id = nodeActive(); if (id) { const n = g.NODES[id], here = id === g.P().pos; out.push({ ic: '📖', t: here ? 'Entrá ' + aLp(n.label) : 'Caminá ' + aLp(n.label), sub: here ? 'Seguí la historia: te espera el pasaje y su desafío.' : 'Seguí la historia: es tu próxima parada. Te marco el camino con una flecha.', b: here ? 'Entrar' : 'Ver camino', fn: here ? () => go(id) : () => nodeWp(id) }); } } catch (e) {}
   try { out.push(metaGoal()); } catch (e) {}
   am.filter(x => !x.hot).forEach(x => out.push(x));
@@ -8920,7 +8923,7 @@ function svBuild(scene, W) {
   // tu casa, si ya la construiste
   if (S.hx) { const s = svP(); if (s.house) svPlaceHouse(scene, s.house, true);
   if (s.bag && s.bag.left > 0) svDropBag(s.bag, true); }
-  try { econBuild(scene, W); } catch (e) { console.warn('econ', e); } try { specBuild(scene, W); } catch (e) { console.warn('spec', e); } try { medBuild(scene, W); } catch (e) { console.warn('mar', e); } try { bkBuild(scene, W); } catch (e) { console.warn('hornos', e); } try { z7Central(scene, W); } catch (e) { console.warn('z7', e); } try { kidsMisBuild(scene, W); } catch (e) { console.warn('kmis', e); } if (S.hx) try { vilBuild(scene, W).then(() => secBuild(scene, W)).then(() => matBuild(scene, W)).catch(e => console.warn('sec', e)); } catch (e) { console.warn('vil', e); }
+  try { econBuild(scene, W); } catch (e) { console.warn('econ', e); } try { specBuild(scene, W); } catch (e) { console.warn('spec', e); } try { medBuild(scene, W); } catch (e) { console.warn('mar', e); } try { bkBuild(scene, W); } catch (e) { console.warn('hornos', e); } try { z7Central(scene, W); } catch (e) { console.warn('z7', e); } try { kidsMisBuild(scene, W); } catch (e) { console.warn('kmis', e); } if (!S.hx) kidsJueBuild(scene, W).catch(e => console.warn('kjue', e)); if (S.hx) try { vilBuild(scene, W).then(() => secBuild(scene, W)).then(() => matBuild(scene, W)).catch(e => console.warn('sec', e)); } catch (e) { console.warn('vil', e); }
   svUI();
 }
 function svToolMesh(t) {
@@ -11460,11 +11463,33 @@ function jueMesh(kind) {
   add(new THREE.CylinderGeometry(.07, .09, .2, 10), M('#B88A50', .6), .45, .88, -.1); const fl = add(new THREE.SphereGeometry(.05, 8, 6), new THREE.MeshBasicMaterial({ color: '#FFC870' }), .45, 1.02, -.1); g.userData.flame = fl;
   return g;
 }
-function jueBuild(scene, W, spot) {
+function jueBuild(scene, W, spot, list) {
   const M = MAT.mod, pm = matP(); pm.jue = pm.jue || {}; MAT.jue = [];
-  (M.JUEGOS || []).forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, g = jueMesh('stand'); g.position.set(x, Math.max(0, W.hAt(x, z)), z); g.rotation.y = Math.atan2(S.av ? S.av.position.x - x : 0, 1);
+  (list || (M && M.JUEGOS) || []).forEach(d => { const p = spot(d); if (!p) return; const [x, z] = p, g = jueMesh('stand'); g.position.set(x, Math.max(0, W.hAt(x, z)), z); g.rotation.y = Math.atan2(S.av ? S.av.position.x - x : 0, 1);
     const ring = new THREE.Mesh(new THREE.RingGeometry(1, 1.1, 32), new THREE.MeshBasicMaterial({ color: '#FFD27A', transparent: true, opacity: .5, depthWrite: false, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .03; ring.visible = !pm.jue[d.type]; g.add(ring);
-    const lb = textSprite('🧩', true); lb.scale.multiplyScalar(.3); /* sin dados: el juego no es de azar */ lb.position.set(0, 1.55, 0); g.add(lb); g.userData.keep = 1; scene.add(g); MAT.jue.push({ d, x, z, g, ring }); phCyl(x, z, .7); });
+    const lb = textSprite('🧩', true); lb.scale.multiplyScalar(.3); /* sin dados: el juego no es de azar */ lb.position.set(0, 1.55, 0); g.add(lb);
+    const lk = textSprite('🔒', true); lk.scale.multiplyScalar(.26); lk.position.set(0, 1.55, 0); g.add(lk); g.userData.keep = 1; scene.add(g); const e = { d, x, z, g, ring, lb, lk }; MAT.jue.push(e); jueLit(e); phCyl(x, z, .7); });
+}
+/* Kids: los juegos del material de las etapas I a III (la carpa, las cuatro raíces y las tres voces), con su tiempo más largo de Kids.
+   No se carga el resto del material de Hero: solo los puestos. */
+async function kidsJueBuild(scene, W) {
+  if (S.hx) return; const M = await import('./story/material.js').catch(() => null); if (!M || !S || !M.JUEGOS) return; const R = rng(8844);
+  const used = (S.avoidPts || []).slice(), ok = (x, z) => !blockedAt(x, z) && waterWet(x, z, null) < .05 && Math.abs(x) < XB * .9 && W.dAt(x, z) > 2.2 && !used.some(([a, b]) => (a - x) ** 2 + (b - z) ** 2 < 16);
+  const spot = d => { const poi = (S.pois || []).find(q => q.r === d.r && q.k === d.near); if (!poi) return null; for (let t = 0; t < 220; t++) { const a = R() * 6.283, rr = 8 + R() * (t < 60 ? 12 : 26), x = poi.x + Math.cos(a) * rr, z = poi.z + Math.sin(a) * rr; if (ok(x, z)) { used.push([x, z]); return [x, z]; } } return null; };
+  jueBuild(scene, W, spot, M.JUEGOS.filter(d => d.r <= 2));
+}
+/* el puesto de cada etapa entra en la cadena parada → misión → minijuego: se abre al cumplir la primera misión de su etapa
+   (la misma que abre la segunda parada). Si ya lo jugaste, o ya pasaste esa parada con una versión anterior, queda abierto. */
+function jueLock(d) {
+  try { const pm = matP(); if (pm.jue && pm.jue[d.type]) return null; const g = G(), R = g.REGIONS[d.r]; if (!R) return null; const mid = (MIS_PUERTA[d.r] || [])[0]; if (!mid || !MIS_BY[mid]) return null;
+    if ((g.P().missions || {})[mid] || g.visited(R.id + '-n2')) return null; return { mis: mid, who: MIS_BY[mid].giver.name }; } catch (e) { return null; }
+}
+function jueLit(e) { const pm = matP(), lk = !!jueLock(e.d), done = !!(pm.jue && pm.jue[e.d.type]); e.ring.visible = !lk && !done; e.lb.visible = !lk; e.lk.visible = lk; e.open = !lk; }
+function jueTick() { for (const e of MAT.jue || []) if (!e.open && !jueLock(e.d)) jueLit(e); }
+/* el juego especial de la etapa donde estás, si ya se abrió y todavía no lo jugaste */
+function jueGoal() {
+  const g = G(), n = g.NODES[g.P().pos], pm = matP(); if (!n) return null; const e = (MAT.jue || []).find(q => q.d.r === n.r && q.open && !(pm.jue && pm.jue[q.d.type])); if (!e) return null;
+  return { ic: '🧩', t: 'Juego especial: ' + e.d.title, sub: 'Un puesto con el juego de esta etapa. Lo encontrás donde brilla el 🧩.', b: 'Ver camino', fn: () => guiaWp(e.x, e.z, e.d.title) };
 }
 function senBuild(scene, W, R, used) {
   const M = MAT.mod, g = G(), pm = matP(); pm.sen = pm.sen || {}; MAT.sen = []; if (!M.SENALES || g.REGIONS.length < 5) return; const [za, zb] = regionZ(g, 4);
@@ -11480,13 +11505,14 @@ function sieteBuild(scene, W, spot) {
 }
 function jueNear() {
   const a = S.av.position, d2 = (e, r) => (e.x - a.x) ** 2 + (e.z - a.z) ** 2 < r * r, pm = matP();
-  for (const e of MAT.jue || []) if (d2(e, 2.6)) return { k: 'matj', e, label: 'Jugar · ' + e.d.title };
+  for (const e of MAT.jue || []) if (d2(e, 2.6)) return { k: 'matj', e, label: e.open ? 'Jugar · ' + e.d.title : '🔒 ' + e.d.title };
   for (const e of MAT.sen || []) if (d2(e, 2.4)) return { k: 'matn', e, label: pm.sen && pm.sen[e.d.id] ? 'Releer la señal' : 'Leer el cartel' };
   if (MAT.siete && d2(MAT.siete, 2.6)) return { k: 'mat7', e: MAT.siete, label: 'Sentarse un momento' }; return null;
 }
 function jueOpen(e) {
-  const g = G(), pm = matP(), d = e.d; if (!g.playMat) return; S.joy.x = 0; S.joy.y = 0;
-  g.playMat(d, () => { if (!pm.jue[d.type]) { pm.jue[d.type] = vday(); matSab(2); glowAdd(3, 'minijuego'); behav('minijuegosMaterial'); if (e.ring) e.ring.visible = false; g.save(); svToast('🎲 ' + d.title + ' · +2 Sabiduría'); } });
+  const g = G(), pm = matP(), d = e.d; if (!g.playMat) return; S.joy.x = 0; S.joy.y = 0; pm.jue = pm.jue || {};
+  const lk = jueLock(d); if (lk) { const a = aQuien(lk.who); svToast(`🔒 Este juego se abre cuando ayudes ${a}.`, `Este juego se abre cuando ayudes ${a}.`); return; }
+  g.playMat(d, () => { if (!pm.jue[d.type]) { pm.jue[d.type] = vday(); if (S.hx) matSab(2); glowAdd(3, 'minijuego'); behav('minijuegosMaterial'); if (e.ring) e.ring.visible = false; g.save(); svToast('🧩 ' + d.title + (S.hx ? ' · +2 Sabiduría' : ' · ¡Lo jugaste!')); } });
 }
 function senOpen(e) {
   const M = MAT.mod, pm = matP(), d = e.d, first = !pm.sen[d.id]; pm.sen[d.id] = pm.sen[d.id] || vday(); senLit(e, true);
