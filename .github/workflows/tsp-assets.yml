@@ -1,0 +1,45 @@
+name: Servidor de archivos (tsp-assets)
+# ver: muestra lo que está publicado hoy (código y conexiones) sin cambiar nada.
+# desplegar: publica tools/site/tsp-assets-worker.js con el bucket R2 tras-sus-pasos como B.
+on:
+  workflow_dispatch:
+    inputs:
+      accion:
+        description: "ver o desplegar"
+        required: true
+        default: "ver"
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ver lo publicado
+        if: ${{ inputs.accion == 'ver' }}
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -e
+          B="https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/workers/scripts/tsp-assets"
+          curl -s -H "Authorization: Bearer $CF_TOKEN" "$B/settings" | python3 -c "import sys,json;d=json.load(sys.stdin);r=d.get('result') or {};print('conexiones:',json.dumps(r.get('bindings'),ensure_ascii=False));print('compat:',r.get('compatibility_date'));print('errores:',d.get('errors'))"
+          curl -s -H "Authorization: Bearer $CF_TOKEN" "$B/content/v2" -o publicado.js || true
+          echo "---- código publicado ----"; head -c 6000 publicado.js; echo
+          echo "---- diferencias con el del repo ----"; diff <(tr -d '\r' < publicado.js) tools/site/tsp-assets-worker.js && echo "IGUALES" || true
+      - name: Desplegar
+        if: ${{ inputs.accion == 'desplegar' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          cd tools/site
+          cat > wrangler.toml <<'T'
+          name = "tsp-assets"
+          main = "tsp-assets-worker.js"
+          compatibility_date = "2026-11-01"
+          workers_dev = true
+          keep_vars = true
+          [[r2_buckets]]
+          binding = "B"
+          bucket_name = "tras-sus-pasos"
+          T
+          npx -y wrangler@4 deploy
