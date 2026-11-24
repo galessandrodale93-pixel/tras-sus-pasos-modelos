@@ -918,15 +918,18 @@ function olDiscover() {
    dicen cuánto falta) y cosas sueltas para juntar (ramas, piedras, granadas, alguna moneda; en Kids, estrellitas) ===================== */
 const LIFE = { pk: [], camps: [], acc: 0, ims: {}, pts: null, sheep: [], flocks: [] };
 function roadLife(scene, W, hx) {
-  LIFE.pk = []; LIFE.camps = []; LIFE.ims = {}; LIFE.sheep = []; LIFE.flocks = []; LIFE.sorted = null; LIFE.pts = null;
+  LIFE.pk = []; LIFE.camps = []; LIFE.ims = {}; LIFE.sheep = []; LIFE.flocks = []; LIFE.an = {}; LIFE.sorted = null; LIFE.pts = null;
   const pts = S.allPts; if (!pts || pts.length < 10) return; const R = rng(6161), yAt = (x, z) => W.hAt(x, z), P = S.pois || [];
   const KINDS = ['gente', 'mercado', 'pastor', 'gente', 'fogon', 'mojon', 'pozo', 'gente', 'pastor', 'mercado', 'fogon', 'mojon'];
   const far = (x, z) => !P.some(q => Math.hypot(q.x - x, q.z - z) < 38) && !(OL.trails || []).some(t => Math.hypot(t.x0 - x, t.z0 - z) < 18) /* lejos de los carteles de los senderos, para que no se pisen (Sicar y El mercado) */ && !Object.values(S.markers || {}).some(m => Math.hypot(m.position.x - x, m.position.z - z) < 9);
   const okAt = (x, z, r) => W.dAt(x, z) > 3.4 && waterWet(x, z, null) < .02 && !blockedAt(x, z) && ![0, 1, 2, 3].some(q => blockedAt(x + Math.cos(q * 1.57) * r, z + Math.sin(q * 1.57) * r));
   // recorrer el camino principal (de arriba hacia abajo, sin repetir ramales)
-  const main = pts.slice().sort((a, b) => b[1] - a[1]); let acc = 0, k = 0, lastE = null, accP = 0;
+  const main = pts.slice().sort((a, b) => b[1] - a[1]); let acc = 0, k = 0, lastE = null, accP = 0, accA = 40, kA = 0;
+  const AN_SUELTOS = ['sheep', 'bighorn', 'donkey', 'sheep', 'ovis', 'bighorn', 'sheep', 'donkey']; /* animales sueltos a lo largo del camino, como en la Galilea de entonces: rebaños en los campos, cabras en las laderas, burros pastando */
   for (let i = 2; i < main.length - 2; i++) { const a = main[i - 1], b = main[i], d = Math.hypot(b[0] - a[0], b[1] - a[1]); if (d > 12) continue; acc += d; accP += d;
     const tx = main[i + 1][0] - main[i - 1][0], tz = main[i + 1][1] - main[i - 1][1], tl = Math.hypot(tx, tz) || 1, nx = tz / tl, nz = -tx / tl;
+    accA += d; if (accA > 95 && grpBase()) { accA = 0; const kd = AN_SUELTOS[kA++ % AN_SUELTOS.length], sd = R() < .5 ? 1 : -1, o = kd === 'donkey' ? 9 + R() * 8 : 16 + R() * 22, x = b[0] + nx * sd * o, z = b[1] + nz * sd * o;
+      if (okAt(x, z, 2.5) && far(x, z) && (kd !== 'bighorn' || W.hAt(x, z) > .8)) (LIFE.an[kd] = LIFE.an[kd] || []).push([x, z]); }
     // cosas sueltas cada ~24 m
     if (accP > 24) { accP = 0; const sd = R() < .5 ? 1 : -1, o = 3 + R() * 4, x = b[0] + nx * sd * o, z = b[1] + nz * sd * o; if (W.dAt(x, z) > 2.2 && waterWet(x, z, null) < .02 && !blockedAt(x, z)) { const r = R(), kd = r < .035 ? 'sobre' : r < .7 ? 'estrella' : 'granada'; void kd; } } /* Kids ya no llena el camino de brillitos: los hallazgos van desparramados por el mapa, como en Hero */
     if (acc < 56 || !far(b[0], b[1])) continue; acc = 0; const kind = KINDS[k % KINDS.length], sd = k % 2 ? 1 : -1; k++;
@@ -944,6 +947,7 @@ function lifeOne(scene, kind, x, z, face, yAt, R, hx, W, b) {
     ppl(st, si ? 'cross' : 'M_Standing_Idle'); st.forEach(q => S.cols.push({ x0: q.x - .35, x1: q.x + .35, z0: q.z - .35, z1: q.z + .35, cx: q.x, cz: q.z, r: .3 }));
     if (si) { const m = new THREE.Mesh(new THREE.CircleGeometry(.7, 16), tm('mant' + (Math.floor(R() * 3)), ['#8E2E22', '#C9A46A', '#3E5A8A'][Math.floor(R() * 3)])); m.rotation.x = -Math.PI / 2; m.position.set(x, y + .03, z); scene.add(m); const br = new THREE.Mesh(new THREE.SphereGeometry(.14, 10, 6), tm('pan', '#C08A4A')); br.scale.y = .55; br.position.set(x + .15, y + .1, z); scene.add(br); }
     S.lore.push({ x, z, r: 2.4, label: 'Saludar', dur: 2.5, info: ['Gente del camino', LIFE_SAY[Math.floor(R() * LIFE_SAY.length)], '', (Math.abs(Math.round(x * 7 + z * 3)) % 2) ? 'mujer' : 'varon'] }); return; }
+  if (grpBase() && (kind === 'mercado' || kind === 'fogon' || kind === 'pozo')) { const sx = x + Math.cos(face) * 4.5, sz = z - Math.sin(face) * 4.5; (LIFE.an.donkey = LIFE.an.donkey || []).push([sx, sz]); if (kind !== 'fogon') (LIFE.an.chicken = LIFE.an.chicken || []).push([x - Math.cos(face) * 4, z + Math.sin(face) * 4]); } /* el burro atado junto al puesto o al fuego, y gallinas sueltas */
   if (kind === 'mercado') { stall(scene, x, z, face, y, R); const sx = x + Math.sin(face) * -1.3, sz = z + Math.cos(face) * -1.3; ppl([{ x: sx, y: yAt(sx, sz), z: sz, ry: face, v: Math.floor(R() * L.length) }], 'M_Standing_Idle'); const lb = poiLb(textSprite('Mercado', hx)); lb.scale.multiplyScalar(.7); lb.position.set(x, y + 3, z); scene.add(lb);
     if (hx && S.sv) (S.sv.stalls || (S.sv.stalls = [])).push({ x, z }); else if (!hx) S.lore.push({ x, z, r: 3, label: 'Cambiar en el mercado', dur: .1, act: () => kMarket() }); else S.lore.push({ x, z, r: 3, label: 'Mirar el mercado', dur: 3, info: ['Mercado del camino', 'Frutas, pan, aceite y especias. En la época de Jesús la gente compraba y vendía en puestos así, a la entrada de los pueblos y junto a los caminos.'] }); return; }
   if (kind === 'pastor') { const sx = x + 1.6, sz = z; ppl([{ x: sx, y: yAt(sx, sz), z: sz, ry: R() * 6.28, v: 2 }], 'M_Standing_Idle'); S.cols.push({ x0: sx - .35, x1: sx + .35, z0: sz - .35, z1: sz + .35, cx: sx, cz: sz, r: .3 });
@@ -7596,6 +7600,7 @@ function anSpots(kind, R, W) { // dónde va cada especie, según la zona
   const P = S.pois || [], out = [], add = (p, n, r0, r1, f) => { for (let t = 0, k = 0; t < n * 30 && k < n; t++) { const a = R() * 6.283, r = r0 + R() * (r1 - r0), x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (Math.abs(x) > XW - 30 || blockedAt(x, z) || waterWet(x, z, null) > .02 || W.dAt(x, z) < 3) continue; if (f && !f(x, z)) continue; out.push([x, z]); k++; } };
   const OS = (S.olSites || []).filter(q => q.k === 'aldea').map(q => ({ x: q.x, z: q.z }));
   if (kind === 'sheep') { LIFE.sheep.forEach(([x, z]) => out.push([x, z])); OS.forEach(p => add(p, 1, 30, 50)); }
+  ((LIFE.an || {})[kind] || []).forEach(([x, z]) => out.push([x, z]));
   if (kind === 'donkey' || kind === 'chicken') OS.forEach(p => add(p, 1, 8, 18));
   if (kind === 'sheep') P.filter(p => /^(pastores|field|village)$/.test(p.k)).forEach(p => add(p, p.k === 'village' ? 1 : 2, 22, 60));
   if (kind === 'donkey') P.filter(p => /^(village|taller|roofhouse|inn|upper)$/.test(p.k)).forEach(p => add(p, 2, 9, 20));
