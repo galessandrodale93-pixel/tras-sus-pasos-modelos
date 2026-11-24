@@ -8859,7 +8859,7 @@ function swimTick(dt, a) {
   const el = document.querySelector('.v3surv .sv-stam'); if (el) { const show = S.stam < .995; el.hidden = !show; if (show) { const i = el.firstChild; i.style.width = (S.stam * 100).toFixed(1) + '%'; i.className = S.stam < .25 && deep && mov ? 'low' : ''; el.lastChild.textContent = deep && mov ? (S.stam < .25 ? '¡Frená y flotá!' : '🏊 Aliento') : deep ? '🫧 Flotando' : '😮‍💨 Recuperando'; } }
 }
 
-function svP() { const p = G().P(); p.surv = p.surv || {}; const s = p.surv; if (s.sat == null) s.sat = SV.FULL; s.play = s.play || 0; s.inv = s.inv || {}; s.tools = s.tools || []; s.furn = s.furn || []; s.chest = s.chest || {}; return s; }
+function svP() { const p = G().P(); p.surv = p.surv || {}; const s = p.surv; if (s.sat == null || !(s.sat <= SV.FULL)) s.sat = s.sat > SV.FULL ? SV.FULL : (s.sat == null || isNaN(s.sat) ? SV.FULL : s.sat); /* nunca más que la panza llena (partidas viejas guardaban valores enormes) */ s.play = s.play || 0; s.inv = s.inv || {}; s.tools = s.tools || []; s.furn = s.furn || []; s.chest = s.chest || {}; return s; }
 function atP() { const p = G().P(); p.attr = p.attr || {}; ATTR.forEach(([k]) => { p.attr[k] = p.attr[k] || 0; }); if (!p.attr.v2 && typeof atMigrate === 'function') try { atMigrate(p.attr); } catch (e) {} return p.attr; }
 function atr(k) { return fv(k) / 10; }
 /* ---------- experiencia por atributo: lo que hacés seguido te sale mejor (pescar → Paciencia, talar y picar → Fuerza, correr y saltar → Agilidad…) ---------- */
@@ -9817,7 +9817,7 @@ function bldP() { const p = G().P(), k = S && S.hx ? 'bldH' : 'bldK'; p[k] = p[k
 function bldBuild(scene) {
   BLD.scene = scene; BLD.parts = {}; BLD.mats = null; BLD.pops = []; BLD.on = false; const M = bldMats();
   BP_ORDER.forEach(t => { BLD.parts[t] = bldShape(t).map(([geo, mk]) => { const im = new THREE.InstancedMesh(geo, M[mk], BLD.cap); im.count = 0; if (mk === 'sillar' || mk === 'plank' || mk === 'adobe') { im.userData.tint = 1; _bm.C = _bm.C || new THREE.Color(); for (let q = 0; q < BLD.cap; q++) im.setColorAt(q, _bm.C.setRGB(1, 1, 1)); } im.frustumCulled = false; im.castShadow = !!S.hx; im.receiveShadow = true; im.userData.keep = 1; scene.add(im); return im; }); });
-  BLD.list = bldP().slice(); bldSync(); if (!S.hx) bldKidsBtn(); else { const kb = document.getElementById('v3kbld'); if (kb) kb.remove(); } /* si antes se jugó Kids en la misma página, su botón no queda en Hero */ try { albInit(); } catch (e) { console.warn('álbum', e); }
+  BLD.list = bldP().slice(); bldSync(); if (!S.hx) bldKidsBtn(); else { ['v3kbld', 'v3mmbox'].forEach(id => { const kb = document.getElementById(id); if (kb) kb.remove(); }); } /* si antes se jugó Kids en la misma página, su botón no queda en Hero */ try { albInit(); } catch (e) { console.warn('álbum', e); }
 }
 const _bm = {}; function bldMat(e, k) { const M = _bm.M || (_bm.M = new THREE.Matrix4()), Q = _bm.Q || (_bm.Q = new THREE.Quaternion()), A = _bm.A || (_bm.A = new THREE.Vector3(0, 1, 0)), V = _bm.V || (_bm.V = new THREE.Vector3()), Sc = _bm.S || (_bm.S = new THREE.Vector3()); Q.setFromAxisAngle(A, (e[4] || 0) * Math.PI / 2); return M.compose(V.set(e[1], e[3], e[2]), Q, Sc.set(k, k, k)); }
 function bldSync() {
