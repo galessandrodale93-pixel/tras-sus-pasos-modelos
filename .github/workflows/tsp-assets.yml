@@ -35,7 +35,7 @@ jobs:
           cat > wrangler.toml <<'T'
           name = "tsp-assets"
           main = "tsp-assets-worker.js"
-          compatibility_date = "2026-11-01"
+          compatibility_date = "2026-11-06"
           workers_dev = true
           keep_vars = true
           [[r2_buckets]]
