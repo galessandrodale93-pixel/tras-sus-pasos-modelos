@@ -9422,7 +9422,9 @@ function kNear() {
   if (st.kw) return { k: 'work', label: '⏸ ' + st.kw.label + (st.kw.n ? ' · ' + st.kw.n : '') };
   { const x = pocketNear(); if (x) return x; if (S.pocket) return null; } /* adentro de un lugar secreto (también en Kids): salir y mirar lo que guarda */
   let best = null, bd = 2.6 * 2.6;
-  chopList().forEach((o, i) => { if (st.felled.has(i)) return; const d = d2(o.x, o.z); if (d < bd) { bd = d; const t = kTier('tree', o, i); best = { k: 'tree', i, t, g: 'wood' }; } });
+  /* los frutales (limoneros y granados) son para recoger fruta, no para talar: si no, el limonero decía «Talar higuera» */
+  const ft = FLORA.fruitTrees || [], isFruit = o => ft.some(f => Math.abs(f.x - o.x) < .6 && Math.abs(f.z - o.z) < .6);
+  chopList().forEach((o, i) => { if (st.felled.has(i)) return; const d = d2(o.x, o.z); if (d < bd && !isFruit(o)) { bd = d; const t = kTier('tree', o, i); best = { k: 'tree', i, t, g: 'wood' }; } });
   rockList().forEach((o, i) => { if (st.mined.has(i)) return; const r = .6 + (.35 + (o.v || .5) * .7) * (o.s || 1), d = d2(o.x, o.z); if (d < (r + 1.4) ** 2 && d < bd + 2) { bd = d; const t = kTier('rock', o, i); best = { k: 'rock', i, t, g: 'stone' }; } });
   (S.kgr || []).forEach((o, i) => { if (st.kgrT && st.kgrT.has(i)) return; const d = d2(o.x, o.z); if (d < 2.4 * 2.4 && d < bd) { bd = d; best = { k: 'grain', i, t: o.t, g: 'grain' }; } });
   if (!best) { const t = kFishT(); if (t) best = { k: 'fish', i: 0, t, g: 'fish' }; }
