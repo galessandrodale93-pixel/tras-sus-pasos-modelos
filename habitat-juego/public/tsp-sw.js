@@ -27,19 +27,19 @@ self.addEventListener('fetch', e => {
 /* ---------- avisos sin servidor ----------
    Android con el juego instalado: el navegador despierta este archivo más o menos una vez por día (Periodic Background Sync) y,
    si el jugador activó los avisos y todavía no jugó hoy, muestra uno solo, nunca de noche. El estado lo deja el juego en /__tsp_estado.
-   'push' queda listo para cuando haya un servidor que mande avisos: recibe {t, b, url}. */
+   Con avisos push (servidor tsp-avisos) el aviso diario llega por 'push', que recibe {t, b, tag, url}, y este no se muestra. */
 const N = 'tsp-noti';
 async function notiEstado() { try { const c = await caches.open(N), r = await c.match('/__tsp_estado'); return r ? await r.json() : {}; } catch (e) { return {}; } }
 async function notiGuardar(o) { try { const c = await caches.open(N); await c.put('/__tsp_estado', new Response(JSON.stringify(o), { headers: { 'Content-Type': 'application/json' } })); } catch (e) {} }
 const hoyKey = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
 self.addEventListener('periodicsync', e => { if (e.tag !== 'tsp-diario') return; e.waitUntil((async () => {
-  const st = await notiEstado(), hoy = hoyKey(), h = new Date().getHours(); if (!st.on || st.jugado === hoy || st.avisado === hoy || h < 9 || h >= 21) return;
+  const st = await notiEstado(), hoy = hoyKey(), h = new Date().getHours(); if (!st.on || st.push || st.jugado === hoy || st.avisado === hoy || h < 9 || h >= 21) return;
   const d = new Date(), adv = d.getMonth() === 11 && d.getDate() <= 25, reyes = d.getMonth() === 0 && d.getDate() === 6;
   const t = reyes ? '👑 Se abrió la ventana de los magos' : adv ? (d.getDate() === 25 ? '⭐ ¡Feliz Navidad! Se abrió la ventana 25' : '🎄 Se abrió la ventana ' + d.getDate() + ' de Adviento') : '☀️ Tu desafío del día te espera';
   const b = adv || reyes ? 'Un tramo nuevo de la historia de la Navidad y un regalito.' : 'Tres metas cortas para hoy en Tras sus pasos.';
   await self.registration.showNotification(t, { body: b, icon: st.icon, tag: 'tsp-diario', data: { url: st.url || '/jugar.html' } });
   st.avisado = hoy; await notiGuardar(st); try { if (self.navigator.setAppBadge) await self.navigator.setAppBadge(1); } catch (er) {} })()); });
 self.addEventListener('push', e => { let d = {}; try { d = e.data ? e.data.json() : {}; } catch (er) { d = { t: e.data && e.data.text() }; }
-  e.waitUntil(notiEstado().then(st => self.registration.showNotification(d.t || 'Tras sus pasos', { body: d.b || '', icon: st.icon, tag: d.tag || 'tsp', data: { url: d.url || st.url || '/jugar.html' } }))); });
+  e.waitUntil(notiEstado().then(st => { if (d.tag === 'tsp-diario') { st.avisado = hoyKey(); notiGuardar(st); } return st; }).then(st => self.registration.showNotification(d.t || 'Tras sus pasos', { body: d.b || '', icon: st.icon, tag: d.tag || 'tsp', data: { url: d.url || st.url || '/jugar.html' } }))); });
 self.addEventListener('notificationclick', e => { e.notification.close(); const url = (e.notification.data && e.notification.data.url) || '/jugar.html';
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(L => { for (const c of L) if ('focus' in c) return c.focus(); return self.clients.openWindow(url); })); });

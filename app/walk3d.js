@@ -5777,7 +5777,7 @@ function guiaTick(dt) {
   GUIA.gT -= dt; if (GUIA.gT <= 0) { GUIA.gT = 1; GUIA.goals = guiaGoals(); const top = GUIA.goals[0], bt = chip.querySelector('b'); if (top && bt.textContent !== top.t) bt.textContent = top.t; }
   GUIA.play = (GUIA.play || 0) + dt;
   if (!GUIA.hT || now0() > GUIA.hT) { GUIA.hT = now0() + 30000; try { histTick(); if (!GUIA.rc && GUIA.play > 25 && !CINE.on) { GUIA.rc = 1; const r = recapDue(); G().save(); if (r) setTimeout(() => { if (!sheetUp()) recapShow(r[0], r[1]); else GUIA.rc = 0; }, 400); } } catch (e) { console.warn('historial', e); } }
-  if (!NOTI.sync || NOTI.sync !== notiHoy()) { NOTI.sync = notiHoy(); notiSync(); try { navigator.clearAppBadge && navigator.clearAppBadge().catch(() => {}); } catch (e) {} }
+  if (!NOTI.sync || NOTI.sync !== notiHoy()) { NOTI.sync = notiHoy(); notiSync(); notiJugue(); try { navigator.clearAppBadge && navigator.clearAppBadge().catch(() => {}); } catch (e) {} }
   if (!GUIA.star || GUIA.star < now0()) { GUIA.star = now0() + 5000; try { advStarSync(); } catch (e) {} }
   { const a = S.av.position, L = GUIA.lp; if (L) { const d = Math.hypot(a.x - L[0], a.z - L[1]); if (d > .05 && d < 8) { GUIA.dist = (GUIA.dist || 0) + d; if (GUIA.dist >= 10) { metaEv('camina', GUIA.dist); GUIA.dist = 0; } } } GUIA.lp = [a.x, a.z]; }
   chip.classList.toggle('pulse', (S.idleT || 0) > 40 && !GUIA.cur);
@@ -6562,6 +6562,20 @@ function metaOpen() {
    Donde eso no existe (iPhone, compu) se ofrece un recordatorio en el calendario del dispositivo. El ícono de la app muestra
    un 1 cuando el desafío del día quedó pendiente. Nunca avisa de noche ni más de una vez por día. */
 const NOTI = { sw: null };
+/* con servidor: avisos push que llegan aunque el juego esté cerrado (tsp-avisos). Si el aparato no los tiene, sigue lo de abajo. */
+const AVISOS = 'https://tsp-avisos.galessandrodale-93.workers.dev';
+const notiZ = () => new Date().getTimezoneOffset();
+async function avPost(ruta, o) { const r = await fetch(AVISOS + ruta, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(o) }); return r.json().catch(() => ({})); }
+async function notiPushReg() { try { if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return null; const reg = await Promise.race([navigator.serviceWorker.ready, new Promise(r => setTimeout(() => r(null), 2500))]); return reg && reg.pushManager ? reg : null; } catch (e) { return null; } }
+async function notiPushOn() {
+  const reg = await notiPushReg(); if (!reg) return false; let perm = 'default'; try { perm = await Notification.requestPermission(); } catch (e) {} if (perm !== 'granted') return 'no';
+  const { k } = await (await fetch(AVISOS + '/clave')).json(); const key = Uint8Array.from(atob(k.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((k.length + 3) % 4)), c => c.charCodeAt(0));
+  let sub = await reg.pushManager.getSubscription(); if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+  const r = await avPost('/alta', { sub: sub.toJSON(), z: notiZ() }); if (!r.ok) return false; const n = notiP(); n.on = 1; n.push = 1; n.jd = notiHoy(); G().save(); await notiSync({ on: true, push: true }); return true;
+}
+/* cada día que jugás, el servidor se entera para no avisarte ese día */
+async function notiJugue() { try { const n = notiP(); if (!n.push || n.jd === notiHoy()) return; const reg = await notiPushReg(), sub = reg && await reg.pushManager.getSubscription(); if (!sub) { n.push = 0; n.on = 0; G().save(); return; }
+  const r = await avPost('/jugue', { endpoint: sub.endpoint, z: notiZ() }); if (r.falta) await avPost('/alta', { sub: sub.toJSON(), z: notiZ() }); n.jd = notiHoy(); G().save(); } catch (e) {} }
 const notiHoy = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
 function notiP() { const p = G().P(); p.noti = p.noti || {}; return p.noti; }
 async function notiSync(extra) {
@@ -6572,6 +6586,7 @@ async function notiSync(extra) {
 async function notiPuede() { try { if (!('serviceWorker' in navigator) || !('Notification' in window)) return false; const reg = await Promise.race([navigator.serviceWorker.ready, new Promise(r => setTimeout(() => r(null), 2500))]); if (!reg || !('periodicSync' in reg)) return false; const q = await navigator.permissions.query({ name: 'periodic-background-sync' }); return q.state === 'granted'; /* Chrome lo da solo con el juego instalado */ } catch (e) { return false; } }
 async function notiActivar(box) {
   const set = h => { if (box) box.innerHTML = h; };
+  try { const r = await notiPushOn(); if (r === true) { set(notiHTML()); notiBind(box); svToast('🔔 Listo: te aviso una vez por día, a la tarde, si todavía no jugaste.'); return; } if (r === 'no') { svToast('Los avisos quedaron bloqueados en este navegador. Se activan desde los permisos del sitio.'); return; } } catch (e) {}
   if (await notiPuede()) {
     let perm = 'default'; try { perm = await Notification.requestPermission(); } catch (e) {}
     if (perm === 'granted') { try { const reg = await navigator.serviceWorker.ready, q = await navigator.permissions.query({ name: 'periodic-background-sync' });
@@ -6580,7 +6595,7 @@ async function notiActivar(box) {
   set(`<div class="nt-in"><b>📅 En este dispositivo el aviso va por el calendario</b><small>Agregamos un recordatorio diario a las 18 h con el enlace al juego. Lo podés cambiar o borrar desde tu calendario cuando quieras.</small><button type="button" class="nt-ics">Agregar al calendario</button></div>`);
   box.querySelector('.nt-ics').onclick = () => { notiIcs(); notiP().cal = 1; G().save(); };
 }
-async function notiApagar(box) { try { const reg = await navigator.serviceWorker.ready; if (reg.periodicSync) await reg.periodicSync.unregister('tsp-diario'); } catch (e) {} notiP().on = 0; G().save(); await notiSync({ on: false }); if (box) { box.innerHTML = notiHTML(); notiBind(box); } }
+async function notiApagar(box) { try { const reg = await navigator.serviceWorker.ready; if (reg.periodicSync) await reg.periodicSync.unregister('tsp-diario'); const sub = reg.pushManager && await reg.pushManager.getSubscription(); if (sub) { avPost('/baja', { endpoint: sub.endpoint }).catch(() => {}); await sub.unsubscribe(); } } catch (e) {} notiP().push = 0; notiP().on = 0; G().save(); await notiSync({ on: false }); if (box) { box.innerHTML = notiHTML(); notiBind(box); } }
 function notiIcs() {
   const d = new Date(), p2 = n => String(n).padStart(2, '0'), day = d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()), now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, ''), url = location.origin + '/jugar.html';
   const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Habitat CFM//Tras sus pasos//ES', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT', 'UID:tsp-diario-' + Date.now() + '@habitat-cfm.org', 'DTSTAMP:' + now, 'DTSTART:' + day + 'T180000', 'DURATION:PT15M', 'RRULE:FREQ=DAILY',
