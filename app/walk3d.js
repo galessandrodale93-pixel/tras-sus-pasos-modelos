@@ -548,6 +548,8 @@ function waterTick(dt, t) {
   WATER.uT.value = t; for (const m of WATER.mats) { const u = m.userData; if (u.flow) { u.nm.offset.y -= dt * .09; u.cn.offset.y -= dt * .14; u.cn.offset.x = Math.sin(t * .2) * .05; } else { u.nm.offset.x += dt * .012; u.nm.offset.y += dt * .007; u.cn.offset.x -= dt * .009; u.cn.offset.y += dt * .013; } }
 }
 // cuánto "moja" la orilla en este punto (0 lejos, 1 en el borde del agua)
+/* agua para la gente del mundo: lago y también el río (el suelo queda por debajo del nivel del agua) */
+function npcWet(x, z, dp) { try { if (S && S.W && S.W.hAt(x, z) < WATER.RL - (dp ?? .3)) return true; } catch (e) {} return waterWet(x, z, null) > .05; }
 function waterWet(x, z, rf) { let w = 0; for (const b of WATER.basins) { const dd = Math.hypot(x - b.x, z - b.z) / b.r; w = Math.max(w, 1 - sstep(.92, 1.35, dd)); } if (rf != null) w = Math.max(w, 1 - sstep(5, 10.5, rf)); return w; }
 
 /* ---------- cielo real (HDRI CC0 de Poly Haven): amanecer y mediodía, con reflejos del cielo en los materiales ---------- */
@@ -2801,6 +2803,7 @@ function crowdSimple(scene, list, looks, anim, sh) {
 function crowdPlace(scene, list, looks, anim, sh) {
   /* nadie sentado con las piernas cruzadas (parece posición de loto): se reparte entre sentado sobre los talones y con las piernas a un costado */
   if (anim === 'cross') { const a = crowdPlace(scene, list.filter((q, i) => i % 2 === 0), looks, 'kneel', sh), b = crowdPlace(scene, list.filter((q, i) => i % 2 === 1), looks, 'side', sh); return a || b; }
+  try { list = list.filter(p => !npcWet(p.x, p.z, .9)); } catch (e) {} /* nadie parado arriba del agua (en el río o el lago) */
   if (!list.length) return false; if (!H3.ok) return crowdSimple(scene, list, looks, anim, sh); const by = looks.map(() => []); list.forEach((p, i) => by[(p.v ?? i) % looks.length].push(p)); const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3();
   looks.forEach((lk, li) => { const L = by[li]; if (!L.length) return; const parts = crowdBake(lk, anim, .4 + li * .37); if (!parts) { crowdSimple(scene, L, [lk], anim, sh); return; }
     const ims = []; parts.forEach(pt => { crowdSway(pt.mat); const im = new THREE.InstancedMesh(pt.g, pt.mat, L.length); L.forEach((p, i) => { E.set(0, p.ry, 0); M.compose(V.set(p.x, p.y, p.z), Q.setFromEuler(E), SC.setScalar(p.s || 1)); im.setMatrixAt(i, M); }); im.instanceMatrix.needsUpdate = true; im.castShadow = !!sh && QUAL.lv >= 2; im.receiveShadow = true; im.computeBoundingSphere(); crowdReg(im); scene.add(im); ims.push(im); });
@@ -7464,7 +7467,7 @@ function wanderTick(dt) {
   for (const o of H3.npcs) {
     const u = o.userData.h3; if (!u || !o.parent || o.parent !== S.scene || !o.visible) continue;
     let w = o.userData.wd;
-    if (w === undefined) { w = o.userData.wd = (o.userData.stay || W_STILL.test(u.idleK || '') || !H3.clips.Walk_Loop || Math.random() > .75) ? null : { hx: o.position.x, hz: o.position.z, st: 0, t: 1 + Math.random() * 6, reg: null }; }
+    if (w === undefined) { w = o.userData.wd = (o.userData.stay || npcWet(o.position.x, o.position.z) || W_STILL.test(u.idleK || '') || !H3.clips.Walk_Loop || Math.random() > .75) ? null : { hx: o.position.x, hz: o.position.z, st: 0, t: 1 + Math.random() * 6, reg: null }; }
     if (!w) { if (u.baseQ) continue; const dq = (o.position.x - a.x) ** 2 + (o.position.z - a.z) ** 2; if (dq > 900) continue; // los que no caminan igual se mueven: miran alrededor, asienten y gesticulan
       if ((o.userData.fid = (o.userData.fid ?? Math.random() * 6) - dt) > 0 || (u.talkT > -.4 && u.talkAge != null) || u.backT > 0) continue;
       o.userData.fid = 5 + Math.random() * 8; const an = o.rotation.y + (Math.random() - .5) * 2.4, hy = o.position.y + 1.4 * (o.scale.y || 1);
@@ -7481,7 +7484,7 @@ function wanderTick(dt) {
       if (busy) { w.st = 0; w.t = 3; continue; } if (near) { toIdle(); continue; }
       const dx = w.tx - o.position.x, dz = w.tz - o.position.z, d = Math.hypot(dx, dz); if (d < .25 || (w.life -= dt) <= 0) { toIdle(); continue; }
       const want = Math.atan2(dx, dz); let dr = want - o.rotation.y; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); o.rotation.y += dr * Math.min(1, dt * 5);
-      if (Math.abs(dr) < 1) { const sp = 1.05 * (o.scale.y || 1) * dt, nx = o.position.x + Math.sin(o.rotation.y) * sp, nz = o.position.z + Math.cos(o.rotation.y) * sp; if (blockedAt(nx, nz)) { toIdle(); continue; } o.position.x = nx; o.position.z = nz; const gy = Math.max(W && W.hAt ? W.hAt(nx, nz) : o.position.y, floorH(nx, nz)); o.position.y += (Math.max(0, gy) - o.position.y) * Math.min(1, dt * 10); if (w.reg) { w.reg.x = nx; w.reg.z = nz; } }
+      if (Math.abs(dr) < 1) { const sp = 1.05 * (o.scale.y || 1) * dt, nx = o.position.x + Math.sin(o.rotation.y) * sp, nz = o.position.z + Math.cos(o.rotation.y) * sp; if (blockedAt(nx, nz) || npcWet(nx, nz)) { toIdle(); continue; } o.position.x = nx; o.position.z = nz; const gy = Math.max(W && W.hAt ? W.hAt(nx, nz) : o.position.y, floorH(nx, nz)); o.position.y += (Math.max(0, gy) - o.position.y) * Math.min(1, dt * 10); if (w.reg) { w.reg.x = nx; w.reg.z = nz; } }
     }
   }
 }
