@@ -1,0 +1,18 @@
+name: Verificar Cloudflare
+# Comprueba que la clave de Cloudflare guardada en GitHub funcione (no cambia nada).
+on:
+  workflow_dispatch:
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probar la clave
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -e
+          r=$(curl -s -H "Authorization: Bearer $CF_TOKEN" https://api.cloudflare.com/client/v4/user/tokens/verify)
+          echo "$r" | python3 -c "import sys,json;d=json.load(sys.stdin);print('clave:',d['result']['status'] if d.get('success') else d.get('errors'))"
+          w=$(curl -s -H "Authorization: Bearer $CF_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/workers/scripts")
+          echo "$w" | python3 -c "import sys,json;d=json.load(sys.stdin);print('workers:',[s['id'] for s in d['result']] if d.get('success') else d.get('errors'));sys.exit(0 if d.get('success') else 1)"
