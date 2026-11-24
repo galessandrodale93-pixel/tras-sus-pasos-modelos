@@ -1,0 +1,24 @@
+name: Subir archivos a R2
+# Sube al bucket tras-sus-pasos los archivos del repo indicados (rutas separadas por espacios), con la misma ruta.
+on:
+  workflow_dispatch:
+    inputs:
+      rutas:
+        description: "rutas del repo, separadas por espacios"
+        required: true
+jobs:
+  subir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Subir
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          RUTAS: ${{ inputs.rutas }}
+        run: |
+          set -e
+          for p in $RUTAS; do
+            case "$p" in *..*|/*) echo "ruta inválida $p"; exit 1;; esac
+            npx -y wrangler@4 r2 object put "tras-sus-pasos/$p" --file "$p" --remote
+          done
