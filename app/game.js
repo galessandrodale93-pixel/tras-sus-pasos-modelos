@@ -816,7 +816,8 @@ function mountFilm(box,sc,shots,n){
   if(reduce)finish();else raf=requestAnimationFrame(loop);return {stop(){cancelAnimationFrame(raf);}};
 }
 function mountVideo(box,key,avatar,n){
-  if(branch==='ados'){let shots=null;try{shots=window.W3&&W3.stageShots&&n?W3.stageShots(n.id):null;}catch(e){}if(shots&&shots.length){HSHOTS=shots;try{return mountFilm(box,SCENES[key]('v'+(uid++)),shots,n);}catch(e){}}}
+  /* Kids y Hero: la intro usa fotos reales del lugar en el mundo 3D (el dibujo viejo queda solo si no hay mundo cargado) */
+  {let shots=null;try{shots=window.W3&&W3.stageShots&&n?W3.stageShots(n.id):null;}catch(e){}if(shots&&shots.length){HSHOTS=shots;try{return mountFilm(box,SCENES[key]('v'+(uid++)),shots,n);}catch(e){}}}
   box.classList.remove('hfilm');
   const u='v'+(uid++),sc=SCENES[key](u),segs={};
   sc.tl.forEach(s=>(segs[s[0]]=segs[s[0]]||[]).push(s));

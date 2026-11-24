@@ -943,7 +943,7 @@ function lifeOne(scene, kind, x, z, face, yAt, R, hx, W, b) {
     if (si) { const m = new THREE.Mesh(new THREE.CircleGeometry(.7, 16), tm('mant' + (Math.floor(R() * 3)), ['#8E2E22', '#C9A46A', '#3E5A8A'][Math.floor(R() * 3)])); m.rotation.x = -Math.PI / 2; m.position.set(x, y + .03, z); scene.add(m); const br = new THREE.Mesh(new THREE.SphereGeometry(.14, 10, 6), tm('pan', '#C08A4A')); br.scale.y = .55; br.position.set(x + .15, y + .1, z); scene.add(br); }
     S.lore.push({ x, z, r: 2.4, label: 'Saludar', dur: 2.5, info: ['Gente del camino', LIFE_SAY[Math.floor(R() * LIFE_SAY.length)], '', (Math.abs(Math.round(x * 7 + z * 3)) % 2) ? 'mujer' : 'varon'] }); return; }
   if (kind === 'mercado') { stall(scene, x, z, face, y, R); const sx = x + Math.sin(face) * -1.3, sz = z + Math.cos(face) * -1.3; ppl([{ x: sx, y: yAt(sx, sz), z: sz, ry: face, v: Math.floor(R() * L.length) }], 'M_Standing_Idle'); const lb = poiLb(textSprite('Mercado', hx)); lb.scale.multiplyScalar(.7); lb.position.set(x, y + 3, z); scene.add(lb);
-    if (hx && S.sv) (S.sv.stalls || (S.sv.stalls = [])).push({ x, z }); else S.lore.push({ x, z, r: 3, label: 'Mirar el mercado', dur: 3, info: ['Mercado del camino', 'Frutas, pan, aceite y especias. En la época de Jesús la gente compraba y vendía en puestos así, a la entrada de los pueblos y junto a los caminos.'] }); return; }
+    if (hx && S.sv) (S.sv.stalls || (S.sv.stalls = [])).push({ x, z }); else if (!hx) S.lore.push({ x, z, r: 3, label: 'Cambiar en el mercado', dur: .1, act: () => kMarket() }); else S.lore.push({ x, z, r: 3, label: 'Mirar el mercado', dur: 3, info: ['Mercado del camino', 'Frutas, pan, aceite y especias. En la época de Jesús la gente compraba y vendía en puestos así, a la entrada de los pueblos y junto a los caminos.'] }); return; }
   if (kind === 'pastor') { const sx = x + 1.6, sz = z; ppl([{ x: sx, y: yAt(sx, sz), z: sz, ry: R() * 6.28, v: 2 }], 'M_Standing_Idle'); S.cols.push({ x0: sx - .35, x1: sx + .35, z0: sz - .35, z1: sz + .35, cx: sx, cz: sz, r: .3 });
     const st = new THREE.Mesh(new THREE.CylinderGeometry(.025, .03, 1.7, 5), tm('vara', '#6A4A2C')); st.position.set(sx + .35, yAt(sx, sz) + .85, sz); st.rotation.z = .12; scene.add(st);
     LIFE.flocks.push([x - 2, z]); if (grpBase()) LIFE.sheep.push([x - 2, z]); else for (let i = 0; i < 5; i++) { const a = R() * 6.28, r = 1.5 + R() * 3, px = x - 2 + Math.cos(a) * r, pz = z + Math.sin(a) * r, sh = misMesh({ k: 'sheep' }); sh.position.set(px, yAt(px, pz), pz); sh.rotation.y = R() * 6.28; scene.add(sh); }
@@ -1002,6 +1002,7 @@ function lifeTick(dt, t) {
 function kidsFind(it) {
   const own = gearState().own, of = rs => GEAR.filter(g => rs.includes(g.r) && !g.x && !own.includes(g.id));
   if (it.k === 'ropa' || it.k === 'rara') { const L = it.k === 'rara' && of(['r']).length ? of(['r']) : of(['c']); if (L.length) { const g = L[Math.floor(it.r * L.length) % L.length]; gearGive(g, 'Lo encontraste en el camino'); pkPop('👘 ¡Ropa nueva! ' + (g.name || '')); return; } }
+  if (it.k === 'cons') { const k = KMAT_K[Math.floor(it.r * 3) % 3], n = 2 + Math.floor(it.r * 10) % 2; kmAdd(k, n); pkPop(KMAT[k][0] + ' +' + n + ' ' + KMAT[k][1].toLowerCase() + ' para construir'); return; }
   if (it.k === 'otro' && it.r < .35) { try { albGetSobre(1, 'Lo encontraste en el camino'); pkPop('🎴 ¡Un sobre de figuritas!'); return; } catch (e) {} }
   const n = it.k === 'rara' ? 10 : 5; svXP(n); try { G().refreshHud && G().refreshHud(); } catch (e) {} pkPop((PK[it.k] || [0, '⭐'])[1] + ' +' + ptsV(n) + ' puntos');
 }
@@ -1178,7 +1179,7 @@ const KL = {};
   try { const sv = posLoad(); if (sv) { av.position.set(sv.x, 0, sv.z); S.yaw = sv.yaw; av.rotation.y = sv.yaw; } } catch (e) {}
   camera.position.set(av.position.x - Math.sin(S.yaw) * 6.6, 3.3, av.position.z - Math.cos(S.yaw) * 6.6);
   S.fill = new THREE.DirectionalLight(hx ? '#FFD9B0' : '#FFFFFF', hx ? .5 : .5); scene.add(S.fill); scene.add(S.fill.target);
-  wireInput(); wireJoy(); if (!window.__acts) { window.__acts = 1; wireActs(); auButtons(); } resize(); addEventListener('resize', resize); try { if (!S.root.__ro && window.ResizeObserver) { S.root.__ro = new ResizeObserver(() => resize()); S.root.__ro.observe(S.root); } } catch (e) {} try { if (!window.__oriR && screen.orientation) { window.__oriR = 1; screen.orientation.addEventListener('change', () => [120, 500, 1200].forEach(t => setTimeout(resize, t))); } } catch (e) {}
+  wireInput(); wireJoy(); if (!window.__acts) { window.__acts = 1; wireActs(); auButtons(); } resize(); addEventListener('resize', resize); try { if (!window.__oriR && screen.orientation) { window.__oriR = 1; screen.orientation.addEventListener('change', () => [120, 500, 1200].forEach(t => setTimeout(resize, t))); } } catch (e) {}
   buildStep('efectos'); renderer.info.autoReset = false; qInit(); fxInit(); buildStep('primer cuadro');
   vivoStart();
   cv.addEventListener('webglcontextlost', e => { e.preventDefault(); r2log('contexto WebGL perdido'); posSave(true); try { QUAL.mode = 'bajo'; localStorage.setItem('tsp:q', 'bajo'); } catch (er) {} let auto = true; try { const t0 = +(sessionStorage.getItem('tsp:glr') || 0); auto = Date.now() - t0 > 90000; sessionStorage.setItem('tsp:glr', String(Date.now())); } catch (er) {} v3fail(auto ? 'El celular se quedó sin memoria gráfica. Volvemos a abrir el mundo en calidad Baja, en el mismo lugar donde estabas…' : 'El celular se quedó sin memoria gráfica otra vez. Cerrá otras pestañas o apps y tocá «Probar de nuevo»: volvés al mismo lugar.'); if (auto) setTimeout(() => location.reload(), 2500); }, { once: true }); svBuild(scene, HW, R); /* en Kids también: frutales, mercados y mendigos del camino (sin la supervivencia) */ try { roadLife(scene, HW, hx); } catch (e) { console.warn('vida del camino', e); } try { clayBuild(scene, HW); } catch (e) { console.warn('barriales', e); } try { farmBuild(scene, HW); } catch (e) { console.warn('trigal', e); } try { orchBuild(scene); } catch (e) { console.warn('olivos y viña', e); } try { woolBuild(scene, HW); } catch (e) { console.warn('lana y lino', e); } if (!hx) try { hueBuild(scene, HW); } catch (e) { console.warn('huerta', e); } try { phWorld(scene, HW, allPts, zMax, hx, R); } catch (e) { console.warn('ph', e); } PG.ready = false; PG.ims.forEach(im => im.parent && im.parent.remove(im)); PG.ims = []; PG.cache.clear(); GT.done = 0; GT.pdone = 0; GT.rdone = 0; GT.zaq = 0; GT.ims.forEach(im => im.parent && im.parent.remove(im)); GT.ims = []; setTimeout(() => { galTrees().catch(e => r2log('árboles: ' + ((e && e.message) || e))).then(() => pgBuild()).catch(e => r2log('pasto nuevo falló: ' + ((e && e.message) || e))).then(() => galPalms()).then(() => galRocks()).catch(e => r2log('árboles fallaron: ' + ((e && e.message) || e))); }, 1500); try { ambWorld(scene, HW, allPts, zMax, hx); } catch (e) { console.warn('amb', e); } try { mergeHouses(scene); } catch (e) { console.warn('merge', e); } [1200, 9000, 25000].forEach(ms => setTimeout(() => { try { if (!/[?&]nomerge/.test(location.search) && S && S.scene === scene) worldMerge(scene); } catch (e) { console.warn('wmerge', e); } }, ms)); setTimeout(() => { try { if (S && S.renderer.compileAsync) S.renderer.compileAsync(S.scene, S.camera); } catch (e) {} }, 300);
@@ -1187,7 +1188,7 @@ const KL = {};
 // tres formas de pantalla, cada una con su propio CSS: pc, movil-v (celular parado) y movil-h (celular acostado)
 function layoutClass() { const coarse = matchMedia('(pointer: coarse)').matches, w = innerWidth, h = innerHeight, lay = !coarse && w >= 900 ? 'pc' : (w > h ? 'movil-h' : 'movil-v'); try { if (document.body && document.body.dataset && document.body.dataset.layout !== lay) document.body.dataset.layout = lay; } catch (e) {} return lay; }
 layoutClass(); try { const vp = document.querySelector('meta[name=viewport]'); if (vp && !/viewport-fit=cover/.test(vp.content)) vp.content += ', viewport-fit=cover'; } catch (e) {} addEventListener('resize', layoutClass); try { screen.orientation && screen.orientation.addEventListener('change', () => setTimeout(layoutClass, 50)); } catch (e) {}
-function resize() { if (!S) return; layoutClass(); const r = S.root.getBoundingClientRect(); const w = r.width || innerWidth, h = r.height || innerHeight; S.renderer.setSize(w, h, false); S.camera.aspect = w / h; S.camera.updateProjectionMatrix(); if (S.fx) { S.fx.setPixelRatio(S.renderer.getPixelRatio()); S.fx.setSize(w, h); } }
+function resize() { if (!S) return; layoutClass(); const r = S.root.getBoundingClientRect(); const w = r.width || innerWidth, h = r.height || innerHeight, pr = S.renderer.getPixelRatio(); if (S.rsz && S.rsz[0] === w && S.rsz[1] === h && S.rsz[2] === pr) return; S.rsz = [w, h, pr]; S.renderer.setSize(w, h, false); S.camera.aspect = w / h; S.camera.updateProjectionMatrix(); if (S.fx) { S.fx.setPixelRatio(S.renderer.getPixelRatio()); S.fx.setSize(w, h); } }
 /* gráficos altos en PC: resplandor suave (bloom) con antialias; si la compu no da, se apaga solo */
 function fxBad() { return /Apple|Metal/i.test(QUAL.gpu || ''); }
 const FX_BASE = window.FX_BASE || new URL('../hero/', import.meta.url).href;
@@ -1198,7 +1199,7 @@ async function fxInit() {
   const mob = matchMedia('(pointer: coarse)').matches, r = S.renderer, sz = r.getDrawingBufferSize(new THREE.Vector2()), rt = new THREE.WebGLRenderTarget(sz.x, sz.y, { type: THREE.HalfFloatType, samples: mob ? 2 : 4 });
   const c = new FXM.EffectComposer(r, rt); c.addPass(new FXM.RenderPass(S.scene, S.camera));
   c.addPass(new FXM.UnrealBloomPass(new THREE.Vector2(sz.x / 2, sz.y / 2), S.hx ? .2 : .14, .4, 1.0)); c.addPass(new FXM.OutputPass());
-  S.fxC = c; S.fx = QUAL.lv >= 3 && !fxBad() ? c : null; resize();
+  S.fxC = c; S.fx = QUAL.lv >= 3 && !fxBad() ? c : null; S.rsz = null; resize();
 }
 /* ---------- el avatar 3D en los minijuegos: cuadros renderizados del mismo personaje (ropa, piel, pelo y proporciones) ---------- */
 const AVS = { key: '', p: null };
@@ -1224,7 +1225,7 @@ async function avSprites(av) {
 /* ---------- Hero: tomas cinematográficas del lugar real para la intro de cada etapa ---------- */
 function stageShots(nodeId) {
   try {
-    if (!S || !S.hx) return null; const m = S.markers[nodeId], c = S.camera, r = S.renderer; if (!m) return null; const P0 = c.position.clone(), Q0 = c.quaternion.clone(), f0 = c.fov, a0 = c.aspect, out = [];
+    if (!S) return null; const m = S.markers[nodeId], c = S.camera, r = S.renderer; if (!m) return null; const P0 = c.position.clone(), Q0 = c.quaternion.clone(), f0 = c.fov, a0 = c.aspect, out = [];
     const sz = r.getSize(new THREE.Vector2()), tx = m.position.x, tz = m.position.z, ty = (S.W ? S.W.hAt(tx, tz) : 0);
     /* en celulares, las fotos de la etapa se sacan chicas y aparte: a pantalla completa el iPhone se quedaba sin memoria y la página se caía */
     const lite = (matchMedia('(pointer: coarse)').matches || window.__liteShots) ? (() => { const w = 640, h = 360, cv = document.createElement('canvas'); cv.width = w; cv.height = h; const lut = new Uint8Array(256); for (let i = 0; i < 256; i++) { const v = i / 255, sv = v <= .0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - .055; lut[i] = Math.round(Math.min(1, sv) * 255); } return { w, h, cv, lut, cx: cv.getContext('2d'), px: new Uint8Array(w * h * 4), rt: new THREE.WebGLRenderTarget(w, h, { depthBuffer: true }) }; })() : null; /* el destino guarda colores lineales: la tabla los pasa a sRGB */
@@ -1427,7 +1428,7 @@ function qApply() {
   if (S.fxC) S.fx = lv >= 3 && !fxBad() ? S.fxC : null;
   if (lv < 2) S.scene.environment = null; else skyEnv();
   try { texTier(lv); } catch (e) {} if (TEXK.tdet) TEXK.tdet.value = lv >= 2 ? 1 : 0;
-  FLORA.acc = 0; PH.near = 0; resize();
+  FLORA.acc = 0; PH.near = 0; S.rsz = null; resize();
 }
 function qSet(mode) { _qE = null; QUAL.mode = mode; try { localStorage.setItem('tsp:q', mode); } catch (e) {} QUAL.dpr = 0; qInit(); }
 function qCycle() { const k = Object.keys(QN), m = k[(k.indexOf(QUAL.mode) + 1) % k.length]; qSet(m); return 'Calidad gráfica: ' + QN[m] + (m === 'auto' ? ' (' + QL[QUAL.lv] + ')' : ''); }
@@ -1492,11 +1493,13 @@ function ui() {
   const cur = g.NODES[p.pos], list = nextList();
   if (S.walking || S.freeMoving || S.quiet) { box.innerHTML = ''; return; }
   if (cur.kind === 'ch' && !g.isDone(cur.id)) { box.innerHTML = `<button class="v3b main" data-to="${cur.id}">Entrar ${aL(cur.label)}</button>`; }
-  else if (list.length === 1) { const n = g.NODES[list[0]]; box.innerHTML = `<button class="v3b main" data-to="${n.id}">Caminar ${aL(n.label)}</button>`; }
+  else if (list.length === 1) { const n = g.NODES[list[0]]; box.innerHTML = `<button class="v3b main" data-to="${n.id}">Ver camino ${aL(n.label)}</button>`; }
   else if (list.length > 1) { const [a, b] = list.map(id => g.NODES[id]).sort((x, y) => x.x - y.x); box.innerHTML = `<span class="v3k">El camino se bifurca</span><div class="v3two"><button class="v3b" data-to="${a.id}">← ${esc(a.label)}</button><button class="v3b" data-to="${b.id}">${esc(b.label)} →</button></div>`; }
   else box.innerHTML = '';
-  box.querySelectorAll('[data-to]').forEach(bt => bt.onclick = () => go(bt.dataset.to));
+  /* «Ver camino» marca la parada con la flecha; el que camina es el jugador (llega solo al acercarse). Solo «Entrar» actúa donde ya estás */
+  box.querySelectorAll('[data-to]').forEach(bt => bt.onclick = () => wpOrGo(bt.dataset.to));
 }
+function wpOrGo(id) { const g = G(); if (id === g.P().pos) { go(id); return; } if (!g.reachable(id)) { go(id); return; } nodeWp(id); const n = g.NODES[id]; try { g.toast('Te marco el camino ' + (n ? aL(n.label).replace(/&amp;/g, '&') : 'a la parada') + ' con una flecha. Caminá hasta ahí.'); } catch (e) {} }
 const aL = l => /^el /i.test(l) ? 'al ' + esc(l.slice(3)) : 'a ' + esc(l);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -3945,7 +3948,7 @@ const MUS = window.MUS_URLS || {
   hero: [new URL('./music/hero_exploracion.mp3', MUS_AT).href],
   // Kids, exploración: «The Light Beyond the Crystals» (piano), en bucle con fundido de 3 s
   kids: [new URL('./music/hero_exploracion.mp3', MUS_AT).href], /* Gui: la misma música de Hero también en Kids */
-  // Kids, minijuegos: «The Inn at the End of the Old Road» (cortada a 3:12 con fundido); Hero mantiene su música hasta que Gui elija
+  // minijuegos de Kids y de Hero: «The Inn at the End of the Old Road» (cortada a 3:12 con fundido)
   kidsMg: [new URL('./music/kids_minijuegos.mp3', MUS_AT).href],
   orar: ['https://music.wixstatic.com/mp3/43ca3b_538f7365d7e248f1bf574404060d1d65.mp3', 'https://music.wixstatic.com/mp3/43ca3b_b29f4283091e41ebb259f0338ad83024.mp3', 'https://music.wixstatic.com/mp3/43ca3b_0ec4648425c24a579ef24a9a0b7caa81.mp3', 'https://music.wixstatic.com/mp3/43ca3b_c88f06c8392149c2a87c327e80823a50.mp3']
 };
@@ -3993,7 +3996,7 @@ function musGesture() { // en un toque del usuario: habilita la reproducción (i
 }
 function musTick() {
   const m = AU.mus; if (!m) return false; if (S && (S.hx ? 'hero' : 'kids') !== m.br) { m.adv.el.pause(); m.adv = musTrack(MUS[S.hx ? 'hero' : 'kids']); m.br = S.hx ? 'hero' : 'kids'; m.adv.primed = false; }
-  const arcOpen = !document.getElementById('arcade').hidden, shown = !document.getElementById('view3d').hidden && !arcOpen, pray = S && (S.pose === 'pray' || S.solemn === 2), on = AU.on && shown && !(S && S.solemn === 1), kidsMg = !!(m.mg && arcOpen && !(S && S.hx) && G().branch !== 'ados');
+  const arcOpen = !document.getElementById('arcade').hidden, shown = !document.getElementById('view3d').hidden && !arcOpen, pray = S && (S.pose === 'pray' || S.solemn === 2), on = AU.on && shown && !(S && S.solemn === 1), kidsMg = !!(m.mg && arcOpen); /* Gui: los minijuegos de Hero con la misma música que Kids */
   if (!(pray ? m.pray : m.adv).ok && on) { if (m.adv.loop && !m.adv.ok) musFail(m.adv); return !pray && !!m.adv.loop && (m.adv.err || 0) <= 5; } /* mientras reintenta cargar la pista elegida queda en silencio; la música de reserva entra recién si falla del todo */
   m.adv.want = on && !pray ? (AU.speaking || AU.narr ? .22 : .55) : 0; m.pray.want = on && pray ? (AU.speaking || AU.narr ? .35 : .7) : 0; if (m.mg) m.mg.want = AU.on && kidsMg ? (AU.speaking || AU.narr ? .22 : .5) : 0;
   for (const t of [m.adv, m.pray, m.mg]) { if (!t) continue;
@@ -6446,7 +6449,7 @@ function camAnn(rid) { const st = camP()[rid]; if (!st || st.ann) return; try { 
 function camAskKids(rid) { const C = CAMS[rid], K = C && C.kids; if (!K) return; const st = camP(); if (st[rid]) return; st[rid] = { b: null, s: 'ask' }; G().save();
   const pick = b => { st[rid] = { b, s: 'go' }; G().save(); camShow(rid); camAnn(rid); };
   camRun({}, [{ who: 'nar', t: K.t }, { who: 'nar', ask: K.ask, o: K.o.map(([t, b]) => ({ t, fn: () => pick(b) })) }], () => { if (!camP()[rid].b) pick(K.o[0][1]); }); }
-function camAskHero(rid) { const A = P3.mod.HASK[rid]; camRun({ [A.who]: {} }, [{ who: A.who, ask: A.q, o: A.o.map(([t, tag, att, rep]) => ({ t, fn: () => { const p = G().P(); p.story = p.story || {}; const a = p.story.att = p.story.att || { esc: 0, zel: 0, rom: 0 }; for (const k in att) a[k] = (a[k] || 0) + att[k]; p.dones = p.dones || {}; p.dones[tag] = (p.dones[tag] || 0) + 1; p.story.ans = p.story.ans || {}; p.story.ans[rid] = tag; G().save(); camStart(rid, tag); }, then: [{ who: rep[0], t: rep[1] }] })) }]); }
+function camAskHero(rid) { const A = P3.mod.HASK[rid], cast = { [A.who]: {} }; A.o.forEach(o => { if (o[3] && o[3][0] !== 'nar' && o[3][0] !== 'me') cast[o[3][0]] = {}; }); /* también los que responden, si no quedaban sin nombre ni voz */ camRun(cast, [{ who: A.who, ask: A.q, o: A.o.map(([t, tag, att, rep]) => ({ t, fn: () => { const p = G().P(); p.story = p.story || {}; const a = p.story.att = p.story.att || { esc: 0, zel: 0, rom: 0 }; for (const k in att) a[k] = (a[k] || 0) + att[k]; p.dones = p.dones || {}; p.dones[tag] = (p.dones[tag] || 0) + 1; p.story.ans = p.story.ans || {}; p.story.ans[rid] = tag; G().save(); camStart(rid, tag); }, then: [{ who: rep[0], t: rep[1] }] })) }]); }
 /* el lugar del camino: la persona, el signo de exclamación y el cartel para hablar */
 function camShow(rid) {
   const st = camP()[rid]; if (!st || !st.b || st.s === 'done' || !S || !S.scene) return; const d = camDef(rid, st.b); if (!d || CAM.npc[rid]) return; const pos = camSpot(d.at, d.off); if (!pos) return;
@@ -6547,6 +6550,7 @@ function camGoal() { try { if (!iniP().fin) return null; } catch (e) {} const st
 /* charla: en Hero con la cámara de cine; en Kids (o si no se puede) en una hoja con voz */
 function camRun(cast, steps, onDone) {
   CAM.run = 1; const done0 = onDone; onDone = () => { CAM.run = 0; done0 && done0(); };
+  { const walk = L => (L || []).forEach(st => { if (st && st.who && CMP_CAST[st.who] && !cast[st.who]) cast[st.who] = {}; (st && st.o || []).forEach(o => walk(o.then)); }); walk(steps); } /* todo el que habla entra en escena (con su nombre y su voz) */
   const c2 = {}; for (const k in cast) if (cast[k] && (cast[k].o || CMP_CAST[k])) c2[k] = cast[k];
   if (S.hx && cineOk() && cine({ cast: c2, steps, onDone })) return;
   const q = steps.slice(), NM = k => k === 'nar' ? '' : k === 'me' ? (G().P().name || 'Vos') : (cast[k] && cast[k].name) || (CMP_CAST[k] && CMP_CAST[k].name) || '', VC = k => k === 'nar' ? 'narrador' : (cast[k] && cast[k].voice) || (CMP_CAST[k] && CMP_CAST[k].voice) || 'varon';
@@ -8229,13 +8233,13 @@ const DANZAS = {
   /* 2 Samuel 6:14 — saltos de alegría con los brazos en alto */
   D_david: { dur: 2.4, f: t => { const b = (t % .6) / .6, hop = Math.sin(b * Math.PI), land = 1 - hop, w = sn(t, 1.2);
     return { py: .11 * hop, pz: 0, R: { spine_01: [['x', -6]], spine_03: [['x', -6]], Head: [['x', -14]], neck_01: [['x', -4]],
-      upperarm_l: [['z', 126 + 10 * w], ['x', -14]], upperarm_r: [['z', -(126 - 10 * w)], ['x', -14]], clavicle_l: [['z', 16]], clavicle_r: [['z', -16]], lowerarm_l: [['x', -12]], lowerarm_r: [['x', -12]], hand_l: [['y', 20 * w]], hand_r: [['y', 20 * w]],
+      upperarm_l: [['z', 116 + 8 * w], ['x', 20]], upperarm_r: [['z', -(116 - 8 * w)], ['x', 20]], clavicle_l: [['z', 8]], clavicle_r: [['z', -8]], lowerarm_l: [['x', -12]], lowerarm_r: [['x', -12]], hand_l: [['y', 20 * w]], hand_r: [['y', 20 * w]],
       thigh_l: [['x', -14 * land - 6]], thigh_r: [['x', -14 * land - 6]], calf_l: [['x', 26 * land + 6]], calf_r: [['x', 26 * land + 6]], foot_l: [['x', -10 * land]], foot_r: [['x', -10 * land]] } }; } },
   /* Salmo 150 — palmas, un paso a cada lado y los brazos al cielo */
   D_salmo: { dur: 4.8, f: t => { const a = sm(t / .4) * (1 - sm((t - 1.1) / .3)), st = sm((t - 1.2) / .3) * (1 - sm((t - 2.3) / .3)), up = sm((t - 2.4) / .9) * (1 - sm((t - 4.3) / .5)), clap = (Math.sin((t / .3) * Math.PI * 2) + 1) / 2;
     const lk = st * Math.max(0, sn(t - 1.2, 1.2, .25)), rk = st * Math.max(0, -sn(t - 1.2, 1.2, .25));
     return { py: .03 * Math.abs(sn(t, .6)) * (st + up * .5), px: .05 * st * sn(t - 1.2, 1.2), R: {
-      upperarm_l: [['x', -62 * a - 20 * st - 14 * up], ['y', -(16 + 10 * clap) * a], ['z', 128 * up + 25 * st]], upperarm_r: [['x', -62 * a - 20 * st - 14 * up], ['y', (16 + 10 * clap) * a], ['z', -(128 * up + 25 * st)]], clavicle_l: [['z', 16 * up]], clavicle_r: [['z', -16 * up]],
+      upperarm_l: [['x', -62 * a - 20 * st + 20 * up], ['y', -(16 + 10 * clap) * a], ['z', 116 * up + 25 * st]], upperarm_r: [['x', -62 * a - 20 * st + 20 * up], ['y', (16 + 10 * clap) * a], ['z', -(116 * up + 25 * st)]], clavicle_l: [['z', 8 * up]], clavicle_r: [['z', -8 * up]],
       lowerarm_l: [['x', -62 * a - 25 * st]], lowerarm_r: [['x', -62 * a - 25 * st]], Head: [['x', -18 * up]], spine_03: [['x', -6 * up]],
       thigh_l: [['x', -38 * lk]], thigh_r: [['x', -38 * rk]], calf_l: [['x', 55 * lk]], calf_r: [['x', 55 * rk]] } }; } },
   /* ronda de la cosecha — brazos abiertos como tomados de los hombros, pasos cruzados y patadas suaves */
@@ -8245,7 +8249,7 @@ const DANZAS = {
       thigh_l: [['x', -40 * k1], ['z', -6 * k1]], thigh_r: [['x', -40 * k2], ['z', 6 * k2]], calf_l: [['x', 20 * k1 * (1 - k1) * 4]], calf_r: [['x', 20 * k2 * (1 - k2) * 4]], foot_l: [['x', 20 * k1]], foot_r: [['x', 20 * k2]] } }; } },
   /* Lucas 15:25 — la fiesta del hijo que volvió: dos palmas, un giro con los brazos abiertos y un salto de alegría */
   D_fiesta: { dur: 3.6, f: t => { const c = 1 - sm((t - 1.1) / .2), sp = sm((t - 1.2) / 1.2), j = t > 2.4 ? Math.sin(Math.min(1, (t - 2.6) / .5) * Math.PI) * (t > 2.6 ? 1 : 0) : 0, open = sm((t - 1.1) / .25) * (1 - sm((t - 2.4) / .25)), hi = sm((t - 2.4) / .3) * (1 - sm((t - 3.3) / .3)), clap = (Math.sin((t / .3) * Math.PI * 2) + 1) / 2;
-    return { py: .12 * j, yaw: 360 * sp, R: { upperarm_l: [['x', -60 * c - 14 * hi], ['y', -(16 + 12 * clap) * c], ['z', 95 * open + 128 * hi]], upperarm_r: [['x', -60 * c - 14 * hi], ['y', (16 + 12 * clap) * c], ['z', -(95 * open + 128 * hi)]], clavicle_l: [['z', 16 * hi]], clavicle_r: [['z', -16 * hi]],
+    return { py: .12 * j, yaw: 360 * sp, R: { upperarm_l: [['x', -60 * c + 20 * hi], ['y', -(16 + 12 * clap) * c], ['z', 95 * open + 116 * hi]], upperarm_r: [['x', -60 * c + 20 * hi], ['y', (16 + 12 * clap) * c], ['z', -(95 * open + 116 * hi)]], clavicle_l: [['z', 8 * hi]], clavicle_r: [['z', -8 * hi]],
       lowerarm_l: [['x', -64 * c - 10 * open]], lowerarm_r: [['x', -64 * c - 10 * open]], Head: [['x', -12 * hi]], spine_03: [['x', -5 * hi]],
       thigh_l: [['x', -10 * (1 - j) * hi]], thigh_r: [['x', -10 * (1 - j) * hi]], calf_l: [['x', 20 * (1 - j) * hi]], calf_r: [['x', 20 * (1 - j) * hi]] } }; } }
 };
@@ -8459,13 +8463,9 @@ function wireInput() {
     pts.delete(e.pointerId); if (pts.size < 2) pinch = null;
     const was = down; down = null; if (!was || drag > 8) return;
     const r = cv.getBoundingClientRect(); v.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
-    ray.setFromCamera(v, S.camera); const here = G().P().pos, hits = ray.intersectObjects(Object.values(S.markers).filter(m => m.userData.id !== here), true);
-    if (hits.length) { let o = hits[0].object; while (o && !o.userData.id) o = o.parent; if (o) { go(o.userData.id); return; } }
-    const gh = ray.intersectObject(S.ground)[0]; if (!gh) return;
-    const g = G(), cand = nextList(); let best = null, bd = Infinity;
-    const pool = cand.length ? cand : Object.keys(S.markers).filter(id => id !== g.P().pos && g.reachable(id));
-    pool.forEach(id => { const m = S.markers[id], d = (m.position.x - gh.point.x) ** 2 + (m.position.z - gh.point.z) ** 2; if (d < bd) { bd = d; best = id; } });
-    if (best && (cand.length || bd < 36)) go(best);
+    ray.setFromCamera(v, S.camera); if (BLD.on) { bldTap(ray); return; } const here = G().P().pos, hits = ray.intersectObjects(Object.values(S.markers).filter(m => m.userData.id !== here), true);
+    if (hits.length) { let o = hits[0].object; while (o && !o.userData.id) o = o.parent; if (o) { wpOrGo(o.userData.id); return; } }
+    /* tocar el suelo ya no lleva al personaje caminando solo: se camina con el joystick o las flechas */
   };
 }
 function loop(now) {
@@ -9420,16 +9420,18 @@ const kFishT = () => { const t = svWaterNear(); return !t ? 0 : t === 1 ? 1 : t 
 function kNear() {
   if (svOn() || !S || !S.sv || S.walking) return null; const st = S.sv, a = S.av.position, d2 = (x, z) => (x - a.x) ** 2 + (z - a.z) ** 2;
   if (st.kw) return { k: 'work', label: '⏸ ' + st.kw.label + (st.kw.n ? ' · ' + st.kw.n : '') };
+  { const x = pocketNear(); if (x) return x; if (S.pocket) return null; } /* adentro de un lugar secreto (también en Kids): salir y mirar lo que guarda */
   let best = null, bd = 2.6 * 2.6;
   chopList().forEach((o, i) => { if (st.felled.has(i)) return; const d = d2(o.x, o.z); if (d < bd) { bd = d; const t = kTier('tree', o, i); best = { k: 'tree', i, t, g: 'wood' }; } });
   rockList().forEach((o, i) => { if (st.mined.has(i)) return; const r = .6 + (.35 + (o.v || .5) * .7) * (o.s || 1), d = d2(o.x, o.z); if (d < (r + 1.4) ** 2 && d < bd + 2) { bd = d; const t = kTier('rock', o, i); best = { k: 'rock', i, t, g: 'stone' }; } });
   (S.kgr || []).forEach((o, i) => { if (st.kgrT && st.kgrT.has(i)) return; const d = d2(o.x, o.z); if (d < 2.4 * 2.4 && d < bd) { bd = d; best = { k: 'grain', i, t: o.t, g: 'grain' }; } });
   if (!best) { const t = kFishT(); if (t) best = { k: 'fish', i: 0, t, g: 'fish' }; }
+  if (!best) for (const m of Z7.stalls.concat(st.stalls || [])) if (d2(m.x, m.z) < 9) return { k: 'kmkt', label: 'Cambiar en el mercado' };
   if (best) best.label = K3[best.g].verb + ' ' + lc1(K3[best.g].n[best.t - 1]);
   return best;
 }
 function kAct() {
-  const n = kNear(), st = S.sv; if (!n) return; if (n.k === 'work') { kStop(); return; }
+  const n = kNear(), st = S.sv; if (!n) return; if (n.k === 'work') { kStop(); return; } if (n.k === 'kmkt') { kMarket(); return; } if (n.k === 'secx') { pocketExit(); return; } if (n.k === 'seci') { pocketItem(n); return; }
   const G3 = K3[n.g], tl = kTool(G3.ty);
   if (tl < n.t) { const m = n.t === 2 ? 'Se gana completando una página de tu álbum.' : 'Se gana con la misión «' + Object.values(KMIS).find(x => x.ty === G3.ty).name + '».'; svToast(`${G3.ic} Para ${lc1(G3.n[n.t - 1])} necesitás ${lc1(K3T[G3.ty][n.t - 1])}. ${m}`, 'Para esto necesitás una herramienta mejor.'); return; }
   st.kw = { k: n.k, i: n.i, t: n.t, g: n.g, hits: 0, need: kNeed(n.t), tt: 0, n: 0, label: G3.ing + ' ' + lc1(G3.n[n.t - 1]) }; S.joy.x = 0; S.joy.y = 0;
@@ -9449,8 +9451,8 @@ function kidsTick(dt) {
   w.tt += dt; if (w.tt < 1.3) return; w.tt = 0; w.hits++;
   if (w.k === 'fish') h3do(['M_Fishing_Idle', 'M_Holding_Idle'], 1.7); else if (w.k === 'grain') h3do(['PickUp_Table', 'M_Kneeling_Idle'], 1.6); else svSwing(w.k);
   if (w.hits < w.need) return; w.hits = 0; w.need = kNeed(w.t); w.n++; try { metaEv('junta'); } catch (e) {}
-  const P = kP(), G3 = K3[w.g], key = w.g + w.t; P.got[key] = (P.got[key] || 0) + 1; P.n = (P.n || 0) + 1; svXP(w.t * 2);
-  try { pkPop(`${G3.ic} +1 ${lc1(G3.n[w.t - 1])}`); } catch (e) {}
+  const P = kP(), G3 = K3[w.g], key = w.g + w.t; P.got[key] = (P.got[key] || 0) + 1; P.n = (P.n || 0) + 1; svXP(w.t * 2); /* lo que sacás sirve para construir (madera y piedra) o para cambiar en el mercado (el grano, como canasta) */ try { if (w.g === 'wood') kmAdd('madera', w.t); else if (w.g === 'stone') kmAdd('piedra', w.t); else if (w.g === 'grain') { const H = hueP(); H.can = (H.can || 0) + 1; } } catch (e) {}
+  try { pkPop(`${G3.ic} +1 ${lc1(G3.n[w.t - 1])}` + (w.g === 'wood' ? ' · +' + w.t + ' madera para construir' : w.g === 'stone' ? ' · +' + w.t + ' piedra para construir' : w.g === 'grain' ? ' · 🧺 +1 canasta' : '')); } catch (e) {}
   { const id = G3.card[w.t - 1], c = id && ALB.find(x => x.id === id); if (c && !albP().have[c.id]) { albAdd(c); albBtn(true); albToast(c); } }
   if (P.n % 15 === 0) { try { albGetSobre(1, 'Cambiaste 15 cosas que juntaste por un sobre de figuritas'); } catch (e) {} }
   G().save();
@@ -9470,7 +9472,7 @@ function kUI() {
 function kidsMisBuild(scene, W) {
   if (svOn()) return; const yAt = (x, z) => W.hAt(x, z);
   /* campos de trigo de Kids: cebada cerca de Nazaret y Belén, trigo en Belén y Capernaúm, una espiga dorada en el campo grande */
-  S.kgr = []; try { [['taller', 1, 2], ['pastores', 1, 2], ['pastores', 2, 2], ['roofhouse', 2, 2], ['field', 3, 1]].forEach(([pk, t, n], q) => { const p = (S.pois || []).find(x => x.k === pk); if (!p) return; for (let j = 0; j < n; j++) for (let tr = 0; tr < 24; tr++) { const a = q * 1.7 + j * 2.4 + tr * .7, r = 12 + (tr % 5) * 2.5, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (blockedAt(x, z) || waterWet(x, z, null) > .02 || S.kgr.some(o => (o.x - x) ** 2 + (o.z - z) ** 2 < 9)) continue; const before = Z7.nodes.length; z7Node(scene, x, z, yAt(x, z), 'trigo', t, 'hoz'); const o = Z7.nodes.splice(before, 1)[0]; if (o) S.kgr.push(o); break; } }); } catch (e) { console.warn('campos kids', e); }
+  S.kgr = []; try { [['taller', 1, 2], ['pastores', 1, 2], ['pastores', 2, 2], ['roofhouse', 2, 2], ['field', 3, 1]].forEach(([pk, t, n], q) => { const p = (S.pois || []).find(x => x.k === pk); if (!p) return; for (let j = 0; j < n; j++) for (let tr = 0; tr < 24; tr++) { const a = q * 1.7 + j * 2.4 + tr * .7, r = 28 + (tr % 5) * 3, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; /* los campos van afuera del pueblo, nunca sobre la plaza ni pegados a las casas */ if ([[0, 0], [4, 0], [-4, 0], [0, 4], [0, -4]].some(([u, v]) => blockedAt(x + u, z + v)) || (S.floors || []).some(f => x > f.x0 - 4 && x < f.x1 + 4 && z > f.z0 - 4 && z < f.z1 + 4) || (S.W && S.W.dAt && S.W.dAt(x, z) < 3) || waterWet(x, z, null) > .02 || S.kgr.some(o => (o.x - x) ** 2 + (o.z - z) ** 2 < 9)) continue; const before = Z7.nodes.length; z7Node(scene, x, z, yAt(x, z), 'trigo', t, 'hoz'); const o = Z7.nodes.splice(before, 1)[0]; if (o) S.kgr.push(o); break; } }); } catch (e) { console.warn('campos kids', e); }
   Object.entries(KMIS).forEach(([id, M]) => { try {
     let x, z; if (M.poi) { const p = (S.pois || []).find(q => q.k === M.poi); if (!p) return; const C = [[-p.side * 34, 6], [-p.side * 36, -6], [-p.side * 10, 6], [-p.side * 12, -8]]; const c = C.find(([ox, oz]) => !blockedAt(p.x + ox, p.z + oz) && !(M.poi === 'lake' ? false : waterWet(p.x + ox, p.z + oz, null) > .02)) || C[0]; x = p.x + c[0]; z = p.z + c[1]; if (M.poi !== 'lake') { x = p.x + C[2][0]; z = p.z + C[2][1]; } }
     else { const p = (OL.plan || []).find(q => q.id === M.ol); if (!p) return; x = p.x - Math.sign(p.x) * (p.r + 3); z = p.z - 4; }
@@ -9815,7 +9817,7 @@ function bldP() { const p = G().P(), k = S && S.hx ? 'bldH' : 'bldK'; p[k] = p[k
 function bldBuild(scene) {
   BLD.scene = scene; BLD.parts = {}; BLD.mats = null; BLD.pops = []; BLD.on = false; const M = bldMats();
   BP_ORDER.forEach(t => { BLD.parts[t] = bldShape(t).map(([geo, mk]) => { const im = new THREE.InstancedMesh(geo, M[mk], BLD.cap); im.count = 0; if (mk === 'sillar' || mk === 'plank' || mk === 'adobe') { im.userData.tint = 1; _bm.C = _bm.C || new THREE.Color(); for (let q = 0; q < BLD.cap; q++) im.setColorAt(q, _bm.C.setRGB(1, 1, 1)); } im.frustumCulled = false; im.castShadow = !!S.hx; im.receiveShadow = true; im.userData.keep = 1; scene.add(im); return im; }); });
-  BLD.list = bldP().slice(); bldSync(); if (!S.hx) bldKidsBtn(); try { albInit(); } catch (e) { console.warn('álbum', e); }
+  BLD.list = bldP().slice(); bldSync(); if (!S.hx) bldKidsBtn(); else { const kb = document.getElementById('v3kbld'); if (kb) kb.remove(); } /* si antes se jugó Kids en la misma página, su botón no queda en Hero */ try { albInit(); } catch (e) { console.warn('álbum', e); }
 }
 const _bm = {}; function bldMat(e, k) { const M = _bm.M || (_bm.M = new THREE.Matrix4()), Q = _bm.Q || (_bm.Q = new THREE.Quaternion()), A = _bm.A || (_bm.A = new THREE.Vector3(0, 1, 0)), V = _bm.V || (_bm.V = new THREE.Vector3()), Sc = _bm.S || (_bm.S = new THREE.Vector3()); Q.setFromAxisAngle(A, (e[4] || 0) * Math.PI / 2); return M.compose(V.set(e[1], e[3], e[2]), Q, Sc.set(k, k, k)); }
 function bldSync() {
@@ -9834,8 +9836,13 @@ function bldPhys() {
 function bldCellTop(x, z) { let t = null; for (const e of BLD.list) if (e[1] === x && e[2] === z) { const top = e[3] + BP[e[0]].h; if (t == null || top > t) t = top; } return t; }
 function bldGround(x, z) { if (!S.W) return 0; let m = 1e9; for (const [u, v] of [[-.45, -.45], [.45, -.45], [-.45, .45], [.45, .45], [0, 0]]) m = Math.min(m, Math.max(0, S.W.hAt(x + u, z + v))); return Math.round(m * 100) / 100; }
 function bldTarget() {
-  const a = S.av.position, x = Math.round(a.x + Math.sin(S.yaw) * 1.75), z = Math.round(a.z + Math.cos(S.yaw) * 1.75), T = { x, z, err: null, rem: null };
-  if (BLD.del) { const L = bldP(); let best = -1, by = -1e9; L.forEach((e, i) => { if (e[1] === x && e[2] === z && e[3] > by) { by = e[3]; best = i; } }); if (best >= 0) { T.rem = best; T.y = L[best][3]; T.t = L[best][0]; T.r = L[best][4]; } else { T.y = bldGround(x, z); T.err = 'Acá no hay nada tuyo para sacar.'; } return T; }
+  /* el lugar va siempre alineado a la cuadrícula: 2 pasos adelante según hacia dónde mirás (4 direcciones) y corrido al costado con ◀ ▶, así se arma una fila (un cerco, un muro) sin moverse */
+  const a = S.av.position, q = ((Math.round(S.yaw / (Math.PI / 2)) % 4) + 4) % 4, fw = [[0, 1], [1, 0], [0, -1], [-1, 0]][q], rt = [-fw[1], fw[0]], sx = BLD.sx || 0;
+  if (BLD.pin && Math.hypot(BLD.pin.x - a.x, BLD.pin.z - a.z) > 11) BLD.pin = null; /* si te alejás, el lugar marcado se suelta y vuelve adelante tuyo */
+  const x = BLD.pin ? BLD.pin.x : Math.round(a.x) + fw[0] * 2 + rt[0] * sx, z = BLD.pin ? BLD.pin.z : Math.round(a.z) + fw[1] * 2 + rt[1] * sx, T = { x, z, err: null, rem: null };
+  /* sacar: la pieza tuya más cerca del lugar marcado (no hace falta apuntar justo) */
+  if (BLD.del) { const L = bldP(); let best = -1, bd = 1e9; L.forEach((e, i) => { const d = Math.hypot(e[1] - x, e[2] - z) - e[3] * .01; if (d < bd) { bd = d; best = i; } });
+    if (best >= 0 && bd <= 1.6) { T.rem = best; T.x = L[best][1]; T.z = L[best][2]; T.y = L[best][3]; T.t = L[best][0]; T.r = L[best][4]; } else { T.y = bldGround(x, z); T.err = 'Acá no hay nada tuyo para sacar: acercate a la pieza o movete con ◀ ▶.'; } return T; }
   const top = bldCellTop(x, z), base = top ?? bldGround(x, z); let nb = base; for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const q = bldCellTop(x + i, z + j); if (q != null && q > nb) nb = q; }
   BLD.maxDy = Math.max(0, Math.round((nb - base) * 2) / 2); if (BLD.dy > BLD.maxDy) BLD.dy = BLD.maxDy; T.y = Math.round((base + BLD.dy) * 100) / 100; T.t = BLD.t; T.r = BLD.r;
   const b = BP[BLD.t];
@@ -9845,6 +9852,7 @@ function bldTarget() {
   else if (typeof waterWet === 'function' && waterWet(x, z, null) > .3) T.err = 'En el agua no se puede construir.';
   else if (top == null && BLD.dy === 0 && blockedAt(x, z, (S.cols || []).filter(c => !c.bld && Math.abs(c.x0 - x) < 30 && Math.abs(c.z0 - z) < 30))) T.err = 'Hay algo en el medio: probá un poco más allá.';
   else if (b.col && Math.hypot(x - a.x, z - a.z) < .8 && T.y < a.y + 1.6 && T.y + b.h > a.y + .15) T.err = 'Estás parado ahí: correte un paso.';
+  else if (!S.hx && !kmHas(b.cost)) T.err = 'Te falta: ' + Object.entries(kmCost(b.cost)).filter(([k, n]) => (kmP()[k] || 0) < n).map(([k, n]) => KMAT[k][0] + ' ' + KMAT[k][1].toLowerCase() + ' (' + (kmP()[k] || 0) + '/' + n + ')').join(', ') + '. Cambiá tu cosecha en un mercado del camino.';
   else if (S.hx && !svHas(b.cost)) T.err = 'Te falta: ' + Object.entries(b.cost).filter(([k, n]) => (svP().inv[k] || 0) < n).map(([k, n]) => RES[k][1] + ' ' + RES[k][0].toLowerCase() + ' (' + (svP().inv[k] || 0) + '/' + n + ')').join(', ') + '. Hacelo en el Taller.';
   return T;
 }
@@ -9854,14 +9862,14 @@ function bldGhost(t) {
 }
 function bldSfx(k) { try { const A = fxCtx(), t0 = A.currentTime, o = A.createOscillator(), gn = A.createGain(); o.type = k === 0 ? 'square' : 'triangle'; const f = k === 0 ? [140, 110] : k === 2 ? [320, 160] : [200, 80]; o.frequency.setValueAtTime(f[0], t0); o.frequency.exponentialRampToValueAtTime(f[1], t0 + .14); gn.gain.setValueAtTime(.0001, t0); gn.gain.exponentialRampToValueAtTime(k === 0 ? .06 : .22, t0 + .01); gn.gain.exponentialRampToValueAtTime(.0001, t0 + .2); o.connect(gn); gn.connect(A.destination); o.start(t0); o.stop(t0 + .22); } catch (e) {} }
 function bldPlace() {
-  const T = bldTarget(); if (T.err) { bldMsg(T.err, 1); bldSfx(0); return; } const b = BP[BLD.t]; if (S.hx) svPay(b.cost);
-  const e = [BLD.t, T.x, T.z, T.y, BLD.r]; bldP().push(e); BLD.list = bldP().slice(); BLD.pops.push({ e, s: 0, sc: .2 }); bldSync(); bldSfx(1);
+  const T = bldTarget(); if (T.err) { bldMsg(T.err, 1); bldSfx(0); return; } const b = BP[BLD.t]; if (S.hx) svPay(b.cost); else kmPay(b.cost);
+  const e = [BLD.t, T.x, T.z, T.y, BLD.r]; bldP().push(e); if (b.thin) { const c = bldCamRight(), al = BLD.r % 2 ? [0, 1] : [1, 0], sg = (al[0] * c[0] + al[1] * c[1]) < 0 ? -1 : 1; BLD.pin = { x: T.x + al[0] * sg, z: T.z + al[1] * sg }; } /* cercos y muros finos: el lugar pasa solo al siguiente de la fila */ BLD.list = bldP().slice(); BLD.pops.push({ e, s: 0, sc: .2 }); bldSync(); bldSfx(1);
   try { if (typeof fireSparks === 'function') fireSparks(T.x, T.y + .1, T.z, 8); } catch (er) {} h3do(['M_Box_Idle', 'Interact', 'PickUp_Table'], .8, 0, 1.6);
   if (S.hx) { svXP(1); ofiXP(b.cost.block || b.cost.losa ? 'can' : 'car', 1); svUI(); } bldMilestone(); G().save(); bldHud();
 }
 function bldRemove() {
   const T = bldTarget(); if (T.rem == null) { bldMsg('Acá no hay nada tuyo para sacar.', 1); bldSfx(0); return; } const L = bldP(), e = L[T.rem]; L.splice(T.rem, 1); BLD.list = L.slice();
-  if (S.hx) { Object.entries(BP[e[0]].cost).forEach(([k, n]) => svAdd(k, n)); svUI(); } bldSync(); bldSfx(2); G().save(); bldHud();
+  if (S.hx) { Object.entries(BP[e[0]].cost).forEach(([k, n]) => svAdd(k, n)); svUI(); } else kmPay(BP[e[0]].cost, -1); bldSync(); bldSfx(2); G().save(); bldHud();
 }
 function bldMilestone() {
   const p = G().P(), nk = S.hx ? 'bldNH' : 'bldNK'; p[nk] = (p[nk] || 0) + 1; const n = p[nk];
@@ -9872,31 +9880,37 @@ function bldMilestone() {
 }
 function bldMsg(t, bad) { const m = document.getElementById('v3bldmsg'); if (m) { m.textContent = t; m.className = bad ? 'no' : 'ok'; clearTimeout(bldMsg.T); bldMsg.T = setTimeout(() => { if (m) m.textContent = ''; }, 3200); } else G().toast(t); }
 function bldStart(t) {
-  if (!BLD.parts) return; const el = document.getElementById('v3sheet'); if (el) el.hidden = true; if (t) BLD.t = t; BLD.on = true; BLD.del = false; BLD.dy = 0;
+  if (!BLD.parts) return; const el = document.getElementById('v3sheet'); if (el) el.hidden = true; if (t) BLD.t = t; BLD.on = true; BLD.del = false; BLD.dy = 0; BLD.sx = 0; BLD.pin = null;
   BLD.cam = [S.camDist, S.camPitch]; S.camDist = Math.max(S.camDist, 6.5); S.camPitch = Math.max(S.camPitch ?? .4, .62); bldGhost(BLD.t); bldHud();
-  const p = G().P(); if (!p.bldTip) { p.bldTip = 1; setTimeout(() => bldMsg('Caminá y girá para elegir el lugar. Las piezas se apilan solas, como bloques. Con ⬆ subís para hacer techos.'), 300); }
+  const p = G().P(); if (!p.bldTip) { p.bldTip = 1; setTimeout(() => bldMsg('Tocá el piso donde va la pieza y después «Poner». Los cercos siguen solos en fila. Con ⬆ subís para hacer techos.'), 300); }
 }
 function bldStop() { BLD.on = false; if (BLD.ghost) BLD.ghost.visible = false; if (BLD.cam) { S.camDist = BLD.cam[0]; S.camPitch = BLD.cam[1]; BLD.cam = null; } bldHud(); }
+/* la derecha de la pantalla, en la cuadrícula (para mover el lugar con ◀ ▶ y para seguir un cerco en fila) */
+function bldCamRight() { const v = new THREE.Vector3(); S.camera.getWorldDirection(v); const rx = -v.z, rz = v.x; return Math.abs(rx) > Math.abs(rz) ? [Math.sign(rx), 0] : [0, Math.sign(rz)]; }
+/* tocar el piso marca ahí el lugar de la pieza (lo más intuitivo en el celular) */
+function bldTap(ray) { const o = ray.ray.origin, d = ray.ray.direction, p = new THREE.Vector3(); let hit = null; for (let t = .5; t < 45; t += .2) { p.copy(d).multiplyScalar(t).add(o); const h = S.W ? S.W.hAt(p.x, p.z) : 0; if (p.y <= h) { hit = p; break; } } if (!hit) return; const x = Math.round(hit.x), z = Math.round(hit.z), a = S.av.position;
+  if (Math.hypot(x - a.x, z - a.z) > 10) { bldMsg('Tocá un lugar más cerca tuyo.', 1); return; } BLD.pin = { x, z }; BLD.sx = 0; bldSfx(0); }
 function bldAct(a) {
   if (a.startsWith('t:')) { BLD.t = a.slice(2); BLD.del = false; BLD.dy = 0; }
   else if (a === 'rot') BLD.r = (BLD.r + 1) % 4;
   else if (a === 'up') { if (BLD.dy + .5 > BLD.maxDy) { bldMsg('Para subir más, poné primero algo al lado: un muro o una columna que lo sostenga.', 1); return; } BLD.dy += .5; }
   else if (a === 'dn') BLD.dy = Math.max(0, BLD.dy - .5);
+  else if (a === 'izq' || a === 'der') { const k = a === 'der' ? 1 : -1; if (BLD.pin) { const c = bldCamRight(); BLD.pin = { x: BLD.pin.x + c[0] * k, z: BLD.pin.z + c[1] * k }; } else BLD.sx = Math.max(-3, Math.min(3, (BLD.sx || 0) + k)); }
   else if (a === 'del') BLD.del = !BLD.del;
   else if (a === 'ok') { BLD.del ? bldRemove() : bldPlace(); return; }
   else if (a === 'x') { bldStop(); return; }
   else if (a === 'menu') { bldStop(); svCraft('obra'); return; }
   bldHud();
 }
-function bldKey(k) { if (!BLD.on) return false; if (k === 'r') bldAct('rot'); else if (k === 'u') bldAct('up'); else if (k === 'j') bldAct('dn'); else if (k === 'x') bldAct('del'); else if (k === 'enter' || k === 'f') bldAct('ok'); else if (k === 'escape' || k === 'b') bldAct('x'); else if (/^[1-9]$/.test(k) && BP_ORDER[+k - 1]) bldAct('t:' + BP_ORDER[+k - 1]); else return false; return true; }
+function bldKey(k) { if (!BLD.on) return false; if (k === 'r') bldAct('rot'); else if (k === 'u') bldAct('up'); else if (k === 'j') bldAct('dn'); else if (k === 'z') bldAct('izq'); else if (k === 'c') bldAct('der'); else if (k === 'x') bldAct('del'); else if (k === 'enter' || k === 'f') bldAct('ok'); else if (k === 'escape' || k === 'b') bldAct('x'); else if (/^[1-9]$/.test(k) && BP_ORDER[+k - 1]) bldAct('t:' + BP_ORDER[+k - 1]); else return false; return true; }
 function bldHud() {
   let el = document.getElementById('v3bld'); document.body.classList.toggle('v3bldon', BLD.on); if (!BLD.on) { if (el) el.hidden = true; return; }
   if (!el) { el = document.createElement('div'); el.id = 'v3bld'; el.className = 'v3bld'; document.body.appendChild(el); el.onclick = e => { const b = e.target.closest('[data-b]'); if (!b) return; e.stopPropagation(); bldAct(b.dataset.b); }; el.onpointerdown = e => e.stopPropagation(); }
   el.hidden = false; el.classList.toggle('kd', !S.hx); const b = BP[BLD.t], s = S.hx ? svP() : null, pc = !matchMedia('(pointer: coarse)').matches;
-  const cost = S.hx ? Object.entries(b.cost).map(([k, n]) => `<i class="${(s.inv[k] || 0) >= n ? 'ok' : 'no'}">${RES[k][1]} ${RES[k][0]}: ${s.inv[k] || 0}/${n}</i>`).join('') : '<i class="ok">✨ Gratis</i>';
-  const pal = BP_ORDER.map((t, i) => { const ok = !S.hx || svHas(BP[t].cost); return `<button data-b="t:${t}" class="${t === BLD.t && !BLD.del ? 'on' : ''}${ok ? '' : ' poor'}" title="${BP[t].n}${pc ? ' (' + (i + 1) + ')' : ''}"><span>${BP[t].ic}</span><small>${BP[t].s}</small></button>`; }).join('');
-  el.innerHTML = `<div class="bl-pal">${pal}</div><div class="bl-info"><b>${BLD.del ? '🗑 Sacar piezas' : b.ic + ' ' + b.n}</b><span>${BLD.del ? 'Apuntá a una pieza tuya y tocá Sacar' + (S.hx ? ': te devuelve los materiales.' : '.') : esc(b.d)}</span><span class="bl-cost">${BLD.del ? '' : cost}</span><em id="v3bldmsg"></em></div>
-    <div class="bl-bar"><button data-b="rot" title="Girar${pc ? ' (R)' : ''}">↻<small>Girar</small></button><button data-b="up" title="Subir${pc ? ' (U)' : ''}">⬆<small>Subir</small></button><button data-b="dn" title="Bajar${pc ? ' (J)' : ''}">⬇<small>Bajar</small></button><button data-b="del" class="${BLD.del ? 'on' : ''}" title="Sacar${pc ? ' (X)' : ''}">🗑<small>Sacar</small></button><button data-b="ok" class="bl-go">${BLD.del ? '🗑' : '✓'}<small>${BLD.del ? 'Sacar' : 'Poner'}${pc ? ' · Enter' : ''}</small></button><button data-b="x" title="Terminar${pc ? ' (Esc)' : ''}">✕<small>Listo</small></button></div>`;
+  const cost = S.hx ? Object.entries(b.cost).map(([k, n]) => `<i class="${(s.inv[k] || 0) >= n ? 'ok' : 'no'}">${RES[k][1]} ${RES[k][0]}: ${s.inv[k] || 0}/${n}</i>`).join('') : Object.entries(kmCost(b.cost)).map(([k, n]) => `<i class="${(kmP()[k] || 0) >= n ? 'ok' : 'no'}">${KMAT[k][0]} ${KMAT[k][1]}: ${kmP()[k] || 0}/${n}</i>`).join('');
+  const pal = BP_ORDER.map((t, i) => { const ok = S.hx ? svHas(BP[t].cost) : kmHas(BP[t].cost); return `<button data-b="t:${t}" class="${t === BLD.t && !BLD.del ? 'on' : ''}${ok ? '' : ' poor'}" title="${BP[t].n}${pc ? ' (' + (i + 1) + ')' : ''}"><span>${BP[t].ic}</span><small>${BP[t].s}</small></button>`; }).join('');
+  el.innerHTML = `<div class="bl-pal">${pal}</div><div class="bl-info"><b>${BLD.del ? '🗑 Sacar piezas' : b.ic + ' ' + b.n}</b><span>${BLD.del ? 'Tocá una pieza tuya y después Sacar: te devuelve los materiales.' : esc(b.d)}</span><span class="bl-cost">${BLD.del ? '' : cost}</span><em id="v3bldmsg"></em></div>
+    <div class="bl-bar"><button data-b="izq" title="Correr el lugar a la izquierda${pc ? ' (Z)' : ''}">◀<small>Correr</small></button><button data-b="der" title="Correr el lugar a la derecha${pc ? ' (C)' : ''}">▶<small>Correr</small></button><button data-b="rot" title="Girar${pc ? ' (R)' : ''}">↻<small>Girar</small></button><button data-b="up" title="Subir${pc ? ' (U)' : ''}">⬆<small>Subir</small></button><button data-b="dn" title="Bajar${pc ? ' (J)' : ''}">⬇<small>Bajar</small></button><button data-b="del" class="${BLD.del ? 'on' : ''}" title="Sacar${pc ? ' (X)' : ''}">🗑<small>Sacar</small></button><button data-b="ok" class="bl-go">${BLD.del ? '🗑' : '✓'}<small>${BLD.del ? 'Sacar' : 'Poner'}${pc ? ' · Enter' : ''}</small></button><button data-b="x" title="Terminar${pc ? ' (Esc)' : ''}">✕<small>Listo</small></button></div>`;
 }
 function bldTick(dt, t) {
   if (!BLD.parts || !S || !S.av) return; const a = S.av.position;
@@ -10036,6 +10050,29 @@ function albPack() { const a = albP(); if (!(a.sob > 0)) return; a.sob--; const 
 function albInit() { if (!albOn()) { albBtn(); return; } albP(); albBtn(); }
 
 /* ===================== HUERTA QUE CRECE (Kids): seis canteros cerca del comienzo; se siembra, se riega y se cosecha caminando encima. Crece en tiempo real, aunque cierres el juego ===================== */
+/* ===================== Kids: materiales para construir y trueque en el mercado =====================
+   En Kids no hay plata: lo que cosechás en tu huerta se junta en canastas, y en los mercados del camino se cambian por
+   madera, piedra y barro (o por un sobre de figuritas). También aparecen algunos materiales entre los hallazgos del camino. */
+const KMAT = { madera: ['🪵', 'Madera'], piedra: ['🪨', 'Piedra'], barro: ['🟫', 'Barro'] }, KMAT_K = Object.keys(KMAT);
+const KMAT_OF = { wood: 'madera', plank: 'madera', viga: 'madera', carpa: 'madera', block: 'piedra', losa: 'piedra', adobe: 'barro' };
+function kmP() { const p = G().P(); p.kmat = p.kmat || { madera: 0, piedra: 0, barro: 0 }; return p.kmat; }
+function kmAdd(k, n) { const m = kmP(); m[k] = Math.max(0, (m[k] || 0) + n); }
+function kmCost(cost) { const o = {}; Object.entries(cost || {}).forEach(([k, n]) => { const m = KMAT_OF[k] || 'madera'; o[m] = (o[m] || 0) + n; }); return o; }
+function kmHas(cost) { const m = kmP(); return Object.entries(kmCost(cost)).every(([k, n]) => (m[k] || 0) >= n); }
+function kmPay(cost, sg) { Object.entries(kmCost(cost)).forEach(([k, n]) => kmAdd(k, -n * (sg || 1))); }
+const KTRUE = [['madera', 1, 3], ['piedra', 1, 2], ['barro', 1, 2], ['sobre', 5, 1]];
+function kMarket() {
+  const H = hueP(), c = H.can || 0, m = kmP();
+  const rows = KTRUE.map(([k, cost, n], i) => { const ok = c >= cost, ic = k === 'sobre' ? '🎴' : KMAT[k][0], nm = k === 'sobre' ? 'Sobre de figuritas' : n + ' de ' + KMAT[k][1].toLowerCase();
+    return `<div class="sv-rec km-r"><span class="gd-ic">${ic}</span><div><b>${nm}</b><small>Por ${cost} 🧺 ${cost === 1 ? 'canasta' : 'canastas'} de tu cosecha</small></div><button data-k="${i}" ${ok ? '' : 'disabled'}>Cambiar</button></div>`; }).join('');
+  const el = vilSheet(`<div class="inv-h"><b>🧺 Mercado del camino</b><button class="bag-x" aria-label="Cerrar">✕</button></div>
+    <p class="vil-p">Acá no se paga con plata: se cambia. Traé lo que cosechás en tu huerta y llevate materiales para construir.</p>
+    <p class="km-have">Tenés <b>🧺 ${c}</b> ${c === 1 ? 'canasta' : 'canastas'} · ${KMAT_K.map(k => KMAT[k][0] + ' ' + (m[k] || 0)).join(' · ')}</p>
+    ${c ? '' : '<p class="vil-p km-tip">Todavía no tenés cosecha: sembrá en tu huerta, regá y cosechá. Cada cosecha te da canastas.</p>'}<div class="gd-list">${rows}</div>`);
+  el.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { const [k, cost, n] = KTRUE[+b.dataset.k]; if ((H.can || 0) < cost) return; H.can -= cost;
+    if (k === 'sobre') { try { albGetSobre(1, 'Lo cambiaste en el mercado'); } catch (e) {} } else { kmAdd(k, n); pkPop(KMAT[k][0] + ' +' + n + ' ' + KMAT[k][1].toLowerCase()); }
+    try { bldSfx(1); } catch (e) {} G().save(); kMarket(); });
+}
 const HUE_CROPS = [
   ['trigo', '🌾', 'Trigo', 3, 0, '#D9B45A', 'El grano de trigo que cae en la tierra da mucho fruto (Juan 12:24).'],
   ['pepino', '🥒', 'Pepinos', 4, 0, '#4E8A2E', 'En el desierto, el pueblo extrañaba los pepinos y los melones de Egipto (Números 11:5).'],
@@ -10045,7 +10082,7 @@ const HUE_CROPS = [
   ['mostaza', '🌳', 'Mostaza', 15, 15, '#E2C23A', 'La semillita más chiquita crece y se hace un árbol donde los pájaros hacen su nido (Mateo 13:31-32).']
 ].map(([id, ic, n, min, need, col, t]) => ({ id, ic, n, min, need, col, t }));
 const HUE = { plots: [], at: null, acc: 0, inside: -1, pick: null };
-function hueP() { const p = G().P(); p.huerta = p.huerta || { pl: [], n: 0, per: {} }; for (let i = 0; i < 6; i++) p.huerta.pl[i] = p.huerta.pl[i] || { c: null, t: 0, w: 0 }; return p.huerta; }
+function hueP() { const p = G().P(); p.huerta = p.huerta || { pl: [], n: 0, per: {} }; if (p.huerta.can == null) p.huerta.can = p.huerta.n || 0; /* lo ya cosechado cuenta como canastas */ for (let i = 0; i < 6; i++) p.huerta.pl[i] = p.huerta.pl[i] || { c: null, t: 0, w: 0 }; return p.huerta; }
 function hueCrop(id) { return HUE_CROPS.find(c => c.id === id); }
 function hueStage(i) { const s = hueP().pl[i]; if (!s.c) return -1; const c = hueCrop(s.c); return Math.min(1, (Date.now() - s.t) / (c.min * 60e3)); }
 function hueSpot(W) { const st = (S.pois || []).find(q => q.name === 'Campos de los pastores') || (S.pois || [])[0]; if (!st) return null; const ok = (x, z) => { if (waterWet(x, z, null) > .02 || (W.dAt && W.dAt(x, z) < 5) || spDist(x, z) < 2.5) return false; const hs = [[-5, -4], [5, -4], [-5, 4], [5, 4], [0, 0]].map(([dx, dz]) => W.hAt(x + dx, z + dz)); if (Math.max(...hs) - Math.min(...hs) > .9) return false; for (let dx = -6; dx <= 6; dx += 3) for (let dz = -5; dz <= 5; dz += 2.5) if (blockedAt(x + dx, z + dz)) return false; return true; };
@@ -10072,7 +10109,7 @@ function hueDrawAll() { HUE.plots.forEach((p, i) => hueDraw(i)); }
 function hueTick(dt) { if (S.hx || !HUE.at) return; HUE.acc += dt; if (HUE.acc > 1) { HUE.acc = 0; hueDrawAll(); } if (HUE.pick || S.walking === 'cine') return; const a = S.av.position; let at = -1; HUE.plots.forEach((p, i) => { if (Math.abs(p.x - a.x) < 1.25 && Math.abs(p.z - a.z) < 1.25) at = i; }); if (at !== HUE.inside) { HUE.inside = at; if (at >= 0) hueAct(at); } }
 function hueAct(i) { const H = hueP(), s = H.pl[i], g = hueStage(i);
   if (g < 0) { huePicker(i); return; }
-  if (g >= 1) { const c = hueCrop(s.c), first = !H.per[c.id]; H.per[c.id] = (H.per[c.id] || 0) + 1; H.n = (H.n || 0) + 1; s.c = null; s.t = 0; s.w = 0; HUE.plots[i].key = ''; hueDraw(i); try { h3do(['M_Pick_Fruit', 'PickUp_Table'], 2, .4); } catch (e) {} const pts = 3 + HUE_CROPS.indexOf(c) * 2; svXP(pts); pkPop('🧺 Cosechaste ' + c.ic + ' ' + c.n.toLowerCase() + ' +' + pts); try { tone3d(); sparkBurst(); } catch (e) {}
+  if (g >= 1) { const c = hueCrop(s.c), first = !H.per[c.id]; H.per[c.id] = (H.per[c.id] || 0) + 1; H.n = (H.n || 0) + 1; const cn = 1 + Math.floor(HUE_CROPS.indexOf(c) / 2); H.can = (H.can || 0) + cn; setTimeout(() => pkPop('🧺 +' + cn + (cn === 1 ? ' canasta' : ' canastas') + ' para cambiar en el mercado'), 1200); s.c = null; s.t = 0; s.w = 0; HUE.plots[i].key = ''; hueDraw(i); try { h3do(['M_Pick_Fruit', 'PickUp_Table'], 2, .4); } catch (e) {} const pts = 3 + HUE_CROPS.indexOf(c) * 2; svXP(pts); pkPop('🧺 Cosechaste ' + c.ic + ' ' + c.n.toLowerCase() + ' +' + pts); try { tone3d(); sparkBurst(); } catch (e) {}
     if (first) setTimeout(() => { try { sello('huerta-' + c.id, 'Primera cosecha: ' + c.n); } catch (e) {} misPop('¡Tu primera cosecha de ' + c.n.toLowerCase() + '!', c.t); try { G().vo(c.t, 'narrador'); } catch (e) {} }, 700);
     if (H.n % 4 === 0) setTimeout(() => { try { albGetSobre(1, '¡Tu huerta te regaló un sobre de figuritas!'); } catch (e) {} }, 1600);
     const nu = HUE_CROPS.find(k => k.need && k.need === H.n); if (nu) setTimeout(() => misPop('¡Nueva semilla: ' + nu.n.toLowerCase() + '!', 'Ya la podés sembrar en tu huerta'), 2600);
