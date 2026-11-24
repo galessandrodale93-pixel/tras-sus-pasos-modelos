@@ -16,3 +16,10 @@ jobs:
           echo "$r" | python3 -c "import sys,json;d=json.load(sys.stdin);print('clave:',d['result']['status'] if d.get('success') else d.get('errors'))"
           w=$(curl -s -H "Authorization: Bearer $CF_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/workers/scripts")
           echo "$w" | python3 -c "import sys,json;d=json.load(sys.stdin);print('workers:',[s['id'] for s in d['result']] if d.get('success') else d.get('errors'));sys.exit(0 if d.get('success') else 1)"
+      - name: Probar el candado de los archivos
+        run: |
+          U=https://tsp-assets.galessandrodale-93.workers.dev/app/voice/0026411d.mp3
+          echo "sin página de origen: $(curl -s -o /dev/null -w '%{http_code}' $U)"
+          echo "desde otro sitio:     $(curl -s -o /dev/null -w '%{http_code}' -H 'Origin: https://otro-sitio.com' -H 'Referer: https://otro-sitio.com/' $U)"
+          echo "desde habitat-cfm:    $(curl -s -o /dev/null -w '%{http_code}' -H 'Referer: https://www.habitat-cfm.org/jugar.html' $U)"
+          echo "desde el sitio test:  $(curl -s -o /dev/null -w '%{http_code}' -H 'Origin: https://headless-tjfrhnexbhw-galessandrodale93-1411.wix-site-host.com' $U)"
