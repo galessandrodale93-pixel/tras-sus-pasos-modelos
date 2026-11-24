@@ -22,7 +22,7 @@ THREE = os.path.join(AQUI, 'node_modules', 'three', 'build', 'three.module.js')
 OUT = os.path.join(AQUI, 'salida')
 
 # funciones internas que las pruebas necesitan ver (se agregan al final de walk3d.js solo acá)
-DBG = ('openMission, jueLock, jueLit, jueGoal, jueTick, jueOpen, MAT, kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
+DBG = ('QUAL, openMission, jueLock, jueLit, jueGoal, jueTick, jueOpen, MAT, kNear, kAct, kidsTick, repLv, vilGiftOpen, vilFamCheck, repP, price, frCheck, perksHtml, POSES, poseMenu, epReqTxt, '
        'WATER, OL, epAdvance, epPlace, epHTML, BK, BREADS, bkOpen, bkStart, bkTick, bkP, bkTier, bkNear, Z7, chopList, epStep, epP, EPIC, '
        'epAct, epNear, atP, ft, rockList, sheetUp, CINE, S: () => S, svP, t7Tick, svNear, svAct, svShop, svWaterNear, R7, svHas, fv, ofiLv, ofiP, GUIA, guiaP, guiaGoals, guiaPanel, metaP, metaEv, metaOpen, gearState, advHoy, advP, advGoal, advRead, advOpen, advStarSync, notiP, notiSync, openBag, cardShow, cardCamino, cardAdv, cardMeta, histP, histTick, recapData, recapShow, recapCard, recapDue, buildHero3, liteR, H3, danceBuild, cardAvatar, vidMake, vidPick, poseMenu, ui, poseSet, MP, mpUI, mpPanel, TALK, QUAL, txShrink, AM, amOpen, amSync, amEv, amGoals, amReqIn, amDraw, GBY, guiaGoals: () => guiaGoals(), puertaLock, puertaGoal, puertaTick, misOpen, misDone, MISSIONS, MIS_PUERTA, CASI, casiList, casiTick, casiGoal, metaP, META_POOL, PUE, pueTick, pueOpen, pueLv, pueSpot, blockedAt, waterWet, INI, iniTick, iniGoal, nodeActive, CAM, CAMS, camTick, camScene, camGoal, camEco, CINE, poseSet, camFinTick, camRecap')
 
@@ -310,6 +310,24 @@ APARATO = COMUN + """
       todo&=ok(/@/.test(d0.pantalla)&&d0.nucleos>0,'pantalla y núcleos: '+d0.pantalla+' · '+d0.nucleos);
       return {ok:!!todo, d:L.join(' · ')};"""
 
+CAMBLK = "const a=S.av.position, x0=a.x, z0=a.z; a.x+=180; a.z+=60; S.gy=null; await wait(400);\n        const c=S.camera.position, dd=Math.hypot(c.x-a.x,c.z-a.z); todo&=ok(dd<9,'tras un viaje largo la cámara queda detrás del personaje ('+dd.toFixed(1)+' m)');\n        todo&=ok(c.y>(S.W?S.W.hAt(c.x,c.z):0),'la cámara no queda bajo el suelo');\n        a.x=x0; a.z=z0; S.gy=null; await wait(300);\n        "
+CALIDAD = COMUN + """
+            const L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return !!c;}; let todo=true; const wait=ms=>new Promise(r=>setTimeout(r,ms)); const W=window.W3;
+      try {
+        const a=S.av.position, x0=a.x, z0=a.z; a.x+=180; a.z+=60; S.gy=null; await wait(400);
+        const c=S.camera.position, dd=Math.hypot(c.x-a.x,c.z-a.z); todo&=ok(dd<9,'tras un viaje largo la cámara queda detrás del personaje ('+dd.toFixed(1)+' m)');
+        todo&=ok(c.y>(S.W?S.W.hAt(c.x,c.z):0),'la cámara no queda bajo el suelo');
+        a.x=x0; a.z=z0; S.gy=null; await wait(300);
+        const m0=W.qLabel(); W.qPick(); await wait(300); const el=document.getElementById('v3qual');
+        todo&=ok(el&&!el.hidden&&el.querySelectorAll('[data-q]').length===5,'el selector muestra las 5 opciones');
+        const free=[...el.querySelectorAll('[data-q]:not([disabled])')].map(b=>b.dataset.q); L.push('disponibles: '+free.join(', '));
+        for(const k of ['bajo','medio','auto']){ if(!free.includes(k)) continue; el.querySelector('[data-q="'+k+'"]').click(); await wait(500);
+          todo&=ok(el.querySelector('[data-q="'+k+'"]').classList.contains('on')&&!el.hidden,'elegir '+k+' la marca y la ventana sigue abierta ('+W.qLabel()+')'); }
+        await wait(1800); todo&=ok(/cuadros por segundo/.test(el.querySelector('.ql-fps').textContent),'muestra los cuadros por segundo: '+el.querySelector('.ql-fps').textContent);
+        el.querySelector('.ql-ok').click(); await wait(400); todo&=ok(el.hidden,'«Listo» la cierra');
+      } catch(e){ L.push('ERROR '+e.message); todo=false; }
+      return {ok:!!todo, d:L.join(' · ')};"""
+
 CASI = COMUN + """
       const G_=window.GAME, P=G_.P(), L=[], ok=(c,t)=>{L.push((c?'✓ ':'✗ ')+t);return !!c;}; let todo=true; const b0=P.bonus||0, casi0=P.casi;
       try {
@@ -469,6 +487,7 @@ HERO = {
     'casi': ('Hero: «Te falta poco»', CASI),
     'puertas': ('Hero: minijuegos y misiones alternados, cadenas de 3', PUERTAS),
     'aparato': ('Datos del aparato para el panel, automáticos', APARATO),
+    'calidad': ('Selector de calidad gráfica (la cámara se prueba en Kids: en Hero la intro la sostiene)', CALIDAD.replace(CAMBLK, '')),
     'puntos': ('Hero: puntos con una cifra más, mismos niveles', PUNTOS),
     'juegos3': ('Hero: los juegos de las etapas I a III se abren con las misiones', JUEGOS3),
     'amigos': ('Hero: amigos del camino, regalos y desafío en equipo', AMIGOS),
@@ -535,6 +554,7 @@ KIDS = {
     'pueblokids': ('Kids: pueblos que cambian con lo que hacés', PUEBLOS),
     'casikids': ('Kids: «Te falta poco»', CASI),
     'puertaskids': ('Kids: minijuegos y misiones alternados, cadenas de 3', PUERTAS),
+    'calidadkids': ('Kids: cámara al entrar y selector de calidad gráfica', CALIDAD),
     'puntoskids': ('Kids: puntos con una cifra más, mismos niveles', PUNTOS),
     'juegos3kids': ('Kids: los juegos de las etapas I a III se abren con las misiones', JUEGOS3),
     'amigoskids': ('Kids: amigos del camino, regalos y desafío en equipo', AMIGOS),
@@ -583,7 +603,7 @@ async def correr(b, nombre, rama, pruebas, movil, elegidas, res):
         (errores if re.search(r'/app/|/kh/|jugar\.html', st) else ajenos).append(str(e)[:200] + ' @ ' + (re.findall(r'(\S+\.(?:js|html)):(\d+)', st)[:1] or [''])[0].__str__())
     ajenos = []; pg.on('pageerror', err)
     t0 = time.time(); ok = False
-    try: ok = await entrar(pg, rama)
+    try: ok = await entrar(pg, rama); print(f'  entró a {nombre}: {ok} ({time.time() - t0:.0f} s)', flush=True)
     except Exception as e: errores.append('entrar: ' + str(e)[:200])
     if not ok:
         for k, (t, _) in pr.items(): res.append((k, t, False, 'no se pudo entrar al juego (' + nombre + ')'))
