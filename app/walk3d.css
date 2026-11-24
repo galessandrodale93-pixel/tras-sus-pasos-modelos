@@ -1744,3 +1744,6 @@ body[data-branch="kids"] .video.hfilm .cap{font-family:"Nunito",sans-serif;font-
 .vil .km-have{margin:4px 0 10px;font-weight:800;font-size:14px}.vil .km-have b{color:#FFD86A}.vil .km-tip{opacity:.85;font-size:13px}
 .vil .km-r button[disabled]{opacity:.45;cursor:default}
 body[data-branch="ados"] .v3kbld{display:none!important}
+/* menú del juego: nunca se corta; si no entra, se desplaza (en la compu y en el celular), y acostado va en dos columnas */
+#menu .menu-in{max-height:calc(100vh - 8px);max-height:calc(100dvh - 8px - env(safe-area-inset-top,0px));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;scrollbar-width:thin}
+@media (max-height:560px){#menu .menu-in{display:grid!important;grid-template-columns:1fr 1fr;gap:6px!important;max-width:760px;padding-top:12px}#menu .menu-in .item{padding:10px 12px}#menu .menu-in>:not(.item){grid-column:1/-1}}
