@@ -61,6 +61,12 @@ export default {
     const url = new URL(req.url), p = url.pathname, o = req.headers.get('Origin'), H = { ...cors(o), 'Content-Type': 'application/json' };
     if (req.method === 'OPTIONS') return new Response(null, { status: okO(o) ? 204 : 403, headers: H });
     if (p === '/' || p === '/salud') return new Response('ok', { headers: H });
+    /* prueba desde el panel de GitHub: manda un aviso a todos los anotados (clave de un solo uso guardada como secreto PRUEBA) */
+    if (p === '/prueba-todos' && env.PRUEBA && req.headers.get('X-Prueba') === env.PRUEBA) { const v = await vapid(env); let cur, out = [];
+      do { const L = await env.AV.list({ prefix: 's:', cursor: cur }); cur = L.list_complete ? null : L.cursor;
+        for (const k of L.keys) { const raw = await env.AV.get(k.name); if (!raw) continue; let st; try { st = await enviar(env, v, JSON.parse(raw), { t: '🔔 Prueba de avisos', b: 'Así te va a llegar el aviso de cada día en Tras sus pasos.', tag: 'tsp-prueba', url: '/jugar.html' }); } catch (e) { st = 'error ' + e.message; }
+          if (st === 404 || st === 410) await env.AV.delete(k.name); out.push({ k: k.name.slice(2, 8), st, ep: (JSON.parse(raw).endpoint || '').split('/')[2] }); } } while (cur);
+      return new Response(JSON.stringify(out), { headers: H }); }
     if (p === '/clave') { const v = await vapid(env); return new Response(JSON.stringify({ k: b64u(v.pub) }), { headers: H }); }
     if (!okO(o)) return new Response('{"error":"prohibido"}', { status: 403, headers: H });
     if (req.method !== 'POST') return new Response('{"error":"metodo"}', { status: 405, headers: H });

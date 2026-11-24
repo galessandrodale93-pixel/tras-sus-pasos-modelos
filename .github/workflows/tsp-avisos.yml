@@ -2,6 +2,11 @@ name: Servidor de avisos (tsp-avisos)
 # Despliega tools/avisos/worker.js. La primera vez crea el espacio KV «tsp-avisos» y la clave VAPID (queda solo como secreto del Worker).
 on:
   workflow_dispatch:
+    inputs:
+      probar:
+        description: "si/no: después de desplegar, mandar un aviso de prueba a todos los anotados"
+        required: false
+        default: "no"
 jobs:
   desplegar:
     runs-on: ubuntu-latest
@@ -36,3 +41,8 @@ jobs:
             echo "clave VAPID creada"
           fi
           sleep 5; curl -s https://tsp-avisos.galessandrodale-93.workers.dev/clave | head -c 120; echo
+          if [ "${{ inputs.probar }}" = "si" ]; then
+            K=$(openssl rand -hex 24); echo -n "$K" | npx -y wrangler@4 secret put PRUEBA --name tsp-avisos; sleep 8
+            curl -s -X POST -H "X-Prueba: $K" -H "Origin: https://www.habitat-cfm.org" https://tsp-avisos.galessandrodale-93.workers.dev/prueba-todos; echo
+            openssl rand -hex 24 | npx -y wrangler@4 secret put PRUEBA --name tsp-avisos
+          fi
