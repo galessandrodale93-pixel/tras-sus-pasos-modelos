@@ -1,7 +1,7 @@
 import re, html, base64, os, asyncio
 from playwright.async_api import async_playwright
 D=os.path.dirname(os.path.abspath(__file__)); F='/tmp/fnt'  # fuentes: npm pack @fontsource/cinzel @fontsource/nunito-sans @fontsource/cormorant-garamond, descomprimidas en /tmp/fnt
-VERSION='Versión del 23 de noviembre de 2026'
+VERSION='Versión del 24 de noviembre de 2026'
 def b64(p): return base64.b64encode(open(p,'rb').read()).decode()
 def font(fam,file,w,st='normal'): return f"@font-face{{font-family:'{fam}';src:url(data:font/woff2;base64,{b64(file)}) format('woff2');font-weight:{w};font-style:{st}}}"
 fonts=''.join([font('Cinzel',f'{F}/fontsource-cinzel-5.3.0/files/cinzel-latin-{w}-normal.woff2',w) for w in (500,600,700)]+

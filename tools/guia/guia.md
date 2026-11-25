@@ -18,7 +18,7 @@ El juego tiene reglas firmes de contenido:
 - Ninguna decisión ofrece mentir, robar ni lastimar a nadie. Las elecciones son entre servir y pasar de largo, escuchar y apurarse, compartir y guardar.
 - Nada depende de la suerte en lo importante: el progreso sale de lo que hacés.
 
-> Lo nuevo en esta versión. Amigos del camino con regalos y equipos de hasta 5 con un desafío por semana; las paradas de cada etapa se abren de a una, ayudando a alguien del camino, y algunas misiones vienen en cadena; «Tu primer camino» para los que recién empiezan; «Te falta poco»; los pueblos que crecen con lo que hacés; los caminos de la historia, donde lo que decidís te lleva a lugares distintos y cierra con «Tus caminos»; un juego especial por etapa también en Kids; puntos con una cifra más; y la revisión de los 18 escenarios.
+> Lo nuevo en esta versión. Amigos del camino con regalos y equipos de hasta 5 con un desafío por semana; las paradas de cada etapa se abren de a una, ayudando a alguien del camino, y algunas misiones vienen en cadena; «Tu primer camino» para los que recién empiezan; «Te falta poco»; los pueblos que crecen con lo que hacés; los caminos de la historia, donde lo que decidís te lleva a lugares distintos y cierra con «Tus caminos»; un juego especial por etapa también en Kids; puntos con una cifra más; la revisión de los 18 escenarios; animales reales en el mundo (ovejas, burros, carneros, muflones y gallinas); construir tocando el piso; trueque en los mercados de Kids; y el selector de calidad gráfica.
 
 # Cómo entrar, tu cuenta y el pase
 Dirección: el juego está dentro de la web de Habitat, en habitat-cfm.org/jugar.html. Mientras dura la prueba solo entran los testers, con su link especial; el resto ve la página de presentación (habitat-cfm.org/kids-hero.html) hasta que el juego se lance.
@@ -94,7 +94,7 @@ Arriba al centro: la brújula. Apunta al próximo lugar y muestra la distancia. 
 
 Tu próximo paso: un solo cartel arriba dice qué conviene hacer ahora (por ejemplo, «Ayudá al posadero» o «Juego especial: La carpa entre nosotros»). Al tocarlo se abre la lista con todo lo pendiente, y lo que está por cumplirse va primero. El botón «Ver camino» marca con una flecha y una luz adónde ir: el personaje no camina solo, vas vos.
 
-Abajo: el botón de acción cambia según dónde estés: «Caminar a Nazaret», «Hablar con Natán», «Sentarse con tus compañeros», «Mover la roca», «Cocinar»… Al costado está el menú con cuatro opciones principales y «Más opciones».
+Abajo: el botón de acción cambia según dónde estés: «Ver camino a Nazaret» (marca la parada con la flecha y caminás vos), «Hablar con Natán», «Sentarse con tus compañeros», «Mover la roca», «Cocinar»… Al costado está el menú con cuatro opciones principales y «Más opciones».
 
 Marcas en el mundo: el signo «!» amarillo sobre una persona es una misión; los destellos dorados son carteles para descubrir; los rollos brillan cuando estás cerca; las fogatas tienen piedras, leños y fuego.
 
@@ -179,6 +179,17 @@ Compartir: en el camino hay mendigos. Darles pan o denarios suma Bondad, Resplan
 |15 | Pañuelo del servidor: prenda única que nunca se pierde
 |25 | Tesoro en el cielo: cuando das, ganás el doble de experiencia
 
+## El mercado en Kids: trueque
+En Kids no hay monedas: en los mercados del camino se cambia. Lo que cosechás en tu huerta y el trigo de los campos se juntan en canastas 🧺, y en cualquier puesto del mercado las cambiás por materiales para construir o por un sobre de figuritas.
+
+|Das | Recibís
+|1 canasta | 3 de madera
+|1 canasta | 2 de piedra
+|1 canasta | 2 de barro
+|5 canastas | 1 sobre de figuritas
+
+Los cultivos más difíciles dan más canastas: el trigo da 1 y la mostaza, 3.
+
 # Trabajo y fabricación (Hero)
 Herramientas: pedernal (fogatas), hacha (madera), caña (pescar esperando el pique), pico (piedra) y red (pesca sola, más lenta).
 
@@ -200,7 +211,17 @@ Con los Brazaletes de Bezalel todo cuesta la mitad de materiales.
 Con 10 tablones y 6 bloques armás tu casa donde estés parado, fuera del camino. Adentro van la cama, la mesa, el banco, el horno, el cofre y la lámpara. El cofre es el lugar más seguro del juego y el horno es un fuego que no se apaga. Terminar la casa con todos los muebles da una legendaria.
 
 # Construir libre
-Además de la casa con muebles, se puede construir libremente con piezas que se apilan en una grilla de un metro, como bloques. En Hero cada pieza cuesta materiales, que se devuelven al sacarla; en Kids son gratis. Lo construido se guarda y queda en el mundo.
+Además de la casa con muebles, se puede construir libremente con piezas que se apilan en una grilla de un metro, como bloques. Cada pieza cuesta materiales, en Hero y en Kids, y se devuelven al sacarla. Lo construido se guarda y queda en el mundo.
+
+Cómo se construye:
+- Tocá el piso donde va la pieza (en la compu, con un clic) y después «Poner». Si no tocás nada, la pieza va dos pasos adelante tuyo.
+- ◀ ▶ «Correr» mueve el lugar un metro al costado.
+- Los cercos siguen solos en fila: después de poner uno, el lugar pasa al siguiente.
+- «Sacar» saca tu pieza más cercana al lugar marcado y te devuelve los materiales.
+- ⬆ y ⬇ suben y bajan la pieza para hacer techos y pisos altos.
+- En el celular acostado, las piezas van en una columna a la derecha, para ver lo que construís.
+
+En Kids los materiales son tres: madera 🪵 (talando), piedra 🪨 (picando) y barro 🟫 (solo en el mercado, por trueque). Algunos hallazgos del camino también traen materiales.
 
 |Pieza | Cuesta (Hero) | Para qué
 |Bloque de piedra · Escalón · Columna · | 1 bloque de piedra | Muros, torres, escaleras y pórticos
@@ -212,6 +233,8 @@ Además de la casa con muebles, se puede construir libremente con piezas que se 
 |Pared de adobe | 2 adobes (alfarería) | Las paredes típicas de las casas de Galilea
 |Carpa | 1 carpa (taller de carpas) | Se arma y se entra, como las de Abraham
 |Cerco · Antorcha | 1 de madera | Corrales, huertas y luz de noche
+
+En Kids, cada pieza pide el material del que está hecha: las de piedra (bloque, escalón, losas, columna, ventana y arco) piden piedra; las de madera (bloque, puerta, techo, cerco, antorcha y carpa), madera; y la pared de adobe, barro.
 
 # Los oficios y sus maestros (Hero)
 Los oficios son trabajos de la época con niveles propios, de Aprendiz (1) a Maestro (30). Cada uno tiene un maestro o una maestra que vive en un lugar del mapa, enseña cómo se hacía de verdad y da encargos que suben el nivel. Se gana experiencia de oficio trabajando, y cada pocos niveles se aprende una receta nueva o se rinde más. Lo que fabricás se puede vender.
@@ -500,7 +523,7 @@ En Kids hay un álbum para completar, con 72 figuritas en 6 páginas: Personas, 
 # La huerta (Kids)
 Junto a los Campos de los pastores, cada chico tiene su huerta: seis parcelas con cerco y un cartel. Se siembra, se riega y se cosecha caminando sobre cada parcela, y al pisar una vacía aparece para elegir qué plantar. Las plantas crecen mientras jugás.
 
-Hay seis cultivos de la época: trigo, pepino, cebolla, melón, lenteja y mostaza (la semilla más chiquita, Mateo 13:31-32). Los nuevos se desbloquean a medida que cosechás. Cada 4 cosechas ganás un sobre de figuritas.
+Hay seis cultivos de la época: trigo, pepino, cebolla, melón, lenteja y mostaza (la semilla más chiquita, Mateo 13:31-32). Los nuevos se desbloquean a medida que cosechás. Cada 4 cosechas ganás un sobre de figuritas, y cada cosecha te da canastas para cambiar en el mercado.
 
 # Compañeros y la trama de Hero
 Eleazar, anciano escriba que guarda el rollo de Isaías. Asher, tu amigo zelote, que quiere que el Mesías eche a Roma. Lucio, soldado romano que empieza a preguntarse quién es este maestro. Cada uno cambia su actitud hacia vos según tus decisiones.
@@ -570,9 +593,9 @@ Equipos. Un equipo junta hasta 5 amigos, con un nombre bíblico (por ejemplo, «
 |Al cumplir 4 semanas | El Turbante de los compañeros de camino | El Turbante de los compañeros de camino
 
 # Música, voz y calidad
-- Música: cada momento tiene su pista elegida. La exploración suena con «The Road Beyond the Ruins», en Hero y también en Kids. No hay música sintetizada.
+- Música: cada momento tiene su pista elegida. La exploración suena con «The Road Beyond the Ruins» y los minijuegos con «The Inn at the End of the Old Road», en Hero y en Kids. No hay música sintetizada.
 - Voz: los personajes, el narrador y los compañeros hablan con voces grabadas, Ahora está todo hablado: charlas del camino, escenas con decisiones, misiones, pueblos, carteles, lugares secretos y avisos. Ya no se usa la voz del aparato: las pocas líneas que cambian en cada partida (por ejemplo, las que llevan tu nombre) se leen en el cartel.
-- Calidad gráfica: Baja, Media, Alta y Ultra, y el juego se ajusta solo según el aparato. En aparatos viejos conviene Baja.
+- Calidad gráfica: en el menú, «Calidad gráfica» abre una ventana con Auto, Ultra, Alto, Medio y Bajo. Se aplica al tocar y la ventana queda abierta para ir probando, con los cuadros por segundo en vivo. Auto elige según el aparato y se ajusta solo. Lo que el aparato no aguanta aparece en gris (en iPhone, Alto y Ultra, porque Safari cierra la página si se pasa de memoria).
 - Pantalla completa: en PC, F11 o el botón del menú; en iPhone, «Agregar a inicio».
 
 # Guardado y datos para el Campus
@@ -624,7 +647,7 @@ La meta es que Tras sus pasos dure unas 60 horas en Hero y 25 en Kids, sin que s
 - Si una charla o un cartel sale sin voz, avisanos en la página de reportes.
 - Las metas de estrellas de cada minijuego se van a ajustar con lo que digan los testers.
 - En las fotos de prueba no se ven los árboles y el pasto comprados (se cargan aparte): conviene revisarlos en el juego real.
-- Los animales nuevos (ovejas, camellos y otros) llegan en una próxima actualización.
+- Los animales reales ya están en el mundo: ovejas Dorper en los campos y los rebaños del camino, burros y gallinas en los pueblos, y carneros y muflones en el desierto y las laderas. Los camellos llegan más adelante.
 
 > Para los testers. El juego se lanza el sábado 12 de diciembre. Hasta entonces, cada error, cosa que no se entienda o idea nueva se manda por la página de reportes que te pasamos, una vez por cosa y con captura si se puede. Todo lo que contás se lee y se tiene en cuenta.
 
