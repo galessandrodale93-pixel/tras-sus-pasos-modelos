@@ -326,3 +326,7 @@ section[id]{scroll-margin-top:140px}
   .nav .nav-side{margin-top:6px}
 }
 .fx input[type=password]{width:100%;font:400 1rem/1.4 var(--sans);padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--text)}
+/* menús desplegables (compu): puente invisible entre el botón y el menú, así no se cierra al bajar el mouse */
+@media (min-width:1021px){
+  .dd-m::before{content:"";position:absolute;left:0;right:0;top:-14px;height:14px}
+}
