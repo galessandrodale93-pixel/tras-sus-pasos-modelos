@@ -1779,3 +1779,20 @@ body[data-branch="ados"] .v3kday{display:none!important}
 #v3sheet .inv:not(.hx) .inv-cap span,#v3sheet .inv:not(.hx) .inv-tip,#v3sheet .inv:not(.hx) .inv-sel span,#v3sheet .inv:not(.hx) .inv-rot{color:#5E74A6}
 #v3sheet .inv:not(.hx) .inv-sel b{font-family:"Baloo 2","Nunito",sans-serif;color:#22407F}
 #v3sheet .inv:not(.hx) h4{color:#E07B12}
+/* Kids: el diario y los cursos con letras oscuras sobre claro */
+#v3sheet .inv:not(.hx) .dy-tabs button{background:#fff;border:2px solid #C9DBF2;color:#5E74A6}
+#v3sheet .inv:not(.hx) .dy-tabs button.on{background:linear-gradient(180deg,#FFD27A,#F29A2E);border-color:#fff;color:#fff;box-shadow:0 2px 0 #C9711A}
+#v3sheet .inv:not(.hx) .dy-head b{font-family:"Baloo 2","Nunito",sans-serif;color:#E07B12}
+#v3sheet .inv:not(.hx) .dy-head b i,#v3sheet .inv:not(.hx) .dy-head span,#v3sheet .inv:not(.hx) .dy-lock{color:#5E74A6}
+#v3sheet .inv:not(.hx) .dy-bar{background:#DCEAFB}
+#v3sheet .inv:not(.hx) .dy-bar em{background:linear-gradient(90deg,#F29A2E,#FFD27A)}
+#v3sheet .inv:not(.hx) .dy-c{background:rgba(255,255,255,.8);border:2px solid #fff;color:#22407F;box-shadow:0 2px 8px rgba(34,64,127,.1)}
+#v3sheet .inv:not(.hx) .dy-c.got{background:linear-gradient(180deg,color-mix(in srgb,var(--rc) 18%,#fff),#fff);border-color:color-mix(in srgb,var(--rc) 55%,#fff)}
+#v3sheet .inv:not(.hx) .dy-i{background:#EAF4FF;box-shadow:inset 0 0 0 1px #C9DBF2}
+#v3sheet .inv:not(.hx) .dy-t b{color:#22407F}
+#v3sheet .inv:not(.hx) .dy-c:not(.got) .dy-t b{color:#8FA6CF}
+#v3sheet .inv:not(.hx) .dy-t>span{color:#5E74A6}
+#v3sheet .inv:not(.hx) .dy-x{color:#7A4FC9}
+#v3sheet .inv:not(.hx) .ins-row{opacity:1;color:#22407F}
+#v3sheet .inv:not(.hx) .ins-row b{color:#22407F}
+#v3sheet .inv:not(.hx) .ins-row small,#v3sheet .inv:not(.hx) .ins-row span{color:#5E74A6}
