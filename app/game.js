@@ -3104,7 +3104,7 @@ const LEARN=[
  ['📖','La Palabra, palabra por palabra','Completan versículos de la Nueva Traducción Viviente y los escuchan en voz alta. Cada respuesta trae su cita para ir a buscarla en la Biblia.'],
  ['🧩','Desafíos en cada parada','Después de cada historia hay una pregunta para pensar: elegir, ordenar los hechos o completar el versículo.'],
  ['🎮','Minijuegos que nunca se repiten','Más de sesenta juegos distintos, cada uno nacido de su historia: llenar las tinajas de Caná, echar las redes, lavar los pies.'],
- ['📝','Exámenes por etapa','Para avanzar hay un desafío de 12 pasos. Si se equivocan, el juego explica la respuesta y muestra el pasaje.'],
+ ['📝','Desafío de cada etapa','Para avanzar hay un desafío de 12 pasos. Si se equivocan, el juego explica la respuesta y muestra el pasaje.'],
  ['🗺️','Un mapa para explorar','Caminan libres por Nazaret, el templo, el mar de Galilea y el Gólgota. Cada lugar muestra cómo se vivía en tiempos de Jesús.'],
  ['🤝','Misiones de servicio','Ayudan a personajes bíblicos: llevar el pan, buscar la oveja perdida, orar en el huerto. Aprenden a servir haciendo.'],
  ['🪵','Oficios y supervivencia (Hero)','Pescan, talan, cocinan y construyen su casa con las herramientas de la época. Si no se alimentan, no pueden seguir: cuidar el cuerpo también es parte del camino.'],
