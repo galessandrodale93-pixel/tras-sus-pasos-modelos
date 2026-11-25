@@ -666,6 +666,22 @@ function olInit(HW, Q, hx) {
   OL.X1 = HW.X1; OL.kk = hx ? 1 : .5; OL.Z1 = HW.Z1; OL.Z0 = HW.Z0; OL.dz = HW.dz; OL.TZ = 32 * HW.dz; OL.mat = HW.terrain.material; OL.seg = Q.tg > 1.8 ? 22 : 28; OL.on = true; OL.tiles.clear(); OL.hx = hx; OL.R = hx ? 300 : 230;
   const h1 = HW.hAt; HW.hAt0 = h1; HW.hAt = (x, z) => olH(h1, x, z); HW.mtnH = null;
   OL.sg.clear(); OL.sites = []; const PL = OL.plan || []; PL.forEach(p => { p.y = HW.hAt(p.x, p.z); }); PL.forEach(p => olSiteAdd({ x: p.x, z: p.z, r: p.r, y: p.y, dirt: p.dirt, id: p.id }));
+  OL.far = null; setTimeout(() => { try { olFar(HW); } catch (e) { console.warn('tierras lejanas', e); } }, 4000);
+}
+/* tierras lejanas: una malla gruesa (24 m) de todo lo de afuera y de las montañas del borde, un poco hundida para que las parcelas de detalle la tapen donde existen.
+   Sin esto, desde la cima del monte (donde la niebla se abre para ver los reinos) más allá de 300 m no había suelo y se veía una llanura vacía */
+function olFar(HW) {
+  if (OL.far || !S || !S.scene) return; const ST = 24, X2 = XW + 420, za = OL.Z0 - 700, zb = OL.Z1 + 700, NX = Math.round(2 * X2 / ST), NZ = Math.round((zb - za) / ST), n = (NX + 1) * (NZ + 1);
+  const P = new Float32Array(n * 3), C = new Float32Array(n * 3), SP = new Float32Array(n * 4), U = new Float32Array(n * 2); let j = 0;
+  const step = () => { if (!S || !S.scene) return; const j1 = Math.min(NZ + 1, j + 24);
+    for (; j < j1; j++) for (let i = 0; i <= NX; i++) { const k = j * (NX + 1) + i, x = -X2 + i * ST, z = za + j * ST, h = HW.hAt(x, z), ax = Math.abs(x), mt = sstep(XW - 40, XW + 60, ax), no = fbm(x * .02, z * .02);
+      P.set([x, h - 1.2, z], k * 3); U.set([x / 16, z / 16], k * 2); const wr = mt * sstep(8, 30, h) * .8, wy = Math.max(.25 + no * .3, mt * .5), wg = (1 - wr) * (1 - wy * .9), tt = wg + wy + wr || 1; SP.set([wg / tt, wy / tt, 0, wr / tt], k * 4); const v = .84 + no * .24; C.set([v, v, v], k * 3); }
+    if (j <= NZ) { setTimeout(step, 30); return; }
+    const I = [], core = (x, z) => Math.abs(x) < OL.X1 - 2 && z > OL.Z0 + 2 && z < OL.Z1 - 2;
+    for (let jj = 0; jj < NZ; jj++) for (let i = 0; i < NX; i++) { const a = jj * (NX + 1) + i, b = a + 1, c = a + NX + 1, d = c + 1, xa = -X2 + i * ST, za2 = za + jj * ST; if (core(xa, za2) && core(xa + ST, za2) && core(xa, za2 + ST) && core(xa + ST, za2 + ST)) continue; I.push(a, c, b, b, c, d); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('color', new THREE.BufferAttribute(C, 3)); g.setAttribute('splat', new THREE.BufferAttribute(SP, 4)); g.setAttribute('uv', new THREE.BufferAttribute(U, 2)); g.setIndex(I); g.computeVertexNormals(); g.computeBoundingSphere();
+    const m = new THREE.Mesh(g, OL.mat); m.userData.terrain = 1; m.userData.keep = 1; m.renderOrder = -1; S.scene.add(m); OL.far = m; };
+  OL.far = 1; setTimeout(step, 1500);
 }
 function olKey(s, i, j) { return s + ':' + i + ':' + j; }
 function olTileBox(s, i, j) { const x0 = s > 0 ? OL.X1 + i * OL.T : -OL.X1 - (i + 1) * OL.T, z1 = OL.Z1 - j * OL.TZ; return { x0, x1: x0 + OL.T, z0: z1 - OL.TZ, z1 }; }
@@ -789,6 +805,7 @@ function olSitesBuild(scene, HW, hx) {
   OL.plan.forEach((p, idx) => { try { const R = rng(9000 + idx * 31); S.olSites.push({ id: p.id, name: p.name, x: p.x, z: p.z, k: p.k, r: p.r });
     if (p.k === 'aldea') { const placed = townLayout(scene, p, yAt, HW, { seed: 7100 + idx * 13, n: p.n || 7, r: p.r - 4, plaza: 8, gap: 2.2 }); if (p.id === 'jope') S.jopeH = placed; const w = well(hx); w.position.set(p.x, yAt(p.x, p.z), p.z); scene.add(w); S.cols.push({ x0: p.x - 1, x1: p.x + 1, z0: p.z - 1, z1: p.z + 1, cx: p.x, cz: p.z, r: 1 });
       try { townFolk(scene, p, yAt, HW, hx ? 6 : 5, p.r * .6, 300 + idx, placed.map(q => [q.x, q.z, q.rr])); } catch (e) {} lore(p, p.x + 2.4, p.z + 1.2, 'Conocer ' + p.name);
+      if (p.id === 'jerico') { /* Jericó, la ciudad de las palmeras (Deuteronomio 34:3): un palmar alrededor del pueblo */ const RP = rng(3434), L = []; for (let i = 0; i < 26; i++) { const a = i / 26 * 6.283 + RP() * .2, rr = p.r + 3 + RP() * 9, x = p.x + Math.cos(a) * rr, z = p.z + Math.sin(a) * rr; if (blockedAt(x, z)) continue; L.push({ x, y: yAt(x, z) - .05, z, ry: RP() * 6.28, s: .9 + RP() * .45, v: Math.floor(RP() * 97) }); S.cols.push({ x0: x - .4, x1: x + .4, z0: z - .4, z1: z + .4, cx: x, cz: z, r: .4 }); } props('trp_palm', L, { wind: 3, far: 1, imp: 1 }); }
       if (p.extra === 'sicomoro') { const x = p.x + 9, z = p.z - 4; props('island_tree_01', [{ x, y: yAt(x, z) - .05, z, ry: 1.2, s: 2.3, v: 0 }], { wind: 3, far: 1 }); S.cols.push({ x0: x - .9, x1: x + .9, z0: z - .9, z1: z + .9, cx: x, cz: z, r: .9 }); S.lore.push({ x: x + 2.2, z, r: 3, label: 'Mirar el sicómoro', dur: 6, go: () => sello('sicomoro', 'El sicómoro de Zaqueo'), info: ['El sicómoro de Zaqueo', 'Zaqueo era tan bajito que no veía nada entre la gente. Se subió a este árbol, y Jesús se detuvo justo abajo: «Zaqueo, bajá enseguida, que hoy tengo que quedarme en tu casa» (Lucas 19:5).'] }); }
       if (p.extra === 'pozo') { const x = p.x - 8, z = p.z + 6, w2 = well(hx); w2.scale.setScalar(1.25); w2.position.set(x, yAt(x, z), z); scene.add(w2); S.cols.push({ x0: x - 1.2, x1: x + 1.2, z0: z - 1.2, z1: z + 1.2, cx: x, cz: z, r: 1.2 }); S.lore.push({ x: x + 2, z, r: 3, label: 'Sacar agua del pozo de Jacob', dur: 6, go: () => sello('pozo-jacob', 'El pozo de Jacob'), info: ['El pozo de Jacob', 'Un pozo hondo que cavó Jacob hace mucho tiempo. Acá Jesús, cansado del viaje, le pidió agua a la samaritana y le ofreció agua viva (Juan 4:6-10).'] }); }
       if (p.extra === 'lazaro') { const x = p.x - 12, z = p.z - 8, g = new THREE.Group(); bx(4.4, 2.6, 2.6, M('lzr', '#BFB39A'), 0, 1.3, 0, g); bx(1.1, 1.5, .4, M('lzd', '#2A2218'), 0, .75, 1.32, g); const st = cy(.85, .85, .3, M('lzs', '#A89C84'), 1.3, .85, 1.45, g, 18); st.rotation.x = Math.PI / 2; g.position.set(x, yAt(x, z) - .1, z); scene.add(g); S.cols.push({ x0: x - 2.2, x1: x + 2.2, z0: z - 1.3, z1: z + 1.3 }); S.lore.push({ x, z: z + 3, r: 3, label: 'Mirar la tumba de Lázaro', dur: 6, go: () => sello('tumba-lazaro', 'La tumba de Lázaro'), info: ['«¡Lázaro, sal fuera!»', 'Lázaro llevaba cuatro días en esta tumba. Jesús mandó sacar la piedra, oró, y gritó con voz fuerte. Y el que había muerto salió (Juan 11:41-44).'] }); }
@@ -874,6 +891,11 @@ function olZona(scene, p, yAt, M, R, props, hx) {
       const oi = 960000 + Z7.rocks.length, id = i % 3 ? 'namaqualand_boulder_02' : 'namaqualand_boulders_01', y = yAt(x, z) - .1;
       z7Put(id, [{ x, y, z, ry: R() * 6.28, s: (id === 'namaqualand_boulders_01' ? .55 : .8) * sc, v: i, oi }], { olive: 1, nocol: 1, keepY: 1, tint: i % 2 ? p.zc : p.zc2 || p.zc }); Z7.rocks.push({ x, z, s: 1, v: .5, zt: p.zt, oi }); } }
   (p.nodes || []).forEach(([gg, t, ty, n, cost], j) => { for (let i = 0; i < n; i++) { const a = (i / n) * 6.283 + j * 1.1 + R() * .3, rr = 5 + R() * (p.r - 9), x = p.x + Math.cos(a) * rr, z = p.z + Math.sin(a) * rr; z7Node(scene, x, z, yAt(x, z) - .02, gg, t, ty, cost); } });
+  if (p.id === 'engadi') { /* el oasis: un ojo de agua con piedras alrededor, juncos y palmeras */ const ox = p.x + 6, oz = p.z + 4, oy = yAt(ox, oz), w = waterLake(scene, ox, oz, 6.5, hx, null); w.position.y = oy + .07;
+    const RP = rng(5151), st = [], pl = [], rd = []; for (let i = 0; i < 22; i++) { const a = i / 22 * 6.283 + RP() * .15, x = ox + Math.cos(a) * (6.6 + RP() * .6), z = oz + Math.sin(a) * (6.6 + RP() * .6); st.push({ x, y: yAt(x, z) - .08, z, ry: RP() * 6.28, s: .45 + RP() * .35, v: i }); }
+    for (let i = 0; i < 9; i++) { const a = i / 9 * 6.283 + RP() * .4, rr = 9 + RP() * 6, x = ox + Math.cos(a) * rr, z = oz + Math.sin(a) * rr; pl.push({ x, y: yAt(x, z) - .05, z, ry: RP() * 6.28, s: .9 + RP() * .4, v: Math.floor(RP() * 97) }); S.cols.push({ x0: x - .4, x1: x + .4, z0: z - .4, z1: z + .4, cx: x, cz: z, r: .4 }); }
+    for (let i = 0; i < 14; i++) { const a = RP() * 6.283, x = ox + Math.cos(a) * (5.4 + RP()), z = oz + Math.sin(a) * (5.4 + RP()); rd.push({ x, y: yAt(x, z) - .02, z, ry: RP() * 6.28, s: .7 + RP() * .4, v: i }); }
+    props('namaqualand_rocks_01', st, { nocol: 1 }); props('trp_palm', pl, { wind: 3, far: 1, imp: 1 }); props('shrub_02', rd, { wind: 3 }); S.cols.push({ x0: ox - 6, x1: ox + 6, z0: oz - 6, z1: oz + 6, cx: ox, cz: oz, r: 6 }); }
   if (p.shop) specStall(scene, p.x, p.z, yAt, p.shop, 0);
   g.position.set(p.x, y0, p.z); scene.add(g);
   const lb = poiLb(textSprite(p.name, hx)); lb.position.set(p.x, y0 + 5.5, p.z); lb.scale.multiplyScalar(.9); scene.add(lb);
@@ -1400,7 +1422,7 @@ let LIVIANO = (() => { try { if (localStorage.getItem('tsp:liv') === '1') return
 function vivoStart() { if (vivoStart.on) return; vivoStart.on = 1; const mark = () => { try { sessionStorage.setItem('tsp:vivo', String(Date.now())); } catch (e) {} }; mark(); setInterval(mark, 15000); addEventListener('pagehide', () => { try { sessionStorage.removeItem('tsp:vivo'); } catch (e) {} }); }
 const QUAL = { mode: 'auto', lv: 2, max: 3, dpr: 1, cap: 1.5, ema: 16, slow: 0, fast: 0, cool: 0, fr: 0, ft: new Float32Array(300), fi: 0, el: null, acc: 0, gpu: '' };
 const QN = { auto: 'Auto', ultra: 'Ultra', alto: 'Alto', medio: 'Medio', bajo: 'Bajo' }, QL = ['Bajo', 'Medio', 'Alto', 'Ultra'], QOLD = { alta: 'alto', media: 'medio', baja: 'bajo' };
-const QT = { dpr: [.75, 1, 1.25, 1.5], sh: [1024, 1024, 2048, 2048], shEvery: [4, 3, 2, 1], far: [36, 60, 110, 140], dens: [.12, .45, 1, 1], see: [.42, .62, 1, 1.25], near: [0, .5, 1, 1] };
+const QT = { dpr: [.75, 1, 1.25, 1.5], sh: [1024, 1024, 2048, 2048], shEvery: [4, 3, 2, 1], far: [36, 75, 130, 170], dens: [.12, .6, 1, 1], see: [.42, .62, 1, 1.25], near: [0, .5, 1, 1] };
 function livSet() { QT.dpr[0] = .6; QT.far[0] = 28; QT.dens[0] = .05; QT.see[0] = .32; QT.sh[0] = 512; }
 if (LIVIANO) livSet();
 /* pasar a liviano en pleno juego (la placa no da) y recordarlo para la próxima vez */
@@ -3333,7 +3355,7 @@ function judeaTick(dt, t) {
   if (J.sheep) J.sheep.gl.material.opacity = on('oveja') ? .9 : .35 + Math.sin(t * 2.2) * .15;
   descTick();
   if (J.eagle) { const E = J.eagle, U = E.g.userData, k2 = on('aguila') ? 1.7 : 1, an = t * .26 * k2, r = 15 - (k2 - 1) * 6, dip = Math.sin(t * .45) * 2.2; E.g.position.set(E.cx + Math.cos(an) * r, E.y + dip - (k2 - 1) * 4, E.cz + Math.sin(an) * r); E.g.rotation.set(Math.cos(t * .45) * .12, -an, .42 + Math.sin(t * .3) * .08); /* planea con las alas abiertas y cada tanto aletea fuerte */ const flap = (t % 7) < 1.6 || k2 > 1, w = flap ? Math.sin(t * 9) : 0, f = flap ? .55 : .06 + Math.sin(t * 1.3) * .03; U.wings.forEach(([sh, el], s2) => { const sg = s2 ? -1 : 1; sh.rotation.z = sg * (w * f + .04); el.rotation.z = sg * (w * f * .7 - .05); }); U.tail.rotation.x = -.08 + Math.sin(t * 1.1) * .05; }
-  if (J.cima) { const a = S.av.position, d = Math.hypot(a.x - J.cima.x, a.z - J.cima.z), k = 1 - sstep(10, 45, d); S.fogMul = 1 - k * .93; if (S.scene.fog && S.scene.fog.isFogExp2) { if (k < .01 || J.fd0 == null) J.fd0 = S.scene.fog.density; else S.scene.fog.density = J.fd0 * S.fogMul; } if (S.scene.fog && S.scene.fog.isFog) { if (J.far0 == null) J.far0 = S.scene.fog.far; S.scene.fog.far = J.far0 + k * 450; } if (J.cityGlow) J.cityGlow.material.opacity = .08 + k * (on('ciudad') ? .4 : .2); }
+  if (J.cima) { const a = S.av.position, d = Math.hypot(a.x - J.cima.x, a.z - J.cima.z), k = 1 - sstep(10, 45, d); S.fogMul = 1 - k * .93; if (S.scene.fog && S.scene.fog.isFogExp2) { if (k < .01 || J.fd0 == null) J.fd0 = S.scene.fog.density; else S.scene.fog.density = J.fd0 * S.fogMul; } if (S.scene.fog && S.scene.fog.isFog) { if (J.far0 == null) J.far0 = S.scene.fog.far; S.scene.fog.far = J.far0 + k * 450; } { const cf = 420 + k * 1400; if (S.camera && Math.abs(S.camera.far - cf) > 5) { S.camera.far = cf; S.camera.updateProjectionMatrix(); } } /* desde la cima se ven los reinos: la cámara llega mucho más lejos */ if (J.cityGlow) J.cityGlow.material.opacity = .08 + k * (on('ciudad') ? .4 : .2); }
   J.lamps.forEach((l, i) => { l.material.opacity = .6 + Math.sin(t * 9 + i) * .1 + Math.sin(t * 23 + i * 2) * .05; });
   if (J.vision) { const k = on('reinos') ? 1 : 0; J.vision.big.material.opacity += ((k ? .55 : .2 + Math.sin(t * .5) * .05) - J.vision.big.material.opacity) * Math.min(1, dt * 2); J.vision.g.children.forEach((c, i) => { if (c !== J.vision.big) c.material.opacity = (k ? .7 : .3) + Math.sin(t * 1.3 + i) * .1; }); }
 }
@@ -7894,7 +7916,7 @@ const DRY_BASE = SEASON === 'seco' ? .62 : 0; // cuánto dorado hay de base, ade
 const PG_H = .8; // altura del pasto respecto del original (1 = como viene)
 const BARE = true; // etapa de prueba: campo sin árboles, solo la cobertura del suelo
 const PG_ONLY = /^(knotweed_0[23]|ezepnik_02)$/i; // las 3 plantas elegidas por Gui para cubrir todo el piso
-const PG_CELL = 16, PG_R = [19, 25, 32, 42], PG_TRI = [6.7e5, 1.42e6, 2.4e6, 4e6]; // radio más grande en Bajo y Medio con la misma densidad: al correr se ve el pasto de adelante
+const PG_CELL = 16, PG_R = [19, 30, 38, 50], PG_TRI = [6.7e5, 1.9e6, 3.4e6, 5.7e6]; /* Baja queda igual; en Media, Alta y Ultra el pasto llega más lejos con la misma densidad, para que no se vea el piso */ // radio más grande en Bajo y Medio con la misma densidad: al correr se ve el pasto de adelante
 const PG_S = { grass_bermuda_01: [4, 5.4], grass_medium_01: [2.8, 3.9], grass_medium_02: [3, 4.1], dandelion_01: [2.2, 3.1], celandine_01: [2.4, 3.2], flower_heliophila: [1.3, 1.9] };
 const PG_W = { grass_bermuda_01: .44, grass_medium_01: .24, grass_medium_02: .18, dandelion_01: .05, celandine_01: .05, flower_heliophila: .04 };
 const pgH = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };
