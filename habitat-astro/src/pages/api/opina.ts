@@ -5,20 +5,23 @@ import { auth } from "@wix/essentials";
 import { items } from "@wix/data";
 import { esClase, emailDe, hoyAR, json, masDias, q, s, todos, type Clase } from "../../lib/profe";
 import { progsDe } from "../../lib/vol";
+import { bloqueoDe } from "../../lib/bloqueo";
 
 const save = auth.elevate(items.save);
 
 async function contexto(request: Request) {
   const me = await emailDe(request);
   if (!me.email) return null;
-  const alu = (await q("TutAlumnos").eq("email", me.email).limit(1).find()).items[0] as { _id: string; title?: string; carreras?: string } | undefined;
-  return { ...me, nombre: (alu && alu.title) || me.nombre, progs: alu ? progsDe(alu.carreras) : [] };
+  const alu = (await q("TutAlumnos").eq("email", me.email).limit(1).find()).items[0] as { _id: string; title?: string; carreras?: string; email?: string } | undefined;
+  return { ...me, alu, nombre: (alu && alu.title) || me.nombre, progs: alu ? progsDe(alu.carreras) : [] };
 }
 
 export const GET: APIRoute = async ({ request }) => {
   try {
     const me = await contexto(request);
     if (!me) return json({ ok: false });
+    // cuotas atrasadas: sin material hasta regularizar
+    if (me.alu && (await bloqueoDe(me.alu).catch(() => ({ bloqueado: false }))).bloqueado) return json({ ok: true, bloqueado: true, pendientes: [], materiales: [] });
     const hoy = hoyAR();
     const [clases, mats, mias] = await Promise.all([
       todos<Clase>("TutClases"), todos<{ _id: string; title?: string; claseId: string; url?: string; mime?: string; para?: string }>("ProfMaterial").then((L) => L.filter((m) => m.para !== "equipo")),

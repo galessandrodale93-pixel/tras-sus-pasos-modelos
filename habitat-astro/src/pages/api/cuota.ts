@@ -10,6 +10,7 @@ import { activa, VENCE } from "../../lib/cobranza";
 import { mandar, marco, p } from "../../lib/sem";
 import { esc } from "../../lib/vol";
 import { preferencia } from "../../lib/pagoCuota";
+import { bloqueoDe, MESES_BLOQUEO } from "../../lib/bloqueo";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
@@ -58,8 +59,9 @@ export const GET: APIRoute = async ({ request }) => {
     const estadoDe: Record<string, string> = {}; escuelas.forEach((e) => e.meses.forEach((m) => (estadoDe[e.escuela + "|" + m.mes] = m.estado)));
     const abierto = (k: string) => !estadoDe[k] || ["revision", "debe", "pendiente"].includes(estadoDe[k]);
     const enRev = comps.filter((c) => (c.estado || "En revisión") === "En revisión").filter((c) => { try { return (JSON.parse(c.meses || "[]") as string[]).some(abierto); } catch { return true; } }).sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).map((c) => { let ms: string[] = []; try { ms = JSON.parse(c.meses || "[]"); } catch { /* */ } return { id: c._id, fecha: c.fecha || "", monto: c.monto || 0, url: c.url || "", meses: ms, txt: ms.map(etq).join(", ") }; });
+    const bq = await bloqueoDe(al as { _id: string; email?: string }).catch(() => ({ bloqueado: false, meses: [] as string[] }));
     const ult = debi.sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
-    return json({ ok: true, alumno: true, nombre: al.title, hoy, cuota: Number(al.cuota) || 0, cuotaCon: al.cuotaCon || "", cuotaDetalle: al.cuotaDetalle || "", escuelas, ultimoDebito: ult ? { fecha: ult.fecha, mes: ult.mes, estado: ult.estado === "approved" ? "aprobado" : ult.estado === "rejected" ? "rechazado" : "pendiente", monto: ult.monto } : null, alias: "habitatcfm", transferencia: transf, vence: VENCE, comprobantes: enRev });
+    return json({ ok: true, alumno: true, nombre: al.title, hoy, bloqueado: bq.bloqueado, vencidos: bq.meses, mesesBloqueo: MESES_BLOQUEO, cuota: Number(al.cuota) || 0, cuotaCon: al.cuotaCon || "", cuotaDetalle: al.cuotaDetalle || "", escuelas, ultimoDebito: ult ? { fecha: ult.fecha, mes: ult.mes, estado: ult.estado === "approved" ? "aprobado" : ult.estado === "rejected" ? "rechazado" : "pendiente", monto: ult.monto } : null, alias: "habitatcfm", transferencia: transf, vence: VENCE, comprobantes: enRev });
   } catch (e) {
     console.error("cuota", e);
     return json({ ok: false }, 500);

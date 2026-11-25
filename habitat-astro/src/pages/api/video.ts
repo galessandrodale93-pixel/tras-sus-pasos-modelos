@@ -4,6 +4,8 @@ import type { APIRoute } from "astro";
 import { auth } from "@wix/essentials";
 import { files } from "@wix/media";
 import VMAP from "../../data/vmap.json";
+import { emailDe, q } from "../../lib/profe";
+import { bloqueoDe } from "../../lib/bloqueo";
 
 const map = VMAP as Record<string, string>;
 const generate = auth.elevate(files.generateVideoStreamingUrl);
@@ -25,6 +27,12 @@ export const POST: APIRoute = async ({ request }) => {
     try { body = await request.json(); } catch { /* vacío */ }
     const stepId = typeof body.stepId === "string" ? body.stepId : "";
     if (!token || !/^[0-9a-f-]{36}$/i.test(stepId)) return json({ error: "faltan datos" }, 400);
+    // cuotas atrasadas: las clases quedan en pausa hasta regularizar
+    const me = await emailDe(request).catch(() => ({ email: "" }));
+    if (me.email) {
+      const al = (await q("TutAlumnos").eq("email", me.email).limit(1).find()).items[0] as { _id: string; email?: string } | undefined;
+      if (al && (await bloqueoDe(al).catch(() => ({ bloqueado: false }))).bloqueado) return json({ error: "bloqueado" }, 402);
+    }
     // El paso solo se puede leer con el token del alumno si participa del programa.
     const r = await fetch(
       "https://www.wixapis.com/online-programs/v3/steps/" + encodeURIComponent(stepId) + "?descriptionFieldSet=EXTENDED",

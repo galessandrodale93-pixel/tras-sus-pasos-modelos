@@ -4,6 +4,7 @@ import { auth } from "@wix/essentials";
 import { items } from "@wix/data";
 import { mandar, marco, p } from "./sem";
 import { esc, progsDe } from "./vol";
+import { bloqueados } from "./bloqueo";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
@@ -39,13 +40,14 @@ export async function materialDiario(hoy: string, dry: boolean, remitente: strin
   for (const m of mats) (porClase[m.claseId] = porClase[m.claseId] || []).push(m);
   const al = (await todos<Alumno>("TutAlumnos")).filter((a) => a.activo !== false);
   const em = await emails(al);
+  const bq = await bloqueados(al).catch(() => new Map<string, string[]>());
   const out: unknown[] = [];
   for (const [cid, L] of Object.entries(porClase)) {
     const c = clases.find((x) => x._id === cid);
     // solo clases de los próximos 14 días o de los últimos 2 (lo viejo no se avisa)
     if (!c || c.fecha < mas(hoy, -2) || c.fecha > mas(hoy, 14)) { if (c && c.fecha < mas(hoy, -2) && !dry) for (const m of L) await save("ProfMaterial", { ...m, avisado: "viejo" }); continue; }
     const progs = progsDe(c.programa);
-    const dest = al.filter((a) => progsDe(a.carreras).some((x) => progs.includes(x)) && em[a._id]);
+    const dest = al.filter((a) => progsDe(a.carreras).some((x) => progs.includes(x)) && em[a._id] && !bq.has(a._id));
     if (dry) { out.push({ clase: cid, archivos: L.length, alumnos: dest.length }); continue; }
     const cuando = c.fecha === hoy ? "de hoy" : c.fecha === mas(hoy, 1) ? "de mañana" : "del " + larga(c.fecha);
     const lista = `<ul style="font:16px/1.8 Arial;margin:0 0 12px;padding-left:20px">${L.map((m) => `<li>${ico(m.mime)} <a href="${esc(m.url)}" style="color:#b8904f">${esc(m.title || "Material")}</a></li>`).join("")}</ul>`;

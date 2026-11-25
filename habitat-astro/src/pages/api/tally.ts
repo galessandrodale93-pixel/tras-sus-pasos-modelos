@@ -1,9 +1,13 @@
 // Webhook de Tally: cada examen enviado se suma a la progresión del alumno en el panel de tutores.
 // Si el nombre escrito no coincide con ningún alumno, queda en TutTally para asignarlo a mano.
+// Si entró desde /examen.html trae los campos ocultos «alumno» y «email» (se usan antes que el nombre).
+// Quien rinde con el acceso en pausa por cuotas vencidas (lib/bloqueo): la nota queda anulada y se avisa a Finanzas.
 // Configurar en Tally → Integraciones → Webhooks: https://www.habitat-cfm.org/api/tally?k=<clave de TutConfig.cronKey>
 import type { APIRoute } from "astro";
 import { auth } from "@wix/essentials";
 import { items } from "@wix/data";
+import { bloqueoDe } from "../../lib/bloqueo";
+import { mandar, marco, p as P } from "../../lib/sem";
 
 const q = auth.elevate(items.query);
 const save = auth.elevate(items.save);
@@ -56,16 +60,31 @@ export const POST: APIRoute = async ({ request, url }) => {
     const archivo = up ? String(((up.value as { url?: string }[])[0] || {}).url || "") : "";
     // buscar alumno
     const tk = norm(nombre);
-    const al = (await q("TutAlumnos").limit(1000).find()).items as { _id: string; title?: string }[];
-    let best: { id: string; s: number } | null = null;
-    for (const a of al) {
+    const al = (await q("TutAlumnos").limit(1000).find()).items as { _id: string; title?: string; email?: string }[];
+    const oculto = (k: string) => text(fields.find((f) => f.type === "HIDDEN_FIELDS" && String(f.label || "").toLowerCase() === k)).trim();
+    const hId = oculto("alumno"), hMail = oculto("email").toLowerCase();
+    const directo = al.find((a) => hId && a._id === hId) || al.find((a) => hMail && String(a.email || "").toLowerCase() === hMail);
+    let best: { id: string; s: number } | null = directo ? { id: directo._id, s: 9 } : null;
+    for (const a of directo ? [] : al) {
       const at = norm(a.title);
       const hit = tk.filter((w) => at.includes(w)).length;
       const sc = hit >= 2 || (hit === 1 && at.length === 1) ? hit / Math.max(at.length, 1) : 0;
       if (sc > 0 && (!best || sc > best.s)) best = { id: a._id, s: sc };
     }
     if (best) {
-      await save("TutEvaluaciones", { _id: best.id + "|" + asc(programa) + "|" + asc(item), alumnoId: best.id, programa, item, ok: nota == null || nota >= 60, nota, fecha, fuente: "Tally", por: "Tally", archivo });
+      const a = al.find((x) => x._id === best!.id)!;
+      const bq = await bloqueoDe(a).catch(() => ({ bloqueado: false, meses: [] as string[] }));
+      if (bq.bloqueado) {
+        const MS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+        const meses = bq.meses.map((m) => MS[+m.slice(5, 7) - 1]).join(", ");
+        await save("TutEvaluaciones", { _id: best.id + "|" + asc(programa) + "|" + asc(item), alumnoId: best.id, programa, item, ok: false, nota, anulada: "Rindió con cuotas vencidas: " + meses, fecha, fuente: "Tally", por: "Tally", archivo });
+        const tut = (await q("TutTutores").limit(100).find()).items as { email?: string; gastos?: boolean }[];
+        for (const t of tut.filter((x) => x.gastos && x.email)) {
+          await mandar(String(t.email).split(/[,;\s]+/)[0], "Examen anulado: " + String(a.title || nombre), marco("Habitat · Finanzas", "Rindió con el acceso en pausa", `${P(`<b>${String(a.title || nombre).replace(/</g, "&lt;")}</b> rindió <b>${programa} · ${item}</b> (nota ${nota ?? "-"}) con ${bq.meses.length} cuotas vencidas (${meses}).`)}${P("La nota quedó anulada en el panel de tutores. Si regulariza y querés que cuente, se puede corregir desde ahí.")}`), cfg.remitente || "info@habitat-cfm.org", "Habitat CFM").catch(() => null);
+        }
+        return new Response(JSON.stringify({ ok: true, alumno: best.id, anulada: true }), { status: 200 });
+      }
+      await save("TutEvaluaciones", { _id: best.id + "|" + asc(programa) + "|" + asc(item), alumnoId: best.id, programa, item, ok: nota == null || nota >= 60, nota, anulada: "", fecha, fuente: "Tally", por: "Tally", archivo });
       return new Response(JSON.stringify({ ok: true, alumno: best.id }), { status: 200 });
     }
     await save("TutTally", { _id: String(d.submissionId || d.responseId || crypto.randomUUID()).slice(0, 60), title: nombre || "(sin nombre)", formId: String(d.formId || ""), formName, programa, item, nota, fecha, modalidad, archivo });
