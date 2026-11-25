@@ -2515,13 +2515,15 @@ function bigTemple0(scene, x, z, side, hx, yAt) {
   // fachada: pórtico de entrada con columnas doradas y friso
   [-1, 1].forEach(s => { cy(.42, .46, 8, st, s * 2.3, 4, sd / 2 + 1.3, sanc, 16); bx(1.1, .5, 1.1, gold, s * 2.3, 8.2, sd / 2 + 1.3, sanc); }); bx(7, .8, 1.4, gold, 0, 8.7, sd / 2 + 1.3, sanc);
   /* la gran fachada de Herodes: más ancha y más alta que el santuario (los «hombros»), con pilastras, cornisa y remates de oro, y la vid de oro sobre la puerta. Desde lejos tiene que verse como lo que era: lo más imponente de Jerusalén */
-  { const FW = 18, FH = 17, fz = sd / 2 + .45, fd = .9, dh = 6.2;
-    [-1, 1].forEach(s2 => bx((FW - dw) / 2, FH, fd, st, s2 * (dw / 2 + (FW - dw) / 4), FH / 2, fz, sanc)); bx(dw, FH - dh, fd, st, 0, dh + (FH - dh) / 2, fz, sanc);
-    [-7.6, -4.2, 4.2, 7.6].forEach(px => bx(.75, FH - 1.2, .35, stD, px, (FH - 1.2) / 2 + .2, fz + fd / 2 + .17, sanc));
-    bx(FW + .8, .55, fd + .7, gold, 0, FH + .1, fz + .1, sanc); bx(FW + .4, .3, fd + .45, gold, 0, 12.2, fz + .1, sanc);
-    for (let i = 0; i < 19; i++) { const sp = new THREE.Mesh(new THREE.ConeGeometry(.09, .9, 6), gold); sp.position.set(-FW / 2 + i * FW / 18, FH + .8, fz + .1); sanc.add(sp); }
+  { const FW = 18, FH = 17, fz = sd / 2 + .45, fd = .9, dh = 6.2, fM = tm('fachT', hx ? '#EFE3C6' : '#FFF6E2', { roughness: .7, emissive: '#6A5020', emissiveIntensity: .14 }), fP = tm('fachP', hx ? '#E2D2AE' : '#F6E8CA', { roughness: .75, emissive: '#5A4420', emissiveIntensity: .1 }), gB = tm('goldB', '#F2C55A', { metalness: .6, roughness: .32, emissive: '#8A5A10', emissiveIntensity: .5 });
+    /* «desde lejos parecía una montaña nevada, y donde no había oro era blanquísimo» (Josefo): piedra clara que no se apaga en la sombra, y oro que brilla */
+    [-1, 1].forEach(s2 => bx((FW - dw) / 2, FH, fd, fM, s2 * (dw / 2 + (FW - dw) / 4), FH / 2, fz, sanc)); bx(dw, FH - dh, fd, fM, 0, dh + (FH - dh) / 2, fz, sanc);
+    [-7.6, -4.2, 4.2, 7.6].forEach(px => bx(.75, FH - 1.2, .35, fP, px, (FH - 1.2) / 2 + .2, fz + fd / 2 + .17, sanc));
+    [-1, 1].forEach(s2 => bx(1.5, 11, .14, gB, s2 * (dw / 2 + .75), 5.6, fz + fd / 2 + .08, sanc)); bx(dw, 11.1 - dh, .14, gB, 0, dh + (11.1 - dh) / 2, fz + fd / 2 + .08, sanc); /* las planchas de oro alrededor de la puerta */
+    bx(FW + .8, .55, fd + .7, gB, 0, FH + .1, fz + .1, sanc); bx(FW + .4, .3, fd + .45, gB, 0, 12.2, fz + .1, sanc);
+    for (let i = 0; i < 19; i++) { const sp = new THREE.Mesh(new THREE.ConeGeometry(.09, .9, 6), gB); sp.position.set(-FW / 2 + i * FW / 18, FH + .8, fz + .1); sanc.add(sp); }
     for (let i = 0; i < 14; i++) roofS.push(bx(.16, .8, .16, gold, (i % 2 ? 1 : -1) * (sw / 2 + .3), sh + .85, -sd / 2 + 1 + Math.floor(i / 2) * (sd - 2) / 6, sanc));
-    const vine = new THREE.Group(); bx(dw + 1.2, .35, .25, gold, 0, dh + .25, 0, vine); for (let i = 0; i < 9; i++) { const gp = new THREE.Mesh(new THREE.SphereGeometry(.17, 8, 6), gold); gp.scale.y = 1.4; gp.position.set(-1.9 + i * .475, dh - .2 - (i % 2) * .12, .05); vine.add(gp); } vine.position.z = fz + fd / 2 + .15; sanc.add(vine); }
+    const vine = new THREE.Group(); bx(dw + 1.2, .35, .25, gB, 0, dh + .25, 0, vine); for (let i = 0; i < 9; i++) { const gp = new THREE.Mesh(new THREE.SphereGeometry(.17, 8, 6), gB); gp.scale.y = 1.4; gp.position.set(-1.9 + i * .475, dh - .2 - (i % 2) * .12, .05); vine.add(gp); } vine.position.z = fz + fd / 2 + .22; sanc.add(vine); }
   // Lugar Santo: candelabro, mesa de los panes y altar del incienso
   const veilZ = -sd / 2 + 4.5;
   const veil = new THREE.Mesh(new THREE.PlaneGeometry(sw - .6, sh - .4), new THREE.MeshStandardMaterial({ map: cnvTex(64, 128, (c, w2, h2) => { const cs = ['#2E4A9A', '#5A2A7A', '#9A1E2A', '#E8DDC6']; for (let y = 0; y < h2; y += 8) { c.fillStyle = cs[(y / 8 | 0) % 4]; c.fillRect(0, y, w2, 8); } c.fillStyle = 'rgba(230,184,74,.55)'; for (let y = 4; y < h2; y += 24) for (let x2 = 6; x2 < w2; x2 += 14) { c.beginPath(); c.arc(x2, y, 3, 0, 7); c.fill(); } }), side: THREE.DoubleSide, roughness: 1 })); veil.position.set(0, sh / 2, veilZ); sanc.add(veil);
