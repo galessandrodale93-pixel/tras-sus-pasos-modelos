@@ -4855,6 +4855,10 @@ const GEAR = [
   { id: 'ley', s: 'pants', r: 'e', t: 'hand', k: 'scroll', c: '#F0E4C4', name: 'Rollo de la Ley', desc: 'Como el que Esdras leyó en voz alta delante de todo el pueblo (Nehemías 8:2-3).' },
   { id: 'lamptemplo', s: 'pants', r: 'e', t: 'hand', k: 'lamp', c: '#C9A04A', metal: 1, name: 'Lámpara del templo', desc: 'De bronce brillante, como las que ardían en la casa de Dios (Éxodo 27:20).' },
   { id: 'jeremias', s: 'pants', r: 'e', t: 'hand', k: 'bloom', c: '#8A6A44', name: 'Rama de almendro florecida', desc: 'Dios le mostró a Jeremías una rama de almendro: «Yo cumplo mi palabra» (Jeremías 1:11-12).' },
+  { id: 'hisopo', s: 'pants', r: 'c', t: 'hand', k: 'branch', c: '#6A7A4A', name: 'Rama de hisopo', desc: 'Con una rama de hisopo marcaron las puertas en la primera Pascua (Éxodo 12:22).' },
+  { id: 'cayadodavid', s: 'pants', r: 'r', t: 'hand', k: 'crook', c: '#6A4A2E', name: 'Cayado de David', desc: 'David cuidaba las ovejas de su padre en las colinas de Belén (1 Samuel 17:34-35).' },
+  { id: 'proverbios', s: 'pants', r: 'r', t: 'hand', k: 'scroll', c: '#E6D8B8', name: 'Rollo de los Proverbios', desc: '«El principio de la sabiduría es el temor del Señor» (Proverbios 9:10).' },
+  { id: 'palmafiesta', s: 'pants', r: 'r', t: 'hand', k: 'palm', c: '#5A7A3A', name: 'Ramo de la fiesta de las enramadas', desc: 'Ramas de palmera para alegrarse delante del Señor en la fiesta (Levítico 23:40).' },
   { id: 'cuerda', s: 'boots', r: 'c', t: 'sandal', c: '#B8A27A', name: 'Sandalias de cuerda', desc: 'Suela de cuero y tiras de cuerda trenzada.' },
   { id: 'suelapalma', s: 'boots', r: 'c', t: 'sandal', c: '#A8865A', name: 'Sandalias de suela de palma', desc: 'Livianas, con la suela tejida con hojas de palmera.' },
   { id: 'cuerocrudo', s: 'boots', r: 'c', t: 'sandal', c: '#8A6A44', name: 'Sandalias de cuero crudo', desc: 'Sin teñir, como las de la mayoría de la gente.' },
@@ -4872,6 +4876,9 @@ const GEAR = [
   { id: 'egiptob', s: 'boots', r: 'e', t: 'sandal', c: '#C9A877', metal: 1, name: 'Sandalias de Egipto', desc: 'De cuero fino con adornos dorados, como las de la corte del faraón.' },
   { id: 'platab', s: 'boots', r: 'e', t: 'sandal', c: '#5A4A3A', c2: '#C8CCD4', name: 'Sandalias con hebillas de plata', desc: 'Las hebillas brillan con cada paso.' },
   { id: 'levitab', s: 'boots', r: 'e', t: 'sandal', c: '#EFE6D2', hi: 1, name: 'Sandalias de los levitas', desc: 'Claras, para servir en la casa de Dios.' },
+  { id: 'magdala', s: 'boots', r: 'c', t: 'sandal', c: '#7A6248', name: 'Sandalias de Magdala', desc: 'De la aldea de los saladeros de pescado, a orillas del lago.' },
+  { id: 'betaniab', s: 'boots', r: 'r', t: 'sandal', c: '#9A6A44', c2: '#E8DDC6', name: 'Sandalias de Betania', desc: 'De la casa de Marta, María y Lázaro, donde María perfumó los pies de Jesús (Juan 12:1-3).' },
+  { id: 'peregrino', s: 'boots', r: 'e', t: 'sandal', hi: 1, c: '#6A3A2A', c2: '#C9A04A', name: 'Sandalias del peregrino', desc: 'Para subir a Jerusalén en las fiestas cantando: «¡Qué alegría cuando me dijeron: vamos a la casa del Señor!» (Salmo 122:1).' },
   { id: 'vendcuero', s: 'gloves', r: 'c', t: 'glove', c: '#6A4528', name: 'Vendas de cuero', desc: 'Cuero fino que protege la palma.' },
   { id: 'linocrudo', s: 'gloves', r: 'c', t: 'wrap', c: '#D9CBB0', name: 'Muñequeras de lino crudo', desc: 'Vueltas de lino atadas a la muñeca.' },
   { id: 'alfarerog', s: 'gloves', r: 'c', t: 'glove', c: '#A85A34', name: 'Vendas de alfarero', desc: 'Siempre con un poco de barro seco.' },
@@ -7595,6 +7602,7 @@ function anMat(base, sp) { // pastar: los vértices de la cabeza (_head) giran a
 }
 async function anInit() { const base = grpBase(); if (!base) return null; if (AN.ready) return AN.ready;
   AN.ready = fetch(base + 'animals/manifest.json', { mode: 'cors' }).then(r => r.ok ? r.json() : null).then(m => (m && m.format === 1 ? (AN.man = m) : null)).catch(() => null); return AN.ready; }
+const anSteep = (W, x, z) => Math.abs(W.hAt(x + 1, z) - W.hAt(x - 1, z)) + Math.abs(W.hAt(x, z + 1) - W.hAt(x, z - 1)) > 1.1; // en laderas muy empinadas el cuerpo queda medio enterrado
 const anSl = (m, sp) => ({ pre: 'animals/' + sp.dir + '/', m: { mats: m.mats } });
 function anSpots(kind, R, W) { // dónde va cada especie, según la zona
   const P = S.pois || [], out = [], add = (p, n, r0, r1, f) => { for (let t = 0, k = 0; t < n * 30 && k < n; t++) { const a = R() * 6.283, r = r0 + R() * (r1 - r0), x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; if (Math.abs(x) > XW - 30 || blockedAt(x, z) || waterWet(x, z, null) > .02 || W.dAt(x, z) < 3) continue; if (f && !f(x, z)) continue; out.push([x, z]); k++; } };
@@ -7615,7 +7623,7 @@ async function anBuild() {
     const spots = anSpots(sp.id, R, W); if (!spots.length) continue;
     if (!sp.skinned) { // instanciados, en grupos alrededor de cada lugar
       const node = g.scene.getObjectByName(lod) || g.scene.getObjectByName('LOD0') || g.scene, parts = []; g.scene.updateMatrixWorld(true); node.traverse(o => { if (o.isMesh) parts.push(o); });
-      const items = []; spots.forEach(([cx, cz]) => { const n = sp.group[0] + Math.floor(R() * (sp.group[1] - sp.group[0] + 1)); for (let i = 0; i < n; i++) { const x = cx + (R() - .5) * sp.spread, z = cz + (R() - .5) * sp.spread; if (blockedAt(x, z) || waterWet(x, z, null) > .02) continue; items.push({ x, z, cx, cz, ry: R() * 6.28, s: (sp.k || 1) * (.88 + R() * .24), t: R() * 50, dark: R() < (sp.dark || 0) }); } });
+      const items = []; spots.forEach(([cx, cz]) => { const n = sp.group[0] + Math.floor(R() * (sp.group[1] - sp.group[0] + 1)); for (let i = 0; i < n; i++) { const x = cx + (R() - .5) * sp.spread, z = cz + (R() - .5) * sp.spread; if (blockedAt(x, z) || waterWet(x, z, null) > .02 || anSteep(W, x, z)) continue; items.push({ x, z, cx, cz, ry: R() * 6.28, s: (sp.k || 1) * (.88 + R() * .24), t: R() * 50, dark: R() < (sp.dark || 0) }); } });
       if (!items.length) continue; const ims = [];
       for (const pm of parts) { const mt = anMat(await grpMat(sl, (pm.material && pm.material.name) || sp.id), sp), im = new THREE.InstancedMesh(pm.geometry, mt, items.length); im.castShadow = QUAL.lv > 0; im.receiveShadow = true;
         items.forEach((it, i) => { E.set(0, it.ry, 0); Q.setFromEuler(E); M4.compose(V.set(it.x, Math.max(0, W.hAt(it.x, it.z)), it.z), Q, SC.setScalar(it.s)).multiply(pm.matrixWorld); im.setMatrixAt(i, M4); im.setColorAt(i, CL.set(it.dark ? '#6A5E54' : '#FFFFFF').multiplyScalar(.92 + R() * .16)); });
@@ -7626,7 +7634,7 @@ async function anBuild() {
     for (const [cx, cz] of spots) { const n = sp.group[0] + Math.floor(R() * (sp.group[1] - sp.group[0] + 1)); for (let i = 0; i < n; i++) {
       const o = (H3.skClone || (x => x.clone()))(g.scene), vr = sp.variants ? sp.variants[Math.floor(R() * sp.variants.length)] : null; const mats = {};
       const todo = []; o.traverse(m => { if (m.isMesh) todo.push(m); }); for (const m of todo) { const nm = (m.material && m.material.name) || sp.id, key = vr ? nm + '_' + vr : nm; m.material = mats[key] || (mats[key] = await grpMat(sl, (man.mats[key] ? key : nm))); m.castShadow = QUAL.lv > 0; }
-      const x = cx + (R() - .5) * sp.spread, z = cz + (R() - .5) * sp.spread; o.position.set(x, Math.max(0, W.hAt(x, z)), z); o.rotation.y = R() * 6.28; o.scale.setScalar((sp.k || 1) * (.9 + R() * .2)); S.scene.add(o);
+      let x = cx + (R() - .5) * sp.spread, z = cz + (R() - .5) * sp.spread; if (anSteep(W, x, z) || blockedAt(x, z) || waterWet(x, z, null) > .02) { x = cx; z = cz; } o.position.set(x, Math.max(0, W.hAt(x, z)), z); o.rotation.y = R() * 6.28; o.scale.setScalar((sp.k || 1) * (.9 + R() * .2)); S.scene.add(o);
       const mx = new THREE.AnimationMixer(o), act = k => clips[k] && mx.clipAction(clips[k]); const a0 = act('eat') || act('idle'); if (a0) { a0.play(); a0.time = R() * 3; }
       AN.sk.push({ sp, o, mx, act, cur: a0, cx, cz, t: R() * 8, mode: 'eat', tx: x, tz: z, l0: o.getObjectByName('LOD0'), l1: o.getObjectByName('LOD1'), skip: 0 }); } }
   }
@@ -7636,14 +7644,14 @@ function anTick(dt) {
   // instanciados: los grupos cercanos se corren despacio (tres o cuatro metros alrededor de su lugar)
   AN.acc += dt; if (AN.acc > .1) { const st = AN.acc; AN.acc = 0; const M4 = anTick.m || (anTick.m = new THREE.Matrix4()), Q = anTick.q || (anTick.q = new THREE.Quaternion()), E = anTick.e || (anTick.e = new THREE.Euler()), V = anTick.v || (anTick.v = new THREE.Vector3()), SC = anTick.s || (anTick.s = new THREE.Vector3());
     for (const G of AN.list) { let touched = false; G.items.forEach((it, i) => { if ((it.x - a.x) ** 2 + (it.z - a.z) ** 2 > 60 * 60) return; it.t += st * .12; const dx = Math.sin(it.t * .7 + i) * .05 * st, dz = Math.cos(it.t * .5 + i * 1.7) * .05 * st, nx = it.x + dx, nz = it.z + dz;
-      if ((nx - it.cx) ** 2 + (nz - it.cz) ** 2 < (G.sp.spread * .7) ** 2 && !blockedAt(nx, nz)) { it.x = nx; it.z = nz; it.ry += (Math.atan2(dx, dz) - it.ry) * .02; }
+      if ((nx - it.cx) ** 2 + (nz - it.cz) ** 2 < (G.sp.spread * .7) ** 2 && !blockedAt(nx, nz) && !anSteep(W, nx, nz)) { it.x = nx; it.z = nz; it.ry += (Math.atan2(dx, dz) - it.ry) * .02; }
       E.set(0, it.ry, 0); Q.setFromEuler(E); G.ims.forEach(([im, mw]) => { M4.compose(V.set(it.x, Math.max(0, W.hAt(it.x, it.z)), it.z), Q, SC.setScalar(it.s)).multiply(mw); im.setMatrixAt(i, M4); }); touched = true; });
       if (touched) G.ims.forEach(([im]) => { im.instanceMatrix.needsUpdate = true; }); } }
   // con esqueleto: animación completa cerca, cada tres cuadros a media distancia, oculto lejos
   for (const k of AN.sk) { const o = k.o, d2 = (o.position.x - a.x) ** 2 + (o.position.z - a.z) ** 2, vis = d2 < 110 * 110; if (o.visible !== vis) o.visible = vis; if (!vis) continue;
     if (k.l0 && k.l1) { const near = d2 < 28 * 28 && QUAL.lv > 0; k.l0.visible = near; k.l1.visible = !near; }
     k.t -= dt; if (k.t <= 0) { k.t = 4 + Math.random() * 7; const r = Math.random(); k.mode = r < .45 ? 'eat' : r < .75 ? 'walk' : 'idle'; if (k.mode === 'walk') { const an = Math.random() * 6.28; k.tx = k.cx + Math.cos(an) * k.sp.spread * .6; k.tz = k.cz + Math.sin(an) * k.sp.spread * .6; } const nx = k.act(k.mode) || k.act('idle'); if (nx && nx !== k.cur) { nx.reset().play(); if (k.cur) nx.crossFadeFrom(k.cur, .4, false); k.cur = nx; } }
-    if (k.mode === 'walk') { const dx = k.tx - o.position.x, dz = k.tz - o.position.z, L2 = Math.hypot(dx, dz); if (L2 > .3) { const sp = (k.sp.walk || .6) * dt, nx = o.position.x + dx / L2 * sp, nz = o.position.z + dz / L2 * sp; if (!blockedAt(nx, nz) && waterWet(nx, nz, null) < .02) { o.position.set(nx, Math.max(0, W.hAt(nx, nz)), nz); o.rotation.y = Math.atan2(dx, dz); } else k.t = 0; } else k.t = Math.min(k.t, .2); }
+    if (k.mode === 'walk') { const dx = k.tx - o.position.x, dz = k.tz - o.position.z, L2 = Math.hypot(dx, dz); if (L2 > .3) { const sp = (k.sp.walk || .6) * dt, nx = o.position.x + dx / L2 * sp, nz = o.position.z + dz / L2 * sp; if (!blockedAt(nx, nz) && waterWet(nx, nz, null) < .02 && !anSteep(W, nx, nz)) { o.position.set(nx, Math.max(0, W.hAt(nx, nz)), nz); o.rotation.y = Math.atan2(dx, dz); } else k.t = 0; } else k.t = Math.min(k.t, .2); }
     k.skip = (k.skip + 1) % (d2 < 35 * 35 ? 1 : 3); if (!k.skip) k.mx.update(d2 < 35 * 35 ? dt : dt * 3); }
 }
 /* un animal real suelto (no instanciado) para reemplazar las figuras de esferas: la oveja perdida, el corral de los pastores,
