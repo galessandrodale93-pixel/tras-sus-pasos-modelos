@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Examen · Habitat</title>
-<meta name="description" content="Entrá con tu cuenta del campus para rendir el examen.">
+<title>Exámenes y TP · Habitat</title>
+<meta name="description" content="Entrá con tu cuenta del campus para rendir el examen o entregar tu TP.">
 <meta name="theme-color" content="#10251d">
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" type="image/png" href="https://static.wixstatic.com/media/43ca3b_2d985f94c5e04a82b1434561cce4cc35~mv2.png">
@@ -20,15 +20,15 @@ small{color:#5d6b64}
 </style>
 </head>
 <body>
-<div class="c" id="c"><p class="k">Habitat CFM · Examen</p><h1>Abriendo el examen…</h1><p>Un momento, estamos revisando tu cuenta.</p></div>
+<div class="c" id="c"><p class="k">Habitat CFM · Campus</p><h1>Abriendo el formulario…</h1><p>Un momento, estamos revisando tu cuenta.</p></div>
 <script src="/assets/auth.js"></script>
 <script>
 (async function(){
   var c=document.getElementById('c'),A=window.HabitatAuth,MS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   var f=new URLSearchParams(location.search).get('f');
   try{if(f)sessionStorage.setItem('habitat:examen',f);else f=sessionStorage.getItem('habitat:examen');}catch(e){}
-  function pinta(t,h){c.innerHTML='<p class="k">Habitat CFM · Examen</p><h1>'+t+'</h1>'+h;}
-  if(!f){pinta('No encontramos el examen','<p>Escaneá de nuevo el código o pedí el link a tu tutor.</p>');return;}
+  function pinta(t,h){c.innerHTML='<p class="k">Habitat CFM · Campus</p><h1>'+t+'</h1>'+h;}
+  if(!f){pinta('No encontramos el formulario','<p>Escaneá de nuevo el código o pedí el link a tu tutor.</p>');return;}
   if(!A||!A.loggedIn()){location.replace('/ingresar.html?ret=/examen.html');return;}
   try{
     await A.api('GET','/members/v1/members/my');
@@ -38,9 +38,9 @@ small{color:#5d6b64}
     if(r.status===401){location.replace('/ingresar.html?ret=/examen.html');return;}
     if(j.ok&&j.url){try{sessionStorage.removeItem('habitat:examen');}catch(e){}location.replace(j.url);return;}
     if(j.bloqueado){var L=(j.vencidos||[]).map(function(m){return MS[+m.slice(5,7)-1]||m;});var t=L.length>1?L.slice(0,-1).join(', ')+' y '+L[L.length-1]:L.join('');
-      pinta('Tu acceso está en pausa','<p>Todavía no registramos el pago de <b>'+L.length+' cuotas</b> ('+t+'). Para rendir el examen es necesario regularizar tu cuota.</p><p>Apenas se registre el pago, vas a poder rendirlo con este mismo código. Si ya pagaste, subí el comprobante y lo revisamos.</p><a class="b" href="/campus.html#cuotaSec">💳 Ver mi cuota y pagar</a><p style="margin-top:14px"><small>¿Ves algo que no coincide? Escribinos y lo vemos juntos.</small></p>');return;}
-    pinta('No pudimos abrir el examen','<p>'+(j.error||'Probá de nuevo en un ratito.')+'</p><a class="b s" href="/campus.html">Ir al campus</a>');
-  }catch(e){pinta('No pudimos abrir el examen','<p>Revisá tu conexión y probá de nuevo.</p><a class="b s" href="/examen.html">Reintentar</a>');}
+      pinta('Tu acceso está en pausa','<p>Todavía no registramos el pago de <b>'+L.length+' cuotas</b> ('+t+'). Para rendir exámenes y entregar trabajos prácticos es necesario regularizar tu cuota.</p><p>Apenas se registre el pago, vas a poder entrar con este mismo link. Si ya pagaste, subí el comprobante y lo revisamos.</p><a class="b" href="/campus.html#cuotaSec">💳 Ver mi cuota y pagar</a><p style="margin-top:14px"><small>¿Ves algo que no coincide? Escribinos y lo vemos juntos.</small></p>');return;}
+    pinta('No pudimos abrirlo','<p>'+(j.error||'Probá de nuevo en un ratito.')+'</p><a class="b s" href="/campus.html">Ir al campus</a>');
+  }catch(e){pinta('No pudimos abrirlo','<p>Revisá tu conexión y probá de nuevo.</p><a class="b s" href="/examen.html">Reintentar</a>');}
 })();
 </script>
 </body>

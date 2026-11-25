@@ -8,10 +8,10 @@ import { bloqueoDe } from "../../lib/bloqueo";
 export const GET: APIRoute = async ({ request, url }) => {
   try {
     const f = String(url.searchParams.get("f") || "");
-    if (!/^[A-Za-z0-9]{5,12}$/.test(f)) return json({ error: "Ese examen no existe." }, 400);
+    if (!/^[A-Za-z0-9]{5,12}$/.test(f)) return json({ error: "Ese formulario no existe." }, 400);
     const cfg = (await q("TutConfig").eq("_id", "tallyForms").limit(1).find()).items[0] as { valor?: string } | undefined;
     const forms = String((cfg && cfg.valor) || "").split(/[\s,]+/).filter(Boolean);
-    if (!forms.includes(f)) return json({ error: "Ese examen no está habilitado." }, 404);
+    if (!forms.includes(f)) return json({ error: "Ese formulario no está habilitado." }, 404);
     const me = await emailDe(request);
     if (!me.email) return json({ error: "Entrá con tu cuenta." }, 401);
     const al = (await q("TutAlumnos").eq("email", me.email).limit(1).find()).items[0] as { _id: string; title?: string; email?: string; activo?: boolean } | undefined;
@@ -25,6 +25,6 @@ export const GET: APIRoute = async ({ request, url }) => {
     return json({ ok: true, url: "https://tally.so/r/" + f + "?" + p.toString() });
   } catch (e) {
     console.error("examen", e);
-    return json({ error: "No pudimos abrir el examen. Probá de nuevo en un ratito." }, 500);
+    return json({ error: "No pudimos abrir el formulario. Probá de nuevo en un ratito." }, 500);
   }
 };
