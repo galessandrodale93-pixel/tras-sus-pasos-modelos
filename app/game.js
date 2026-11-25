@@ -1398,7 +1398,7 @@ function Herd(th, f) {
   let sheep = [], held = null, score = 0, over = false, left = 0, full = 0, round = 0, ban = 0, tt = 0;
   const pen = { x: GW / 2 - 70, y: 420, w: 140, h: 76 };
   const inPen = (x, y) => x > pen.x + 10 && x < pen.x + pen.w - 10 && y > pen.y + 8 && y < pen.y + pen.h;
-  function deal() { round++; const n = 3 + round * 2; sheep = []; for (let i = 0; i < n; i++) sheep.push({ x: 40 + Math.random() * (GW - 80), y: 80 + Math.random() * 260, vx: 0, vy: 0, done: false, t: Math.random() * 3 }); const add = (14 + n * 3) / f; left = round === 1 ? add : left + add; full = Math.max(full, left); ban = 1.3; }
+  function deal() { round++; const n = 3 + round * 2; sheep = []; for (let i = 0; i < n; i++) sheep.push({ x: 40 + Math.random() * (GW - 80), y: 80 + Math.random() * 260, vx: 0, vy: 0, done: false, t: Math.random() * 3 }); const add = (th.hx ? 26 : 14 + n * 3) / f; /* Hero: el mismo tiempo corto en cada ronda, aunque la ronda sea más difícil */ left = round === 1 ? add : left + add; full = Math.max(full, left); ban = 1.3; }
   deal();
   return { get score() { return score }, get over() { return over },
     input(k, d) { if (over || ban > .8) return; if (k === 'down') { held = sheep.filter(s => !s.done).find(s => Math.hypot(s.x - d.x, s.y - d.y) < 34) || null; }
@@ -1448,7 +1448,7 @@ function Slide(th, f) {
   function paint() { const c = pic.getContext('2d'), g = c.createLinearGradient(0, 0, 0, 300); g.addColorStop(0, th.hx ? '#2A2015' : '#FFD9B8'); g.addColorStop(1, th.hx ? '#6A4A2A' : '#FFF3DD'); c.fillStyle = g; c.fillRect(0, 0, 300, 300);
     c.fillStyle = th.hx ? '#E9A55A' : '#FFB347'; c.beginPath(); c.arc(230, 70, 34, 0, 7); c.fill(); c.fillStyle = th.hx ? '#C9B892' : '#F4E8CC'; c.fillRect(40, 140, 220, 120); c.fillStyle = th.hx ? '#A8987A' : '#E0D0AE'; c.beginPath(); c.moveTo(30, 140); c.lineTo(150, 90); c.lineTo(270, 140); c.fill(); c.fillRect(30, 255, 240, 18);
     for (let i = 0; i < 6; i++) { c.fillStyle = th.hx ? '#DCCDA6' : '#FFFFFF'; c.fillRect(52 + i * 36, 150, 14, 105); } c.fillStyle = '#6B4A2C'; c.fillRect(132, 200, 36, 55); c.fillStyle = th.hx ? '#3E4A2A' : '#7CB35E'; c.fillRect(0, 273, 300, 27); }
-  function deal() { round++; n = round === 1 ? 3 : 4; paint(); tiles = [...Array(n * n).keys()]; empty = n * n - 1; let e = empty; for (let i = 0; i < 120 * n; i++) { const r = Math.floor(e / n), q = e % n, nb = []; if (r) nb.push(e - n); if (r < n - 1) nb.push(e + n); if (q) nb.push(e - 1); if (q < n - 1) nb.push(e + 1); const o = nb[Math.floor(Math.random() * nb.length)]; [tiles[e], tiles[o]] = [tiles[o], tiles[e]]; e = o; } empty = e; const add = (n === 3 ? 70 : 140) / f; left = round === 1 ? add : left + add; full = Math.max(full, left); ban = 1.3; }
+  function deal() { round++; n = round === 1 ? 3 : 4; paint(); tiles = [...Array(n * n).keys()]; empty = n * n - 1; let e = empty; for (let i = 0; i < 120 * n; i++) { const r = Math.floor(e / n), q = e % n, nb = []; if (r) nb.push(e - n); if (r < n - 1) nb.push(e + n); if (q) nb.push(e - 1); if (q < n - 1) nb.push(e + 1); const o = nb[Math.floor(Math.random() * nb.length)]; [tiles[e], tiles[o]] = [tiles[o], tiles[e]]; e = o; } empty = e; const add = (th.hx ? 80 : n === 3 ? 70 : 140) / f; /* Hero: el mismo tiempo corto en cada ronda, aunque la ronda sea más difícil */ left = round === 1 ? add : left + add; full = Math.max(full, left); ban = 1.3; }
   deal();
   return { get score() { return score }, get over() { return over },
     input(k, d) { if (over || k !== 'tap' || ban > .8) return; const sz = S0 / n, q = Math.floor((d.x - ox) / sz), r = Math.floor((d.y - oy) / sz); if (q < 0 || r < 0 || q >= n || r >= n) return; const i = r * n + q, er = Math.floor(empty / n), eq = empty % n; if (Math.abs(er - r) + Math.abs(eq - q) !== 1) return;
@@ -1569,7 +1569,7 @@ function TrueFalse(th, f) {
 // 11. Linterna en el desierto: encontrá lo escondido en la oscuridad
 function Lantern(th, f) {
   let lx = GW / 2, ly = 300, items = [], score = 0, over = false, left = 0, full = 0, round = 0, ban = 0, tt = 0; const pool = ['star', 'scroll', 'lamb', 'dove', 'honey', 'gift', 'lantern', 'orb'];
-  function deal() { round++; items = []; for (let i = 0; i < 4 + round; i++) items.push({ k: pool[Math.floor(Math.random() * pool.length)], x: 30 + Math.random() * (GW - 60), y: 80 + Math.random() * (GH - 120), got: false }); const add = (20 + round * 6) / f; left = round === 1 ? add : left + add; full = Math.max(full, left); ban = 1.3; }
+  function deal() { round++; items = []; for (let i = 0; i < 4 + round; i++) items.push({ k: pool[Math.floor(Math.random() * pool.length)], x: 30 + Math.random() * (GW - 60), y: 80 + Math.random() * (GH - 120), got: false }); const add = (th.hx ? 24 : 20 + round * 6) / f; /* Hero: el mismo tiempo corto en cada ronda, aunque la ronda sea más difícil */ left = round === 1 ? add : left + add; full = Math.max(full, left); ban = 1.3; }
   deal();
   return { get score() { return score }, get over() { return over },
     input(k, d) { if (over || ban > .8) return; if (k === 'down' || k === 'move') { lx = d.x; ly = d.y - 40; } if (k === 'down' || k === 'up') { const it = items.find(o => !o.got && Math.hypot(o.x - lx, o.y - ly) < 70 && Math.hypot(o.x - d.x, o.y - d.y) < 36); if (it) { it.got = true; score += 15; tone(820, .12); burstAt(it.x, it.y); if (items.every(o => o.got)) { score += 20 + Math.round(left); setTimeout(() => { if (!over) deal(); }, 800); } } } },
@@ -1699,7 +1699,7 @@ function Pipes(th, f) {
     while (!(x === N - 1 && y === dst)) { const opts = []; if (x < N - 1) opts.push([1, 0], [1, 0]); if (y < N - 1) opts.push([0, 1]); if (y > 0) opts.push([0, -1]); if (x === N - 1) opts.length = 0, opts.push(y < dst ? [0, 1] : [0, -1]); const nb = opts.map(([a, b]) => [x + a, y + b]).filter(([a, b]) => !seen.has(a + ',' + b)); const n = nb.length ? nb[Math.floor(Math.random() * nb.length)] : [x + 1, y]; x = n[0]; y = n[1]; seen.add(x + ',' + y); path.push([x, y]); }
     grid = Array.from({ length: N }, () => Array.from({ length: N }, () => ({ k: ['I', 'L', 'T'][Math.floor(Math.random() * 3)], r: Math.floor(Math.random() * 4), on: false })));
     path.forEach(([px, py], i) => { const prev = i ? path[i - 1] : [-1, src], next = i < path.length - 1 ? path[i + 1] : [N, dst], a = D.findIndex(([dx, dy]) => px + dx === prev[0] && py + dy === prev[1]), b = D.findIndex(([dx, dy]) => px + dx === next[0] && py + dy === next[1]); grid[py][px] = { k: (a + 2) % 4 === b ? 'I' : 'L', r: Math.floor(Math.random() * 4), on: false }; });
-    const add = (22 + round * 4) / f; left = round === 1 ? add : left + add; full = Math.max(full, left); ban = 1.3; check(); }
+    const add = (th.hx ? 24 : 22 + round * 4) / f; /* Hero: el mismo tiempo corto en cada ronda, aunque la ronda sea más difícil */ left = round === 1 ? add : left + add; full = Math.max(full, left); ban = 1.3; check(); }
   function check() { grid.forEach(r => r.forEach(t => t.on = false)); const q = [[0, src, 3]]; let ok = false; const vis = new Set();
     while (q.length) { const [x, y, from] = q.shift(); if (x < 0 || y < 0 || x >= N || y >= N) continue; const t = grid[y][x], cs = conn(t); if (!cs.includes(from)) continue; const key = x + ',' + y; if (vis.has(key)) continue; vis.add(key); t.on = true; for (const s of cs) { if (s === from) continue; const [dx, dy] = D[s]; if (x + dx === N && y + dy === dst && s === 1) ok = true; q.push([x + dx, y + dy, (s + 2) % 4]); } }
     return ok; }
@@ -1718,7 +1718,7 @@ function Pipes(th, f) {
 function Lights(th, f) {
   const N = 4, CS = 72, ox = (GW - N * CS) / 2, oy = 170; let on = [], moves = 0, score = 0, over = false, left = 0, full = 0, round = 0, ban = 0, done = 0;
   const press = (x, y) => [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const a = x + dx, b = y + dy; if (a >= 0 && b >= 0 && a < N && b < N) on[b * N + a] = !on[b * N + a]; });
-  function deal() { round++; moves = 0; done = 0; on = Array(N * N).fill(true); const k = Math.min(8, 2 + round); for (let i = 0; i < k; i++) press(Math.floor(Math.random() * N), Math.floor(Math.random() * N)); if (on.every(Boolean)) press(1, 1); const add = (18 + round * 5) / f; left = round === 1 ? add : left + add; full = Math.max(full, left); ban = 1.3; }
+  function deal() { round++; moves = 0; done = 0; on = Array(N * N).fill(true); const k = Math.min(8, 2 + round); for (let i = 0; i < k; i++) press(Math.floor(Math.random() * N), Math.floor(Math.random() * N)); if (on.every(Boolean)) press(1, 1); const add = (th.hx ? 22 : 18 + round * 5) / f; /* Hero: el mismo tiempo corto en cada ronda, aunque la ronda sea más difícil */ left = round === 1 ? add : left + add; full = Math.max(full, left); ban = 1.3; }
   deal();
   return { get score() { return score }, get over() { return over },
     input(k, d) { if (over || k !== 'tap' || ban > .7 || done) return; const x = Math.floor((d.x - ox) / CS), y = Math.floor((d.y - oy) / CS); if (x < 0 || y < 0 || x >= N || y >= N) return; press(x, y); moves++; tone(on[y * N + x] ? 660 : 330, .06);
@@ -1776,7 +1776,7 @@ function Flood(th, f) {
 // 2. El techo abierto (sacá solo las tejas marcadas)
 function Roof(th, f) {
   const C = 6, R = 6, S = 52, ox = (GW - C * S) / 2, oy = 120; let tiles = [], tgt = null, score = 0, over = false, round = 0, ban = 0, done = 0, left = 0, full = 0, bad = null, bT = 0, low = 0;
-  function deal() { round++; done = 0; low = 0; const w = 2 + Math.floor(Math.random() * 2), h = 2 + (round > 2 ? 1 : 0); const x = Math.floor(Math.random() * (C - w + 1)), y = Math.floor(Math.random() * (R - h + 1)); tgt = { x, y, w, h }; tiles = Array.from({ length: C * R }, () => true); const add = (10 + w * h * 1.2) / f; left = round === 1 ? add + 6 : left + add; full = Math.max(full, left); ban = 1.2; }
+  function deal() { round++; done = 0; low = 0; const w = 2 + Math.floor(Math.random() * 2), h = 2 + (round > 2 ? 1 : 0); const x = Math.floor(Math.random() * (C - w + 1)), y = Math.floor(Math.random() * (R - h + 1)); tgt = { x, y, w, h }; tiles = Array.from({ length: C * R }, () => true); const add = (th.hx ? 22 : 10 + w * h * 1.2) / f; /* Hero: el mismo tiempo corto en cada ronda, aunque la ronda sea más difícil */ left = round === 1 ? add + 6 : left + add; full = Math.max(full, left); ban = 1.2; }
   deal();
   const inT = (x, y) => x >= tgt.x && x < tgt.x + tgt.w && y >= tgt.y && y < tgt.y + tgt.h;
   return { get score() { return score }, get over() { return over },
@@ -1867,15 +1867,15 @@ const SORT_SETS = [
   { a: 'Con una palabra', b: 'Tomando de la mano o tocando', items: [['La tormenta se calma', 'a'], ['El paralítico se levanta', 'a'], ['Bartimeo recupera la vista', 'a'], ['El siervo del oficial romano', 'a'], ['La hija de Jairo', 'b'], ['La suegra de Pedro', 'b'], ['El leproso queda limpio', 'b'], ['Pedro, que se hundía', 'b']] }
 ];
 function Sort(th, f) {
-  let set = null, queue = [], cur = null, cx = GW / 2, fly = 0, flyTo = 0, score = 0, streak = 0, over = false, left = 0, full = 0, round = 0, ban = 0, fb = '', fT = 0; const order = shuffle([0, 1, 2]);
+  let set = null, queue = [], cur = null, cx = GW / 2, fly = 0, flyTo = 0, score = 0, streak = 0, over = false, left = 0, full = 0, round = 0, ban = 0, fb = '', fT = 0, lives = th.hx ? 3 : 5; /* con errores contados: tocar al azar ya no suma sin fin */ const order = shuffle([0, 1, 2]);
   function deal() { set = SORT_SETS[order[round % 3]]; round++; queue = shuffle(set.items.slice()); next(); const add = 28 / f; left = round === 1 ? add : left + add; full = Math.max(full, left); ban = 1.3; }
   function next() { cur = queue.shift() || null; cx = GW / 2; fly = 0; if (!cur) setTimeout(() => { if (!over) deal(); }, 600); }
   deal();
   return { get score() { return score }, get over() { return over },
     input(k, d) { if (over || ban > .7 || !cur || fly) return; let s = null; if (k === 'tap') s = d.x < GW / 2 ? 'a' : 'b'; if (k === 'left') s = 'a'; if (k === 'right') s = 'b'; if (!s) return;
-      if (s === cur[1]) { streak++; score += 15 + streak * 3; fb = '¡Bien!'; tone(600 + streak * 30, .1); } else { streak = 0; left = Math.max(0, left - 3); fb = 'Era: ' + (cur[1] === 'a' ? set.a : set.b); tone(170, .25); } fT = .7; fly = .35; flyTo = s === 'a' ? -1 : 1; },
+      if (s === cur[1]) { streak++; score += 15 + streak * 3; fb = '¡Bien!'; tone(600 + streak * 30, .1); } else { streak = 0; left = Math.max(0, left - 3); lives--; fb = 'Era: ' + (cur[1] === 'a' ? set.a : set.b); tone(170, .25); if (lives <= 0) { fT = 1.2; setTimeout(() => { over = true; }, 900); } } fT = Math.max(fT, .7); fly = .35; flyTo = s === 'a' ? -1 : 1; },
     update(dt) { if (over) return; ban = Math.max(0, ban - dt); fT = Math.max(0, fT - dt); if (fly) { fly = Math.max(0, fly - dt); cx += flyTo * 900 * dt; if (!fly) next(); } if (ban < .7) left -= dt; if (left <= 0) { left = 0; over = true; } },
-    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'RONDA ' + round + (streak > 2 ? ' · RACHA ' + streak : ''), 16, 27);
+    draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'RONDA ' + round + ' · ' + '♥'.repeat(Math.max(0, lives)) + (streak > 2 ? ' · RACHA ' + streak : ''), 16, 27);
       [[set.a, 16], [set.b, GW / 2 + 6]].forEach(([s, x]) => { c.fillStyle = th.hx ? 'rgba(233,195,122,.18)' : 'rgba(255,255,255,.6)'; rr(c, x, 380, GW / 2 - 22, 100, 18); c.fill(); c.fillStyle = INK(th); c.font = '900 13px Nunito,sans-serif'; c.textAlign = 'center'; c.fillText(s, x + (GW / 2 - 22) / 2, 436); c.textAlign = 'left'; });
       if (cur) { c.fillStyle = th.hx ? '#2A2418' : '#FFFFFF'; rr(c, cx - 140, 180, 280, 110, 20); c.fill(); c.strokeStyle = th.hx ? '#E9C37A' : '#FF9636'; c.lineWidth = 2; c.stroke(); c.fillStyle = INK(th); c.font = '800 17px Nunito,sans-serif'; c.textAlign = 'center'; const w = cur[0].split(' '); let l1 = '', l2 = ''; w.forEach(x => { if ((l1 + ' ' + x).trim().length <= 22 && !l2) l1 = (l1 + ' ' + x).trim(); else l2 = (l2 + ' ' + x).trim(); }); c.fillText(l1, cx, l2 ? 228 : 240); if (l2) c.fillText(l2, cx, 252); c.textAlign = 'left'; }
       lab(c, th, 'Tocá a la izquierda o a la derecha', GW / 2, GH - 18, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.5); else banner(c, th, 'Ronda ' + round, ban); } };
@@ -2169,7 +2169,7 @@ function Carry(th, f) {
 // 3. Nudos sueltos (tocá los números en orden: cada uno es un perdón)
 function Forgive(th, f) {
   let n = 0, cols = 3, rows = 3, nums = [], nextN = 1, score = 0, over = false, left = 0, full = 0, board = 0, fb = '', fT = 0, shake = 0, glow = [];
-  function deal() { board++; cols = board === 1 ? 3 : 4; rows = board < 3 ? (board === 1 ? 3 : 4) : 5; n = cols * rows; nums = shuffle(Array.from({ length: n }, (_, i) => i + 1)); nextN = 1; glow = []; const add = n * 1.6 / f; left = board === 1 ? add + 4 : left + add; full = Math.max(full, left); }
+  function deal() { board++; cols = board === 1 ? 3 : 4; rows = board < 3 ? (board === 1 ? 3 : 4) : 5; n = cols * rows; nums = shuffle(Array.from({ length: n }, (_, i) => i + 1)); nextN = 1; glow = []; const add = (th.hx ? 16 : n * 1.6) / f; /* Hero: el mismo tiempo corto en cada ronda, aunque la ronda sea más difícil */ left = board === 1 ? add + 4 : left + add; full = Math.max(full, left); }
   deal();
   const cw = () => (GW - 40) / cols, ch2 = () => Math.min(64, 330 / rows), cell = i => ({ x: 20 + (i % cols) * cw(), y: 110 + Math.floor(i / cols) * ch2() });
   return { get score() { return score }, get over() { return over },
@@ -2212,7 +2212,7 @@ function Puzzle(th, f) {
     c.fillStyle = '#E2CFA8'; c.fillRect(40, 96, 90, 64); c.fillStyle = '#C9B48A'; c.fillRect(34, 90, 102, 10); c.fillStyle = '#6A4A2E'; c.fillRect(74, 124, 22, 36); c.fillStyle = '#8A6A44'; c.fillRect(48, 108, 16, 14);
     [[160, '#3E5A8A', '#E6B691'], [186, '#8A5A3A', '#C99A72']].forEach(([x, robe, skin]) => { c.fillStyle = robe; c.beginPath(); c.moveTo(x - 12, 186); c.quadraticCurveTo(x - 14, 152, x - 6, 144); c.lineTo(x + 6, 144); c.quadraticCurveTo(x + 14, 152, x + 12, 186); c.fill(); c.fillStyle = skin; c.beginPath(); c.arc(x, 136, 8, 0, 7); c.fill(); });
     c.fillStyle = '#3E5A8A'; c.beginPath(); c.arc(160, 133, 9, 3.1, 6.3); c.fill(); c.strokeStyle = 'rgba(255,255,255,.6)'; c.lineWidth = 3; c.beginPath(); c.moveTo(166, 158); c.lineTo(180, 158); c.stroke(); return cv; }
-  function deal() { round++; n = round === 1 ? 3 : 4; img = paint(round); pcs = []; const s = BS / n; for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) pcs.push({ i, j, x: 10 + Math.random() * (GW - 20 - s), y: 300 + Math.random() * (GH - 340 - s), ok: false }); const add = n * n * 2.4 / f; left = round === 1 ? add + 6 : left + add; full = Math.max(full, left); }
+  function deal() { round++; n = round === 1 ? 3 : 4; img = paint(round); pcs = []; const s = BS / n; for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) pcs.push({ i, j, x: 10 + Math.random() * (GW - 20 - s), y: 300 + Math.random() * (GH - 340 - s), ok: false }); const add = (th.hx ? 22 : n * n * 2.4) / f; /* Hero: el mismo tiempo corto en cada ronda, aunque la ronda sea más difícil */ left = round === 1 ? add + 6 : left + add; full = Math.max(full, left); }
   deal();
   return { get score() { return score }, get over() { return over },
     input(k, d) { if (over) return; const s = BS / n;
@@ -2230,7 +2230,7 @@ function Puzzle(th, f) {
 // 6. Luz en la oscuridad (mové la luz para encontrar las lámparas escondidas)
 function Dark(th, f) {
   let px = GW / 2, py = 260, items = [], score = 0, over = false, left = 0, full = 0, round = 0, fb = '', fT = 0; const R = 62;
-  function deal() { round++; const k = 3 + round; items = []; while (items.length < k) { const x = 30 + Math.random() * (GW - 60), y = 90 + Math.random() * 360; if (items.every(q => Math.hypot(q.x - x, q.y - y) > 60)) items.push({ x, y, h: 0, on: false }); } const add = k * 3.2 / f; left = round === 1 ? add + 5 : left + add; full = Math.max(full, left); }
+  function deal() { round++; const k = 3 + round; items = []; while (items.length < k) { const x = 30 + Math.random() * (GW - 60), y = 90 + Math.random() * 360; if (items.every(q => Math.hypot(q.x - x, q.y - y) > 60)) items.push({ x, y, h: 0, on: false }); } const add = (th.hx ? 13 : k * 3.2) / f; /* Hero: el mismo tiempo corto en cada ronda, aunque la ronda sea más difícil */ left = round === 1 ? add + 5 : left + add; full = Math.max(full, left); }
   deal();
   return { get score() { return score }, get over() { return over },
     input(k, d) { if (over) return; if (k === 'down' || k === 'move') { px = d.x; py = d.y; } },
