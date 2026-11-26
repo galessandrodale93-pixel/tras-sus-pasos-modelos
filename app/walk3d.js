@@ -1840,7 +1840,7 @@ function openBag(first) {
   const tx = id => ((document.getElementById(id) || {}).textContent || '').trim(), lvn = tx('lvN') || '1', rk = tx('lvT'), pts = tx('score');
   const T = (t, ic, n) => `<button data-t="${t}" role="tab"><span class="it-ic" aria-hidden="true">${ic}</span><span class="it-tx">${n}</span></button>`;
   el.innerHTML = `<div class="inv${S.hx ? ' hx' : ''}"><div class="inv-h"><div class="inv-tt"><span class="inv-emb">${BAG_SVG}</span><div><b>Mochila</b><small>Nivel ${esc(lvn)}${rk ? ' · ' + esc(rk) : ''}${pts ? ` · <em>✦ ${esc(pts)}</em>` : ''}</small></div></div><button class="bag-x" aria-label="Cerrar">✕</button></div>
-    <div class="inv-tabs" role="tablist">${T('eq', '🛡️', 'Equipo')}${T('di', '📖', 'Diario')}${T('ob', '🏺', 'Objetos')}${T('me', '📜', 'Recuerdos')}${T('cu', '🎓', 'Cursos')}${S.hx ? T('su', '🔨', 'Trabajo') : T('su', '🧰', 'Herramientas')}${T('at', '💪', S.hx ? 'Atributos' : 'Mis fuerzas')}</div>
+    <div class="inv-tabs" role="tablist" data-i18n-ctx="inv">${T('eq', '🛡️', 'Equipo')}${T('di', '📖', 'Diario')}${T('ob', '🏺', 'Objetos')}${T('me', '📜', 'Recuerdos')}${T('cu', '🎓', 'Cursos')}${S.hx ? T('su', '🔨', 'Trabajo') : T('su', '🧰', 'Herramientas')}${T('at', '💪', S.hx ? 'Atributos' : 'Mis fuerzas')}</div>
     <div class="inv-body"></div></div>`;
   el.hidden = false; const close = () => { el.hidden = true; }; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   const tabs = el.querySelectorAll('.inv-tabs button'), body = el.querySelector('.inv-body');
