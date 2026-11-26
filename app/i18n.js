@@ -17,7 +17,7 @@ const LIB = {
 function cita(k) { const B = LIB[LANG]; if (!B || !/\d/.test(k)) return null; let ok = true; const r = k.replace(/[A-Za-zÀ-ÿ]+/g, w => { if (B[w]) return B[w]; ok = false; return w; }); return ok ? r : null; }
 const STOP = new Set(['de', 'del', 'y', 'e', 'a', 'al', 'en', 'con', 'o', 'u', 'el', 'la', 'los', 'las', 'lo', 'por', 'para', 'que', 'un', 'una']);
 const Y = { en: 'and', pt: 'e' }; const NOMBRE = /^$/;
-let D = null, LOW = null; const P = [], CACHE = new Map(), OUT = new Set(), MISS = new Set();
+let D = null, LOW = null, REV = null; const P = [], CACHE = new Map(), OUT = new Set(), MISS = new Set();
 const rx = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const norm = s => s.replace(/\s+/g, ' ').trim();
 export const ready = LANG === 'es' ? Promise.resolve() :
@@ -25,6 +25,7 @@ export const ready = LANG === 'es' ? Promise.resolve() :
     D = new Map(); LOW = new Map();
     for (const k in j) { if (k.includes('{*}')) P.push([(k.replace(/\{\*\}|\{n\}/g, ' ').match(/[A-Za-zÀ-ÿ]+/g) || []).every(w => STOP.has(w.toLowerCase())), new RegExp('^' + k.split('{*}').map(s => rx(s).replace(/\\\{n\\\}/g, '(\\d+(?:[.,]\\d+)*)')).join('(.+?)') + '$'), j[k], k]); else { D.set(k, j[k]); LOW.set(k.toLowerCase(), j[k]); } OUT.add(norm(String(j[k]).replace(/\{\*\}|\{n\}/g, ''))); }
     P.sort((a, b) => b[3].length - a[3].length);
+    REV = new Map(); for (const k in j) if (typeof j[k] === 'string' && !k.includes('{')) { const v = norm(j[k]); if (!REV.has(v)) REV.set(v, k); }
   }).catch(() => { D = new Map(); });
 
 /* busca la traducción de un texto ya normalizado; null si no hay */
@@ -51,6 +52,8 @@ function look(k) {
   if (r != null && CACHE.size < 30000) CACHE.set(k, r);
   return r;
 }
+/* el texto en español del que salió una traducción (para encontrar su voz, que se guarda con el nombre del texto en español) */
+export function es(s) { return REV && s ? REV.get(norm(s)) || null : null; }
 export function t(s, quiet) {
   if (!D || !s || typeof s !== 'string') return s;
   const k = norm(s); if (!k || !/[A-Za-zÀ-ÿ]/.test(k)) return s;

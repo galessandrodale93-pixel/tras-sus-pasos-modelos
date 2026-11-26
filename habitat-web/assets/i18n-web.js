@@ -20,6 +20,7 @@
     '.lang-aviso{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9998;max-width:min(560px,calc(100vw - 120px));background:rgba(32,24,48,.94);color:#f3ead6;font:500 13px/1.45 system-ui,sans-serif;padding:10px 38px 10px 14px;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.3)}' +
     '.lang-aviso button{all:unset;cursor:pointer;position:absolute;right:10px;top:8px;font-size:15px;opacity:.7}' +
     '@media (max-width:600px){.lang-aviso{left:12px;right:12px;transform:none;max-width:none;bottom:56px}}' +
+    '.lang-es{display:inline-block;margin:6px 0 10px;padding:4px 10px;border-radius:999px;background:rgba(200,160,80,.18);border:1px solid rgba(200,160,80,.55);font:600 12px/1.3 system-ui,sans-serif;letter-spacing:.02em}' +
     'html.i18n-wait body{opacity:0}html body{transition:opacity .15s}';
   var st = document.createElement('style'); st.textContent = css; (document.head || document.documentElement).appendChild(st);
   function selector() {
@@ -34,6 +35,14 @@
     var a = document.createElement('div'); a.className = 'lang-aviso'; a.setAttribute('data-notr', ''); a.setAttribute('role', 'note'); a.textContent = AVISO[LANG];
     var x = document.createElement('button'); x.type = 'button'; x.setAttribute('aria-label', LANG === 'pt' ? 'Fechar' : 'Close'); x.textContent = '✕';
     x.onclick = function () { a.remove(); try { sessionStorage.setItem('hab:aviso-idioma', '1'); } catch (e) {} }; a.appendChild(x); document.body.appendChild(a);
+  }
+  /* en la página de un curso o de una clase: el curso se dicta en español */
+  var ENES = { en: 'Taught in Spanish', pt: 'Curso em espanhol' };
+  function cursoEs() {
+    if (!ENES[LANG] || document.querySelector('.lang-es')) return;
+    var h = document.getElementById('csTitle') || document.getElementById('pTitle'); if (!h) return;
+    var b = document.createElement('span'); b.className = 'lang-es'; b.setAttribute('data-notr', ''); b.textContent = '🇪🇸 ' + ENES[LANG];
+    h.parentNode.insertBefore(b, h.nextSibling);
   }
   function onReady(f) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', f); else f(); }
   onReady(selector);
@@ -85,7 +94,7 @@
     onReady(function () {
       document.documentElement.lang = LANG; document.title = t(document.title);
       var md = document.querySelector('meta[name=description]'); if (md) md.setAttribute('content', t(md.getAttribute('content') || ''));
-      walk(document.body); aviso(); show();
+      walk(document.body); aviso(); cursoEs(); show();
       new MutationObserver(function (ms) { ms.forEach(function (m) { if (m.type === 'characterData') tn(m.target); else if (m.type === 'attributes') { var v = m.target.getAttribute(m.attributeName), r = t(v); if (r !== v) m.target.setAttribute(m.attributeName, r); } else m.addedNodes.forEach(walk); }); })
         .observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ATT });
     });

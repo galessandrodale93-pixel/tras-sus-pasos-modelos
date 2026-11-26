@@ -14,16 +14,19 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 20
+      max-parallel: 4
       matrix:
         lang: [en, pt]
-        part: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+        part: [0, 1]
     steps:
       - uses: actions/checkout@v4
         if: contains(inputs.idiomas, matrix.lang)
         with:
           sparse-checkout: |
             tools/voice
+            app/voice/en/index.json
+            app/voice/pt/index.json
+          sparse-checkout-cone-mode: false
       - name: Grabar
         if: contains(inputs.idiomas, matrix.lang)
         run: |
@@ -33,13 +36,14 @@ jobs:
           mkdir -p /tmp/kok
           curl -sL -o /tmp/kok/m.onnx https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx
           curl -sL -o /tmp/kok/v.bin https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
-          python3 tools/voice/gen_lang.py ${{ matrix.lang }} /tmp/kok/m.onnx /tmp/kok/v.bin ${{ matrix.part }} 16
+          python3 tools/voice/gen_lang.py ${{ matrix.lang }} /tmp/kok/m.onnx /tmp/kok/v.bin ${{ matrix.part }} 2
       - uses: actions/upload-artifact@v4
         if: contains(inputs.idiomas, matrix.lang)
         with:
           name: voz-${{ matrix.lang }}-${{ matrix.part }}
-          path: app/voice/${{ matrix.lang }}/
+          path: app/voice/${{ matrix.lang }}/*.mp3
           retention-days: 3
+          if-no-files-found: ignore
   subir:
     needs: grabar
     runs-on: ubuntu-latest

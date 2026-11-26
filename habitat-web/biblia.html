@@ -33,7 +33,7 @@
   <div class="bb-main">
     <div class="bb-bar">
       <select id="bB" aria-label="Libro"></select><select id="bC" aria-label="Capítulo"></select>
-      <select id="bV" aria-label="Traducción"><option value="rv1909">Reina-Valera 1909</option><option value="rv1865">Reina-Valera 1865</option></select>
+      <select id="bV" aria-label="Traducción"><option value="rv1909">Reina-Valera 1909</option><option value="rv1865">Reina-Valera 1865</option><option value="web">World English Bible</option><option value="blivre">Bíblia Livre</option></select>
     </div>
     <div class="bb-ext">Leer este capítulo en otras traducciones: <a id="xNTV" target="_blank" rel="noopener">NTV</a> · <a id="xNVI" target="_blank" rel="noopener">NVI</a> · <a id="xRVR" target="_blank" rel="noopener">RVR 1960</a></div>
     <h2 id="bT" data-notr></h2>
@@ -65,6 +65,10 @@
 var A=window.HabitatAuth,X=window.CampusExtra,esc=X.esc,$=function(i){return document.getElementById(i);};
 var U=['GEN','EXO','LEV','NUM','DEU','JOS','JDG','RUT','1SA','2SA','1KI','2KI','1CH','2CH','EZR','NEH','EST','JOB','PSA','PRO','ECC','SNG','ISA','JER','LAM','EZK','DAN','HOS','JOL','AMO','OBA','JON','MIC','NAM','HAB','ZEP','HAG','ZEC','MAL','MAT','MRK','LUK','JHN','ACT','ROM','1CO','2CO','GAL','EPH','PHP','COL','1TH','2TH','1TI','2TI','TIT','PHM','HEB','JAS','1PE','2PE','1JN','2JN','3JN','JUD','REV'];
 var st={v:'rv1909',b:43,c:1};try{var sv=JSON.parse(localStorage.getItem('campus:bib')||'null');if(sv)st=sv;}catch(e){}
+/* la versión sigue al idioma de la web: inglés → World English Bible, portugués → Bíblia Livre, español → Reina-Valera */
+var LG=window.HAB_LANG||'es',VL={en:'web',pt:'blivre',es:'rv1909'}[LG]||'rv1909';if(st.lang!==LG){if(st.lang||LG!=='es'||st.v==='web'||st.v==='blivre')st.v=VL;st.lang=LG;}
+var VN={rv1909:'RV1909',rv1865:'RV1865',web:'WEB',blivre:'BLIVRE'};
+var XL={es:[[127,'NTV'],[128,'NVI'],[149,'RVR1960']],en:[[111,'NIV'],[116,'NLT'],[1,'KJV']],pt:[[129,'NVI'],[1608,'ARA'],[1930,'NVT']]}[LG]||[[127,'NTV'],[128,'NVI'],[149,'RVR1960']];
 var q=new URLSearchParams(location.search);if(q.get('b'))st.b=+q.get('b');if(q.get('c'))st.c=+q.get('c');
 var IDX=null,cache={},sel=[];
 async function idx(){if(!IDX)IDX=await fetch('/assets/biblia/'+st.v+'/index.json').then(function(r){return r.json();});return IDX;}
@@ -74,11 +78,11 @@ async function draw(){var I=await idx();st.b=Math.min(66,Math.max(1,st.b));var n
  $('bB').innerHTML=I.books.map(function(n,i){return '<option value="'+(i+1)+'"'+(i+1===st.b?' selected':'')+'>'+n+'</option>';}).join('');
  var o='';for(var i=1;i<=nc;i++)o+='<option value="'+i+'"'+(i===st.c?' selected':'')+'>Capítulo '+i+'</option>';$('bC').innerHTML=o;$('bV').value=st.v;
  var name=I.books[st.b-1];$('bT').textContent=name+' '+st.c;
- var u=function(id,code){return 'https://www.bible.com/bible/'+id+'/'+U[st.b-1]+'.'+st.c+'.'+code;};$('xNTV').href=u(127,'NTV');$('xNVI').href=u(128,'NVI');$('xRVR').href=u(149,'RVR1960');
+ var u=function(id,code){return 'https://www.bible.com/bible/'+id+'/'+U[st.b-1]+'.'+st.c+'.'+code;};['xNTV','xNVI','xRVR'].forEach(function(id,k){var e=$(id);e.href=u(XL[k][0],XL[k][1]);e.textContent=XL[k][1];e.setAttribute('data-notr','');});
  $('bX').innerHTML='<p class="cx-empty">Cargando…</p>';var B=await book(st.v,st.b);var vs=B[st.c-1]||[];
  $('bX').innerHTML=vs.map(function(t,i){return '<span class="vs" data-n="'+(i+1)+'"><sup>'+(i+1)+'</sup>'+esc(t)+' </span>';}).join('');
  sel=[];side();$('bP').disabled=st.b===1&&st.c===1;$('bN').disabled=st.b===66&&st.c===I.chapters[65];window.scrollTo({top:0});}
-function ref(){if(!sel.length)return '';var I=IDX,a=sel.slice().sort(function(x,y){return x-y;}),r=[],s=a[0],p=a[0];for(var i=1;i<=a.length;i++){if(a[i]===p+1){p=a[i];continue;}r.push(s===p?s:s+'-'+p);s=p=a[i];}return I.books[st.b-1]+' '+st.c+':'+r.join(',')+' ('+(st.v==='rv1909'?'RV1909':'RV1865')+')';}
+function ref(){if(!sel.length)return '';var I=IDX,a=sel.slice().sort(function(x,y){return x-y;}),r=[],s=a[0],p=a[0];for(var i=1;i<=a.length;i++){if(a[i]===p+1){p=a[i];continue;}r.push(s===p?s:s+'-'+p);s=p=a[i];}return I.books[st.b-1]+' '+st.c+':'+r.join(',')+' ('+(VN[st.v]||st.v.toUpperCase())+')';}
 function side(){var on=sel.length>0;$('bS').classList.toggle('sel',on);$('bF').hidden=!on;$('bHint').hidden=on;document.querySelectorAll('.vs').forEach(function(e){e.classList.toggle('on',sel.indexOf(+e.dataset.n)>=0);});
  if(on){var t=sel.slice().sort(function(x,y){return x-y;}).map(function(n){return document.querySelector('.vs[data-n="'+n+'"]').textContent.replace(/^\d+/,'').trim();}).join(' ');$('bQ').innerHTML=esc(t)+' <cite>'+esc(ref())+'</cite>';$('bQ').dataset.t=t;}}
 $('bX').addEventListener('click',function(e){var v=e.target.closest('.vs');if(!v)return;var n=+v.dataset.n,i=sel.indexOf(n);if(i>=0)sel.splice(i,1);else sel.push(n);side();});

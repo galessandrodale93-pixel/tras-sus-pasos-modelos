@@ -3240,7 +3240,7 @@ function ksPayload(){const p=current;if(!p||!KS.sid)return null;const f=KS.fps.s
     lugares:KS.lug.slice(0,40),misiones:(()=>{let N={};try{N=W3.misNames();}catch(e){}return ksDone(p.missions).filter(k=>!KS.mis0.includes(k)).map(k=>N[k]||k);})(),examenes:Object.keys(p.exams||{}).filter(k=>p.exams[k]&&p.exams[k].passed&&!KS.ex0.includes(k)).map(k=>(REGIONS.find(R=>R.id===k)||{}).name||k),
     lore:Math.max(0,Object.keys(p.dlore||{}).length-KS.lore0),sellos:Math.max(0,ksSellos()-KS.sel0),juegos:KS.games,sala:KS.sala,amigos:KS.amigos,
     nivelIni:KS.lv0,nivelFin:lvOf(total(p)),horas:Math.round((p.playMs||0)/36e3)/100,pase:KH.activo===true?'activo':khLocked(p)?'cerrado':'libre',cierre:KS.cierre,cierreAt:p.khc&&p.khc.at?new Date(p.khc.at).toISOString():'',pagoAt:p.khc&&p.khc.pago?new Date(p.khc.pago).toISOString():'',cierreVeces:(p.khc&&p.khc.n)||0,
-    ...(()=>{const d=ksDev();return {modelo:d.modelo,soVer:d.soVer,nav:d.nav,placa:d.placa,mem:d.mem,nucleos:d.nucleos,pantalla:d.pantalla};})(),cortes:KS.lost||0,corteAntes:!!KS.corteAntes,zonas:Object.entries(KS.zf||{}).filter(([,e])=>e[1]>=3).map(([z,e])=>({z,fps:Math.round(e[0]/e[1]),n:e[1],lento:Math.round(e[2]/e[1]*100)})).sort((x,y)=>x.fps-y.fps).slice(0,12),
+    ...(()=>{const d=ksDev();return {modelo:d.modelo,soVer:d.soVer,nav:d.nav,placa:d.placa,mem:d.mem,nucleos:d.nucleos,pantalla:d.pantalla};})(),cortes:KS.lost||0,corteAntes:!!KS.corteAntes,vozFalta:(()=>{try{return [...VO.falta].slice(0,20).map(x=>x.slice(0,220));}catch(e){return [];}})(),zonas:Object.entries(KS.zf||{}).filter(([,e])=>e[1]>=3).map(([z,e])=>({z,fps:Math.round(e[0]/e[1]),n:e[1],lento:Math.round(e[2]/e[1]*100)})).sort((x,y)=>x.fps-y.fps).slice(0,12),
     tester:(()=>{try{return localStorage.getItem('tsp:tester')==='1';}catch(e){return false;}})()};}
 function ksSend(force){const x=ksPayload();if(!x||(x.seg<20&&!force))return;KS.sent=KS.act;const b=JSON.stringify(x);/* fetch con keepalive y sin cookies: el sendBeacon manda las cookies del aparato y la web de Habitat lo rechaza (403) */try{fetch(KS_API,{method:'POST',body:b,headers:{'Content-Type':'text/plain'},keepalive:true,credentials:'omit',mode:'cors'}).catch(()=>{});}catch(e){}}
 setInterval(()=>{try{
@@ -3344,7 +3344,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){const n=D
 /* ---------- Narración grabada: narrador, varón y mujer (voces aprobadas, Kokoro es-419) ----------
    Cada texto tiene su MP3 en app/voice/<hash>.mp3 (hash FNV-1a de "voz|texto"); se baja recién cuando hace falta.
    Si un texto no tiene archivo (por ejemplo, porque lleva el nombre del jugador), lo lee la voz del aparato. */
-const VO={log:[],on:(()=>{try{return localStorage.getItem('tsp:narr')!=='0';}catch(e){return true;}})(),base:(window.ASSET_BASE!==undefined?(window.ASSET_BASE?window.ASSET_BASE+'app/voice/':new URL('./voice/',import.meta.url).href):'https://tsp-assets.galessandrodale-93.workers.dev/app/voice/'),idx:null,el:null,q:[],cur:null,ok:false};
+const VO={falta:new Set(),log:[],on:(()=>{try{return localStorage.getItem('tsp:narr')!=='0';}catch(e){return true;}})(),base:(window.ASSET_BASE!==undefined?(window.ASSET_BASE?window.ASSET_BASE+'app/voice/':new URL('./voice/',import.meta.url).href):'https://tsp-assets.galessandrodale-93.workers.dev/app/voice/'),idx:null,el:null,q:[],cur:null,ok:false};
 const voH=s=>{let x=0x811c9dc5;for(let i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,0x01000193)>>>0;}return x.toString(16).padStart(8,'0');};
 function voIdx(){if(!VO.idx)VO.idx=fetch(new URL('./voice/'+(I18N.LANG!=='es'?I18N.LANG+'/':'')+'index.json',import.meta.url).href).then(r=>r.ok?r.json():[]).then(a=>new Set(a)).catch(()=>new Set());return VO.idx;}
 // los celulares solo dejan sonar audio después de un toque: se "abre" un reproductor en el primer toque y se reusa
@@ -3354,12 +3354,13 @@ function voUnlock(e){if(VO.ok||VO.trying)return;VO.trying=true;try{if(!VO.el){VO
 const voDuck=on=>{try{if(window.W3&&W3.AU)W3.AU.narr=on;}catch(e){}};
 function voClean(t){t=String(t||'').replace(/\s+/g,' ').trim();const nm=current&&current.name;if(nm&&t.startsWith(nm)){t=t.slice(nm.length).replace(/^[,!¡\s]+/,'');t=t.charAt(0).toUpperCase()+t.slice(1);}return t;}
 // vo(texto, voz, {queue, tts:false, onend})
-function vo(text,voice,o){o=o||{};if(!text)return;const t=voClean(text);if(!t)return;const it={t,v:voice||'narrador',o};if(!VO.on){o.onend&&setTimeout(o.onend,0);return;}
+function vo(text,voice,o){o=o||{};if(!text)return;if(I18N.LANG!=='es'){const es=I18N.es(String(text).replace(/\s+/g,' ').trim());if(es)text=es;}const t=voClean(text);if(!t)return;const it={t,v:voice||'narrador',o};if(!VO.on){o.onend&&setTimeout(o.onend,0);return;}
   if(o.queue)VO.q.push(it);else{voStop(true);VO.q=[it];}if(!VO.cur)voNext();}
 /* el iPhone no reproduce audio de un servidor que no responde por partes (Range): se baja el MP3 entero y se reproduce desde la memoria */
 const VOL=I18N.LANG!=='es'?I18N.LANG+'/':'';const VOB=new Map();async function voSrc(k){if(VOB.has(k))return VOB.get(k);const r=await fetch(VO.base+VOL+k+'.mp3');if(!r.ok)throw new Error('voz '+r.status);const u=URL.createObjectURL(await r.blob());VOB.set(k,u);if(VOB.size>60){const [k0,u0]=VOB.entries().next().value;VOB.delete(k0);try{URL.revokeObjectURL(u0);}catch(e){}}return u;}
 async function voNext(){const it=VO.q.shift();if(!it){VO.cur=null;voDuck(false);return;}VO.cur=it;const idx=await voIdx();if(VO.cur!==it)return;const k=voH(it.v+'|'+it.t);voDuck(true);
   const done=()=>{if(VO.cur!==it)return;it.o.onend&&it.o.onend();voNext();};
+  if(I18N.LANG!=='es'&&!idx.has(k)&&idx.size&&VO.falta.size<60)VO.falta.add(it.v+'|'+it.t);
   if(idx.has(k)&&VO.el){let src=VO.base+VOL+k+'.mp3';try{src=await voSrc(k);}catch(e){}if(VO.cur!==it)return;try{VO.el.onended=()=>{VO.log.push('end '+k);done();};VO.el.onerror=()=>{VO.log.push('err '+k);done();};VO.el.src=src;try{VO.el.volume=window.TSP_MIX?TSP_MIX.v('sfx'):1;}catch(e){}VO.log.push('play '+k);const pr=VO.el.play();if(pr)pr.catch(e=>{VO.log.push('rej '+k+' '+(e&&e.name));if(e&&e.name==='AbortError')return;done();});return;}catch(e){}}
   VO.log.push('tts '+it.t.slice(0,30));
   return done();} /* la voz del aparato sonaba rara: ni en Kids ni en Hero se usa, solo las voces grabadas (lo demás queda en el cartel) */

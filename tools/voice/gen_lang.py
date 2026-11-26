@@ -13,6 +13,10 @@ V={'en':{'narrador':'am_santa','varon':'am_michael','mujer':'af_heart'},'pt':{'n
 AJ={'narrador':(1,1),'varon':(1,1),'mujer':(1,1),'past':(.92,.9),'merc':(1,.965),'zel':(1.05,1.06),'esc':(.89,.98),'rom':(1,.97)}
 KL={'en':'en-us','pt':'pt-br'}[lang]
 L=json.load(open(os.path.join(R,'tools','voice','lista_'+lang+'.json')));n=0
+# las que ya están grabadas (index.json del idioma) no se vuelven a grabar
+try: YA=set(json.load(open(os.path.join(D,'index.json'))))
+except Exception: YA=set()
+L=[e for e in L if e['k'] not in YA]
 for i,e in enumerate(L):
     if i%parts!=part: continue
     f=os.path.join(D,e['k']+'.mp3')

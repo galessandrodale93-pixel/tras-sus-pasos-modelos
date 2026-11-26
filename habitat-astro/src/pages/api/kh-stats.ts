@@ -33,7 +33,7 @@ export const POST: APIRoute = async ({ request }) => {
     disp: s(x.disp, 12), so: s(x.so, 12), calidad: s(x.calidad, 30), fps: n(x.fps, 240),
     modelo: s(x.modelo, 50), soVer: s(x.soVer, 24), nav: s(x.nav, 24), placa: s(x.placa, 60), mem: n(x.mem, 64), nucleos: n(x.nucleos, 64), pantalla: s(x.pantalla, 24), cortes: n(x.cortes, 99), corteAntes: x.corteAntes === true,
     etapaIni: s(x.etapaIni, 30), lugarIni: s(x.lugarIni, 60), etapa: s(x.etapa, 30), etapaMax: s(x.etapaMax, 30),
-    lugares: JSON.stringify(arr(x.lugares)), misiones: JSON.stringify(arr(x.misiones, 40, 70)), examenes: JSON.stringify(arr(x.examenes, 12, 30)), juegos: JSON.stringify(juegos),
+    lugares: JSON.stringify(arr(x.lugares)), vozFalta: JSON.stringify(arr(x.vozFalta, 20, 220)), misiones: JSON.stringify(arr(x.misiones, 40, 70)), examenes: JSON.stringify(arr(x.examenes, 12, 30)), juegos: JSON.stringify(juegos),
     lore: n(x.lore, 999), sellos: n(x.sellos, 999), sala: x.sala === true, amigos: n(x.amigos, 50), nivelIni: n(x.nivelIni, 200), nivelFin: n(x.nivelFin, 200), horas: n(x.horas, 5000),
     pase: ["activo", "cerrado", "libre"].includes(String(x.pase)) ? String(x.pase) : "libre", cierre: x.cierre === true, cierreAt: ISO(x.cierreAt), pagoAt: ISO(x.pagoAt), cierreVeces: n(x.cierreVeces, 9999),
     nuevo: x.nuevo === true, tester: x.tester === true,
