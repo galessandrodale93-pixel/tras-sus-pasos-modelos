@@ -1810,3 +1810,6 @@ body[data-branch="ados"] .v3kday{display:none!important}
 .inv:not(.hx) .gd-t{background:#fff;border-color:#D6E6F7}.inv:not(.hx) .gd-t.own{border-color:#7FB2FF}.inv:not(.hx) .gd-t.use{background:#EAF4FF}.inv:not(.hx) .gd-n{background:#EAF4FF}
 /* celulares chicos apaisados (iPhone SE, 667 px): el botón del camino se corre a la izquierda para no pisar los botones de comer y fabricar */
 @media (max-width:720px) and (orientation:landscape){#v3go .v3b.main{position:relative;left:-72px;max-width:calc(100vw - 400px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+
+/* selector de idioma en la portada */
+.kh-lang{display:flex;gap:6px;justify-content:center;margin:6px 0 10px}.kh-lang button{padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:inherit;font:800 12px Nunito,system-ui,sans-serif;cursor:pointer}.kh-lang button.on{background:#FFD25E;color:#3A2606;border-color:#FFD25E}

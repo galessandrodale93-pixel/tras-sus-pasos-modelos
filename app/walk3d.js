@@ -135,7 +135,7 @@ function poiLbTick(dt) { if (!POILB.length || !S || !S.camera) return; poiLbTick
     if (rec) { V.setFromMatrixPosition(lb.matrixWorld); const d = V.distanceTo(cam.position); if (d < 90) { V.project(cam); if (V.z < 1) { const px = (V.x + 1) / 2 * W, py = (1 - V.y) / 2 * H, hh = lb.scale.y / 2 / (d * th) * H / 2, hw = hh * lb.scale.x / lb.scale.y; hide = obs.some(q => px + hw > q.left - 6 && px - hw < q.right + 6 && py + hh > q.top - 6 && py - hh < q.bottom + 6); } } lb.userData.hide = hide; }
     const tg = lb.userData.hide ? 0 : (lb.userData.op0 ?? 1); if (Math.abs(m.opacity - tg) > .01) m.opacity += (tg - m.opacity) * Math.min(1, dt * 8); else m.opacity = tg; }
 }
-function textSprite(txt, hx) {
+function textSprite(txt, hx) { if (window.TSP_T) txt = window.TSP_T(txt);
   if (hx) return romanSprite(txt);
   if (G().branch !== 'ados') return foamSprite(txt);
   const c = document.createElement('canvas'), x = c.getContext('2d'), f = 44;
