@@ -37,12 +37,13 @@ export const POST: APIRoute = async ({ request }) => {
     lore: n(x.lore, 999), sellos: n(x.sellos, 999), sala: x.sala === true, amigos: n(x.amigos, 50), nivelIni: n(x.nivelIni, 200), nivelFin: n(x.nivelFin, 200), horas: n(x.horas, 5000),
     pase: ["activo", "cerrado", "libre"].includes(String(x.pase)) ? String(x.pase) : "libre", cierre: x.cierre === true, cierreAt: ISO(x.cierreAt), pagoAt: ISO(x.pagoAt), cierreVeces: n(x.cierreVeces, 9999),
     nuevo: x.nuevo === true, tester: x.tester === true,
+    zonas: JSON.stringify((Array.isArray(x.zonas) ? x.zonas : []).slice(0, 12).map((o: any) => ({ z: s(o && o.z, 60), fps: n(o && o.fps, 240), n: n(o && o.n, 99999), lento: n(o && o.lento, 100) })).filter((o) => o.z && o.n)),
   };
   try { await guardar(COL, it); return json({ ok: true }, 200, true); }
   catch (e) { console.error("kh-stats guardar", e); return json({ error: "guardar" }, 500, true); }
 };
 
-type Fila = { _id: string; title?: string; cuenta?: boolean; perfil?: string; rama?: string; inicio?: string; fin?: string; fecha?: string; hora?: number; dia?: number; minutos?: number; disp?: string; so?: string; calidad?: string; fps?: number; modelo?: string; soVer?: string; nav?: string; placa?: string; mem?: number; nucleos?: number; pantalla?: string; cortes?: number; corteAntes?: boolean; etapaIni?: string; lugarIni?: string; etapa?: string; etapaMax?: string; lugares?: string; misiones?: string; examenes?: string; juegos?: string; lore?: number; sellos?: number; sala?: boolean; amigos?: number; nivelIni?: number; nivelFin?: number; horas?: number; pase?: string; cierre?: boolean; cierreAt?: string; pagoAt?: string; cierreVeces?: number; nuevo?: boolean; tester?: boolean };
+type Fila = { zonas?: string; _id: string; title?: string; cuenta?: boolean; perfil?: string; rama?: string; inicio?: string; fin?: string; fecha?: string; hora?: number; dia?: number; minutos?: number; disp?: string; so?: string; calidad?: string; fps?: number; modelo?: string; soVer?: string; nav?: string; placa?: string; mem?: number; nucleos?: number; pantalla?: string; cortes?: number; corteAntes?: boolean; etapaIni?: string; lugarIni?: string; etapa?: string; etapaMax?: string; lugares?: string; misiones?: string; examenes?: string; juegos?: string; lore?: number; sellos?: number; sala?: boolean; amigos?: number; nivelIni?: number; nivelFin?: number; horas?: number; pase?: string; cierre?: boolean; cierreAt?: string; pagoAt?: string; cierreVeces?: number; nuevo?: boolean; tester?: boolean };
 
 async function acceso(request: Request) {
   const token = request.headers.get("x-habitat-auth");
@@ -76,6 +77,7 @@ function calcular(F: Fila[]) {
   const lug: Record<string, number> = {}, mis: Record<string, number> = {}, jue: Record<string, number> = {}, exa: Record<string, number> = {};
   const arr0: Record<string, number> = {}, lug0: Record<string, number> = {}, disp: Record<string, number> = {}, so: Record<string, number> = {}, cal: Record<string, number> = {};
   const fpsD: Record<string, number[]> = {};
+  const zon: Record<string, { s: number; n: number; lento: number; ses: number; cel: number }> = {}; // cuadros por zona del mapa, sumando todas las sesiones
   let sala = 0, amigosMax = 0, hero = 0;
   // cada aparato: cuántas sesiones, cómo le anda y si se corta (la placa se reinició o la sesión anterior terminó sin cerrarse)
   type Ap = { ses: number; jug: Set<string>; fps: number[]; cortes: number; caidas: number; so: string; nav: string; placa: string; mem: number; disp: string };
@@ -87,6 +89,7 @@ function calcular(F: Fila[]) {
     Object.entries(J<Record<string, number>>(f.juegos, {})).forEach(([k, v]) => inc(jue, k, v || 1));
     inc(disp, f.disp || "?"); inc(so, f.so || "?"); inc(cal, (f.calidad || "?").replace(/^Auto · /, ""));
     if (f.fps) (fpsD[f.disp || "?"] = fpsD[f.disp || "?"] || []).push(f.fps);
+    J<{ z: string; fps: number; n: number; lento: number }[]>(f.zonas, []).forEach((o) => { const e = (zon[o.z] = zon[o.z] || { s: 0, n: 0, lento: 0, ses: 0, cel: 0 }); e.s += o.fps * o.n; e.n += o.n; e.lento += o.lento * o.n / 100; e.ses++; if (f.disp === "celular") e.cel++; });
     { const k = f.modelo || (f.disp === "pc" ? "Computadora" : "Celular") + " sin modelo"; const a = (apar[k] = apar[k] || { ses: 0, jug: new Set(), fps: [], cortes: 0, caidas: 0, so: "", nav: "", placa: "", mem: 0, disp: f.disp || "" });
       a.ses++; a.jug.add(f.title || "?"); if (f.fps) a.fps.push(f.fps); a.cortes += f.cortes || 0; if (f.corteAntes) a.caidas++; a.so = f.soVer || a.so || f.so || ""; a.nav = f.nav || a.nav; a.placa = f.placa || a.placa; a.mem = f.mem || a.mem; }
     if (f.sala) sala++; amigosMax = Math.max(amigosMax, f.amigos || 0); if (f.rama === "hero") hero++;
@@ -111,6 +114,7 @@ function calcular(F: Fila[]) {
     embudo, niveles: top(niveles, 10),
     pase: { llegaron: cierre.length, pagaron: pagos.length, horasHastaPagarMed: r1(med(demoras)), pagaronEn24h: demoras.filter((h) => h <= 24).length, dejaron: sinVolver, esperando, vistasProm: r1(cierre.length ? cierre.reduce((a, x) => a + x.vistas, 0) / cierre.length : 0) },
     modelos: Object.entries(apar).sort((a, b) => b[1].ses - a[1].ses).slice(0, 40).map(([k, a]) => ({ modelo: k, disp: a.disp, ses: a.ses, jugadores: a.jug.size, fps: Math.round(med(a.fps)), cortes: a.cortes, caidas: a.caidas, so: a.so, nav: a.nav, placa: a.placa, mem: a.mem })),
+    zonas: Object.entries(zon).filter(([, e]) => e.n >= 10).map(([z, e]) => ({ z, fps: Math.round(e.s / e.n), lento: Math.round(e.lento / e.n * 100), ses: e.ses, cel: e.cel })).sort((a, b) => a.fps - b.fps).slice(0, 15),
     aparatos: { disp: top(disp, 4), so: top(so, 6), calidad: top(cal, 6), fps: Object.fromEntries(Object.entries(fpsD).map(([k, L]) => [k, Math.round(med(L))])) },
   };
 }

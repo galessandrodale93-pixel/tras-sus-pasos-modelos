@@ -72,6 +72,9 @@
         var st = (a.cortes || a.caidas) ? '<span class="kj-mal">Se cortó ' + (a.cortes + a.caidas) + (a.cortes + a.caidas === 1 ? ' vez' : ' veces') + '</span>' : !a.fps ? '<span>–</span>' : a.fps < 20 ? '<span class="kj-lento">Lento</span>' : '<span class="kj-ok">Anda bien</span>';
         return '<div class="kj-ap-r"><span>' + esc(a.modelo) + '<small>' + esc([a.placa, a.mem ? a.mem + ' GB' : ''].filter(Boolean).join(' · ')) + '</small></span><span class="kj-x">' + esc(a.so || '–') + '<small>' + esc(a.nav || '') + '</small></span><b>' + (a.fps ? a.fps + ' fps' : '–') + '</b><b>' + num(a.ses) + '</b>' + st + '</div>';
       }).join('') + '</div>';
+    var Z = D.zonas || [];
+    out += card('Dónde se pone lento', 'Cuadros por segundo en cada lugar del mapa, sumando todas las sesiones (primero los más lentos). «Lento» es la parte del tiempo que anduvo por debajo de 20 cuadros.', !Z.length ? '<p class="kj-none">Todavía no hay datos por lugar (se juntan solos desde esta versión del juego).</p>' :
+      '<div class="kj-ap"><div class="kj-ap-r kj-h"><span>Lugar</span><b>Cuadros</b><b>Lento</b><b>Sesiones</b><span>En celular</span></div>' + Z.map(function (z) { return '<div class="kj-ap-r"><span>' + esc(z.z) + '</span><b>' + z.fps + ' fps</b><b>' + z.lento + '%</b><b>' + num(z.ses) + '</b><span>' + num(z.cel) + '</span></div>'; }).join('') + '</div>');
     out += card('Cada aparato', 'Lo manda el juego solo, sin preguntar nada: modelo, sistema, placa de video y cuadros por segundo. «Se cortó» cuenta las veces que la pantalla se reinició o el juego se cerró de golpe.', ap);
     $('#kOut').innerHTML = out;
     $('#kUpd').textContent = 'Actualizado ' + new Date(D.actualizado).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });

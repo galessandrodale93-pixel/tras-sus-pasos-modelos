@@ -3229,7 +3229,7 @@ function ksDev(){if(KS.dev)return KS.dev;const ua=navigator.userAgent||'',sc=scr
 function ksVivo(on){try{if(on)localStorage.setItem('tsp:vivo',KS.sid||'1');else localStorage.removeItem('tsp:vivo');}catch(e){}}
 function ksStart(){const p=current;try{KS.corteAntes=!!localStorage.getItem('tsp:vivo');}catch(e){KS.corteAntes=false;}ksDev();KS.lost=0;KS.sid='s'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);KS.t0=Date.now();KS.act=0;KS.tick=Date.now();KS.lug=[];KS.perfil=p.id||'';KS.rama=branch;
   KS.mis0=ksDone(p.missions);KS.ex0=Object.keys(p.exams||{}).filter(k=>p.exams[k]&&p.exams[k].passed);KS.lore0=Object.keys(p.dlore||{}).length;KS.sel0=ksSellos();KS.lv0=lvOf(total(p));
-  KS.games={};KS.sala=false;KS.amigos=0;KS.fps=[];KS.etIni=(REGIONS[curRegion()]||{}).name||'';KS.lugIni='';KS.nuevo=(p.playMs||0)<120000;KS.cierre=false;KS.sent=0;ksVivo(true);}
+  KS.games={};KS.sala=false;KS.amigos=0;KS.fps=[];KS.zf={};KS.etIni=(REGIONS[curRegion()]||{}).name||'';KS.lugIni='';KS.nuevo=(p.playMs||0)<120000;KS.cierre=false;KS.sent=0;ksVivo(true);}
 function ksPayload(){const p=current;if(!p||!KS.sid)return null;const f=KS.fps.slice().sort((a,b)=>a-b),ua=navigator.userAgent||'';
   return {sid:KS.sid,u:khUid()||ksAnon(),cuenta:!!khUid(),perfil:KS.perfil,rama:KS.rama==='ados'?'hero':'kids',inicio:new Date(KS.t0).toISOString(),fin:new Date().toISOString(),seg:Math.round(KS.act/1000),
     disp:matchMedia('(pointer:coarse)').matches?'celular':'pc',so:/iPhone|iPad|iPod/.test(ua)?'iOS':/Android/.test(ua)?'Android':/Windows/.test(ua)?'Windows':/Mac/.test(ua)?'Mac':/Linux|CrOS/.test(ua)?'Linux':'otro',
@@ -3238,7 +3238,7 @@ function ksPayload(){const p=current;if(!p||!KS.sid)return null;const f=KS.fps.s
     lugares:KS.lug.slice(0,40),misiones:(()=>{let N={};try{N=W3.misNames();}catch(e){}return ksDone(p.missions).filter(k=>!KS.mis0.includes(k)).map(k=>N[k]||k);})(),examenes:Object.keys(p.exams||{}).filter(k=>p.exams[k]&&p.exams[k].passed&&!KS.ex0.includes(k)).map(k=>(REGIONS.find(R=>R.id===k)||{}).name||k),
     lore:Math.max(0,Object.keys(p.dlore||{}).length-KS.lore0),sellos:Math.max(0,ksSellos()-KS.sel0),juegos:KS.games,sala:KS.sala,amigos:KS.amigos,
     nivelIni:KS.lv0,nivelFin:lvOf(total(p)),horas:Math.round((p.playMs||0)/36e3)/100,pase:KH.activo===true?'activo':khLocked(p)?'cerrado':'libre',cierre:KS.cierre,cierreAt:p.khc&&p.khc.at?new Date(p.khc.at).toISOString():'',pagoAt:p.khc&&p.khc.pago?new Date(p.khc.pago).toISOString():'',cierreVeces:(p.khc&&p.khc.n)||0,
-    ...(()=>{const d=ksDev();return {modelo:d.modelo,soVer:d.soVer,nav:d.nav,placa:d.placa,mem:d.mem,nucleos:d.nucleos,pantalla:d.pantalla};})(),cortes:KS.lost||0,corteAntes:!!KS.corteAntes,
+    ...(()=>{const d=ksDev();return {modelo:d.modelo,soVer:d.soVer,nav:d.nav,placa:d.placa,mem:d.mem,nucleos:d.nucleos,pantalla:d.pantalla};})(),cortes:KS.lost||0,corteAntes:!!KS.corteAntes,zonas:Object.entries(KS.zf||{}).filter(([,e])=>e[1]>=3).map(([z,e])=>({z,fps:Math.round(e[0]/e[1]),n:e[1],lento:Math.round(e[2]/e[1]*100)})).sort((x,y)=>x.fps-y.fps).slice(0,12),
     tester:(()=>{try{return localStorage.getItem('tsp:tester')==='1';}catch(e){return false;}})()};}
 function ksSend(force){const x=ksPayload();if(!x||(x.seg<20&&!force))return;KS.sent=KS.act;const b=JSON.stringify(x);/* fetch con keepalive y sin cookies: el sendBeacon manda las cookies del aparato y la web de Habitat lo rechaza (403) */try{fetch(KS_API,{method:'POST',body:b,headers:{'Content-Type':'text/plain'},keepalive:true,credentials:'omit',mode:'cors'}).catch(()=>{});}catch(e){}}
 setInterval(()=>{try{
@@ -3247,7 +3247,7 @@ setInterval(()=>{try{
   const n=Date.now(),d=n-KS.tick;KS.tick=n;if(!document.hidden&&d<15000)KS.act+=d;
   const S=W3.S(),a=S.av&&S.av.position;if(a&&S.pois)for(const q of S.pois){if(!q.name||KS.lug.includes(q.name))continue;if(Math.hypot(a.x-q.x,a.z-q.z)<22){KS.lug.push(q.name);if(!KS.lugIni)KS.lugIni=q.name;}}
   try{if(W3.MP&&W3.MP.code){KS.sala=true;KS.amigos=Math.max(KS.amigos,Object.keys(W3.MP.players||{}).length);}}catch(e){}
-  try{const ri=W3.renderInfo();if(ri&&ri.ms>0&&!document.hidden){KS.fps.push(1000/ri.ms);if(KS.fps.length>200)KS.fps.shift();}}catch(e){}
+  try{const ri=W3.renderInfo();if(ri&&ri.ms>0&&!document.hidden){const fv=1000/ri.ms;KS.fps.push(fv);if(KS.fps.length>200)KS.fps.shift();/* cuadros por zona del mapa: para saber dónde se pone lento */if(a){let z='',bd=60*60;for(const q of (S.pois||[]).concat(S.olSites||[])){if(!q.name)continue;const d=(a.x-q.x)**2+(a.z-q.z)**2;if(d<bd){bd=d;z=q.name;}}if(!z)z='Camino · '+((REGIONS[curRegion()]||{}).name||'');const e=KS.zf[z]||(KS.zf[z]=[0,0,0]);e[0]+=fv;e[1]++;if(fv<20)e[2]++;}}}catch(e){}
   try{const cv=S.renderer&&S.renderer.domElement;if(cv&&!cv._ksLost){cv._ksLost=1;cv.addEventListener('webglcontextlost',()=>{KS.lost=(KS.lost||0)+1;ksSend(true);});}}catch(e){}
   if(!document.hidden)ksVivo(true);
   if(document.querySelector('.khp.hard'))KS.cierre=true;
