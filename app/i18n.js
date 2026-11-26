@@ -25,17 +25,23 @@ export const ready = LANG === 'es' ? Promise.resolve() :
     P.sort((a, b) => b[2].length - a[2].length);
   }).catch(() => { D = new Map(); });
 
+/* busca la traducción de un texto ya normalizado; null si no hay */
+function look(k) {
+  if (CACHE.has(k)) return CACHE.get(k);
+  let r = D.get(k);
+  if (r == null) { const nums = []; const kn = k.replace(/\d+(?:[.,]\d+)*/g, m => { nums.push(m); return '{n}'; }); if (nums.length) { const x = D.get(kn); if (x != null) { let i = 0; r = x.replace(/\{n\}/g, () => nums[i++] || ''); } } }
+  /* con partes que cambian: solo vale si cada parte también se traduce (o es un número, o un nombre que no cambia) */
+  if (r == null) for (const [re, v] of P) { const m = k.match(re); if (!m) continue; const g = m.slice(1).map(x => { const y = norm(x); if (!/[A-Za-zÀ-ÿ]/.test(y)) return x; const z = look(y); return z == null ? (/^[A-ZÁÉÍÓÚÑ][A-Za-zÀ-ÿ'’-]*$/.test(y) ? y : null) : z; }); if (g.includes(null)) continue; let i = 0; r = v.replace(/\{\*\}|\{n\}/g, () => g[i++] || ''); break; }
+  if (r == null) r = cita(k);
+  if (r != null && CACHE.size < 30000) CACHE.set(k, r);
+  return r;
+}
 export function t(s) {
   if (!D || !s || typeof s !== 'string') return s;
   const k = norm(s); if (!k || !/[A-Za-zÀ-ÿ]/.test(k)) return s;
   const lead = s.match(/^\s*/)[0], trail = s.match(/\s*$/)[0];
-  if (CACHE.has(k)) return lead + CACHE.get(k) + trail;
-  let r = D.get(k);
-  if (r == null) { const nums = []; const kn = k.replace(/\d+(?:[.,]\d+)*/g, m => { nums.push(m); return '{n}'; }); if (nums.length) { const x = D.get(kn); if (x != null) { let i = 0; r = x.replace(/\{n\}/g, () => nums[i++] || ''); } } }
-  if (r == null) for (const [re, v] of P) { const m = k.match(re); if (m) { let i = 1; r = v.replace(/\{\*\}|\{n\}/g, () => { const g = m[i++] || ''; return t(g); }); break; } }
-  if (r == null) r = cita(k);
-  if (r == null) { r = k; if (!OUT.has(k)) MISS.add(k); }
-  if (CACHE.size < 30000) CACHE.set(k, r);
+  let r = look(k);
+  if (r == null) { if (!OUT.has(k)) MISS.add(k); return s; }
   return lead + r + trail;
 }
 window.TSP_T = t; window.TSP_LANG = LANG; window.__i18nMiss = MISS;
