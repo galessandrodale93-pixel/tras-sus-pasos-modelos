@@ -17,7 +17,7 @@ function lits(src) {
   }
   return out;
 }
-const codey = f => /^[\w.#:\[\]\/\\-]+$/.test(f) && !/^[A-ZÁÉÍÓÚÑ¡¿]/.test(f) && !/[áéíóúñ]/.test(f) || /[;{}]|=>|\b(px|rgba?|var\(|function|return|const|let)\b|\.(js|png|jpg|glb|mp3|json|webp)\b|^#|^\.|--|=\"|&&|\|\|/.test(f);
+const codey = f => /^[\w.#:\[\]\/\\-]+$/.test(f) && !/^[A-ZÁÉÍÓÚÑ¡¿]/.test(f) && !/[áéíóúñ]/.test(f) || /;(?! [a-záéíóúñ])|[{}]|=>|\b(px|rgba?|var\(|function|return|const|let)\b|\.(js|png|jpg|glb|mp3|json|webp)\b|^#|^\.|--|=\"|&&|\|\|/.test(f);
 for (const f of FILES) {
   const src = fs.readFileSync(path.join(APP, f), 'utf8');
   for (const L of lits(src)) {
