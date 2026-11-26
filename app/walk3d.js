@@ -9252,7 +9252,7 @@ function r7Where(g, t) {
   let base = (R7_W0[g] || [])[t - 1];
   if (g === 'lana') { try { const RG = G().REGIONS; base = t === 1 ? 'Las ovejas de los pastores, en casi todo el camino' : t === 2 ? 'Las ovejas de ' + RG[0].name : t === 3 ? 'Las ovejas de ' + [3, 4, 5].map(r => RG[r] && RG[r].name).filter(Boolean).join(', ') : ''; } catch (e) {} }
   const zs = OL_PLAN.filter(q => (q.nodes || []).some(n => n[0] === g && n[1] === t)).map(q => q.name);
-  try { Z7_POI.forEach(sp => { if (!sp.L.some(n => n[0] === g && n[1] === t)) return; const q = (S.pois || []).find(o => o.k === sp.poi && (!sp.name || o.name === sp.name)); const nm = sp.name || (q && (q.name || q.label)); if (nm && !zs.includes(nm)) zs.push('Cerca de ' + nm); }); } catch (e) {}
+  try { Z7_POI.forEach(sp => { if (!sp.L.some(n => n[0] === g && n[1] === t)) return; const q = (S.pois || []).find(o => o.k === sp.poi && (!sp.name || o.name === sp.name)); const nm = sp.name || (q && (q.name || q.label)); const nn = ({ 'Taller de José': 'el taller de José, en Nazaret', 'Campos de los pastores': 'los campos de los pastores', 'Casa en Capernaúm': 'la casa de Capernaúm' })[nm] || nm, cc = /^el /.test(nn) ? 'Cerca del ' + nn.slice(3) : 'Cerca de ' + nn; if (nm && !zs.includes(cc)) zs.push(cc); }); } catch (e) {}
   if (t === 7 && !base && !zs.length) { const k = r7k(g, 7), E = Object.values(EPIC).find(e => e.steps.some(st => st.give && st.give[k])); if (E) return `Se gana en la misión épica «${E.name}»`; }
   return [base].concat(zs).filter(Boolean).join(' · ') || 'Todavía no aparece en este curso';
 }
