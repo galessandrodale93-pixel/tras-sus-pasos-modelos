@@ -9209,7 +9209,7 @@ const R7 = {
   stone: { n: ['Piedra de campo', 'Caliza blanca', 'Basalto negro', 'Piedra de Jerusalén', 'Sillar de cantera', 'Sal de roca', 'Cobre de Timna'], it: ['Piedra', 'Caliza blanca', 'Basalto negro', 'Piedra de Jerusalén', 'Sillar de cantera', 'Sal de roca', 'Cobre de Timna'], ic: '🪨',
     w: ['Junto a las aldeas y en el camino', 'Alrededor de Nazaret', 'Galilea y Capernaúm, tierra de basalto', 'Jerusalén y sus alrededores', 'La cantera de la tumba del huerto', 'El monte de sal, en las tierras de afuera', 'La mina de Timna, en las tierras de afuera'] },
   fish: { n: ['Sardina de Galilea', 'Pez del Jordán', 'Pez de San Pedro', 'Barbo de Galilea', 'Barbo grande', 'Dorada del Mediterráneo', 'Atún de mar abierto'], it: ['Pescado crudo', 'Pez del Jordán', 'Pez de San Pedro', 'Barbo de Galilea', 'Barbo grande', 'Dorada', 'Atún'], ic: '🐟',
-    w: ['La orilla del Mar de Galilea', 'El río Jordán', 'El mar abierto, más allá de las piedras del lago', 'La orilla del lago de Juan 21', 'El muelle de Magdala, en el Mar de Galilea', 'El puerto de Jope (próximamente)', 'Mar abierto frente a Jope (próximamente)'] }
+    w: ['La orilla del Mar de Galilea', 'El río Jordán', 'El mar abierto, más allá de las piedras del lago', 'La orilla del lago de Juan 21', 'El muelle de Magdala, en el Mar de Galilea', 'La costa del mar Mediterráneo, junto a Jope', 'Desde el muelle del puerto de Jope'] }
 };
 Object.assign(R7, {
   barro: { n: ['Barro del camino', 'Barro del río', 'Arcilla del lago', 'Arcilla blanca', 'Arcilla fina', 'Arcilla de mar', 'Arcilla de la casa del alfarero'], it: ['Barro', 'Barro del río', 'Arcilla del lago', 'Arcilla blanca', 'Arcilla fina', 'Arcilla de mar', 'Arcilla del alfarero'], ic: '🟤' },
@@ -9253,6 +9253,7 @@ function r7Where(g, t) {
   if (g === 'lana') { try { const RG = G().REGIONS; base = t === 1 ? 'Las ovejas de los pastores, en casi todo el camino' : t === 2 ? 'Las ovejas de ' + RG[0].name : t === 3 ? 'Las ovejas de ' + [3, 4, 5].map(r => RG[r] && RG[r].name).filter(Boolean).join(', ') : ''; } catch (e) {} }
   const zs = OL_PLAN.filter(q => (q.nodes || []).some(n => n[0] === g && n[1] === t)).map(q => q.name);
   try { Z7_POI.forEach(sp => { if (!sp.L.some(n => n[0] === g && n[1] === t)) return; const q = (S.pois || []).find(o => o.k === sp.poi && (!sp.name || o.name === sp.name)); const nm = sp.name || (q && (q.name || q.label)); if (nm && !zs.includes(nm)) zs.push('Cerca de ' + nm); }); } catch (e) {}
+  if (t === 7 && !base && !zs.length) { const k = r7k(g, 7), E = Object.values(EPIC).find(e => e.steps.some(st => st.give && st.give[k])); if (E) return `Se gana en la misión épica «${E.name}»`; }
   return [base].concat(zs).filter(Boolean).join(' · ') || 'Todavía no aparece en este curso';
 }
 function t7Where(ty, t) {
@@ -9781,7 +9782,9 @@ const Z7_POI = [
   { poi: 'village', name: 'Emaús', L: [['trigo', 2, 'hoz', 3]] },
   { poi: 'roofhouse', L: [['aceitunas', 4, 'vara', 3], ['trigo', 3, 'hoz', 3], ['lana', 4, 'tijera', 3], ['lino', 4, 'aguja', 3]] },
   { poi: 'pastores', L: [['lino', 3, 'aguja', 4], ['trigo', 1, 'hoz', 3], ['trigo', 2, 'hoz', 3]] },
-  { poi: 'lake', L: [['lana', 5, 'tijera', 2, { lana: 1 }]] }
+  { poi: 'lake', L: [['lana', 5, 'tijera', 2, { lana: 1 }]] },
+  { poi: 'village', name: 'Belén', L: [['aceitunas', 2, 'vara', 3], ['uvas', 2, 'podadera', 3]] },
+  { poi: 'garden', L: [['aceitunas', 5, 'vara', 3]] }
 ];
 function z7Central(scene, W) {
   if (!S.hx) { z7Flush(); return; } const yAt = (x, z) => W.hAt(x, z), dry = (x, z) => { try { return waterWet(x, z, null) < .03; } catch (e) { return true; } };
