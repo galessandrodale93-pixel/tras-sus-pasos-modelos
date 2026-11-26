@@ -1,0 +1,59 @@
+name: Voces del juego en otros idiomas (tsp-voces)
+# Graba con Kokoro las voces en inglés y portugués (tools/voice/lista_<idioma>.json) y las sube a app/voice/<idioma>/.
+on:
+  workflow_dispatch:
+    inputs:
+      idiomas:
+        description: "idiomas separados por coma"
+        required: true
+        default: "en,pt"
+permissions:
+  contents: write
+jobs:
+  grabar:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        lang: [en, pt]
+        part: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    steps:
+      - uses: actions/checkout@v4
+        if: contains(inputs.idiomas, matrix.lang)
+        with:
+          sparse-checkout: |
+            tools/voice
+      - name: Grabar
+        if: contains(inputs.idiomas, matrix.lang)
+        run: |
+          set -e
+          sudo apt-get -qq update && sudo apt-get -qq install -y ffmpeg espeak-ng >/dev/null
+          pip install -q kokoro-onnx soundfile
+          mkdir -p /tmp/kok
+          curl -sL -o /tmp/kok/m.onnx https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx
+          curl -sL -o /tmp/kok/v.bin https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
+          python3 -I tools/voice/gen_lang.py ${{ matrix.lang }} /tmp/kok/m.onnx /tmp/kok/v.bin ${{ matrix.part }} 16
+      - uses: actions/upload-artifact@v4
+        if: contains(inputs.idiomas, matrix.lang)
+        with:
+          name: voz-${{ matrix.lang }}-${{ matrix.part }}
+          path: app/voice/${{ matrix.lang }}/
+          retention-days: 3
+  subir:
+    needs: grabar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: /tmp/voces
+      - name: Juntar, indexar y subir
+        run: |
+          set -e
+          for d in /tmp/voces/voz-*; do l=$(basename $d | cut -d- -f2); mkdir -p app/voice/$l; cp -n $d/*.mp3 app/voice/$l/ 2>/dev/null || true; done
+          for l in en pt; do [ -d app/voice/$l ] && python3 -c "import os,json,sys;d='app/voice/$l';json.dump(sorted(f[:-4] for f in os.listdir(d) if f.endswith('.mp3')),open(d+'/index.json','w'),separators=(',',':'))"; done
+          git config user.name "habitat-bot"; git config user.email "bot@habitat-cfm.org"
+          git add app/voice
+          git commit -qm "Voces del juego en inglés y portugués (Kokoro)" || exit 0
+          git pull -q --rebase origin main && git push -q origin HEAD:main
