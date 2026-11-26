@@ -1840,11 +1840,11 @@ function openBag(first) {
   const tx = id => ((document.getElementById(id) || {}).textContent || '').trim(), lvn = tx('lvN') || '1', rk = tx('lvT'), pts = tx('score');
   const T = (t, ic, n) => `<button data-t="${t}" role="tab"><span class="it-ic" aria-hidden="true">${ic}</span><span class="it-tx">${n}</span></button>`;
   el.innerHTML = `<div class="inv${S.hx ? ' hx' : ''}"><div class="inv-h"><div class="inv-tt"><span class="inv-emb">${BAG_SVG}</span><div><b>Mochila</b><small>Nivel ${esc(lvn)}${rk ? ' · ' + esc(rk) : ''}${pts ? ` · <em>✦ ${esc(pts)}</em>` : ''}</small></div></div><button class="bag-x" aria-label="Cerrar">✕</button></div>
-    <div class="inv-tabs" role="tablist">${T('eq', '🛡️', 'Equipo')}${T('di', '📖', 'Diario')}${T('ob', '🏺', 'Objetos')}${T('me', '📜', 'Recuerdos')}${T('cu', '🎓', 'Cursos')}${S.hx ? T('su', '🔨', 'Trabajo') : ''}${T('at', '💪', S.hx ? 'Atributos' : 'Mis fuerzas')}</div>
+    <div class="inv-tabs" role="tablist">${T('eq', '🛡️', 'Equipo')}${T('di', '📖', 'Diario')}${T('ob', '🏺', 'Objetos')}${T('me', '📜', 'Recuerdos')}${T('cu', '🎓', 'Cursos')}${S.hx ? T('su', '🔨', 'Trabajo') : T('su', '🧰', 'Herramientas')}${T('at', '💪', S.hx ? 'Atributos' : 'Mis fuerzas')}</div>
     <div class="inv-body"></div></div>`;
   el.hidden = false; const close = () => { el.hidden = true; }; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   const tabs = el.querySelectorAll('.inv-tabs button'), body = el.querySelector('.inv-body');
-  const show = t => { tabs.forEach(b => { b.classList.toggle('on', b.dataset.t === t); b.setAttribute('aria-selected', b.dataset.t === t ? 'true' : 'false'); }); body.dataset.t = t; body.classList.remove('in'); void body.offsetWidth; body.classList.add('in'); body.innerHTML = ''; if (t === 'eq') invEquip(body); else if (t === 'ob') invItems(body); else if (t === 'su') invSurv(body); else if (t === 'at') invAttr(body); else if (t === 'cu') invCourses(body); else if (t === 'di') invDiary(body); else invMemories(body); };
+  const show = t => { tabs.forEach(b => { b.classList.toggle('on', b.dataset.t === t); b.setAttribute('aria-selected', b.dataset.t === t ? 'true' : 'false'); }); body.dataset.t = t; body.classList.remove('in'); void body.offsetWidth; body.classList.add('in'); body.innerHTML = ''; if (t === 'eq') invEquip(body); else if (t === 'ob') invItems(body); else if (t === 'su') (S.hx ? invSurv : invGuiaK)(body); else if (t === 'at') invAttr(body); else if (t === 'cu') invCourses(body); else if (t === 'di') invDiary(body); else invMemories(body); };
   tabs.forEach(b => b.onclick = () => show(b.dataset.t)); try { if (diaryNew()) el.querySelector('.inv-tabs [data-t="di"]').classList.add('nw'); } catch (e) {} show((typeof first === 'string' ? first : 'eq'));
 }
 /* ícono dibujado de cada prenda: su forma, su color real y su detalle (rayas, vendas, bordado, metal) */
@@ -8897,7 +8897,7 @@ function ofiTalk(k, o) { const O = OFI[k], M = O.m, st = ofiP()[k], lv = ofiLv(k
   if (cineOk() && cine({ cast, steps: all })) return;
   vilSheet(`<div class="inv-h"><b>${esc(M.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div><small class="vil-k">${esc(M.sub)}</small>${steps.map(x => `<p class="vil-p">${esc(x.t)}</p>`).join('')}${ask.length ? `<p class="vil-p"><b>${esc(ask[0].ask)}</b></p><div class="vivo-o">${ask[0].o.map((x, i) => `<button data-i="${i}">${esc(x.t)}</button>`).join('')}</div>` : ''}`, el => el.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const x = ask[0].o[+b.dataset.i]; try { x.fn && x.fn(); } catch (e) {} vilSheet(`<div class="inv-h"><b>${esc(M.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div>${(x.then || []).map(y => `<p class="vil-p">${esc(y.t)}</p>`).join('')}`); })); }
 function ofiHTML() { const st = ofiP(); return `<h4>Oficios</h4><p class="sv-tip">Cada oficio sube trabajando y con los encargos de su maestro. Tiene 30 niveles, de Aprendiz a Maestro, y sigue en los próximos cursos. Con el maestro aprendés cómo se hacía de verdad en tiempos de Jesús.</p><div class="ofi-g">${Object.entries(OFI).map(([k, O]) => { const lv = ofiLv(k), x = st[k].xp, a = lv >= OFI_MAX ? 1 : (x - ofiCum(lv - 1)) / (ofiCum(lv) - ofiCum(lv - 1)), nx = O.perks.find(([l]) => l > lv);
-    return `<div class="ofi-c"><span class="ofi-i">${O.ic}</span><div><b>${O.name} · nivel ${lv} de ${OFI_MAX}</b><small>${OFI_T[lv - 1]} · maestro: ${esc(O.m.name)}, en ${esc(O.m.donde || O.m.at)}</small><i class="ofi-b"><u style="width:${Math.round(Math.max(0, Math.min(1, a)) * 100)}%"></u></i><small>${nx ? 'En el nivel ' + nx[0] + ': ' + esc(nx[1].charAt(0).toLowerCase() + nx[1].slice(1)) : '¡Sabés todo el oficio!'}</small>${st[k].l.length ? `<details><summary>Lo que te enseñó ${esc(O.m.name)} (${st[k].l.length})</summary>${st[k].l.map(b => `<p>${esc(O.les[b][0])} <em>${esc(O.les[b][1])}</em></p>`).join('')}</details>` : ''}</div></div>`; }).join('')}</div>`; }
+    return `<div class="ofi-c"><span class="ofi-i">${O.ic}</span><div><b>${O.name} · nivel ${lv} de ${OFI_MAX}</b><small>${OFI_T[lv - 1]} · maestro: ${esc(O.m.name)}, en ${esc(O.m.donde || O.m.at)}</small><i class="ofi-b"><u style="width:${Math.round(Math.max(0, Math.min(1, a)) * 100)}%"></u></i><small>${nx ? 'En el nivel ' + nx[0] + ': ' + esc(nx[1].charAt(0).toLowerCase() + nx[1].slice(1)) : '¡Sabés todo el oficio!'}</small>${(() => { const ty = Object.keys(T7).find(t => T7[t].of === k); return ty ? `<button class="gd-lnk" type="button" data-gt="${ty}">${T7[ty].ic} Ver herramientas y qué sacan</button>` : ''; })()}${st[k].l.length ? `<details><summary>Lo que te enseñó ${esc(O.m.name)} (${st[k].l.length})</summary>${st[k].l.map(b => `<p>${esc(O.les[b][0])} <em>${esc(O.les[b][1])}</em></p>`).join('')}</details>` : ''}</div></div>`; }).join('')}</div>`; }
 
 function svOn() { return !!(S && S.hx); }
 /* nadar: donde el agua es más honda que el pecho, el personaje se tiende y bracea. En Hero nadar cansa: la barra de aliento baja y, si se vacía, la corriente lo devuelve a la orilla */
@@ -9245,6 +9245,62 @@ function t7Ficha(type, t) {
   const n = R7[T7[type].res].n.map(lc1), easy = n.slice(0, t), slow = t < 7 ? [n[t]] : [], brk = n.slice(t + 1);
   return `Saca ${easy.join(', ')} (más rápido cuanto más común).` + (slow.length ? ` Con ${slow[0]} trabaja lento y se gasta.` : '') + (brk.length ? ` Con ${brk[0]}${brk.length > 1 ? ' en adelante' : ''} se rompe.` : '') + ` Pide ${t7Req(type, t)}.` + (t === 7 ? ' No se gasta nunca.' : '');
 }
+/* ---------- guía de oficios y herramientas: qué saca cada herramienta, dónde está cada recurso y cómo se consigue (para que nadie se pierda) ---------- */
+const R7_W0 = { barro: ['La alfarería, junto al camino', 'La orilla del río Jordán', 'La orilla del Mar de Galilea'], trigo: ['Las espigas al borde del trigal de Booz (espigar)', 'Las parcelas del trigal de Booz'], aceitunas: ['Los olivares del camino'], uvas: ['Las viñas del camino'], lino: ['Los campos de lino', 'Los campos de lino'] };
+function r7Where(g, t) {
+  const R = R7[g]; if (R.w && R.w[t - 1]) return R.w[t - 1];
+  let base = (R7_W0[g] || [])[t - 1];
+  if (g === 'lana') { try { const RG = G().REGIONS; base = t === 1 ? 'Las ovejas de los pastores, en casi todo el camino' : t === 2 ? 'Las ovejas de ' + RG[0].name : t === 3 ? 'Las ovejas de ' + [3, 4, 5].map(r => RG[r] && RG[r].name).filter(Boolean).join(', ') : ''; } catch (e) {} }
+  const zs = OL_PLAN.filter(q => (q.nodes || []).some(n => n[0] === g && n[1] === t)).map(q => q.name);
+  return [base].concat(zs).filter(Boolean).join(' · ') || 'Todavía no aparece en este curso';
+}
+function t7Where(ty, t) {
+  if (t === 7) { const E = Object.values(EPIC).find(e => e.ty === ty); return E ? `Premio de la misión épica «${E.name}»` : 'Todavía no se consigue en este curso'; }
+  const sh = Object.entries(SHOPS).filter(([, x]) => x.buy.some(b => b[0] === 'T' && b[1] === ty + ':' + t)).map(([k, x]) => k === 'mercado' ? 'cualquier puesto del mercado' : lc1(x.name));
+  if (t === 1 && T7[ty].free) return 'La tenés desde el principio' + (sh.length ? '. También se compra en ' + sh.join(', ') : '');
+  return sh.length ? 'Se compra en ' + sh.join(', ') : 'Todavía no se consigue en este curso';
+}
+const GD_LB = { pala: 'Sacar barro', aguja: 'Arrancar lino', podadera: 'Cortar uvas' };
+function invGuia(body, ty) {
+  ty = T7[ty] ? ty : (invGuia.last || 'axe'); invGuia.last = ty;
+  const T = T7[ty], R = R7[T.res], P = t7P()[ty], best = t7Best(ty);
+  const rows = [1, 2, 3, 4, 5, 6, 7].map(t => { const own = P[t] != null && P[t] !== 0;
+    return `<div class="gd-t${own ? ' own' : ''}${t === best ? ' use' : ''}"><span class="gd-n">${t}</span><div><b>${esc(t7Name(ty, t))}${t === best ? ' · en uso' : own ? ' · la tenés' : ''}</b>
+      <small><em>Saca:</em> ${esc(t === 1 ? R.n[0] : R.n[t - 1] + ' y todo lo de abajo')}</small><small><em>Dónde está:</em> ${esc(r7Where(T.res, t))}</small>
+      <small><em>Pide:</em> ${esc(t7Req(ty, t))}</small><small><em>Se consigue:</em> ${esc(t7Where(ty, t))}</small></div></div>`; }).join('');
+  body.innerHTML = `<div class="sv-inv gd"><button class="gd-back" type="button">← Volver a Trabajo</button><h4>📘 Guía de oficios y herramientas</h4>
+    <p class="sv-tip">Cada trabajo tiene su herramienta, de la 1 (común) a la 7 (épica). Cada una saca su recurso y todos los de abajo. Con el recurso de un nivel más arriba trabaja lento y se gasta; con uno de dos niveles más arriba, se rompe. Para usarla necesitás el nivel del oficio y el atributo que pide. Tocás una vez y el personaje trabaja solo.</p>
+    <div class="tl-tabs gd-tabs">${Object.keys(T7).map(k => `<button type="button" data-gt="${k}" class="${k === ty ? 'on' : ''}">${T7[k].ic} ${GD_LB[k] || T7[k].verb}</button>`).join('')}</div>
+    <p class="gd-of">${T.ic} <b>${esc(GD_LB[ty] || T.verb)}</b> · oficio ${esc(OFI[T.of].name.toLowerCase())}, nivel ${ofiLv(T.of)} · ${ATN[T.at]} ${Math.round(fv(T.at))}</p>${rows}</div>`;
+  body.querySelector('.gd-back').onclick = () => invSurv(body);
+  body.querySelectorAll('[data-gt]').forEach(b => b.onclick = () => invGuia(body, b.dataset.gt));
+  try { const on = body.querySelector('.gd-tabs .on'); on.parentNode.scrollLeft = on.offsetLeft - 40; body.scrollTop = 0; } catch (e) {}
+}
+/* Kids: las 3 herramientas de cada trabajo (común, especial y brillante) */
+const K3W = { wood: ['Cerca del camino', 'Más lejos del camino, entre los campos', 'Bien lejos del camino: buscá los árboles más grandes'], stone: ['Cerca del camino', 'Más lejos del camino, entre los campos', 'Bien lejos del camino: buscá la piedra que brilla'],
+  fish: ['La orilla del Mar de Galilea', 'El río Jordán y el lago adentro', 'La orilla de Juan 21, el muelle de Magdala y el mar Mediterráneo'], grain: ['Los campos de Nazaret y de Belén', 'Los campos de Belén y de Capernaúm', 'El campo grande: buscá la espiga que brilla'] };
+function invGuiaK(body, g) {
+  g = K3[g] ? g : (invGuiaK.last || 'wood'); invGuiaK.last = g;
+  const G3 = K3[g], tl = kTool(G3.ty), M = Object.values(KMIS).find(x => x.ty === G3.ty);
+  const saca = t => t === 1 ? G3.n[0] : t === 2 ? G3.n[0] + ' y ' + lc1(G3.n[1]) : 'Todo, también ' + lc1(G3.n[2]);
+  const how = t => t === 1 ? 'La tenés desde el principio.' : t === 2 ? 'Se gana completando una página de tu álbum.' : M ? `Te la regala ${M.who} en la misión «${M.name}».` : '';
+  const rows = [1, 2, 3].map(t => `<div class="gd-t${tl >= t ? ' own' : ''}${tl === t ? ' use' : ''}"><span class="gd-n">${['⭐', '⭐⭐', '✨'][t - 1]}</span><div><b>${esc(K3T[G3.ty][t - 1])}${tl === t ? ' · la que usás' : tl > t ? ' · la tenés' : ''}</b>
+    <small><em>Saca:</em> ${esc(saca(t))}</small><small><em>Dónde está ${esc(lc1(G3.n[t - 1]))}:</em> ${esc(K3W[g][t - 1])}</small><small><em>Cómo se consigue:</em> ${esc(how(t))}</small></div></div>`).join('');
+  body.innerHTML = `<div class="sv-inv gd"><h4>🧰 Tus herramientas</h4><p class="sv-tip">Cada trabajo tiene 3 herramientas: la común, la especial y la brillante. Cuanto mejor es, más cosas saca. Tocás una vez y tu personaje trabaja solo. Lo que juntás va a tu álbum.</p>
+    <div class="tl-tabs gd-tabs">${Object.keys(K3).map(k => `<button type="button" data-gk="${k}" class="${k === g ? 'on' : ''}">${K3[k].ic} ${K3[k].verb}</button>`).join('')}</div>${rows}</div>`;
+  body.querySelectorAll('[data-gk]').forEach(b => b.onclick = () => invGuiaK(body, b.dataset.gk));
+}
+/* la primera vez que estás al lado de algo para trabajar, el narrador te cuenta con qué se trabaja y dónde está la guía */
+const GW_TX = { axe: 'Este árbol se tala con un hacha y te da madera. Cada árbol pide un hacha de su nivel o mejor.', pick: 'Esta piedra se pica con un pico. Cada piedra pide un pico de su nivel o mejor.', rod: 'Acá se pesca con caña o red. En cada agua hay peces distintos, y los mejores piden una red mejor.', pala: 'De acá se saca barro con una pala. Es lo que usa el alfarero para hacer vasijas.', hoz: 'Este campo se cosecha con una hoz. Del grano sale la harina para el pan.', vara: 'Los olivos se varean con una vara para juntar aceitunas. En la prensa, después, sale el aceite.', podadera: 'Las uvas se cortan con una podadera. Con ellas se hacen pasas y vino.', tijera: 'Las ovejas se esquilan con una tijera y te dan lana para tejer.', aguja: 'El lino se arranca con un cuchillo o una hoz, y sirve para hilar telas y carpas.' };
+const GW_END = ' Tocás una vez y trabaja solo. En tu mochila, en «Trabajo», está la guía de cada herramienta y lo que saca.';
+const GWK_TX = { wood: 'Este árbol se tala con el hacha. Tocá una vez y tu personaje trabaja solo.', stone: 'Esta piedra se pica con el pico. Tocá una vez y tu personaje trabaja solo.', fish: 'Acá se pesca con la caña. Tocá una vez y tu personaje pesca solo.', grain: 'Este campo se cosecha con la hoz. Tocá una vez y tu personaje trabaja solo.' };
+const GWK_END = ' En tu mochila, en «Herramientas», ves qué saca cada una.';
+const GW_K = { tree: 'axe', rock: 'pick', fish: 'rod', clay: 'pala', farm: 'hoz', esp: 'hoz', olive: 'vara', vid: 'podadera', shear: 'tijera', lino: 'aguja' };
+function guiaWork(k, kid) {
+  const ty = kid ? (GWK_TX[k] ? k : null) : GW_K[k]; if (!ty) return; const gp = guiaP(), key = (kid ? 'wk_' : 'w_') + ty; if (gp[key]) return;
+  const now = performance.now(); if (GUIA.cur || now - (guiaWork.t || -1e9) < 25000) return; try { if (!guiaReady()) return; } catch (e) { return; }
+  gp[key] = 1; guiaWork.t = now; G().save(); const tx = kid ? GWK_TX[ty] + GWK_END : GW_TX[ty] + GW_END; G().toast(tx, 0, 1); try { G().vo(tx, 'narrador'); } catch (e) {}
+}
 /* golpes que hacen falta (no se muestran), según la herramienta frente al recurso */
 /* misma regla en todo el juego: lo más común sale en 2 a 4 golpes y cada nivel del recurso suma uno (el 7, de 8 a 10);
    cada nivel de herramienta por encima del recurso resta un golpe (mínimo 1), y una por debajo suma tres */
@@ -9523,7 +9579,7 @@ function kidsTick(dt) {
 function kUI() {
   if (svOn() || !S) return; let el = document.getElementById('v3kids');
   if (!el) { el = document.createElement('div'); el.id = 'v3kids'; el.className = 'v3surv kdo'; el.innerHTML = '<button class="sv-do" data-a="do"><b>✋</b><span></span></button>'; document.body.appendChild(el); const b = el.querySelector('button'); b.onpointerdown = e => { e.preventDefault(); kAct(); }; }
-  const n = document.getElementById('view3d').hidden ? null : kNear(), b = el.querySelector('button'); b.hidden = !n; if (n) b.querySelector('span').textContent = n.label + (n.k === 'work' ? '' : ' (E)');
+  const n = document.getElementById('view3d').hidden ? null : kNear(), b = el.querySelector('button'); b.hidden = !n; if (n && n.g) guiaWork(n.g, 1); if (n) b.querySelector('span').textContent = n.label + (n.k === 'work' ? '' : ' (E)');
 }
 /* las tres misiones brillantes: una persona con una chispa; al acercarte te cuenta qué necesita */
 function kidsMisBuild(scene, W) {
@@ -10341,20 +10397,21 @@ function svUI() {
   el.hidden = document.getElementById('view3d').hidden; const s = svP(), k = Math.max(0, s.sat) / SV.FULL, mins = Math.ceil(Math.max(0, s.sat) / 60);
   el.querySelector('.sv-day').textContent = 'Día ' + (Math.floor(s.play / SV.DAY) + 1); el.querySelector('.sv-money').textContent = '🪙 ' + (s.inv.money || 0);
   const fi = el.querySelector('.sv-food i'); fi.style.width = (k * 100).toFixed(1) + '%'; fi.className = s.sat < SV.WARN ? 'low' : ''; el.querySelector('.sv-food span').textContent = s.sat < SV.WARN ? '¡Comé algo! ' + mins + ' min' : '🍞 ' + mins + ' min';
-  const n = S.sv && !S.down ? svNear() : null, b = el.querySelector('.sv-do'); b.hidden = !n; if (n) { b.querySelector('span').textContent = n.k === 'work' ? '⏸ ' + S.sv.work.label + (S.sv.work.n ? ' · ' + S.sv.work.n : '') : n.k === 'fishing' ? (S.sv.fishing.mode === 'rod' ? 'Tirar' : 'Esperando…') : n.label + ' (E)'; b.classList.toggle('need', !!n.need); }
+  const n = S.sv && !S.down ? svNear() : null, b = el.querySelector('.sv-do'); b.hidden = !n; if (n) guiaWork(n.k); if (n) { b.querySelector('span').textContent = n.k === 'work' ? '⏸ ' + S.sv.work.label + (S.sv.work.n ? ' · ' + S.sv.work.n : '') : n.k === 'fishing' ? (S.sv.fishing.mode === 'rod' ? 'Tirar' : 'Esperando…') : n.label + ' (E)'; b.classList.toggle('need', !!n.need); }
 }
 
 /* ---------- mochila: trabajo y atributos ---------- */
 function invSurv(body) {
   const s = svP(); const tools = `<div class="sv-tool${s.tools.includes('flint') ? '' : ' off'}"><span>${TOOLS.flint[1]}</span><b>${TOOLS.flint[0]}</b><small>${s.tools.includes('flint') ? TOOLS.flint[2] : 'Todavía no lo tenés'}</small></div>` + Object.keys(T7).map(ty => { const P = t7P()[ty], own = [7, 6, 5, 4, 3, 2, 1].filter(t => P[t] != null && P[t] !== 0), best = t7Best(ty);
-    if (!own.length) return `<div class="sv-tool off"><span>${T7[ty].ic}</span><b>${ty === 'axe' ? 'Hacha' : ty === 'pick' ? 'Pico' : 'Caña o red'}</b><small>Todavía no tenés. Se consigue en el mercado.</small></div>`;
-    return own.map(t => { const d = P[t], pct = d < 0 ? 100 : Math.round(d / T7_DUR[t - 1] * 100), ok = t7Ok(ty, t); return `<div class="sv-tool${ok ? '' : ' off'}"><span>${T7[ty].ic}</span><b>${esc(t7Name(ty, t))} · nivel ${t}${t === best ? ' · en uso' : ''}</b><small>${esc(t7Ficha(ty, t))}${ok ? '' : ' Todavía no la podés usar.'}</small><i class="t7-dur"><i style="width:${pct}%" class="${pct < 25 ? 'low' : ''}"></i></i><small>${d < 0 ? 'No se gasta' : 'Le queda ' + pct + '%'}</small></div>`; }).join(''); }).join('');
+    if (!own.length) return `<div class="sv-tool off" data-gt="${ty}" role="button"><span>${T7[ty].ic}</span><b>${ty === 'axe' ? 'Hacha' : ty === 'pick' ? 'Pico' : 'Caña o red'}</b><small>Todavía no tenés. Se consigue en el mercado.</small></div>`;
+    return own.map(t => { const d = P[t], pct = d < 0 ? 100 : Math.round(d / T7_DUR[t - 1] * 100), ok = t7Ok(ty, t); return `<div class="sv-tool${ok ? '' : ' off'}" data-gt="${ty}" role="button"><span>${T7[ty].ic}</span><b>${esc(t7Name(ty, t))} · nivel ${t}${t === best ? ' · en uso' : ''}</b><small>${esc(t7Ficha(ty, t))}${ok ? '' : ' Todavía no la podés usar.'}</small><i class="t7-dur"><i style="width:${pct}%" class="${pct < 25 ? 'low' : ''}"></i></i><small>${d < 0 ? 'No se gasta' : 'Le queda ' + pct + '%'}</small></div>`; }).join(''); }).join('');
   const res = Object.entries(RES).filter(([k]) => !RES_PROD.has(k) || (s.inv[k] || 0) > 0).map(([k, [n, i]]) => `<div class="sv-res"><span>${i}</span><b>${s.inv[k] || 0}</b><small>${n}</small></div>`).join('');
-  body.innerHTML = `<div class="sv-inv">${ofiHTML()}<h4>Herramientas</h4><div class="sv-tools">${tools}</div><h4>Materiales y comida</h4><div class="sv-ress">${res}</div>
+  body.innerHTML = `<div class="sv-inv"><button class="gd-open" type="button" data-a="guia">📘 Guía: qué saca cada herramienta y dónde está cada cosa</button>${ofiHTML()}<h4>Herramientas</h4><div class="sv-tools">${tools}</div><h4>Materiales y comida</h4><div class="sv-ress">${res}</div>
     <div class="sv-row"><button data-a="eat">🍽️ Comer</button><button data-a="craft">🔨 Fabricar y construir</button></div>
     ${s.house && s.furn.includes('cofre') ? `<h4>Cofre de tu casa</h4><p class="sv-tip">Lo que está en el cofre no se pierde nunca. ${Object.entries(s.chest).filter(([, n]) => n).map(([k, n]) => RES[k][1] + ' ' + n).join(' · ') || 'Está vacío.'}</p><div class="sv-row"><button data-a="store">Guardar todo</button><button data-a="take">Sacar todo</button></div>` : ''}
     <p class="sv-tip">Día ${Math.floor(s.play / SV.DAY) + 1} de tu camino · Alimento para ${Math.ceil(Math.max(0, s.sat) / 60)} minutos de juego</p></div>`;
   const nearHome = () => { const h = s.house; if (!h) return false; const a = S.av.position; return (a.x - h.x) ** 2 + (a.z - h.z) ** 2 < 49; };
+  body.querySelector('[data-a="guia"]').onclick = () => invGuia(body); body.querySelectorAll('[data-gt]').forEach(b => b.onclick = () => invGuia(body, b.dataset.gt));
   body.querySelector('[data-a="eat"]').onclick = () => { svEat(); invSurv(body); }; body.querySelector('[data-a="craft"]').onclick = () => svCraft();
   const st = body.querySelector('[data-a="store"]'), tk = body.querySelector('[data-a="take"]');
   if (st) st.onclick = () => { if (!nearHome()) { svToast('Tenés que estar en tu casa para usar el cofre.'); return; } Object.entries(s.inv).forEach(([k, n]) => { s.chest[k] = (s.chest[k] || 0) + n; }); s.inv = {}; G().save(); invSurv(body); };

@@ -1796,3 +1796,15 @@ body[data-branch="ados"] .v3kday{display:none!important}
 #v3sheet .inv:not(.hx) .ins-row{opacity:1;color:#22407F}
 #v3sheet .inv:not(.hx) .ins-row b{color:#22407F}
 #v3sheet .inv:not(.hx) .ins-row small,#v3sheet .inv:not(.hx) .ins-row span{color:#5E74A6}
+
+/* guía de oficios y herramientas (Hero) y de herramientas (Kids) */
+.gd-open{display:block;width:100%;margin:2px 0 12px;padding:12px 14px;border-radius:14px;border:1px solid rgba(233,195,122,.55);background:linear-gradient(180deg,rgba(255,231,154,.16),rgba(242,169,59,.10));color:inherit;font:800 14px Nunito,system-ui,sans-serif;text-align:left;cursor:pointer}
+.gd-lnk{display:inline-block;margin:6px 0 2px;padding:6px 10px;border-radius:999px;border:1px solid rgba(233,195,122,.45);background:rgba(255,255,255,.04);color:inherit;font:800 12px Nunito,system-ui,sans-serif;cursor:pointer}
+.sv-tool[data-gt]{cursor:pointer}
+.gd-back{margin:0 0 8px;padding:7px 12px;border-radius:999px;border:1px solid var(--ed);background:rgba(255,255,255,.05);color:inherit;font:800 12.5px Nunito,system-ui,sans-serif;cursor:pointer}
+.gd-of{margin:0 0 10px;font-size:13px;color:var(--mu)}.gd-of b{color:inherit}
+.gd-t{display:grid;grid-template-columns:38px 1fr;gap:10px;align-items:start;padding:10px 12px;margin:0 0 8px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--ed);text-align:left}
+.gd-t.own{border-color:rgba(233,195,122,.55)}.gd-t.use{background:rgba(255,210,94,.12)}
+.gd-n{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:900 15px Nunito,system-ui,sans-serif;background:rgba(233,195,122,.18);white-space:nowrap;font-size:13px}
+.gd-t b{display:block;font-size:14px;margin-bottom:3px}.gd-t small{display:block;font-size:12.5px;line-height:1.4;color:var(--mu);margin-top:2px}.gd-t em{font-style:normal;font-weight:800;color:inherit;opacity:.9}
+.inv:not(.hx) .gd-t{background:#fff;border-color:#D6E6F7}.inv:not(.hx) .gd-t.own{border-color:#7FB2FF}.inv:not(.hx) .gd-t.use{background:#EAF4FF}.inv:not(.hx) .gd-n{background:#EAF4FF}
