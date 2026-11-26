@@ -51,12 +51,12 @@ function look(k) {
   if (r != null && CACHE.size < 30000) CACHE.set(k, r);
   return r;
 }
-export function t(s) {
+export function t(s, quiet) {
   if (!D || !s || typeof s !== 'string') return s;
   const k = norm(s); if (!k || !/[A-Za-zÀ-ÿ]/.test(k)) return s;
   const lead = s.match(/^\s*/)[0], trail = s.match(/\s*$/)[0];
   let r = look(k);
-  if (r == null) { if (!OUT.has(k)) MISS.add(k); return s; }
+  if (r == null) { if (!quiet && !OUT.has(k)) MISS.add(k); return s; }
   return lead + r + trail;
 }
 window.TSP_T = t; window.TSP_LANG = LANG; window.__i18nMiss = MISS;
@@ -67,7 +67,7 @@ export function word(s) { if (LANG === 'es' || !D) return s; const r = t(s); ret
 if (LANG !== 'es' && typeof CanvasRenderingContext2D !== 'undefined') {
   for (const C of [CanvasRenderingContext2D, typeof OffscreenCanvasRenderingContext2D !== 'undefined' ? OffscreenCanvasRenderingContext2D : null]) {
     if (!C) continue; const P2 = C.prototype;
-    for (const f of ['fillText', 'strokeText', 'measureText']) { const o = P2[f]; P2[f] = function (x, ...a) { return o.call(this, typeof x === 'string' && x.length > 1 ? t(x) : x, ...a); }; }
+    for (const f of ['fillText', 'strokeText', 'measureText']) { const o = P2[f]; P2[f] = function (x, ...a) { return o.call(this, typeof x === 'string' && x.length > 1 ? t(x, f === 'measureText') : x, ...a); }; }
   }
 }
 

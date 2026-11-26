@@ -22,7 +22,7 @@ if(ios){const w=()=>document.body?setTimeout(show,2500):setTimeout(w,300);w();}}
 function tspGate(){let q=null;try{q=new URLSearchParams(location.search).get('tester');}catch(e){}try{if(q==='galilea2611')localStorage.setItem('tsp:tester','1');if(q==='salir')localStorage.removeItem('tsp:tester');}catch(e){}if(q!=null){try{const u=new URL(location.href);u.searchParams.delete('tester');history.replaceState(null,'',u.pathname+u.search+u.hash);}catch(e){}}let ok=q==='galilea2611';try{ok=ok||localStorage.getItem('tsp:tester')==='1';}catch(e){}if(ok)return true;if(tspApp()){tspAppGate();return false;}const raw=(location.hash||'').replace('#','');location.replace('https://www.habitat-cfm.org/kids-hero.html'+(/kids/.test(raw)?'#kids':'#hero'));return false;}
 const TSP_OK=tspGate();
 /* idiomas: español por defecto; el resto sale de app/i18n/<idioma>.json (ver app/i18n.js) */
-const I18N=await import('./i18n.js');await I18N.ready;
+const I18N=await import('./i18n.js');await I18N.ready;const TT=s=>I18N.t(s);
 // Tras Sus Pasos: lógica del juego (servida desde el repositorio; el sitio de Wix solo carga este archivo)
 // guarda los archivos del juego en el aparato (service worker propio; Wix usa /sw.js)
 try{if('serviceWorker' in navigator&&location.protocol==='https:'&&!/localhost|127\.0\.0\.1/.test(location.hostname)){const reg=()=>navigator.serviceWorker.register('/tsp-sw.js',window.TSP_SW_SCOPE?{scope:window.TSP_SW_SCOPE}:undefined).catch(()=>{});if(document.readyState==='complete')reg();else window.addEventListener('load',reg);}}catch(e){}
@@ -1371,7 +1371,7 @@ function Verso(th,f,av){
   function layout(){if(!ctx)return;ctx.font='800 15px Nunito,sans-serif';const rows=[];let row=[],rw=0;const maxW=GW-32;
     tiles.filter(q=>!q.used).forEach(q=>{q.w=ctx.measureText(q.s).width+26;if(rw+q.w>maxW&&row.length){rows.push([row,rw]);row=[];rw=0;}row.push(q);rw+=q.w+8;});if(row.length)rows.push([row,rw]);
     let y=GH-24-rows.length*50;rows.forEach(([r,w])=>{let x=(GW-(w-8))/2;r.forEach(q=>{q.x=x;q.y=y;x+=q.w+8;});y+=50;});}
-  function wrap(c,txt,maxW){const w=txt.split(' '),lines=[];let l='';w.forEach(s=>{const tt=l?l+' '+s:s;if(c.measureText(tt).width>maxW&&l){lines.push(l);l=s;}else l=tt;});if(l)lines.push(l);return lines;}
+  function wrap(c,txt,maxW){const w=TT(txt).split(' '),lines=[];let l='';w.forEach(s=>{const tt=l?l+' '+s:s;if(c.measureText(tt).width>maxW&&l){lines.push(l);l=s;}else l=tt;});if(l)lines.push(l);return lines;}
   load();
   return {get score(){return score},get over(){return over},
    input(k,d){if(over||k!=='tap'||ban>.8)return;const q=tiles.find(q=>!q.used&&d.x>q.x&&d.x<q.x+q.w&&d.y>q.y&&d.y<q.y+40);if(!q)return;
@@ -1393,7 +1393,7 @@ function Verso(th,f,av){
 const INK = th => th.hx ? '#F1D7A2' : th.night ? '#FFFFFF' : '#22407F';
 const lab = (c, th, t, x, y, al) => { c.fillStyle = INK(th); c.font = '900 12px Nunito,sans-serif'; c.textAlign = al || 'left'; c.fillText(t, x, y); c.textAlign = 'left'; };
 const card = (c, th, x, y, w, h, r) => { c.fillStyle = th.hx ? 'rgba(20,16,10,.82)' : 'rgba(255,255,255,.92)'; rr(c, x, y, w, h, r || 16); c.fill(); };
-function wrapT(c, txt, maxW) { const w = txt.split(' '), L = []; let l = ''; w.forEach(s => { const t = l ? l + ' ' + s : s; if (c.measureText(t).width > maxW && l) { L.push(l); l = s; } else l = t; }); if (l) L.push(l); return L; }
+function wrapT(c, txt, maxW) { const w = TT(txt).split(' '), L = []; let l = ''; w.forEach(s => { const t = l ? l + ' ' + s : s; if (c.measureText(t).width > maxW && l) { L.push(l); l = s; } else l = t; }); if (l) L.push(l); return L; }
 
 // 1. Arrear ovejas al corral: arrastrá cada oveja hasta el corral
 function Herd(th, f) {
@@ -1752,7 +1752,7 @@ function Match(th, f) {
     draw(c, t) { skyBg(c, th, t); timeBar(c, th, left, full); lab(c, th, 'PARES ' + pairs.length + '/' + L.length, 16, 27); lab(c, th, 'Tocá a la izquierda y después su pareja a la derecha', GW / 2, 118, 'center');
       c.strokeStyle = th.hx ? '#E9C37A' : '#FF9636'; c.lineWidth = 3; pairs.forEach(([a, b]) => { c.beginPath(); c.moveTo(a.x + a.w, a.y + 26); c.lineTo(b.x, b.y + 26); c.stroke(); });
       const box = (q, side) => { const sx = q === bad && bT > 0 ? Math.sin(bT * 60) * 4 : 0, active = q === sel; c.fillStyle = q.done ? (th.hx ? 'rgba(233,195,122,.25)' : 'rgba(255,200,80,.35)') : active ? (th.hx ? '#4A3A1E' : '#FFE7B0') : q === bad && bT > 0 ? '#FFD9D3' : (th.hx ? '#2A2418' : '#FFFFFF'); rr(c, q.x + sx, q.y, q.w, q.h, 12); c.fill(); if (active) { c.strokeStyle = th.hx ? '#E9C37A' : '#FF9636'; c.lineWidth = 2; c.stroke(); }
-        c.fillStyle = INK(th); c.font = (side ? '700 11.5px' : '800 13px') + ' Nunito,sans-serif'; c.textAlign = 'center'; const words = q.s.split(' '); let l1 = '', l2 = ''; words.forEach(w => { if ((l1 + ' ' + w).trim().length <= (side ? 22 : 18) && !l2) l1 = (l1 + ' ' + w).trim(); else l2 = (l2 + ' ' + w).trim(); }); c.fillText(l1, q.x + sx + q.w / 2, q.y + (l2 ? 22 : 31)); if (l2) c.fillText(l2, q.x + sx + q.w / 2, q.y + 38); c.textAlign = 'left'; };
+        c.fillStyle = INK(th); c.font = (side ? '700 11.5px' : '800 13px') + ' Nunito,sans-serif'; c.textAlign = 'center'; const words = TT(q.s).split(' '); let l1 = '', l2 = ''; words.forEach(w => { if ((l1 + ' ' + w).trim().length <= (side ? 22 : 18) && !l2) l1 = (l1 + ' ' + w).trim(); else l2 = (l2 + ' ' + w).trim(); }); c.fillText(l1, q.x + sx + q.w / 2, q.y + (l2 ? 22 : 31)); if (l2) c.fillText(l2, q.x + sx + q.w / 2, q.y + 38); c.textAlign = 'left'; };
       L.forEach(q => box(q, 0)); Rr.forEach(q => box(q, 1)); banner(c, th, 'Ronda ' + round, ban); } };
 }
 
@@ -2417,7 +2417,7 @@ function Plinko(th, f) {
         for (const p of pegs) { const dx = ball.x - p.x, dy = ball.y - p.y, dd = Math.hypot(dx, dy); if (dd < 12 && dd > 0) { const nx = dx / dd, ny = dy / dd, vn = ball.vx * nx + ball.vy * ny; if (vn < 0) { ball.vx -= 1.6 * vn * nx; ball.vy -= 1.6 * vn * ny; } ball.x = p.x + nx * 12; ball.y = p.y + ny * 12; } } }
       if (ball.y > 440) { const slot = Math.min(cur.o.length - 1, Math.floor(ball.x / slotW())); if (slot === cur.a) { score += 20; fb = '¡Correcto!'; tone(880, .25); } else { lives-=pazHit(); fb = 'Era: ' + cur.o[cur.a]; tone(180, .2); if (lives <= 0) { fT = 1.6; setTimeout(() => { over = true; }, 1500); wait = 9; return; } } fT = 1.4; wait = 1.6; ball.y = 440; } },
     draw(c, t) { skyBg(c, th, t); hearts(c, lives, 3); card(c, th, 14, 46, GW - 28, 96); c.fillStyle = INK(th); c.font = '800 14px Nunito,sans-serif'; c.textAlign = 'center';
-      const words = cur.q.split(' '); let line = '', y = 72; words.forEach(w => { if (c.measureText(line + w).width > GW - 60) { c.fillText(line, GW / 2, y); line = ''; y += 19; } line += w + ' '; }); c.fillText(line, GW / 2, y);
+      const words = TT(cur.q).split(' '); let line = '', y = 72; words.forEach(w => { if (c.measureText(line + w).width > GW - 60) { c.fillText(line, GW / 2, y); line = ''; y += 19; } line += w + ' '; }); c.fillText(line, GW / 2, y);
       pegs.forEach(p => { c.fillStyle = th.hx ? '#C9B48A' : '#8A7256'; c.beginPath(); c.arc(p.x, p.y, 4, 0, 7); c.fill(); });
       cur.o.forEach((o, i) => { const x = i * slotW(); c.fillStyle = wait > 0 && i === cur.a ? 'rgba(47,174,124,.55)' : th.hx ? 'rgba(20,16,10,.55)' : 'rgba(255,255,255,.75)'; rr(c, x + 3, 444, slotW() - 6, 66, 10); c.fill(); c.fillStyle = INK(th); c.font = '800 12px Nunito,sans-serif'; const ws = o.split(' '); let ln = '', yy = 464; ws.forEach(w => { if (c.measureText(ln + w).width > slotW() - 14) { c.fillText(ln, x + slotW() / 2, yy); ln = ''; yy += 14; } ln += w + ' '; }); c.fillText(ln, x + slotW() / 2, yy); });
       c.textAlign = 'left'; if (ball) { c.fillStyle = '#FFD25E'; c.beginPath(); c.arc(ball.x, ball.y, 8, 0, 7); c.fill(); } else lab(c, th, 'Tocá arriba para soltar la piedrita', GW / 2, 166, 'center'); if (fT > 0) banner(c, th, fb, fT * 1.2); } };

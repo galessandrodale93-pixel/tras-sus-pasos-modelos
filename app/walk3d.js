@@ -5534,7 +5534,7 @@ function marPlaque(lines, w, h, opt) {
   x.lineWidth = 14; x.strokeStyle = '#D9A93A'; x.stroke(); x.lineWidth = 3; x.strokeStyle = '#8A6418'; x.beginPath(); x.roundRect ? x.roundRect(30, 30, 964, Hh - 60, 24) : x.rect(30, 30, 964, Hh - 60); x.stroke();
   x.textAlign = 'center'; x.textBaseline = 'middle'; let y = Hh * (o.y0 || .2);
   lines.forEach(([t, sz, col, fam]) => { x.fillStyle = col || '#3A2A12'; x.font = `${fam || '700'} ${sz}px Georgia, 'Times New Roman', serif`;
-    const words = t.split(' '), out = []; let ln = ''; words.forEach(wd => { const tt = ln ? ln + ' ' + wd : wd; if (x.measureText(tt).width > 904 && ln) { out.push(ln); ln = wd; } else ln = tt; }); if (ln) out.push(ln);
+    const words = (window.TSP_T ? window.TSP_T(t) : t).split(' '), out = []; let ln = ''; words.forEach(wd => { const tt = ln ? ln + ' ' + wd : wd; if (x.measureText(tt).width > 904 && ln) { out.push(ln); ln = wd; } else ln = tt; }); if (ln) out.push(ln);
     out.forEach(l => { x.fillText(l, 512, y); y += sz * 1.18; }); y += sz * .25; });
   const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 4;
   return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tx, transparent: true, toneMapped: false, side: THREE.DoubleSide }));
@@ -10608,7 +10608,7 @@ const GMH = {
   cadena: {
     start(E) { const vs = []; G().REGIONS.forEach(R => ((G().EXAMS || {})[R.id] || []).forEach(q => { if (q.t === 'verse') vs.push({ txt: q.parts.map(x => typeof x === 'number' ? q.blanks[x] : x).join('').replace(/\s+/g, ' ').trim(), ref: q.ref }); }));
       E.vs = vs.filter(v => v.txt.split(' ').length <= 22).sort(() => Math.random() - .5).slice(0, 3); E.v = -1; E.errs = 0; E.turn = 0; this.next(E); },
-    next(E) { E.v++; if (E.v >= E.vs.length) { gmTo({ ev: 'end', errs: E.errs, n: E.vs.length }); return; } const w = E.vs[E.v].txt.split(' '); E.words = w; E.done = 0; E.bank = w.map((t, i) => ({ i, t })).sort(() => Math.random() - .5); this.push(E); },
+    next(E) { E.v++; if (E.v >= E.vs.length) { gmTo({ ev: 'end', errs: E.errs, n: E.vs.length }); return; } const w = (window.TSP_T ? window.TSP_T(E.vs[E.v].txt) : E.vs[E.v].txt).split(' '); E.words = w; E.done = 0; E.bank = w.map((t, i) => ({ i, t })).sort(() => Math.random() - .5); this.push(E); },
     push(E) { gmTo({ ev: 'st', v: E.v, tot: E.vs.length, bank: E.bank.map(b => ({ i: b.i, t: b.t, u: b.i < E.done })), done: E.words.slice(0, E.done).join(' '), turn: E.who[E.turn % E.who.length], tname: pName(E.who[E.turn % E.who.length]), errs: E.errs, ref: E.done >= E.words.length ? E.vs[E.v].ref : null }); },
     on(m) { const E = GM.on;
       if (m.ev === 'st') { const mine = m.turn === myId() && !m.ref; const el = gmSheet(`<div class="esp-top"><span>Versículo ${m.v + 1} de ${m.tot} · errores del equipo: ${m.errs}</span></div><p class="vc-done">${esc(m.done) || '<i>Empiecen por la primera palabra…</i>'}</p>${m.ref ? `<p class="esp-ref">${esc(m.ref)} · ¡Lo armaron juntos!</p>` : `<p class="sv-tip">${mine ? '<b>¡Es tu turno!</b> Tocá la palabra que sigue.' : 'Turno de <b>' + esc(m.tname) + '</b>.'}</p>`}<div class="vc-bank">${m.bank.map(b => `<button data-i="${b.i}" ${b.u || !mine ? 'disabled' : ''} class="${b.u ? 'used' : ''}">${esc(b.t)}</button>`).join('')}</div>`, false, 'Versículo en cadena');
