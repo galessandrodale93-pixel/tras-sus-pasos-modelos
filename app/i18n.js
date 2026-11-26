@@ -15,6 +15,7 @@ const LIB = {
   pt: { Lucas: 'Lucas', Juan: 'João', Mateo: 'Mateus', Marcos: 'Marcos', 'Isaías': 'Isaías', Salmo: 'Salmo', Salmos: 'Salmos', 'Éxodo': 'Êxodo', 'Génesis': 'Gênesis', Deuteronomio: 'Deuteronômio', Hechos: 'Atos', 'Jeremías': 'Jeremias', 'Números': 'Números', Proverbios: 'Provérbios', Hebreos: 'Hebreus', Samuel: 'Samuel', Apocalipsis: 'Apocalipse', Reyes: 'Reis', Rut: 'Rute', 'Levítico': 'Levítico', Ezequiel: 'Ezequiel', Romanos: 'Romanos', Miqueas: 'Miqueias', Filipenses: 'Filipenses', Corintios: 'Coríntios', Santiago: 'Tiago', 'Josué': 'Josué', 'Gálatas': 'Gálatas', Efesios: 'Efésios', Oseas: 'Oseias', 'Nehemías': 'Neemias', 'Jonás': 'Jonas', Colosenses: 'Colossenses', 'Zacarías': 'Zacarias', 'Sofonías': 'Sofonias', Jueces: 'Juízes', Habacuc: 'Habacuque', 'Eclesiastés': 'Eclesiastes', Daniel: 'Daniel', Cantares: 'Cânticos', 'Amós': 'Amós', Timoteo: 'Timóteo', Pedro: 'Pedro', 'Crónicas': 'Crônicas', 'Malaquías': 'Malaquias' } };
 /* citas bíblicas («Lucas 2:1-5 · Mateo 2:1»): solo cambia el nombre del libro */
 function cita(k) { const B = LIB[LANG]; if (!B || !/\d/.test(k)) return null; let ok = true; const r = k.replace(/[A-Za-zÀ-ÿ]+/g, w => { if (B[w]) return B[w]; ok = false; return w; }); return ok ? r : null; }
+const STOP = new Set(['de', 'del', 'y', 'e', 'a', 'al', 'en', 'con', 'o', 'u', 'el', 'la', 'los', 'las', 'lo', 'por', 'para', 'que', 'un', 'una']);
 const Y = { en: 'and', pt: 'e' }; const NOMBRE = /^$/;
 let D = null, LOW = null; const P = [], CACHE = new Map(), OUT = new Set(), MISS = new Set();
 const rx = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -22,8 +23,8 @@ const norm = s => s.replace(/\s+/g, ' ').trim();
 export const ready = LANG === 'es' ? Promise.resolve() :
   fetch(new URL(`./i18n/${LANG}.json`, import.meta.url).href).then(r => r.ok ? r.json() : {}).then(j => {
     D = new Map(); LOW = new Map();
-    for (const k in j) { if (k.includes('{*}')) P.push([new RegExp('^' + k.split('{*}').map(s => rx(s).replace(/\\\{n\\\}/g, '(\\d+(?:[.,]\\d+)*)')).join('(.+?)') + '$'), j[k], k]); else { D.set(k, j[k]); LOW.set(k.toLowerCase(), j[k]); } OUT.add(norm(String(j[k]).replace(/\{\*\}|\{n\}/g, ''))); }
-    P.sort((a, b) => b[2].length - a[2].length);
+    for (const k in j) { if (k.includes('{*}')) P.push([(k.replace(/\{\*\}|\{n\}/g, ' ').match(/[A-Za-zÀ-ÿ]+/g) || []).every(w => STOP.has(w.toLowerCase())), new RegExp('^' + k.split('{*}').map(s => rx(s).replace(/\\\{n\\\}/g, '(\\d+(?:[.,]\\d+)*)')).join('(.+?)') + '$'), j[k], k]); else { D.set(k, j[k]); LOW.set(k.toLowerCase(), j[k]); } OUT.add(norm(String(j[k]).replace(/\{\*\}|\{n\}/g, ''))); }
+    P.sort((a, b) => b[3].length - a[3].length);
   }).catch(() => { D = new Map(); });
 
 /* busca la traducción de un texto ya normalizado; null si no hay */
@@ -31,21 +32,20 @@ function look(k) {
   if (CACHE.has(k)) return CACHE.get(k);
   let r = D.get(k);
   if (r == null) { const nums = []; const kn = k.replace(/\d+(?:[.,]\d+)*/g, m => { nums.push(m); return '{n}'; }); if (nums.length) { const x = D.get(kn); if (x != null) { let i = 0; r = x.replace(/\{n\}/g, () => nums[i++] || ''); } } }
-  /* con partes que cambian: solo vale si cada parte también se traduce (o es un número, o un nombre que no cambia) */
-  if (r == null) for (const [re, v] of P) { const m = k.match(re); if (!m) continue; const g = m.slice(1).map(x => { const y = norm(x); if (!/[A-Za-zÀ-ÿ]/.test(y)) return x; const z0 = look(y); const z = z0 == null ? null : x.match(/^\s*/)[0] + z0 + x.match(/\s*$/)[0]; return z == null ? (/^[A-ZÁÉÍÓÚÑ][A-Za-zÀ-ÿ'’-]*$/.test(y) ? y : null) : z; }); if (g.includes(null)) continue; let i = 0; r = v.replace(/\{\*\}|\{n\}/g, () => g[i++] || ''); break; }
+  /* partes separadas por « · » (más abajo) y oraciones; después, frases con partes que cambian: solo vale si cada parte también se traduce */
+  /* varias oraciones juntas: se traduce cada una */
+  if (r == null) { const ps = k.split(/(?<=[.!?…»)])\s+(?=[¡¿«"“(A-ZÁÉÍÓÚÑ0-9])/); if (ps.length > 1) { const g = ps.map(x => look(x)); if (!g.includes(null)) r = g.join(' '); } }
+  if (r == null) for (const [weak, re, v] of P) { const m = k.match(re); if (!m) continue; const g = m.slice(1).map(x => { const y = norm(x); if (!/[A-Za-zÀ-ÿ]/.test(y)) return x; const z0 = weak ? null : look(y); const z = z0 == null ? null : x.match(/^\s*/)[0] + z0 + x.match(/\s*$/)[0]; return z == null ? (/^[A-ZÁÉÍÓÚÑ][A-Za-zÀ-ÿ'’-]*$/.test(y) ? y : null) : z; }); if (g.includes(null)) continue; let i = 0; r = v.replace(/\{\*\}|\{n\}/g, () => g[i++] || ''); break; }
   if (r == null) r = cita(k);
   /* EN MAYÚSCULAS (carteles del mundo) */
   if (r == null && k === k.toUpperCase() && k !== k.toLowerCase()) { const x = LOW.get(k.toLowerCase()); if (x != null) r = x.toUpperCase(); }
   /* con símbolos alrededor: «← Tecoa», «🔥 Pedernal», «Jope →» */
   if (r == null) { const m = k.match(/^([^A-Za-zÀ-ÿ¡¿«"“]*)(.*?)([^A-Za-zÀ-ÿ.!?»"”)…]*)$/); if (m && (m[1] || m[3]) && m[2]) { const z = look(m[2]); if (z != null) r = m[1] + z + m[3]; } }
-  /* partes separadas por « · »: «Nazaret · 64 m», «Tu primer camino · 0 de 3» */
   if (r == null && k.includes(' · ')) { let any = false; const g = k.split(' · ').map(x => { if (!/[A-Za-zÀ-ÿ]{2}/.test(x.replace(/\b\d+(?:[.,]\d+)?\s?(m|km|s|MB|min)\b/g, ''))) return x; const z = look(x); if (z != null) { any = true; return z; } return /^[A-ZÁÉÍÓÚÑ][A-Za-zÀ-ÿ'’-]*$/.test(x) ? x : null; }); if (any && !g.includes(null)) r = g.join(' · '); }
   /* mayúscula/minúscula distinta: «retama» → «Retama» */
   if (r == null) { const x = LOW.get(k.toLowerCase()); if (x != null) r = /^[a-záéíóúñ]/.test(k) && /^[A-Z]/.test(x) && !NOMBRE.test(k) ? x.charAt(0).toLowerCase() + x.slice(1) : x; }
   /* listas: «retama, higuera y sicómoro» */
   if (r == null && /, | y /.test(k) && !/[.!?¿¡:]/.test(k)) { const it = k.split(/, | y /); if (it.length > 1 && it.length < 12) { const g = it.map(x => look(x)); if (!g.includes(null)) r = g.slice(0, -1).join(', ') + ' ' + Y[LANG] + ' ' + g[g.length - 1]; } }
-  /* varias oraciones juntas: se traduce cada una */
-  if (r == null) { const ps = k.split(/(?<=[.!?…»)])\s+(?=[¡¿«"“(A-ZÁÉÍÓÚÑ0-9])/); if (ps.length > 1) { const g = ps.map(x => look(x)); if (!g.includes(null)) r = g.join(' '); } }
   if (r != null && CACHE.size < 30000) CACHE.set(k, r);
   return r;
 }
