@@ -1808,3 +1808,5 @@ body[data-branch="ados"] .v3kday{display:none!important}
 .gd-n{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:900 15px Nunito,system-ui,sans-serif;background:rgba(233,195,122,.18);white-space:nowrap;font-size:13px}
 .gd-t b{display:block;font-size:14px;margin-bottom:3px}.gd-t small{display:block;font-size:12.5px;line-height:1.4;color:var(--mu);margin-top:2px}.gd-t em{font-style:normal;font-weight:800;color:inherit;opacity:.9}
 .inv:not(.hx) .gd-t{background:#fff;border-color:#D6E6F7}.inv:not(.hx) .gd-t.own{border-color:#7FB2FF}.inv:not(.hx) .gd-t.use{background:#EAF4FF}.inv:not(.hx) .gd-n{background:#EAF4FF}
+/* celulares chicos apaisados (iPhone SE, 667 px): el botón del camino se corre a la izquierda para no pisar los botones de comer y fabricar */
+@media (max-width:720px) and (orientation:landscape){#v3go .v3b.main{position:relative;left:-72px;max-width:calc(100vw - 400px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
