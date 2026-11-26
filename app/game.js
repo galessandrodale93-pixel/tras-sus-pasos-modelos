@@ -1496,7 +1496,7 @@ function Order(th, f) {
 }
 
 // 7. Sopa de letras
-const WORD_SETS = [['JUAN', 'JORDAN', 'AGUA', 'PALOMA', 'CIELO', 'HIJO'], ['MIEL', 'DESIERTO', 'CORDERO', 'VOZ', 'AMADO', 'RIO']];
+const WORD_SETS = [['JUAN', 'JORDAN', 'AGUA', 'PALOMA', 'CIELO', 'HIJO'], ['MIEL', 'DESIERTO', 'CORDERO', 'VOZ', 'AMADO', 'RIO']].map(a => a.map(I18N.word));
 function Words(th, f) {
   const N = 8, cs = 38, ox = (GW - N * cs) / 2, oy = 150; let grid, words, found, sel = null, cur = null, score = 0, over = false, left = 0, full = 0, round = 0, ban = 0;
   function deal() { words = WORD_SETS[round % 2]; round++; found = []; grid = Array.from({ length: N * N }, () => ''); const dirs = [[1, 0], [0, 1], [1, 1]];
@@ -1640,7 +1640,7 @@ function Pour(th, f) {
       banner(c, th, wine > 0 ? '¡El agua se volvió vino!' : 'Ronda ' + round, wine > 0 ? wine : ban); } };
 }
 // 2. Letras del rollo (formá la palabra tocando las letras en orden)
-const SPELL_W = ['ISAÍAS', 'ROLLO', 'ESPÍRITU', 'UNGIDO', 'LIBERTAD', 'POBRES', 'NAZARET', 'SINAGOGA', 'NOTICIA', 'VISTA'];
+const SPELL_W = ['ISAÍAS', 'ROLLO', 'ESPÍRITU', 'UNGIDO', 'LIBERTAD', 'POBRES', 'NAZARET', 'SINAGOGA', 'NOTICIA', 'VISTA'].map(I18N.word);
 function Spell(th, f) {
   let word = '', got = 0, tiles = [], score = 0, over = false, left = 40 / f, full = 40 / f, round = 0, ban = 0, miss = null, mT = 0; const order = shuffle(SPELL_W.slice());
   function deal() { word = order[round % order.length]; round++; got = 0; const ab = 'AEIOURSNLTDCMPBG', L = word.split(''); while (L.length < 14) L.push(ab[Math.floor(Math.random() * ab.length)]); tiles = shuffle(L).map((ch, i) => ({ ch, x: 40 + (i % 5) * 70, y: 250 + Math.floor(i / 5) * 78, ph: Math.random() * 6, used: false })); ban = 1.2; }
@@ -2101,9 +2101,9 @@ function Awake(th, f) {
       lab(c, th, 'APAGADAS ' + out + '/3', 16, 27); lab(c, th, 'Tocá las lámparas antes de que se apaguen', GW / 2, 120, 'center'); lab(c, th, '«Quiero que se haga tu voluntad, no la mía» · Lucas 22:42', GW / 2, GH - 14, 'center'); } };
 }
 // 7. Adiviná la palabra (letra por letra)
-const GUESS_W = [['HOSANNA', 'Lo gritaba la gente con palmas'], ['BURRITO', 'Jesús entró montado en uno'], ['ZAQUEO', 'Se subió a un sicómoro'], ['VIUDA', 'Dio dos monedas, todo lo que tenía'], ['TOALLA', 'Jesús la usó para secar los pies'], ['PAN', 'Jesús lo partió en la última cena'], ['COPA', 'La compartió con sus discípulos'], ['GETSEMANI', 'El huerto donde oró'], ['MANDAMIENTO', 'Nuevo: ámense unos a otros'], ['PASCUA', 'La fiesta que celebraban en Jerusalén']];
+const GUESS_W = [['HOSANNA', 'Lo gritaba la gente con palmas'], ['BURRITO', 'Jesús entró montado en uno'], ['ZAQUEO', 'Se subió a un sicómoro'], ['VIUDA', 'Dio dos monedas, todo lo que tenía'], ['TOALLA', 'Jesús la usó para secar los pies'], ['PAN', 'Jesús lo partió en la última cena'], ['COPA', 'La compartió con sus discípulos'], ['GETSEMANI', 'El huerto donde oró'], ['MANDAMIENTO', 'Nuevo: ámense unos a otros'], ['PASCUA', 'La fiesta que celebraban en Jerusalén']].map(([w, h]) => [I18N.word(w), h]);
 function Guess(th, f) {
-  const AB = 'ABCDEFGHIJLMNOPQRSTUVZ'; let w = null, hit = new Set(), wrong = 0, score = 0, over = false, n = 0, lives = 3+pazNew(), fb = '', fT = 0, lock = false; const order = shuffle(GUESS_W.slice());
+  const AB = I18N.LANG === 'es' ? 'ABCDEFGHIJLMNOPQRSTUVZ' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'; let w = null, hit = new Set(), wrong = 0, score = 0, over = false, n = 0, lives = 3+pazNew(), fb = '', fT = 0, lock = false; const order = shuffle(GUESS_W.slice());
   function deal() { w = order[n % order.length]; n++; hit = new Set(); wrong = 0; lock = false; }
   deal();
   const kb = i => ({ x: 22 + (i % 8) * 40, y: 330 + Math.floor(i / 8) * 46 });

@@ -42,6 +42,8 @@ function look(k) {
   /* con símbolos alrededor: «← Tecoa», «🔥 Pedernal», «Jope →» */
   if (r == null) { const m = k.match(/^([^A-Za-zÀ-ÿ¡¿«"“]*)(.*?)([^A-Za-zÀ-ÿ.!?»"”)…]*)$/); if (m && (m[1] || m[3]) && m[2]) { const z = look(m[2]); if (z != null) r = m[1] + z + m[3]; } }
   if (r == null && k.includes(' · ')) { let any = false; const g = k.split(' · ').map(x => { if (!/[A-Za-zÀ-ÿ]{2}/.test(x.replace(/\b\d+(?:[.,]\d+)?\s?(m|km|s|MB|min)\b/g, ''))) return x; const z = look(x); if (z != null) { any = true; return z; } return /^[A-ZÁÉÍÓÚÑ][A-Za-zÀ-ÿ'’-]*$/.test(x) ? x : null; }); if (any && !g.includes(null)) r = g.join(' · '); }
+  /* con un número al final o al principio: «RONDA 3», «3 vidas» */
+  if (r == null) { const m = k.match(/^(.*?[A-Za-zÀ-ÿ.:)])\s+(\d+(?:[.,/]\d+)*)$/); if (m) { const z = look(m[1]); if (z != null) r = z + ' ' + m[2]; } }
   /* mayúscula/minúscula distinta: «retama» → «Retama» */
   if (r == null) { const x = LOW.get(k.toLowerCase()); if (x != null) r = /^[a-záéíóúñ]/.test(k) && /^[A-Z]/.test(x) && !NOMBRE.test(k) ? x.charAt(0).toLowerCase() + x.slice(1) : x; }
   /* listas: «retama, higuera y sicómoro» */
@@ -58,6 +60,16 @@ export function t(s) {
   return lead + r + trail;
 }
 window.TSP_T = t; window.TSP_LANG = LANG; window.__i18nMiss = MISS;
+/* palabras de los juegos de letras (sopa, deletrear, adivinar): traducidas, en mayúsculas y sin tildes, para que se puedan armar con las letras */
+export function word(s) { if (LANG === 'es' || !D) return s; const r = t(s); return String(r).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z]/g, ''); }
+
+/* los textos que se dibujan en los minijuegos (canvas) */
+if (LANG !== 'es' && typeof CanvasRenderingContext2D !== 'undefined') {
+  for (const C of [CanvasRenderingContext2D, typeof OffscreenCanvasRenderingContext2D !== 'undefined' ? OffscreenCanvasRenderingContext2D : null]) {
+    if (!C) continue; const P2 = C.prototype;
+    for (const f of ['fillText', 'strokeText', 'measureText']) { const o = P2[f]; P2[f] = function (x, ...a) { return o.call(this, typeof x === 'string' && x.length > 1 ? t(x) : x, ...a); }; }
+  }
+}
 
 /* la pantalla: textos, títulos y ayudas de los botones */
 const SKIP = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'SELECT', 'CODE', 'CANVAS', 'svg']);
