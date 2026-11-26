@@ -9997,6 +9997,7 @@ function bldMilestone() {
 }
 function bldMsg(t, bad) { const m = document.getElementById('v3bldmsg'); if (m) { m.textContent = t; m.className = bad ? 'no' : 'ok'; clearTimeout(bldMsg.T); bldMsg.T = setTimeout(() => { if (m) m.textContent = ''; }, 3200); } else G().toast(t); }
 function bldStart(t) {
+  try { window.tspMark && tspMark('construir:' + (t || BLD.t)); } catch (e) {}
   if (!BLD.parts) return; const el = document.getElementById('v3sheet'); if (el) el.hidden = true; if (t) BLD.t = t; BLD.on = true; BLD.del = false; BLD.dy = 0; BLD.sx = 0; BLD.pin = null;
   BLD.cam = [S.camDist, S.camPitch]; S.camDist = Math.max(S.camDist, 6.5); S.camPitch = Math.max(S.camPitch ?? .4, .62); bldGhost(BLD.t); bldHud();
   const p = G().P(); if (!p.bldTip) { p.bldTip = 1; setTimeout(() => bldMsg('Tocá el piso donde va la pieza y después «Poner». Los cercos siguen solos en fila. Con ⬆ subís para hacer techos.'), 300); }
@@ -10256,6 +10257,7 @@ function comboIc(c) { return c.place === 'fire' ? '🔥' : c.mk ? TOOLS[c.mk][1]
 function comboDisc() { const s = svP(); s.disc = s.disc || ['plank', 'block']; return s.disc; }
 const sameNeed = (a, b) => { const ka = Object.keys(a).filter(k => a[k] > 0), kb = Object.keys(b).filter(k => b[k] > 0); return ka.length === kb.length && ka.every(k => a[k] === b[k]); };
 function svCraft(tab) {
+  try { window.tspMark && tspMark('taller:' + (tab || '')); } catch (e) {}
   if (typeof tab !== 'string') tab = null; if (!S || S.down || !S.av) return; if (BLD.on) bldStop(); const el = document.getElementById('v3sheet'); if (!el) return; S.joy.x = 0; S.joy.y = 0; const hx = svOn();
   if (!hx) tab = 'obra'; else if (tab) TL.tab = tab; else if (!TL.tab) TL.tab = 'mesa'; if (hx) tab = TL.tab;
   const s = hx ? svP() : null, inv = s ? t7Inv(s.inv, 1) : {};
