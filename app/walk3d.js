@@ -4250,7 +4250,7 @@ function say(txt, ref, onend) {
 function caption(txt, ref, secs) {
   let el = document.getElementById('v3say'); if (!el) { el = document.createElement('div'); el.id = 'v3say'; el.className = 'v3say'; document.body.appendChild(el); }
   clearTimeout(caption.t); if (!txt) { el.classList.remove('on'); return; }
-  el.innerHTML = `<p>${esc(txt)}</p>${ref ? `<small>${esc(ref)}${/\d+:\d+/.test(ref) ? ' · NTV' : ''}</small>` : ''}`; /* «NTV» solo cuando es una cita con capítulo y versículo */ el.classList.add('on'); caption.t = setTimeout(() => el.classList.remove('on'), secs * 1000);
+  el.innerHTML = `<p>${esc(txt)}</p>${ref ? `<small>${esc(ref)}${/\d+:\d+/.test(ref) ? ' · ' + (window.TSP_BV || 'NTV') : ''}</small>` : ''}`; /* «NTV» solo cuando es una cita con capítulo y versículo */ el.classList.add('on'); caption.t = setTimeout(() => el.classList.remove('on'), secs * 1000);
 }
 function stopVoice() { try { speechSynthesis.cancel(); } catch (e) {} try { if (AU.voSay) { AU.voSay = false; G().voStop && G().voStop(); } } catch (e) {} AU.speaking = false; caption(null); }
 function topicUI(show) {

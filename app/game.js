@@ -1097,7 +1097,7 @@ function renderOrder(c,el){
   btns.forEach(b=>b.onclick=()=>{if(locked)return;const i=+b.dataset.i,p=picked.indexOf(i);if(p>=0)picked=picked.slice(0,p);else picked.push(i);paint();});
   $('#check').onclick=()=>{if(locked)return;locked=true;const ok=picked.every((v,k)=>v===k);btns.forEach(b=>{b.disabled=true;const i=+b.dataset.i;b.classList.remove('picked');b.classList.add(picked.indexOf(i)===i?'correct':'wrong');});$('#check').hidden=true;resolve(ok,ok?'':`<p>El orden correcto:</p><ol class="ordered">${c.items.map(t=>`<li>${esc(t)}</li>`).join('')}</ol>`);};
 }
-function renderVerse(c,el){
+function renderVerse(c,el){c=I18N.verseQ(c);
   const fill=c.blanks.map(()=>null);
   el.innerHTML=`<div class="card">${kindLabel('verse')}<h3>Elegí las palabras que faltan</h3><div class="verse" id="vtext"></div><div class="bank" id="bank"></div><button class="primary" id="check" disabled>Comprobar</button></div>`;
   const draw=()=>{
@@ -1367,7 +1367,7 @@ function Simon(th,f,av){
 function Verso(th,f,av){
   const pool=shuffle(th.verses.slice());let vi=-1,V=null,tiles=[],built=[],score=0,over=false,left=0,full=0,ban=0,tt=0,shake=null,shT=0,ctx=null;
   const split=txt=>{const w=txt.split(' '),n=Math.min(9,w.length),out=[];let k=0;for(let i=0;i<n;i++){const take=Math.round((w.length-k)/(n-i));out.push(w.slice(k,k+take).join(' '));k+=take;}return out;};
-  function load(){vi++;V=pool[vi%pool.length];const parts=split(V.text);built=[];tiles=shuffle(parts.map((s,i)=>({s,i,used:false})));layout();const add=(th.hx?18:14+parts.length*2.4)/f;left=vi===0?add:left+add;full=Math.max(full,left);ban=1.3;V.parts=parts;}
+  function load(){vi++;V=pool[vi%pool.length];const parts=split(TT(V.text));built=[];tiles=shuffle(parts.map((s,i)=>({s,i,used:false})));layout();const add=(th.hx?18:14+parts.length*2.4)/f;left=vi===0?add:left+add;full=Math.max(full,left);ban=1.3;V.parts=parts;}
   function layout(){if(!ctx)return;ctx.font='800 15px Nunito,sans-serif';const rows=[];let row=[],rw=0;const maxW=GW-32;
     tiles.filter(q=>!q.used).forEach(q=>{q.w=ctx.measureText(q.s).width+26;if(rw+q.w>maxW&&row.length){rows.push([row,rw]);row=[];rw=0;}row.push(q);rw+=q.w+8;});if(row.length)rows.push([row,rw]);
     let y=GH-24-rows.length*50;rows.forEach(([r,w])=>{let x=(GW-(w-8))/2;r.forEach(q=>{q.x=x;q.y=y;x+=q.w+8;});y+=50;});}
@@ -1381,7 +1381,7 @@ function Verso(th,f,av){
    update(dt){if(over)return;tt+=dt;ban=Math.max(0,ban-dt);shT=Math.max(0,shT-dt);if(ban<.8)left-=dt;if(left<=0){left=0;over=true;}},
    draw(c,t){if(!ctx){ctx=c;layout();}skyBg(c,th,t);timeBar(c,th,left,full);c.fillStyle=th.hx?'#F1D7A2':th.night?'#FFFFFF':'#22407F';c.font='900 12px Nunito,sans-serif';c.fillText('VERSÍCULO '+(vi+1),16,27);
     c.fillStyle=th.hx?'rgba(20,16,10,.82)':'rgba(255,255,255,.9)';rr(c,16,52,GW-32,214,20);c.fill();
-    c.fillStyle=th.hx?'#E2AC55':'#FF9636';c.font='900 13px Nunito,sans-serif';c.textAlign='center';c.fillText(V.ref.toUpperCase()+' · NTV',GW/2,80);
+    c.fillStyle=th.hx?'#E2AC55':'#FF9636';c.font='900 13px Nunito,sans-serif';c.textAlign='center';c.fillText(TT(V.ref).toUpperCase()+' · '+I18N.BV,GW/2,80);
     c.font='700 18px Nunito,sans-serif';const done=built.join(' '),rest=V.parts.slice(built.length).map(s=>s.replace(/[^\s]/g,'_')).join(' ');
     const lines=wrap(c,(done+(done&&rest?' ':'')+rest),GW-64);let y=114;lines.slice(0,6).forEach(l=>{const cut=Math.max(0,Math.min(l.length,done.length-(lines.slice(0,lines.indexOf(l)).join(' ').length+(lines.indexOf(l)?1:0))));
       const a=l.slice(0,cut),b=l.slice(cut),wa=c.measureText(a).width,wb=c.measureText(b).width,x0=GW/2-(wa+wb)/2;c.textAlign='left';c.fillStyle=th.hx?'#FFF1D6':'#22407F';c.fillText(a,x0,y);c.fillStyle=th.hx?'rgba(241,215,162,.35)':'rgba(34,64,127,.28)';c.fillText(b,x0+wa,y);y+=27;});
@@ -2431,7 +2431,7 @@ function mgBtn(c, th, b, hot) { c.fillStyle = hot ? (th.hx ? 'rgba(233,195,122,.
 const mgHit = (b, d) => d && d.x >= b.x && d.x <= b.x + b.w && d.y >= b.y && d.y <= b.y + b.h;
 // I · La carpa entre nosotros: armá la carpa pieza por pieza y se va completando Juan 1:14
 function Tent(th, f) {
-  const V = 'Entonces la Palabra se hizo hombre y vino a vivir entre nosotros.'.split(' '), P = [['Estacas', '📍'], ['Palo del frente', '🪵'], ['Palo de atrás', '🪵'], ['Cumbrera', '➖'], ['La lona', '⛺'], ['Las cuerdas', '🪢'], ['La puerta', '🚪'], ['Una lámpara', '🪔'], ['La alfombra', '🟫'], ['¡A vivir adentro!', '🏠']];
+  const V = TT('Entonces la Palabra se hizo hombre y vino a vivir entre nosotros.').split(' '), P = [['Estacas', '📍'], ['Palo del frente', '🪵'], ['Palo de atrás', '🪵'], ['Cumbrera', '➖'], ['La lona', '⛺'], ['Las cuerdas', '🪢'], ['La puerta', '🚪'], ['Una lámpara', '🪔'], ['La alfombra', '🟫'], ['¡A vivir adentro!', '🏠']];
   let step = 0, score = 0, left = 45 / f, full = left, over = false, fb = '', fT = 0, opts = [];
   const deal = () => { const want = step, pool = shuffle([...Array(P.length).keys()].filter(i => i !== want)).slice(0, 2); opts = shuffle([want, ...pool]).map((i, k) => ({ i, x: 20 + k * 112, y: 410, w: 104, h: 70, t: P[i][1] + ' ' + P[i][0] })); };
   deal();
@@ -2452,7 +2452,7 @@ function Tent(th, f) {
         if (i === 7) sh('#FFD27A', () => c.arc(cx, base - 20, 5 + Math.sin(t * 6), 0, 7)); if (i === 8) sh('#8A3A2A', rect(cx - 60, base - 2, 120, 4));
         if (i === 9) sh('#FFD27A', () => c.arc(cx, base - 140, 6, 0, 7)); c.restore(); };
       for (let i = 0; i < Math.min(step, P.length); i++) piece(i, false); if (step < P.length) piece(step, true);
-      const shown = Math.round(V.length * k); c.fillStyle = MG_CARD(th); rr(c, 16, 46, GW - 32, 86, 14); c.fill(); mgText(c, th, V.slice(0, shown).join(' ') + (shown < V.length ? ' …' : ''), 28, 74, GW - 56, 16); lab(c, th, 'Juan 1:14 · NTV', 28, 122);
+      const shown = Math.round(V.length * k); c.fillStyle = MG_CARD(th); rr(c, 16, 46, GW - 32, 86, 14); c.fill(); mgText(c, th, V.slice(0, shown).join(' ') + (shown < V.length ? ' …' : ''), 28, 74, GW - 56, 16); lab(c, th, TT('Juan 1:14') + ' · ' + I18N.BV, 28, 122);
       lab(c, th, 'La pieza que sigue está punteada en el dibujo', 20, 400); opts.forEach(o => mgBtn(c, th, o)); if (fT > 0) mgText(c, th, fb, GW / 2, 370, 300, 15, 'center'); } };
 }
 // II · Cuatro raíces: Jesús crecía en sabiduría, estatura, el favor de Dios y el de la gente (Lucas 2:52)
@@ -2739,7 +2739,7 @@ resurreccion:[
 /* bancos de preguntas: EXAMS (base) + preguntas de las paradas + app/exams/<hero|kids>/<etapa>.json (opcional, se puede llenar sin tocar código) */
 const EXB={};
 const exId=x=>{const t=(x.t||'')+'|'+(x.q||'')+'|'+((x.parts||[]).join('')||'')+'|'+((x.p||[]).map(v=>v[0]).join(','));let h=0;for(let k=0;k<t.length;k++)h=(h*31+t.charCodeAt(k))>>>0;return x.id||('q'+h.toString(36));};
-function exNorm(x){x=Object.assign({},x);if(x.t==='who')x={t:'mc',q:'¿Quién dijo: «'+x.quote+'»?',o:x.options,a:x.options.indexOf(x.answer),exp:x.exp,ref:x.ref};
+function exNorm(x){x=I18N.verseQ(Object.assign({},x));if(x.t==='who')x={t:'mc',q:'¿Quién dijo: «'+x.quote+'»?',o:x.options,a:x.options.indexOf(x.answer),exp:x.exp,ref:x.ref};
   if(x.t==='mc'&&x.options&&x.o==null){x.o=x.options;x.a=typeof x.answer==='number'?x.answer:x.options.indexOf(x.answer);}
   if(x.t==='tf'&&typeof x.a==='string')x.a=/^(v|true|verdadero|s)/i.test(x.a);x.id=exId(x);return x;}
 const exOk=x=>x&&({mc:x.o&&x.a>=0&&x.a<x.o.length,app:x.o&&x.a>=0&&x.a<x.o.length,tf:typeof x.a==='boolean',match:x.p&&x.p.length>1,verse:x.parts&&x.blanks&&x.bank,order:x.items&&x.items.length>1,reflect:1}[x.t]);

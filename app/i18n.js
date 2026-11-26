@@ -59,7 +59,16 @@ export function t(s, quiet) {
   if (r == null) { if (!quiet && !OUT.has(k)) MISS.add(k); return s; }
   return lead + r + trail;
 }
-window.TSP_T = t; window.TSP_LANG = LANG; window.__i18nMiss = MISS;
+/* versión bíblica de las citas textuales: español NTV; inglés World English Bible (dominio público); portugués Bíblia Livre (licencia abierta) */
+export const BV = { es: 'NTV', en: 'WEB', pt: 'BLIVRE' }[LANG] || 'NTV';
+/* «Completá el versículo»: en otro idioma, el versículo de esa versión con sus propias palabras para completar (i18n/<idioma>.json, clave __verses) */
+export function verseQ(c) {
+  if (LANG === 'es' || !D || !c || !Array.isArray(c.parts)) return c;
+  const k = norm(c.parts.map(x => typeof x === 'number' ? c.blanks[x] : x).join('')), o = (D.get('__verses') || {})[k];
+  if (!o) { MISS.add('verso: ' + k); return c; }
+  return Object.assign({}, c, { parts: o.p, blanks: o.b, bank: o.k });
+}
+window.TSP_T = t; window.TSP_LANG = LANG; window.TSP_BV = BV; window.__i18nMiss = MISS;
 /* palabras de los juegos de letras (sopa, deletrear, adivinar): traducidas, en mayúsculas y sin tildes, para que se puedan armar con las letras */
 export function word(s) { if (LANG === 'es' || !D) return s; const r = t(s); return String(r).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z]/g, ''); }
 
