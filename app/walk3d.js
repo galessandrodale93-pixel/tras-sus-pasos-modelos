@@ -4471,8 +4471,9 @@ async function mpJoin(code) {
    Cada jugador puede reportar (3 reportes de personas distintas lo sacan 30 minutos) o silenciar a alguien. */
 const MUNDO_WS = 'wss://tsp-mundo.galessandrodale-93.workers.dev/mundo', MUNDO_API = 'https://www.habitat-cfm.org/api/kh-mundo';
 const MUNDO_MOT = ['Se comporta mal', 'Molesta o persigue a otros', 'Nombre o aspecto inapropiado', 'Hace trampa'];
-/* abierto: quién entra lo decide el servidor (cuenta, personaje de Hero, nivel 5 y sin suspensión). Para cerrarlo, devolver false. */
-const mundoAbierto = () => true;
+/* cerrado al público por ahora (decisión de Gui): solo el equipo de prueba. Igual, quién entra lo decide el servidor
+   (cuenta, personaje de Hero, nivel 5 y sin suspensión). Para abrirlo a todos, devolver true. */
+const mundoAbierto = () => { try { return localStorage.getItem('tsp:tester') === '1'; } catch (e) { return false; } };
 async function mundoToken() { try { const base = window.TSP_WIX || location.origin + '/js/wix'; const c = await import(base + '/client.js'); return await c.accessToken(); } catch (e) { return ''; } }
 async function mpMundo() {
   if (!S || !S.hx) { G().toast('El multijugador es de Hero.'); return; }
