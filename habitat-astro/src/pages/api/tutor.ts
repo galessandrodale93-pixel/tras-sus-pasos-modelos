@@ -115,7 +115,7 @@ export const POST: APIRoute = async ({ request }) => {
         const est = s(x.estado, 1);
         if (!est) { await rem("TutAsistencia", alu + "|" + f).catch(() => null); return json({ ok: true }); }
         if (!/^[PZVAJ]$/.test(est)) return json({ error: "estado" }, 400);
-        const it = { _id: alu + "|" + f, alumnoId: alu, fecha: f, estado: est, tarde: b(x.tarde), mesa: b(x.mesa), por };
+        const it = { _id: alu + "|" + f, alumnoId: alu, fecha: f, estado: est, tarde: b(x.tarde), temprano: b(x.temprano), mesa: b(x.mesa), por };
         await save("TutAsistencia", it); return json({ ok: true, item: it });
       }
       case "pago": {

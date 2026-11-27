@@ -48,8 +48,8 @@ export const GET: APIRoute = async ({ request }) => {
     for (const t of ts.sort((a, b) => (a.fecha < b.fecha ? 1 : -1))) {
       const modo = modoLista(t.tarea);
       const L = alumnosLista(alumnos, clases as { fecha?: string; programa?: string }[], t.fecha, modo);
-      const asis = (await q("TutAsistencia").eq("fecha", t.fecha).limit(1000).find()).items as { alumnoId: string; estado: string; tarde?: boolean; mesa?: boolean; por?: string }[];
-      const by = Object.fromEntries(asis.map((x) => [x.alumnoId, { estado: x.estado, tarde: !!x.tarde, mesa: !!x.mesa, por: x.por || "" }]));
+      const asis = (await q("TutAsistencia").eq("fecha", t.fecha).limit(1000).find()).items as { alumnoId: string; estado: string; tarde?: boolean; temprano?: boolean; mesa?: boolean; por?: string }[];
+      const by = Object.fromEntries(asis.map((x) => [x.alumnoId, { estado: x.estado, tarde: !!x.tarde, temprano: !!x.temprano, mesa: !!x.mesa, por: x.por || "" }]));
       out.push({ fecha: t.fecha, tarea: t.tarea, modo, alumnos: L, marcas: by });
     }
     return json({ clases: out });
@@ -81,7 +81,7 @@ export const POST: APIRoute = async ({ request }) => {
     const _id = alu + "|" + f;
     if (!est) { await rem("TutAsistencia", _id).catch(() => null); return json({ ok: true }); }
     const vino = est === "P" || est === "Z";
-    const it = { _id, alumnoId: alu, fecha: f, estado: est, tarde: vino && (x.tarde === true), mesa: vino && (x.mesa === true), por: (v.title || "Voluntario") + " (" + t.tarea + ")" };
+    const it = { _id, alumnoId: alu, fecha: f, estado: est, tarde: vino && (x.tarde === true), temprano: vino && (x.temprano === true), mesa: vino && (x.mesa === true), por: (v.title || "Voluntario") + " (" + t.tarea + ")" };
     await save("TutAsistencia", it);
     return json({ ok: true, item: it });
   } catch (e) {

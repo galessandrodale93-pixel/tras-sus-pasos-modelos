@@ -92,7 +92,7 @@ body.tutor{background:var(--paper)}
 .tt-tile.A .st{background:var(--r);color:#fff}
 .tt-tile.J{border-color:var(--y);background:var(--yb)}
 .tt-tile.J .st{background:var(--y);color:#fff}
-.tt-tile .tg{display:flex;gap:6px}
+.tt-tile .tg{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .tt-tile .tg button{font:600 .72rem var(--sans);border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 9px;cursor:pointer;color:var(--muted)}
 .tt-tile .tg button.on{background:var(--ink);color:var(--cream);border-color:var(--ink)}
 .tt-tile .tg button:disabled{opacity:.35;cursor:default}

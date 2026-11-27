@@ -84,6 +84,7 @@
       if (L.length >= 2 && L[0].estado === 'A' && L[1].estado === 'A') why.push(['r', 'Faltó las últimas ' + (L.length >= 3 && L[2].estado === 'A' ? 3 : 2) + ' clases']);
       else if (ab >= 2) why.push(['y', 'Faltó ' + ab + ' de las últimas ' + L.length]);
       if (L.filter(function (x) { return x.tarde; }).length >= 2) why.push(['y', 'Llega tarde']);
+      if (L.filter(function (x) { return x.temprano; }).length >= 2) why.push(['y', 'Se va temprano']);
     }
     var dr = (D.debiRech || {})[a._id]; if (dr) why.push(['r', 'Debi rechazó su débito' + (dr.veces > 1 ? ' (' + dr.veces + ' veces)' : '')]);
     progs(a).forEach(function (p) { var d = IX.med[p] - nEv(a, p); if (d >= 2) why.push(['r', 'Atrasado en exámenes de ' + p]); else if (d === 1) why.push(['y', 'Le falta un examen de ' + p]); });
@@ -167,7 +168,7 @@
   var LF = { car: '', mod: '' }, CYC = ['P', 'Z', 'A', 'J', ''], STN = { P: 'Presente', Z: 'Zoom', A: 'Ausente', J: 'Justificó', '': 'Sin marcar' };
   function listaAl() { return activos().filter(function (a) { return !async_(a) && (!LF.car || progs(a).indexOf(LF.car) >= 0) && (!LF.mod || a.modalidad === LF.mod) && (!F.par || a.tutores === F.par); }).sort(function (x, y) { return (x.title || '').localeCompare(y.title || ''); }); }
   function renderLista() {
-    var puede = !!ME.lista; $('#lAll').hidden = !puede; $('#lTip').textContent = puede ? 'Tocá a cada alumno para marcar cómo vino. Cada toque pasa al estado siguiente: presente, Zoom, ausente, justificó. Si vino, abajo podés marcar si llegó tarde o si se quedó al tiempo de mesa. Se guarda solo.' : 'La lista la pasa quien tiene ese permiso (Raquel). Acá ves cómo quedó cada clase.';
+    var puede = !!ME.lista; $('#lAll').hidden = !puede; $('#lTip').textContent = puede ? 'Tocá a cada alumno para marcar cómo vino. Cada toque pasa al estado siguiente: presente, Zoom, ausente, justificó. Si vino, abajo podés marcar si llegó tarde, si se fue temprano o si se quedó al tiempo de mesa. Se guarda solo.' : 'La lista la pasa quien tiene ese permiso (Raquel). Acá ves cómo quedó cada clase.';
     var f = $('#lDate').value, L = listaAl(), by = {}; D.asistencia.forEach(function (x) { if (x.fecha === f) by[x.alumnoId] = x; });
     var pill = function (k, v, t) { return '<button class="tt-pill' + (LF[k] === v ? ' on' : '') + '" data-k="' + k + '" data-v="' + v + '">' + t + '</button>'; };
     $('#lPills').innerHTML = pill('car', '', 'Todas') + ['Maranata', 'Liderazgo', 'Adoración'].map(function (c) { return pill('car', c, c); }).join('') + '<span class="tt-sep"></span>' + pill('mod', '', 'Presencial y Zoom') + pill('mod', 'Presencial', 'Presencial') + pill('mod', 'Zoom', 'Zoom') + '<span class="tt-sep"></span>' + pairPills();
@@ -177,15 +178,16 @@
     $('#lBar').style.width = (L.length ? 100 * dn / L.length : 0) + '%'; $('#lCnt').textContent = dn + ' de ' + L.length + ' marcados';
     $('#ttRoll').innerHTML = L.map(function (a) {
       var x = by[a._id] || {}, e = x.estado || '', on = e === 'P' || e === 'Z';
-      return '<div class="tt-tile ' + e + '" role="button" tabindex="0" data-id="' + esc(a._id) + '">' + av(a.title) + '<b>' + esc(a.title) + '</b><span class="st">' + STN[e] + '</span><span class="tg"><button type="button" data-k="tarde" title="Llegó tarde"' + (x.tarde ? ' class="on"' : '') + (on ? '' : ' disabled') + '>⏰ Llegó tarde</button><button type="button" data-k="mesa" title="Se quedó al tiempo de mesa"' + (x.mesa ? ' class="on"' : '') + (on ? '' : ' disabled') + '>🍽️ Se quedó a la mesa</button></span></div>';
+      return '<div class="tt-tile ' + e + '" role="button" tabindex="0" data-id="' + esc(a._id) + '">' + av(a.title) + '<b>' + esc(a.title) + '</b><span class="st">' + STN[e] + '</span><span class="tg"><button type="button" data-k="tarde" title="Llegó tarde"' + (x.tarde ? ' class="on"' : '') + (on ? '' : ' disabled') + '>⏰ Llegó tarde</button><button type="button" data-k="temprano" title="Se fue temprano"' + (x.temprano ? ' class="on"' : '') + (on ? '' : ' disabled') + '>🚪 Se fue temprano</button><button type="button" data-k="mesa" title="Se quedó al tiempo de mesa"' + (x.mesa ? ' class="on"' : '') + (on ? '' : ' disabled') + '>🍽️ Se quedó a la mesa</button></span></div>';
     }).join('') || '<p class="tt-empty">No hay alumnos para esta clase con estos filtros.</p>';
     $$('#ttRoll .tt-tile').forEach(function (t) {
       var id = t.dataset.id, cur = function () { return by[id] || {}; };
       var put = function (o) {
-        var x = Object.assign({ estado: cur().estado || '', tarde: !!cur().tarde, mesa: !!cur().mesa }, o);
-        if (x.estado !== 'P' && x.estado !== 'Z') { x.tarde = false; x.mesa = false; }
+        var x = Object.assign({ estado: cur().estado || '', tarde: !!cur().tarde, temprano: !!cur().temprano, mesa: !!cur().mesa }, o);
+        if (o.temprano) x.mesa = false; if (o.mesa) x.temprano = false;
+        if (x.estado !== 'P' && x.estado !== 'Z') { x.tarde = false; x.temprano = false; x.mesa = false; }
         by[id] = Object.assign({}, cur(), x); paint(t, by[id]);
-        send({ op: 'asis', alumnoId: id, fecha: f, estado: x.estado, tarde: x.tarde, mesa: x.mesa }, id + '|' + f, 'asistencia').then(function () { var d2 = L.filter(function (a) { return by[a._id] && by[a._id].estado; }).length; $('#lBar').style.width = (100 * d2 / L.length) + '%'; $('#lCnt').textContent = d2 + ' de ' + L.length + ' marcados'; }).catch(renderLista);
+        send({ op: 'asis', alumnoId: id, fecha: f, estado: x.estado, tarde: x.tarde, temprano: x.temprano, mesa: x.mesa }, id + '|' + f, 'asistencia').then(function () { var d2 = L.filter(function (a) { return by[a._id] && by[a._id].estado; }).length; $('#lBar').style.width = (100 * d2 / L.length) + '%'; $('#lCnt').textContent = d2 + ' de ' + L.length + ' marcados'; }).catch(renderLista);
       };
       var a = IX.alu[id];
       var next = function () { var e = cur().estado || ''; var n = CYC[(CYC.indexOf(e) + 1) % CYC.length]; if (n === 'P' && a && a.modalidad === 'Zoom') n = 'Z'; else if (n === 'Z' && a && a.modalidad === 'Zoom' && e === 'Z') n = 'A'; put({ estado: n }); };
@@ -200,7 +202,7 @@
     var f = $('#lDate').value, by = {}; D.asistencia.forEach(function (x) { if (x.fecha === f) by[x.alumnoId] = x; });
     var L = listaAl().filter(function (a) { return !by[a._id]; });
     if (!L.length) { toast('Todos tienen un estado marcado.'); return; }
-    Promise.all(L.map(function (a) { return send({ op: 'asis', alumnoId: a._id, fecha: f, estado: a.modalidad === 'Zoom' ? 'Z' : 'P', tarde: false, mesa: false }, a._id + '|' + f, 'asistencia'); })).then(function () { renderLista(); toast('Marcados ' + L.length + ' presentes. Ajustá a los que faltaron.'); });
+    Promise.all(L.map(function (a) { return send({ op: 'asis', alumnoId: a._id, fecha: f, estado: a.modalidad === 'Zoom' ? 'Z' : 'P', tarde: false, temprano: false, mesa: false }, a._id + '|' + f, 'asistencia'); })).then(function () { renderLista(); toast('Marcados ' + L.length + ' presentes. Ajustá a los que faltaron.'); });
   };
 
   /* Tiempo de mesa */
@@ -219,7 +221,7 @@
   $('#mesaF').onsubmit = function (e) {
     e.preventDefault(); var f = e.target, ids = Object.keys(MESA_SEL);
     send({ op: 'mesa', fecha: f.fecha.value, programa: f.programa.value, tutor: f.tutor.value, asistentes: ids.join(','), temas: f.temas.value, observaciones: f.observaciones.value }, null, 'mesa').then(function () {
-      ids.forEach(function (id) { var x = D.asistencia.filter(function (z) { return z.alumnoId === id && z.fecha === f.fecha.value; })[0]; if (x && x.estado !== 'A' && !x.mesa) send({ op: 'asis', alumnoId: id, fecha: x.fecha, estado: x.estado, tarde: !!x.tarde, mesa: true }, id + '|' + x.fecha, 'asistencia'); });
+      ids.forEach(function (id) { var x = D.asistencia.filter(function (z) { return z.alumnoId === id && z.fecha === f.fecha.value; })[0]; if (x && x.estado !== 'A' && !x.mesa) send({ op: 'asis', alumnoId: id, fecha: x.fecha, estado: x.estado, tarde: !!x.tarde, temprano: false, mesa: true }, id + '|' + x.fecha, 'asistencia'); });
       f.temas.value = ''; f.observaciones.value = ''; MESA_SEL = {}; toast('Tiempo de mesa guardado. ¡Gracias!'); renderMesa();
     });
   };
@@ -461,7 +463,7 @@
     }
     if (FT === 'asis') {
       var as = IX.asis[id] || [];
-      box.innerHTML = async_(a) ? '<p class="tt-tip">Cursa en modalidad asincrónica: su avance se ve en el Campus.</p>' : '<p class="tt-tip">' + (as.length ? as.filter(function (x) { return x.estado !== 'A'; }).length + ' de ' + as.length + ' clases · llegó tarde ' + as.filter(function (x) { return x.tarde; }).length + ' veces · se quedó a la mesa ' + as.filter(function (x) { return x.mesa; }).length + ' veces' : 'Sin clases registradas.') + '</p><div class="tt-grid">' + as.map(function (x) { return '<button type="button" disabled class="' + (x.estado === 'A' ? 'no' : x.estado === 'J' ? '' : 'ok') + '">' + fcorta(x.fecha) + '<small>' + STN[x.estado] + (x.tarde ? ' · tarde' : '') + (x.mesa ? ' · mesa' : '') + '</small></button>'; }).join('') + '</div>';
+      box.innerHTML = async_(a) ? '<p class="tt-tip">Cursa en modalidad asincrónica: su avance se ve en el Campus.</p>' : '<p class="tt-tip">' + (as.length ? as.filter(function (x) { return x.estado !== 'A'; }).length + ' de ' + as.length + ' clases · llegó tarde ' + as.filter(function (x) { return x.tarde; }).length + ' veces · se fue temprano ' + as.filter(function (x) { return x.temprano; }).length + ' veces · se quedó a la mesa ' + as.filter(function (x) { return x.mesa; }).length + ' veces' : 'Sin clases registradas.') + '</p><div class="tt-grid">' + as.map(function (x) { return '<button type="button" disabled class="' + (x.estado === 'A' ? 'no' : x.estado === 'J' ? '' : 'ok') + '">' + fcorta(x.fecha) + '<small>' + STN[x.estado] + (x.tarde ? ' · tarde' : '') + (x.temprano ? ' · se fue temprano' : '') + (x.mesa ? ' · mesa' : '') + '</small></button>'; }).join('') + '</div>';
     }
     if (FT === 'ex') {
       box.innerHTML = progs(a).map(function (pg) { var e = IX.ev[id] || {}, nn = IX.nota[id] || {}; return '<h3 class="tt-lbl">' + pg + '</h3><div class="tt-grid" data-pg="' + pg + '">' + PROG[pg].map(function (it) { var k = pg + '|' + it, x = nn[k]; return '<button type="button" data-it="' + it + '" class="' + (e[k] ? 'ok' : x ? 'no' : '') + '">' + it.replace('Módulo', 'Mód.').replace('Bloque', 'Bl.') + '<small>' + (x && x.nota != null ? 'nota ' + x.nota : e[k] ? 'hecho' : x ? 'recupera' : '—') + '</small></button>'; }).join('') + '</div>' + PROG[pg].filter(function (it) { return nn[pg + '|' + it] && nn[pg + '|' + it].archivo; }).map(function (it) { return '<a class="tt-file" target="_blank" rel="noopener" href="' + esc(nn[pg + '|' + it].archivo) + '">📄 Ver PDF del ' + it + '</a>'; }).join(' '); }).join('') + '<p class="tt-tip">Las notas de Tally llegan solas. En rojo: rindió con menos de 60 y vuelve a rendir. Tocá un casillero para marcarlo a mano.</p>';
