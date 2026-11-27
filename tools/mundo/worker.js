@@ -69,7 +69,7 @@ export default {
       if (limited(ip, 'tribu', 30, 60000)) return new Response('Demasiados pedidos', { status: 429, headers: CORS });
       let x = {}; try { x = JSON.parse((await req.text()).slice(0, 3000)); } catch (e) { }
       const pase = await abrir(x.pase || ''); if (!pase) return new Response(JSON.stringify({ error: 'pase' }), { status: 401, headers: CORS });
-      const r = x.t ? await TR().fetch('https://t/unirse', { method: 'POST', body: JSON.stringify({ m: pase.m, t: String(x.t) }) }) : await TR().fetch('https://t/de?m=' + encodeURIComponent(pase.m));
+      const r = x.t ? await TR().fetch('https://t/unirse', { method: 'POST', body: JSON.stringify({ m: pase.p, t: String(x.t) }) }) : await TR().fetch('https://t/de?m=' + encodeURIComponent(pase.p)); /* la tribu es del personaje: lo acompaña en todos los cursos */
       return new Response(r.body, { status: r.status, headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
     if (p === '/mundo') {
@@ -141,7 +141,7 @@ export class Mundo {
     const a = this.att(ws), id = a.id; if (!id) return;
     if (m.t === 'hi') {
       if (a.in) return; const i = m.info && typeof m.info === 'object' ? m.info : {};
-      const tr = await this.tribuDe(a.m);
+      const tr = await this.tribuDe(a.p);
       a.info = { name: a.n, avatar: avatarOk(i.avatar), branch: 'ados', hum: Math.floor(num(i.hum, 0, 999)), pid: a.p, tribu: tr.t || '', tlv: tr.lv || 0 }; a.tribu = tr.t || ''; a.in = true; ws.serializeAttachment(a);
       const players = this.socks().filter(w => w !== ws).map(w => this.att(w)).filter(b => b.in).map(b => ({ id: b.id, info: b.info }));
       this.env(ws, { t: 'list', host: 'srv', players, mundo: a.mundo });
@@ -163,7 +163,7 @@ export class Mundo {
     if (m.t === 'leg') { const g = str(m.g, 24); if (g) this.a_todos({ t: 'leg', id, g }, ws); return; }
     if (m.t === 'look') { const av = avatarOk(m.avatar); a.info.avatar = av; ws.serializeAttachment(a); this.a_todos({ t: 'look', id, avatar: av }, ws); return; }
     if (m.t === 'tribuSet') { /* eligió o cambió de tribu: se vuelve a leer y se avisa a todos */
-      this.trCache = null; const tr = await this.tribuDe(a.m, true); a.tribu = tr.t || ''; a.info.tribu = a.tribu; a.info.tlv = tr.lv || 0; ws.serializeAttachment(a);
+      this.trCache = null; const tr = await this.tribuDe(a.p, true); a.tribu = tr.t || ''; a.info.tribu = a.tribu; a.info.tlv = tr.lv || 0; ws.serializeAttachment(a);
       const o = { t: 'tribu', id, tribu: a.tribu, tlv: a.info.tlv }; this.env(ws, o); this.a_todos(o, ws); return;
     }
     /* ---- amigos con voz: solo entre amigos del camino (los que se aceptaron en una sala) ---- */

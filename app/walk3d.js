@@ -4461,7 +4461,7 @@ function mpClean(m, c, cap) {
   if (m.t === 'x') { if (typeof m.k !== 'string') return null; if ('give' in m) m.give = resOk(m.give); if ('want' in m) m.want = resOk(m.want); if ('by' in m) m.by = strOk(m.by, 16); if ('name' in m) m.name = strOk(m.name, 40); if ('label' in m) m.label = strOk(m.label, 60); if ('x' in m) m.x = numOk(m.x, -5e3, 5e3); if ('z' in m) m.z = numOk(m.z, -5e3, 5e3); }
   return m;
 }
-const meInfo = () => { const p = G().P(); return { name: (p.name || 'Invitado').slice(0, 16), avatar: lookOf(p), branch: G().branch, hum: (p.attr && p.attr.hum) || 0, pid: (amId() || {}).perfil || '' }; };
+const meInfo = () => { const p = G().P(); return { name: (p.name || 'Invitado').slice(0, 16), avatar: lookOf(p), branch: G().branch, hum: (p.attr && p.attr.hum) || 0, pid: (amId() || {}).perfil || '', tribu: S && S.hx && mundoAbierto() && TRIBU[p.tribu] ? p.tribu : '', tlv: p.tribuLv || 0 }; };
 const roomLink = () => location.origin + location.pathname + '#sala-' + (G().branch === 'ados' ? 'hero' : 'kids') + '-' + MP.code;
 function mpSend(msg, except) { const d = msg; if (MP.host) { for (const id in MP.conns) if (id !== except && MP.conns[id].open) MP.conns[id].send(d); } else if (MP.conn && MP.conn.open) MP.conn.send(d); }
 async function mpCreate() {
@@ -4594,7 +4594,8 @@ function tribuInsignia(av, t, lv) {
   pieza(.1, 1.36, .2, 0); pieza(.14, 1.4, -.2, Math.PI);
   av.add(g);
 }
-function tribuAuraYo() { if (!S || !S.av) return; tribuInsignia(S.av, MP.mundo ? MP.tribu : '', MP.tribuLv || 0); }
+/* la insignia de tu tribu va con tu personaje a todos lados: tu mundo, las salas, el multijugador y los próximos cursos */
+function tribuAuraYo() { if (!S || !S.av || !S.hx) return; const p = G().P(), t = MP.mundo ? MP.tribu : (mundoAbierto() && TRIBU[p.tribu] ? p.tribu : ''); if (t && p.tribu !== t) { p.tribu = t; G().save(); } tribuInsignia(S.av, t, MP.mundo ? MP.tribuLv || 0 : p.tribuLv || 0); }
 /* el pase de Habitat (cuenta + personaje de Hero + nivel + sin suspensión) */
 async function mundoPase(avisar) {
   const id = amId(); if (!id) { if (avisar) G().toast('Para entrar al multijugador hace falta iniciar sesión con tu cuenta.'); return { error: 'cuenta' }; }
@@ -4602,7 +4603,7 @@ async function mundoPase(avisar) {
 }
 async function tribuMia() { const j = await mundoPase(); if (!j.pase) return ''; try { const r = await (await fetch(MUNDO_HTTP + '/tribu', { method: 'POST', body: JSON.stringify({ pase: j.pase }) })).json(); MP.tribuLv = r.lv || 0; const p = G().P(); if (r.t && p.tribu !== r.t) { p.tribu = r.t; G().save(); } return TRIBU[r.t] ? r.t : ''; } catch (e) { return ''; } }
 function tribuJuntos(m) {
-  const T0 = TRIBU[MP.tribu]; if (!T0) return; MP.tribuLv = Math.floor(numOk(m.tlv, 0, 9)); tribuAuraYo();
+  const T0 = TRIBU[MP.tribu]; if (!T0) return; MP.tribuLv = Math.floor(numOk(m.tlv, 0, 9)); G().P().tribuLv = MP.tribuLv; tribuAuraYo();
   misPop((m.k === 'ora' ? '🙏 ¡Oraron juntos!' : '🎉 ¡Festejaron juntos!'), m.n + ' de ' + T0.n + ' juntos: la tribu suma ' + Math.floor(numOk(m.pts, 0, 9999)) + ' de Resplandor.');
   if (Array.isArray(m.logros) && m.logros.length) setTimeout(() => tribuLogro(m.logros), 2600);
 }
@@ -4817,7 +4818,7 @@ function talkOpen(on) { TALK.open = !!on; if (on) talkStart(); else talkStop(); 
 function mpLeave(silent) {
   talkEnd();
   try { for (const id in MP.conns) MP.conns[id].close(); if (MP.conn) MP.conn.close(); if (MP.peer) MP.peer.destroy(); } catch (e) {}
-  for (const id in MP.players) mpDel(id); MP.peer = null; MP.conn = null; MP.conns = {}; MP.code = null; MP.host = false; MP.hostId = null; if (MP.mundo) vozFin(); MP.mundo = 0; MP.mute = {}; MP.tribu = ''; MP.tribuTip = 0; tribuAuraYo(); obraVolver(); if (!silent) mpUI();
+  for (const id in MP.players) mpDel(id); MP.peer = null; MP.conn = null; MP.conns = {}; MP.code = null; MP.host = false; MP.hostId = null; if (MP.mundo) vozFin(); MP.mundo = 0; MP.mute = {}; MP.tribu = ''; MP.tribuTip = 0; try { tribuAuraYo(); } catch (e) {} obraVolver(); if (!silent) mpUI();
 }
 function mpAdd(id, info) {
   if (!S || MP.players[id]) return; const hx = S.hx, rig = hx || H3.ok, av = rig ? buildHeroAvatar(info.avatar || {}) : buildAvatar(info.avatar || {}, false); av.traverse(o => { if (o.isPointLight) o.intensity = 2; if (o.isMesh && rig) o.castShadow = true; });
@@ -5452,7 +5453,7 @@ function dressKid(d, P) {
 function reLook() {
   if (!S) return; const p = G().P(), look = lookOf(p), old = S.av, rig = S.hx || H3.ok, av = rig ? buildHeroAvatar(look) : buildAvatar(look, S.hx); if (rig) av.traverse(o => { if (o.isMesh) o.castShadow = true; });
   av.position.copy(old.position); av.rotation.copy(old.rotation); if (S.carry) av.add(S.carry); if (S.meP) { S.meP.av = av; if (S.meP.bubble) av.add(S.meP.bubble); }
-  S.scene.remove(old); S.scene.add(av); S.av = av; if (MP.code) mpSend({ t: 'look', id: MP.peer && MP.peer.id, avatar: look });
+  S.scene.remove(old); S.scene.add(av); S.av = av; if (MP.code) mpSend({ t: 'look', id: MP.peer && MP.peer.id, avatar: look }); try { tribuAuraYo(); } catch (e) {}
 }
 // fardo brillante que aparece muy de vez en cuando
 function gearDropTick(dt, t) {
@@ -8984,7 +8985,7 @@ async function show3d(on) {
   const g = G(), key = g.branch + '|' + g.P().id + '|' + JSON.stringify(g.P().avatar);
   if (!THREE) { if (!loading) loading = import(THREE_URL); try { THREE = await loading; } catch (e) { loading = null; v3fail('Revisá la conexión a internet y volvé a intentar.'); return; } }
   r2hooks(); let LBU = null; if (builtFor !== key || !S) { if (!window.__noLobby && !/[?&]lobby=0/.test(location.search)) { try { LBU = await lobby(); } catch (e) { console.warn('lobby', e); } } if (S) { S.renderer.dispose(); S = null; } builtFor = key; BSTEP.u = LBU; BSTEP.log = [];
-    let ok = false; try { await withTO(build(), 120000, 'armado'); ok = true; } catch (e) { builtFor = null; buildFail(LBU, e); if (!LBU) v3fail('Probá de nuevo. Si sigue pasando, elegí la calidad Baja en el menú.'); return; } finally { BSTEP.u = null; if (LBU && ok) { LBU.close(); try { modoAplicar(); } catch (e) {} } } if (ok) setTimeout(r2summary, 6000); }
+    let ok = false; try { await withTO(build(), 120000, 'armado'); ok = true; } catch (e) { builtFor = null; buildFail(LBU, e); if (!LBU) v3fail('Probá de nuevo. Si sigue pasando, elegí la calidad Baja en el menú.'); return; } finally { BSTEP.u = null; if (ok) try { tribuAuraYo(); } catch (e) {} if (LBU && ok) { LBU.close(); try { modoAplicar(); } catch (e) {} } } if (ok) setTimeout(r2summary, 6000); }
   else { const n = g.NODES[g.P().pos], [x, z] = (S.npos && S.npos[n.id]) || toV(n.x, n.y); S.av.position.set(x, 0, z); S.sig = ''; S.onStop = g.P().pos; S.quiet = false; }
   resize(); refresh(); bagBtn(); try { fanInit(); miniInit(); bagHud(); } catch (e) { console.warn('hud', e); } setTimeout(fullHint, 1500); setTimeout(iosHint, 1800); setTimeout(fidDaily, 5000); document.body.classList.remove('v3boot');
 }
