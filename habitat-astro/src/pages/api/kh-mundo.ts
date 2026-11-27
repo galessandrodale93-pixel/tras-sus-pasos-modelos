@@ -118,7 +118,10 @@ export const POST: APIRoute = async ({ request }) => {
       const j = await uno("KhJugadores", perfil), nivel = Number((j && j.nivel) || 0), tester = !!(j && j.tester);
       if (!tester && nivel < NIVEL_MIN) return json({ error: "nivel", min: NIVEL_MIN, nivel, msg: "El multijugador se abre en el nivel " + NIVEL_MIN + ". ¡Seguí jugando en tu mundo y volvé!" }, 403);
       const nombre = s(pf.apodo, 16) || "Jugador";
-      const pase = await firmar({ m: yo.id, p: perfil, n: nombre, lv: nivel, t: tester ? 1 : 0, exp: Date.now() + 15 * 60e3 });
+      /* amigos del camino (los dos se aceptaron jugando juntos en una sala): solo con ellos hay voz en el multijugador */
+      const [ra, rb] = await Promise.all([q("KhAmigos").eq("a", perfil).limit(60).find(), q("KhAmigos").eq("b", perfil).limit(60).find()]);
+      const amigos = [...ra.items, ...rb.items].filter((it: any) => it.aOk && it.bOk).map((it: any) => (it.a === perfil ? it.b : it.a)).filter((id: string) => ID.test(id)).slice(0, 40);
+      const pase = await firmar({ m: yo.id, p: perfil, n: nombre, lv: nivel, t: tester ? 1 : 0, a: amigos, exp: Date.now() + 15 * 60e3 });
       return json({ pase, nombre, motivos: MOTIVOS });
     }
 

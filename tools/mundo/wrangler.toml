@@ -12,6 +12,10 @@ class_name = "Mundo"
 name = "TRIBUS"
 class_name = "Tribus"
 
+[[durable_objects.bindings]]
+name = "AMIGOS"
+class_name = "Amigos"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Mundo"]
@@ -19,3 +23,7 @@ new_sqlite_classes = ["Mundo"]
 [[migrations]]
 tag = "v2"
 new_sqlite_classes = ["Tribus"]
+
+[[migrations]]
+tag = "v3"
+new_sqlite_classes = ["Amigos"]

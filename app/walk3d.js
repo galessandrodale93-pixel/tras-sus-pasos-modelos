@@ -4438,7 +4438,7 @@ async function mpCreate() {
       m = mpClean(m, c); if (!m) return;
       if (m.t === 'hi') { if (m.info.branch !== G().branch) { c.send({ t: 'branch', b: G().branch }); setTimeout(() => c.close(), 300); return; } if (Object.keys(MP.conns).length >= 4) return; MP.conns[c.peer] = c;
         c.send({ t: 'list', host: MP.peer.id, players: [{ id: MP.peer.id, info: meInfo() }].concat(Object.entries(MP.players).map(([id, p]) => ({ id, info: p.info }))) });
-        mpAdd(c.peer, m.info); mpSend({ t: 'hi', id: c.peer, info: m.info }, c.peer); G().toast(m.info.name + ' entró a la sala.'); mpUI(); setTimeout(() => obraEnviar(c.peer), 500); return; }
+        mpAdd(c.peer, m.info); mpSend({ t: 'hi', id: c.peer, info: m.info }, c.peer); G().toast(m.info.name + ' entró a la sala.'); mpUI(); setTimeout(() => obraEnviar(c.peer), 500); amSugerir(c.peer); return; }
       if (m.t === 'st' || m.t === 'say' || m.t === 'talk' || m.t === 'look' || m.t === 'leg') { m.id = c.peer; mpOn(m); mpSend(m, c.peer); }
       if (m.t === 'x') xRelay(c, m);
     });
@@ -4456,8 +4456,8 @@ async function mpJoin(code) {
     c.on('data', m => { m = mpClean(m, c); if (!m) return; ok = true; clearTimeout(to);
       if (m.t === 'full') { G().toast('La sala ya tiene 5 personas.'); mpLeave(); return; }
       if (m.t === 'branch') { G().toast(m.b === 'ados' ? 'Esa sala es de Hero. Entrá con tu perfil de Hero.' : 'Esa sala es de Kids. Entrá con tu perfil de Kids.'); mpLeave(); return; }
-      if (m.t === 'list') { MP.hostId = ID_OK(m.host) ? m.host : null; m.players.forEach(p => { if (p.id !== MP.peer.id) mpAdd(p.id, p.info); }); G().toast('¡Entraste a la sala ' + code + '!'); mpUI(); return; }
-      if (m.t === 'hi') { mpAdd(m.id, m.info); G().toast(m.info.name + ' entró a la sala.'); mpUI(); return; }
+      if (m.t === 'list') { MP.hostId = ID_OK(m.host) ? m.host : null; m.players.forEach(p => { if (p.id !== MP.peer.id) { mpAdd(p.id, p.info); amSugerir(p.id); } }); G().toast('¡Entraste a la sala ' + code + '!'); mpUI(); return; }
+      if (m.t === 'hi') { mpAdd(m.id, m.info); G().toast(m.info.name + ' entró a la sala.'); mpUI(); amSugerir(m.id); return; }
       if (m.t === 'bye') { const n = MP.players[m.id] && MP.players[m.id].info.name; mpDel(m.id); if (n) G().toast(n + ' salió de la sala.'); mpUI(); return; }
       if (m.t === 'x') { mpX(m); return; }
       mpOn(m); });
@@ -4489,11 +4489,12 @@ async function mpMundo() {
   ws.onmessage = ev => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
     if (m.t === 'pase') { MP.peer.id = ID_OK(m.id) ? m.id : ''; MP.mundo = Math.floor(numOk(m.mundo, 1, 99)) || 1; MP.ultMundo = MP.mundo; conn.open = true; conn.send({ t: 'hi', info: meInfo() }); return; }
     if (m.t === 'fuera') { MP.fuera = m.por; return; }
+    if (m.t === 'amigos' || m.t === 'llamar' || m.t === 'colgar' || m.t === 'no' || m.t === 'convInv' || m.t === 'convLista' || m.t === 'convSale') { vozMsg(m); return; }
     if (m.t === 'juntos') { tribuJuntos(m); return; }
     if (m.t === 'logro') { if (m.tribu && m.tribu === MP.tribu && Array.isArray(m.logros)) tribuLogro(m.logros); return; }
     if (m.t === 'tribu') { if (m.id === MP.peer.id) { MP.tribu = TRIBU[m.tribu] ? m.tribu : ''; tribuAuraYo(); } else { const p = MP.players[m.id]; if (p && TRIBU[m.tribu]) { const info = { ...p.info, tribu: m.tribu, tlv: Math.floor(numOk(m.tlv, 0, 9)) }; const pos = p.av.position.clone(); mpDel(m.id); mpAdd(m.id, info); MP.players[m.id].av.position.copy(pos); } } return; }
     m = mpClean(m, null, m.t === 'list' ? 400000 : 12000); if (!m) return; /* el servidor ya revisa y limita; acá se vuelve a revisar todo */
-    if (m.t === 'list') { dentro = true; m.players.forEach(p => { if (p.id !== MP.peer.id) mpAdd(p.id, p.info); }); tribuMia().then(t => { MP.tribu = t || ''; tribuAuraYo(); if (!G().P().mundoIntro) mundoIntro(); else if (!t) tribuElegir(); }); if (G().P().mundoIntro) misPop('🌍 Multijugador · Mundo ' + MP.mundo, 'Estás con jugadores de Hero de todos lados. Saludá con las frases rápidas desde 👥. Acá no se construye: tu casa te espera en tu mundo. Si alguien se porta mal, podés reportarlo o silenciarlo.'); mpUI(); return; }
+    if (m.t === 'list') { dentro = true; vozIniciar(); m.players.forEach(p => { if (p.id !== MP.peer.id) mpAdd(p.id, p.info); }); tribuMia().then(t => { MP.tribu = t || ''; tribuAuraYo(); if (!G().P().mundoIntro) mundoIntro(); else if (!t) tribuElegir(); }); if (G().P().mundoIntro) misPop('🌍 Multijugador · Mundo ' + MP.mundo, 'Estás con jugadores de Hero de todos lados. Saludá con las frases rápidas desde 👥. Acá no se construye: tu casa te espera en tu mundo. Si alguien se porta mal, podés reportarlo o silenciarlo.'); mpUI(); return; }
     if (m.t === 'hi') { mpAdd(m.id, m.info); mpUI(); return; }
     if (m.t === 'bye') { mpDel(m.id); mpUI(); return; }
     if (m.t === 'st' || m.t === 'say' || m.t === 'look' || m.t === 'leg') mpOn(m); };
@@ -4509,19 +4510,22 @@ async function mpMundo() {
    brillar a la tribu: el Resplandor de la tribu sube de nivel con los puntos, y hay logros que se ven en la mochila.
    El servidor cuenta todo (orar juntos, festejar juntos, miembros); el juego solo lo muestra. */
 const TRIBU = {
-  ruben: { n: 'Rubén', e: '🌊', c: '#3C7FB8', l: 'El primero: fuerte como el agua.' },
-  simeon: { n: 'Simeón', e: '🏰', c: '#8A6A44', l: 'Firmes como una muralla.' },
-  levi: { n: 'Leví', e: '🕎', c: '#C9A23A', l: 'Los que sirven en la casa de Dios.' },
-  juda: { n: 'Judá', e: '🦁', c: '#C0392B', l: 'El león: de su tribu viene Jesús.' },
-  zabulon: { n: 'Zabulón', e: '⛵', c: '#2A8C8C', l: 'Gente del mar y de los puertos.' },
-  isacar: { n: 'Isacar', e: '🫏', c: '#7A6A5A', l: 'Trabajadores que entienden los tiempos.' },
-  dan: { n: 'Dan', e: '⚖️', c: '#5A4E9A', l: 'Los que juzgan con justicia.' },
-  gad: { n: 'Gad', e: '⛺', c: '#4E7A3A', l: 'Valientes del campamento.' },
-  aser: { n: 'Aser', e: '🫒', c: '#7A8C2A', l: 'Pan rico y aceite de oliva.' },
-  neftali: { n: 'Neftalí', e: '🦌', c: '#B8763A', l: 'Ágiles como la cierva, con palabras lindas.' },
-  jose: { n: 'José', e: '🌾', c: '#D49A2A', l: 'Rama que da fruto junto a la fuente.' },
-  benjamin: { n: 'Benjamín', e: '🐺', c: '#6A6A7A', l: 'El menor, amado y protegido.' }
+  ruben: { n: 'Rubén', e: '🌊', c: '#2F6FB0', l: 'El primero: fuerte como el agua.' },
+  simeon: { n: 'Simeón', e: '🏰', c: '#5A6068', l: 'Firmes como una muralla.' },
+  levi: { n: 'Leví', e: '🕎', c: '#8E2B5E', l: 'Los que sirven en la casa de Dios.' },
+  juda: { n: 'Judá', e: '🦁', c: '#B8312A', l: 'El león: de su tribu viene Jesús.' },
+  zabulon: { n: 'Zabulón', e: '⛵', c: '#1F8A8A', l: 'Gente del mar y de los puertos.' },
+  isacar: { n: 'Isacar', e: '🫏', c: '#7A6040', l: 'Trabajadores que entienden los tiempos.' },
+  dan: { n: 'Dan', e: '⚖️', c: '#4B3F8F', l: 'Los que juzgan con justicia.' },
+  gad: { n: 'Gad', e: '⛺', c: '#3F6E35', l: 'Valientes del campamento.' },
+  aser: { n: 'Aser', e: '🫒', c: '#7E8E22', l: 'Pan rico y aceite de oliva.' },
+  neftali: { n: 'Neftalí', e: '🦌', c: '#A0783A', l: 'Ágiles como la cierva, con palabras lindas.' },
+  jose: { n: 'José', e: '🌾', c: '#C25A1F', l: 'Rama que da fruto junto a la fuente.' },
+  benjamin: { n: 'Benjamín', e: '🐺', c: '#3A3A4A', l: 'El menor, amado y protegido.' }
 };
+/* las insignias dibujadas a mano (app/tribus/*.svg): iguales en todos los aparatos */
+const tribuSrc = t => new URL('./tribus/' + t + '.svg', import.meta.url).href;
+const tribuImg = (t, px, cl) => TRIBU[t] ? `<img class="tr-img${cl ? ' ' + cl : ''}" src="${tribuSrc(t)}" width="${px}" height="${px}" alt="${TRIBU[t].n}" draggable="false">` : '';
 const TRIBU_NV = [[0, 'Chispa'], [100, 'Brasa'], [300, 'Llama'], [700, 'Antorcha'], [1500, 'Fogata'], [3000, 'Faro'], [6000, 'Lámpara del templo'], [12000, 'Columna de fuego'], [25000, 'Gloria'], [50000, 'Gloria eterna']];
 const TRIBU_LOG = [['fam1', '👨‍👩‍👧', 'Una familia que crece', '10 miembros', 'miembros', 10], ['fam2', '🏘️', 'Un pueblo entero', '50 miembros', 'miembros', 50], ['fam3', '🌟', 'Como las estrellas del cielo', '200 miembros', 'miembros', 200],
   ['ora1', '🙏', 'Oran juntos', '10 oraciones en grupo', 'ora', 10], ['ora2', '🕯️', 'Casa de oración', '100 oraciones en grupo', 'ora', 100], ['ora3', '🔥', 'Fuego que no se apaga', '1000 oraciones en grupo', 'ora', 1000],
@@ -4532,11 +4536,9 @@ const tribuNv = pts => { let i = 0; TRIBU_NV.forEach((x, k) => { if (pts >= x[0]
 /* insignia de la tribu en el pecho y en la espalda (como un escudo bordado): círculo del color de la tribu con su emblema */
 const TRIBU_TEX = {};
 function tribuTex(t) {
-  if (TRIBU_TEX[t]) return TRIBU_TEX[t]; const T0 = TRIBU[t], c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
-  const g = x.createRadialGradient(64, 56, 8, 64, 64, 60); g.addColorStop(0, T0.c); g.addColorStop(1, '#1A120A');
-  x.beginPath(); x.arc(64, 64, 58, 0, Math.PI * 2); x.fillStyle = g; x.fill(); x.lineWidth = 7; x.strokeStyle = '#E9C37A'; x.stroke();
-  x.beginPath(); x.arc(64, 64, 49, 0, Math.PI * 2); x.lineWidth = 2; x.strokeStyle = 'rgba(255,236,190,.6)'; x.stroke();
-  x.font = '58px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(T0.e, 64, 68);
+  if (TRIBU_TEX[t]) return TRIBU_TEX[t]; const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d');
+  x.beginPath(); x.arc(128, 128, 120, 0, Math.PI * 2); x.fillStyle = TRIBU[t].c; x.fill(); /* mientras carga el dibujo */
+  const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { x.clearRect(0, 0, 256, 256); x.drawImage(im, 0, 0, 256, 256); tx.needsUpdate = true; }; im.src = tribuSrc(t);
   const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return TRIBU_TEX[t] = tx;
 }
 /* el Resplandor de la tribu se ve como un brillo suave detrás de la insignia, que crece con el nivel de la tribu */
@@ -4565,7 +4567,7 @@ async function mundoPase(avisar) {
 async function tribuMia() { const j = await mundoPase(); if (!j.pase) return ''; try { const r = await (await fetch(MUNDO_HTTP + '/tribu', { method: 'POST', body: JSON.stringify({ pase: j.pase }) })).json(); MP.tribuLv = r.lv || 0; const p = G().P(); if (r.t && p.tribu !== r.t) { p.tribu = r.t; G().save(); } return TRIBU[r.t] ? r.t : ''; } catch (e) { return ''; } }
 function tribuJuntos(m) {
   const T0 = TRIBU[MP.tribu]; if (!T0) return; MP.tribuLv = Math.floor(numOk(m.tlv, 0, 9)); tribuAuraYo();
-  misPop(T0.e + (m.k === 'ora' ? ' ¡Oraron juntos!' : ' ¡Festejaron juntos!'), m.n + ' de ' + T0.n + ' juntos: la tribu suma ' + Math.floor(numOk(m.pts, 0, 9999)) + ' de Resplandor.');
+  misPop((m.k === 'ora' ? '🙏 ¡Oraron juntos!' : '🎉 ¡Festejaron juntos!'), m.n + ' de ' + T0.n + ' juntos: la tribu suma ' + Math.floor(numOk(m.pts, 0, 9999)) + ' de Resplandor.');
   if (Array.isArray(m.logros) && m.logros.length) setTimeout(() => tribuLogro(m.logros), 2600);
 }
 function tribuLogro(ids) { const L = TRIBU_LOG.find(x => x[0] === ids[0]); if (!L) return; misPop('🏆 ¡Tu tribu logró «' + L[2] + '»!', 'Miralo en tu mochila, en Tribu. Cada logro hace brillar más a ' + TRIBU[MP.tribu].n + '.'); }
@@ -4579,7 +4581,7 @@ function mundoIntro() {
   const draw = () => { const c = C[i];
     el.innerHTML = `<div class="bag-in mis-in mu-intro"><div class="mu-ic">${c[0]}</div><b class="mu-t">${c[1]}</b><p class="mis-ask">${c[2]}</p><div class="mu-dots">${C.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div>
       <div class="mis-btns">${i < C.length - 1 ? '<button class="mis-yes mu-next">Seguir</button>' : '<button class="mis-yes mu-next">🏳️ Elegir mi tribu</button>'}</div></div>`;
-    el.hidden = false; el.querySelector('.mu-next').onclick = () => { if (i < C.length - 1) { i++; draw(); return; } const p = G().P(); p.mundoIntro = 1; G().save(); if (MP.tribu) { el.hidden = true; misPop(TRIBU[MP.tribu].e + ' Sos de ' + TRIBU[MP.tribu].n, 'Buscá a otros de tu tribu y hagan cosas juntos.'); } else tribuElegir(); }; };
+    el.hidden = false; el.querySelector('.mu-next').onclick = () => { if (i < C.length - 1) { i++; draw(); return; } const p = G().P(); p.mundoIntro = 1; G().save(); if (MP.tribu) { el.hidden = true; misPop('Sos de ' + TRIBU[MP.tribu].n, 'Buscá a otros de tu tribu y hagan cosas juntos.'); } else tribuElegir(); }; };
   draw();
 }
 /* elegir tribu: las 12, con cuántos son; se sugiere la que tiene menos gente */
@@ -4589,15 +4591,15 @@ async function tribuElegir(host) {
   let R = {}; try { R = (await (await fetch(MUNDO_HTTP + '/tribus')).json()).tribus || {}; } catch (e) {}
   const ids = Object.keys(TRIBU), menos = ids.slice().sort((a, b) => ((R[a] || {}).miembros || 0) - ((R[b] || {}).miembros || 0))[0];
   const html = `<div class="${inSheet ? 'bag-in mis-in' : ''} tr-pick"><div class="bag-h"><b>🏳️ Elegí tu tribu</b><span>Podés cambiarla una vez cada 30 días</span>${inSheet ? '<button class="bag-x" aria-label="Cerrar">✕</button>' : ''}</div>
-    <div class="tr-grid">${ids.map(t => `<button class="tr-c${t === menos ? ' sug' : ''}" data-t="${t}" style="--tc:${TRIBU[t].c}"><span class="tr-e">${TRIBU[t].e}</span><b>${TRIBU[t].n}</b><small>${TRIBU[t].l}</small><em>${(R[t] || {}).miembros || 0} miembros${t === menos ? ' · te necesita' : ''}</em></button>`).join('')}</div></div>`;
+    <div class="tr-grid">${ids.map(t => `<button class="tr-c${t === menos ? ' sug' : ''}" data-t="${t}" style="--tc:${TRIBU[t].c}">${tribuImg(t, 56, "tr-e")}<b>${TRIBU[t].n}</b><small>${TRIBU[t].l}</small><em>${(R[t] || {}).miembros || 0} miembros${t === menos ? ' · te necesita' : ''}</em></button>`).join('')}</div></div>`;
   el.innerHTML = html; if (inSheet) el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
   el.querySelectorAll('.tr-c').forEach(b => b.onclick = () => tribuConfirmar(b.dataset.t, el, inSheet, R));
 }
 /* confirmar la tribu elegida (sin ventanitas del navegador) */
 function tribuConfirmar(t, el, inSheet, R) {
-  const T0 = TRIBU[t], volver = (bt) => { bt.disabled = false; bt.textContent = T0.e + ' Unirme a ' + T0.n; };
-  el.innerHTML = `<div class="${inSheet ? 'bag-in mis-in ' : ''}tr-ok" style="--tc:${T0.c}"><div class="tr-emb lv3">${T0.e}</div><b class="tr-n">${T0.n}</b><p class="mis-ask">${T0.l}</p><p class="sv-tip">${(R[t] || {}).miembros || 0} miembros. Vas a llevar su insignia en el pecho y en la espalda, y brilla más cuanto más Resplandor tiene la tribu. Podés cambiar de tribu recién dentro de 30 días, y lo que aportes queda en esta tribu.</p>
-    <div class="mis-btns"><button class="mis-yes tr-si">${T0.e} Unirme a ${T0.n}</button><button class="mis-no tr-vol">Ver otras</button></div></div>`;
+  const T0 = TRIBU[t], volver = (bt) => { bt.disabled = false; bt.textContent = 'Unirme a ' + T0.n; };
+  el.innerHTML = `<div class="${inSheet ? 'bag-in mis-in ' : ''}tr-ok" style="--tc:${T0.c}"><div class="tr-emb lv3">${tribuImg(t, 110)}</div><b class="tr-n">${T0.n}</b><p class="mis-ask">${T0.l}</p><p class="sv-tip">${(R[t] || {}).miembros || 0} miembros. Vas a llevar su insignia en el pecho y en la espalda, y brilla más cuanto más Resplandor tiene la tribu. Podés cambiar de tribu recién dentro de 30 días, y lo que aportes queda en esta tribu.</p>
+    <div class="mis-btns"><button class="mis-yes tr-si">Unirme a ${T0.n}</button><button class="mis-no tr-vol">Ver otras</button></div></div>`;
   el.querySelector('.tr-vol').onclick = () => tribuElegir(inSheet ? null : el);
   el.querySelector('.tr-si').onclick = async () => {
     const bt = el.querySelector('.tr-si'); bt.disabled = true; bt.textContent = 'Uniéndote…';
@@ -4607,7 +4609,7 @@ function tribuConfirmar(t, el, inSheet, R) {
     if (!r.t) { G().toast('No se pudo. Probá de nuevo.'); volver(bt); return; }
     const p = G().P(); p.tribu = r.t; G().save(); MP.tribuLv = r.lv || 0;
     if (MP.mundo && MP.conn) { MP.tribu = r.t; tribuAuraYo(); MP.conn.send({ t: 'tribuSet' }); }
-    if (inSheet) el.hidden = true; misPop(TRIBU[r.t].e + ' ¡Bienvenido a ' + TRIBU[r.t].n + '!', 'Buscá a otros de tu tribu en el multijugador: orar y festejar juntos la hace brillar.');
+    if (inSheet) el.hidden = true; misPop('¡Bienvenido a ' + TRIBU[r.t].n + '!', 'Buscá a otros de tu tribu en el multijugador: orar y festejar juntos la hace brillar.');
     if (!inSheet) invTribu(el);
   };
 }
@@ -4622,34 +4624,123 @@ async function invTribu(body) {
   const t = mine.t, T0 = TRIBU[t], D = R[t] || { pts: 0, miembros: 0, semana: 0, cnt: {}, logros: {} }, lv = tribuNv(D.pts), nx = TRIBU_NV[lv + 1];
   const pct = nx ? Math.round((D.pts - TRIBU_NV[lv][0]) / (nx[0] - TRIBU_NV[lv][0]) * 100) : 100;
   const rk = Object.keys(TRIBU).sort((a, b) => ((R[b] || {}).semana || 0) - ((R[a] || {}).semana || 0)), pos = rk.indexOf(t) + 1;
-  body.innerHTML = `<div class="tr-card" style="--tc:${T0.c}"><div class="tr-emb lv${Math.min(lv, 9)}">${T0.e}</div><div><b class="tr-n">${T0.n}</b><small>${T0.l}</small>
+  body.innerHTML = `<div class="tr-card" style="--tc:${T0.c}"><div class="tr-emb lv${Math.min(lv, 9)}">${tribuImg(t, 96)}</div><div><b class="tr-n">${T0.n}</b><small>${T0.l}</small>
       <div class="tr-rs"><span>✦ Resplandor de la tribu: <b>${TRIBU_NV[lv][1]}</b></span><div class="tr-bar"><i style="width:${pct}%"></i></div><small>${D.pts} puntos${nx ? ' · faltan ' + (nx[0] - D.pts) + ' para ' + nx[1] : ' · ¡el más alto!'}</small></div>
       <div class="tr-st"><span>👥 ${D.miembros} miembros</span><span>📅 Esta semana: ${D.semana || 0} · puesto ${pos} de 12</span></div></div></div>
     <h4 class="tr-h">🏆 Logros de la tribu</h4><div class="tr-logs">${TRIBU_LOG.map(([id, ic, n, d, k, meta]) => { const ok = D.logros && D.logros[id], v = k === 'miembros' ? D.miembros : (D.cnt[k] || 0);
       return `<div class="tr-lg${ok ? ' ok' : ''}"><span class="tr-li">${ic}</span><div><b>${n}</b><small>${ok ? 'Logrado el ' + new Date(ok + 'T12:00:00').toLocaleDateString('es-AR') : d + ' · van ' + Math.min(v, meta) + ' de ' + meta}</small></div></div>`; }).join('')}
       ${TRIBU_PRONTO.map(([ic, n]) => `<div class="tr-lg pronto"><span class="tr-li">${ic}</span><div><b>${n}</b><small>Muy pronto</small></div></div>`).join('')}</div>
     <h4 class="tr-h">✨ Cómo brilla tu tribu</h4><ul class="tr-how"><li>🙏 <b>Orar juntos:</b> 3 o más de tu tribu, cerca, arrodillados a la vez. +3 por persona.</li><li>🎉 <b>Festejar juntos:</b> 3 o más haciendo el mismo festejo, cerca. +2 por persona.</li><li>🏆 <b>Logros:</b> cada logro suma mucho más.</li><li>⏳ Cada persona suma una vez cada 10 minutos por cosa. Muy pronto: la casa de la tribu, los Juegos de la fiesta, la caravana y las expediciones.</li></ul>
-    <h4 class="tr-h">📅 Tabla de la semana</h4><ol class="tr-rank">${rk.map(x => `<li class="${x === t ? 'yo' : ''}"><span>${TRIBU[x].e} ${TRIBU[x].n}</span><b>${(R[x] || {}).semana || 0}</b></li>`).join('')}</ol>
+    <h4 class="tr-h">📅 Tabla de la semana</h4><ol class="tr-rank">${rk.map(x => `<li class="${x === t ? 'yo' : ''}"><span>${tribuImg(x, 22, "tr-mini")} ${TRIBU[x].n}</span><b>${(R[x] || {}).semana || 0}</b></li>`).join('')}</ol>
     <p class="cap-note">La tabla vuelve a cero cada lunes. Tribu desde el ${new Date(mine.desde).toLocaleDateString('es-AR')}.</p>`;
+}
+/* ---------- AMIGOS CON VOZ en el multijugador ----------
+   Solo con amigos del camino (los dos se aceptaron jugando juntos en una sala con amigos). El servidor dice quién está
+   conectado y pasa los avisos (sonar, aceptar, cortar); la voz va directo entre los aparatos, como en las salas.
+   Un aparato solo atiende la voz de amigos que el servidor confirmó. */
+const VOZ = { peer: null, id: '', stream: null, calls: {}, aus: {}, ok: new Set(), amigos: [], con: {}, conv: null, mute: false, ring: null, ping: 0, panel: null };
+const vozYo = () => (amId() || {}).perfil || '';
+async function vozIniciar() {
+  try { await mpLoad(); } catch (e) { return; }
+  if (VOZ.peer) return; VOZ.peer = newPeer();
+  VOZ.peer.on('open', id => { VOZ.id = id; MP.conn && MP.conn.send({ t: 'voz', peer: id }); MP.conn && MP.conn.send({ t: 'amigos' }); });
+  VOZ.peer.on('call', c => { if (!VOZ.ok.has(c.peer)) { c.close(); return; } vozMic().then(st => { if (!st) { c.close(); return; } c.answer(st); vozEnganchar(c); }); });
+  VOZ.peer.on('error', () => {});
+  clearInterval(VOZ.ping); VOZ.ping = setInterval(() => { if (MP.mundo && MP.conn) { MP.conn.send({ t: 'ping' }); MP.conn.send({ t: 'amigos' }); } }, 60000);
+}
+async function vozMic() {
+  if (VOZ.stream) return VOZ.stream;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { G().toast('Este aparato no permite usar el micrófono acá.'); return null; }
+  try { VOZ.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); } catch (e) { G().toast('Para hablar con tus amigos hace falta permitir el micrófono.'); return null; }
+  VOZ.stream.getAudioTracks().forEach(t => t.enabled = !VOZ.mute); return VOZ.stream;
+}
+function vozEnganchar(c) {
+  VOZ.calls[c.peer] = c;
+  c.on('stream', st => { let a = VOZ.aus[c.peer]; if (!a) { a = VOZ.aus[c.peer] = new Audio(); a.autoplay = true; } a.srcObject = st; a.play().catch(() => {}); });
+  const fin = () => { delete VOZ.calls[c.peer]; if (VOZ.aus[c.peer]) { VOZ.aus[c.peer].srcObject = null; delete VOZ.aus[c.peer]; } vozBarra(); };
+  c.on('close', fin); c.on('error', fin); vozBarra();
+}
+async function vozLlamarPeer(peer) { if (!peer || !VOZ.peer || VOZ.calls[peer]) return; const st = await vozMic(); if (!st) return; try { const c = VOZ.peer.call(peer, st); if (c) vozEnganchar(c); } catch (e) {} }
+const vozNom = p => { const a = VOZ.amigos.find(x => x.p === p); return (a && a.n) || (VOZ.con[p] && VOZ.con[p].n) || 'tu amigo'; };
+/* llamar a un amigo: le suena; si atiende, él llama de vuelta y queda la charla */
+async function vozLlamar(p) {
+  const a = VOZ.amigos.find(x => x.p === p); if (!a || !a.on) { G().toast('Ese amigo no está en el multijugador ahora.'); return; }
+  if (!(await vozMic())) return; if (a.peer) VOZ.ok.add(a.peer);
+  VOZ.con[p] = { n: a.n, peer: a.peer, estado: 'llamando' }; MP.conn.send({ t: 'llamar', to: p, peer: VOZ.id }); vozBarra();
+  setTimeout(() => { if (VOZ.con[p] && VOZ.con[p].estado === 'llamando') { delete VOZ.con[p]; G().toast(a.n + ' no atendió.'); vozBarra(); } }, 30000);
+}
+function vozColgar() {
+  for (const p in VOZ.con) MP.conn && MP.conn.send({ t: 'colgar', to: p });
+  if (VOZ.conv) MP.conn && MP.conn.send({ t: 'convFin', c: VOZ.conv });
+  for (const k in VOZ.calls) try { VOZ.calls[k].close(); } catch (e) {}
+  VOZ.calls = {}; for (const k in VOZ.aus) { VOZ.aus[k].srcObject = null; } VOZ.aus = {}; VOZ.con = {}; VOZ.conv = null;
+  if (VOZ.stream) { VOZ.stream.getTracks().forEach(t => t.stop()); VOZ.stream = null; } vozBarra();
+}
+function vozFin() { vozColgar(); clearInterval(VOZ.ping); try { if (VOZ.peer) VOZ.peer.destroy(); } catch (e) {} VOZ.peer = null; VOZ.id = ''; VOZ.ok = new Set(); VOZ.amigos = []; const r = document.getElementById('v3ring'); if (r) r.remove(); }
+function vozMsg(m) {
+  const ID = v => typeof v === 'string' && /^[\w-]{1,64}$/.test(v) ? v : '';
+  if (m.t === 'amigos') { VOZ.amigos = (Array.isArray(m.l) ? m.l : []).filter(a => a && ID(a.p)).slice(0, 40).map(a => ({ p: a.p, n: strOk(a.n, 16) || (AM.st && (AM.st.amigos.find(x => x.id === a.p) || {}).nom) || 'Amigo', on: !!a.on, peer: ID(a.peer) })); VOZ.amigos.forEach(a => { if (a.peer) VOZ.ok.add(a.peer); }); if (VOZ.panel) VOZ.panel(); return; }
+  const de = ID(m.de), n = strOk(m.n, 16) || 'Tu amigo', peer = ID(m.peer);
+  if (m.t === 'llamar' && de) { if (peer) VOZ.ok.add(peer); vozSuena(n, () => { VOZ.con[de] = { n, peer, estado: 'charla' }; vozLlamarPeer(peer); vozBarra(); }, () => MP.conn.send({ t: 'no', to: de })); return; }
+  if (m.t === 'no' && de) { delete VOZ.con[de]; G().toast(n + ' no puede charlar ahora.'); vozBarra(); return; }
+  if (m.t === 'colgar' && de) { const c = VOZ.con[de]; if (c && c.peer && VOZ.calls[c.peer]) try { VOZ.calls[c.peer].close(); } catch (e) {} delete VOZ.con[de]; G().toast(n + ' cortó la charla.'); vozBarra(); return; }
+  if (m.t === 'convInv' && ID(m.c)) { vozSuena(n + ' te invita a charlar', () => { VOZ.conv = m.c; MP.conn.send({ t: 'convSi', c: m.c, peer: VOZ.id }); vozBarra(); }, null, true); return; }
+  if (m.t === 'convLista' && ID(m.c)) { VOZ.conv = m.c; const l = (Array.isArray(m.l) ? m.l : []).filter(x => x && ID(x.p)); VOZ.con = {}; l.forEach(x => { if (x.p === vozYo()) return; const pr = ID(x.peer); if (pr) VOZ.ok.add(pr); VOZ.con[x.p] = { n: strOk(x.n, 16), peer: pr, estado: 'charla' }; });
+    if (m.nuevo === vozYo()) for (const p in VOZ.con) vozLlamarPeer(VOZ.con[p].peer); else vozMic(); vozBarra(); return; }
+  if (m.t === 'convSale' && ID(m.p)) { const c = VOZ.con[m.p]; if (c && c.peer && VOZ.calls[c.peer]) try { VOZ.calls[c.peer].close(); } catch (e) {} delete VOZ.con[m.p]; vozBarra(); }
+}
+/* aviso de llamada o invitación: Atender / Ahora no */
+function vozSuena(txt, si, no, conv) {
+  let r = document.getElementById('v3ring'); if (r) r.remove(); r = document.createElement('div'); r.id = 'v3ring'; r.className = 'v3ring-voz';
+  r.innerHTML = `<span class="vz-ic">${conv ? '🗣️' : '📞'}</span><div><b>${esc(conv ? txt : txt + ' te llama')}</b><small>Charla por voz entre amigos</small></div><button class="vz-si">${conv ? 'Sumarme' : 'Atender'}</button><button class="vz-no">Ahora no</button>`;
+  document.body.appendChild(r); const out = () => { r.remove(); clearTimeout(VOZ.ring); };
+  r.querySelector('.vz-si').onclick = async () => { out(); if (await vozMic()) si(); };
+  r.querySelector('.vz-no').onclick = () => { out(); if (no) no(); };
+  VOZ.ring = setTimeout(() => { if (r.isConnected) { out(); if (no) no(); } }, 30000);
+}
+/* barra de la charla en curso: con quién, silenciar y cortar */
+function vozBarra() {
+  let b = document.getElementById('v3voz'); const ps = Object.values(VOZ.con);
+  if (!ps.length) { if (b) b.remove(); if (VOZ.stream && !Object.keys(VOZ.calls).length) { VOZ.stream.getTracks().forEach(t => t.stop()); VOZ.stream = null; } return; }
+  if (!b) { b = document.createElement('div'); b.id = 'v3voz'; b.className = 'v3voz'; document.body.appendChild(b); }
+  b.innerHTML = `<span class="vz-on${VOZ.mute ? ' off' : ''}">🎙️</span><b>${ps.some(c => c.estado === 'llamando') ? 'Llamando a ' : 'Charlando con '}${esc(ps.map(c => c.n).join(', '))}</b><button class="vz-mute">${VOZ.mute ? '🔈 Activar' : '🔇 Silenciar'}</button><button class="vz-fin">Cortar</button>`;
+  b.querySelector('.vz-mute').onclick = () => { VOZ.mute = !VOZ.mute; if (VOZ.stream) VOZ.stream.getAudioTracks().forEach(t => t.enabled = !VOZ.mute); vozBarra(); };
+  b.querySelector('.vz-fin').onclick = () => vozColgar();
+}
+/* la sección «Amigos» del panel del multijugador */
+function vozSeccion() {
+  const L = VOZ.amigos.slice().sort((a, b) => (b.on - a.on) || a.n.localeCompare(b.n)), on = L.filter(a => a.on);
+  return `<div class="r-micbox vz-sec"><b>👥 Amigos</b>${L.length ? `<ul class="vz-l">${L.map(a => `<li><i class="vz-dot${a.on ? ' on' : ''}"></i><span>${esc(a.n)}</span>${a.on ? `<button class="am-sm vz-call" data-p="${esc(a.p)}" aria-label="Hablar con ${esc(a.n)}">🎙️</button>` : '<small>desconectado</small>'}</li>`).join('')}</ul>${on.length > 1 ? '<button class="gd-how vz-conv">🗣️ Invitar a charlar a varios</button>' : ''}` : '<p class="cap-note">Acá aparecen tus amigos del camino: los que se aceptaron como amigos jugando juntos en una sala con amigos. Con ellos podés hablar por micrófono.</p>'}</div>`;
+}
+function vozWire(el, redraw) {
+  el.querySelectorAll('.vz-call').forEach(b => b.onclick = () => vozLlamar(b.dataset.p));
+  const cv = el.querySelector('.vz-conv'); if (cv) cv.onclick = () => {
+    const on = VOZ.amigos.filter(a => a.on);
+    el.querySelector('.vz-sec').innerHTML = `<b>🗣️ ¿A quiénes invitás?</b><div class="vz-pick">${on.map(a => `<label><input type="checkbox" value="${esc(a.p)}"> ${esc(a.n)}</label>`).join('')}</div><div class="mis-btns"><button class="mis-yes vz-mandar">Invitar</button><button class="mis-no vz-vol">Volver</button></div>`;
+    el.querySelector('.vz-vol').onclick = redraw;
+    el.querySelector('.vz-mandar').onclick = async () => { const to = [...el.querySelectorAll('.vz-pick input:checked')].map(i => i.value); if (!to.length) { G().toast('Elegí al menos un amigo.'); return; } if (!(await vozMic())) return; MP.conn.send({ t: 'conv', to, peer: VOZ.id }); G().toast('Invitación enviada. Cuando acepten, se escuchan entre todos.'); redraw(); };
+  };
 }
 /* con muchos jugadores, se dibujan los 14 más cercanos */
 function mundoVer(now) {
   if (now - (MP.verT || 0) < 900) return; MP.verT = now; const me = S.av.position;
   Object.values(MP.players).map(p => [p, p.av.position.distanceTo(me)]).sort((a, b) => a[1] - b[1]).forEach(([p, d], i) => { p.av.visible = i < 14 && d < 90; });
-  if (MP.tribu && !MP.tribuTip) { const n = Object.values(MP.players).filter(p => p.info.tribu === MP.tribu && p.av.position.distanceTo(me) < 14).length; if (n >= 2) { MP.tribuTip = 1; misPop(TRIBU[MP.tribu].e + ' Hay ' + n + ' de tu tribu cerca', 'Si oran o festejan juntos (el mismo festejo), tu tribu brilla más y suma logros.'); } }
+  if (MP.tribu && !MP.tribuTip) { const n = Object.values(MP.players).filter(p => p.info.tribu === MP.tribu && p.av.position.distanceTo(me) < 14).length; if (n >= 2) { MP.tribuTip = 1; misPop('Hay ' + n + ' de tu tribu cerca', 'Si oran o festejan juntos (el mismo festejo), tu tribu brilla más y suma logros.'); } }
 }
 function mundoPanel(el, close) {
   const ps = Object.entries(MP.players).sort((a, b) => a[1].av.position.distanceTo(S.av.position) - b[1].av.position.distanceTo(S.av.position)).slice(0, 25);
   el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>🌍 Multijugador · Mundo ${MP.mundo}</b><span>${1 + Object.keys(MP.players).length} jugadores · se ven los más cercanos</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
     <div class="r-micbox"><b>💬 Frases rápidas</b><div class="r-phr2">${PHR.map((p, i) => `<button data-k="${i}">${p}</button>`).join('')}</div></div>
-    <div class="r-micbox mu-que"><b>🧭 Qué se puede hacer acá</b><div class="mu-q"><span>🙏 Orar juntos con tu tribu</span><span>🎉 Festejar juntos (desde ✦)</span><span>👋 Saludar con frases rápidas</span><span class="pr">👥 Grupos de 5 · muy pronto</span><span class="pr">🕳️ Expediciones · muy pronto</span><span class="pr">🏗️ Casa de la tribu · muy pronto</span><span class="pr">🏁 Juegos de la fiesta · muy pronto</span><span class="pr">🐫 Caravana a Jerusalén · muy pronto</span><span class="pr">🛒 Mercado · muy pronto</span></div>${MP.tribu ? `<button class="gd-how mu-tr">${TRIBU[MP.tribu].e} Mi tribu: ${TRIBU[MP.tribu].n}</button>` : '<button class="gd-how mu-tr">🏳️ Elegir mi tribu</button>'}</div>
-    <ul class="r-list">${ps.length ? ps.map(([id, p]) => `<li>${p.info.tribu ? TRIBU[p.info.tribu].e + ' ' : ''}${esc(p.info.name)} <span class="mu-acts"><button class="am-sm mu-mute" data-id="${esc(id)}">${MP.mute[id] ? '🔈 Escuchar' : '🔇 Silenciar'}</button><button class="am-sm mu-rep" data-id="${esc(id)}">🚩 Reportar</button></span></li>`).join('') : '<li><small>Todavía no hay nadie cerca. ¡Explorá el mapa!</small></li>'}</ul>
+    <div class="r-micbox mu-que"><b>🧭 Qué se puede hacer acá</b><div class="mu-q"><span>🙏 Orar juntos con tu tribu</span><span>🎉 Festejar juntos (desde ✦)</span><span>👋 Saludar con frases rápidas</span><span class="pr">👥 Grupos de 5 · muy pronto</span><span class="pr">🕳️ Expediciones · muy pronto</span><span class="pr">🏗️ Casa de la tribu · muy pronto</span><span class="pr">🏁 Juegos de la fiesta · muy pronto</span><span class="pr">🐫 Caravana a Jerusalén · muy pronto</span><span class="pr">🛒 Mercado · muy pronto</span></div>${MP.tribu ? `<button class="gd-how mu-tr">${tribuImg(MP.tribu, 22, 'tr-mini')} Mi tribu: ${TRIBU[MP.tribu].n}</button>` : '<button class="gd-how mu-tr">🏳️ Elegir mi tribu</button>'}</div>
+    ${vozSeccion()}
+    <ul class="r-list">${ps.length ? ps.map(([id, p]) => `<li>${p.info.tribu ? tribuImg(p.info.tribu, 20, 'tr-mini') + ' ' : ''}${esc(p.info.name)} <span class="mu-acts"><button class="am-sm mu-mute" data-id="${esc(id)}">${MP.mute[id] ? '🔈 Escuchar' : '🔇 Silenciar'}</button><button class="am-sm mu-rep" data-id="${esc(id)}">🚩 Reportar</button></span></li>`).join('') : '<li><small>Todavía no hay nadie cerca. ¡Explorá el mapa!</small></li>'}</ul>
     <div class="mis-btns"><button class="mis-no r-leave">Salir del multijugador</button></div>
     <p class="cap-note">Acá no hay chat libre ni micrófono: solo frases rápidas y festejos. Si alguien se porta mal, reportalo: el equipo de Habitat lo revisa.</p></div>`;
   el.hidden = false; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   el.querySelectorAll('.r-phr2 button').forEach(b => b.onclick = () => { mpSay(+b.dataset.k); close(); });
   el.querySelector('.r-leave').onclick = () => { close(); mpLeave(); };
   el.querySelector('.mu-tr').onclick = () => { if (MP.tribu) openBag('tr'); else tribuElegir(); };
+  vozWire(el, () => mundoPanel(el, close)); VOZ.panel = () => { if (!el.hidden && el.querySelector('.vz-sec')) mundoPanel(el, close); };
   el.querySelectorAll('.mu-mute').forEach(b => b.onclick = () => { const id = b.dataset.id; MP.mute[id] = !MP.mute[id]; const p = MP.players[id]; if (p && p.bubble && MP.mute[id]) p.bT = .01; mundoPanel(el, close); });
   el.querySelectorAll('.mu-rep').forEach(b => b.onclick = () => mundoReportar(b.dataset.id, el, close));
 }
@@ -4690,11 +4781,11 @@ function talkOpen(on) { TALK.open = !!on; if (on) talkStart(); else talkStop(); 
 function mpLeave(silent) {
   talkEnd();
   try { for (const id in MP.conns) MP.conns[id].close(); if (MP.conn) MP.conn.close(); if (MP.peer) MP.peer.destroy(); } catch (e) {}
-  for (const id in MP.players) mpDel(id); MP.peer = null; MP.conn = null; MP.conns = {}; MP.code = null; MP.host = false; MP.hostId = null; MP.mundo = 0; MP.mute = {}; MP.tribu = ''; MP.tribuTip = 0; tribuAuraYo(); obraVolver(); if (!silent) mpUI();
+  for (const id in MP.players) mpDel(id); MP.peer = null; MP.conn = null; MP.conns = {}; MP.code = null; MP.host = false; MP.hostId = null; if (MP.mundo) vozFin(); MP.mundo = 0; MP.mute = {}; MP.tribu = ''; MP.tribuTip = 0; tribuAuraYo(); obraVolver(); if (!silent) mpUI();
 }
 function mpAdd(id, info) {
   if (!S || MP.players[id]) return; const hx = S.hx, rig = hx || H3.ok, av = rig ? buildHeroAvatar(info.avatar || {}) : buildAvatar(info.avatar || {}, false); av.traverse(o => { if (o.isPointLight) o.intensity = 2; if (o.isMesh && rig) o.castShadow = true; });
-  const tag = tagSprite((info.tribu ? TRIBU[info.tribu].e + ' ' : '') + info.name + (info.avatar && info.avatar.don && DONL[info.avatar.don] ? ' · ' + DONL[info.avatar.don] : ''), (info.avatar && info.avatar.ins) || [], hx, (info.avatar && info.avatar.glow) || 0); tag.scale.multiplyScalar(.42); tag.position.y = 2.55 * (av.userData.h3 ? av.userData.h3.tagK || 1 : 1); av.add(tag); if ((info.hum || 0) >= 10) av.add(humHalo()); if (info.tribu) tribuInsignia(av, info.tribu, info.tlv); av.position.copy(S.av.position); av.position.x += 1.5; S.scene.add(av);
+  const tag = tagSprite(info.name + (info.avatar && info.avatar.don && DONL[info.avatar.don] ? ' · ' + DONL[info.avatar.don] : ''), (info.avatar && info.avatar.ins) || [], hx, (info.avatar && info.avatar.glow) || 0); tag.scale.multiplyScalar(.42); tag.position.y = 2.55 * (av.userData.h3 ? av.userData.h3.tagK || 1 : 1); av.add(tag); if ((info.hum || 0) >= 10) av.add(humHalo()); if (info.tribu) tribuInsignia(av, info.tribu, info.tlv); av.position.copy(S.av.position); av.position.x += 1.5; S.scene.add(av);
   if (TALK.stream) setTimeout(talkCallAll, 600);
   MP.players[id] = { info, av, tag, tgt: { x: av.position.x, y: 0, z: av.position.z, yaw: 0 }, st: { pose: null, waveT: 0, jy: 0 }, moving: false, bubble: null, bT: 0 };
 }
@@ -4826,6 +4917,8 @@ function amGoals() {
   return out;
 }
 /* ---------- en la sala: pedir y aceptar amistad ---------- */
+/* después de jugar un rato juntos en una sala, el juego sugiere hacerse amigos del camino (así después pueden hablar en el multijugador) */
+function amSugerir(id) { if (MP.mundo) return; setTimeout(() => { const p = MP.players[id]; if (!p || !p.info.pid || !amId() || amEsAmigo(p.info.pid) || MP.mundo) return; misPop('🤝 ¿Se hacen amigos con ' + p.info.name + '?', 'Tocá 👥 y «Ser amigos». Así quedan guardados y en el multijugador pueden verse conectados y hablar por micrófono.'); }, 8 * 60e3); }
 function amEsAmigo(pid) { return !!(AM.st && AM.st.amigos.some(a => a.id === pid)); }
 function amPedir(id) { const p = MP.players[id]; if (!p || !p.info.pid) return; xSend({ k: 'amReq', to: id }); G().toast('Le preguntaste a ' + p.info.name + ' si quiere ser tu amigo del camino.'); }
 function amReqIn(m) {

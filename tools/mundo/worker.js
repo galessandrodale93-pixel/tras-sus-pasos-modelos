@@ -39,7 +39,7 @@ async function pub(force) {
 }
 const unb64 = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), c => c.charCodeAt(0));
 async function abrir(tok) {
-  if (typeof tok !== 'string' || tok.length > 2000 || !/^[\w-]+\.[\w-]+$/.test(tok)) return null;
+  if (typeof tok !== 'string' || tok.length > 8000 || !/^[\w-]+\.[\w-]+$/.test(tok)) return null;
   const [body, sig] = tok.split('.'), data = new TextEncoder().encode(body);
   for (const force of [false, true]) {
     try { if (await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, await pub(force), unb64(sig), data)) { const o = JSON.parse(new TextDecoder().decode(unb64(body))); return o && o.exp > Date.now() ? o : null; } } catch (e) { }
@@ -77,6 +77,7 @@ export default {
       if (req.headers.get('Upgrade') !== 'websocket') return new Response('Se espera WebSocket', { status: 426, headers: CORS });
       if (limited(ip, 'ws', 20, 60000)) return new Response('Demasiados pedidos', { status: 429, headers: CORS });
       const pase = await abrir(url.searchParams.get('pase') || '');
+      if (pase && !Array.isArray(pase.a)) pase.a = [];
       if (!pase || typeof pase.m !== 'string' || typeof pase.p !== 'string') return new Response('Pase inválido', { status: 401, headers: CORS });
       /* el primer mundo con lugar (o el que pidió, si vuelve a entrar) */
       const want = Math.floor(+url.searchParams.get('n') || 0);
@@ -86,7 +87,7 @@ export default {
         const c = await (await stub.fetch('https://m/cupo?m=' + encodeURIComponent(pase.m))).json();
         if (c.bloq) return new Response(JSON.stringify({ error: 'bloqueado', hasta: c.bloq }), { status: 403, headers: CORS });
         if (c.n < CUPO || c.yo) {
-          const h = new Headers(req.headers); h.set('x-pase', JSON.stringify({ m: pase.m, p: pase.p, n: pase.n, lv: pase.lv, t: pase.t })); h.set('x-mundo', String(n));
+          const h = new Headers(req.headers); h.set('x-pase', JSON.stringify({ m: pase.m, p: pase.p, n: pase.n, lv: pase.lv, t: pase.t, a: pase.a.filter(x => typeof x === 'string' && /^[a-zA-Z0-9-]{8,60}$/.test(x)).slice(0, 40) })); h.set('x-mundo', String(n));
           return stub.fetch(new Request('https://m/entrar', { headers: h }));
         }
       }
@@ -119,6 +120,7 @@ export class Mundo {
     const url = new URL(req.url);
     if (url.pathname === '/cupo') { const m = url.searchParams.get('m') || ''; const S = this.socks().map(w => this.att(w)); return Response.json({ n: S.filter(a => a.m).length, yo: S.some(a => a.m === m), bloq: await this.bloqueo(m) }); }
     if (url.pathname === '/orden') { const o = await req.json(); if (o.cmd === 'suspender') { await this.state.storage.put('b:' + o.m, o.hasta === 'siempre' ? 'siempre' : Date.parse(o.hasta) || Date.now() + 864e5); this.sacar(o.m, 'suspendido'); } else await this.state.storage.delete('b:' + o.m); return new Response('ok'); }
+    if (url.pathname === '/enviar') { const o = await req.json(); for (const w of this.socks()) { const a = this.att(w); if (a.p === o.p) this.env(w, o.msg); } return new Response('ok'); }
     if (url.pathname !== '/entrar') return new Response('No', { status: 404 });
     let pase; try { pase = JSON.parse(req.headers.get('x-pase') || ''); } catch (e) { return new Response('Pase', { status: 400 }); }
     if (await this.bloqueo(pase.m)) return new Response('Bloqueado', { status: 403 });
@@ -126,7 +128,7 @@ export class Mundo {
     for (const w of this.socks()) if (this.att(w).m === pase.m) { this.env(w, { t: 'fuera', por: 'otra' }); try { w.close(4001, 'otra'); } catch (e) { } }
     const pair = new WebSocketPair(), [client, server] = Object.values(pair), id = nuevoId();
     this.state.acceptWebSocket(server);
-    server.serializeAttachment({ id, m: pase.m, p: str(pase.p, 60), n: str(pase.n, 16) || 'Jugador', t: pase.t ? 1 : 0, mundo: +req.headers.get('x-mundo') || 1, in: false, info: null });
+    server.serializeAttachment({ id, m: pase.m, p: str(pase.p, 60), n: str(pase.n, 16) || 'Jugador', t: pase.t ? 1 : 0, mundo: +req.headers.get('x-mundo') || 1, in: false, info: null, am: Array.isArray(pase.a) ? pase.a : [] });
     this.env(server, { t: 'pase', id, mundo: +req.headers.get('x-mundo') || 1 });
     return new Response(null, { status: 101, webSocket: client });
   }
@@ -143,8 +145,10 @@ export class Mundo {
       a.info = { name: a.n, avatar: avatarOk(i.avatar), branch: 'ados', hum: Math.floor(num(i.hum, 0, 999)), pid: a.p, tribu: tr.t || '', tlv: tr.lv || 0 }; a.tribu = tr.t || ''; a.in = true; ws.serializeAttachment(a);
       const players = this.socks().filter(w => w !== ws).map(w => this.att(w)).filter(b => b.in).map(b => ({ id: b.id, info: b.info }));
       this.env(ws, { t: 'list', host: 'srv', players, mundo: a.mundo });
-      this.a_todos({ t: 'hi', id, info: a.info }, ws); return;
+      this.a_todos({ t: 'hi', id, info: a.info }, ws);
+      await this.amg('/on', { p: a.p, n: a.n, mundo: a.mundo }); return;
     }
+    if (m.t === 'voz') { const peer = str(m.peer, 64); if (/^[\w-]{6,64}$/.test(peer)) await this.amg('/peer', { p: a.p, peer }); return; }
     if (!a.in) return;
     if (m.t === 'st') {
       if (!Array.isArray(m.s)) return; const s = m.s;
@@ -162,6 +166,18 @@ export class Mundo {
       this.trCache = null; const tr = await this.tribuDe(a.m, true); a.tribu = tr.t || ''; a.info.tribu = a.tribu; a.info.tlv = tr.lv || 0; ws.serializeAttachment(a);
       const o = { t: 'tribu', id, tribu: a.tribu, tlv: a.info.tlv }; this.env(ws, o); this.a_todos(o, ws); return;
     }
+    /* ---- amigos con voz: solo entre amigos del camino (los que se aceptaron en una sala) ---- */
+    if (m.t === 'ping') { await this.amg('/on', { p: a.p, n: a.n, mundo: a.mundo }); return; }
+    if (m.t === 'voz') { const peer = str(m.peer, 64); if (/^[\w-]{6,64}$/.test(peer)) await this.amg('/peer', { p: a.p, peer }); return; }
+    if (m.t === 'amigos') { const r = await this.amg('/quien', { ps: a.am }); this.env(ws, { t: 'amigos', l: (r && r.l) || [] }); return; }
+    if (m.t === 'llamar' || m.t === 'colgar' || m.t === 'no') { /* sonar, cortar o rechazar: solo a un amigo */
+      const to = str(m.to, 60); if (!a.am.includes(to)) return; await this.amg('/enviar', { to, msg: { t: m.t, de: a.p, n: a.n, peer: str(m.peer, 64) } }); return;
+    }
+    if (m.t === 'conv') { /* invitar a una charla de voz a varios amigos */
+      const to = (Array.isArray(m.to) ? m.to : []).map(x => str(x, 60)).filter(x => a.am.includes(x)).slice(0, 7); if (!to.length) return;
+      await this.amg('/conv', { host: a.p, n: a.n, peer: str(m.peer, 64), to }); return;
+    }
+    if (m.t === 'convSi' || m.t === 'convFin') { await this.amg('/' + m.t, { c: str(m.c, 40), p: a.p, n: a.n, peer: str(m.peer, 64) }); return; }
     if (m.t === 'rep') {
       const to = this.socks().find(w => this.att(w).id === m.to); if (!to) return; const b = this.att(to); if (b.m === a.m) return;
       /* se guarda (no solo en memoria) para que no se pierda si el servidor se duerme */
@@ -189,8 +205,9 @@ export class Mundo {
     nuevos.forEach(([w]) => this.env(w, msg));
     if ((r.nuevos || []).length) this.a_todos({ t: 'logro', tribu: a.tribu, logros: r.nuevos }, null);
   }
-  async webSocketClose(ws) { const a = this.att(ws); try { ws.close(1000, 'chau'); } catch (e) { } if (a.in) this.a_todos({ t: 'bye', id: a.id }, ws); }
-  async webSocketError(ws) { const a = this.att(ws); try { ws.close(1011, 'error'); } catch (e) { } if (a.in) this.a_todos({ t: 'bye', id: a.id }, ws); }
+  async amg(path, body) { try { return await (await this.env_.AMIGOS.get(this.env_.AMIGOS.idFromName('amigos')).fetch('https://a' + path, { method: 'POST', body: JSON.stringify(body) })).json(); } catch (e) { return null; } }
+  async webSocketClose(ws) { const a = this.att(ws); try { ws.close(1000, 'chau'); } catch (e) { } if (a.in) { this.a_todos({ t: 'bye', id: a.id }, ws); if (!this.socks().some(w => w !== ws && this.att(w).p === a.p)) await this.amg('/off', { p: a.p }); } }
+  async webSocketError(ws) { const a = this.att(ws); try { ws.close(1011, 'error'); } catch (e) { } if (a.in) { this.a_todos({ t: 'bye', id: a.id }, ws); await this.amg('/off', { p: a.p }); } }
 }
 
 /* ---------- las 12 tribus: miembros, puntos, logros y Resplandor (un solo objeto para todos los mundos) ---------- */
@@ -232,6 +249,36 @@ export class Tribus {
       if (!TRIBUS.includes(t) || !PTS[k] || !n) return Response.json({ error: 'evento' }, { status: 400 });
       const nuevos = this.sumar(t, k, n); await this.guardar(); return Response.json({ nuevos, lv: nivelDe(D[t].pts), pts: D[t].pts });
     }
+    return new Response('No', { status: 404 });
+  }
+}
+
+/* ---------- quién está conectado (para los amigos) y las charlas de voz ----------
+   Guarda en memoria qué perfil está en qué mundo y su id de voz. Solo responde sobre los amigos que figuran en el
+   pase de quien pregunta. Las charlas: el anfitrión invita a amigos suyos; los que aceptan se escuchan entre todos. */
+export class Amigos {
+  constructor(state, env) { this.state = state; this.env = env; this.on = new Map(); this.conv = new Map(); }
+  vivo(p) { const x = this.on.get(p); return x && Date.now() - x.t < 3 * 60e3 ? x : null; }
+  async mandar(p, msg) { const x = this.vivo(p); if (!x) return false; try { await this.env.MUNDO.get(this.env.MUNDO.idFromName('hero-' + x.mundo)).fetch('https://m/enviar', { method: 'POST', body: JSON.stringify({ p, msg }) }); return true; } catch (e) { return false; } }
+  async fetch(req) {
+    const path = new URL(req.url).pathname, x = await req.json().catch(() => ({}));
+    if (path === '/on') { const cur = this.on.get(x.p) || {}; this.on.set(x.p, { ...cur, n: x.n, mundo: x.mundo, t: Date.now() }); if (this.on.size > 20000) for (const [k, v] of this.on) if (Date.now() - v.t > 3 * 60e3) this.on.delete(k); return Response.json({ ok: 1 }); }
+    if (path === '/off') { this.on.delete(x.p); for (const [c, v] of this.conv) if (v.ps.has(x.p)) { v.ps.delete(x.p); for (const q of v.ps.keys()) await this.mandar(q, { t: 'convSale', c, p: x.p }); if (!v.ps.size) this.conv.delete(c); } return Response.json({ ok: 1 }); }
+    if (path === '/peer') { const cur = this.on.get(x.p); if (cur) cur.peer = x.peer; return Response.json({ ok: 1 }); }
+    if (path === '/quien') { return Response.json({ l: (x.ps || []).map(p => { const v = this.vivo(p); return { p, on: !!v, n: v ? v.n : '', mundo: v ? v.mundo : 0, peer: v ? v.peer || '' : '' }; }) }); }
+    if (path === '/enviar') { return Response.json({ ok: await this.mandar(x.to, x.msg) }); }
+    if (path === '/conv') {
+      const c = 'c' + crypto.randomUUID().replace(/-/g, '').slice(0, 12), ps = new Map([[x.host, { n: x.n, peer: x.peer }]]);
+      this.conv.set(c, { host: x.host, inv: new Set(x.to), ps, t: Date.now() }); if (this.conv.size > 2000) { const k = this.conv.keys().next().value; this.conv.delete(k); }
+      for (const p of x.to) await this.mandar(p, { t: 'convInv', c, de: x.host, n: x.n });
+      await this.mandar(x.host, { t: 'convLista', c, l: [...ps].map(([p, v]) => ({ p, n: v.n, peer: v.peer })) }); return Response.json({ c });
+    }
+    if (path === '/convSi') {
+      const v = this.conv.get(x.c); if (!v || !v.inv.has(x.p) || v.ps.size >= 8) return Response.json({ error: 'conv' });
+      v.ps.set(x.p, { n: x.n, peer: x.peer }); const l = [...v.ps].map(([p, w]) => ({ p, n: w.n, peer: w.peer }));
+      for (const p of v.ps.keys()) await this.mandar(p, { t: 'convLista', c: x.c, l, nuevo: x.p }); return Response.json({ ok: 1 });
+    }
+    if (path === '/convFin') { const v = this.conv.get(x.c); if (v && v.ps.has(x.p)) { v.ps.delete(x.p); for (const p of v.ps.keys()) await this.mandar(p, { t: 'convSale', c: x.c, p: x.p }); if (!v.ps.size) this.conv.delete(x.c); } return Response.json({ ok: 1 }); }
     return new Response('No', { status: 404 });
   }
 }

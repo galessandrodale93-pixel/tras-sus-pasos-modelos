@@ -1884,3 +1884,31 @@ body[data-branch="ados"] .v3kday{display:none!important}
 .mu-dots{display:flex;gap:6px;justify-content:center;margin:12px 0}.mu-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25)}.mu-dots i.on{background:#FFE3A0}
 .mu-q{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.mu-q span{font-size:12px;font-weight:800;padding:5px 9px;border-radius:99px;background:rgba(255,255,255,.08)}.mu-q span.pr{opacity:.5}
 .tr-ok{text-align:center;display:grid;justify-items:center;gap:6px}
+/* ===== Amigos con voz en el multijugador ===== */
+.vz-l{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.vz-l li{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px}
+.vz-l li small{margin-left:auto;opacity:.55;font-weight:700}
+.vz-l li .vz-call{margin-left:auto}
+.vz-dot{width:10px;height:10px;border-radius:50%;background:#6B6B78;flex:none}
+.vz-dot.on{background:#3DDC84;box-shadow:0 0 8px #3DDC84}
+.vz-pick{display:grid;gap:6px;margin:8px 0}.vz-pick label{display:flex;gap:8px;align-items:center;font-weight:800}
+.v3ring-voz{position:fixed;left:50%;top:max(14px,env(safe-area-inset-top));transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:10px;padding:10px 12px 10px 14px;border-radius:18px;background:rgba(18,14,10,.94);border:1px solid #E9C37A;color:#F3E6CC;box-shadow:0 12px 34px rgba(0,0,0,.45);animation:vzIn .35s ease}
+.v3ring-voz .vz-ic{font-size:26px;animation:vzPulse 1.2s ease-in-out infinite}
+.v3ring-voz b{display:block;font-size:14px}.v3ring-voz small{opacity:.7;font-weight:700;font-size:11.5px}
+.v3ring-voz button{border:0;border-radius:12px;padding:8px 12px;font:800 13px Nunito,sans-serif;cursor:pointer}
+.v3ring-voz .vz-si{background:#3DDC84;color:#0B2A17}.v3ring-voz .vz-no{background:rgba(255,255,255,.12);color:#F3E6CC}
+.v3voz{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:55;display:flex;align-items:center;gap:8px;padding:8px 10px 8px 12px;border-radius:99px;background:rgba(18,14,10,.9);border:1px solid rgba(61,220,132,.6);color:#F3E6CC;font-size:13px;max-width:92vw}
+.v3voz b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42vw}
+.v3voz .vz-on{animation:vzPulse 1.6s ease-in-out infinite}.v3voz .vz-on.off{animation:none;opacity:.4}
+.v3voz button{border:0;border-radius:99px;padding:6px 10px;font:800 12px Nunito,sans-serif;cursor:pointer;background:rgba(255,255,255,.12);color:#F3E6CC}
+.v3voz .vz-fin{background:#C0392B;color:#fff}
+@keyframes vzPulse{50%{transform:scale(1.15)}}
+@keyframes vzIn{from{opacity:0;transform:translate(-50%,-10px)}}
+/* insignias dibujadas (svg) */
+.tr-img{display:block;user-select:none;-webkit-user-drag:none}
+.tr-emb{background:none!important;width:96px;height:96px;font-size:0;box-shadow:0 0 calc(10px + var(--g,0px)) color-mix(in srgb,var(--tc) 80%,#FFE3A0)}
+.tr-emb .tr-img{width:100%;height:100%}
+.tr-ok .tr-emb{width:110px;height:110px}
+.tr-c .tr-img.tr-e{width:56px;height:56px;margin-bottom:2px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.45))}
+.tr-mini{display:inline-block!important;width:20px;height:20px;vertical-align:-5px}
+.tr-rank .tr-mini{width:22px;height:22px}
