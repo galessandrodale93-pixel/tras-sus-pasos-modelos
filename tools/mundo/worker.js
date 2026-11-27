@@ -22,8 +22,9 @@ const LOGROS = [['fam1', 'miembros', 10, 50], ['fam2', 'miembros', 50, 150], ['f
   ['ora1', 'ora', 10, 50], ['ora2', 'ora', 100, 150], ['ora3', 'ora', 1000, 500],
   ['fes1', 'festejo', 10, 50], ['fes2', 'festejo', 100, 150], ['fes3', 'festejo', 1000, 500],
   ['pes1', 'comp', 10, 150], ['sal1', 'inv', 20, 150], ['luz1', 'serv', 30, 150], ['int1', 'orv', 50, 150],
+  ['ove1', 'oveja', 1, 100], ['ove2', 'oveja', 25, 300], ['ove3', 'oveja', 100, 600],
   ['met1', 'metas', 1, 100], ['met2', 'metas', 4, 300], ['met3', 'metas', 12, 600]];
-const PTS = { ora: 3, festejo: 2, comp: 15, inv: 6, serv: 5, orv: 2 };
+const PTS = { ora: 3, festejo: 2, comp: 15, inv: 6, serv: 5, orv: 2, oveja: 20 };
 /* la meta de la semana: lo que cada uno hace fuera del juego (compartir de Jesús, invitar, servir, orar).
    Topes por persona y por semana (orar: una vez por día), para que cuente lo hecho de verdad y no el apuro. */
 const META_K = { comp: 3, inv: 3, serv: 5, orv: 7 };
@@ -129,9 +130,9 @@ export class Mundo {
   att(ws) { try { return ws.deserializeAttachment() || {}; } catch (e) { return {}; } }
   async bloqueo(m) { const h = await this.state.storage.get('b:' + m); if (!h) return null; if (h !== 'siempre' && h < Date.now()) { await this.state.storage.delete('b:' + m); return null; } return h; }
   env(ws, o) { try { ws.send(typeof o === 'string' ? o : JSON.stringify(o)); } catch (e) { } }
-  a_todos(o, menos, cerca) {
+  a_todos(o, menos, cerca, sin) {
     const s = JSON.stringify(o);
-    for (const w of this.socks()) { if (w === menos) continue; const a = this.att(w); if (!a.in) continue;
+    for (const w of this.socks()) { if (w === menos || (sin && sin.has(w))) continue; const a = this.att(w); if (!a.in) continue;
       if (cerca && a.x != null && Math.hypot(a.x - cerca[0], a.z - cerca[1]) > 160) continue; this.env(w, s); }
   }
   sacar(m, por) { for (const w of this.socks()) { const a = this.att(w); if (a.m === m) { this.env(w, { t: 'fuera', por }); try { w.close(4003, por); } catch (e) { } } } }
@@ -166,7 +167,8 @@ export class Mundo {
       const players = this.socks().filter(w => w !== ws).map(w => this.att(w)).filter(b => b.in).map(b => ({ id: b.id, info: b.info }));
       this.env(ws, { t: 'list', host: 'srv', players, mundo: a.mundo });
       this.a_todos({ t: 'hi', id, info: a.info }, ws);
-      await this.amg('/on', { p: a.p, n: a.n, mundo: a.mundo }); return;
+      await this.amg('/on', { p: a.p, n: a.n, mundo: a.mundo });
+      await this.evArmar(); if (this.ev && this.ev.fase && this.ev.fase !== 'nada' && this.ev.fase !== 'semilla') this.env(ws, this.evMsg()); return;
     }
     if (m.t === 'voz') { const peer = str(m.peer, 64); if (/^[\w-]{6,64}$/.test(peer)) await this.amg('/peer', { p: a.p, peer }); return; }
     if (!a.in) return;
@@ -177,6 +179,7 @@ export class Mundo {
       const act = v[5] === 'pray' ? 'ora' : v[8] && /^D_/.test(v[8]) ? 'fes:' + v[8] : '';
       const nx = Math.round(v[0]), nz = Math.round(v[2]); if (a.x !== nx || a.z !== nz || a.act !== act) { a.x = nx; a.z = nz; a.act = act; ws.serializeAttachment(a); }
       if (act && a.tribu) await this.juntos(ws, a);
+      if (this.ev && this.ev.fase === 'cargada' && this.ev.carga === a.id && Math.hypot(nx - this.ev.rx, nz - this.ev.rz) <= 8) await this.evLogrado(ws, a);
       this.a_todos({ t: 'st', id, s: v }, ws, [v[0], v[2]]); return;
     }
     if (m.t === 'say') { this.a_todos({ t: 'say', id, k: Math.floor(num(m.k, 0, 99)) }, ws, a.x != null ? [a.x, a.z] : null); return; }
@@ -198,6 +201,54 @@ export class Mundo {
       await this.amg('/conv', { host: a.p, n: a.n, peer: str(m.peer, 64), to }); return;
     }
     if (m.t === 'convSi' || m.t === 'convFin') { await this.amg('/' + m.t, { c: str(m.c, 40), p: a.p, n: a.n, peer: str(m.peer, 64) }); return; }
+    /* ---- grupos de hasta 5 (en este mundo) y sus roles ---- */
+    if (m.t === 'gInv') { /* invitar a alguien que está en este mundo */
+      const now = Date.now(); if (now - (a.gInvT || 0) < 4000) return; a.gInvT = now; ws.serializeAttachment(a);
+      const to = this.socks().find(w => this.att(w).id === m.to); if (!to) return; const b = this.att(to); if (!b.in || b.m === a.m) return;
+      if (b.g) { this.env(ws, { t: 'gAviso', k: 'ocupado', n: b.n }); return; }
+      const g = a.g || 'g' + a.id; if (this.grupo(g).length >= 5) { this.env(ws, { t: 'gAviso', k: 'lleno' }); return; }
+      (this.inv || (this.inv = new Map())).set(b.id, { g, de: a.id, t: now }); if (this.inv.size > 2000) for (const [k, v] of this.inv) if (now - v.t > 60e3) this.inv.delete(k);
+      this.env(to, { t: 'gInv', de: a.id, n: a.n, tribu: a.tribu || '' }); return;
+    }
+    if (m.t === 'gSi' || m.t === 'gNo') {
+      const iv = this.inv && this.inv.get(a.id); if (!iv || Date.now() - iv.t > 60e3) return; this.inv.delete(a.id);
+      const de = this.socks().find(w => this.att(w).id === iv.de); if (!de) return; const d = this.att(de);
+      if (m.t === 'gNo') { this.env(de, { t: 'gAviso', k: 'no', n: a.n }); return; }
+      if (a.g) this.salirGrupo(ws, a);
+      const g = d.g || iv.g; if (this.grupo(g).length >= 5) { this.env(ws, { t: 'gAviso', k: 'lleno' }); return; }
+      if (!d.g) { d.g = g; d.gj = Date.now() - 1; de.serializeAttachment(d); }
+      a.g = g; a.gj = Date.now(); a.rol = ''; ws.serializeAttachment(a); this.avisarGrupo(g); return;
+    }
+    if (m.t === 'gSal') { if (a.g) this.salirGrupo(ws, a); return; }
+    if (m.t === 'gRol') {
+      const r = String(m.r || ''); if (!a.g || !['pastor', 'rastreador', 'intercesor', 'heraldo', ''].includes(r)) return;
+      if (r && this.grupo(a.g).some(([w, b]) => b.id !== a.id && b.rol === r)) { this.env(ws, { t: 'gAviso', k: 'rol' }); return; }
+      if (this.ev && this.ev.carga === a.id && r !== 'pastor') return; /* el que lleva la oveja sigue siendo el pastor */
+      a.rol = r; ws.serializeAttachment(a); this.avisarGrupo(a.g); return;
+    }
+    if (m.t === 'gSen') { /* el heraldo toca el shofar: una señal para su grupo */
+      const now = Date.now(); if (!a.g || a.rol !== 'heraldo' || now - (a.senT || 0) < 20e3 || a.x == null) return; a.senT = now; ws.serializeAttachment(a);
+      for (const [w] of this.grupo(a.g)) this.env(w, { t: 'gSen', id: a.id, n: a.n, x: a.x, z: a.z }); return;
+    }
+    if (m.t === 'gPista') { /* el intercesor oró: su grupo recibe la pista (el juego la calcula) */
+      const now = Date.now(); if (!a.g || a.rol !== 'intercesor' || now - (a.pisT || 0) < 45e3 || !this.ev || this.ev.fase !== 'perdida') return; a.pisT = now; ws.serializeAttachment(a);
+      for (const [w] of this.grupo(a.g)) this.env(w, { t: 'gPista', n: a.n }); return;
+    }
+    /* ---- la oveja perdida ---- */
+    if (m.t === 'ovejaPos') { /* el primer juego que responde elige dónde (lejos de quien la elige) */
+      const E = this.ev; if (!E || E.fase !== 'semilla' || m.ev !== E.id || a.x == null) return;
+      const x = num(m.x, -5e3, 5e3), z = num(m.z, -5e3, 5e3), rx = num(m.rx, -5e3, 5e3), rz = num(m.rz, -5e3, 5e3);
+      if (Math.hypot(x - a.x, z - a.z) < 60 || Math.hypot(x - E.sx, z - E.sz) > 260 || Math.hypot(rx - x, rz - z) < 40) return;
+      Object.assign(E, { fase: 'perdida', x, z, rx, rz, lugar: str(m.lugar, 40), fin: Date.now() + 12 * 60e3 }); await this.state.storage.put('ev', E);
+      this.a_todos(this.evMsg(), null); await this.state.storage.setAlarm(E.fin); return;
+    }
+    if (m.t === 'ovejaVi') { const E = this.ev; if (!E || E.fase !== 'perdida' || a.x == null || Math.hypot(a.x - E.x, a.z - E.z) > 10 || E.vista) return;
+      E.vista = a.id; const msg = { t: 'oveja', fase: 'vista', ev: E.id, n: a.n, id: a.id }; if (a.g) for (const [w] of this.grupo(a.g)) this.env(w, msg); else this.env(ws, msg); return; }
+    if (m.t === 'ovejaCargar') {
+      const E = this.ev; if (!E || E.fase !== 'perdida' || a.x == null || Math.hypot(a.x - E.x, a.z - E.z) > 10) return;
+      if (!a.g || a.rol !== 'pastor' || this.grupo(a.g).length < 2) { this.env(ws, { t: 'gAviso', k: 'pastor' }); return; }
+      E.fase = 'cargada'; E.carga = a.id; E.g = a.g; E.cn = a.n; await this.state.storage.put('ev', E); this.a_todos(this.evMsg(), null); return;
+    }
     if (m.t === 'rep') {
       const to = this.socks().find(w => this.att(w).id === m.to); if (!to) return; const b = this.att(to); if (b.m === a.m) return;
       /* se guarda (no solo en memoria) para que no se pierda si el servidor se duerme */
@@ -207,6 +258,45 @@ export class Mundo {
       else await this.state.storage.put('r:' + b.m, r);
       return;
     }
+  }
+  /* ---- grupos ---- */
+  grupo(g) { return g ? this.socks().map(w => [w, this.att(w)]).filter(([w, b]) => b.in && b.g === g) : []; }
+  avisarGrupo(g) {
+    const L = this.grupo(g).sort((x, y) => (x[1].gj || 0) - (y[1].gj || 0)), l = L.map(([w, b], i) => ({ id: b.id, n: b.n, rol: b.rol || '', tribu: b.tribu || '', lider: i === 0 ? 1 : 0 }));
+    if (L.length === 1) { const [w, b] = L[0]; b.g = ''; b.rol = ''; w.serializeAttachment(b); this.env(w, { t: 'grupo', g: '', l: [] }); return; } /* uno solo ya no es grupo */
+    for (const [w] of L) this.env(w, { t: 'grupo', g, l });
+  }
+  salirGrupo(ws, a) { const g = a.g; a.g = ''; a.rol = ''; ws.serializeAttachment(a); this.env(ws, { t: 'grupo', g: '', l: [] }); this.soltar(a); this.avisarGrupo(g); }
+  /* si el que lleva la oveja se va o sale del grupo, la oveja queda donde estaba */
+  soltar(a) { const E = this.ev; if (!E || E.fase !== 'cargada' || E.carga !== a.id) return; Object.assign(E, { fase: 'perdida', carga: '', g: '', x: a.x != null ? a.x : E.x, z: a.z != null ? a.z : E.z, vista: '' }); this.state.storage.put('ev', E); this.a_todos(this.evMsg(), null); }
+  /* ---- eventos del mundo: la oveja perdida (Lucas 15). Cada 15 minutos, si hay 2 o más jugadores ---- */
+  evMsg() { const E = this.ev || {}; return { t: 'oveja', fase: E.fase || 'nada', ev: E.id, x: E.x, z: E.z, rx: E.rx, rz: E.rz, sx: E.sx, sz: E.sz, lugar: E.lugar || '', fin: E.fin || 0, carga: E.carga || '', cn: E.cn || '' }; }
+  async evArmar() {
+    if (this.ev === undefined) this.ev = (await this.state.storage.get('ev')) || null;
+    const al = await this.state.storage.getAlarm(); if (!al) await this.state.storage.setAlarm(Date.now() + (this.ev && this.ev.fin > Date.now() ? this.ev.fin - Date.now() : this.env_.EV_PRUEBA ? 3000 : 4 * 60e3)); /* EV_PRUEBA: solo en pruebas locales */
+  }
+  async alarm() {
+    if (this.ev === undefined) this.ev = (await this.state.storage.get('ev')) || null;
+    const now = Date.now(), E = this.ev, ps = this.socks().map(w => this.att(w)).filter(b => b.in && b.x != null);
+    if (E && E.fase !== 'nada' && E.fin && now < E.fin) { await this.state.storage.setAlarm(E.fin); return; }
+    if (E && (E.fase === 'perdida' || E.fase === 'cargada' || E.fase === 'semilla')) { this.ev = { fase: 'nada', id: E.id }; await this.state.storage.put('ev', this.ev); this.a_todos({ t: 'oveja', fase: 'fin', ev: E.id }, null); }
+    if (ps.length >= 2) { /* una oveja nueva: el lugar lo elige el primer juego que responde, cerca de alguien al azar */
+      const b = ps[Math.floor(Math.random() * ps.length)], an = Math.random() * 6.283, r = 110 + Math.random() * 90;
+      this.ev = { id: 'o' + now.toString(36), fase: 'semilla', sx: Math.round(b.x + Math.cos(an) * r), sz: Math.round(b.z + Math.sin(an) * r), fin: now + 60e3 }; await this.state.storage.put('ev', this.ev);
+      this.a_todos({ t: 'oveja', fase: 'semilla', ev: this.ev.id, sx: this.ev.sx, sz: this.ev.sz }, null);
+      await this.state.storage.setAlarm(now + 60e3); return;
+    }
+    if (this.socks().length) await this.state.storage.setAlarm(now + (ps.length ? 5 : 15) * 60e3); /* sin nadie, no se programa nada: se arma de nuevo cuando alguien entra */
+  }
+  /* el pastor llegó al redil con la oveja: fiesta para todo el grupo y su tribu */
+  async evLogrado(ws, a) {
+    const E = this.ev, mem = this.grupo(E.g), nombres = mem.map(([w, b]) => b.n), tribus = {}; mem.forEach(([w, b]) => { if (b.tribu) tribus[b.tribu] = (tribus[b.tribu] || 0) + 1; });
+    this.ev = { fase: 'nada', id: E.id }; await this.state.storage.put('ev', this.ev); await this.state.storage.setAlarm(Date.now() + 15 * 60e3);
+    const TRo = this.env_.TRIBUS.get(this.env_.TRIBUS.idFromName('tribus')); const res = {};
+    for (const t in tribus) { try { res[t] = await (await TRo.fetch('https://t/evento', { method: 'POST', body: JSON.stringify({ t, k: 'oveja', n: tribus[t] }) })).json(); } catch (e) { } }
+    for (const [w, b] of mem) { let ti = {}; try { ti = await (await TRo.fetch('https://t/titulo', { method: 'POST', body: JSON.stringify({ m: b.p, k: 'oveja' }) })).json(); } catch (e) { }
+      this.env(w, { t: 'oveja', fase: 'lograda', ev: E.id, yo: 1, nombres, pts: PTS.oveja, titulo: !!ti.nuevo, logros: (res[b.tribu] || {}).nuevos || [], tlv: (res[b.tribu] || {}).lv || 0 }); }
+    this.a_todos({ t: 'oveja', fase: 'lograda', ev: E.id, nombres, cn: E.cn }, null, null, new Set(mem.map(([w]) => w)));
   }
   /* la tribu de cada cuenta la guarda el objeto «tribus» (uno solo para todos los mundos) */
   async tribuDe(m, fresh) {
@@ -226,8 +316,8 @@ export class Mundo {
     if ((r.nuevos || []).length) this.a_todos({ t: 'logro', tribu: a.tribu, logros: r.nuevos }, null);
   }
   async amg(path, body) { try { return await (await this.env_.AMIGOS.get(this.env_.AMIGOS.idFromName('amigos')).fetch('https://a' + path, { method: 'POST', body: JSON.stringify(body) })).json(); } catch (e) { return null; } }
-  async webSocketClose(ws) { const a = this.att(ws); try { ws.close(1000, 'chau'); } catch (e) { } if (a.in) { this.a_todos({ t: 'bye', id: a.id }, ws); if (!this.socks().some(w => w !== ws && this.att(w).p === a.p)) await this.amg('/off', { p: a.p }); } }
-  async webSocketError(ws) { const a = this.att(ws); try { ws.close(1011, 'error'); } catch (e) { } if (a.in) { this.a_todos({ t: 'bye', id: a.id }, ws); await this.amg('/off', { p: a.p }); } }
+  async webSocketClose(ws) { const a = this.att(ws); try { ws.close(1000, 'chau'); } catch (e) { } if (a.g) { const g = a.g; this.soltar(a); a.g = ''; try { ws.serializeAttachment(a); } catch (e) { } this.avisarGrupo(g); } if (a.in) { this.a_todos({ t: 'bye', id: a.id }, ws); if (!this.socks().some(w => w !== ws && this.att(w).p === a.p)) await this.amg('/off', { p: a.p }); } }
+  async webSocketError(ws) { const a = this.att(ws); try { ws.close(1011, 'error'); } catch (e) { } if (a.g) { const g = a.g; this.soltar(a); a.g = ''; try { ws.serializeAttachment(a); } catch (e) { } this.avisarGrupo(g); } if (a.in) { this.a_todos({ t: 'bye', id: a.id }, ws); await this.amg('/off', { p: a.p }); } }
 }
 
 /* ---------- las 12 tribus: miembros, puntos, logros y Resplandor (un solo objeto para todos los mundos) ---------- */
@@ -243,7 +333,7 @@ export class Tribus {
   mio(r) {
     const T = this.D[r.t], wk = semana(), w = r.w && r.w.wk === wk ? r.w : {}, esta = T.sem === wk, c = r.c || {};
     return { t: r.t, desde: r.d, lv: nivelDe(T.pts), yo: { comp: w.comp || 0, inv: w.inv || 0, serv: w.serv || 0, orv: w.orv || 0, oroHoy: w.dia === hoyAR(), total: c }, topes: META_K,
-      titulos: c.comp ? ['mensajero'] : [], meta: metaDe(T.miembros), mpts: esta ? T.mpts || 0 : 0, mok: esta ? !!T.mok : false, feed: (T.feed || []).filter(f => Date.now() - f.at < 14 * 864e5) };
+      titulos: [c.comp ? 'mensajero' : '', c.oveja ? 'pastor' : ''].filter(Boolean), meta: metaDe(T.miembros), mpts: esta ? T.mpts || 0 : 0, mok: esta ? !!T.mok : false, feed: (T.feed || []).filter(f => Date.now() - f.at < 14 * 864e5) };
   }
   sumar(T, k, n) {
     const D = this.D[T], wk = semana(); if (D.sem !== wk) { D.sem = wk; D.spts = 0; D.mpts = 0; D.mok = 0; }
@@ -261,6 +351,10 @@ export class Tribus {
       const total = { comp: 0, inv: 0, serv: 0, orv: 0 }; TRIBUS.forEach(t => { for (const k in total) total[k] += D[t].cnt[k] || 0; });
       const mis = (await this.state.storage.get('testimonios')) || 0; total.mis = mis; total.comp += mis; /* las fotos de testimonio de las misiones también cuentan */
       return Response.json({ tribus: out, semana: wk, total });
+    }
+    if (url.pathname === '/titulo') { /* lo personal de cada uno (por personaje): cuántas ovejas encontró → «Buen pastor» */
+      const x = await req.json(), k = 'm:' + String(x.m || ''), r = (await this.state.storage.get(k)) || null; if (!r) return Response.json({});
+      r.c = r.c || {}; r.c[x.k] = (r.c[x.k] || 0) + 1; await this.state.storage.put(k, r); return Response.json({ nuevo: r.c[x.k] === 1 });
     }
     if (url.pathname === '/testimonio') {
       const x = await req.json(), k = 'tm:' + String(x.p || '') + ':' + String(x.mis || ''); if (await this.state.storage.get(k)) return Response.json({ ok: 1, ya: 1 });

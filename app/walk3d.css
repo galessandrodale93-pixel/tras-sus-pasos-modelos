@@ -1945,3 +1945,26 @@ body[data-branch="ados"] .v3kday{display:none!important}
 .tm-rev{margin:8px 0 0;font:800 13px "Nunito",sans-serif;color:#FFE3A0;animation:tmRev 1.2s ease-in-out infinite}@keyframes tmRev{50%{opacity:.45}}
 .tm-tot{margin-top:10px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);display:grid;gap:2px}
 .tm-tot span{font:900 10.5px "Nunito",sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#E9C37A}.tm-tot p{margin:0;font-size:14px;font-weight:700}.tm-tot b{font:900 18px "Cinzel",Georgia,serif;color:#FFE3A0;margin-right:4px}
+/* ===== Grupos de 5 y la oveja perdida (multijugador) ===== */
+#v3ovc{top:calc(var(--compT,calc(12px + env(safe-area-inset-top,0px))) + 40px)!important;border-color:rgba(158,230,168,.6);color:#D8FFDF}
+#v3grupo{position:fixed;z-index:6;left:calc(12px + env(safe-area-inset-left,0px));top:calc(50% - 60px);width:min(230px,42vw);display:grid;gap:6px;font:700 12.5px "Nunito",sans-serif;color:#F3E6CC;pointer-events:auto}
+body:has(#v3sheet:not([hidden])) #v3grupo,body:not(.v3on) #v3grupo{display:none}
+#v3grupo>div,#v3grupo>ul{background:rgba(20,15,10,.74);border:1px solid rgba(233,195,122,.4);border-radius:14px;padding:8px 10px;backdrop-filter:blur(6px)}
+#v3grupo .gr-ev{border-color:rgba(158,230,168,.6);background:linear-gradient(135deg,rgba(60,110,70,.55),rgba(20,15,10,.78))}#v3grupo .gr-ev b{display:block;font-size:13px}#v3grupo .gr-ev small{color:#D8FFDF;font-weight:800}
+#v3grupo .gr-h{display:flex;justify-content:space-between;align-items:center;gap:6px;border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:-7px}
+#v3grupo .gr-h span{display:flex;gap:4px}#v3grupo .gr-h button,#v3grupo .gr-sho{border:1px solid rgba(233,195,122,.5);background:rgba(233,195,122,.14);color:#FFE7A6;border-radius:99px;padding:3px 9px;font:800 11.5px "Nunito",sans-serif;cursor:pointer}
+#v3grupo ul{list-style:none;margin:0;display:grid;gap:3px;border-top-left-radius:0;border-top-right-radius:0}
+#v3grupo li{display:flex;align-items:center;gap:5px}#v3grupo li b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#v3grupo li small{color:#B7A584;font-weight:800}#v3grupo li.yo b{color:#FFE3A0}
+#v3grupo .gr-ic{width:20px;text-align:center}#v3grupo .gr-sho{justify-self:start;padding:6px 12px;font-size:12.5px}#v3grupo .gr-tip{margin:0;padding:6px 10px;border-radius:10px;background:rgba(20,15,10,.7);color:#FFE3A0;font-size:12px}
+#v3ginv{position:fixed;z-index:30;left:50%;transform:translateX(-50%);top:calc(64px + env(safe-area-inset-top,0px));display:grid;gap:8px;padding:12px 14px;border-radius:16px;background:rgba(24,18,12,.94);border:1px solid #E9C37A;box-shadow:0 10px 30px rgba(0,0,0,.5);font:700 14px "Nunito",sans-serif;color:#F3E6CC;animation:v3ginv .3s ease-out}
+#v3ginv p{margin:0;display:flex;align-items:center;gap:6px}#v3ginv>div{display:flex;gap:8px}#v3ginv button{padding:8px 14px;border-radius:12px;border:0;font:900 13.5px "Nunito",sans-serif;cursor:pointer}
+@keyframes v3ginv{from{opacity:0;transform:translate(-50%,-10px)}}
+#v3ovb{position:fixed;z-index:7;left:50%;transform:translateX(-50%);bottom:calc(120px + env(safe-area-inset-bottom,0px));padding:12px 22px;border-radius:99px;border:0;background:linear-gradient(180deg,#FFE79A,#F2A93B);color:#2B1D00;font:900 16px "Nunito",sans-serif;box-shadow:0 0 24px rgba(255,210,94,.6);cursor:pointer;animation:trGlow 2s ease-in-out infinite}
+.gr-roles{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin:10px 0}
+.gr-r{display:grid;gap:3px;text-align:left;padding:12px;border-radius:14px;border:1px solid var(--ed,#6B5233);background:rgba(0,0,0,.22);color:inherit;font-family:"Nunito",sans-serif;cursor:pointer}
+.gr-r span{font-size:26px}.gr-r b{font-size:15px}.gr-r small{color:var(--mu,#B7A584);font-weight:700;font-size:12.5px;line-height:1.35}.gr-r em{font-style:normal;font-weight:900;font-size:11.5px;color:#E9C37A;margin-top:3px}
+.gr-r.on{border-color:#FFD25E;background:linear-gradient(135deg,rgba(255,210,94,.2),rgba(0,0,0,.15));box-shadow:0 0 12px rgba(255,210,94,.3)}.gr-r:disabled{opacity:.5;cursor:default}
+.mu-yag{font-style:normal;font-size:11.5px;font-weight:900;color:#9EE6A8;margin-right:4px}
+/* los avisos largos (explicaciones) tienen ✕ para cerrarlos */
+.toast .toast-x{pointer-events:auto;flex:none;align-self:flex-start;width:34px;height:34px;margin:-2px -6px -2px 2px;border-radius:50%;border:1px solid rgba(233,195,122,.5);background:rgba(233,195,122,.16);color:inherit;font:900 15px/1 "Nunito",sans-serif;display:grid;place-items:center;cursor:pointer}
+.toast:not(.on) .toast-x{pointer-events:none}

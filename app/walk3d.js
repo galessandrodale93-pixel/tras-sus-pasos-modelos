@@ -1999,13 +1999,23 @@ function liteR(cv, always) {
     dispose() { if (rt) rt.dispose(); rt = null; }, forceContextLoss() {} };
 }
 // el personaje girando en 3D dentro de la mochila
+/* la escena del visor y el personaje se arman una sola vez y se reusan cada vez que se abre la mochila:
+   armarlos de nuevo en cada apertura sumaba texturas y geometrías que no se liberaban, y en el iPhone la página se cerraba */
+const PVC = { sc: null, cam: null, av: null, key: '', hx: null };
+function pvcDejar(av) { if (!av) return; if (av.parent) av.parent.remove(av); av.traverse(o => { if (o.isMesh && o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { try { m.dispose(); } catch (e) {} }); }); }
 function invPreview(cv) {
-  const R = LOWMEM() && _r0 ? liteR(cv) : new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true }), sc = new THREE.Scene(), cam = new THREE.PerspectiveCamera(24, 1, .1, 30);
+  const R = LOWMEM() && _r0 ? liteR(cv) : new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true });
+  if (!PVC.sc || PVC.hx !== !!S.hx) { pvcDejar(PVC.av); PVC.av = null; PVC.key = ''; PVC.hx = !!S.hx;
+    const sc = PVC.sc = new THREE.Scene(); PVC.cam = new THREE.PerspectiveCamera(24, 1, .1, 30);
+    sc.add(new THREE.HemisphereLight('#FFF4E0', '#3A2A1C', 1.5)); const key = new THREE.DirectionalLight('#FFE2B8', 2.4); key.position.set(2, 4, 4); sc.add(key); const rim = new THREE.DirectionalLight('#9EC2FF', 1.6); rim.position.set(-3, 2.5, -3); sc.add(rim);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(.62, .66, .06, 40), new THREE.MeshStandardMaterial({ color: '#3A2C1E', roughness: .7, metalness: .2 })); base.position.y = -.03; sc.add(base); }
+  const sc = PVC.sc, cam = PVC.cam;
   R.setPixelRatio(Math.min(2, devicePixelRatio || 1)); R.outputColorSpace = THREE.SRGBColorSpace; R.toneMapping = THREE.ACESFilmicToneMapping;
-  sc.add(new THREE.HemisphereLight('#FFF4E0', '#3A2A1C', 1.5)); const key = new THREE.DirectionalLight('#FFE2B8', 2.4); key.position.set(2, 4, 4); sc.add(key); const rim = new THREE.DirectionalLight('#9EC2FF', 1.6); rim.position.set(-3, 2.5, -3); sc.add(rim);
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(.62, .66, .06, 40), new THREE.MeshStandardMaterial({ color: '#3A2C1E', roughness: .7, metalness: .2 })); base.position.y = -.03; sc.add(base);
   let av = null, rot = .5, vel = 0, drag = null, last = performance.now(); const sheet = document.getElementById('v3sheet');
-  const set = () => { if (av) sc.remove(av); const look = lookOf(G().P()); av = (S.hx || H3.ok) ? buildHeroAvatar(look) : buildAvatar(look, false); av.traverse(o => { if (o.isPointLight) o.intensity = 0; }); if (av.userData.h3) av.userData.h3.lamp.visible = false; av.position.set(0, 0, 0); sc.add(av);
+  const set = () => { const look = lookOf(G().P()), k = JSON.stringify(look);
+    if (PVC.av && PVC.key === k) av = PVC.av; /* el mismo personaje: se reusa tal cual */
+    else { pvcDejar(PVC.av); av = (S.hx || H3.ok) ? buildHeroAvatar(look) : buildAvatar(look, false); av.traverse(o => { if (o.isPointLight) o.intensity = 0; }); if (av.userData.h3) av.userData.h3.lamp.visible = false; av.position.set(0, 0, 0); PVC.av = av; PVC.key = k; }
+    if (av.parent !== sc) sc.add(av);
     const h = av.userData.h3 ? 1.85 * av.scale.y : 2.1; cam.position.set(0, h * .55, h * 2.75); cam.lookAt(0, h * .5, 0); };
   const size = () => { const w = cv.clientWidth || 160, h = cv.clientHeight || 220; R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); };
   cv.addEventListener('pointerdown', e => { drag = e.clientX; vel = 0; try { cv.setPointerCapture(e.pointerId); } catch (x) {} });
@@ -4535,6 +4545,7 @@ async function mpMundo() {
     if (m.t === 'fuera') { MP.fuera = m.por; return; }
     if (m.t === 'amigos' || m.t === 'llamar' || m.t === 'colgar' || m.t === 'no' || m.t === 'convInv' || m.t === 'convLista' || m.t === 'convSale') { vozMsg(m); return; }
     if (m.t === 'juntos') { tribuJuntos(m); return; }
+    if (/^(grupo|gInv|gAviso|gSen|gPista|oveja)$/.test(m.t)) { try { mmoMsg(m); } catch (e) { console.warn('mmo', e); } return; }
     if (m.t === 'logro') { if (m.tribu && m.tribu === MP.tribu && Array.isArray(m.logros)) tribuLogro(m.logros); return; }
     if (m.t === 'tribu') { if (m.id === MP.peer.id) { MP.tribu = TRIBU[m.tribu] ? m.tribu : ''; tribuAuraYo(); } else { const p = MP.players[m.id]; if (p && TRIBU[m.tribu]) { const info = { ...p.info, tribu: m.tribu, tlv: Math.floor(numOk(m.tlv, 0, 9)) }; const pos = p.av.position.clone(); mpDel(m.id); mpAdd(m.id, info); MP.players[m.id].av.position.copy(pos); } } return; }
     m = mpClean(m, null, m.t === 'list' ? 400000 : 12000); if (!m) return; /* el servidor ya revisa y limita; acá se vuelve a revisar todo */
@@ -4575,8 +4586,9 @@ const TRIBU_LOG = [['fam1', '👨‍👩‍👧', 'Una familia que crece', '10 m
   ['ora1', '🙏', 'Oran juntos', '10 oraciones en grupo', 'ora', 10], ['ora2', '🕯️', 'Casa de oración', '100 oraciones en grupo', 'ora', 100], ['ora3', '🔥', 'Fuego que no se apaga', '1000 oraciones en grupo', 'ora', 1000],
   ['fes1', '🎉', 'Festejan juntos', '10 festejos en grupo', 'festejo', 10], ['fes2', '🥁', 'Panderos y danzas', '100 festejos en grupo', 'festejo', 100], ['fes3', '🎺', 'Alegría de todo el pueblo', '1000 festejos en grupo', 'festejo', 1000],
   ['pes1', '🎣', 'Pescadores de hombres', '10 veces compartieron de Jesús', 'comp', 10], ['sal1', '🧂', 'Sal de la tierra', '20 amigos invitados', 'inv', 20], ['luz1', '🪔', 'Luz del mundo', '30 veces sirvieron a otros', 'serv', 30], ['int1', '🕊️', 'Intercesores', '50 oraciones por otros', 'orv', 50],
+  ['ove1', '🐑', 'La oveja perdida', 'Encontrar una oveja perdida', 'oveja', 1], ['ove2', '🧺', 'Pastores del pueblo', '25 ovejas encontradas', 'oveja', 25], ['ove3', '🌄', 'Ninguna se pierde', '100 ovejas encontradas', 'oveja', 100],
   ['met1', '🎯', 'Meta cumplida', 'Cumplir una meta de la semana', 'metas', 1], ['met2', '🗓️', 'Un mes entero', '4 metas de la semana', 'metas', 4], ['met3', '🌱', 'Fieles en lo poco', '12 metas de la semana', 'metas', 12]];
-const TRIBU_PRONTO = [['🏗️', 'Levantan la casa de la tribu'], ['🏁', 'Ganan los Juegos de la fiesta'], ['🐫', 'Llegan juntos a Jerusalén'], ['🕳️', 'Terminan una expedición'], ['🐑', 'Encuentran la oveja perdida']];
+const TRIBU_PRONTO = [['🏗️', 'Levantan la casa de la tribu'], ['🏁', 'Ganan los Juegos de la fiesta'], ['🐫', 'Llegan juntos a Jerusalén'], ['🕳️', 'Terminan una expedición']];
 const MUNDO_HTTP = MUNDO_WS.replace(/^wss:/, 'https:').replace(/\/mundo$/, '');
 const tribuNv = pts => { let i = 0; TRIBU_NV.forEach((x, k) => { if (pts >= x[0]) i = k; }); return i; };
 /* insignia de la tribu en el pecho y en la espalda (como un escudo bordado): círculo del color de la tribu con su emblema */
@@ -4623,7 +4635,7 @@ function mundoIntro() {
   const el = document.getElementById('v3sheet'); if (!el) return; let i = 0;
   const C = [['🌍', 'El mundo de todos', 'Acá se encuentran jugadores de Hero de todos lados, hasta 100 por mundo. Los que ves cerca son personas de verdad.'],
     ['🏳️', 'Tu tribu', 'Vas a elegir una de las 12 tribus de Israel. Todo lo que hagan juntos hace brillar a la tribu: es el Resplandor de la tribu, y sus logros los ves en tu mochila, en Tribu.'],
-    ['🙏', 'Juntos suman', 'Si 3 o más de tu tribu oran juntos, o hacen el mismo festejo cerca, la tribu suma. Muy pronto: la casa de la tribu, los Juegos de la fiesta, la caravana a Jerusalén y expediciones en grupo.'],
+    ['🙏', 'Juntos suman', 'Si 3 o más de tu tribu oran juntos, o hacen el mismo festejo cerca, la tribu suma. Desde 👥 armás un grupo de hasta 5, cada uno con su rol: cada tanto se pierde una oveja y el grupo sale a buscarla. Muy pronto: la casa de la tribu, los Juegos de la fiesta y la caravana a Jerusalén.'],
     ['🎯', 'La meta de la semana', 'Cada semana tu tribu tiene una meta, y se llena con lo que hacés en tu vida: compartir de Jesús con un amigo, invitar, servir y orar por otros. Lo sumás desde tu mochila, en Tribu.'],
     ['🛡️', 'Nos cuidamos', 'No hay chat libre ni micrófono: se saluda con frases rápidas desde 👥. Si alguien se porta mal, reportalo o silencialo ahí mismo. Acá no se construye: tu casa te espera en tu mundo.']];
   const draw = () => { const c = C[i];
@@ -4676,7 +4688,7 @@ async function invTribu(body) {
   const rk = Object.keys(TRIBU).sort((a, b) => ((R[b] || {}).semana || 0) - ((R[a] || {}).semana || 0)), pos = rk.indexOf(t) + 1;
   body.innerHTML = `<div class="tr-card" style="--tc:${T0.c}"><div class="tr-emb lv${Math.min(lv, 9)}">${tribuImg(t, 96)}</div><div><b class="tr-n">${T0.n}</b><small>${T0.l}</small>
       <div class="tr-rs"><span>✦ Resplandor de la tribu: <b>${TRIBU_NV[lv][1]}</b></span><div class="tr-bar"><i style="width:${pct}%"></i></div><small>${D.pts} puntos${nx ? ' · faltan ' + (nx[0] - D.pts) + ' para ' + nx[1] : ' · ¡el más alto!'}</small></div>
-      <div class="tr-st"><span>👥 ${D.miembros} miembros</span><span>📅 Esta semana: ${D.semana || 0} · puesto ${pos} de 12</span></div>${(mine.titulos || []).includes('mensajero') ? '<span class="tm-tit">📣 Mensajero</span>' : ''}</div></div>
+      <div class="tr-st"><span>👥 ${D.miembros} miembros</span><span>📅 Esta semana: ${D.semana || 0} · puesto ${pos} de 12</span></div>${(mine.titulos || []).map(x => x === 'mensajero' ? '<span class="tm-tit">📣 Mensajero</span>' : x === 'pastor' ? '<span class="tm-tit">🐑 Buen pastor</span>' : '').join(' ')}</div></div>
     ${metaHTML(t, mine)}${TOT && (TOT.comp || TOT.inv) ? `<div class="tm-tot"><span>En todo Kids &amp; Hero</span><p><b>${TOT.comp || 0}</b> amigos escucharon de Jesús</p><p><b>${TOT.inv || 0}</b> amigos invitados a la iglesia</p></div>` : ''}
     <h4 class="tr-h">🏆 Logros de la tribu</h4><div class="tr-logs">${TRIBU_LOG.map(([id, ic, n, d, k, meta]) => { const ok = D.logros && D.logros[id], v = k === 'miembros' ? D.miembros : (D.cnt[k] || 0);
       return `<div class="tr-lg${ok ? ' ok' : ''}"><span class="tr-li">${ic}</span><div><b>${n}</b><small>${ok ? 'Logrado el ' + new Date(ok + 'T12:00:00').toLocaleDateString('es-AR') : d + ' · van ' + Math.min(v, meta) + ' de ' + meta}</small></div></div>`; }).join('')}
@@ -4909,9 +4921,9 @@ function mundoPanel(el, close) {
   const ps = Object.entries(MP.players).sort((a, b) => a[1].av.position.distanceTo(S.av.position) - b[1].av.position.distanceTo(S.av.position)).slice(0, 25);
   el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>🌍 Multijugador · Mundo ${MP.mundo}</b><span>${1 + Object.keys(MP.players).length} jugadores · se ven los más cercanos</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
     <div class="r-micbox"><b>💬 Frases rápidas</b><div class="r-phr2">${PHR.map((p, i) => `<button data-k="${i}">${p}</button>`).join('')}</div></div>
-    <div class="r-micbox mu-que"><b>🧭 Qué se puede hacer acá</b><div class="mu-q"><span>🙏 Orar juntos con tu tribu</span><span>🎉 Festejar juntos (desde ✦)</span><span>👋 Saludar con frases rápidas</span><span class="pr">👥 Grupos de 5 · muy pronto</span><span class="pr">🕳️ Expediciones · muy pronto</span><span class="pr">🏗️ Casa de la tribu · muy pronto</span><span class="pr">🏁 Juegos de la fiesta · muy pronto</span><span class="pr">🐫 Caravana a Jerusalén · muy pronto</span><span class="pr">🛒 Mercado · muy pronto</span></div>${MP.tribu ? `<button class="gd-how mu-tr">${tribuImg(MP.tribu, 22, 'tr-mini')} Mi tribu: ${TRIBU[MP.tribu].n}</button>` : '<button class="gd-how mu-tr">🏳️ Elegir mi tribu</button>'}</div>
+    <div class="r-micbox mu-que"><b>🧭 Qué se puede hacer acá</b><div class="mu-q"><span>🙏 Orar juntos con tu tribu</span><span>🎉 Festejar juntos (desde ✦)</span><span>👋 Saludar con frases rápidas</span><span>👥 Grupos de 5 con roles</span><span>🐑 La oveja perdida (cada tanto)</span><span class="pr">🕳️ Expediciones · muy pronto</span><span class="pr">🏗️ Casa de la tribu · muy pronto</span><span class="pr">🏁 Juegos de la fiesta · muy pronto</span><span class="pr">🐫 Caravana a Jerusalén · muy pronto</span><span class="pr">🛒 Mercado · muy pronto</span></div>${MP.tribu ? `<button class="gd-how mu-tr">${tribuImg(MP.tribu, 22, 'tr-mini')} Mi tribu: ${TRIBU[MP.tribu].n}</button>` : '<button class="gd-how mu-tr">🏳️ Elegir mi tribu</button>'}</div>
     ${vozSeccion()}
-    <ul class="r-list">${ps.length ? ps.map(([id, p]) => `<li>${p.info.tribu ? tribuImg(p.info.tribu, 20, 'tr-mini') + ' ' : ''}${esc(p.info.name)} <span class="mu-acts"><button class="am-sm mu-mute" data-id="${esc(id)}">${MP.mute[id] ? '🔈 Escuchar' : '🔇 Silenciar'}</button><button class="am-sm mu-rep" data-id="${esc(id)}">🚩 Reportar</button></span></li>`).join('') : '<li><small>Todavía no hay nadie cerca. ¡Explorá el mapa!</small></li>'}</ul>
+    <ul class="r-list">${ps.length ? ps.map(([id, p]) => `<li>${p.info.tribu ? tribuImg(p.info.tribu, 20, 'tr-mini') + ' ' : ''}${esc(p.info.name)} <span class="mu-acts">${MMO.l.some(x => x.id === id) ? '<em class="mu-yag">👥 En tu grupo</em>' : MMO.l.length < 5 ? `<button class="am-sm mu-ginv" data-id="${esc(id)}">👥 Invitar</button>` : ''}<button class="am-sm mu-mute" data-id="${esc(id)}">${MP.mute[id] ? '🔈 Escuchar' : '🔇 Silenciar'}</button><button class="am-sm mu-rep" data-id="${esc(id)}">🚩 Reportar</button></span></li>`).join('') : '<li><small>Todavía no hay nadie cerca. ¡Explorá el mapa!</small></li>'}</ul>
     <div class="mis-btns"><button class="mis-no r-leave">Salir del multijugador</button></div>
     <p class="cap-note">Acá no hay chat libre ni micrófono: solo frases rápidas y festejos. Si alguien se porta mal, reportalo: el equipo de Habitat lo revisa.</p></div>`;
   el.hidden = false; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
@@ -4921,6 +4933,7 @@ function mundoPanel(el, close) {
   vozWire(el, () => mundoPanel(el, close)); VOZ.panel = () => { if (!el.hidden && el.querySelector('.vz-sec')) mundoPanel(el, close); };
   el.querySelectorAll('.mu-mute').forEach(b => b.onclick = () => { const id = b.dataset.id; MP.mute[id] = !MP.mute[id]; const p = MP.players[id]; if (p && p.bubble && MP.mute[id]) p.bT = .01; mundoPanel(el, close); });
   el.querySelectorAll('.mu-rep').forEach(b => b.onclick = () => mundoReportar(b.dataset.id, el, close));
+  el.querySelectorAll('.mu-ginv').forEach(b => b.onclick = () => { MP.conn && MP.conn.send({ t: 'gInv', to: b.dataset.id }); b.disabled = true; b.textContent = 'Invitado'; G().toast('Le mandaste la invitación. Si acepta, quedan en grupo.'); });
 }
 function mundoReportar(id, el, close) {
   const p = MP.players[id]; if (!p) return;
@@ -4934,6 +4947,128 @@ function mundoReportar(id, el, close) {
     close(); G().toast('Gracias por avisar. Lo silenciamos para vos y el equipo lo va a revisar.');
   });
 }
+/* ---------- GRUPOS DE 5 y LA OVEJA PERDIDA (multijugador de Hero) ----------
+   Grupos: se invita desde 👥 a alguien del mundo; si acepta, quedan juntos (hasta 5). Cada uno elige un rol (uno por grupo):
+   el pastor es el único que puede cargar la oveja, el rastreador la «siente» de cerca, el intercesor ora y el grupo recibe
+   una pista, el heraldo toca el shofar y marca dónde juntarse. El servidor cuida todo (roles, distancias, premios). */
+const ROLES = {
+  pastor: { ic: '🧑‍🌾', n: 'Pastor', d: 'El único que puede cargar la oveja en los hombros y llevarla al redil.' },
+  rastreador: { ic: '🧭', n: 'Rastreador', d: 'Sigue las huellas: cuando la oveja está a menos de 70 metros, ve hacia dónde ir.' },
+  intercesor: { ic: '🙏', n: 'Intercesor', d: 'Cuando ora (arrodillado), todo el grupo recibe una pista hacia la oveja.' },
+  heraldo: { ic: '🎺', n: 'Heraldo', d: 'Toca el shofar: marca con una luz dónde está, para que el grupo se junte.' }
+};
+const MMO = { g: '', l: [], ev: null, oveja: null, redil: null, pil: [], arrowT: 0, inv: null, viSent: '', prayT: 0, el: null, t: 0, carry: null, carryId: '' };
+const mmoYo = () => MP.peer && MP.peer.id;
+const mmoRol = () => { const y = MMO.l.find(x => x.id === mmoYo()); return y ? y.rol : ''; };
+function mmoMsg(m) {
+  if (m.t === 'grupo') { const antes = MMO.g; MMO.g = typeof m.g === 'string' ? m.g.slice(0, 40) : ''; MMO.l = Array.isArray(m.l) ? m.l.slice(0, 5).map(x => ({ id: String(x.id || '').slice(0, 40), n: String(x.n || '').slice(0, 16), rol: ROLES[x.rol] ? x.rol : '', tribu: TRIBU[x.tribu] ? x.tribu : '', lider: !!x.lider })) : [];
+    if (MMO.g && !antes) misPop('👥 ¡Ya están en grupo!', 'Elijan un rol cada uno desde el panel del grupo. En los eventos del mundo, cada rol hace falta.');
+    mmoMarcas(); mmoHud(); return; }
+  if (m.t === 'gInv') { mmoInvitacion(String(m.de || '').slice(0, 40), String(m.n || '').slice(0, 16), TRIBU[m.tribu] ? m.tribu : ''); return; }
+  if (m.t === 'gAviso') { const T0 = { ocupado: (m.n || 'Esa persona') + ' ya está en otro grupo.', lleno: 'El grupo ya tiene 5.', no: (m.n || 'Esa persona') + ' no puede ahora.', rol: 'Ese rol ya lo tiene alguien del grupo.', pastor: 'Solo el pastor de un grupo de 2 o más puede cargar la oveja. ¡Armen un grupo y elijan pastor!' }[m.k]; if (T0) G().toast(T0); return; }
+  if (m.t === 'gSen') { const x = numOk(m.x, -5e3, 5e3), z = numOk(m.z, -5e3, 5e3); mmoPilar(x, z, '#FFD25E', 30); if (m.id !== mmoYo()) G().toast('🎺 ' + String(m.n || '').slice(0, 16) + ' tocó el shofar: ¡júntense donde está la luz!'); try { tone3d(); } catch (e) {} return; }
+  if (m.t === 'gPista') { MMO.arrowT = performance.now() + 15000; G().toast('🙏 ' + String(m.n || '').slice(0, 16) + ' oró por la oveja: seguí la flecha.'); return; }
+  if (m.t === 'oveja') mmoOveja(m);
+}
+/* ---- el grupo en pantalla ---- */
+function mmoHud() {
+  let el = document.getElementById('v3grupo'); if (!MP.mundo || (!MMO.g && !(MMO.ev && MMO.ev.fase !== 'nada'))) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.id = 'v3grupo'; document.body.appendChild(el); }
+  const me = S.av.position, E = MMO.ev, fin = E && E.fin ? Math.max(0, Math.round((E.fin - Date.now()) / 1000)) : 0;
+  const ev = E && (E.fase === 'perdida' || E.fase === 'cargada') ? `<div class="gr-ev"><b>🐑 La oveja perdida</b><small>${E.fase === 'cargada' ? (E.carga === mmoYo() ? 'La llevás vos: ¡al redil, donde está la luz!' : esc(E.cn) + ' la lleva al redil') : 'Cerca de ' + esc(E.lugar || 'acá') + ' · ' + Math.floor(fin / 60) + ':' + String(fin % 60).padStart(2, '0')}</small></div>` : '';
+  const gr = MMO.g ? `<div class="gr-h"><b>👥 Mi grupo</b><span><button class="gr-rol" type="button">Roles</button><button class="gr-sal" type="button" aria-label="Salir del grupo">Salir</button></span></div><ul>${MMO.l.map(x => { const p = x.id === mmoYo() ? null : MP.players[x.id], d = p ? Math.round(p.av.position.distanceTo(me)) : 0; return `<li class="${x.id === mmoYo() ? 'yo' : ''}"><span class="gr-ic">${x.rol ? ROLES[x.rol].ic : '·'}</span>${x.tribu ? tribuImg(x.tribu, 16, 'tr-mini') : ''}<b>${esc(x.n)}</b><small>${x.id === mmoYo() ? 'vos' : p ? d + ' m' : 'lejos'}</small></li>`; }).join('')}</ul>${mmoRol() === 'heraldo' ? '<button class="gr-sho" type="button">🎺 Tocar el shofar</button>' : ''}${!mmoRol() ? '<p class="gr-tip">Elegí tu rol en «Roles».</p>' : ''}` : '';
+  el.innerHTML = ev + gr;
+  const q = s => el.querySelector(s); if (q('.gr-rol')) q('.gr-rol').onclick = () => mmoRoles(); if (q('.gr-sal')) q('.gr-sal').onclick = () => { MP.conn && MP.conn.send({ t: 'gSal' }); };
+  if (q('.gr-sho')) q('.gr-sho').onclick = () => { MP.conn && MP.conn.send({ t: 'gSen' }); };
+}
+function mmoRoles() {
+  const el = document.getElementById('v3sheet'); if (!el) return; S.joy.x = 0; S.joy.y = 0; const close = () => { el.hidden = true; }, mio = mmoRol();
+  const de = r => { const x = MMO.l.find(y => y.rol === r); return x ? x : null; };
+  el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>👥 Los roles del grupo</b><span>Uno por persona. En los eventos del mundo, cada rol hace falta.</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
+    <div class="gr-roles">${Object.entries(ROLES).map(([k, R]) => { const x = de(k), tomado = x && x.id !== mmoYo(); return `<button class="gr-r${mio === k ? ' on' : ''}" data-r="${k}"${tomado ? ' disabled' : ''}><span>${R.ic}</span><b>${R.n}</b><small>${R.d}</small><em>${mio === k ? 'Tu rol' : tomado ? 'Lo tiene ' + esc(x.n) : 'Libre'}</em></button>`; }).join('')}</div>
+    <p class="cap-note">«El Señor es mi pastor; tengo todo lo que necesito.» (Salmo 23:1)</p></div>`;
+  el.hidden = false; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
+  el.querySelectorAll('.gr-r').forEach(b => b.onclick = () => { MP.conn && MP.conn.send({ t: 'gRol', r: b.dataset.r }); close(); });
+}
+function mmoInvitacion(de, n, tribu) {
+  let el = document.getElementById('v3ginv'); if (el) el.remove(); el = document.createElement('div'); el.id = 'v3ginv';
+  el.innerHTML = `<p>${tribu ? tribuImg(tribu, 22, 'tr-mini') : '👥'} <b>${esc(n)}</b> te invita a su grupo</p><div><button class="mis-yes gi-si" type="button">Unirme</button><button class="mis-no gi-no" type="button">Ahora no</button></div>`;
+  document.body.appendChild(el); const fuera = () => { el.remove(); clearTimeout(MMO.invT); };
+  el.querySelector('.gi-si').onclick = () => { MP.conn && MP.conn.send({ t: 'gSi' }); fuera(); }; el.querySelector('.gi-no').onclick = () => { MP.conn && MP.conn.send({ t: 'gNo' }); fuera(); };
+  clearTimeout(MMO.invT); MMO.invT = setTimeout(fuera, 45000);
+}
+/* un ícono del rol arriba de cada compañero de grupo */
+function mmoMarcas() {
+  for (const id in MP.players) { const p = MP.players[id]; if (p.gMark) { p.av.remove(p.gMark); p.gMark = null; } }
+  for (const x of MMO.l) { const p = MP.players[x.id]; if (!p) continue; const s = textSprite((x.rol ? ROLES[x.rol].ic + ' ' : '') + '👥', S.hx); s.scale.multiplyScalar(.34); s.position.y = 3.05 * (p.av.userData.h3 ? p.av.userData.h3.tagK || 1 : 1); p.av.add(s); p.gMark = s; }
+}
+/* una columna de luz (shofar, redil) */
+function mmoPilar(x, z, col, seg) {
+  const y = S.W ? S.W.hAt(x, z) : 0, g = new THREE.Mesh(new THREE.CylinderGeometry(.9, 1.4, 26, 18, 1, true), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: .32, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  g.position.set(x, y + 13, z); g.renderOrder = 5; S.scene.add(g); const P = { m: g, fin: seg ? performance.now() + seg * 1000 : 0 }; MMO.pil.push(P); return P;
+}
+function mmoPilarFuera(P) { if (!P) return; S.scene.remove(P.m); P.m.geometry.dispose(); P.m.material.dispose(); MMO.pil = MMO.pil.filter(x => x !== P); }
+/* ---- la oveja perdida (Lucas 15) ---- */
+const OVEJA_V = '«Alégrense conmigo porque encontré mi oveja perdida.» (Lucas 15:6)';
+/* elegir dónde: un lugar bueno (pisable, sin agua ni pendiente) cerca de la semilla, y el redil junto al pueblo más cercano */
+function mmoLugar(sx, sz) {
+  const W0 = S.W; if (!W0) return null; const ok = (x, z) => { if (Math.abs(x) > Math.min(XB * .9, (W0.X1 || XB) - 6)) return false; if (waterWet(x, z, null) > .04) return false; for (const B of WATER.basins) if (Math.hypot(x - B.x, z - B.z) < B.r * 1.4 + 2) return false; const sl = Math.hypot(W0.hAt(x + 1, z) - W0.hAt(x - 1, z), W0.hAt(x, z + 1) - W0.hAt(x, z - 1)) / 2; if (sl > .38) return false; for (let k = 0; k < 8; k++) { const an = k / 8 * 6.283; if (blockedAt(x + Math.cos(an) * 1.2, z + Math.sin(an) * 1.2)) return false; } return true; };
+  let ov = null; for (let t = 0; t < 160 && !ov; t++) { const an = t * 2.399, r = Math.sqrt(t) * 6, x = sx + Math.cos(an) * r, z = sz + Math.sin(an) * r; if (ok(x, z) && Math.hypot(x - S.av.position.x, z - S.av.position.z) > 70) ov = [x, z]; }
+  if (!ov) return null; const pois = (S.pois || []).filter(q => q.k !== 'river' && q.k !== 'lake' && q.name); if (!pois.length) return null;
+  const cerca = pois.slice().sort((a, b) => Math.hypot(a.x - ov[0], a.z - ov[1]) - Math.hypot(b.x - ov[0], b.z - ov[1])), pv = cerca.find(q => Math.hypot(q.x - ov[0], q.z - ov[1]) > 50) || cerca[0];
+  let rd = null; for (let t = 0; t < 160 && !rd; t++) { const an = t * 2.399, r = 8 + Math.sqrt(t) * 4, x = pv.x + Math.cos(an) * r, z = pv.z + Math.sin(an) * r; if (ok(x, z) && Math.hypot(x - ov[0], z - ov[1]) > 45) rd = [x, z]; }
+  return rd ? { x: Math.round(ov[0]), z: Math.round(ov[1]), rx: Math.round(rd[0]), rz: Math.round(rd[1]), lugar: (cerca[0] && cerca[0].name) || pv.name } : null;
+}
+function mmoOvejaFuera() { if (MMO.oveja) { S.scene.remove(MMO.oveja); MMO.oveja = null; } if (MMO.redil) { mmoPilarFuera(MMO.redil); MMO.redil = null; } mmoCarga(''); }
+function mmoCarga(id) { /* la oveja en los hombros del pastor */
+  if (MMO.carry && MMO.carryAv) MMO.carryAv.remove(MMO.carry); MMO.carry = null; MMO.carryAv = null; MMO.carryId = id; if (!id) return;
+  const av = id === mmoYo() ? S.av : MP.players[id] && MP.players[id].av; if (!av) return; const c = misMesh({ k: 'sheep' }); c.scale.setScalar(.7); c.position.y = 2.1; if (av.userData.h3) { c.scale.setScalar(.5); c.position.set(0, 1.55, -.05); c.rotation.y = Math.PI / 2; } av.add(c); MMO.carry = c; MMO.carryAv = av;
+}
+function mmoOveja(m) {
+  const fase = String(m.fase || ''), ev = String(m.ev || '').slice(0, 24);
+  if (fase === 'semilla') { const L = mmoLugar(numOk(m.sx, -5e3, 5e3), numOk(m.sz, -5e3, 5e3)); if (L && MP.conn) MP.conn.send({ t: 'ovejaPos', ev, ...L }); return; }
+  if (fase === 'perdida' || fase === 'cargada') {
+    const nueva = !MMO.ev || MMO.ev.id !== ev || MMO.ev.fase !== fase;
+    MMO.ev = { id: ev, fase, x: numOk(m.x, -5e3, 5e3), z: numOk(m.z, -5e3, 5e3), rx: numOk(m.rx, -5e3, 5e3), rz: numOk(m.rz, -5e3, 5e3), lugar: String(m.lugar || '').slice(0, 40), fin: numOk(m.fin, 0, 9e15), carga: String(m.carga || '').slice(0, 40), cn: String(m.cn || '').slice(0, 16) };
+    if (fase === 'perdida') { mmoCarga(''); if (MMO.redil) { mmoPilarFuera(MMO.redil); MMO.redil = null; }
+      if (!MMO.oveja) { MMO.oveja = misMesh({ k: 'sheep' }); S.scene.add(MMO.oveja); } MMO.oveja.position.set(MMO.ev.x, (S.W ? S.W.hAt(MMO.ev.x, MMO.ev.z) : 0), MMO.ev.z); MMO.oveja.visible = false; MMO.viSent = '';
+      if (nueva && !m.carga) misPop('🐑 ¡Se perdió una oveja!', 'Está cerca de ' + (MMO.ev.lugar || 'acá') + '. Como en Lucas 15:4, el pastor deja las noventa y nueve y sale a buscarla. Armen un grupo: el pastor la carga.'); }
+    else { if (MMO.oveja) { S.scene.remove(MMO.oveja); MMO.oveja = null; } mmoCarga(MMO.ev.carga); if (!MMO.redil) MMO.redil = mmoPilar(MMO.ev.rx, MMO.ev.rz, '#9EE6A8', 0);
+      if (nueva) misPop('🐑 ¡' + (MMO.ev.carga === mmoYo() ? 'La cargaste' : MMO.ev.cn + ' la cargó') + '!', MMO.ev.carga === mmoYo() ? 'Llevala al redil: la luz verde, cerca de ' + (MMO.ev.lugar || 'acá') + '.' : 'Ahora la lleva al redil, la luz verde.'); }
+    mmoHud(); return;
+  }
+  if (fase === 'vista') { if (m.id !== mmoYo()) G().toast('🐑 ¡' + String(m.n || '').slice(0, 16) + ' encontró la oveja!' + (mmoRol() === 'pastor' ? ' Andá a cargarla.' : ' El pastor tiene que ir a cargarla.')); return; }
+  if (fase === 'lograda') { MMO.ev = null; mmoOvejaFuera(); mmoHud(); const nom = (Array.isArray(m.nombres) ? m.nombres : []).map(x => String(x).slice(0, 16)).slice(0, 5);
+    if (!m.yo) { G().toast('🐑 El grupo de ' + (String(m.cn || nom[0] || '').slice(0, 16)) + ' encontró la oveja perdida. ¡Hay alegría en el cielo!'); return; }
+    const T0 = TRIBU[MP.tribu]; if (m.tlv != null && T0) { MP.tribuLv = Math.floor(numOk(m.tlv, 0, 9)); tribuAuraYo(); }
+    misPop('🐑 ¡Encontraron la oveja perdida!', OVEJA_V + (T0 ? ' ' + T0.n + ' suma +' + Math.floor(numOk(m.pts, 0, 99)) + ' de Resplandor.' : ''));
+    let d = 3400; if (m.titulo) { const p = G().P(); p.titulos = Array.from(new Set([...(p.titulos || []), 'pastor'])); G().save(); setTimeout(() => misPop('🐑 ¡Nuevo título: Buen pastor!', '«Yo soy el buen pastor; conozco a mis ovejas y ellas me conocen a mí.» (Juan 10:14)'), d); d += 3400; }
+    if (Array.isArray(m.logros) && m.logros.length) setTimeout(() => tribuLogro(m.logros), d); d += 3400;
+    setTimeout(() => { try { cardShow({ t: '¡Encontramos la oveja perdida!', ref: 'Lucas 15:6', lines: ['«Alégrense conmigo porque encontré mi oveja perdida.»', nom.length > 1 ? 'En equipo: ' + nom.join(', ') : ''] }); } catch (e) {} }, d); return; }
+  if (fase === 'fin') { if (MMO.ev) G().toast('🐑 Esta vez nadie llegó a tiempo. Pronto se va a perder otra: ¡armen un grupo!'); MMO.ev = null; mmoOvejaFuera(); mmoHud(); }
+}
+/* cada cuadro: flecha (rastreador e intercesor), ver la oveja, botón de cargar, luces que se apagan */
+function mmoTick(t) {
+  if (!MP.mundo || !S || !S.av) return; const now = performance.now(), me = S.av.position, E = MMO.ev;
+  for (const P of MMO.pil.slice()) { if (P.fin && now > P.fin) mmoPilarFuera(P); else P.m.material.opacity = .22 + Math.sin(t * 3) * .08; }
+  if (MMO.oveja) { MMO.oveja.rotation.y = t * .4; const d = Math.hypot(MMO.oveja.position.x - me.x, MMO.oveja.position.z - me.z); MMO.oveja.visible = d < 45;
+    if (d < 7 && E && MMO.viSent !== E.id) { MMO.viSent = E.id; MP.conn && MP.conn.send({ t: 'ovejaVi' }); G().toast('🐑 ¡La encontraste! ' + (mmoRol() === 'pastor' ? 'Cargala con el botón.' : 'Avisale al pastor de tu grupo.')); } }
+  /* el intercesor ora (arrodillado 2 s) durante la búsqueda: pista para todo el grupo */
+  if (E && E.fase === 'perdida' && mmoRol() === 'intercesor' && S.pose === 'pray') { MMO.prayT += 1; if (MMO.prayT === 120 && now - (MMO.pisT || 0) > 45000) { MMO.pisT = now; MP.conn && MP.conn.send({ t: 'gPista' }); } } else MMO.prayT = 0;
+  if (now - MMO.t < 200) return; MMO.t = now;
+  let el = document.getElementById('v3ovc'), btn = document.getElementById('v3ovb');
+  const tgt = E && E.fase === 'perdida' ? [E.x, E.z] : E && E.fase === 'cargada' && E.carga === mmoYo() ? [E.rx, E.rz] : null;
+  const dd = tgt ? Math.hypot(tgt[0] - me.x, tgt[1] - me.z) : 1e9, ver = tgt && !sheetUp() && (E.fase === 'cargada' || now < MMO.arrowT || (mmoRol() === 'rastreador' && dd < 70));
+  if (ver) { if (!el) { el = document.createElement('div'); el.id = 'v3ovc'; el.className = 'v3comp'; el.innerHTML = '<i><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3l6 15-6-3.5L6 18Z" fill="currentColor"/></svg></i><span></span>'; document.body.appendChild(el); }
+    const dx = tgt[0] - me.x, dz = tgt[1] - me.z, C = S.yaw + S.camYaw, th = Math.atan2(dx * -Math.cos(C) + dz * Math.sin(C), dx * Math.sin(C) + dz * Math.cos(C));
+    el.hidden = false; el.firstChild.style.transform = `rotate(${th}rad)`; el.lastChild.textContent = (E.fase === 'cargada' ? 'El redil' : '🐑 La oveja') + ' · ' + Math.round(dd) + ' m'; }
+  else if (el) el.hidden = true;
+  const puede = E && E.fase === 'perdida' && mmoRol() === 'pastor' && MMO.g && dd < 7;
+  if (puede && !btn) { btn = document.createElement('button'); btn.id = 'v3ovb'; btn.type = 'button'; btn.textContent = '🐑 Cargar la oveja'; btn.onclick = () => { MP.conn && MP.conn.send({ t: 'ovejaCargar' }); btn.remove(); }; document.body.appendChild(btn); }
+  else if (!puede && btn) btn.remove();
+  if (now - (MMO.hudT || 0) > 1000) { MMO.hudT = now; mmoHud(); }
+}
+function mmoFuera() { mmoOvejaFuera(); for (const P of MMO.pil.slice()) mmoPilarFuera(P); MMO.g = ''; MMO.l = []; MMO.ev = null; ['v3grupo', 'v3ginv', 'v3ovc', 'v3ovb'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); }); }
 /* micrófono: se habla solo mientras se mantiene apretado (tecla T o el botón) */
 const TALK = { stream: null, calls: {}, aus: {}, on: false, want: false, open: false };
 function talkPeer(peer) {
@@ -4957,7 +5092,7 @@ function talkUI() { const b = document.querySelector('.v3mic'); if (b) { b.class
 /* micrófono abierto: se habla sin apretar; el botón silencia o vuelve a abrir */
 function talkOpen(on) { TALK.open = !!on; if (on) talkStart(); else talkStop(); talkUI(); }
 function mpLeave(silent) {
-  talkEnd();
+  talkEnd(); try { mmoFuera(); } catch (e) { }
   try { for (const id in MP.conns) MP.conns[id].close(); if (MP.conn) MP.conn.close(); if (MP.peer) MP.peer.destroy(); } catch (e) {}
   for (const id in MP.players) mpDel(id); MP.peer = null; MP.conn = null; MP.conns = {}; MP.code = null; MP.host = false; MP.hostId = null; if (MP.mundo) vozFin(); MP.mundo = 0; MP.mute = {}; MP.tribu = ''; MP.tribuTip = 0; try { tribuAuraYo(); } catch (e) {} obraVolver(); if (!silent) mpUI();
 }
@@ -4966,6 +5101,7 @@ function mpAdd(id, info) {
   const tag = tagSprite(info.name + (info.avatar && info.avatar.don && DONL[info.avatar.don] ? ' · ' + DONL[info.avatar.don] : ''), (info.avatar && info.avatar.ins) || [], hx, (info.avatar && info.avatar.glow) || 0); tag.scale.multiplyScalar(.42); tag.position.y = 2.55 * (av.userData.h3 ? av.userData.h3.tagK || 1 : 1); av.add(tag); if ((info.hum || 0) >= 10) av.add(humHalo()); if (info.tribu) tribuInsignia(av, info.tribu, info.tlv); av.position.copy(S.av.position); av.position.x += 1.5; S.scene.add(av);
   if (TALK.stream) setTimeout(talkCallAll, 600);
   MP.players[id] = { info, av, tag, tgt: { x: av.position.x, y: 0, z: av.position.z, yaw: 0 }, st: { pose: null, waveT: 0, jy: 0 }, moving: false, bubble: null, bT: 0 };
+  if (MP.mundo && MMO.l.some(x => x.id === id)) setTimeout(mmoMarcas, 0); if (MP.mundo && MMO.carryId === id) setTimeout(() => mmoCarga(id), 0);
 }
 function mpDel(id) { if (MP.pend && MP.pend[id]) { try { Object.entries(MP.pend[id].give).forEach(([k, n]) => svAdd(k, n)); G().save(); } catch (e) {} delete MP.pend[id]; } if (TALK.calls[id]) { try { TALK.calls[id].close(); } catch (e) {} delete TALK.calls[id]; } if (TALK.aus[id]) { TALK.aus[id].srcObject = null; delete TALK.aus[id]; } const p = MP.players[id]; if (!p) return; if (S) S.scene.remove(p.av); delete MP.players[id]; }
 function mpOn(m) {
@@ -4984,7 +5120,7 @@ function mpTick(t, dt) {
   if (!MP.code) return;
   for (const id in MP.players) { const p = MP.players[id], a = p.av.position, k = Math.min(1, dt * 8); a.x += (p.tgt.x - a.x) * k; a.z += (p.tgt.z - a.z) * k; a.y += (p.tgt.y - a.y) * k; let d = p.tgt.yaw - p.av.rotation.y; while (d > Math.PI) d -= 6.283; while (d < -Math.PI) d += 6.283; p.av.rotation.y += d * k;
     animAvatar(p.av, t, p.moving && !(p.st.jy > .02), dt); applyPose(p.av, t, dt, p.st); if (p.bT > 0) { p.bT -= dt; if (p.bT <= 0 && p.bubble) { p.av.remove(p.bubble); p.bubble = null; } } }
-  const now = performance.now(); if (MP.mundo) mundoVer(now); if (now - MP.last > (MP.mundo ? 200 : 110)) { const a = S.av.position, s = [+a.x.toFixed(2), +a.y.toFixed(2), +a.z.toFixed(2), +S.yaw.toFixed(2), (S.moving || S.freeMoving) ? 1 : 0, S.pose || null, S.waveT > 1.8 ? 1 : 0, +(S.jy || 0).toFixed(2), S.poseK || null], sig = JSON.stringify(s); if (sig !== MP.sig || now - MP.last > 1500) { MP.sig = sig; MP.last = now; mpSend({ t: 'st', id: MP.peer && MP.peer.id, s }); } }
+  const now = performance.now(); if (MP.mundo) { mundoVer(now); try { mmoTick(t); } catch (e) { } } if (now - MP.last > (MP.mundo ? 200 : 110)) { const a = S.av.position, s = [+a.x.toFixed(2), +a.y.toFixed(2), +a.z.toFixed(2), +S.yaw.toFixed(2), (S.moving || S.freeMoving) ? 1 : 0, S.pose || null, S.waveT > 1.8 ? 1 : 0, +(S.jy || 0).toFixed(2), S.poseK || null], sig = JSON.stringify(s); if (sig !== MP.sig || now - MP.last > 1500) { MP.sig = sig; MP.last = now; mpSend({ t: 'st', id: MP.peer && MP.peer.id, s }); } }
 }
 function mpUI() {
   const old = document.getElementById('v3room'); if (old) old.remove();
