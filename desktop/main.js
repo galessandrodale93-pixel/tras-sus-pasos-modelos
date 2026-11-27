@@ -1,7 +1,8 @@
 /* Kids & Hero para Windows: abre el juego de habitat-cfm.org en una ventana propia, sin barras del navegador,
    usando la placa de video de la computadora. El juego y el progreso son los mismos que en la web: cada vez que se
    publica una versión nueva del juego, el programa la toma solo. */
-const { app, BrowserWindow, shell, session, Menu, screen } = require('electron');
+const { app, BrowserWindow, shell, session, Menu, screen, ipcMain } = require('electron');
+const cache = require('./cache');
 const path = require('path');
 const fs = require('fs');
 
@@ -19,6 +20,7 @@ app.commandLine.appendSwitch('force_high_performance_gpu');
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
 if (!app.requestSingleInstanceLock()) { app.quit(); }
+cache.preparar();
 
 let win = null;
 const ESTADO = () => path.join(app.getPath('userData'), 'ventana.json');
@@ -49,7 +51,7 @@ function crear() {
   win.webContents.on('will-navigate', (e, url) => { if (!adentro(url)) { e.preventDefault(); shell.openExternal(url); } });
 
   /* sin conexión: una pantalla propia con «Reintentar» */
-  win.webContents.on('did-fail-load', (e, code, desc, url, main) => { if (main && code !== -3) win.loadFile(path.join(__dirname, 'offline.html')); });
+  win.webContents.on('did-fail-load', (e, code, desc, url, main) => { if (main && code !== -3 && /^https:/.test(url)) win.loadFile(path.join(__dirname, 'offline.html')); });
 
   /* teclas: F11 pantalla completa, F5 recargar, Ctrl+R recargar */
   win.webContents.on('before-input-event', (e, i) => {
@@ -58,11 +60,27 @@ function crear() {
     else if (i.key === 'F5' || (i.control && i.key.toLowerCase() === 'r')) { win.webContents.reload(); e.preventDefault(); }
     else if (i.control && i.shift && i.key.toLowerCase() === 'i') e.preventDefault();
   });
-  win.loadURL(START);
+  arrancar();
 }
+
+/* al abrir: pantalla de descarga → bajar el juego completo (o lo nuevo) → entrar al juego */
+let enJuego = false;
+const prog = d => { try { if (win && !enJuego) win.webContents.send('kh-prog', d); } catch (e) {} };
+const entrar = () => { if (!win || enJuego) return; enJuego = true; win.loadURL(START); };
+async function arrancar() {
+  enJuego = false;
+  await win.loadFile(path.join(__dirname, 'descarga.html'), { query: { l: cache.idioma() } });
+  const r = await cache.sincronizar(prog);
+  if (r && r.offline) { prog({ fase: 'offline' }); return; }
+  setTimeout(entrar, r && r.nada ? 0 : 900);
+}
+ipcMain.on('kh-jugar', entrar);
+ipcMain.on('kh-reintentar', () => { if (win) arrancar(); });
+ipcMain.on('kh-lang', (e, l) => { if (/^(es|en|pt)$/.test(l || '')) cache.idioma(l); });
 
 app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
 app.whenReady().then(() => {
+  cache.iniciar();
   /* permisos que usa el juego: pantalla completa, bloquear el mouse, avisos, micrófono en las salas con amigos */
   session.defaultSession.setPermissionRequestHandler((wc, perm, cb, det) => {
     const ok = ['fullscreen', 'pointerLock', 'notifications', 'media', 'clipboard-sanitized-write'].includes(perm) && adentro(det.requestingUrl || wc.getURL());

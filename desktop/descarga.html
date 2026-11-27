@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Kids & Hero</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#0E0C08;color:#F3EAD6;font-family:"Segoe UI",system-ui,sans-serif}
+  body{background:radial-gradient(ellipse at 50% 30%,#3A2C55 0%,#1A1426 45%,#0E0C08 80%)}
+  .stars{position:fixed;inset:0;background-image:radial-gradient(1.5px 1.5px at 20% 30%,#fff8 50%,transparent 51%),radial-gradient(1px 1px at 70% 20%,#fff6 50%,transparent 51%),radial-gradient(1.5px 1.5px at 40% 75%,#fff5 50%,transparent 51%),radial-gradient(1px 1px at 85% 65%,#fff7 50%,transparent 51%),radial-gradient(1px 1px at 10% 85%,#fff5 50%,transparent 51%),radial-gradient(1.5px 1.5px at 55% 45%,#fff4 50%,transparent 51%);animation:tw 6s ease-in-out infinite alternate}
+  @keyframes tw{from{opacity:.5}to{opacity:1}}
+  .c{position:relative;height:100%;display:grid;place-items:center;text-align:center;padding:24px;box-sizing:border-box}
+  .in{width:min(560px,92vw)}
+  img{width:200px;height:200px;border-radius:32px;box-shadow:0 24px 60px rgba(0,0,0,.5),0 0 0 1px rgba(255,216,106,.18);animation:fl 5s ease-in-out infinite}
+  @keyframes fl{50%{transform:translateY(-6px)}}
+  h1{font-size:24px;margin:30px 0 8px;font-weight:700;letter-spacing:.01em}
+  p{margin:0 auto 22px;opacity:.82;font-size:15px;line-height:1.55;max-width:460px}
+  .bar{height:12px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+  .bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#F2A93B,#FFE79A);box-shadow:0 0 18px rgba(255,216,106,.55);transition:width .4s ease}
+  .bar.ind i{width:35%;animation:ind 1.3s ease-in-out infinite}
+  @keyframes ind{from{transform:translateX(-100%)}to{transform:translateX(290%)}}
+  .n{margin-top:12px;font-size:13px;opacity:.75;font-variant-numeric:tabular-nums;min-height:18px}
+  .b{margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  button{border:0;border-radius:999px;padding:12px 26px;font:800 15px "Segoe UI",system-ui,sans-serif;cursor:pointer;transition:transform .12s,filter .12s}
+  button:hover{transform:translateY(-1px);filter:brightness(1.07)}
+  .go{color:#2B1D00;background:linear-gradient(180deg,#FFE79A,#F2A93B);box-shadow:0 8px 22px rgba(242,169,59,.35)}
+  .sec{color:#F3EAD6;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+  [hidden]{display:none!important}
+  .tip{margin-top:28px;font-size:12.5px;opacity:.55}
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<div class="c"><div class="in">
+  <img src="build/icon.png" alt="Kids & Hero">
+  <h1 id="t"></h1>
+  <p id="x"></p>
+  <div class="bar ind" id="bar"><i></i></div>
+  <div class="n" id="n"></div>
+  <div class="b"><button class="sec" id="jugar" hidden></button><button class="go" id="reintentar" hidden></button></div>
+  <div class="tip" id="tip"></div>
+</div></div>
+<script>
+  var TX = {
+    es: { prep: 'Preparando Kids & Hero', lista: 'Buscando la última versión del juego…', prim: 'Descargando el juego completo', primx: 'Bajamos todo el mundo a tu compu: modelos, paisajes, música y voces. Pasa una sola vez; después el juego carga al instante y solo se baja lo nuevo.',
+      act: 'Actualizando el juego', actx: 'Hay una versión nueva. Bajamos solo lo que cambió.', listo: '¡Listo! Entrando al juego…', de: 'de', faltan: 'faltan', min: 'min', s: 's', arch: 'archivos',
+      jugar: 'Jugar mientras se descarga', off: 'No hay conexión a internet', offx: 'Kids & Hero necesita internet para entrar con tu cuenta y guardar tu progreso. Revisá la conexión y probá de nuevo.', re: 'Reintentar', tip: 'F11: pantalla completa' },
+    en: { prep: 'Getting Kids & Hero ready', lista: 'Looking for the latest version of the game…', prim: 'Downloading the full game', primx: 'We’re downloading the whole world to your computer: models, landscapes, music and voices. This happens only once; after that the game loads instantly and only new things are downloaded.',
+      act: 'Updating the game', actx: 'There’s a new version. We’re downloading only what changed.', listo: 'Done! Entering the game…', de: 'of', faltan: 'left', min: 'min', s: 's', arch: 'files',
+      jugar: 'Play while it downloads', off: 'No internet connection', offx: 'Kids & Hero needs internet to sign in with your account and save your progress. Check the connection and try again.', re: 'Try again', tip: 'F11: full screen' },
+    pt: { prep: 'Preparando o Kids & Hero', lista: 'Procurando a versão mais recente do jogo…', prim: 'Baixando o jogo completo', primx: 'Estamos baixando o mundo inteiro para o seu computador: modelos, paisagens, música e vozes. Isso acontece uma só vez; depois o jogo carrega na hora e só se baixa o que for novo.',
+      act: 'Atualizando o jogo', actx: 'Há uma versão nova. Baixamos só o que mudou.', listo: 'Pronto! Entrando no jogo…', de: 'de', faltan: 'faltam', min: 'min', s: 's', arch: 'arquivos',
+      jugar: 'Jogar enquanto baixa', off: 'Sem conexão com a internet', offx: 'Kids & Hero precisa de internet para entrar com a sua conta e salvar o seu progresso. Confira a conexão e tente de novo.', re: 'Tentar de novo', tip: 'F11: tela cheia' }
+  };
+  var L = (new URLSearchParams(location.search).get('l')) || 'es', T = TX[L] || TX.es;
+  document.documentElement.lang = L;
+  var $ = function (id) { return document.getElementById(id); };
+  $('t').textContent = T.prep; $('x').textContent = T.lista; $('tip').textContent = T.tip; $('jugar').textContent = T.jugar; $('reintentar').textContent = T.re;
+  var mb = function (b) { return (b / 1048576).toFixed(b > 104857600 ? 0 : 1) + ' MB'; };
+  $('jugar').onclick = function () { KH_DESKTOP.jugar(); };
+  $('reintentar').onclick = function () { KH_DESKTOP.reintentar(); };
+  KH_DESKTOP.onProgreso(function (d) {
+    if (d.fase === 'lista') { $('t').textContent = T.prep; $('x').textContent = T.lista; $('bar').className = 'bar ind'; return; }
+    if (d.fase === 'offline') { $('t').textContent = T.off; $('x').textContent = T.offx; $('bar').hidden = true; $('n').textContent = ''; $('reintentar').hidden = false; $('jugar').hidden = true; return; }
+    $('bar').hidden = false; $('reintentar').hidden = true;
+    $('t').textContent = d.primera ? T.prim : T.act; $('x').textContent = d.primera ? T.primx : T.actx;
+    if (d.fase === 'listo') { $('bar').className = 'bar'; $('bar').firstChild.style.width = '100%'; $('n').textContent = T.listo; $('jugar').hidden = true; return; }
+    $('bar').className = 'bar'; var f = d.tot ? d.got / d.tot : (d.N ? d.n / d.N : 0); $('bar').firstChild.style.width = Math.max(2, Math.round(f * 100)) + '%';
+    var eta = d.vel ? (d.tot - d.got) / d.vel : 0, et = eta > 90 ? Math.ceil(eta / 60) + ' ' + T.min : Math.ceil(eta) + ' ' + T.s;
+    $('n').textContent = mb(d.got) + ' ' + T.de + ' ' + mb(d.tot) + ' · ' + Math.round(f * 100) + '%' + (d.vel ? ' · ' + (d.vel / 1048576).toFixed(1) + ' MB/s · ' + T.faltan + ' ' + et : '');
+    $('jugar').hidden = !d.primera;
+  });
+</script>
+</body>
+</html>

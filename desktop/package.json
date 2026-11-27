@@ -1,7 +1,7 @@
 {
   "name": "kids-and-hero",
   "productName": "Kids & Hero",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Kids & Hero · Habitat CFM",
   "author": "Habitat CFM",
   "homepage": "https://www.habitat-cfm.org/kids-hero.html",
@@ -20,7 +20,7 @@
     "productName": "Kids & Hero",
     "copyright": "Habitat CFM",
     "directories": { "output": "dist", "buildResources": "build" },
-    "files": ["main.js", "preload.js", "offline.html", "build/icon.png"],
+    "files": ["main.js", "cache.js", "preload.js", "offline.html", "descarga.html", "build/icon.png"],
     "win": {
       "icon": "build/icon.ico",
       "target": ["nsis", "portable"],
