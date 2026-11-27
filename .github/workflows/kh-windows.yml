@@ -30,4 +30,5 @@ jobs:
           name: kids-and-hero-windows
           path: |
             desktop/dist/*.exe
+            desktop/dist/squirrel-windows/*.exe
           retention-days: 30

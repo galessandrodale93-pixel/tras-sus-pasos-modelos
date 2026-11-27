@@ -4,71 +4,205 @@
 <meta charset="utf-8">
 <title>Kids & Hero</title>
 <style>
-  html,body{margin:0;height:100%;overflow:hidden;background:#0E0C08;color:#F3EAD6;font-family:"Segoe UI",system-ui,sans-serif}
-  body{background:radial-gradient(ellipse at 50% 30%,#3A2C55 0%,#1A1426 45%,#0E0C08 80%)}
-  .stars{position:fixed;inset:0;background-image:radial-gradient(1.5px 1.5px at 20% 30%,#fff8 50%,transparent 51%),radial-gradient(1px 1px at 70% 20%,#fff6 50%,transparent 51%),radial-gradient(1.5px 1.5px at 40% 75%,#fff5 50%,transparent 51%),radial-gradient(1px 1px at 85% 65%,#fff7 50%,transparent 51%),radial-gradient(1px 1px at 10% 85%,#fff5 50%,transparent 51%),radial-gradient(1.5px 1.5px at 55% 45%,#fff4 50%,transparent 51%);animation:tw 6s ease-in-out infinite alternate}
-  @keyframes tw{from{opacity:.5}to{opacity:1}}
-  .c{position:relative;height:100%;display:grid;place-items:center;text-align:center;padding:24px;box-sizing:border-box}
-  .in{width:min(560px,92vw)}
-  img{width:200px;height:200px;border-radius:32px;box-shadow:0 24px 60px rgba(0,0,0,.5),0 0 0 1px rgba(255,216,106,.18);animation:fl 5s ease-in-out infinite}
-  @keyframes fl{50%{transform:translateY(-6px)}}
-  h1{font-size:24px;margin:30px 0 8px;font-weight:700;letter-spacing:.01em}
-  p{margin:0 auto 22px;opacity:.82;font-size:15px;line-height:1.55;max-width:460px}
-  .bar{height:12px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
-  .bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#F2A93B,#FFE79A);box-shadow:0 0 18px rgba(255,216,106,.55);transition:width .4s ease}
-  .bar.ind i{width:35%;animation:ind 1.3s ease-in-out infinite}
-  @keyframes ind{from{transform:translateX(-100%)}to{transform:translateX(290%)}}
-  .n{margin-top:12px;font-size:13px;opacity:.75;font-variant-numeric:tabular-nums;min-height:18px}
-  .b{margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-  button{border:0;border-radius:999px;padding:12px 26px;font:800 15px "Segoe UI",system-ui,sans-serif;cursor:pointer;transition:transform .12s,filter .12s}
-  button:hover{transform:translateY(-1px);filter:brightness(1.07)}
-  .go{color:#2B1D00;background:linear-gradient(180deg,#FFE79A,#F2A93B);box-shadow:0 8px 22px rgba(242,169,59,.35)}
-  .sec{color:#F3EAD6;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+  @font-face{font-family:Cinzel;font-weight:600;src:url(assets/f/cinzel-latin-600-normal.woff2) format("woff2")}
+  @font-face{font-family:Fraunces;font-style:italic;font-weight:500;src:url(assets/f/fraunces-latin-500-italic.woff2) format("woff2")}
+  @font-face{font-family:Nunito;font-weight:700;src:url(assets/f/nunito-latin-700-normal.woff2) format("woff2")}
+  @font-face{font-family:Nunito;font-weight:800;src:url(assets/f/nunito-latin-800-normal.woff2) format("woff2")}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:#0B0805;color:#F4E2B8;font-family:Nunito,"Segoe UI",sans-serif;user-select:none;-webkit-user-select:none;cursor:default}
   [hidden]{display:none!important}
-  .tip{margin-top:28px;font-size:12.5px;opacity:.55}
+  button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+
+  /* fondo: las mismas fotos de la portada del juego, con zoom lento y fundido */
+  .sl{position:fixed;inset:0;overflow:hidden}
+  .im{position:absolute;inset:-6%;background:center/cover no-repeat;opacity:0;transition:opacity 1.8s ease,transform 9s linear;transform:scale(1)}
+  .im.k0{transform-origin:20% 60%}.im.k1{transform-origin:80% 40%}.im.k2{transform-origin:50% 20%}
+  .im.on{opacity:1;transform:scale(1.14)}
+  .shade{position:fixed;inset:0;background:linear-gradient(90deg,rgba(6,4,2,.9) 0%,rgba(6,4,2,.58) 34%,rgba(6,4,2,.1) 64%,rgba(6,4,2,0) 100%),linear-gradient(0deg,rgba(6,4,2,.92) 0%,rgba(6,4,2,0) 46%),linear-gradient(180deg,rgba(0,0,0,.7) 0%,rgba(0,0,0,0) 16%)}
+  .grain{position:fixed;inset:0;pointer-events:none;opacity:.07;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  .frame{position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(233,201,138,.28)}
+
+  /* barra de arriba propia (la ventana no usa la de Windows) */
+  .bar{position:fixed;top:0;left:0;right:0;height:44px;display:flex;align-items:center;gap:12px;padding-left:18px;-webkit-app-region:drag;z-index:5}
+  .bar .mk{display:flex;align-items:center;gap:10px;font:600 11px Cinzel,Georgia,serif;letter-spacing:.34em;color:#E9C98A;text-shadow:0 1px 8px rgba(0,0,0,.8)}
+  .bar .mk img{width:22px;height:22px;border-radius:6px;box-shadow:0 0 0 1px rgba(233,201,138,.4)}
+  .bar .mk small{font:700 9.5px Nunito,sans-serif;letter-spacing:.12em;color:rgba(244,226,184,.45)}
+  .bar .sp{flex:1}
+  .lg{display:flex;gap:2px;padding:3px;border-radius:99px;background:rgba(10,7,4,.55);box-shadow:inset 0 0 0 1px rgba(233,201,138,.25);-webkit-app-region:no-drag}
+  .lg button{padding:4px 10px;border-radius:99px;font:800 10.5px Nunito,sans-serif;letter-spacing:.1em;color:rgba(244,226,184,.6);transition:background .2s,color .2s}
+  .lg button:hover{color:#FBF1DC}
+  .lg button.on{background:linear-gradient(180deg,#FFEDB8,#E3A93E);color:#2A1904}
+  .wb{display:flex;height:100%;margin-left:6px;-webkit-app-region:no-drag}
+  .wb button{width:50px;height:100%;display:grid;place-items:center;color:rgba(244,226,184,.8);transition:background .15s,color .15s}
+  .wb button:hover{background:rgba(255,255,255,.1);color:#fff}
+  .wb button.x:hover{background:#C42B1C;color:#fff}
+  .wb svg{width:11px;height:11px;stroke:currentColor;stroke-width:1.2;fill:none}
+
+  /* contenido */
+  .in{position:fixed;left:64px;bottom:56px;width:560px;display:grid;justify-items:start;gap:14px}
+  .logo{display:flex;align-items:center;gap:14px;margin-left:-14px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.55))}
+  .logo .k{height:104px;transform:rotate(-4deg);animation:fl 6s ease-in-out infinite}
+  .logo .amp{font:600 38px Cinzel,Georgia,serif;color:#E9C98A;margin:6px -2px 0;text-shadow:0 2px 12px rgba(0,0,0,.7)}
+  .logo .h{height:74px;position:relative}
+  .hw{position:relative;line-height:0}
+  .hw::after{content:"";position:absolute;inset:0;-webkit-mask:url(assets/hero.png) center/contain no-repeat;background:linear-gradient(105deg,transparent 38%,rgba(255,250,225,.85) 50%,transparent 62%) -200% 0/300% 100% no-repeat;animation:sh 4.5s ease-in-out infinite}
+  @keyframes sh{0%,40%{background-position:200% 0}100%{background-position:-100% 0}}
+  @keyframes fl{50%{transform:rotate(-4deg) translateY(-4px)}}
+  .tt{display:flex;align-items:center;gap:12px;font:600 14px Cinzel,Georgia,serif;letter-spacing:.44em;text-transform:uppercase;color:#E9C98A;text-shadow:0 2px 12px rgba(0,0,0,.7)}
+  .tt::after{content:"";width:64px;height:1px;background:linear-gradient(90deg,#E9C98A,transparent)}
+  h2{margin:4px 0 0;font:800 20px/1.25 Nunito,sans-serif;color:#FBF1DC;text-shadow:0 2px 14px rgba(0,0,0,.8)}
+  .vs{margin:0;padding:2px 0 2px 16px;border-left:2px solid rgba(233,201,138,.7);max-width:500px;min-height:70px;opacity:0;transform:translateY(6px);transition:opacity .45s,transform .45s}
+  .vs.on{opacity:1;transform:none}
+  .vs p{margin:0;font:italic 500 17px/1.5 Fraunces,Georgia,serif;color:#FBF1DC;text-shadow:0 2px 14px rgba(0,0,0,.8)}
+  .vs cite{display:block;margin-top:6px;font:600 10.5px Cinzel,serif;letter-spacing:.24em;text-transform:uppercase;font-style:normal;color:#E9C98A}
+
+  /* el camino de nueve paradas que se va llenando, igual que en el juego */
+  .dl{width:500px;display:grid;gap:9px;margin-top:4px}
+  .path{position:relative;height:16px;display:flex;justify-content:space-between;align-items:center}
+  .path>i{position:relative;z-index:1;width:9px;height:9px;border:1.5px solid rgba(233,201,138,.75);background:#120D07;transform:rotate(45deg);border-radius:1px;transition:background .4s,box-shadow .4s}
+  .path>i.done{background:#E9C98A}
+  .path>i.here{background:#FFE3A0;box-shadow:0 0 0 4px rgba(255,214,120,.18),0 0 16px 3px rgba(255,200,90,.7);animation:hr 1.8s ease-in-out infinite}
+  @keyframes hr{50%{box-shadow:0 0 0 7px rgba(255,214,120,.08),0 0 24px 6px rgba(255,200,90,.9)}}
+  .pb{position:absolute;left:4px;right:4px;top:50%;height:2px;margin-top:-1px;border-radius:2px;background:rgba(233,201,138,.22)}
+  .pb i{position:relative;display:block;height:100%;width:0;background:linear-gradient(90deg,rgba(184,134,46,.6),#FFE09A);box-shadow:0 0 10px rgba(255,210,120,.8);transition:width .45s ease}
+  .pb i::after{content:"";position:absolute;right:-4px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:#FFF4D2;box-shadow:0 0 12px 4px rgba(255,220,140,.9)}
+  .pb.ind{overflow:hidden}.pb.ind i{width:30%!important;animation:ind 1.5s ease-in-out infinite}.pb.ind i::after{display:none}
+  @keyframes ind{from{transform:translateX(-100%)}to{transform:translateX(340%)}}
+  .n{display:flex;justify-content:space-between;gap:12px;font:800 10.5px Nunito,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:rgba(244,226,184,.82);font-variant-numeric:tabular-nums;min-height:14px}
+  .n b{color:#FFE3A0;font-weight:800}
+  .act{display:flex;gap:10px;align-items:center;min-height:50px;margin-top:2px}
+  .go{position:relative;overflow:hidden;padding:15px 36px;border-radius:3px;font:600 14px Cinzel,Georgia,serif;letter-spacing:.24em;text-transform:uppercase;color:#1E1204;background:linear-gradient(180deg,#FFEDB8,#E3A93E 60%,#C98A24);box-shadow:0 0 0 1px rgba(255,236,190,.6) inset,0 12px 34px rgba(227,169,62,.4);transition:transform .15s,filter .15s}
+  .go:hover{transform:translateY(-1px);filter:brightness(1.06)}
+  .go::before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);transform:translateX(-120%);animation:shine 2.8s ease-in-out infinite}
+  @keyframes shine{60%,100%{transform:translateX(120%)}}
+  .alt{padding:13px 22px;border-radius:3px;font:800 12px Nunito,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#F4E2B8;background:rgba(20,14,8,.7);box-shadow:0 0 0 1px rgba(233,201,138,.55) inset;transition:background .15s}
+  .alt:hover{background:rgba(40,28,14,.85)}
+  .note{margin:0;max-width:500px;font:700 12px/1.5 Nunito,sans-serif;color:rgba(244,226,184,.72)}
+
+  /* nombre del lugar de la foto, abajo a la derecha */
+  .cap{position:fixed;right:56px;bottom:56px;display:grid;justify-items:end;gap:4px;text-align:right;opacity:0;transform:translateY(8px);transition:opacity .6s,transform .6s;pointer-events:none}
+  .cap.on{opacity:1;transform:none}
+  .cap i{width:46px;height:1px;background:linear-gradient(90deg,transparent,#E9C98A)}
+  .cap b{font:600 22px Cinzel,Georgia,serif;letter-spacing:.08em;color:#FBF1DC;text-shadow:0 2px 16px rgba(0,0,0,.8)}
+  .cap span{font:italic 500 13px Fraunces,Georgia,serif;color:rgba(244,226,184,.85);text-shadow:0 2px 10px rgba(0,0,0,.8)}
+
+  /* entrada y salida */
+  .in,.bar,.cap{animation:aparece .9s ease both}.in{animation-delay:.15s}
+  @keyframes aparece{from{opacity:0;transform:translateY(10px)}}
+  body.sale .in,body.sale .cap{transition:opacity .5s,transform .5s;opacity:0;transform:translateY(-8px)}
+  body.sale .shade{transition:background .6s}
+  @media (max-height:600px){.vs{display:none}.in{bottom:32px}.cap{bottom:32px}}
+  @media (prefers-reduced-motion:reduce){.im.on{transform:none}.go::before,.hw::after{animation:none}}
 </style>
 </head>
 <body>
-<div class="stars"></div>
-<div class="c"><div class="in">
-  <img src="build/icon.png" alt="Kids & Hero">
-  <h1 id="t"></h1>
-  <p id="x"></p>
-  <div class="bar ind" id="bar"><i></i></div>
-  <div class="n" id="n"></div>
-  <div class="b"><button class="sec" id="jugar" hidden></button><button class="go" id="reintentar" hidden></button></div>
-  <div class="tip" id="tip"></div>
-</div></div>
+<div class="sl" id="sl"></div><div class="shade"></div><div class="grain"></div>
+
+<div class="bar">
+  <div class="mk"><img src="build/icon.png" alt="">KIDS &amp; HERO <small id="ver"></small></div>
+  <div class="sp"></div>
+  <div class="lg" id="lg"><button data-l="es">ES</button><button data-l="en">EN</button><button data-l="pt">PT</button></div>
+  <div class="wb">
+    <button id="min" aria-label="Minimizar"><svg viewBox="0 0 10 10"><path d="M0 5.5h10"/></svg></button>
+    <button id="cerrar" class="x" aria-label="Cerrar"><svg viewBox="0 0 10 10"><path d="M0 0l10 10M10 0L0 10"/></svg></button>
+  </div>
+</div>
+
+<div class="cap" id="cap"><i></i><b></b><span></span></div>
+
+<div class="in">
+  <div class="logo"><img class="k" src="assets/kids.png" alt="Kids"><span class="amp">&amp;</span><span class="hw"><img class="h" src="assets/hero.png" alt="Hero"></span></div>
+  <div class="tt" id="tt"></div>
+  <h2 id="t"></h2>
+  <blockquote class="vs" id="vs"><p></p><cite></cite></blockquote>
+  <div class="dl" id="dl">
+    <div class="path" id="path"><div class="pb ind" id="pb"><i></i></div></div>
+    <div class="n"><span id="n1"></span><span id="n2"></span></div>
+  </div>
+  <div class="act"><button class="go" id="go" hidden></button><button class="alt" id="jugar" hidden></button></div>
+  <p class="note" id="x"></p>
+</div>
+<div class="frame"></div>
+
 <script>
   var TX = {
-    es: { prep: 'Preparando Kids & Hero', lista: 'Buscando la última versión del juego…', prim: 'Descargando el juego completo', primx: 'Bajamos todo el mundo a tu compu: modelos, paisajes, música y voces. Pasa una sola vez; después el juego carga al instante y solo se baja lo nuevo.',
-      act: 'Actualizando el juego', actx: 'Hay una versión nueva. Bajamos solo lo que cambió.', listo: '¡Listo! Entrando al juego…', de: 'de', faltan: 'faltan', min: 'min', s: 's', arch: 'archivos',
-      jugar: 'Jugar mientras se descarga', off: 'No hay conexión a internet', offx: 'Kids & Hero necesita internet para entrar con tu cuenta y guardar tu progreso. Revisá la conexión y probá de nuevo.', re: 'Reintentar', tip: 'F11: pantalla completa' },
-    en: { prep: 'Getting Kids & Hero ready', lista: 'Looking for the latest version of the game…', prim: 'Downloading the full game', primx: 'We’re downloading the whole world to your computer: models, landscapes, music and voices. This happens only once; after that the game loads instantly and only new things are downloaded.',
-      act: 'Updating the game', actx: 'There’s a new version. We’re downloading only what changed.', listo: 'Done! Entering the game…', de: 'of', faltan: 'left', min: 'min', s: 's', arch: 'files',
-      jugar: 'Play while it downloads', off: 'No internet connection', offx: 'Kids & Hero needs internet to sign in with your account and save your progress. Check the connection and try again.', re: 'Try again', tip: 'F11: full screen' },
-    pt: { prep: 'Preparando o Kids & Hero', lista: 'Procurando a versão mais recente do jogo…', prim: 'Baixando o jogo completo', primx: 'Estamos baixando o mundo inteiro para o seu computador: modelos, paisagens, música e vozes. Isso acontece uma só vez; depois o jogo carrega na hora e só se baixa o que for novo.',
-      act: 'Atualizando o jogo', actx: 'Há uma versão nova. Baixamos só o que mudou.', listo: 'Pronto! Entrando no jogo…', de: 'de', faltan: 'faltam', min: 'min', s: 's', arch: 'arquivos',
-      jugar: 'Jogar enquanto baixa', off: 'Sem conexão com a internet', offx: 'Kids & Hero precisa de internet para entrar com a sua conta e salvar o seu progresso. Confira a conexão e tente de novo.', re: 'Tentar de novo', tip: 'F11: tela cheia' }
+    es: { tt: 'Tras sus pasos', prep: 'Preparando el juego', lista: 'Buscando la última versión…', prim: 'Descargando el juego completo', primx: 'Bajamos todo el mundo a tu compu: modelos, paisajes, música y voces. Pasa una sola vez; después el juego carga al instante y solo se baja lo nuevo.',
+      act: 'Actualizando el juego', actx: 'Hay una versión nueva: bajamos solo lo que cambió.', listo: '¡Listo! Todo guardado en tu compu', entrar: 'Entrar al juego', entrando: 'Entrando…', de: 'de', faltan: 'faltan', min: 'min', s: 's',
+      jugar: 'Jugar mientras se descarga', off: 'No hay conexión a internet', offx: 'Kids & Hero necesita internet para entrar con tu cuenta y guardar tu progreso. Revisá la conexión y probá de nuevo.', re: 'Reintentar', fs: 'F11 sale y vuelve a la pantalla completa',
+      cap: [['Mar de Galilea', 'Donde Jesús llamó a los pescadores'], ['Templo de Jerusalén', 'La casa de su Padre'], ['La colina de los cinco mil', 'Cinco panes y dos peces'], ['El Gólgota', 'Donde dio su vida'], ['Desierto de Judea', 'Cuarenta días en el desierto']],
+      vs: [['Yo soy la luz del mundo: el que me sigue, no andará en tinieblas, mas tendrá la lumbre de la vida.', 'Juan 8:12'], ['Venid a mí todos los que estáis trabajados y cargados, que yo os haré descansar.', 'Mateo 11:28'], ['Yo soy el camino, y la verdad, y la vida: nadie viene al Padre, sino por mí.', 'Juan 14:6'], ['Lámpara es a mis pies tu palabra, y lumbrera a mi camino.', 'Salmos 119:105'], ['Venid en pos de mí, y os haré pescadores de hombres.', 'Mateo 4:19'], ['Yo soy el buen pastor: el buen pastor su vida da por las ovejas.', 'Juan 10:11'], ['Nosotros le amamos a él, porque él nos amó primero.', '1 Juan 4:19']] },
+    en: { tt: 'In His Steps', prep: 'Getting the game ready', lista: 'Looking for the latest version…', prim: 'Downloading the full game', primx: 'We’re downloading the whole world to your computer: models, landscapes, music and voices. This happens only once; after that the game loads instantly and only new things are downloaded.',
+      act: 'Updating the game', actx: 'There’s a new version: we’re downloading only what changed.', listo: 'Done! Everything is saved on your computer', entrar: 'Enter the game', entrando: 'Entering…', de: 'of', faltan: 'left', min: 'min', s: 's',
+      jugar: 'Play while it downloads', off: 'No internet connection', offx: 'Kids & Hero needs internet to sign in with your account and save your progress. Check the connection and try again.', re: 'Try again', fs: 'F11 leaves and returns to full screen',
+      cap: [['Sea of Galilee', 'Where Jesus called the fishermen'], ['Temple of Jerusalem', 'His Father’s house'], ['The hill of the five thousand', 'Five loaves and two fish'], ['Golgotha', 'Where he gave his life'], ['Judean Desert', 'Forty days in the wilderness']],
+      vs: [['I am the light of the world. He who follows me will not walk in the darkness, but will have the light of life.', 'John 8:12'], ['Come to me, all you who labor and are heavily burdened, and I will give you rest.', 'Matthew 11:28'], ['I am the way, the truth, and the life. No one comes to the Father, except through me.', 'John 14:6'], ['Your word is a lamp to my feet, and a light for my path.', 'Psalm 119:105'], ['Come after me, and I will make you fishers for men.', 'Matthew 4:19'], ['I am the good shepherd. The good shepherd lays down his life for the sheep.', 'John 10:11'], ['We love him, because he first loved us.', '1 John 4:19']] },
+    pt: { tt: 'Nos Seus Passos', prep: 'Preparando o jogo', lista: 'Procurando a versão mais recente…', prim: 'Baixando o jogo completo', primx: 'Estamos baixando o mundo inteiro para o seu computador: modelos, paisagens, música e vozes. Isso acontece uma só vez; depois o jogo carrega na hora e só se baixa o que for novo.',
+      act: 'Atualizando o jogo', actx: 'Há uma versão nova: baixamos só o que mudou.', listo: 'Pronto! Tudo salvo no seu computador', entrar: 'Entrar no jogo', entrando: 'Entrando…', de: 'de', faltan: 'faltam', min: 'min', s: 's',
+      jugar: 'Jogar enquanto baixa', off: 'Sem conexão com a internet', offx: 'Kids & Hero precisa de internet para entrar com a sua conta e salvar o seu progresso. Confira a conexão e tente de novo.', re: 'Tentar de novo', fs: 'F11 sai e volta para a tela cheia',
+      cap: [['Mar da Galileia', 'Onde Jesus chamou os pescadores'], ['Templo de Jerusalém', 'A casa de seu Pai'], ['A colina dos cinco mil', 'Cinco pães e dois peixes'], ['O Gólgota', 'Onde ele deu a sua vida'], ['Deserto da Judeia', 'Quarenta dias no deserto']],
+      vs: [['Eu sou a luz do mundo; quem me seguir não andará em trevas, mas terá luz de vida.', 'João 8:12'], ['Vinde a mim todos vós que estais cansados e sobrecarregados, e eu vos farei descansar.', 'Mateus 11:28'], ['Eu sou o caminho, e a verdade, e a vida. Ninguém vem ao Pai, a não ser por mim.', 'João 14:6'], ['Tua palavra é lâmpada para meus pés e luz para meu caminho.', 'Salmos 119:105'], ['Vinde após mim, e eu vos farei pescadores de gente.', 'Mateus 4:19'], ['Eu sou o bom Pastor; o bom Pastor dá sua vida pelas ovelhas.', 'João 10:11'], ['Nós amamos, porque ele nos amou primeiro.', '1 João 4:19']] }
   };
-  var L = (new URLSearchParams(location.search).get('l')) || 'es', T = TX[L] || TX.es;
-  document.documentElement.lang = L;
   var $ = function (id) { return document.getElementById(id); };
-  $('t').textContent = T.prep; $('x').textContent = T.lista; $('tip').textContent = T.tip; $('jugar').textContent = T.jugar; $('reintentar').textContent = T.re;
+  var K = window.KH_DESKTOP || { onProgreso: function () {}, jugar: function () {}, reintentar: function () {}, minimizar: function () {}, cerrar: function () {}, idioma: function () {} };
+  var L = new URLSearchParams(location.search).get('l') || 'es'; if (!TX[L]) L = 'es';
+  var T = TX[L], last = { fase: 'lista' }, entrando = false;
+
+  /* fotos: Hero y Kids intercaladas */
+  var FOTOS = [];
+  for (var i = 1; i <= 5; i++) { FOTOS.push(['hero' + i, i - 1]); FOTOS.push(['kids' + i, i - 1]); }
+  FOTOS = FOTOS.sort(function () { return Math.random() - .5; });
+  $('sl').innerHTML = FOTOS.map(function (f, i) { return '<div class="im k' + (i % 3) + '" style="background-image:url(assets/' + f[0] + '.jpg)"></div>'; }).join('');
+  var ims = [].slice.call(document.querySelectorAll('.im')), si = 0;
+  var caption = function () { var c = T.cap[FOTOS[si][1]], el = $('cap'); el.classList.remove('on'); setTimeout(function () { el.querySelector('b').textContent = c[0]; el.querySelector('span').textContent = c[1]; el.classList.add('on'); }, 500); };
+  ims[0].classList.add('on'); caption();
+  setInterval(function () { ims[si].classList.remove('on'); si = (si + 1) % ims.length; ims[si].classList.add('on'); caption(); }, 7000);
+
+  /* versículos */
+  var vi = Math.floor(Math.random() * 7);
+  var verso = function () { var v = $('vs'); v.classList.remove('on'); setTimeout(function () { var q = T.vs[vi % T.vs.length]; v.querySelector('p').textContent = q[0]; v.querySelector('cite').textContent = q[1]; vi++; v.classList.add('on'); }, 450); };
+  verso(); setInterval(verso, 9000);
+
+  /* camino de nueve paradas */
+  var DOTS = 9; $('path').insertAdjacentHTML('afterbegin', new Array(DOTS + 1).join('<i></i>'));
+  var dots = [].slice.call(document.querySelectorAll('.path>i'));
+  var camino = function (f) { var k = Math.min(DOTS - 1, Math.floor(f * (DOTS - 1) + 1e-6)); dots.forEach(function (d, i) { d.className = f >= 1 || i < k ? 'done' : i === k ? 'here' : ''; }); };
+
   var mb = function (b) { return (b / 1048576).toFixed(b > 104857600 ? 0 : 1) + ' MB'; };
-  $('jugar').onclick = function () { KH_DESKTOP.jugar(); };
-  $('reintentar').onclick = function () { KH_DESKTOP.reintentar(); };
-  KH_DESKTOP.onProgreso(function (d) {
-    if (d.fase === 'lista') { $('t').textContent = T.prep; $('x').textContent = T.lista; $('bar').className = 'bar ind'; return; }
-    if (d.fase === 'offline') { $('t').textContent = T.off; $('x').textContent = T.offx; $('bar').hidden = true; $('n').textContent = ''; $('reintentar').hidden = false; $('jugar').hidden = true; return; }
-    $('bar').hidden = false; $('reintentar').hidden = true;
+  function pintar(d) {
+    last = d;
+    $('tt').textContent = T.tt; $('jugar').textContent = T.jugar; $('ver').textContent = K.version ? 'v' + K.version : '';
+    [].forEach.call(document.querySelectorAll('.lg button'), function (b) { b.classList.toggle('on', b.dataset.l === L); });
+    var go = $('go'), al = $('jugar');
+    if (d.fase === 'offline') {
+      $('t').textContent = T.off; $('x').textContent = T.offx; $('dl').hidden = true; al.hidden = true;
+      go.hidden = false; go.textContent = T.re; go.onclick = function () { K.reintentar(); }; return;
+    }
+    $('dl').hidden = false;
+    if (d.fase === 'lista') { $('t').textContent = T.prep; $('x').textContent = T.lista; $('pb').className = 'pb ind'; camino(0); $('n1').textContent = ''; $('n2').textContent = ''; go.hidden = true; al.hidden = true; return; }
+    if (d.fase === 'listo') {
+      $('pb').className = 'pb'; $('pb').firstChild.style.width = '100%'; camino(1);
+      $('t').textContent = T.listo; $('x').textContent = T.fs; $('n1').innerHTML = '<b>100%</b>'; $('n2').textContent = d.tot ? mb(d.tot) : '';
+      al.hidden = true; go.hidden = false; go.textContent = entrando ? T.entrando : T.entrar; go.onclick = entrar; return;
+    }
     $('t').textContent = d.primera ? T.prim : T.act; $('x').textContent = d.primera ? T.primx : T.actx;
-    if (d.fase === 'listo') { $('bar').className = 'bar'; $('bar').firstChild.style.width = '100%'; $('n').textContent = T.listo; $('jugar').hidden = true; return; }
-    $('bar').className = 'bar'; var f = d.tot ? d.got / d.tot : (d.N ? d.n / d.N : 0); $('bar').firstChild.style.width = Math.max(2, Math.round(f * 100)) + '%';
+    $('pb').className = 'pb'; var f = d.tot ? d.got / d.tot : (d.N ? d.n / d.N : 0);
+    $('pb').firstChild.style.width = Math.max(1, f * 100).toFixed(1) + '%'; camino(f);
     var eta = d.vel ? (d.tot - d.got) / d.vel : 0, et = eta > 90 ? Math.ceil(eta / 60) + ' ' + T.min : Math.ceil(eta) + ' ' + T.s;
-    $('n').textContent = mb(d.got) + ' ' + T.de + ' ' + mb(d.tot) + ' · ' + Math.round(f * 100) + '%' + (d.vel ? ' · ' + (d.vel / 1048576).toFixed(1) + ' MB/s · ' + T.faltan + ' ' + et : '');
-    $('jugar').hidden = !d.primera;
-  });
+    $('n1').innerHTML = '<b>' + Math.floor(f * 100) + '%</b> · ' + mb(d.got) + ' ' + T.de + ' ' + mb(d.tot);
+    $('n2').textContent = d.vel ? (d.vel / 1048576).toFixed(1) + ' MB/s · ' + T.faltan + ' ' + et : '';
+    go.hidden = true; al.hidden = !d.primera;
+  }
+  function entrar() { if (entrando) return; entrando = true; document.body.classList.add('sale'); $('go').textContent = T.entrando; K.jugar(); }
+  $('jugar').onclick = entrar;
+  $('min').onclick = function () { K.minimizar(); };
+  $('cerrar').onclick = function () { K.cerrar(); };
+  $('lg').onclick = function (e) { var l = e.target.dataset && e.target.dataset.l; if (!l || l === L) return; L = l; T = TX[L]; document.documentElement.lang = L; K.idioma(L); pintar(last); vi--; verso(); caption(); };
+  document.documentElement.lang = L;
+  K.onProgreso(function (d) { if (d.fase === 'entrando') { entrando = true; document.body.classList.add('sale'); $('go').textContent = T.entrando; return; } pintar(d); });
+  pintar(last);
+  /* vista previa sin el programa: ?demo=0.62 */
+  var dm = new URLSearchParams(location.search).get('demo');
+  if (dm != null) { if (dm === 'off') pintar({ fase: 'offline' }); else if (+dm >= 1) pintar({ fase: 'listo', tot: 2.1e9 }); else pintar({ fase: 'bajando', primera: true, got: +dm * 2.1e9, tot: 2.1e9, vel: 9.4e6 }); }
 </script>
 </body>
 </html>
