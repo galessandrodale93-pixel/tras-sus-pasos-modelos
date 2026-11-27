@@ -1,7 +1,7 @@
 /* El juego sabe que corre en el programa de Windows; la pantalla de descarga recibe el avance. */
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('KH_DESKTOP', {
-  plataforma: 'windows', version: '1.2.0',
+  plataforma: process.platform === 'darwin' ? 'mac' : 'windows', version: '1.2.0',
   onProgreso: cb => ipcRenderer.on('kh-prog', (e, d) => cb(d)),
   jugar: () => ipcRenderer.send('kh-jugar'),
   reintentar: () => ipcRenderer.send('kh-reintentar'),

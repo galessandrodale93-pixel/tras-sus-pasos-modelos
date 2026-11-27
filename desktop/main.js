@@ -6,7 +6,8 @@ const cache = require('./cache');
 const path = require('path');
 const fs = require('fs');
 
-const START = process.env.KH_START || 'https://www.habitat-cfm.org/jugar.html?app=win'; /* KH_START: solo para probar */
+const MAC = process.platform === 'darwin';
+const START = process.env.KH_START || 'https://www.habitat-cfm.org/jugar.html?app=' + (MAC ? 'mac' : 'win'); /* KH_START: solo para probar */
 /* lugares que se abren dentro del programa: el juego, el inicio de sesión y el pago; lo demás va al navegador */
 const ADENTRO = [/(^|\.)habitat-cfm\.org$/, /(^|\.)wix\.com$/, /(^|\.)wixapis\.com$/, /(^|\.)wixstatic\.com$/, /(^|\.)wixsite\.com$/,
   /(^|\.)accounts\.google\.com$/, /(^|\.)google\.com$/, /(^|\.)facebook\.com$/, /(^|\.)mercadopago\.com(\.ar)?$/, /(^|\.)mercadolibre\.com(\.ar)?$/];
@@ -44,11 +45,18 @@ const leerEstado = () => { try { return JSON.parse(fs.readFileSync(ESTADO(), 'ut
 const guardarEstado = () => { try { if (!win) return; fs.writeFileSync(ESTADO(), JSON.stringify({ b: win.getNormalBounds(), full: win.isFullScreen() })); } catch (e) {} };
 const uaLimpio = wc => wc.setUserAgent(wc.getUserAgent().replace(/\s*Electron\/\S+/, '').replace(/\s*kids-and-hero\/\S+/i, '').replace(/\s*Kids & Hero\/\S+/i, ''));
 
+/* en Mac hace falta un menú mínimo para que anden Cmd+Q, Cmd+C/V (al iniciar sesión) y la pantalla completa */
+function menu() {
+  if (!MAC) { Menu.setApplicationMenu(null); return; }
+  Menu.setApplicationMenu(Menu.buildFromTemplate([{ role: 'appMenu' }, { role: 'editMenu' },
+    { label: 'Ver', submenu: [{ role: 'reload' }, { role: 'togglefullscreen' }] }, { role: 'windowMenu' }]));
+}
+
 function lanzador() {
   const wa = screen.getPrimaryDisplay().workAreaSize, w = Math.min(1280, Math.round(wa.width * .92)), h = Math.min(Math.round(w * 9 / 16), Math.round(wa.height * .92));
   lan = new BrowserWindow({ width: w, height: h, center: true, frame: false, resizable: false, maximizable: false, fullscreenable: false, show: false,
     backgroundColor: '#0B0805', title: 'Kids & Hero', icon: ICON, roundedCorners: true, webPreferences: WP });
-  Menu.setApplicationMenu(null);
+  menu();
   lan.once('ready-to-show', () => lan.show());
   lan.on('closed', () => { lan = null; });
   lan.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });
@@ -78,7 +86,7 @@ function entrar() {
   uaLimpio(win.webContents);
   /* que la pantalla completa se note al entrar: se muestra recién cuando el juego ya pintó algo, y el lanzador se va */
   let listo = false;
-  const mostrar = () => { if (listo || !win) return; listo = true; win.setFullScreen(true); win.show(); win.focus(); setTimeout(() => { if (lan) lan.close(); }, 350); };
+  const mostrar = () => { if (listo || !win) return; listo = true; if (MAC) { win.show(); win.setFullScreen(true); } else { win.setFullScreen(true); win.show(); } win.focus(); setTimeout(() => { if (lan) lan.close(); }, 350); };
   win.once('ready-to-show', mostrar); setTimeout(mostrar, 12000);
   win.on('close', guardarEstado);
   win.on('closed', () => { win = null; });
@@ -95,9 +103,9 @@ function entrar() {
   /* teclas: F11 pantalla completa, F5 recargar, Ctrl+R recargar */
   win.webContents.on('before-input-event', (e, i) => {
     if (i.type !== 'keyDown') return;
-    if (i.key === 'F11') { win.setFullScreen(!win.isFullScreen()); e.preventDefault(); }
-    else if (i.key === 'F5' || (i.control && i.key.toLowerCase() === 'r')) { win.webContents.reload(); e.preventDefault(); }
-    else if (i.control && i.shift && i.key.toLowerCase() === 'i') e.preventDefault();
+    if (i.key === 'F11' || (MAC && i.meta && i.control && i.key.toLowerCase() === 'f')) { win.setFullScreen(!win.isFullScreen()); e.preventDefault(); }
+    else if (i.key === 'F5' || ((i.control || i.meta) && i.key.toLowerCase() === 'r')) { win.webContents.reload(); e.preventDefault(); }
+    else if ((i.control || i.meta) && (i.shift || i.alt) && i.key.toLowerCase() === 'i') e.preventDefault();
   });
   win.loadURL(START);
 }

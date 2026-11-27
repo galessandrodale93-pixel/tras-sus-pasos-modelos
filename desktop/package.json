@@ -9,7 +9,8 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win squirrel portable --publish never"
+    "dist": "electron-builder --win squirrel portable --publish never",
+    "dist:mac": "electron-builder --mac dmg --universal --publish never"
   },
   "devDependencies": {
     "electron": "^33.2.1",
@@ -49,6 +50,46 @@
       "iconUrl": "https://raw.githubusercontent.com/galessandrodale93-pixel/tras-sus-pasos-modelos/main/desktop/build/icon.ico",
       "artifactName": "Kids-and-Hero-Instalar-${version}.${ext}",
       "msi": false
+    },
+    "mac": {
+      "icon": "build/icon.png",
+      "category": "public.app-category.games",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "identity": "-",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "darkModeSupport": true,
+      "artifactName": "Kids-and-Hero-Mac-${version}.${ext}",
+      "minimumSystemVersion": "11.0"
+    },
+    "dmg": {
+      "title": "Kids & Hero",
+      "background": "build/background.png",
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "iconSize": 96,
+      "contents": [
+        {
+          "x": 140,
+          "y": 230,
+          "type": "file"
+        },
+        {
+          "x": 400,
+          "y": 230,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     }
   }
 }
