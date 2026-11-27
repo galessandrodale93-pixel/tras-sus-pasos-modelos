@@ -14,20 +14,49 @@
     en: 'For now, apart from Kids & Hero, our classes, videos and other audiovisual materials are only available in Spanish.',
     pt: 'Por enquanto, além do Kids & Hero, nossas aulas, vídeos e demais materiais audiovisuais estão disponíveis só em espanhol.'
   };
-  var css = '.lang-sw{display:inline-flex;gap:2px;align-items:center;border:1px solid currentColor;border-radius:999px;padding:2px;margin-left:10px;font:700 11px/1 system-ui,sans-serif;opacity:.85}' +
-    '.lang-sw button{all:unset;cursor:pointer;padding:5px 7px;border-radius:999px;letter-spacing:.04em;opacity:.55}.lang-sw button:hover{opacity:.85}.lang-sw button[aria-pressed=true]{opacity:1;text-decoration:underline;text-underline-offset:3px}' +
-    '.lang-sw.flot{position:fixed;left:12px;bottom:12px;z-index:9999;background:rgba(20,16,30,.82);color:#fff;border-color:rgba(255,255,255,.4)}' +
+  var css = '.lang-dd{position:relative;display:flex;align-items:center;margin-left:14px;color:var(--cream,#F3EAD6);z-index:60}' +
+    '.lang-dd svg{width:20px;height:14px;border-radius:2px;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.25)}' +
+    '.lang-b{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.28);color:inherit;border-radius:999px;padding:6px 10px;font:700 12px/1 system-ui,sans-serif;letter-spacing:.04em;cursor:pointer}' +
+    '.lang-b:hover{background:rgba(255,255,255,.14)}.lang-b i{font-style:normal;opacity:.7;font-size:10px}' +
+    '.lang-m{position:absolute;top:calc(100% + 8px);right:0;min-width:160px;background:#1E1830;border:1px solid rgba(255,255,255,.14);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.35);padding:6px;display:grid;gap:2px}' +
+    '.lang-m:not([hidden]){animation:langIn .16s ease-out}@keyframes langIn{from{opacity:0;transform:translateY(-6px)}}.lang-b[aria-expanded=true] i{transform:rotate(180deg)}.lang-b i{transition:transform .15s}' +
+    '.lang-m[hidden]{display:none}.lang-m button{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;color:#F3EAD6;font:600 14px/1.2 system-ui,sans-serif}' +
+    '.lang-m button:hover{background:rgba(255,255,255,.08)}.lang-m button.on{background:rgba(233,195,122,.16);font-weight:800}' +
+    '.lang-dd.abs{position:absolute;right:16px;top:50%;transform:translateY(-50%);margin:0}.lang-dd.flot{position:fixed;right:14px;top:14px;margin:0}' +
+    '.lang-dd.mob{margin-left:auto;margin-right:4px}.top .wrap:has(.lang-dd.mob){display:flex;align-items:center}' +
     '.lang-aviso{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9998;max-width:min(560px,calc(100vw - 120px));background:rgba(32,24,48,.94);color:#f3ead6;font:500 13px/1.45 system-ui,sans-serif;padding:10px 38px 10px 14px;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.3)}' +
     '.lang-aviso button{all:unset;cursor:pointer;position:absolute;right:10px;top:8px;font-size:15px;opacity:.7}' +
     '@media (max-width:600px){.lang-aviso{left:12px;right:12px;transform:none;max-width:none;bottom:56px}}' +
     '.lang-es{display:inline-block;margin:6px 0 10px;padding:4px 10px;border-radius:999px;background:rgba(200,160,80,.18);border:1px solid rgba(200,160,80,.55);font:600 12px/1.3 system-ui,sans-serif;letter-spacing:.02em}' +
     'html.i18n-wait body{opacity:0}html body{transition:opacity .15s}';
   var st = document.createElement('style'); st.textContent = css; (document.head || document.documentElement).appendChild(st);
+  /* banderas dibujadas (los emojis de banderas no se ven en Windows) */
+  var FLAG = {
+    es: '<svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#AA151B"/><rect y="5" width="30" height="10" fill="#F1BF00"/></svg>',
+    en: '<svg viewBox="0 0 60 30" aria-hidden="true"><rect width="60" height="30" fill="#012169"/><path d="M0,0 60,30M60,0 0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 60,30M60,0 0,30" stroke="#C8102E" stroke-width="2.4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></svg>',
+    pt: '<svg viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" fill="#009C3B"/><path d="M10 1.6 18.4 7 10 12.4 1.6 7z" fill="#FFDF00"/><circle cx="10" cy="7" r="3.4" fill="#002776"/></svg>'
+  };
+  var NOMBRE = { es: 'Español', en: 'English', pt: 'Português' };
   function selector() {
-    if (document.querySelector('.lang-sw')) return;
-    var w = document.createElement('div'); w.className = 'lang-sw'; w.setAttribute('data-notr', ''); w.setAttribute('role', 'group'); w.setAttribute('aria-label', 'Idioma / Language');
-    Object.keys(SUP).forEach(function (l) { var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', l === LANG ? 'true' : 'false'); b.title = { es: 'Español', en: 'English', pt: 'Português' }[l]; b.innerHTML = '<span>' + SUP[l] + '</span>'; b.onclick = function () { if (l !== LANG) setLang(l); }; w.appendChild(b); });
-    w.classList.add('flot'); document.body.appendChild(w);
+    if (document.querySelector('.lang-dd')) return;
+    var w = document.createElement('div'); w.className = 'lang-dd'; w.setAttribute('data-notr', '');
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'lang-b'; b.setAttribute('aria-haspopup', 'true'); b.setAttribute('aria-expanded', 'false'); b.setAttribute('aria-label', 'Idioma · Language · Idioma');
+    b.innerHTML = FLAG[LANG] + '<span>' + SUP[LANG] + '</span><i>▾</i>';
+    var m = document.createElement('div'); m.className = 'lang-m'; m.hidden = true; m.setAttribute('role', 'menu');
+    Object.keys(SUP).forEach(function (l) { var o = document.createElement('button'); o.type = 'button'; o.setAttribute('role', 'menuitem'); if (l === LANG) o.className = 'on'; o.innerHTML = FLAG[l] + '<span>' + NOMBRE[l] + '</span>'; o.onclick = function () { m.hidden = true; if (l !== LANG) setLang(l); }; m.appendChild(o); });
+    b.onclick = function (e) { e.stopPropagation(); m.hidden = !m.hidden; b.setAttribute('aria-expanded', m.hidden ? 'false' : 'true'); };
+    document.addEventListener('click', function (e) { if (!w.contains(e.target)) { m.hidden = true; b.setAttribute('aria-expanded', 'false'); } });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') m.hidden = true; });
+    w.appendChild(b); w.appendChild(m);
+    /* en compu va al final de la barra (después de «Ingresar»); en celu, al lado del menú ☰ */
+    var hw = document.querySelector('header.top .wrap'), side = hw && hw.querySelector('.nav-side'), bur = hw && hw.querySelector('.burger'), top = document.querySelector('header.top');
+    if (hw && side && bur) {
+      var mq = window.matchMedia('(max-width:1020px)');
+      var place = function () { if (mq.matches) { w.classList.add('mob'); hw.insertBefore(w, bur); } else { w.classList.remove('mob'); side.appendChild(w); } };
+      place(); if (mq.addEventListener) mq.addEventListener('change', place); else if (mq.addListener) mq.addListener(place);
+    }
+    else if (top) { w.classList.add('abs'); top.appendChild(w); }
+    else { w.classList.add('flot'); document.body.appendChild(w); }
   }
   function aviso() {
     if (!AVISO[LANG] || document.querySelector('.lang-aviso')) return;
