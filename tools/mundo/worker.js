@@ -20,8 +20,16 @@ const nivelDe = pts => { let n = 0; NIVELES.forEach((u, i) => { if (pts >= u) n 
 /* logros: [id, contador, meta, puntos] */
 const LOGROS = [['fam1', 'miembros', 10, 50], ['fam2', 'miembros', 50, 150], ['fam3', 'miembros', 200, 500],
   ['ora1', 'ora', 10, 50], ['ora2', 'ora', 100, 150], ['ora3', 'ora', 1000, 500],
-  ['fes1', 'festejo', 10, 50], ['fes2', 'festejo', 100, 150], ['fes3', 'festejo', 1000, 500]];
-const PTS = { ora: 3, festejo: 2 };
+  ['fes1', 'festejo', 10, 50], ['fes2', 'festejo', 100, 150], ['fes3', 'festejo', 1000, 500],
+  ['pes1', 'comp', 10, 150], ['sal1', 'inv', 20, 150], ['luz1', 'serv', 30, 150], ['int1', 'orv', 50, 150],
+  ['met1', 'metas', 1, 100], ['met2', 'metas', 4, 300], ['met3', 'metas', 12, 600]];
+const PTS = { ora: 3, festejo: 2, comp: 15, inv: 6, serv: 5, orv: 2 };
+/* la meta de la semana: lo que cada uno hace fuera del juego (compartir de Jesús, invitar, servir, orar).
+   Topes por persona y por semana (orar: una vez por día), para que cuente lo hecho de verdad y no el apuro. */
+const META_K = { comp: 3, inv: 3, serv: 5, orv: 7 };
+const META_S = { comp: ['', ''], inv: ['iglesia', 'grupo', 'casa'], serv: ['casa', 'vecino', 'iglesia', 'dar', 'escuela'], orv: ['amigo', 'familia', 'tribu', 'escuela'] };
+const metaDe = miembros => Math.min(3000, 40 + 8 * Math.max(1, miembros));
+const hoyAR = () => new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
 const semana = () => { const d = new Date(Date.now() - 3 * 3600e3), dia = (d.getUTCDay() + 6) % 7; return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - dia)).toISOString().slice(0, 10); };
 const RATE = new Map();
 function limited(ip, what, max, perMs) {
@@ -62,6 +70,8 @@ export default {
       return new Response('ok');
     }
     const TR = () => env.TRIBUS.get(env.TRIBUS.idFromName('tribus'));
+    /* el contador general (para la web y el juego): a cuántos amigos les hablaron de Jesús y cuántos invitaron, con foto revisada en el aparato */
+    if (p === '/contador' && req.method === 'GET') { const j = await (await TR().fetch('https://t/resumen')).json(); return new Response(JSON.stringify({ ...j.total, semana: j.semana }), { headers: { ...CORS, 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=120' } }); }
     if (p === '/tribus' && req.method === 'GET') { if (!okOrigin(o)) return new Response('Prohibido', { status: 403, headers: CORS }); const r = await TR().fetch('https://t/resumen'); return new Response(r.body, { headers: { ...CORS, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } }); }
     /* mi tribu (con el pase): { pase } la consulta; { pase, t } la elige o la cambia (una vez cada 30 días) */
     if (p === '/tribu' && req.method === 'POST') {
@@ -69,6 +79,7 @@ export default {
       if (limited(ip, 'tribu', 30, 60000)) return new Response('Demasiados pedidos', { status: 429, headers: CORS });
       let x = {}; try { x = JSON.parse((await req.text()).slice(0, 3000)); } catch (e) { }
       const pase = await abrir(x.pase || ''); if (!pase) return new Response(JSON.stringify({ error: 'pase' }), { status: 401, headers: CORS });
+      if (x.meta) { if (limited(ip, 'meta', 12, 60000)) return new Response('Demasiados pedidos', { status: 429, headers: CORS }); const r = await TR().fetch('https://t/meta', { method: 'POST', body: JSON.stringify({ m: pase.p, n: pase.n, k: String(x.meta.k || ''), s: String(x.meta.s || '') }) }); return new Response(r.body, { status: r.status, headers: { ...CORS, 'Content-Type': 'application/json' } }); }
       const r = x.t ? await TR().fetch('https://t/unirse', { method: 'POST', body: JSON.stringify({ m: pase.p, t: String(x.t) }) }) : await TR().fetch('https://t/de?m=' + encodeURIComponent(pase.p)); /* la tribu es del personaje: lo acompaña en todos los cursos */
       return new Response(r.body, { status: r.status, headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
@@ -219,10 +230,17 @@ export class Tribus {
     this.D = D; return D;
   }
   async guardar() { await this.state.storage.put('T', this.D); }
+  /* lo que ve cada uno de su tribu: su tribu, lo suyo de esta semana, la meta y lo último que hizo la tribu */
+  mio(r) {
+    const T = this.D[r.t], wk = semana(), w = r.w && r.w.wk === wk ? r.w : {}, esta = T.sem === wk, c = r.c || {};
+    return { t: r.t, desde: r.d, lv: nivelDe(T.pts), yo: { comp: w.comp || 0, inv: w.inv || 0, serv: w.serv || 0, orv: w.orv || 0, oroHoy: w.dia === hoyAR(), total: c }, topes: META_K,
+      titulos: c.comp ? ['mensajero'] : [], meta: metaDe(T.miembros), mpts: esta ? T.mpts || 0 : 0, mok: esta ? !!T.mok : false, feed: (T.feed || []).filter(f => Date.now() - f.at < 14 * 864e5) };
+  }
   sumar(T, k, n) {
-    const D = this.D[T], wk = semana(); if (D.sem !== wk) { D.sem = wk; D.spts = 0; }
+    const D = this.D[T], wk = semana(); if (D.sem !== wk) { D.sem = wk; D.spts = 0; D.mpts = 0; D.mok = 0; }
     if (k !== 'miembros') { D.cnt[k] = (D.cnt[k] || 0) + n; const p = (PTS[k] || 1) * n; D.pts += p; D.spts += p; }
     const nuevos = [];
+    if (META_K[k]) { D.mpts = (D.mpts || 0) + (PTS[k] || 1) * n; if (!D.mok && D.mpts >= metaDe(D.miembros)) { D.mok = 1; D.cnt.metas = (D.cnt.metas || 0) + 1; D.pts += 100; D.spts += 100; nuevos.push('meta'); } }
     for (const [id, c, meta, p] of LOGROS) { const v = c === 'miembros' ? D.miembros : (D.cnt[c] || 0); if (!D.logros[id] && v >= meta) { D.logros[id] = new Date().toISOString().slice(0, 10); D.pts += p; D.spts += p; nuevos.push(id); } }
     return nuevos;
   }
@@ -230,19 +248,35 @@ export class Tribus {
     const url = new URL(req.url), D = await this.datos();
     if (url.pathname === '/resumen') {
       const wk = semana(), out = {};
-      TRIBUS.forEach(t => { const x = D[t]; out[t] = { miembros: x.miembros, pts: x.pts, lv: nivelDe(x.pts), semana: x.sem === wk ? x.spts : 0, cnt: x.cnt, logros: x.logros }; });
-      return Response.json({ tribus: out, semana: wk });
+      TRIBUS.forEach(t => { const x = D[t], esta = x.sem === wk; out[t] = { miembros: x.miembros, pts: x.pts, lv: nivelDe(x.pts), semana: esta ? x.spts : 0, cnt: x.cnt, logros: x.logros, meta: metaDe(x.miembros), mpts: esta ? x.mpts || 0 : 0, mok: esta ? !!x.mok : false }; });
+      const total = { comp: 0, inv: 0, serv: 0, orv: 0 }; TRIBUS.forEach(t => { for (const k in total) total[k] += D[t].cnt[k] || 0; });
+      return Response.json({ tribus: out, semana: wk, total });
     }
-    if (url.pathname === '/de') { const m = url.searchParams.get('m') || '', r = await this.state.storage.get('m:' + m); return Response.json(r ? { t: r.t, desde: r.d, lv: nivelDe(D[r.t].pts) } : {}); }
+    if (url.pathname === '/de') { const m = url.searchParams.get('m') || '', r = await this.state.storage.get('m:' + m); return Response.json(r ? this.mio(r) : {}); }
+    /* la meta de la semana: { m, n, k, s } (k: comp, inv, serv, orv; s: de qué forma) */
+    if (url.pathname === '/meta') {
+      const x = await req.json(), m = String(x.m || ''), k = String(x.k || ''), sub = String(x.s || ''), r = await this.state.storage.get('m:' + m);
+      if (!r || !TRIBUS.includes(r.t)) return Response.json({ error: 'sin-tribu' }, { status: 409 });
+      if (!META_K[k] || (META_S[k][0] && !META_S[k].includes(sub))) return Response.json({ error: 'meta' }, { status: 400 });
+      const wk = semana(); if (!r.w || r.w.wk !== wk) r.w = { wk };
+      if ((r.w[k] || 0) >= META_K[k]) return Response.json({ error: 'tope', ...this.mio(r) }, { status: 409 });
+      if (k === 'orv' && r.w.dia === hoyAR()) return Response.json({ error: 'hoy', ...this.mio(r) }, { status: 409 });
+      r.w[k] = (r.w[k] || 0) + 1; if (k === 'orv') r.w.dia = hoyAR(); r.c = r.c || {}; r.c[k] = (r.c[k] || 0) + 1;
+      const titulo = k === 'comp' && r.c.comp === 1; /* la primera vez que comparte de Jesús: «Mensajero» */
+      const T = D[r.t], nuevos = this.sumar(r.t, k, 1), nm = String(x.n || '').trim().split(/\s+/)[0].slice(0, 14) || 'Alguien';
+      T.feed = [{ n: nm, k, s: sub, at: Date.now() }].concat(T.feed || []).slice(0, 25);
+      await this.state.storage.put('m:' + m, r); await this.guardar();
+      return Response.json({ ok: 1, pts: PTS[k], nuevos, titulo, ...this.mio(r) });
+    }
     if (url.pathname === '/unirse') {
       const x = await req.json(), t = String(x.t || ''), m = String(x.m || ''); if (!TRIBUS.includes(t) || !m) return Response.json({ error: 'tribu' }, { status: 400 });
       const cur = await this.state.storage.get('m:' + m);
-      if (cur && cur.t === t) return Response.json({ t, desde: cur.d, lv: nivelDe(D[t].pts) });
+      if (cur && cur.t === t) return Response.json(this.mio(cur));
       if (cur && Date.now() - Date.parse(cur.d) < 30 * 864e5) return Response.json({ error: 'reciente', t: cur.t, desde: cur.d, puede: new Date(Date.parse(cur.d) + 30 * 864e5).toISOString().slice(0, 10) }, { status: 409 });
       if (cur) D[cur.t].miembros = Math.max(0, D[cur.t].miembros - 1);
-      D[t].miembros++; const d = new Date().toISOString(); await this.state.storage.put('m:' + m, { t, d });
+      D[t].miembros++; const d = new Date().toISOString(), nr = { t, d, c: cur ? cur.c : undefined }; await this.state.storage.put('m:' + m, nr); /* lo personal (y el título) lo acompaña; lo de la semana queda en la tribu anterior */
       const nuevos = this.sumar(t, 'miembros', 0); await this.guardar();
-      return Response.json({ t, desde: d, lv: nivelDe(D[t].pts), nuevos });
+      return Response.json({ ...this.mio(nr), nuevos });
     }
     if (url.pathname === '/evento') {
       const x = await req.json(), t = String(x.t || ''), k = String(x.k || ''), n = Math.max(0, Math.min(100, Math.floor(+x.n || 0)));

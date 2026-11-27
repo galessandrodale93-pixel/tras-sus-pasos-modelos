@@ -1921,3 +1921,27 @@ body[data-branch="ados"] .v3kday{display:none!important}
 .sop-f{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px}
 .sop-f img{grid-column:1/-1;width:100%;max-height:140px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.15)}
 .sop-ok{text-align:center}
+/* ===== La meta de la semana de la tribu ===== */
+.tm-tit{display:inline-block;margin-top:8px;padding:3px 10px;border-radius:99px;font:900 12px "Nunito",sans-serif;letter-spacing:.04em;color:#2B1D00;background:linear-gradient(180deg,#FFE79A,#F2A93B);box-shadow:0 0 12px rgba(242,169,59,.45)}
+.tm-box{margin-top:14px;padding:14px;border-radius:16px;border:1px solid #E9C37A;background:linear-gradient(160deg,rgba(233,195,122,.14),color-mix(in srgb,var(--tc) 14%,transparent));box-shadow:0 0 18px rgba(233,195,122,.12)}
+.tm-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.tm-h b{font:900 15px "Cinzel",Georgia,serif;letter-spacing:.05em;color:#FFE3A0}.tm-h span{font-weight:900;font-size:13px;color:#E9C37A}
+.tm-bar{height:11px}.tm-sub{display:block;color:var(--mu,#B7A584);font-weight:700;font-size:12px;line-height:1.4}
+.tm-fs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:12px}
+.tm-f{display:grid;gap:2px;text-align:left;padding:10px;border-radius:14px;border:1px solid var(--ed,#6B5233);background:rgba(0,0,0,.22);color:inherit;cursor:pointer;font-family:"Nunito",sans-serif;transition:transform .15s,box-shadow .15s}
+.tm-f:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 0 14px rgba(233,195,122,.3)}
+.tm-f.big{grid-column:1/-1;border-color:#E9C37A;background:linear-gradient(135deg,rgba(233,195,122,.2),rgba(0,0,0,.2))}
+.tm-f .tm-ic{font-size:24px}.tm-f b{font-size:14px;color:var(--tx,#F3E6CC)}.tm-f small{color:var(--mu,#B7A584);font-weight:700;font-size:12px;line-height:1.35}.tm-f em{font-style:normal;font-weight:900;font-size:11.5px;color:#E9C37A;margin-top:3px}
+.tm-f:disabled{opacity:.55;cursor:default}
+.tm-feed{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.tm-feed li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+.tm-feed li>span{font-size:19px;line-height:1.2}.tm-feed p{margin:0;font-size:13.5px;line-height:1.4}.tm-feed small{display:block;color:var(--mu,#B7A584);font-weight:700;font-size:11px}
+.tm-form{display:grid;gap:4px}
+.tm-back{justify-self:start;background:none;border:0;color:#E9C37A;font:800 13px "Nunito",sans-serif;cursor:pointer;padding:2px 0}
+.tm-ttl{display:flex;gap:10px;align-items:center;margin:6px 0 2px}.tm-ttl span{font-size:30px}.tm-ttl b{font:900 19px "Cinzel",Georgia,serif;letter-spacing:.05em;color:#FFE3A0}
+.tm-q{margin:10px 0 4px;font:900 11px "Nunito",sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#E9C37A}
+.tm-ops{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;margin-bottom:6px}
+.tm-op{display:flex;gap:8px;align-items:center;text-align:left;padding:10px;border-radius:12px;border:1px solid var(--ed,#6B5233);background:rgba(0,0,0,.2);color:inherit;font:800 13.5px "Nunito",sans-serif;cursor:pointer}
+.tm-op span{font-size:20px}.tm-op.on{border-color:#FFD25E;background:linear-gradient(135deg,rgba(255,210,94,.22),rgba(0,0,0,.15));box-shadow:0 0 12px rgba(255,210,94,.3)}
+.tm-rev{margin:8px 0 0;font:800 13px "Nunito",sans-serif;color:#FFE3A0;animation:tmRev 1.2s ease-in-out infinite}@keyframes tmRev{50%{opacity:.45}}
+.tm-tot{margin-top:10px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);display:grid;gap:2px}
+.tm-tot span{font:900 10.5px "Nunito",sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#E9C37A}.tm-tot p{margin:0;font-size:14px;font-weight:700}.tm-tot b{font:900 18px "Cinzel",Georgia,serif;color:#FFE3A0;margin-right:4px}

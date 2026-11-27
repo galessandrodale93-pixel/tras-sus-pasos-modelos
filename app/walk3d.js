@@ -4565,7 +4565,9 @@ const tribuImg = (t, px, cl) => TRIBU[t] ? `<img class="tr-img${cl ? ' ' + cl : 
 const TRIBU_NV = [[0, 'Chispa'], [100, 'Brasa'], [300, 'Llama'], [700, 'Antorcha'], [1500, 'Fogata'], [3000, 'Faro'], [6000, 'Lámpara del templo'], [12000, 'Columna de fuego'], [25000, 'Gloria'], [50000, 'Gloria eterna']];
 const TRIBU_LOG = [['fam1', '👨‍👩‍👧', 'Una familia que crece', '10 miembros', 'miembros', 10], ['fam2', '🏘️', 'Un pueblo entero', '50 miembros', 'miembros', 50], ['fam3', '🌟', 'Como las estrellas del cielo', '200 miembros', 'miembros', 200],
   ['ora1', '🙏', 'Oran juntos', '10 oraciones en grupo', 'ora', 10], ['ora2', '🕯️', 'Casa de oración', '100 oraciones en grupo', 'ora', 100], ['ora3', '🔥', 'Fuego que no se apaga', '1000 oraciones en grupo', 'ora', 1000],
-  ['fes1', '🎉', 'Festejan juntos', '10 festejos en grupo', 'festejo', 10], ['fes2', '🥁', 'Panderos y danzas', '100 festejos en grupo', 'festejo', 100], ['fes3', '🎺', 'Alegría de todo el pueblo', '1000 festejos en grupo', 'festejo', 1000]];
+  ['fes1', '🎉', 'Festejan juntos', '10 festejos en grupo', 'festejo', 10], ['fes2', '🥁', 'Panderos y danzas', '100 festejos en grupo', 'festejo', 100], ['fes3', '🎺', 'Alegría de todo el pueblo', '1000 festejos en grupo', 'festejo', 1000],
+  ['pes1', '🎣', 'Pescadores de hombres', '10 veces compartieron de Jesús', 'comp', 10], ['sal1', '🧂', 'Sal de la tierra', '20 amigos invitados', 'inv', 20], ['luz1', '🪔', 'Luz del mundo', '30 veces sirvieron a otros', 'serv', 30], ['int1', '🕊️', 'Intercesores', '50 oraciones por otros', 'orv', 50],
+  ['met1', '🎯', 'Meta cumplida', 'Cumplir una meta de la semana', 'metas', 1], ['met2', '🗓️', 'Un mes entero', '4 metas de la semana', 'metas', 4], ['met3', '🌱', 'Fieles en lo poco', '12 metas de la semana', 'metas', 12]];
 const TRIBU_PRONTO = [['🏗️', 'Levantan la casa de la tribu'], ['🏁', 'Ganan los Juegos de la fiesta'], ['🐫', 'Llegan juntos a Jerusalén'], ['🕳️', 'Terminan una expedición'], ['🐑', 'Encuentran la oveja perdida']];
 const MUNDO_HTTP = MUNDO_WS.replace(/^wss:/, 'https:').replace(/\/mundo$/, '');
 const tribuNv = pts => { let i = 0; TRIBU_NV.forEach((x, k) => { if (pts >= x[0]) i = k; }); return i; };
@@ -4607,13 +4609,14 @@ function tribuJuntos(m) {
   misPop((m.k === 'ora' ? '🙏 ¡Oraron juntos!' : '🎉 ¡Festejaron juntos!'), m.n + ' de ' + T0.n + ' juntos: la tribu suma ' + Math.floor(numOk(m.pts, 0, 9999)) + ' de Resplandor.');
   if (Array.isArray(m.logros) && m.logros.length) setTimeout(() => tribuLogro(m.logros), 2600);
 }
-function tribuLogro(ids) { const L = TRIBU_LOG.find(x => x[0] === ids[0]); if (!L) return; misPop('🏆 ¡Tu tribu logró «' + L[2] + '»!', 'Miralo en tu mochila, en Tribu. Cada logro hace brillar más a ' + TRIBU[MP.tribu].n + '.'); }
+function tribuLogro(ids, t) { const L = TRIBU_LOG.find(x => x[0] === ids[0]), T0 = TRIBU[t || MP.tribu || G().P().tribu]; if (!L || !T0) return; misPop('🏆 ¡Tu tribu logró «' + L[2] + '»!', 'Miralo en tu mochila, en Tribu. Cada logro hace brillar más a ' + T0.n + '.'); }
 /* la primera vez en el multijugador: cuatro tarjetas para entender todo, y después elegir tribu */
 function mundoIntro() {
   const el = document.getElementById('v3sheet'); if (!el) return; let i = 0;
   const C = [['🌍', 'El mundo de todos', 'Acá se encuentran jugadores de Hero de todos lados, hasta 100 por mundo. Los que ves cerca son personas de verdad.'],
     ['🏳️', 'Tu tribu', 'Vas a elegir una de las 12 tribus de Israel. Todo lo que hagan juntos hace brillar a la tribu: es el Resplandor de la tribu, y sus logros los ves en tu mochila, en Tribu.'],
     ['🙏', 'Juntos suman', 'Si 3 o más de tu tribu oran juntos, o hacen el mismo festejo cerca, la tribu suma. Muy pronto: la casa de la tribu, los Juegos de la fiesta, la caravana a Jerusalén y expediciones en grupo.'],
+    ['🎯', 'La meta de la semana', 'Cada semana tu tribu tiene una meta, y se llena con lo que hacés en tu vida: compartir de Jesús con un amigo, invitar, servir y orar por otros. Lo sumás desde tu mochila, en Tribu.'],
     ['🛡️', 'Nos cuidamos', 'No hay chat libre ni micrófono: se saluda con frases rápidas desde 👥. Si alguien se porta mal, reportalo o silencialo ahí mismo. Acá no se construye: tu casa te espera en tu mundo.']];
   const draw = () => { const c = C[i];
     el.innerHTML = `<div class="bag-in mis-in mu-intro"><div class="mu-ic">${c[0]}</div><b class="mu-t">${c[1]}</b><p class="mis-ask">${c[2]}</p><div class="mu-dots">${C.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div>
@@ -4646,30 +4649,155 @@ function tribuConfirmar(t, el, inSheet, R) {
     if (!r.t) { G().toast('No se pudo. Probá de nuevo.'); volver(bt); return; }
     const p = G().P(); p.tribu = r.t; G().save(); MP.tribuLv = r.lv || 0;
     if (MP.mundo && MP.conn) { MP.tribu = r.t; tribuAuraYo(); MP.conn.send({ t: 'tribuSet' }); }
-    if (inSheet) el.hidden = true; misPop('¡Bienvenido a ' + TRIBU[r.t].n + '!', 'Buscá a otros de tu tribu en el multijugador: orar y festejar juntos la hace brillar.');
+    if (inSheet) el.hidden = true; misPop('¡Bienvenido a ' + TRIBU[r.t].n + '!', 'Orar y festejar juntos en el multijugador la hace brillar, y también la meta de la semana, en tu mochila.');
     if (!inSheet) invTribu(el);
   };
 }
 /* la tribu en la mochila: Resplandor, logros (los que faltan en silueta), cómo brillar y la tabla de la semana */
 async function invTribu(body) {
+  const tk = body._tk = {}; /* si mientras carga se abre otra cosa (o se vuelve a cargar), esta carga no pisa nada */
   body.innerHTML = '<p class="sv-tip">Cargando tu tribu…</p>';
-  const j = await mundoPase();
+  const j = await mundoPase(); if (body._tk !== tk) return;
   if (!j.pase) { body.innerHTML = `<div class="tr-none"><div class="tr-e big">🏳️</div><b>Las 12 tribus</b><p class="sv-tip">${j.error === 'nivel' ? 'Las tribus son del multijugador: se abren en el nivel ' + j.min + '. ¡Seguí jugando y volvé!' : j.error === 'cuenta' ? 'Para tener tribu hace falta iniciar sesión con tu cuenta.' : esc(j.msg || 'No se pudo cargar. Revisá la conexión.')}</p><p class="sv-tip">En el multijugador vas a elegir una de las 12 tribus de Israel. Lo que hagan juntos hace brillar a la tribu y suma logros.</p></div>`; return; }
-  let mine = {}, R = {}, wk = '';
-  try { const [a, b] = await Promise.all([fetch(MUNDO_HTTP + '/tribu', { method: 'POST', body: JSON.stringify({ pase: j.pase }) }).then(r => r.json()), fetch(MUNDO_HTTP + '/tribus').then(r => r.json())]); mine = a; R = b.tribus || {}; wk = b.semana || ''; } catch (e) { body.innerHTML = '<p class="sv-tip">No se pudo cargar. Revisá la conexión.</p>'; return; }
+  let mine = {}, R = {}, wk = '', TOT = null;
+  try { const [a, b] = await Promise.all([fetch(MUNDO_HTTP + '/tribu', { method: 'POST', body: JSON.stringify({ pase: j.pase }) }).then(r => r.json()), fetch(MUNDO_HTTP + '/tribus').then(r => r.json())]); mine = a; R = b.tribus || {}; wk = b.semana || ''; TOT = b.total || null; } catch (e) { if (body._tk === tk) body.innerHTML = '<p class="sv-tip">No se pudo cargar. Revisá la conexión.</p>'; return; }
+  if (body._tk !== tk) return;
   if (!TRIBU[mine.t]) { tribuElegir(body); return; }
   const t = mine.t, T0 = TRIBU[t], D = R[t] || { pts: 0, miembros: 0, semana: 0, cnt: {}, logros: {} }, lv = tribuNv(D.pts), nx = TRIBU_NV[lv + 1];
   const pct = nx ? Math.round((D.pts - TRIBU_NV[lv][0]) / (nx[0] - TRIBU_NV[lv][0]) * 100) : 100;
   const rk = Object.keys(TRIBU).sort((a, b) => ((R[b] || {}).semana || 0) - ((R[a] || {}).semana || 0)), pos = rk.indexOf(t) + 1;
   body.innerHTML = `<div class="tr-card" style="--tc:${T0.c}"><div class="tr-emb lv${Math.min(lv, 9)}">${tribuImg(t, 96)}</div><div><b class="tr-n">${T0.n}</b><small>${T0.l}</small>
       <div class="tr-rs"><span>✦ Resplandor de la tribu: <b>${TRIBU_NV[lv][1]}</b></span><div class="tr-bar"><i style="width:${pct}%"></i></div><small>${D.pts} puntos${nx ? ' · faltan ' + (nx[0] - D.pts) + ' para ' + nx[1] : ' · ¡el más alto!'}</small></div>
-      <div class="tr-st"><span>👥 ${D.miembros} miembros</span><span>📅 Esta semana: ${D.semana || 0} · puesto ${pos} de 12</span></div></div></div>
+      <div class="tr-st"><span>👥 ${D.miembros} miembros</span><span>📅 Esta semana: ${D.semana || 0} · puesto ${pos} de 12</span></div>${(mine.titulos || []).includes('mensajero') ? '<span class="tm-tit">📣 Mensajero</span>' : ''}</div></div>
+    ${metaHTML(t, mine)}${TOT && (TOT.comp || TOT.inv) ? `<div class="tm-tot"><span>En todo Kids &amp; Hero</span><p><b>${TOT.comp || 0}</b> amigos escucharon de Jesús</p><p><b>${TOT.inv || 0}</b> amigos invitados a la iglesia</p></div>` : ''}
     <h4 class="tr-h">🏆 Logros de la tribu</h4><div class="tr-logs">${TRIBU_LOG.map(([id, ic, n, d, k, meta]) => { const ok = D.logros && D.logros[id], v = k === 'miembros' ? D.miembros : (D.cnt[k] || 0);
       return `<div class="tr-lg${ok ? ' ok' : ''}"><span class="tr-li">${ic}</span><div><b>${n}</b><small>${ok ? 'Logrado el ' + new Date(ok + 'T12:00:00').toLocaleDateString('es-AR') : d + ' · van ' + Math.min(v, meta) + ' de ' + meta}</small></div></div>`; }).join('')}
       ${TRIBU_PRONTO.map(([ic, n]) => `<div class="tr-lg pronto"><span class="tr-li">${ic}</span><div><b>${n}</b><small>Muy pronto</small></div></div>`).join('')}</div>
-    <h4 class="tr-h">✨ Cómo brilla tu tribu</h4><ul class="tr-how"><li>🙏 <b>Orar juntos:</b> 3 o más de tu tribu, cerca, arrodillados a la vez. +3 por persona.</li><li>🎉 <b>Festejar juntos:</b> 3 o más haciendo el mismo festejo, cerca. +2 por persona.</li><li>🏆 <b>Logros:</b> cada logro suma mucho más.</li><li>⏳ Cada persona suma una vez cada 10 minutos por cosa. Muy pronto: la casa de la tribu, los Juegos de la fiesta, la caravana y las expediciones.</li></ul>
+    <h4 class="tr-h">✨ Cómo brilla tu tribu</h4><ul class="tr-how"><li>🙏 <b>Orar juntos:</b> 3 o más de tu tribu, cerca, arrodillados a la vez. +3 por persona.</li><li>🎉 <b>Festejar juntos:</b> 3 o más haciendo el mismo festejo, cerca. +2 por persona.</li><li>🎯 <b>La meta de la semana:</b> compartir de Jesús (+15), invitar (+6), servir (+5) y orar por otros (+2). Cuando la tribu la cumple, suma +100.</li><li>🏆 <b>Logros:</b> cada logro suma mucho más.</li><li>⏳ Cada persona suma una vez cada 10 minutos por cosa. Muy pronto: la casa de la tribu, los Juegos de la fiesta, la caravana y las expediciones.</li></ul>
     <h4 class="tr-h">📅 Tabla de la semana</h4><ol class="tr-rank">${rk.map(x => `<li class="${x === t ? 'yo' : ''}"><span>${tribuImg(x, 22, "tr-mini")} ${TRIBU[x].n}</span><b>${(R[x] || {}).semana || 0}</b></li>`).join('')}</ol>
     <p class="cap-note">La tabla vuelve a cero cada lunes. Tribu desde el ${new Date(mine.desde).toLocaleDateString('es-AR')}.</p>`;
+  body.querySelectorAll('.tm-f').forEach(b => b.onclick = () => { body._tk = null; body.scrollTop = 0; if (b.dataset.k === 'comp' || b.dataset.k === 'inv') metaComp(body, t, b.dataset.k); else metaForm(body, b.dataset.k, t); });
+}
+/* ---------- LA META DE LA SEMANA DE LA TRIBU ----------
+   Lo que cada uno hace en su vida (compartir de Jesús, invitar, servir y orar) llena la meta de su tribu. La tribu ve
+   solamente «Juan de Judá le habló de Jesús a un amigo»: las fotos nunca salen del aparato. El servidor pone los topes
+   por semana (orar: una vez por día) y suma el Resplandor. */
+const META_F = {
+  comp: { ic: '📣', n: 'Compartir de Jesús', d: 'Contale a un amigo quién es Jesús y sacate una foto con él o ella.', pts: 15, f: 'le habló de Jesús a un amigo' },
+  inv: { ic: '⛪', n: 'Invitar a la iglesia', d: 'Llevá a un amigo a tu iglesia o a tu grupo, y sáquense una foto juntos.', pts: 6, op: [['iglesia', '⛪', 'Vino conmigo a la iglesia', 'invitó a un amigo a su iglesia'], ['grupo', '👥', 'Vino a mi grupo o célula', 'invitó a un amigo a su grupo'], ['casa', '📖', 'Oramos o leímos la Biblia juntos', 'invitó a un amigo a orar juntos']] },
+  serv: { ic: '🤝', n: 'Servir', d: 'Ayudá a alguien sin que te lo pidan, como Jesús.', pts: 5, op: [['casa', '🏠', 'En mi casa', 'ayudó en su casa'], ['vecino', '🏘️', 'A un vecino o a alguien mayor', 'ayudó a un vecino'], ['escuela', '🎒', 'A un compañero', 'ayudó a un compañero'], ['iglesia', '⛪', 'En la iglesia', 'sirvió en la iglesia'], ['dar', '🎁', 'Le di algo a quien lo necesitaba', 'compartió con alguien que lo necesitaba']] },
+  orv: { ic: '🙏', n: 'Orar', d: 'Orá por alguien con nombre y apellido. Una vez por día.', pts: 2, op: [['amigo', '🧑‍🤝‍🧑', 'Por un amigo', 'oró por un amigo'], ['familia', '👨‍👩‍👧', 'Por mi familia', 'oró por su familia'], ['escuela', '🎒', 'Por mi escuela', 'oró por su escuela'], ['tribu', '🏳️', 'Por mi tribu', 'oró por su tribu']] }
+};
+const metaFeedTx = f => { const F = META_F[f.k]; if (!F) return ''; const o = F.op && F.op.find(x => x[0] === f.s); return o ? o[3] : F.f; };
+const haceTx = at => { const m = Math.max(1, Math.round((Date.now() - at) / 60000)); return m < 60 ? 'hace ' + m + ' min' : m < 1440 ? 'hace ' + Math.round(m / 60) + ' h' : 'hace ' + Math.round(m / 1440) + (Math.round(m / 1440) > 1 ? ' días' : ' día'); };
+function metaHTML(t, mine) {
+  const T0 = TRIBU[t], meta = mine.meta || 40, v = Math.min(mine.mpts || 0, meta), pct = Math.round(v / meta * 100), yo = mine.yo || {}, tp = mine.topes || { comp: 3, inv: 3, serv: 5, orv: 7 };
+  const card = k => { const F = META_F[k], n = yo[k] || 0, lleno = n >= tp[k] || (k === 'orv' && yo.oroHoy);
+    return `<button class="tm-f${k === 'comp' ? ' big' : ''}" data-k="${k}"${lleno ? ' disabled' : ''}><span class="tm-ic">${F.ic}</span><b>${F.n}</b><small>${F.d}</small><em>+${F.pts} · ${k === 'orv' && yo.oroHoy ? 'Hoy ya oraste' : n >= tp[k] ? 'Listo por esta semana' : n + ' de ' + tp[k] + ' esta semana'}</em></button>`; };
+  const feed = (mine.feed || []).slice(0, 12);
+  return `<div class="tm-box" style="--tc:${T0.c}"><div class="tm-h"><b>🎯 Meta de la semana</b><span>${v} de ${meta}</span></div><div class="tr-bar tm-bar"><i style="width:${pct}%"></i></div>
+    <small class="tm-sub">${mine.mok ? '¡Cumplida! La tribu sumó +100 de Resplandor. Lo que sigan haciendo también suma.' : 'Faltan ' + (meta - v) + '. Se llena con lo que hacen en su vida, fuera del juego.'} Vuelve a empezar el lunes.</small>
+    <div class="tm-fs">${['comp', 'inv', 'serv', 'orv'].map(card).join('')}</div></div>
+    <h4 class="tr-h">📣 Lo que hizo la tribu</h4>${feed.length ? `<ul class="tm-feed">${feed.map(f => `<li><span>${(META_F[f.k] || {}).ic || '✦'}</span><p><b>${esc(f.n)}</b> de ${T0.n} ${metaFeedTx(f)}<small>${haceTx(f.at)}</small></p></li>`).join('')}</ul>` : '<p class="sv-tip">Todavía nadie de la tribu sumó a la meta. ¡Podés ser el primero!</p>'}`;
+}
+/* después de sumar: los avisos (puntos, meta cumplida, logros, título) */
+function metaAvisos(k, r, t) {
+  const T0 = TRIBU[t]; let d = 0; const pop = (a, b) => { setTimeout(() => misPop(a, b), d); d += 3300; };
+  pop(META_F[k].ic + ' ¡Sumaste a ' + T0.n + '!', 'Tu tribu suma +' + (r.pts || META_F[k].pts) + ' de Resplandor. Los de tu tribu lo van a ver en la mochila.');
+  if (r.titulo) { const p = G().P(); p.titulos = Array.from(new Set([...(p.titulos || []), 'mensajero'])); G().save(); pop('📣 ¡Nuevo título: Mensajero!', '«¡Qué hermosos son los pies de los mensajeros que traen buenas noticias!» (Romanos 10:15)'); }
+  if ((r.nuevos || []).includes('meta')) pop('🎯 ¡' + T0.n + ' cumplió la meta de la semana!', 'La tribu suma +100 de Resplandor. ¡Gracias por ser parte!');
+  const lg = (r.nuevos || []).filter(x => x !== 'meta'); if (lg.length) setTimeout(() => tribuLogro(lg, t), d);
+}
+async function metaMandar(k, s) {
+  const j = await mundoPase(true); if (!j.pase) return { error: 'pase', msg: j.msg };
+  try { const q = await fetch(MUNDO_HTTP + '/tribu', { method: 'POST', body: JSON.stringify({ pase: j.pase, meta: { k, s } }) }); return await q.json(); } catch (e) { return { error: 'red' }; }
+}
+/* invitar, servir y orar: elegir cómo y marcar que se hizo de verdad */
+function metaForm(body, k, t) {
+  const F = META_F[k], kids = !S.hx; let sel = '';
+  body.innerHTML = `<div class="tm-form" style="--tc:${TRIBU[t].c}"><button class="tm-back">← Volver a mi tribu</button><div class="tm-ttl"><span>${F.ic}</span><b>${F.n}</b></div><p class="mis-ask">${k === 'orv' ? 'Buscá un momento tranquilo y hablale a Dios con tus palabras. Contale lo que te preocupa de esa persona y pedile que la bendiga.' : k === 'inv' ? 'Invitar es abrir la puerta: a la iglesia, a tu grupo o a orar juntos. Lo demás lo hace Dios.' : '«El Hijo del Hombre no vino para que le sirvan, sino para servir a otros.» (Marcos 10:45)'}</p>
+    <p class="tm-q">¿Qué hiciste?</p><div class="tm-ops">${F.op.map(o => `<button class="tm-op" data-s="${o[0]}"><span>${o[1]}</span>${o[2]}</button>`).join('')}</div>
+    <label class="cap-chk"><input type="checkbox" class="tm-ok"> ${k === 'orv' ? 'Ya oré' : 'Ya lo hice'}. Lo marco porque es verdad.</label><p class="cap-err" hidden></p>
+    <div class="mis-btns"><button class="mis-yes tm-go" disabled>Sumar a mi tribu (+${F.pts})</button></div></div>`;
+  const go = body.querySelector('.tm-go'), ok = body.querySelector('.tm-ok'), err = body.querySelector('.cap-err'), upd = () => { go.disabled = !(sel && ok.checked); };
+  body.querySelector('.tm-back').onclick = () => invTribu(body);
+  body.querySelectorAll('.tm-op').forEach(b => b.onclick = () => { sel = b.dataset.s; body.querySelectorAll('.tm-op').forEach(x => x.classList.toggle('on', x === b)); upd(); });
+  ok.onchange = upd;
+  go.onclick = async () => { go.disabled = true; go.textContent = 'Sumando…'; const r = await metaMandar(k, sel);
+    if (!r.ok) { err.hidden = false; err.textContent = r.error === 'hoy' ? 'Hoy ya sumaste una oración. Mañana podés de nuevo.' : r.error === 'tope' ? 'Ya llegaste al máximo de esta semana. ¡Gracias! El lunes empieza otra.' : 'No se pudo sumar. Revisá la conexión y probá de nuevo.'; go.disabled = false; go.textContent = 'Sumar a mi tribu (+' + F.pts + ')'; return; }
+    metaAvisos(k, r, t); invTribu(body); };
+}
+/* ---- la foto de «Compartir de Jesús»: se revisa en el aparato y la foto nunca se manda ----
+   · que sea recién sacada · que se vean al menos dos caras · que no sea una foto ya usada (huella de la imagen)
+   · que el amigo no sea el mismo de las fotos de las misiones (ni de otra vez que compartió): se comparan las caras
+     en el aparato; de cada foto se guarda solo la huella y unos números de cada cara, nunca la foto. */
+const FA = { p: null };
+function faCargar() {
+  return FA.p || (FA.p = (async () => {
+    const fa = await import(new URL('./vendor/face-api/face-api.esm.js', import.meta.url).href), u = new URL('./vendor/face-api/', import.meta.url).href;
+    try { await fa.tf.setBackend('webgl'); } catch (e) { } await fa.tf.ready();
+    await Promise.all([fa.nets.tinyFaceDetector.loadFromUri(u), fa.nets.faceLandmark68TinyNet.loadFromUri(u), fa.nets.faceRecognitionNet.loadFromUri(u)]); return fa;
+  })().catch(e => { FA.p = null; throw e; }));
+}
+async function faCaras(fa, cv) { /* dos pasadas del detector (más fina si en la primera aparece una sola cara); las caras chicas del fondo no cuentan */
+  let best = [];
+  for (const [sz, th] of [[416, .4], [608, .35], [320, .35]]) {
+    const r = (await fa.detectAllFaces(cv, new fa.TinyFaceDetectorOptions({ inputSize: sz, scoreThreshold: th })).withFaceLandmarks(true).withFaceDescriptors()).filter(x => x.detection.box.width >= Math.min(cv.width, cv.height) * .07);
+    if (r.length > best.length) best = r; if (best.length >= 2) break;
+  }
+  return best.map(x => Array.from(x.descriptor));
+}
+function huella(cv) { const W = 17, H = 16, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'); g.drawImage(cv, 0, 0, W, H); const d = g.getImageData(0, 0, W, H).data; let h = ''; for (let y = 0; y < H; y++) for (let x = 0; x < W - 1; x++) { const i = (y * W + x) * 4, a = d[i] + d[i + 1] + d[i + 2], b = d[i + 4] + d[i + 5] + d[i + 6]; h += a > b ? '1' : '0'; } return h; }
+const huellaDist = (a, b) => { if (!a || !b || a.length !== b.length) return 999; let n = 0; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) n++; return n; };
+const caraDist = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) s += (a[i] - b[i]) ** 2; return Math.sqrt(s); };
+async function blobCanvas(blob, max) { const bm = await createImageBitmap(blob), k = Math.min(1, (max || 1100) / Math.max(bm.width, bm.height)), cv = document.createElement('canvas'); cv.width = Math.round(bm.width * k); cv.height = Math.round(bm.height * k); cv.getContext('2d').drawImage(bm, 0, 0, cv.width, cv.height); return cv; }
+/* lo ya usado: las fotos de las misiones (se miran una vez y se guarda solo su huella y sus caras) y las veces que compartió */
+async function compUsadas(fa, k) {
+  if (k === 'inv') return { fotos: (await mget(mkey('inv-hechas')).catch(() => null)) || [] }; /* invitar: alcanza con que no sea el mismo amigo de otra invitación */
+  const ids = MISSIONS.filter(d => d.kind === 'photo').map(d => d.id), have = G().P().missions || {};
+  let cache = await mget(mkey('comp-mis')).catch(() => null); cache = cache && typeof cache === 'object' ? cache : {};
+  for (const id of ids) { if (!have[id] || cache[id]) continue; const v = await mget(mkey(id)).catch(() => null); if (!v || !v.blob) continue; try { const cv = await blobCanvas(v.blob); cache[id] = { h: huella(cv), c: await faCaras(fa, cv) }; } catch (e) { } }
+  try { await mput(mkey('comp-mis'), cache); } catch (e) { }
+  const prev = (await mget(mkey('comp-hechas')).catch(() => null)) || [];
+  return { fotos: Object.values(cache).concat(prev) };
+}
+async function compRevisar(cv, f, k) {
+  if (f && f.lastModified && Date.now() - f.lastModified > 30 * 60e3) return { msg: 'Tiene que ser una foto recién sacada con la cámara, en el momento.' };
+  let fa; try { fa = await faCargar(); } catch (e) { return { msg: 'No pudimos revisar la foto. Revisá la conexión y probá de nuevo.', red: 1 }; }
+  const h = huella(cv), caras = await faCaras(fa, cv);
+  if (caras.length < 2) return { msg: 'No encontramos las caras de los dos. Sacala de cerca, con buena luz, y que se vean bien las dos caras.' };
+  const U = await compUsadas(fa, k);
+  /* la misma foto: la imagen casi igual y las mismas caras casi idénticas (dos fotos distintas en el mismo lugar no la cumplen) */
+  if (U.fotos.some(x => huellaDist(x.h, h) <= 26 && caras.every(c => (x.c || []).some(v => caraDist(c, v) < .2)))) return { msg: 'Esta foto ya la usaste antes. Sacá una nueva con tu amigo.' };
+  const viejas = U.fotos.flatMap(x => x.c || []), conocidas = caras.filter(c => viejas.some(v => caraDist(c, v) < .6)).length; /* 0,6: el umbral habitual para «es la misma persona» */
+  if (conocidas >= 2) return { msg: k === 'inv' ? 'Parece que a esta persona ya la invitaste antes. ¡Qué bueno que siga yendo! Para sumar, invitá a alguien nuevo.' : 'Parece que ya sacaste una foto con esta persona, en una misión o en otra meta. La idea es contarle de Jesús a alguien nuevo.' };
+  return { ok: 1, h, caras };
+}
+function metaComp(body, t, k) {
+  k = k || 'comp'; const kids = !S.hx, F = META_F[k], inv = k === 'inv', pts = F.pts; let sel = inv ? '' : '-';
+  body.innerHTML = `<div class="tm-form cap" style="--tc:${TRIBU[t].c}"><button class="tm-back">← Volver a mi tribu</button><div class="tm-ttl"><span>${F.ic}</span><b>${F.n}</b></div>
+    ${inv ? `<p class="mis-ask">La mejor puerta para un amigo es una iglesia que lo reciba. Invitalo a tu iglesia o a tu grupo, y cuando vaya con vos, sáquense una foto juntos.</p>
+    <p class="tm-q">¿Qué pasó?</p><div class="tm-ops">${F.op.map(o => `<button class="tm-op" data-s="${o[0]}"><span>${o[1]}</span>${o[2]}</button>`).join('')}</div>` : `<p class="mis-ask">Contale a un amigo o amiga quién es Jesús. Si está de acuerdo, sacate una foto con él o ella. Tiene que ser alguien distinto de las fotos de tus misiones.</p>
+    ${capHow(kids)}`}
+    <p class="cap-note">La foto se revisa en tu ${kids ? 'aparato' : 'celular'} y no se manda a ningún lado: tu tribu solamente ve que alguien de la tribu ${inv ? 'invitó a un amigo' : 'le habló de Jesús a un amigo'}.</p>
+    <label class="cap-chk"><input type="checkbox" class="c1"> ${inv ? 'Mi amigo o amiga vino conmigo' : 'Le hablé de Jesús'}</label><label class="cap-chk"><input type="checkbox" class="c2"> Mi amigo o amiga aceptó sacarse la foto</label>
+    <img class="cap-img" alt="Foto con tu amigo" hidden><input type="file" accept="image/*" capture="user" class="cap-file" hidden><p class="tm-rev" hidden>🔎 Revisando la foto en tu ${kids ? 'aparato' : 'celular'}…</p><p class="cap-err" hidden></p>
+    <div class="mis-btns"><button class="mis-yes cap-go">📷 Abrir la cámara</button><button class="mis-no cap-save" hidden>Sumar a mi tribu (+${pts})</button></div></div>`;
+  const go = body.querySelector('.cap-go'), save = body.querySelector('.cap-save'), file = body.querySelector('.cap-file'), img = body.querySelector('.cap-img'), err = body.querySelector('.cap-err'), rev = body.querySelector('.tm-rev'), c1 = body.querySelector('.c1'), c2 = body.querySelector('.c2');
+  let res = null; const ready = () => { save.hidden = !res; save.disabled = !(res && sel && c1.checked && c2.checked); }; c1.onchange = c2.onchange = ready;
+  body.querySelector('.tm-back').onclick = () => invTribu(body);
+  body.querySelectorAll('.tm-op').forEach(b => b.onclick = () => { sel = b.dataset.s; body.querySelectorAll('.tm-op').forEach(x => x.classList.toggle('on', x === b)); ready(); });
+  const fallo = m => { err.hidden = false; err.textContent = m; };
+  go.onclick = () => { if (!sel) { fallo('Primero elegí qué pasó.'); return; } if (!c1.checked || !c2.checked) { fallo(inv ? 'Marcá las dos casillas: que vino con vos y que aceptó la foto.' : 'Primero contale de Jesús y preguntale si está de acuerdo con la foto. Después marcá las dos casillas.'); return; } err.hidden = true; file.click(); };
+  file.onchange = async () => { const f = file.files && file.files[0]; file.value = ''; if (!f) return; res = null; ready(); err.hidden = true; rev.hidden = false; go.disabled = true; img.hidden = true;
+    let r; try { const cv = await blobCanvas(f); img.src = cv.toDataURL('image/jpeg', .7); img.hidden = false; r = await compRevisar(cv, f, k); } catch (e) { r = { msg: 'No pudimos abrir la foto. Probá sacarla de nuevo.' }; }
+    rev.hidden = true; go.disabled = false; go.textContent = '📷 Sacar otra';
+    if (!r.ok) { fallo(r.msg); return; } res = r; ready(); };
+  save.onclick = async () => { if (!res || !sel || !c1.checked || !c2.checked) return; save.disabled = true; save.textContent = 'Sumando…';
+    const r = await metaMandar(k, inv ? sel : '');
+    if (!r.ok) { fallo(r.error === 'tope' ? 'Ya llegaste al máximo de esta semana: ¡gracias! El lunes empieza otra.' : 'No se pudo sumar. Revisá la conexión y probá de nuevo.'); save.disabled = false; save.textContent = 'Sumar a mi tribu (+' + pts + ')'; return; }
+    try { const key = mkey(inv ? 'inv-hechas' : 'comp-hechas'), prev = (await mget(key).catch(() => null)) || []; prev.unshift({ h: res.h, c: res.caras, at: Date.now() }); await mput(key, prev.slice(0, 60)); } catch (e) { }
+    metaAvisos(k, r, t); invTribu(body); };
 }
 /* ---------- AMIGOS CON VOZ en el multijugador ----------
    Solo con amigos del camino (los dos se aceptaron jugando juntos en una sala con amigos). El servidor dice quién está
