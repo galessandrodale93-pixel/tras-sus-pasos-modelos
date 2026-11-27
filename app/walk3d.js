@@ -4529,13 +4529,6 @@ const TRIBU_LOG = [['fam1', '👨‍👩‍👧', 'Una familia que crece', '10 m
 const TRIBU_PRONTO = [['🏗️', 'Levantan la casa de la tribu'], ['🏁', 'Ganan los Juegos de la fiesta'], ['🐫', 'Llegan juntos a Jerusalén'], ['🕳️', 'Terminan una expedición'], ['🐑', 'Encuentran la oveja perdida']];
 const MUNDO_HTTP = MUNDO_WS.replace(/^wss:/, 'https:').replace(/\/mundo$/, '');
 const tribuNv = pts => { let i = 0; TRIBU_NV.forEach((x, k) => { if (pts >= x[0]) i = k; }); return i; };
-/* aura de la tribu: un anillo del color de la tribu a los pies, más fuerte con el Resplandor de la tribu */
-function tribuAura(t, lv) {
-  const T0 = TRIBU[t]; if (!T0) return new THREE.Group(); const g = new THREE.Group(); g.name = 'tribuAura';
-  const mk = (r1, r2, op) => { const m = new THREE.Mesh(new THREE.RingGeometry(r1, r2, 40), new THREE.MeshBasicMaterial({ color: T0.c, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); m.rotation.x = -Math.PI / 2; m.position.y = .04; return m; };
-  g.add(mk(.42, .5, .35 + .05 * (lv || 0))); if ((lv || 0) >= 3) g.add(mk(.58, .62, .15 + .04 * lv)); if ((lv || 0) >= 6) g.add(mk(.7, .73, .2 + .03 * lv));
-  return g;
-}
 /* insignia de la tribu en el pecho y en la espalda (como un escudo bordado): círculo del color de la tribu con su emblema */
 const TRIBU_TEX = {};
 function tribuTex(t) {
@@ -4546,15 +4539,24 @@ function tribuTex(t) {
   x.font = '58px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(T0.e, 64, 68);
   const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return TRIBU_TEX[t] = tx;
 }
-function tribuInsignia(av, t) {
-  const old = av.getObjectByName('tribuIns'); if (old) av.remove(old); if (!TRIBU[t]) return;
+/* el Resplandor de la tribu se ve como un brillo suave detrás de la insignia, que crece con el nivel de la tribu */
+const TRIBU_GLOW = {};
+function tribuGlowTex(t) {
+  if (TRIBU_GLOW[t]) return TRIBU_GLOW[t]; const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 10, 64, 64, 64);
+  g.addColorStop(0, '#FFF2C8'); g.addColorStop(.35, TRIBU[t].c); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return TRIBU_GLOW[t] = tx;
+}
+function tribuInsignia(av, t, lv) {
+  const old = av.getObjectByName('tribuIns'); if (old) av.remove(old); if (!TRIBU[t]) return; lv = lv || 0;
   const k = av.userData.h3 ? av.userData.h3.tagK || 1 : 1, g = new THREE.Group(); g.name = 'tribuIns';
   const mat = new THREE.MeshBasicMaterial({ map: tribuTex(t), transparent: true, depthWrite: false });
-  const f = new THREE.Mesh(new THREE.CircleGeometry(.1 * k, 32), mat); f.position.set(0, 1.36 * k, .2 * k); g.add(f);
-  const b = new THREE.Mesh(new THREE.CircleGeometry(.14 * k, 32), mat); b.position.set(0, 1.4 * k, -.2 * k); b.rotation.y = Math.PI; g.add(b);
+  const gm = lv ? new THREE.MeshBasicMaterial({ map: tribuGlowTex(t), transparent: true, opacity: Math.min(.85, .25 + lv * .07), blending: THREE.AdditiveBlending, depthWrite: false }) : null;
+  const pieza = (r, y, z, ry) => { const m = new THREE.Mesh(new THREE.CircleGeometry(r * k, 32), mat); m.position.set(0, y * k, z * k); m.rotation.y = ry; g.add(m);
+    if (gm) { const h = new THREE.Mesh(new THREE.PlaneGeometry(r * k * (2.4 + lv * .25), r * k * (2.4 + lv * .25)), gm); h.position.set(0, y * k, (z + (z > 0 ? -.005 : .005)) * k); h.rotation.y = ry; g.add(h); } };
+  pieza(.1, 1.36, .2, 0); pieza(.14, 1.4, -.2, Math.PI);
   av.add(g);
 }
-function tribuAuraYo() { if (!S || !S.av) return; const old = S.av.getObjectByName('tribuAura'); if (old) S.av.remove(old); if (MP.mundo && MP.tribu) S.av.add(tribuAura(MP.tribu, MP.tribuLv || 0)); tribuInsignia(S.av, MP.mundo ? MP.tribu : ''); }
+function tribuAuraYo() { if (!S || !S.av) return; tribuInsignia(S.av, MP.mundo ? MP.tribu : '', MP.tribuLv || 0); }
 /* el pase de Habitat (cuenta + personaje de Hero + nivel + sin suspensión) */
 async function mundoPase(avisar) {
   const id = amId(); if (!id) { if (avisar) G().toast('Para entrar al multijugador hace falta iniciar sesión con tu cuenta.'); return { error: 'cuenta' }; }
@@ -4594,7 +4596,7 @@ async function tribuElegir(host) {
 /* confirmar la tribu elegida (sin ventanitas del navegador) */
 function tribuConfirmar(t, el, inSheet, R) {
   const T0 = TRIBU[t], volver = (bt) => { bt.disabled = false; bt.textContent = T0.e + ' Unirme a ' + T0.n; };
-  el.innerHTML = `<div class="${inSheet ? 'bag-in mis-in ' : ''}tr-ok" style="--tc:${T0.c}"><div class="tr-emb lv3">${T0.e}</div><b class="tr-n">${T0.n}</b><p class="mis-ask">${T0.l}</p><p class="sv-tip">${(R[t] || {}).miembros || 0} miembros. Vas a llevar su insignia en el pecho y su color a tus pies. Podés cambiar de tribu recién dentro de 30 días, y lo que aportes queda en esta tribu.</p>
+  el.innerHTML = `<div class="${inSheet ? 'bag-in mis-in ' : ''}tr-ok" style="--tc:${T0.c}"><div class="tr-emb lv3">${T0.e}</div><b class="tr-n">${T0.n}</b><p class="mis-ask">${T0.l}</p><p class="sv-tip">${(R[t] || {}).miembros || 0} miembros. Vas a llevar su insignia en el pecho y en la espalda, y brilla más cuanto más Resplandor tiene la tribu. Podés cambiar de tribu recién dentro de 30 días, y lo que aportes queda en esta tribu.</p>
     <div class="mis-btns"><button class="mis-yes tr-si">${T0.e} Unirme a ${T0.n}</button><button class="mis-no tr-vol">Ver otras</button></div></div>`;
   el.querySelector('.tr-vol').onclick = () => tribuElegir(inSheet ? null : el);
   el.querySelector('.tr-si').onclick = async () => {
@@ -4692,7 +4694,7 @@ function mpLeave(silent) {
 }
 function mpAdd(id, info) {
   if (!S || MP.players[id]) return; const hx = S.hx, rig = hx || H3.ok, av = rig ? buildHeroAvatar(info.avatar || {}) : buildAvatar(info.avatar || {}, false); av.traverse(o => { if (o.isPointLight) o.intensity = 2; if (o.isMesh && rig) o.castShadow = true; });
-  const tag = tagSprite((info.tribu ? TRIBU[info.tribu].e + ' ' : '') + info.name + (info.avatar && info.avatar.don && DONL[info.avatar.don] ? ' · ' + DONL[info.avatar.don] : ''), (info.avatar && info.avatar.ins) || [], hx, (info.avatar && info.avatar.glow) || 0); tag.scale.multiplyScalar(.42); tag.position.y = 2.55 * (av.userData.h3 ? av.userData.h3.tagK || 1 : 1); av.add(tag); if ((info.hum || 0) >= 10) av.add(humHalo()); if (info.tribu) { av.add(tribuAura(info.tribu, info.tlv)); tribuInsignia(av, info.tribu); } av.position.copy(S.av.position); av.position.x += 1.5; S.scene.add(av);
+  const tag = tagSprite((info.tribu ? TRIBU[info.tribu].e + ' ' : '') + info.name + (info.avatar && info.avatar.don && DONL[info.avatar.don] ? ' · ' + DONL[info.avatar.don] : ''), (info.avatar && info.avatar.ins) || [], hx, (info.avatar && info.avatar.glow) || 0); tag.scale.multiplyScalar(.42); tag.position.y = 2.55 * (av.userData.h3 ? av.userData.h3.tagK || 1 : 1); av.add(tag); if ((info.hum || 0) >= 10) av.add(humHalo()); if (info.tribu) tribuInsignia(av, info.tribu, info.tlv); av.position.copy(S.av.position); av.position.x += 1.5; S.scene.add(av);
   if (TALK.stream) setTimeout(talkCallAll, 600);
   MP.players[id] = { info, av, tag, tgt: { x: av.position.x, y: 0, z: av.position.z, yaw: 0 }, st: { pose: null, waveT: 0, jy: 0 }, moving: false, bubble: null, bT: 0 };
 }
