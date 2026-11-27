@@ -1348,6 +1348,31 @@ function foamWord(c, txt) {
     pass(true); try { x.filter = 'brightness(' + T.bright + ')'; } catch (e) {} pass(false); try { x.filter = 'none'; } catch (e) {} c.classList.add('on'); };
   const wait = () => { if (T.ready) draw(); else if (c.isConnected || !c.dataset.t) { c.dataset.t = 1; setTimeout(wait, 120); } }; wait();
 }
+/* ---------- cómo jugar: Individual, Con amigos o Multijugador (solo Hero), elegido en la sala de espera ---------- */
+const MODO = { k: 'solo', code: '', crear: false };
+const MODOS = kid => [['solo', '👤', 'Individual', kid ? 'Tu mundo, a tu ritmo' : 'Tu mundo y tus casas'], ['amigos', '👥', 'Con amigos', kid ? 'Con tu código, hasta 5' : 'Sala privada de hasta 5']].concat(kid ? [] : [['multi', '🌍', 'Multijugador', 'Muy pronto', 1]]);
+function modoHTML(kid) {
+  let pend = ''; try { pend = sessionStorage.getItem('tsp:join') || ''; } catch (e) {}
+  if (pend) { MODO.k = 'amigos'; MODO.code = pend; }
+  return `<div class="lb-modo" role="radiogroup" aria-label="Cómo querés jugar">${MODOS(kid).map(([k, ic, n, sub, lock]) => `<button type="button" role="radio" data-m="${k}" class="${MODO.k === k ? 'on' : ''}${lock ? ' lock' : ''}" aria-checked="${MODO.k === k}"><i aria-hidden="true">${lock ? '🔒' : ic}</i><b>${n}</b><small>${sub}</small></button>`).join('')}</div>
+      <div class="lb-amg"${MODO.k === 'amigos' ? '' : ' hidden'}><button type="button" class="lb-crear${MODO.crear ? ' on' : ''}">✨ Crear una sala</button><span>o</span><input class="lb-code" maxlength="6" placeholder="CÓDIGO" value="${esc3(MODO.code)}" autocapitalize="characters" autocomplete="off" spellcheck="false" aria-label="Código de la sala"><small class="lb-amg-n"></small></div>`;
+}
+function modoWire(ov) {
+  const row = ov.querySelector('.lb-modo'), amg = ov.querySelector('.lb-amg'); if (!row) return;
+  const crear = amg.querySelector('.lb-crear'), code = amg.querySelector('.lb-code'), nota = amg.querySelector('.lb-amg-n');
+  const pinta = () => { row.querySelectorAll('[data-m]').forEach(b => { const on = b.dataset.m === MODO.k; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); }); amg.hidden = MODO.k !== 'amigos'; crear.classList.toggle('on', MODO.crear);
+    nota.textContent = MODO.k !== 'amigos' ? '' : MODO.code.length === 6 ? 'Al entrar al mundo te sumás a esa sala.' : MODO.crear ? 'Al entrar al mundo se crea tu sala y te damos el código para invitar.' : 'Creá una sala o escribí el código que te pasaron.'; };
+  row.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { if (b.classList.contains('lock')) { G().toast('El multijugador abre muy pronto: un mundo para encontrarte con jugadores de Hero de todos lados.'); return; } MODO.k = b.dataset.m; if (MODO.k === 'amigos' && !MODO.code) MODO.crear = true; pinta(); });
+  crear.onclick = () => { MODO.crear = true; MODO.code = ''; code.value = ''; pinta(); };
+  code.oninput = () => { code.value = code.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6); MODO.code = code.value; MODO.crear = !MODO.code; pinta(); };
+  pinta();
+}
+/* al terminar de armar el mundo: crear la sala o entrar con el código */
+function modoAplicar() {
+  if (MODO.k !== 'amigos') return; let pend = ''; try { pend = sessionStorage.getItem('tsp:join') || ''; } catch (e) {}
+  if (MODO.code.length === 6) { if (pend !== MODO.code) setTimeout(() => mpJoin(MODO.code), 900); } /* si vino por link, mpAuto ya se ocupa */
+  else if (MODO.crear) setTimeout(() => mpCreate(), 900);
+}
 function lobbyUI(kid) {
   const ov = document.createElement('div'); ov.className = 'v3lobby' + (kid ? ' kid' : ''); const H = HOWTO[kid ? 'kids' : 'hero'];
   const im = (LB_IMG[kid ? 'kids' : 'hero'] || []).map(n => `url(${DLM.r2}app/lobby/${n}),url(${DLW.root}app/lobby/${n})`);
@@ -1361,12 +1386,14 @@ function lobbyUI(kid) {
     <div class="lb-cap" aria-hidden="true"><i></i><b></b><span></span></div>
     <div class="lb-in">
       <div class="lb-head">${logo}<b class="lb-title">Tras sus pasos</b>${st ? `<p class="lb-stage"><span>${kid ? 'Seguís en' : 'Etapa ' + st.n + ' de ' + st.total}</span> ${esc3(st.name)}</p>` : `<p class="lb-sub">${kid ? '¡Vamos a caminar la historia de Jesús!' : 'Recorré la tierra donde caminó Jesús.'}</p>`}</div>
+      ${modoHTML(kid)}
       <blockquote class="lb-vs" aria-live="polite"><p></p><cite></cite></blockquote>
       <div class="lb-cards" hidden></div>
       <div class="lb-dl"><div class="lb-path">${steps.map((n, i) => `<i class="${i < cur ? 'done' : i === cur ? 'here' : ''}" title="${esc3(n)}"></i>`).join('')}<div class="lb-bar"><i></i></div></div><p class="lb-n">Preparando el mundo…</p></div>
       <div class="lb-act"><button class="lb-go" hidden></button></div><p class="lb-note"></p></div>`;
   document.body.appendChild(ov); document.body.classList.add('v3lb');
   if (kid) foamWord(ov.querySelector('.lb-foam canvas'), 'KIDS');
+  modoWire(ov);
   const $ = q => ov.querySelector(q), ims = [...ov.querySelectorAll('.lb-im')], T = [], cap = $('.lb-cap'), capS = () => { const c = LB_CAP[si % LB_CAP.length]; cap.classList.remove('on'); setTimeout(() => { cap.querySelector('b').textContent = c[0]; cap.querySelector('span').textContent = c[1]; cap.classList.add('on'); }, 500); };
   let si = 0; capS(); T.push(setInterval(() => { if (ims.length < 2) return; ims[si].classList.remove('on'); si = (si + 1) % ims.length; ims[si].classList.add('on'); capS(); }, 7000));
   let vi = Math.floor(Math.random() * Math.max(1, lines.length)); const vs = $('.lb-vs'), verse = () => { if (!lines.length) { vs.hidden = true; return; } vs.classList.remove('on'); setTimeout(() => { const t = String(lines[vi % lines.length]), m = /^(.*?)\s*\(([^()]+)\)\s*$/.exec(t); vs.querySelector('p').textContent = m ? m[1] : t; vs.querySelector('cite').textContent = m ? m[2] : ''; vi++; vs.classList.add('on'); }, 450); }; verse(); T.push(setInterval(verse, 9000));
@@ -4389,6 +4416,8 @@ function mpClean(m, c) {
   if (m.t === 'list') { if (!Array.isArray(m.players)) return null; m.players = m.players.slice(0, 5).filter(p => p && ID_OK(p.id)).map(p => ({ id: p.id, info: infoOk(p.info) })); }
   if (m.t === 'st') { if (!Array.isArray(m.s)) return null; const s = m.s; m.s = [numOk(s[0], -5e3, 5e3), numOk(s[1], -500, 2e3), numOk(s[2], -5e3, 5e3), numOk(s[3], -50, 50), s[4] ? 1 : 0, typeof s[5] === 'string' ? strOk(s[5], 16) : null, s[6] ? 1 : 0, numOk(s[7], -10, 50)]; }
   if (m.t === 'say') m.k = Math.floor(numOk(m.k, 0, 99));
+  if (m.t === 'x' && m.k === 'obraL') { if (!Array.isArray(m.l)) return null; m.l = m.l.slice(0, 160).map(obraPieza).filter(Boolean); m.s = Math.floor(numOk(m.s, 0, 1e9)); m.n = Math.floor(numOk(m.n, 1, 8)); m.i = Math.floor(numOk(m.i, 0, m.n - 1)); }
+  if (m.t === 'x' && m.k === 'obraM') { const o = {}; if (m.mat && typeof m.mat === 'object') for (const k of OBRA_MAT) if (Object.prototype.hasOwnProperty.call(m.mat, k)) { const n = Math.floor(numOk(m.mat[k], 0, 50)); if (n > 0) o[k] = n; } if (!Object.keys(o).length) return null; m.mat = o; }
   if (m.t === 'leg') { m.g = strOk(m.g, 24); if (!GBY[m.g] || GBY[m.g].r !== 'l') return null; }
   if (m.t === 'look' && !(m.avatar && typeof m.avatar === 'object' && !Array.isArray(m.avatar))) return null;
   if (m.t === 'x') { if (typeof m.k !== 'string') return null; if ('give' in m) m.give = resOk(m.give); if ('want' in m) m.want = resOk(m.want); if ('by' in m) m.by = strOk(m.by, 16); if ('name' in m) m.name = strOk(m.name, 40); if ('label' in m) m.label = strOk(m.label, 60); if ('x' in m) m.x = numOk(m.x, -5e3, 5e3); if ('z' in m) m.z = numOk(m.z, -5e3, 5e3); }
@@ -4407,7 +4436,7 @@ async function mpCreate() {
       m = mpClean(m, c); if (!m) return;
       if (m.t === 'hi') { if (m.info.branch !== G().branch) { c.send({ t: 'branch', b: G().branch }); setTimeout(() => c.close(), 300); return; } if (Object.keys(MP.conns).length >= 4) return; MP.conns[c.peer] = c;
         c.send({ t: 'list', host: MP.peer.id, players: [{ id: MP.peer.id, info: meInfo() }].concat(Object.entries(MP.players).map(([id, p]) => ({ id, info: p.info }))) });
-        mpAdd(c.peer, m.info); mpSend({ t: 'hi', id: c.peer, info: m.info }, c.peer); G().toast(m.info.name + ' entró a la sala.'); mpUI(); return; }
+        mpAdd(c.peer, m.info); mpSend({ t: 'hi', id: c.peer, info: m.info }, c.peer); G().toast(m.info.name + ' entró a la sala.'); mpUI(); setTimeout(() => obraEnviar(c.peer), 500); return; }
       if (m.t === 'st' || m.t === 'say' || m.t === 'talk' || m.t === 'look' || m.t === 'leg') { m.id = c.peer; mpOn(m); mpSend(m, c.peer); }
       if (m.t === 'x') xRelay(c, m);
     });
@@ -4425,7 +4454,7 @@ async function mpJoin(code) {
     c.on('data', m => { m = mpClean(m, c); if (!m) return; ok = true; clearTimeout(to);
       if (m.t === 'full') { G().toast('La sala ya tiene 5 personas.'); mpLeave(); return; }
       if (m.t === 'branch') { G().toast(m.b === 'ados' ? 'Esa sala es de Hero. Entrá con tu perfil de Hero.' : 'Esa sala es de Kids. Entrá con tu perfil de Kids.'); mpLeave(); return; }
-      if (m.t === 'list') { m.players.forEach(p => { if (p.id !== MP.peer.id) mpAdd(p.id, p.info); }); G().toast('¡Entraste a la sala ' + code + '!'); mpUI(); return; }
+      if (m.t === 'list') { MP.hostId = ID_OK(m.host) ? m.host : null; m.players.forEach(p => { if (p.id !== MP.peer.id) mpAdd(p.id, p.info); }); G().toast('¡Entraste a la sala ' + code + '!'); mpUI(); return; }
       if (m.t === 'hi') { mpAdd(m.id, m.info); G().toast(m.info.name + ' entró a la sala.'); mpUI(); return; }
       if (m.t === 'bye') { const n = MP.players[m.id] && MP.players[m.id].info.name; mpDel(m.id); if (n) G().toast(n + ' salió de la sala.'); mpUI(); return; }
       if (m.t === 'x') { mpX(m); return; }
@@ -4459,7 +4488,7 @@ function talkOpen(on) { TALK.open = !!on; if (on) talkStart(); else talkStop(); 
 function mpLeave(silent) {
   talkEnd();
   try { for (const id in MP.conns) MP.conns[id].close(); if (MP.conn) MP.conn.close(); if (MP.peer) MP.peer.destroy(); } catch (e) {}
-  for (const id in MP.players) mpDel(id); MP.peer = null; MP.conn = null; MP.conns = {}; MP.code = null; MP.host = false; if (!silent) mpUI();
+  for (const id in MP.players) mpDel(id); MP.peer = null; MP.conn = null; MP.conns = {}; MP.code = null; MP.host = false; MP.hostId = null; obraVolver(); if (!silent) mpUI();
 }
 function mpAdd(id, info) {
   if (!S || MP.players[id]) return; const hx = S.hx, rig = hx || H3.ok, av = rig ? buildHeroAvatar(info.avatar || {}) : buildAvatar(info.avatar || {}, false); av.traverse(o => { if (o.isPointLight) o.intensity = 2; if (o.isMesh && rig) o.castShadow = true; });
@@ -4500,7 +4529,7 @@ function mpPanel() {
   const el = document.getElementById('v3sheet'); if (!el) return; S.joy.x = 0; S.joy.y = 0; const close = () => { el.hidden = true; };
   if (!MP.code) {
     el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>Jugar con amigos</b><span>Salas privadas de hasta 5 personas</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
-      <p class="mis-ask">Cada uno juega con su propio perfil y conserva su nivel. En la sala se ven caminando juntos por el mismo mundo.</p>
+      <p class="mis-ask">Cada uno juega con su propio perfil y conserva su nivel. Se juega en el mundo de quien crea la sala: los demás ven sus construcciones y pueden aportarle materiales.</p>
       <div class="mis-btns"><button class="mis-yes r-new">Crear una sala</button></div>
       <button type="button" class="gd-how r-amg">🎁 Amigos, regalos y equipo</button>
       <p class="cap-note" style="margin-top:16px">¿Te pasaron un código?</p><div class="r-join"><input class="r-code" maxlength="6" placeholder="CÓDIGO" autocapitalize="characters" autocomplete="off" spellcheck="false"><button class="mis-no r-go">Entrar</button></div>
@@ -8621,7 +8650,7 @@ async function show3d(on) {
   const g = G(), key = g.branch + '|' + g.P().id + '|' + JSON.stringify(g.P().avatar);
   if (!THREE) { if (!loading) loading = import(THREE_URL); try { THREE = await loading; } catch (e) { loading = null; v3fail('Revisá la conexión a internet y volvé a intentar.'); return; } }
   r2hooks(); let LBU = null; if (builtFor !== key || !S) { if (!window.__noLobby && !/[?&]lobby=0/.test(location.search)) { try { LBU = await lobby(); } catch (e) { console.warn('lobby', e); } } if (S) { S.renderer.dispose(); S = null; } builtFor = key; BSTEP.u = LBU; BSTEP.log = [];
-    let ok = false; try { await withTO(build(), 120000, 'armado'); ok = true; } catch (e) { builtFor = null; buildFail(LBU, e); if (!LBU) v3fail('Probá de nuevo. Si sigue pasando, elegí la calidad Baja en el menú.'); return; } finally { BSTEP.u = null; if (LBU && ok) LBU.close(); } if (ok) setTimeout(r2summary, 6000); }
+    let ok = false; try { await withTO(build(), 120000, 'armado'); ok = true; } catch (e) { builtFor = null; buildFail(LBU, e); if (!LBU) v3fail('Probá de nuevo. Si sigue pasando, elegí la calidad Baja en el menú.'); return; } finally { BSTEP.u = null; if (LBU && ok) { LBU.close(); try { modoAplicar(); } catch (e) {} } } if (ok) setTimeout(r2summary, 6000); }
   else { const n = g.NODES[g.P().pos], [x, z] = (S.npos && S.npos[n.id]) || toV(n.x, n.y); S.av.position.set(x, 0, z); S.sig = ''; S.onStop = g.P().pos; S.quiet = false; }
   resize(); refresh(); bagBtn(); try { fanInit(); miniInit(); bagHud(); } catch (e) { console.warn('hud', e); } setTimeout(fullHint, 1500); setTimeout(iosHint, 1800); setTimeout(fidDaily, 5000); document.body.classList.remove('v3boot');
 }
@@ -9982,11 +10011,11 @@ function bldPlace() {
   const T = bldTarget(); if (T.err) { bldMsg(T.err, 1); bldSfx(0); return; } const b = BP[BLD.t]; if (S.hx) svPay(b.cost); else kmPay(b.cost);
   const e = [BLD.t, T.x, T.z, T.y, BLD.r]; bldP().push(e); if (b.thin) { const c = bldCamRight(), al = BLD.r % 2 ? [0, 1] : [1, 0], sg = (al[0] * c[0] + al[1] * c[1]) < 0 ? -1 : 1; BLD.pin = { x: T.x + al[0] * sg, z: T.z + al[1] * sg }; } /* cercos y muros finos: el lugar pasa solo al siguiente de la fila */ BLD.list = bldP().slice(); BLD.pops.push({ e, s: 0, sc: .2 }); bldSync(); bldSfx(1);
   try { if (typeof fireSparks === 'function') fireSparks(T.x, T.y + .1, T.z, 8); } catch (er) {} h3do(['M_Box_Idle', 'Interact', 'PickUp_Table'], .8, 0, 1.6);
-  if (S.hx) { svXP(1); ofiXP(b.cost.block || b.cost.losa ? 'can' : 'car', 1); svUI(); } bldMilestone(); G().save(); bldHud();
+  if (S.hx) { svXP(1); ofiXP(b.cost.block || b.cost.losa ? 'can' : 'car', 1); svUI(); } bldMilestone(); G().save(); bldHud(); obraCambio();
 }
 function bldRemove() {
   const T = bldTarget(); if (T.rem == null) { bldMsg('Acá no hay nada tuyo para sacar.', 1); bldSfx(0); return; } const L = bldP(), e = L[T.rem]; L.splice(T.rem, 1); BLD.list = L.slice();
-  if (S.hx) { Object.entries(BP[e[0]].cost).forEach(([k, n]) => svAdd(k, n)); svUI(); } else kmPay(BP[e[0]].cost, -1); bldSync(); bldSfx(2); G().save(); bldHud();
+  if (S.hx) { Object.entries(BP[e[0]].cost).forEach(([k, n]) => svAdd(k, n)); svUI(); } else kmPay(BP[e[0]].cost, -1); bldSync(); bldSfx(2); G().save(); bldHud(); obraCambio();
 }
 function bldMilestone() {
   const p = G().P(), nk = S.hx ? 'bldNH' : 'bldNK'; p[nk] = (p[nk] || 0) + 1; const n = p[nk];
@@ -9998,7 +10027,7 @@ function bldMilestone() {
 function bldMsg(t, bad) { const m = document.getElementById('v3bldmsg'); if (m) { m.textContent = t; m.className = bad ? 'no' : 'ok'; clearTimeout(bldMsg.T); bldMsg.T = setTimeout(() => { if (m) m.textContent = ''; }, 3200); } else G().toast(t); }
 function bldStart(t) {
   try { window.tspMark && tspMark('construir:' + (t || BLD.t)); } catch (e) {}
-  if (!BLD.parts) return; const el = document.getElementById('v3sheet'); if (el) el.hidden = true; if (t) BLD.t = t; BLD.on = true; BLD.del = false; BLD.dy = 0; BLD.sx = 0; BLD.pin = null;
+  if (!BLD.parts) return; if (BLD.ajeno) { obraAportar(); return; } const el = document.getElementById('v3sheet'); if (el) el.hidden = true; if (t) BLD.t = t; BLD.on = true; BLD.del = false; BLD.dy = 0; BLD.sx = 0; BLD.pin = null;
   BLD.cam = [S.camDist, S.camPitch]; S.camDist = Math.max(S.camDist, 6.5); S.camPitch = Math.max(S.camPitch ?? .4, .62); bldGhost(BLD.t); bldHud();
   const p = G().P(); if (!p.bldTip) { p.bldTip = 1; setTimeout(() => bldMsg('Tocá el piso donde va la pieza y después «Poner». Los cercos siguen solos en fila. Con ⬆ subís para hacer techos.'), 300); }
 }
@@ -10459,11 +10488,59 @@ function mpX(m) {
   if (m.k === 'offerOk') return xOfferOk(m);
   if (m.k === 'offerNo') { const pd = MP.pend && MP.pend[m.id]; if (!pd) return; delete MP.pend[m.id]; Object.entries(pd.give).forEach(([k, n]) => svAdd(k, n)); G().save(); svUI && svUI(); G().toast(pName(m.id) + ' no aceptó el intercambio. Te devolvimos tus cosas.'); return; }
   if (m.k === 'gift') return xGiftIn(m);
+  if (m.k === 'obraL') return obraIn(m);
+  if (m.k === 'obraM') return obraMIn(m);
   if (m.k === 'amReq') return amReqIn(m);
   if (m.k === 'amOk') return amOkIn(m);
   if (m.k === 'esp') return espIn(m);
   if (m.k === 'g') return gmIn(m);
   if (m.k === 'share' && svOn() && !S.down && (S.av.position.x - m.x) ** 2 + (S.av.position.z - m.z) ** 2 < 100) { const s = svP(); s.sat = Math.min(SV.FULL, s.sat + 300); G().save(); svUI(); G().toast('🍞 ' + m.by + ' compartió su comida: +5 minutos de alimento.'); }
+}
+/* ---------- sala con amigos: se juega en el mundo de quien creó la sala ----------
+   Los invitados ven las construcciones del anfitrión (y chocan con ellas). Mientras están en la sala no construyen:
+   le aportan materiales para su obra. Sus propias casas siguen guardadas en su mundo y vuelven al salir. */
+const OBRA = { seq: 0, rx: null, t: 0, avisado: false };
+const OBRA_MAT = ['wood', 'plank', 'block', 'losa', 'viga', 'adobe', 'carpa', 'madera', 'piedra', 'barro'];
+const OBRA_HX = ['wood', 'plank', 'block', 'losa', 'viga', 'adobe', 'carpa'];
+function obraPieza(e) { if (!Array.isArray(e) || typeof e[0] !== 'string' || !BP[e[0]]) return null; const r2 = v => Math.round(v * 100) / 100; return [e[0], r2(numOk(e[1], -5e3, 5e3)), r2(numOk(e[2], -5e3, 5e3)), r2(numOk(e[3], -20, 300)), Math.floor(numOk(e[4], 0, 3))]; }
+function obraEnviar(to) {
+  if (!MP.host || !MP.code) return; const L = bldP().map(e => [e[0], e[1], e[2], e[3], e[4] || 0]), s = ++OBRA.seq, n = Math.max(1, Math.ceil(L.length / 150));
+  for (let i = 0; i < n; i++) xSend({ k: 'obraL', to, s, i, n, l: L.slice(i * 150, i * 150 + 150) });
+}
+function obraCambio() { if (!MP.host || !MP.code) return; clearTimeout(OBRA.t); OBRA.t = setTimeout(() => obraEnviar(), 600); }
+function obraIn(m) {
+  if (MP.host || !MP.hostId || m.id !== MP.hostId || !BLD.parts) return;
+  if (!OBRA.rx || OBRA.rx.s !== m.s) OBRA.rx = { s: m.s, n: m.n, p: {} }; OBRA.rx.p[m.i] = m.l; if (Object.keys(OBRA.rx.p).length < OBRA.rx.n) return;
+  const L = []; for (let i = 0; i < OBRA.rx.n; i++) L.push(...(OBRA.rx.p[i] || [])); OBRA.rx = null;
+  if (BLD.on) bldStop(); BLD.ajeno = pName(m.id); BLD.list = L; BLD.pops = []; bldSync();
+  if (!OBRA.avisado) { OBRA.avisado = true; misPop('Estás en el mundo de ' + BLD.ajeno, L.length ? 'Ves todo lo que construyó. Podés aportarle materiales desde Construir.' : 'Todavía no construyó nada. Podés aportarle materiales desde Construir.'); }
+}
+function obraVolver() { OBRA.rx = null; OBRA.avisado = false; if (!BLD.ajeno) return; BLD.ajeno = null; if (!BLD.parts) return; BLD.list = bldP().slice(); BLD.pops = []; bldSync(); }
+/* aportar materiales a la obra del anfitrión */
+function obraAportar() {
+  const el = document.getElementById('v3sheet'); if (!el || !MP.hostId) return; const hx = !!S.hx, give = {};
+  const keys = hx ? OBRA_HX : KMAT_K, tiene = k => hx ? (t7Inv(svP().inv)[k] || 0) : (kmP()[k] || 0), nom = k => hx ? RES[k][1] + ' ' + RES[k][0] : KMAT[k][0] + ' ' + KMAT[k][1];
+  const draw = () => {
+    el.innerHTML = `<div class="inv${hx ? ' hx' : ''}"><div class="inv-h"><b>Obra de ${esc(BLD.ajeno)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div>
+      <p class="sv-tip">Acá construye quien creó la sala. Ayudalo con materiales para su obra. Tus casas siguen guardadas en tu mundo.</p>
+      ${keys.map(k => `<div class="x-row"><span>${nom(k)} <small>(tenés ${tiene(k)})</small></span><button data-k="${k}" data-d="-1" aria-label="Menos">−</button><b>${give[k] || 0}</b><button data-k="${k}" data-d="1" aria-label="Más" ${(give[k] || 0) >= Math.min(50, tiene(k)) ? 'disabled' : ''}>+</button></div>`).join('')}
+      <div class="sv-row"><button class="x-send">🤝 Aportar a la obra</button></div></div>`;
+    el.hidden = false; el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
+    el.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { const k = b.dataset.k; give[k] = Math.max(0, Math.min(Math.min(50, tiene(k)), (give[k] || 0) + +b.dataset.d)); if (!give[k]) delete give[k]; draw(); });
+    el.querySelector('.x-send').onclick = () => {
+      if (!Object.keys(give).length) { G().toast('Elegí qué materiales querés aportar.'); return; }
+      if (!Object.entries(give).every(([k, n]) => tiene(k) >= n)) return;
+      if (hx) svPay(give); else Object.entries(give).forEach(([k, n]) => kmAdd(k, -n));
+      xSend({ k: 'obraM', to: MP.hostId, mat: { ...give } }); G().save(); if (hx) svUI(); el.hidden = true; G().toast('¡Le aportaste materiales a ' + BLD.ajeno + ' para su obra!');
+    };
+  };
+  draw();
+}
+function obraMIn(m) {
+  if (!MP.host) return; const hx = !!S.hx, got = {};
+  Object.entries(m.mat).forEach(([k, n]) => { if (hx && OBRA_HX.includes(k)) { svAdd(k, n); got[k] = n; } else if (!hx && KMAT[k]) { kmAdd(k, n); got[k] = n; } });
+  if (!Object.keys(got).length) return; G().save(); if (hx) svUI();
+  misPop(pName(m.id) + ' aportó a tu obra', Object.entries(got).map(([k, n]) => (hx ? RES[k][1] + ' ' + n + ' ' + RES[k][0].toLowerCase() : KMAT[k][0] + ' ' + n + ' ' + KMAT[k][1].toLowerCase())).join(', '));
 }
 function playerPick(title, onPick) {
   const el = document.getElementById('v3sheet'), ids = Object.keys(MP.players); if (!ids.length) { G().toast('Todavía no hay nadie más en la sala.'); return; }

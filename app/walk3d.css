@@ -1813,3 +1813,39 @@ body[data-branch="ados"] .v3kday{display:none!important}
 
 /* selector de idioma en la portada */
 .kh-lang{display:flex;gap:6px;justify-content:center;margin:6px 0 10px}.kh-lang button{padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:inherit;font:800 12px Nunito,system-ui,sans-serif;cursor:pointer}.kh-lang button.on{background:#FFD25E;color:#3A2606;border-color:#FFD25E}
+/* ===== Sala de espera: cómo querés jugar (Individual / Con amigos / Multijugador) ===== */
+.lb2 .lb-modo{display:flex;gap:8px;flex-wrap:wrap;max-width:480px}
+.lb2 .lb-modo button{flex:1 1 0;min-width:120px;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:9px;align-items:center;text-align:left;padding:9px 12px;border-radius:3px;border:1px solid rgba(233,201,138,.45);background:rgba(10,7,4,.62);color:#F4E2B8;cursor:pointer;transition:background .2s,border-color .2s,transform .15s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.lb2 .lb-modo button:hover{transform:translateY(-1px);border-color:rgba(255,227,160,.8)}
+.lb2 .lb-modo i{grid-row:1/3;font-style:normal;font-size:20px;line-height:1}
+.lb2 .lb-modo b{font:600 12px "Cinzel",Georgia,serif;letter-spacing:.12em;text-transform:uppercase}
+.lb2 .lb-modo small{font:700 10.5px/1.2 "Nunito",sans-serif;color:rgba(244,226,184,.7)}
+.lb2 .lb-modo button.on{background:linear-gradient(180deg,rgba(255,237,184,.22),rgba(227,169,62,.18));border-color:#FFE3A0;box-shadow:0 0 0 1px rgba(255,227,160,.5) inset,0 0 18px rgba(255,200,90,.28)}
+.lb2 .lb-modo button.on b{color:#FFE9B0}
+.lb2 .lb-modo button.lock{opacity:.6}
+.lb2 .lb-amg{display:flex;flex-wrap:wrap;align-items:center;gap:8px;max-width:480px;margin-top:-4px}
+.lb2 .lb-amg[hidden]{display:none}
+.lb2 .lb-amg>span{font:700 11px "Nunito",sans-serif;color:rgba(244,226,184,.6);text-transform:uppercase;letter-spacing:.14em}
+.lb2 .lb-crear{padding:8px 14px;border-radius:3px;border:1px solid rgba(233,201,138,.5);background:rgba(10,7,4,.62);color:#F4E2B8;font:700 12px "Nunito",sans-serif;cursor:pointer}
+.lb2 .lb-crear.on{background:#E9C98A;color:#2A1904;border-color:#FFE3A0}
+.lb2 .lb-code{width:108px;padding:8px 10px;border-radius:3px;border:1px solid rgba(233,201,138,.5);background:rgba(10,7,4,.7);color:#FFE9B0;font:800 14px ui-monospace,monospace;letter-spacing:.22em;text-align:center;outline:none}
+.lb2 .lb-code:focus{border-color:#FFE3A0;box-shadow:0 0 0 3px rgba(255,214,120,.2)}
+.lb2 .lb-amg-n{flex-basis:100%;font:600 11.5px/1.4 "Nunito",sans-serif;color:rgba(244,226,184,.75)}
+/* Kids: botones redondos y luminosos */
+.lb2.kid .lb-modo button{border-radius:18px;border:0;background:rgba(255,255,255,.88);color:#22407F;box-shadow:0 6px 18px rgba(14,30,80,.2)}
+.lb2.kid .lb-modo b{font:800 14px "Baloo 2","Nunito",sans-serif;letter-spacing:0;text-transform:none}
+.lb2.kid .lb-modo small{color:#5A6A9A}
+.lb2.kid .lb-modo button.on{background:#FFD54A;box-shadow:0 5px 0 #E58A1F,0 10px 24px rgba(255,138,43,.35)}
+.lb2.kid .lb-modo button.on b{color:#5A3200}.lb2.kid .lb-modo button.on small{color:#7A4A00}
+.lb2.kid .lb-amg>span{color:#fff}
+.lb2.kid .lb-crear{border-radius:99px;border:0;background:rgba(255,255,255,.9);color:#22407F;font-weight:800}
+.lb2.kid .lb-crear.on{background:#FF8A2B;color:#fff}
+.lb2.kid .lb-code{border-radius:99px;border:0;background:#fff;color:#22407F}
+.lb2.kid .lb-amg-n{color:rgba(255,255,255,.9)}
+@media (max-height:560px){.lb2 .lb-modo button{padding:6px 10px;min-width:100px}.lb2 .lb-modo small{display:none}}
+.lb2 .lb-modo small,.lb2 .lb-amg-n{text-transform:none!important;letter-spacing:0!important}
+.lb2 .lb-modo b{white-space:nowrap}
+/* con los modos, en pantallas de hasta 820 de alto las tarjetas de cómo se juega dejan lugar */
+@media (max-height:820px){.lb2 .lb-cards{display:none!important}.lb2 .lb-vs p{font-size:15px}}
+@media (max-height:700px){.lb2 .lb-amg-n{display:none}.lb2 .lb-vs{display:none}}
+.lb2 .lb-modo,.lb2 .lb-amg{width:100%}
