@@ -13,6 +13,16 @@ const okOrigin = o => !!o && ORIGINS.some(r => r.test(o));
 const cors = o => ({ 'Access-Control-Allow-Origin': okOrigin(o) ? o : 'null', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type', 'Vary': 'Origin' });
 let PUB_URL = 'https://www.habitat-cfm.org/api/kh-mundo?pub=1';
 const CUPO = 100, MUNDOS = 12;
+/* las 12 tribus: logros y Resplandor de cada tribu (lo mismo está en el juego) */
+const TRIBUS = ['ruben', 'simeon', 'levi', 'juda', 'zabulon', 'isacar', 'dan', 'gad', 'aser', 'neftali', 'jose', 'benjamin'];
+const NIVELES = [0, 100, 300, 700, 1500, 3000, 6000, 12000, 25000, 50000];
+const nivelDe = pts => { let n = 0; NIVELES.forEach((u, i) => { if (pts >= u) n = i; }); return n; };
+/* logros: [id, contador, meta, puntos] */
+const LOGROS = [['fam1', 'miembros', 10, 50], ['fam2', 'miembros', 50, 150], ['fam3', 'miembros', 200, 500],
+  ['ora1', 'ora', 10, 50], ['ora2', 'ora', 100, 150], ['ora3', 'ora', 1000, 500],
+  ['fes1', 'festejo', 10, 50], ['fes2', 'festejo', 100, 150], ['fes3', 'festejo', 1000, 500]];
+const PTS = { ora: 3, festejo: 2 };
+const semana = () => { const d = new Date(Date.now() - 3 * 3600e3), dia = (d.getUTCDay() + 6) % 7; return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - dia)).toISOString().slice(0, 10); };
 const RATE = new Map();
 function limited(ip, what, max, perMs) {
   const k = what + ip, now = Date.now(); let r = RATE.get(k); if (!r || now - r.t > perMs) { r = { t: now, n: 0 }; RATE.set(k, r); }
@@ -51,6 +61,17 @@ export default {
       await Promise.allSettled(Array.from({ length: MUNDOS }, (_, i) => env.MUNDO.get(env.MUNDO.idFromName('hero-' + (i + 1))).fetch('https://m/orden', { method: 'POST', body: JSON.stringify(ord) })));
       return new Response('ok');
     }
+    const TR = () => env.TRIBUS.get(env.TRIBUS.idFromName('tribus'));
+    if (p === '/tribus' && req.method === 'GET') { if (!okOrigin(o)) return new Response('Prohibido', { status: 403, headers: CORS }); const r = await TR().fetch('https://t/resumen'); return new Response(r.body, { headers: { ...CORS, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } }); }
+    /* mi tribu (con el pase): { pase } la consulta; { pase, t } la elige o la cambia (una vez cada 30 días) */
+    if (p === '/tribu' && req.method === 'POST') {
+      if (!okOrigin(o)) return new Response('Prohibido', { status: 403, headers: CORS });
+      if (limited(ip, 'tribu', 30, 60000)) return new Response('Demasiados pedidos', { status: 429, headers: CORS });
+      let x = {}; try { x = JSON.parse((await req.text()).slice(0, 3000)); } catch (e) { }
+      const pase = await abrir(x.pase || ''); if (!pase) return new Response(JSON.stringify({ error: 'pase' }), { status: 401, headers: CORS });
+      const r = x.t ? await TR().fetch('https://t/unirse', { method: 'POST', body: JSON.stringify({ m: pase.m, t: String(x.t) }) }) : await TR().fetch('https://t/de?m=' + encodeURIComponent(pase.m));
+      return new Response(r.body, { status: r.status, headers: { ...CORS, 'Content-Type': 'application/json' } });
+    }
     if (p === '/mundo') {
       if (!okOrigin(o)) return new Response('Prohibido', { status: 403, headers: CORS });
       if (req.headers.get('Upgrade') !== 'websocket') return new Response('Se espera WebSocket', { status: 426, headers: CORS });
@@ -82,7 +103,7 @@ const avatarOk = a => { if (!a || typeof a !== 'object' || Array.isArray(a)) ret
 const nuevoId = () => 'w' + crypto.randomUUID().replace(/-/g, '').slice(0, 10);
 
 export class Mundo {
-  constructor(state) { this.state = state; this.rl = new WeakMap(); }
+  constructor(state, env) { this.state = state; this.env_ = env; this.rl = new WeakMap(); }
   socks() { return this.state.getWebSockets(); }
   att(ws) { try { return ws.deserializeAttachment() || {}; } catch (e) { return {}; } }
   async bloqueo(m) { const h = await this.state.storage.get('b:' + m); if (!h) return null; if (h !== 'siempre' && h < Date.now()) { await this.state.storage.delete('b:' + m); return null; } return h; }
@@ -118,7 +139,8 @@ export class Mundo {
     const a = this.att(ws), id = a.id; if (!id) return;
     if (m.t === 'hi') {
       if (a.in) return; const i = m.info && typeof m.info === 'object' ? m.info : {};
-      a.info = { name: a.n, avatar: avatarOk(i.avatar), branch: 'ados', hum: Math.floor(num(i.hum, 0, 999)), pid: a.p }; a.in = true; ws.serializeAttachment(a);
+      const tr = await this.tribuDe(a.m);
+      a.info = { name: a.n, avatar: avatarOk(i.avatar), branch: 'ados', hum: Math.floor(num(i.hum, 0, 999)), pid: a.p, tribu: tr.t || '', tlv: tr.lv || 0 }; a.tribu = tr.t || ''; a.in = true; ws.serializeAttachment(a);
       const players = this.socks().filter(w => w !== ws).map(w => this.att(w)).filter(b => b.in).map(b => ({ id: b.id, info: b.info }));
       this.env(ws, { t: 'list', host: 'srv', players, mundo: a.mundo });
       this.a_todos({ t: 'hi', id, info: a.info }, ws); return;
@@ -127,12 +149,19 @@ export class Mundo {
     if (m.t === 'st') {
       if (!Array.isArray(m.s)) return; const s = m.s;
       const v = [num(s[0], -5e3, 5e3), num(s[1], -500, 2e3), num(s[2], -5e3, 5e3), num(s[3], -50, 50), s[4] ? 1 : 0, typeof s[5] === 'string' ? str(s[5], 16) : null, s[6] ? 1 : 0, num(s[7], -10, 50)];
-      const nx = Math.round(v[0]), nz = Math.round(v[2]); if (a.x !== nx || a.z !== nz) { a.x = nx; a.z = nz; ws.serializeAttachment(a); }
+      v[8] = typeof s[8] === 'string' ? str(s[8], 16) : null; /* festejo que está bailando */
+      const act = v[5] === 'pray' ? 'ora' : v[8] && /^D_/.test(v[8]) ? 'fes:' + v[8] : '';
+      const nx = Math.round(v[0]), nz = Math.round(v[2]); if (a.x !== nx || a.z !== nz || a.act !== act) { a.x = nx; a.z = nz; a.act = act; ws.serializeAttachment(a); }
+      if (act && a.tribu) await this.juntos(ws, a);
       this.a_todos({ t: 'st', id, s: v }, ws, [v[0], v[2]]); return;
     }
     if (m.t === 'say') { this.a_todos({ t: 'say', id, k: Math.floor(num(m.k, 0, 99)) }, ws, a.x != null ? [a.x, a.z] : null); return; }
     if (m.t === 'leg') { const g = str(m.g, 24); if (g) this.a_todos({ t: 'leg', id, g }, ws); return; }
     if (m.t === 'look') { const av = avatarOk(m.avatar); a.info.avatar = av; ws.serializeAttachment(a); this.a_todos({ t: 'look', id, avatar: av }, ws); return; }
+    if (m.t === 'tribuSet') { /* eligió o cambió de tribu: se vuelve a leer y se avisa a todos */
+      this.trCache = null; const tr = await this.tribuDe(a.m, true); a.tribu = tr.t || ''; a.info.tribu = a.tribu; a.info.tlv = tr.lv || 0; ws.serializeAttachment(a);
+      const o = { t: 'tribu', id, tribu: a.tribu, tlv: a.info.tlv }; this.env(ws, o); this.a_todos(o, ws); return;
+    }
     if (m.t === 'rep') {
       const to = this.socks().find(w => this.att(w).id === m.to); if (!to) return; const b = this.att(to); if (b.m === a.m) return;
       /* se guarda (no solo en memoria) para que no se pierda si el servidor se duerme */
@@ -143,6 +172,66 @@ export class Mundo {
       return;
     }
   }
+  /* la tribu de cada cuenta la guarda el objeto «tribus» (uno solo para todos los mundos) */
+  async tribuDe(m, fresh) {
+    try { const r = await (await this.env_.TRIBUS.get(this.env_.TRIBUS.idFromName('tribus')).fetch('https://t/de?m=' + encodeURIComponent(m))).json(); return r || {}; } catch (e) { return {}; }
+  }
+  /* orar o festejar juntos: 3 o más de la misma tribu, cerca (8 m), haciendo lo mismo. Cada persona suma una vez cada 10 minutos. */
+  async juntos(ws, a) {
+    const now = Date.now(), cd = this.cd || (this.cd = new Map());
+    const grupo = this.socks().map(w => [w, this.att(w)]).filter(([w, b]) => b.in && b.tribu === a.tribu && b.act === a.act && b.x != null && Math.hypot(b.x - a.x, b.z - a.z) <= 8);
+    if (grupo.length < 3) return;
+    const kind = a.act === 'ora' ? 'ora' : 'festejo', nuevos = grupo.filter(([w, b]) => !(cd.get(b.m + kind) > now));
+    if (!nuevos.length) return;
+    nuevos.forEach(([w, b]) => cd.set(b.m + kind, now + 10 * 60e3)); if (cd.size > 5000) for (const [k, t] of cd) if (t < now) cd.delete(k);
+    let r = {}; try { r = await (await this.env_.TRIBUS.get(this.env_.TRIBUS.idFromName('tribus')).fetch('https://t/evento', { method: 'POST', body: JSON.stringify({ t: a.tribu, k: kind, n: nuevos.length }) })).json(); } catch (e) { }
+    const msg = { t: 'juntos', k: kind, n: grupo.length, pts: (PTS[kind] || 1) * nuevos.length, logros: r.nuevos || [], tlv: r.lv || 0 };
+    nuevos.forEach(([w]) => this.env(w, msg));
+    if ((r.nuevos || []).length) this.a_todos({ t: 'logro', tribu: a.tribu, logros: r.nuevos }, null);
+  }
   async webSocketClose(ws) { const a = this.att(ws); try { ws.close(1000, 'chau'); } catch (e) { } if (a.in) this.a_todos({ t: 'bye', id: a.id }, ws); }
   async webSocketError(ws) { const a = this.att(ws); try { ws.close(1011, 'error'); } catch (e) { } if (a.in) this.a_todos({ t: 'bye', id: a.id }, ws); }
+}
+
+/* ---------- las 12 tribus: miembros, puntos, logros y Resplandor (un solo objeto para todos los mundos) ---------- */
+export class Tribus {
+  constructor(state) { this.state = state; }
+  async datos() {
+    if (this.D) return this.D; let D = await this.state.storage.get('T');
+    if (!D) { D = {}; TRIBUS.forEach(t => { D[t] = { miembros: 0, pts: 0, sem: '', spts: 0, cnt: {}, logros: {} }; }); }
+    this.D = D; return D;
+  }
+  async guardar() { await this.state.storage.put('T', this.D); }
+  sumar(T, k, n) {
+    const D = this.D[T], wk = semana(); if (D.sem !== wk) { D.sem = wk; D.spts = 0; }
+    if (k !== 'miembros') { D.cnt[k] = (D.cnt[k] || 0) + n; const p = (PTS[k] || 1) * n; D.pts += p; D.spts += p; }
+    const nuevos = [];
+    for (const [id, c, meta, p] of LOGROS) { const v = c === 'miembros' ? D.miembros : (D.cnt[c] || 0); if (!D.logros[id] && v >= meta) { D.logros[id] = new Date().toISOString().slice(0, 10); D.pts += p; D.spts += p; nuevos.push(id); } }
+    return nuevos;
+  }
+  async fetch(req) {
+    const url = new URL(req.url), D = await this.datos();
+    if (url.pathname === '/resumen') {
+      const wk = semana(), out = {};
+      TRIBUS.forEach(t => { const x = D[t]; out[t] = { miembros: x.miembros, pts: x.pts, lv: nivelDe(x.pts), semana: x.sem === wk ? x.spts : 0, cnt: x.cnt, logros: x.logros }; });
+      return Response.json({ tribus: out, semana: wk });
+    }
+    if (url.pathname === '/de') { const m = url.searchParams.get('m') || '', r = await this.state.storage.get('m:' + m); return Response.json(r ? { t: r.t, desde: r.d, lv: nivelDe(D[r.t].pts) } : {}); }
+    if (url.pathname === '/unirse') {
+      const x = await req.json(), t = String(x.t || ''), m = String(x.m || ''); if (!TRIBUS.includes(t) || !m) return Response.json({ error: 'tribu' }, { status: 400 });
+      const cur = await this.state.storage.get('m:' + m);
+      if (cur && cur.t === t) return Response.json({ t, desde: cur.d, lv: nivelDe(D[t].pts) });
+      if (cur && Date.now() - Date.parse(cur.d) < 30 * 864e5) return Response.json({ error: 'reciente', t: cur.t, desde: cur.d, puede: new Date(Date.parse(cur.d) + 30 * 864e5).toISOString().slice(0, 10) }, { status: 409 });
+      if (cur) D[cur.t].miembros = Math.max(0, D[cur.t].miembros - 1);
+      D[t].miembros++; const d = new Date().toISOString(); await this.state.storage.put('m:' + m, { t, d });
+      const nuevos = this.sumar(t, 'miembros', 0); await this.guardar();
+      return Response.json({ t, desde: d, lv: nivelDe(D[t].pts), nuevos });
+    }
+    if (url.pathname === '/evento') {
+      const x = await req.json(), t = String(x.t || ''), k = String(x.k || ''), n = Math.max(0, Math.min(100, Math.floor(+x.n || 0)));
+      if (!TRIBUS.includes(t) || !PTS[k] || !n) return Response.json({ error: 'evento' }, { status: 400 });
+      const nuevos = this.sumar(t, k, n); await this.guardar(); return Response.json({ nuevos, lv: nivelDe(D[t].pts), pts: D[t].pts });
+    }
+    return new Response('No', { status: 404 });
+  }
 }

@@ -1869,11 +1869,11 @@ function openBag(first) {
   const tx = id => ((document.getElementById(id) || {}).textContent || '').trim(), lvn = tx('lvN') || '1', rk = tx('lvT'), pts = tx('score');
   const T = (t, ic, n) => `<button data-t="${t}" role="tab"><span class="it-ic" aria-hidden="true">${ic}</span><span class="it-tx">${n}</span></button>`;
   el.innerHTML = `<div class="inv${S.hx ? ' hx' : ''}"><div class="inv-h"><div class="inv-tt"><span class="inv-emb">${BAG_SVG}</span><div><b>Mochila</b><small>Nivel ${esc(lvn)}${rk ? ' · ' + esc(rk) : ''}${pts ? ` · <em>✦ ${esc(pts)}</em>` : ''}</small></div></div><button class="bag-x" aria-label="Cerrar">✕</button></div>
-    <div class="inv-tabs" role="tablist" data-i18n-ctx="inv">${T('eq', '🛡️', 'Equipo')}${T('di', '📖', 'Diario')}${T('ob', '🏺', 'Objetos')}${T('me', '📜', 'Recuerdos')}${T('cu', '🎓', 'Cursos')}${S.hx ? T('su', '🔨', 'Trabajo') : T('su', '🧰', 'Herramientas')}${T('at', '💪', S.hx ? 'Atributos' : 'Mis fuerzas')}</div>
+    <div class="inv-tabs" role="tablist" data-i18n-ctx="inv">${T('eq', '🛡️', 'Equipo')}${T('di', '📖', 'Diario')}${T('ob', '🏺', 'Objetos')}${T('me', '📜', 'Recuerdos')}${T('cu', '🎓', 'Cursos')}${S.hx ? T('su', '🔨', 'Trabajo') : T('su', '🧰', 'Herramientas')}${T('at', '💪', S.hx ? 'Atributos' : 'Mis fuerzas')}${S.hx && mundoAbierto() ? T('tr', '🏳️', 'Tribu') : ''}</div>
     <div class="inv-body"></div></div>`;
   el.hidden = false; const close = () => { el.hidden = true; }; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   const tabs = el.querySelectorAll('.inv-tabs button'), body = el.querySelector('.inv-body');
-  const show = t => { tabs.forEach(b => { b.classList.toggle('on', b.dataset.t === t); b.setAttribute('aria-selected', b.dataset.t === t ? 'true' : 'false'); }); body.dataset.t = t; body.classList.remove('in'); void body.offsetWidth; body.classList.add('in'); body.innerHTML = ''; if (t === 'eq') invEquip(body); else if (t === 'ob') invItems(body); else if (t === 'su') (S.hx ? invSurv : invGuiaK)(body); else if (t === 'at') invAttr(body); else if (t === 'cu') invCourses(body); else if (t === 'di') invDiary(body); else invMemories(body); };
+  const show = t => { tabs.forEach(b => { b.classList.toggle('on', b.dataset.t === t); b.setAttribute('aria-selected', b.dataset.t === t ? 'true' : 'false'); }); body.dataset.t = t; body.classList.remove('in'); void body.offsetWidth; body.classList.add('in'); body.innerHTML = ''; if (t === 'eq') invEquip(body); else if (t === 'ob') invItems(body); else if (t === 'su') (S.hx ? invSurv : invGuiaK)(body); else if (t === 'at') invAttr(body); else if (t === 'cu') invCourses(body); else if (t === 'di') invDiary(body); else if (t === 'tr') invTribu(body); else invMemories(body); };
   tabs.forEach(b => b.onclick = () => show(b.dataset.t)); try { if (diaryNew()) el.querySelector('.inv-tabs [data-t="di"]').classList.add('nw'); } catch (e) {} show((typeof first === 'string' ? first : 'eq'));
 }
 /* ícono dibujado de cada prenda: su forma, su color real y su detalle (rayas, vendas, bordado, metal) */
@@ -4408,7 +4408,7 @@ const ID_OK = v => typeof v === 'string' && /^[\w\-]{1,64}$/.test(v);
 const numOk = (v, a, b) => { v = +v; return Number.isFinite(v) ? Math.max(a, Math.min(b, v)) : 0; };
 const strOk = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f<>]/g, '').slice(0, n);
 const resOk = o => { const r = {}; if (o && typeof o === 'object') for (const k of XRES) if (Object.prototype.hasOwnProperty.call(o, k)) { const n = Math.floor(numOk(o[k], 0, 99)); if (n > 0) r[k] = n; } return r; };
-const infoOk = i => { i = i && typeof i === 'object' ? i : {}; return { name: strOk(i.name, 16) || 'Invitado', avatar: i.avatar && typeof i.avatar === 'object' && !Array.isArray(i.avatar) ? i.avatar : {}, branch: strOk(i.branch, 12), hum: numOk(i.hum, 0, 999), pid: typeof i.pid === 'string' && /^[a-zA-Z0-9-]{8,60}$/.test(i.pid) ? i.pid : '' }; };
+const infoOk = i => { i = i && typeof i === 'object' ? i : {}; return { name: strOk(i.name, 16) || 'Invitado', avatar: i.avatar && typeof i.avatar === 'object' && !Array.isArray(i.avatar) ? i.avatar : {}, branch: strOk(i.branch, 12), hum: numOk(i.hum, 0, 999), pid: typeof i.pid === 'string' && /^[a-zA-Z0-9-]{8,60}$/.test(i.pid) ? i.pid : '', tribu: TRIBU[i.tribu] ? i.tribu : '', tlv: Math.floor(numOk(i.tlv, 0, 9)) }; };
 function mpClean(m, c, cap) {
   if (!m || typeof m !== 'object' || typeof m.t !== 'string') return null;
   try { if (JSON.stringify(m).length > (cap || 12000)) return null; } catch (e) { return null; }
@@ -4479,7 +4479,7 @@ async function mpMundo() {
   if (!S || !S.hx) { G().toast('El multijugador es de Hero.'); return; }
   const id = amId(); if (!id) { G().toast('Para entrar al multijugador hace falta iniciar sesión con tu cuenta.'); return; }
   mpLeave(true); G().toast('Entrando al multijugador…');
-  let j = {}; try { const r = await fetch(MUNDO_API, { method: 'POST', headers: { 'Content-Type': 'text/plain', 'x-habitat-auth': await mundoToken() }, body: JSON.stringify({ k: 'pase', perfil: id.perfil }) }); j = await r.json(); } catch (e) { G().toast('No se pudo entrar al multijugador. Revisá la conexión.'); return; }
+  const j = await mundoPase(true); if (j.red) { G().toast('No se pudo entrar al multijugador. Revisá la conexión.'); return; }
   if (!j.pase) { if (j.error === 'nivel') misPop('El multijugador se abre en el nivel ' + j.min, 'Seguí jugando en tu mundo: cuando llegues al nivel ' + j.min + ' vas a poder encontrarte con jugadores de todos lados.'); else G().toast(j.msg || 'No se pudo entrar al multijugador.'); return; }
   let ws; try { ws = new WebSocket(MUNDO_WS + '?pase=' + encodeURIComponent(j.pase) + (MP.ultMundo ? '&n=' + MP.ultMundo : '')); } catch (e) { G().toast('No se pudo entrar al multijugador.'); return; }
   /* un «conector» con la misma forma que el de las salas, así el resto del juego no cambia */
@@ -4489,8 +4489,11 @@ async function mpMundo() {
   ws.onmessage = ev => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
     if (m.t === 'pase') { MP.peer.id = ID_OK(m.id) ? m.id : ''; MP.mundo = Math.floor(numOk(m.mundo, 1, 99)) || 1; MP.ultMundo = MP.mundo; conn.open = true; conn.send({ t: 'hi', info: meInfo() }); return; }
     if (m.t === 'fuera') { MP.fuera = m.por; return; }
+    if (m.t === 'juntos') { tribuJuntos(m); return; }
+    if (m.t === 'logro') { if (m.tribu && m.tribu === MP.tribu && Array.isArray(m.logros)) tribuLogro(m.logros); return; }
+    if (m.t === 'tribu') { if (m.id === MP.peer.id) { MP.tribu = TRIBU[m.tribu] ? m.tribu : ''; tribuAuraYo(); } else { const p = MP.players[m.id]; if (p && TRIBU[m.tribu]) { const info = { ...p.info, tribu: m.tribu, tlv: Math.floor(numOk(m.tlv, 0, 9)) }; const pos = p.av.position.clone(); mpDel(m.id); mpAdd(m.id, info); MP.players[m.id].av.position.copy(pos); } } return; }
     m = mpClean(m, null, m.t === 'list' ? 400000 : 12000); if (!m) return; /* el servidor ya revisa y limita; acá se vuelve a revisar todo */
-    if (m.t === 'list') { dentro = true; m.players.forEach(p => { if (p.id !== MP.peer.id) mpAdd(p.id, p.info); }); misPop('🌍 Multijugador · Mundo ' + MP.mundo, 'Estás con jugadores de Hero de todos lados. Saludá con las frases rápidas desde 👥. Acá no se construye: tu casa te espera en tu mundo. Si alguien se porta mal, podés reportarlo o silenciarlo.'); mpUI(); return; }
+    if (m.t === 'list') { dentro = true; m.players.forEach(p => { if (p.id !== MP.peer.id) mpAdd(p.id, p.info); }); tribuMia().then(t => { MP.tribu = t || ''; tribuAuraYo(); if (!G().P().mundoIntro) mundoIntro(); else if (!t) tribuElegir(); }); if (G().P().mundoIntro) misPop('🌍 Multijugador · Mundo ' + MP.mundo, 'Estás con jugadores de Hero de todos lados. Saludá con las frases rápidas desde 👥. Acá no se construye: tu casa te espera en tu mundo. Si alguien se porta mal, podés reportarlo o silenciarlo.'); mpUI(); return; }
     if (m.t === 'hi') { mpAdd(m.id, m.info); mpUI(); return; }
     if (m.t === 'bye') { mpDel(m.id); mpUI(); return; }
     if (m.t === 'st' || m.t === 'say' || m.t === 'look' || m.t === 'leg') mpOn(m); };
@@ -4501,21 +4504,150 @@ async function mpMundo() {
     else if (ev.code === 1006 && !dentro) G().toast('No se pudo entrar al multijugador. Probá en un rato.');
     else G().toast('Saliste del multijugador.'); };
 }
+/* ---------- LAS 12 TRIBUS (multijugador de Hero) ----------
+   Cada jugador elige una tribu (puede cambiarla una vez cada 30 días). Lo que hacen juntos en el mundo de todos hace
+   brillar a la tribu: el Resplandor de la tribu sube de nivel con los puntos, y hay logros que se ven en la mochila.
+   El servidor cuenta todo (orar juntos, festejar juntos, miembros); el juego solo lo muestra. */
+const TRIBU = {
+  ruben: { n: 'Rubén', e: '🌊', c: '#3C7FB8', l: 'El primero: fuerte como el agua.' },
+  simeon: { n: 'Simeón', e: '🏰', c: '#8A6A44', l: 'Firmes como una muralla.' },
+  levi: { n: 'Leví', e: '🕎', c: '#C9A23A', l: 'Los que sirven en la casa de Dios.' },
+  juda: { n: 'Judá', e: '🦁', c: '#C0392B', l: 'El león: de su tribu viene Jesús.' },
+  zabulon: { n: 'Zabulón', e: '⛵', c: '#2A8C8C', l: 'Gente del mar y de los puertos.' },
+  isacar: { n: 'Isacar', e: '🫏', c: '#7A6A5A', l: 'Trabajadores que entienden los tiempos.' },
+  dan: { n: 'Dan', e: '⚖️', c: '#5A4E9A', l: 'Los que juzgan con justicia.' },
+  gad: { n: 'Gad', e: '⛺', c: '#4E7A3A', l: 'Valientes del campamento.' },
+  aser: { n: 'Aser', e: '🫒', c: '#7A8C2A', l: 'Pan rico y aceite de oliva.' },
+  neftali: { n: 'Neftalí', e: '🦌', c: '#B8763A', l: 'Ágiles como la cierva, con palabras lindas.' },
+  jose: { n: 'José', e: '🌾', c: '#D49A2A', l: 'Rama que da fruto junto a la fuente.' },
+  benjamin: { n: 'Benjamín', e: '🐺', c: '#6A6A7A', l: 'El menor, amado y protegido.' }
+};
+const TRIBU_NV = [[0, 'Chispa'], [100, 'Brasa'], [300, 'Llama'], [700, 'Antorcha'], [1500, 'Fogata'], [3000, 'Faro'], [6000, 'Lámpara del templo'], [12000, 'Columna de fuego'], [25000, 'Gloria'], [50000, 'Gloria eterna']];
+const TRIBU_LOG = [['fam1', '👨‍👩‍👧', 'Una familia que crece', '10 miembros', 'miembros', 10], ['fam2', '🏘️', 'Un pueblo entero', '50 miembros', 'miembros', 50], ['fam3', '🌟', 'Como las estrellas del cielo', '200 miembros', 'miembros', 200],
+  ['ora1', '🙏', 'Oran juntos', '10 oraciones en grupo', 'ora', 10], ['ora2', '🕯️', 'Casa de oración', '100 oraciones en grupo', 'ora', 100], ['ora3', '🔥', 'Fuego que no se apaga', '1000 oraciones en grupo', 'ora', 1000],
+  ['fes1', '🎉', 'Festejan juntos', '10 festejos en grupo', 'festejo', 10], ['fes2', '🥁', 'Panderos y danzas', '100 festejos en grupo', 'festejo', 100], ['fes3', '🎺', 'Alegría de todo el pueblo', '1000 festejos en grupo', 'festejo', 1000]];
+const TRIBU_PRONTO = [['🏗️', 'Levantan la casa de la tribu'], ['🏁', 'Ganan los Juegos de la fiesta'], ['🐫', 'Llegan juntos a Jerusalén'], ['🕳️', 'Terminan una expedición'], ['🐑', 'Encuentran la oveja perdida']];
+const MUNDO_HTTP = MUNDO_WS.replace(/^wss:/, 'https:').replace(/\/mundo$/, '');
+const tribuNv = pts => { let i = 0; TRIBU_NV.forEach((x, k) => { if (pts >= x[0]) i = k; }); return i; };
+/* aura de la tribu: un anillo del color de la tribu a los pies, más fuerte con el Resplandor de la tribu */
+function tribuAura(t, lv) {
+  const T0 = TRIBU[t]; if (!T0) return new THREE.Group(); const g = new THREE.Group(); g.name = 'tribuAura';
+  const mk = (r1, r2, op) => { const m = new THREE.Mesh(new THREE.RingGeometry(r1, r2, 40), new THREE.MeshBasicMaterial({ color: T0.c, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); m.rotation.x = -Math.PI / 2; m.position.y = .04; return m; };
+  g.add(mk(.42, .5, .35 + .05 * (lv || 0))); if ((lv || 0) >= 3) g.add(mk(.58, .62, .15 + .04 * lv)); if ((lv || 0) >= 6) g.add(mk(.7, .73, .2 + .03 * lv));
+  return g;
+}
+/* insignia de la tribu en el pecho y en la espalda (como un escudo bordado): círculo del color de la tribu con su emblema */
+const TRIBU_TEX = {};
+function tribuTex(t) {
+  if (TRIBU_TEX[t]) return TRIBU_TEX[t]; const T0 = TRIBU[t], c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
+  const g = x.createRadialGradient(64, 56, 8, 64, 64, 60); g.addColorStop(0, T0.c); g.addColorStop(1, '#1A120A');
+  x.beginPath(); x.arc(64, 64, 58, 0, Math.PI * 2); x.fillStyle = g; x.fill(); x.lineWidth = 7; x.strokeStyle = '#E9C37A'; x.stroke();
+  x.beginPath(); x.arc(64, 64, 49, 0, Math.PI * 2); x.lineWidth = 2; x.strokeStyle = 'rgba(255,236,190,.6)'; x.stroke();
+  x.font = '58px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(T0.e, 64, 68);
+  const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return TRIBU_TEX[t] = tx;
+}
+function tribuInsignia(av, t) {
+  const old = av.getObjectByName('tribuIns'); if (old) av.remove(old); if (!TRIBU[t]) return;
+  const k = av.userData.h3 ? av.userData.h3.tagK || 1 : 1, g = new THREE.Group(); g.name = 'tribuIns';
+  const mat = new THREE.MeshBasicMaterial({ map: tribuTex(t), transparent: true, depthWrite: false });
+  const f = new THREE.Mesh(new THREE.CircleGeometry(.1 * k, 32), mat); f.position.set(0, 1.36 * k, .2 * k); g.add(f);
+  const b = new THREE.Mesh(new THREE.CircleGeometry(.14 * k, 32), mat); b.position.set(0, 1.4 * k, -.2 * k); b.rotation.y = Math.PI; g.add(b);
+  av.add(g);
+}
+function tribuAuraYo() { if (!S || !S.av) return; const old = S.av.getObjectByName('tribuAura'); if (old) S.av.remove(old); if (MP.mundo && MP.tribu) S.av.add(tribuAura(MP.tribu, MP.tribuLv || 0)); tribuInsignia(S.av, MP.mundo ? MP.tribu : ''); }
+/* el pase de Habitat (cuenta + personaje de Hero + nivel + sin suspensión) */
+async function mundoPase(avisar) {
+  const id = amId(); if (!id) { if (avisar) G().toast('Para entrar al multijugador hace falta iniciar sesión con tu cuenta.'); return { error: 'cuenta' }; }
+  try { const r = await fetch(MUNDO_API, { method: 'POST', headers: { 'Content-Type': 'text/plain', 'x-habitat-auth': await mundoToken() }, body: JSON.stringify({ k: 'pase', perfil: id.perfil }) }); return await r.json(); } catch (e) { return { red: 1 }; }
+}
+async function tribuMia() { const j = await mundoPase(); if (!j.pase) return ''; try { const r = await (await fetch(MUNDO_HTTP + '/tribu', { method: 'POST', body: JSON.stringify({ pase: j.pase }) })).json(); MP.tribuLv = r.lv || 0; const p = G().P(); if (r.t && p.tribu !== r.t) { p.tribu = r.t; G().save(); } return TRIBU[r.t] ? r.t : ''; } catch (e) { return ''; } }
+function tribuJuntos(m) {
+  const T0 = TRIBU[MP.tribu]; if (!T0) return; MP.tribuLv = Math.floor(numOk(m.tlv, 0, 9)); tribuAuraYo();
+  misPop(T0.e + (m.k === 'ora' ? ' ¡Oraron juntos!' : ' ¡Festejaron juntos!'), m.n + ' de ' + T0.n + ' juntos: la tribu suma ' + Math.floor(numOk(m.pts, 0, 9999)) + ' de Resplandor.');
+  if (Array.isArray(m.logros) && m.logros.length) setTimeout(() => tribuLogro(m.logros), 2600);
+}
+function tribuLogro(ids) { const L = TRIBU_LOG.find(x => x[0] === ids[0]); if (!L) return; misPop('🏆 ¡Tu tribu logró «' + L[2] + '»!', 'Miralo en tu mochila, en Tribu. Cada logro hace brillar más a ' + TRIBU[MP.tribu].n + '.'); }
+/* la primera vez en el multijugador: cuatro tarjetas para entender todo, y después elegir tribu */
+function mundoIntro() {
+  const el = document.getElementById('v3sheet'); if (!el) return; let i = 0;
+  const C = [['🌍', 'El mundo de todos', 'Acá se encuentran jugadores de Hero de todos lados, hasta 100 por mundo. Los que ves cerca son personas de verdad.'],
+    ['🏳️', 'Tu tribu', 'Vas a elegir una de las 12 tribus de Israel. Todo lo que hagan juntos hace brillar a la tribu: es el Resplandor de la tribu, y sus logros los ves en tu mochila, en Tribu.'],
+    ['🙏', 'Juntos suman', 'Si 3 o más de tu tribu oran juntos, o hacen el mismo festejo cerca, la tribu suma. Muy pronto: la casa de la tribu, los Juegos de la fiesta, la caravana a Jerusalén y expediciones en grupo.'],
+    ['🛡️', 'Nos cuidamos', 'No hay chat libre ni micrófono: se saluda con frases rápidas desde 👥. Si alguien se porta mal, reportalo o silencialo ahí mismo. Acá no se construye: tu casa te espera en tu mundo.']];
+  const draw = () => { const c = C[i];
+    el.innerHTML = `<div class="bag-in mis-in mu-intro"><div class="mu-ic">${c[0]}</div><b class="mu-t">${c[1]}</b><p class="mis-ask">${c[2]}</p><div class="mu-dots">${C.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div>
+      <div class="mis-btns">${i < C.length - 1 ? '<button class="mis-yes mu-next">Seguir</button>' : '<button class="mis-yes mu-next">🏳️ Elegir mi tribu</button>'}</div></div>`;
+    el.hidden = false; el.querySelector('.mu-next').onclick = () => { if (i < C.length - 1) { i++; draw(); return; } const p = G().P(); p.mundoIntro = 1; G().save(); if (MP.tribu) { el.hidden = true; misPop(TRIBU[MP.tribu].e + ' Sos de ' + TRIBU[MP.tribu].n, 'Buscá a otros de tu tribu y hagan cosas juntos.'); } else tribuElegir(); }; };
+  draw();
+}
+/* elegir tribu: las 12, con cuántos son; se sugiere la que tiene menos gente */
+async function tribuElegir(host) {
+  const el = host || document.getElementById('v3sheet'); if (!el) return; const inSheet = !host;
+  el.innerHTML = '<p class="sv-tip">Cargando las tribus…</p>'; if (inSheet) el.hidden = false;
+  let R = {}; try { R = (await (await fetch(MUNDO_HTTP + '/tribus')).json()).tribus || {}; } catch (e) {}
+  const ids = Object.keys(TRIBU), menos = ids.slice().sort((a, b) => ((R[a] || {}).miembros || 0) - ((R[b] || {}).miembros || 0))[0];
+  const html = `<div class="${inSheet ? 'bag-in mis-in' : ''} tr-pick"><div class="bag-h"><b>🏳️ Elegí tu tribu</b><span>Podés cambiarla una vez cada 30 días</span>${inSheet ? '<button class="bag-x" aria-label="Cerrar">✕</button>' : ''}</div>
+    <div class="tr-grid">${ids.map(t => `<button class="tr-c${t === menos ? ' sug' : ''}" data-t="${t}" style="--tc:${TRIBU[t].c}"><span class="tr-e">${TRIBU[t].e}</span><b>${TRIBU[t].n}</b><small>${TRIBU[t].l}</small><em>${(R[t] || {}).miembros || 0} miembros${t === menos ? ' · te necesita' : ''}</em></button>`).join('')}</div></div>`;
+  el.innerHTML = html; if (inSheet) el.querySelector('.bag-x').onclick = () => { el.hidden = true; };
+  el.querySelectorAll('.tr-c').forEach(b => b.onclick = () => tribuConfirmar(b.dataset.t, el, inSheet, R));
+}
+/* confirmar la tribu elegida (sin ventanitas del navegador) */
+function tribuConfirmar(t, el, inSheet, R) {
+  const T0 = TRIBU[t], volver = (bt) => { bt.disabled = false; bt.textContent = T0.e + ' Unirme a ' + T0.n; };
+  el.innerHTML = `<div class="${inSheet ? 'bag-in mis-in ' : ''}tr-ok" style="--tc:${T0.c}"><div class="tr-emb lv3">${T0.e}</div><b class="tr-n">${T0.n}</b><p class="mis-ask">${T0.l}</p><p class="sv-tip">${(R[t] || {}).miembros || 0} miembros. Vas a llevar su insignia en el pecho y su color a tus pies. Podés cambiar de tribu recién dentro de 30 días, y lo que aportes queda en esta tribu.</p>
+    <div class="mis-btns"><button class="mis-yes tr-si">${T0.e} Unirme a ${T0.n}</button><button class="mis-no tr-vol">Ver otras</button></div></div>`;
+  el.querySelector('.tr-vol').onclick = () => tribuElegir(inSheet ? null : el);
+  el.querySelector('.tr-si').onclick = async () => {
+    const bt = el.querySelector('.tr-si'); bt.disabled = true; bt.textContent = 'Uniéndote…';
+    const j = await mundoPase(true); if (!j.pase) { G().toast(j.msg || 'No se pudo. Probá de nuevo.'); volver(bt); return; }
+    let r = {}; try { const q = await fetch(MUNDO_HTTP + '/tribu', { method: 'POST', body: JSON.stringify({ pase: j.pase, t }) }); r = await q.json(); } catch (e) {}
+    if (r.error === 'reciente') { G().toast('Ya elegiste tribu hace poco. Podés cambiarla desde el ' + new Date(r.puede).toLocaleDateString('es-AR') + '.'); volver(bt); return; }
+    if (!r.t) { G().toast('No se pudo. Probá de nuevo.'); volver(bt); return; }
+    const p = G().P(); p.tribu = r.t; G().save(); MP.tribuLv = r.lv || 0;
+    if (MP.mundo && MP.conn) { MP.tribu = r.t; tribuAuraYo(); MP.conn.send({ t: 'tribuSet' }); }
+    if (inSheet) el.hidden = true; misPop(TRIBU[r.t].e + ' ¡Bienvenido a ' + TRIBU[r.t].n + '!', 'Buscá a otros de tu tribu en el multijugador: orar y festejar juntos la hace brillar.');
+    if (!inSheet) invTribu(el);
+  };
+}
+/* la tribu en la mochila: Resplandor, logros (los que faltan en silueta), cómo brillar y la tabla de la semana */
+async function invTribu(body) {
+  body.innerHTML = '<p class="sv-tip">Cargando tu tribu…</p>';
+  const j = await mundoPase();
+  if (!j.pase) { body.innerHTML = `<div class="tr-none"><div class="tr-e big">🏳️</div><b>Las 12 tribus</b><p class="sv-tip">${j.error === 'nivel' ? 'Las tribus son del multijugador: se abren en el nivel ' + j.min + '. ¡Seguí jugando y volvé!' : j.error === 'cuenta' ? 'Para tener tribu hace falta iniciar sesión con tu cuenta.' : esc(j.msg || 'No se pudo cargar. Revisá la conexión.')}</p><p class="sv-tip">En el multijugador vas a elegir una de las 12 tribus de Israel. Lo que hagan juntos hace brillar a la tribu y suma logros.</p></div>`; return; }
+  let mine = {}, R = {}, wk = '';
+  try { const [a, b] = await Promise.all([fetch(MUNDO_HTTP + '/tribu', { method: 'POST', body: JSON.stringify({ pase: j.pase }) }).then(r => r.json()), fetch(MUNDO_HTTP + '/tribus').then(r => r.json())]); mine = a; R = b.tribus || {}; wk = b.semana || ''; } catch (e) { body.innerHTML = '<p class="sv-tip">No se pudo cargar. Revisá la conexión.</p>'; return; }
+  if (!TRIBU[mine.t]) { tribuElegir(body); return; }
+  const t = mine.t, T0 = TRIBU[t], D = R[t] || { pts: 0, miembros: 0, semana: 0, cnt: {}, logros: {} }, lv = tribuNv(D.pts), nx = TRIBU_NV[lv + 1];
+  const pct = nx ? Math.round((D.pts - TRIBU_NV[lv][0]) / (nx[0] - TRIBU_NV[lv][0]) * 100) : 100;
+  const rk = Object.keys(TRIBU).sort((a, b) => ((R[b] || {}).semana || 0) - ((R[a] || {}).semana || 0)), pos = rk.indexOf(t) + 1;
+  body.innerHTML = `<div class="tr-card" style="--tc:${T0.c}"><div class="tr-emb lv${Math.min(lv, 9)}">${T0.e}</div><div><b class="tr-n">${T0.n}</b><small>${T0.l}</small>
+      <div class="tr-rs"><span>✦ Resplandor de la tribu: <b>${TRIBU_NV[lv][1]}</b></span><div class="tr-bar"><i style="width:${pct}%"></i></div><small>${D.pts} puntos${nx ? ' · faltan ' + (nx[0] - D.pts) + ' para ' + nx[1] : ' · ¡el más alto!'}</small></div>
+      <div class="tr-st"><span>👥 ${D.miembros} miembros</span><span>📅 Esta semana: ${D.semana || 0} · puesto ${pos} de 12</span></div></div></div>
+    <h4 class="tr-h">🏆 Logros de la tribu</h4><div class="tr-logs">${TRIBU_LOG.map(([id, ic, n, d, k, meta]) => { const ok = D.logros && D.logros[id], v = k === 'miembros' ? D.miembros : (D.cnt[k] || 0);
+      return `<div class="tr-lg${ok ? ' ok' : ''}"><span class="tr-li">${ic}</span><div><b>${n}</b><small>${ok ? 'Logrado el ' + new Date(ok + 'T12:00:00').toLocaleDateString('es-AR') : d + ' · van ' + Math.min(v, meta) + ' de ' + meta}</small></div></div>`; }).join('')}
+      ${TRIBU_PRONTO.map(([ic, n]) => `<div class="tr-lg pronto"><span class="tr-li">${ic}</span><div><b>${n}</b><small>Muy pronto</small></div></div>`).join('')}</div>
+    <h4 class="tr-h">✨ Cómo brilla tu tribu</h4><ul class="tr-how"><li>🙏 <b>Orar juntos:</b> 3 o más de tu tribu, cerca, arrodillados a la vez. +3 por persona.</li><li>🎉 <b>Festejar juntos:</b> 3 o más haciendo el mismo festejo, cerca. +2 por persona.</li><li>🏆 <b>Logros:</b> cada logro suma mucho más.</li><li>⏳ Cada persona suma una vez cada 10 minutos por cosa. Muy pronto: la casa de la tribu, los Juegos de la fiesta, la caravana y las expediciones.</li></ul>
+    <h4 class="tr-h">📅 Tabla de la semana</h4><ol class="tr-rank">${rk.map(x => `<li class="${x === t ? 'yo' : ''}"><span>${TRIBU[x].e} ${TRIBU[x].n}</span><b>${(R[x] || {}).semana || 0}</b></li>`).join('')}</ol>
+    <p class="cap-note">La tabla vuelve a cero cada lunes. Tribu desde el ${new Date(mine.desde).toLocaleDateString('es-AR')}.</p>`;
+}
 /* con muchos jugadores, se dibujan los 14 más cercanos */
 function mundoVer(now) {
   if (now - (MP.verT || 0) < 900) return; MP.verT = now; const me = S.av.position;
   Object.values(MP.players).map(p => [p, p.av.position.distanceTo(me)]).sort((a, b) => a[1] - b[1]).forEach(([p, d], i) => { p.av.visible = i < 14 && d < 90; });
+  if (MP.tribu && !MP.tribuTip) { const n = Object.values(MP.players).filter(p => p.info.tribu === MP.tribu && p.av.position.distanceTo(me) < 14).length; if (n >= 2) { MP.tribuTip = 1; misPop(TRIBU[MP.tribu].e + ' Hay ' + n + ' de tu tribu cerca', 'Si oran o festejan juntos (el mismo festejo), tu tribu brilla más y suma logros.'); } }
 }
 function mundoPanel(el, close) {
   const ps = Object.entries(MP.players).sort((a, b) => a[1].av.position.distanceTo(S.av.position) - b[1].av.position.distanceTo(S.av.position)).slice(0, 25);
   el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>🌍 Multijugador · Mundo ${MP.mundo}</b><span>${1 + Object.keys(MP.players).length} jugadores · se ven los más cercanos</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
     <div class="r-micbox"><b>💬 Frases rápidas</b><div class="r-phr2">${PHR.map((p, i) => `<button data-k="${i}">${p}</button>`).join('')}</div></div>
-    <ul class="r-list">${ps.length ? ps.map(([id, p]) => `<li>${esc(p.info.name)} <span class="mu-acts"><button class="am-sm mu-mute" data-id="${esc(id)}">${MP.mute[id] ? '🔈 Escuchar' : '🔇 Silenciar'}</button><button class="am-sm mu-rep" data-id="${esc(id)}">🚩 Reportar</button></span></li>`).join('') : '<li><small>Todavía no hay nadie cerca. ¡Explorá el mapa!</small></li>'}</ul>
+    <div class="r-micbox mu-que"><b>🧭 Qué se puede hacer acá</b><div class="mu-q"><span>🙏 Orar juntos con tu tribu</span><span>🎉 Festejar juntos (desde ✦)</span><span>👋 Saludar con frases rápidas</span><span class="pr">👥 Grupos de 5 · muy pronto</span><span class="pr">🕳️ Expediciones · muy pronto</span><span class="pr">🏗️ Casa de la tribu · muy pronto</span><span class="pr">🏁 Juegos de la fiesta · muy pronto</span><span class="pr">🐫 Caravana a Jerusalén · muy pronto</span><span class="pr">🛒 Mercado · muy pronto</span></div>${MP.tribu ? `<button class="gd-how mu-tr">${TRIBU[MP.tribu].e} Mi tribu: ${TRIBU[MP.tribu].n}</button>` : '<button class="gd-how mu-tr">🏳️ Elegir mi tribu</button>'}</div>
+    <ul class="r-list">${ps.length ? ps.map(([id, p]) => `<li>${p.info.tribu ? TRIBU[p.info.tribu].e + ' ' : ''}${esc(p.info.name)} <span class="mu-acts"><button class="am-sm mu-mute" data-id="${esc(id)}">${MP.mute[id] ? '🔈 Escuchar' : '🔇 Silenciar'}</button><button class="am-sm mu-rep" data-id="${esc(id)}">🚩 Reportar</button></span></li>`).join('') : '<li><small>Todavía no hay nadie cerca. ¡Explorá el mapa!</small></li>'}</ul>
     <div class="mis-btns"><button class="mis-no r-leave">Salir del multijugador</button></div>
     <p class="cap-note">Acá no hay chat libre ni micrófono: solo frases rápidas y festejos. Si alguien se porta mal, reportalo: el equipo de Habitat lo revisa.</p></div>`;
   el.hidden = false; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
   el.querySelectorAll('.r-phr2 button').forEach(b => b.onclick = () => { mpSay(+b.dataset.k); close(); });
   el.querySelector('.r-leave').onclick = () => { close(); mpLeave(); };
+  el.querySelector('.mu-tr').onclick = () => { if (MP.tribu) openBag('tr'); else tribuElegir(); };
   el.querySelectorAll('.mu-mute').forEach(b => b.onclick = () => { const id = b.dataset.id; MP.mute[id] = !MP.mute[id]; const p = MP.players[id]; if (p && p.bubble && MP.mute[id]) p.bT = .01; mundoPanel(el, close); });
   el.querySelectorAll('.mu-rep').forEach(b => b.onclick = () => mundoReportar(b.dataset.id, el, close));
 }
@@ -4556,11 +4688,11 @@ function talkOpen(on) { TALK.open = !!on; if (on) talkStart(); else talkStop(); 
 function mpLeave(silent) {
   talkEnd();
   try { for (const id in MP.conns) MP.conns[id].close(); if (MP.conn) MP.conn.close(); if (MP.peer) MP.peer.destroy(); } catch (e) {}
-  for (const id in MP.players) mpDel(id); MP.peer = null; MP.conn = null; MP.conns = {}; MP.code = null; MP.host = false; MP.hostId = null; MP.mundo = 0; MP.mute = {}; obraVolver(); if (!silent) mpUI();
+  for (const id in MP.players) mpDel(id); MP.peer = null; MP.conn = null; MP.conns = {}; MP.code = null; MP.host = false; MP.hostId = null; MP.mundo = 0; MP.mute = {}; MP.tribu = ''; MP.tribuTip = 0; tribuAuraYo(); obraVolver(); if (!silent) mpUI();
 }
 function mpAdd(id, info) {
   if (!S || MP.players[id]) return; const hx = S.hx, rig = hx || H3.ok, av = rig ? buildHeroAvatar(info.avatar || {}) : buildAvatar(info.avatar || {}, false); av.traverse(o => { if (o.isPointLight) o.intensity = 2; if (o.isMesh && rig) o.castShadow = true; });
-  const tag = tagSprite(info.name + (info.avatar && info.avatar.don && DONL[info.avatar.don] ? ' · ' + DONL[info.avatar.don] : ''), (info.avatar && info.avatar.ins) || [], hx, (info.avatar && info.avatar.glow) || 0); tag.scale.multiplyScalar(.42); tag.position.y = 2.55 * (av.userData.h3 ? av.userData.h3.tagK || 1 : 1); av.add(tag); if ((info.hum || 0) >= 10) av.add(humHalo()); av.position.copy(S.av.position); av.position.x += 1.5; S.scene.add(av);
+  const tag = tagSprite((info.tribu ? TRIBU[info.tribu].e + ' ' : '') + info.name + (info.avatar && info.avatar.don && DONL[info.avatar.don] ? ' · ' + DONL[info.avatar.don] : ''), (info.avatar && info.avatar.ins) || [], hx, (info.avatar && info.avatar.glow) || 0); tag.scale.multiplyScalar(.42); tag.position.y = 2.55 * (av.userData.h3 ? av.userData.h3.tagK || 1 : 1); av.add(tag); if ((info.hum || 0) >= 10) av.add(humHalo()); if (info.tribu) { av.add(tribuAura(info.tribu, info.tlv)); tribuInsignia(av, info.tribu); } av.position.copy(S.av.position); av.position.x += 1.5; S.scene.add(av);
   if (TALK.stream) setTimeout(talkCallAll, 600);
   MP.players[id] = { info, av, tag, tgt: { x: av.position.x, y: 0, z: av.position.z, yaw: 0 }, st: { pose: null, waveT: 0, jy: 0 }, moving: false, bubble: null, bT: 0 };
 }
@@ -4581,7 +4713,7 @@ function mpTick(t, dt) {
   if (!MP.code) return;
   for (const id in MP.players) { const p = MP.players[id], a = p.av.position, k = Math.min(1, dt * 8); a.x += (p.tgt.x - a.x) * k; a.z += (p.tgt.z - a.z) * k; a.y += (p.tgt.y - a.y) * k; let d = p.tgt.yaw - p.av.rotation.y; while (d > Math.PI) d -= 6.283; while (d < -Math.PI) d += 6.283; p.av.rotation.y += d * k;
     animAvatar(p.av, t, p.moving && !(p.st.jy > .02), dt); applyPose(p.av, t, dt, p.st); if (p.bT > 0) { p.bT -= dt; if (p.bT <= 0 && p.bubble) { p.av.remove(p.bubble); p.bubble = null; } } }
-  const now = performance.now(); if (MP.mundo) mundoVer(now); if (now - MP.last > (MP.mundo ? 200 : 110)) { const a = S.av.position, s = [+a.x.toFixed(2), +a.y.toFixed(2), +a.z.toFixed(2), +S.yaw.toFixed(2), (S.moving || S.freeMoving) ? 1 : 0, S.pose || null, S.waveT > 1.8 ? 1 : 0, +(S.jy || 0).toFixed(2)], sig = JSON.stringify(s); if (sig !== MP.sig || now - MP.last > 1500) { MP.sig = sig; MP.last = now; mpSend({ t: 'st', id: MP.peer && MP.peer.id, s }); } }
+  const now = performance.now(); if (MP.mundo) mundoVer(now); if (now - MP.last > (MP.mundo ? 200 : 110)) { const a = S.av.position, s = [+a.x.toFixed(2), +a.y.toFixed(2), +a.z.toFixed(2), +S.yaw.toFixed(2), (S.moving || S.freeMoving) ? 1 : 0, S.pose || null, S.waveT > 1.8 ? 1 : 0, +(S.jy || 0).toFixed(2), S.poseK || null], sig = JSON.stringify(s); if (sig !== MP.sig || now - MP.last > 1500) { MP.sig = sig; MP.last = now; mpSend({ t: 'st', id: MP.peer && MP.peer.id, s }); } }
 }
 function mpUI() {
   const old = document.getElementById('v3room'); if (old) old.remove();

@@ -8,6 +8,14 @@ keep_vars = true
 name = "MUNDO"
 class_name = "Mundo"
 
+[[durable_objects.bindings]]
+name = "TRIBUS"
+class_name = "Tribus"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Mundo"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Tribus"]

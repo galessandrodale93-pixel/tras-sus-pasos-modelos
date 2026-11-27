@@ -1853,3 +1853,34 @@ body[data-branch="ados"] .v3kday{display:none!important}
 .lb2 .lb-amg.solo-nota>:not(.lb-amg-n){display:none}
 .lb2 .lb-amg.solo-nota{margin-top:-6px}
 .lb2 .lb-modo b{letter-spacing:.06em;font-size:11.5px}.lb2.kid .lb-modo b{font-size:14px;letter-spacing:0}
+/* ===== Las 12 tribus (multijugador de Hero) ===== */
+.tr-card{display:flex;gap:14px;align-items:flex-start;padding:14px;border-radius:16px;border:1px solid color-mix(in srgb,var(--tc) 60%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--tc) 22%,transparent),rgba(255,255,255,.03))}
+.tr-emb{flex:none;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-size:32px;background:radial-gradient(circle,color-mix(in srgb,var(--tc) 55%,#000) 0%,color-mix(in srgb,var(--tc) 20%,#000) 70%);box-shadow:0 0 0 2px var(--tc),0 0 calc(6px + var(--g,0px)) var(--tc)}
+.tr-emb.lv1{--g:4px}.tr-emb.lv2{--g:8px}.tr-emb.lv3{--g:12px}.tr-emb.lv4{--g:16px}.tr-emb.lv5{--g:20px}.tr-emb.lv6{--g:26px}.tr-emb.lv7{--g:32px}.tr-emb.lv8,.tr-emb.lv9{--g:40px;animation:trGlow 2.4s ease-in-out infinite}
+@keyframes trGlow{50%{box-shadow:0 0 0 2px var(--tc),0 0 56px var(--tc)}}
+.tr-n{display:block;font:900 20px "Cinzel",Georgia,serif;letter-spacing:.06em;color:var(--tx,#F3E6CC)}
+.tr-card small{display:block;color:var(--mu,#B7A584);font-weight:700}
+.tr-rs{margin-top:8px}.tr-rs span{font-weight:800;font-size:13px}
+.tr-bar{height:8px;border-radius:99px;background:rgba(255,255,255,.1);margin:6px 0 3px;overflow:hidden}.tr-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--tc),#FFE3A0);box-shadow:0 0 10px var(--tc)}
+.tr-st{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12.5px;font-weight:800;color:var(--tx,#F3E6CC)}
+.tr-h{margin:18px 0 8px;font:900 11px "Nunito",sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#E9C37A}
+.tr-logs{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.tr-lg{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:12px;border:1px solid var(--ed,#6B5233);background:rgba(255,255,255,.03)}
+.tr-lg b{display:block;font-size:13.5px}.tr-lg small{color:var(--mu,#B7A584);font-weight:700;font-size:11.5px}
+.tr-li{font-size:22px;filter:grayscale(1) brightness(.35);opacity:.8}
+.tr-lg.ok{border-color:#E9C37A;background:linear-gradient(135deg,rgba(233,195,122,.16),rgba(255,255,255,.02));box-shadow:0 0 14px rgba(233,195,122,.18)}
+.tr-lg.ok .tr-li{filter:none;opacity:1}
+.tr-lg.pronto{opacity:.55}
+.tr-how{margin:0;padding-left:0;list-style:none;display:grid;gap:6px;font-size:13.5px;line-height:1.45}
+.tr-rank{margin:0;padding-left:22px;display:grid;gap:3px;font-size:13.5px;font-weight:700}
+.tr-rank li span{display:inline-block;min-width:150px}.tr-rank li b{color:#E9C37A}.tr-rank li.yo{color:#FFE3A0}
+.tr-none{text-align:center;padding:14px 6px}.tr-e.big{font-size:44px}
+.tr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:10px}
+.tr-c{display:grid;gap:3px;text-align:left;padding:10px;border-radius:14px;border:1px solid color-mix(in srgb,var(--tc) 55%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 24%,transparent),rgba(0,0,0,.2));color:inherit;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.tr-c:hover{transform:translateY(-2px);box-shadow:0 0 16px color-mix(in srgb,var(--tc) 60%,transparent)}
+.tr-c .tr-e{font-size:26px}.tr-c b{font:800 15px "Nunito",sans-serif}.tr-c small{font-size:11.5px;opacity:.8;line-height:1.3}.tr-c em{font-style:normal;font-size:11px;font-weight:800;opacity:.75}
+.tr-c.sug{box-shadow:0 0 0 2px #FFE3A0 inset}.tr-c.sug em{color:#FFE3A0;opacity:1}
+.mu-intro{text-align:center}.mu-ic{font-size:54px;margin:8px 0}.mu-t{display:block;font:800 20px "Cinzel",Georgia,serif;color:#FFE3A0;margin-bottom:6px}
+.mu-dots{display:flex;gap:6px;justify-content:center;margin:12px 0}.mu-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25)}.mu-dots i.on{background:#FFE3A0}
+.mu-q{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.mu-q span{font-size:12px;font-weight:800;padding:5px 9px;border-radius:99px;background:rgba(255,255,255,.08)}.mu-q span.pr{opacity:.5}
+.tr-ok{text-align:center;display:grid;justify-items:center;gap:6px}
