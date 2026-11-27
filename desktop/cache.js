@@ -3,7 +3,8 @@
    pasa por acá: si ya está en el disco se entrega desde el disco, y si no, se baja una vez y queda guardado.
    La primera vez se baja el juego completo de una sola vez (pantalla de descarga); con cada versión nueva, solo lo que cambió.
    La cuenta, el progreso y el pago siguen yendo por internet como siempre. */
-const { protocol, session, app } = require('electron');
+const { protocol, session, app, safeStorage } = require('electron');
+const os = require('os');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
@@ -33,6 +34,35 @@ const inflight = new Map();
 function loadIdx() { try { IDX = JSON.parse(fs.readFileSync(path.join(DIR, 'index.json'), 'utf8')); } catch (e) { IDX = null; } if (!IDX || IDX.v !== 1) IDX = { v: 1, hash: '', done: false, lang: '', e: {} }; }
 function saveIdx(now) { clearTimeout(idxT); const w = () => { try { const t = path.join(DIR, 'index.json.tmp'); fs.writeFileSync(t, JSON.stringify(IDX)); fs.renameSync(t, path.join(DIR, 'index.json')); } catch (e) {} }; if (now) w(); else idxT = setTimeout(w, 1500); }
 const fileOf = k => path.join(FILES, crypto.createHash('sha1').update(k).digest('hex'));
+/* los archivos se guardan cifrados (AES-256-GCM) con una clave propia de cada compu: así los modelos pagos no se pueden
+   sacar sueltos y, si alguien toca un archivo, el sello no cierra y el programa vuelve a bajar el original */
+const MAGIC = Buffer.from('KHC1');
+let KEY = null, KEY_NUEVA = false;
+function clave() {
+  const kf = path.join(DIR, 'clave'), envolver = () => crypto.createHash('sha256').update('kids&hero|tras-sus-pasos|' + os.userInfo().username + '|' + os.homedir()).digest();
+  const usaSS = process.platform === 'win32' && safeStorage.isEncryptionAvailable();
+  try {
+    const raw = fs.readFileSync(kf);
+    if (raw[0] === 1 && usaSS) return Buffer.from(safeStorage.decryptString(raw.subarray(1)), 'hex');
+    if (raw[0] === 2) { const iv = raw.subarray(1, 13), tag = raw.subarray(13, 29), d = crypto.createDecipheriv('aes-256-gcm', envolver(), iv); d.setAuthTag(tag); return Buffer.concat([d.update(raw.subarray(29)), d.final()]); }
+  } catch (e) {}
+  const k = crypto.randomBytes(32); KEY_NUEVA = true;
+  try {
+    if (usaSS) fs.writeFileSync(kf, Buffer.concat([Buffer.from([1]), safeStorage.encryptString(k.toString('hex'))]));
+    else { const iv = crypto.randomBytes(12), c = crypto.createCipheriv('aes-256-gcm', envolver(), iv), x = Buffer.concat([c.update(k), c.final()]); fs.writeFileSync(kf, Buffer.concat([Buffer.from([2]), iv, c.getAuthTag(), x])); }
+  } catch (e) {}
+  return k;
+}
+function cifrar(k, b) { const iv = crypto.randomBytes(12), c = crypto.createCipheriv('aes-256-gcm', KEY, iv); c.setAAD(Buffer.from(k)); const x = Buffer.concat([c.update(b), c.final()]); return Buffer.concat([MAGIC, iv, c.getAuthTag(), x]); }
+/* leer un archivo guardado; si fue tocado (o es de otra compu) tira error y se vuelve a bajar */
+function leer(k) {
+  const f = fileOf(k), b = fs.readFileSync(f);
+  if (b.length >= 32 && b.subarray(0, 4).equals(MAGIC)) { const d = crypto.createDecipheriv('aes-256-gcm', KEY, b.subarray(4, 16)); d.setAAD(Buffer.from(k)); d.setAuthTag(b.subarray(16, 32)); return Buffer.concat([d.update(b.subarray(32)), d.final()]); }
+  /* archivo de la versión 1.1 (sin cifrar): si se puede comprobar contra el original, se cifra; si no coincide, se descarta */
+  const e = IDX.e[k]; if (e && e.sha && gitSha(b) !== e.sha) throw new Error('alterado');
+  const t = f + '.' + process.pid + '.tmp'; fs.writeFileSync(t, cifrar(k, b)); fs.renameSync(t, f); return b;
+}
+function descartar(k) { try { fs.unlinkSync(fileOf(k)); } catch (e) {} delete IDX.e[k]; saveIdx(); }
 const gitSha = buf => crypto.createHash('sha1').update('blob ' + buf.length + '\0').update(buf).digest('hex');
 
 /* qué archivo es cada dirección (y si se puede guardar) */
@@ -56,7 +86,7 @@ async function bajar(srcs, timeoutMs) {
   return null;
 }
 function guardar(k, b, ct, sha) {
-  const f = fileOf(k), t = f + '.' + process.pid + '.tmp'; fs.writeFileSync(t, b); fs.renameSync(t, f);
+  const f = fileOf(k), t = f + '.' + process.pid + '.tmp'; fs.writeFileSync(t, cifrar(k, b)); fs.renameSync(t, f);
   IDX.e[k] = { s: b.length, ct: ct || '', sha: sha || (IDX.e[k] && IDX.e[k].sha) || '' }; saveIdx();
 }
 function respuesta(b, ct, u) {
@@ -66,13 +96,13 @@ function respuesta(b, ct, u) {
 /* entregar un archivo al juego: del disco si está; si no, bajarlo y guardarlo */
 async function servir(orig) {
   const K = keyOf(orig); if (!K) { const r = await bajar([orig]); return r ? respuesta(r.b, r.ct, orig) : new Response('', { status: 502 }); }
-  const f = fileOf(K.k), e = IDX.e[K.k], hay = e && fs.existsSync(f);
-  if (hay && K.mode === 'disk') return respuesta(fs.readFileSync(f), e.ct, orig);
+  const f = fileOf(K.k), e = IDX.e[K.k]; let hay = e && fs.existsSync(f);
+  if (hay && K.mode === 'disk') { try { return respuesta(leer(K.k), e.ct, orig); } catch (er) { descartar(K.k); hay = false; } }
   if (inflight.has(K.k)) { const r = await inflight.get(K.k); if (r) return respuesta(r.b, r.ct, orig); }
   const p = (async () => { const r = await bajar([orig], K.mode === 'net' ? 10000 : 120000); if (r) { try { guardar(K.k, r.b, r.ct); } catch (er) {} } return r; })();
   inflight.set(K.k, p); let r; try { r = await p; } finally { inflight.delete(K.k); }
   if (r) return respuesta(r.b, r.ct, orig);
-  if (hay) return respuesta(fs.readFileSync(f), e.ct, orig);
+  if (hay) { try { return respuesta(leer(K.k), e.ct, orig); } catch (er) { descartar(K.k); } }
   return new Response('', { status: 504 });
 }
 
@@ -82,7 +112,9 @@ function preparar() {
   protocol.registerSchemesAsPrivileged([{ scheme: 'khc', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true, bypassCSP: true } }]);
 }
 function iniciar() {
-  DIR = path.join(app.getPath('userData'), 'juego'); FILES = path.join(DIR, 'archivos'); fs.mkdirSync(FILES, { recursive: true }); loadIdx();
+  DIR = path.join(app.getPath('userData'), 'juego'); FILES = path.join(DIR, 'archivos'); fs.mkdirSync(FILES, { recursive: true }); loadIdx(); KEY = clave();
+  /* clave nueva (se perdió la anterior): lo cifrado con la vieja ya no se puede abrir, se vuelve a bajar en la próxima descarga */
+  if (KEY_NUEVA) { let n = 0; for (const k of Object.keys(IDX.e)) { try { const fd = fs.openSync(fileOf(k), 'r'), h = Buffer.alloc(4); fs.readSync(fd, h, 0, 4, 0); fs.closeSync(fd); if (h.equals(MAGIC)) { fs.unlinkSync(fileOf(k)); delete IDX.e[k]; n++; } } catch (e) {} } if (n) { IDX.done = false; saveIdx(true); } }
   DL = session.fromPartition('persist:kh-descargas');
   /* el servidor de los modelos responde como a la web de Habitat */
   DL.webRequest.onBeforeSendHeaders({ urls: [ABASE + '*', R2 + '*'] }, (d, cb) => { d.requestHeaders.Origin = SITE; d.requestHeaders.Referer = SITE + '/'; cb({ requestHeaders: d.requestHeaders }); });
@@ -110,7 +142,7 @@ async function sync(prog) {
       if (it.type !== 'blob' || !INCLUDE.test(it.path) || EXCLUDE.test(it.path)) continue; const p = it.path, bin = BIN.test(p);
       if (!bin && !CODE.test(p)) continue;
       const k = bin ? 'r:' + p : 'h:' + hash + ':' + p, e = IDX.e[k], f = fileOf(k);
-      if (e && fs.existsSync(f)) { if (!bin || e.sha === it.sha) continue; if (!e.sha) { try { const s = gitSha(fs.readFileSync(f)); if (s === it.sha) { e.sha = s; continue; } } catch (er) {} } }
+      if (e && fs.existsSync(f)) { if (!bin || e.sha === it.sha) continue; if (!e.sha) { try { const s = gitSha(leer(k)); if (s === it.sha) { e.sha = s; continue; } } catch (er) {} } }
       tareas.push({ k, n: it.size || 0, sha: bin ? it.sha : '', srcs: bin && R2OK.test(p) ? [ABASE + p, RAW + hash + '/' + p, GH + hash + '/' + p] : [RAW + hash + '/' + p, GH + hash + '/' + p] });
     }
   } catch (e) {}

@@ -2,9 +2,16 @@ name: Kids & Hero para Mac (kh-mac)
 # Arma el .dmg del programa de escritorio (carpeta desktop/) para Mac con chip Apple (M1, M2…) e Intel.
 on:
   workflow_dispatch:
+    inputs:
+      publicar:
+        description: "Publicar en la web (link fijo de descarga)"
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths: ["desktop/**", ".github/workflows/kh-mac.yml"]
+permissions:
+  contents: write
 jobs:
   mac:
     runs-on: macos-latest
@@ -30,3 +37,12 @@ jobs:
           name: kids-and-hero-mac
           path: desktop/dist/*.dmg
           retention-days: 30
+      - name: Publicar en el link fijo de descarga
+        if: ${{ inputs.publicar }}
+        shell: bash
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view escritorio -R ${{ github.repository }} >/dev/null 2>&1 || gh release create escritorio -R ${{ github.repository }} --target main --title "Kids & Hero para compu" --notes "Instaladores de Kids & Hero para Windows y Mac. Se descargan desde habitat-cfm.org/kids-hero.html" || sleep 15
+          gh release upload escritorio desktop/dist/*.dmg -R ${{ github.repository }} --clobber

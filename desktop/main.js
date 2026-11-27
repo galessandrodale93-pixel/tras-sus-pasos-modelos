@@ -39,7 +39,7 @@ if (!INSTALANDO) cache.preparar();
 /* dos ventanas: el lanzador (sin marco de Windows, con la portada y la descarga) y el juego (pantalla completa) */
 let lan = null, win = null;
 const ICON = path.join(__dirname, 'build', 'icon.png');
-const WP = { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false, spellcheck: false };
+const WP = { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false, spellcheck: false, devTools: !app.isPackaged };
 const ESTADO = () => path.join(app.getPath('userData'), 'ventana.json');
 const leerEstado = () => { try { return JSON.parse(fs.readFileSync(ESTADO(), 'utf8')); } catch (e) { return null; } };
 const guardarEstado = () => { try { if (!win) return; fs.writeFileSync(ESTADO(), JSON.stringify({ b: win.getNormalBounds(), full: win.isFullScreen() })); } catch (e) {} };

@@ -9,13 +9,14 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win squirrel portable --publish never",
+    "dist": "electron-builder --win squirrel --publish never",
     "dist:mac": "electron-builder --mac dmg --universal --publish never"
   },
   "devDependencies": {
     "electron": "^33.2.1",
     "electron-builder": "^25.1.8",
-    "electron-builder-squirrel-windows": "^25.1.8"
+    "electron-builder-squirrel-windows": "^25.1.8",
+    "@electron/fuses": "^1.8.0"
   },
   "build": {
     "appId": "org.habitat-cfm.kidshero",
@@ -36,19 +37,15 @@
     "win": {
       "icon": "build/icon.ico",
       "target": [
-        "squirrel",
-        "portable"
+        "squirrel"
       ],
       "artifactName": "Kids-and-Hero-${version}-${arch}.${ext}"
-    },
-    "portable": {
-      "artifactName": "Kids-and-Hero-Portable-${version}.${ext}"
     },
     "squirrelWindows": {
       "name": "KidsAndHero",
       "loadingGif": "build/instalando.gif",
       "iconUrl": "https://raw.githubusercontent.com/galessandrodale93-pixel/tras-sus-pasos-modelos/main/desktop/build/icon.ico",
-      "artifactName": "Kids-and-Hero-Instalar-${version}.${ext}",
+      "artifactName": "Kids-and-Hero-Windows.${ext}",
       "msi": false
     },
     "mac": {
@@ -66,7 +63,7 @@
       "hardenedRuntime": false,
       "gatekeeperAssess": false,
       "darkModeSupport": true,
-      "artifactName": "Kids-and-Hero-Mac-${version}.${ext}",
+      "artifactName": "Kids-and-Hero-Mac.${ext}",
       "minimumSystemVersion": "11.0"
     },
     "dmg": {
@@ -91,6 +88,7 @@
         }
       ]
     },
-    "afterPack": "firmar-mac.js"
+    "afterPack": "despues-de-armar.js",
+    "asar": true
   }
 }
