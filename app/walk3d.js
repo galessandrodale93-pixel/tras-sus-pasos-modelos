@@ -4551,7 +4551,7 @@ const TRIBU = {
   levi: { n: 'Leví', e: '📜', c: '#8E2B5E', l: 'Sirven en la casa de Dios y enseñan su ley.' },
   juda: { n: 'Judá', e: '👑', c: '#B8312A', l: 'La corona: de su tribu viene Jesús, el Rey.' },
   zabulon: { n: 'Zabulón', e: '⛵', c: '#1F8A8A', l: 'Gente del mar y de los puertos.' },
-  isacar: { n: 'Isacar', e: '🌗', c: '#7A6040', l: 'Entienden los tiempos y saben qué hacer.' },
+  isacar: { n: 'Isacar', e: '⏳', c: '#7A6040', l: 'Entienden los tiempos y saben qué hacer.' },
   dan: { n: 'Dan', e: '⚖️', c: '#4B3F8F', l: 'Los que juzgan con justicia.' },
   gad: { n: 'Gad', e: '⛺', c: '#3F6E35', l: 'Valientes del campamento.' },
   aser: { n: 'Aser', e: '🫒', c: '#7E8E22', l: 'Pan rico y aceite de oliva.' },
