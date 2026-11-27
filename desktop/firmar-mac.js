@@ -4,7 +4,7 @@
 const { execFileSync } = require('child_process');
 const path = require('path');
 exports.default = async ctx => {
-  if (ctx.electronPlatformName !== 'darwin') return;
+  if (ctx.electronPlatformName !== 'darwin' || /-temp$/.test(ctx.appOutDir)) return; /* en la versión universal se firma solo la final */
   const app = path.join(ctx.appOutDir, ctx.packager.appInfo.productFilename + '.app');
   execFileSync('codesign', ['--force', '--deep', '--sign', '-', app], { stdio: 'inherit' });
   execFileSync('codesign', ['--verify', '--deep', '--verbose=1', app], { stdio: 'inherit' });
