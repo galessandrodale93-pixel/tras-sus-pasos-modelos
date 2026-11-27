@@ -125,6 +125,16 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ pase, nombre, motivos: MOTIVOS });
     }
 
+    /* testimonio de una misión (Kids o Hero): la foto ya se revisó en el aparato; esto firma un aviso para el contador general.
+       Cuenta una vez por personaje y por misión (eso lo cuida el servidor del mundo). */
+    if (k === "testimonio") {
+      const perfil = s(x.perfil, 60), mis = s(x.mis, 30); if (!ID.test(perfil) || !/^(fotopastores|fotofelipe)$/.test(mis)) return json({ error: "datos" }, 400);
+      const pf = await uno("Perfiles", perfil);
+      if (!pf || pf._owner !== yo.id) return json({ error: "perfil" }, 403);
+      if (await suspendido(yo.id)) return json({ error: "suspendido" }, 403);
+      return json({ aviso: await firmar({ cmd: "testimonio", p: perfil, mis, exp: Date.now() + 5 * 60e3 }) });
+    }
+
     if (k === "reporte") {
       const perfil = s(x.perfil, 60), contra = s(x.contra, 60), motivo = MOTIVOS[Math.floor(Number(x.motivo))] || "";
       if (!ID.test(perfil) || !ID.test(contra) || !motivo || perfil === contra) return json({ error: "datos" }, 400);

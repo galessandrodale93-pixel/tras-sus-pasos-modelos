@@ -71,6 +71,15 @@ export default {
     }
     const TR = () => env.TRIBUS.get(env.TRIBUS.idFromName('tribus'));
     /* el contador general (para la web y el juego): a cuántos amigos les hablaron de Jesús y cuántos invitaron, con foto revisada en el aparato */
+    /* testimonio de una misión: aviso firmado por Habitat (cuenta una vez por personaje y misión) */
+    if (p === '/testimonio' && req.method === 'POST') {
+      if (!okOrigin(o)) return new Response('Prohibido', { status: 403, headers: CORS });
+      if (limited(ip, 'testim', 10, 60000)) return new Response('Demasiados pedidos', { status: 429, headers: CORS });
+      const av = await abrir((await req.text()).slice(0, 2000));
+      if (!av || av.cmd !== 'testimonio' || typeof av.p !== 'string' || !/^(fotopastores|fotofelipe)$/.test(av.mis)) return new Response(JSON.stringify({ error: 'aviso' }), { status: 403, headers: CORS });
+      const r = await TR().fetch('https://t/testimonio', { method: 'POST', body: JSON.stringify({ p: av.p, mis: av.mis }) });
+      return new Response(r.body, { headers: { ...CORS, 'Content-Type': 'application/json' } });
+    }
     if (p === '/contador' && req.method === 'GET') { const j = await (await TR().fetch('https://t/resumen')).json(); return new Response(JSON.stringify({ ...j.total, semana: j.semana }), { headers: { ...CORS, 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=120' } }); }
     if (p === '/tribus' && req.method === 'GET') { if (!okOrigin(o)) return new Response('Prohibido', { status: 403, headers: CORS }); const r = await TR().fetch('https://t/resumen'); return new Response(r.body, { headers: { ...CORS, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } }); }
     /* mi tribu (con el pase): { pase } la consulta; { pase, t } la elige o la cambia (una vez cada 30 días) */
@@ -250,7 +259,12 @@ export class Tribus {
       const wk = semana(), out = {};
       TRIBUS.forEach(t => { const x = D[t], esta = x.sem === wk; out[t] = { miembros: x.miembros, pts: x.pts, lv: nivelDe(x.pts), semana: esta ? x.spts : 0, cnt: x.cnt, logros: x.logros, meta: metaDe(x.miembros), mpts: esta ? x.mpts || 0 : 0, mok: esta ? !!x.mok : false }; });
       const total = { comp: 0, inv: 0, serv: 0, orv: 0 }; TRIBUS.forEach(t => { for (const k in total) total[k] += D[t].cnt[k] || 0; });
+      const mis = (await this.state.storage.get('testimonios')) || 0; total.mis = mis; total.comp += mis; /* las fotos de testimonio de las misiones también cuentan */
       return Response.json({ tribus: out, semana: wk, total });
+    }
+    if (url.pathname === '/testimonio') {
+      const x = await req.json(), k = 'tm:' + String(x.p || '') + ':' + String(x.mis || ''); if (await this.state.storage.get(k)) return Response.json({ ok: 1, ya: 1 });
+      const n = ((await this.state.storage.get('testimonios')) || 0) + 1; await this.state.storage.put({ [k]: 1, testimonios: n }); return Response.json({ ok: 1, n });
     }
     if (url.pathname === '/de') { const m = url.searchParams.get('m') || '', r = await this.state.storage.get('m:' + m); return Response.json(r ? this.mio(r) : {}); }
     /* la meta de la semana: { m, n, k, s } (k: comp, inv, serv, orv; s: de qué forma) */

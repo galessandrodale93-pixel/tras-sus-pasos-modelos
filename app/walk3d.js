@@ -4402,8 +4402,16 @@ function openCapture(m) {
     const go = el.querySelector('.cap-go'), save = el.querySelector('.cap-save'), file = el.querySelector('.cap-file'), img = el.querySelector('.cap-img'), err = el.querySelector('.cap-err'), c1 = el.querySelector('.c1'), c2 = el.querySelector('.c2');
     let blob = null; const ready = () => { save.hidden = !blob; save.disabled = !(c1.checked && c2.checked); }; c1.onchange = c2.onchange = ready;
     go.onclick = () => { if (!c1.checked || !c2.checked) { err.hidden = false; err.textContent = 'Primero contale de Jesús y preguntale si está de acuerdo con la foto. Después marcá las dos casillas.'; return; } err.hidden = true; file.click(); };
-    file.onchange = () => { const f = file.files && file.files[0]; if (!f) return; const im = new Image(); im.onload = () => { const k = Math.min(1, 1100 / Math.max(im.width, im.height)), cv = document.createElement('canvas'); cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); cv.toBlob(b => { blob = b; img.src = URL.createObjectURL(b); img.hidden = false; go.textContent = '📷 Sacar otra'; ready(); }, 'image/jpeg', .85); }; im.src = URL.createObjectURL(f); };
-    save.onclick = async () => { if (!blob || !c1.checked || !c2.checked) return; const v = { kind: 'photo', blob, ref: d.ref, at: Date.now() }; try { await mput(mkey(d.id), v); } catch (e) {} close(); misDone(m); setTimeout(() => shareAsk(el, v, d), 1400); };
+    /* la foto se revisa en el aparato (como en la meta de la tribu): dos caras, recién sacada, foto y amigo nuevos.
+       Si no se pudo revisar (sin conexión), la misión igual se guarda, pero no suma al contador general. */
+    let rev = null;
+    file.onchange = async () => { const f = file.files && file.files[0]; file.value = ''; if (!f) return; blob = null; rev = null; ready(); err.hidden = false; err.textContent = '🔎 Revisando la foto…'; go.disabled = true;
+      let cv = null, r; try { cv = await blobCanvas(f); img.src = cv.toDataURL('image/jpeg', .7); img.hidden = false; r = await compRevisar(cv, f, 'comp'); } catch (e) { r = { msg: 'No pudimos abrir la foto. Probá sacarla de nuevo.' }; }
+      go.disabled = false; go.textContent = '📷 Sacar otra';
+      if (!r.ok && !r.red) { err.textContent = r.msg; return; }
+      err.hidden = true; rev = r.ok ? r : null; cv.toBlob(b => { blob = b; ready(); }, 'image/jpeg', .85); };
+    save.onclick = async () => { if (!blob || !c1.checked || !c2.checked) return; const v = { kind: 'photo', blob, ref: d.ref, at: Date.now() }; try { await mput(mkey(d.id), v); } catch (e) {} close(); misDone(m); setTimeout(() => shareAsk(el, v, d), 1400);
+      if (rev) { try { const key = mkey('comp-mis'), c = (await mget(key).catch(() => null)) || {}; c[d.id] = { h: rev.h, c: rev.caras }; await mput(key, c); } catch (e) {} testimonioContar(d.id); } };
   }
 }
 async function shareMedia(v, d) {
@@ -4711,6 +4719,11 @@ function metaAvisos(k, r, t) {
 async function metaMandar(k, s) {
   const j = await mundoPase(true); if (!j.pase) return { error: 'pase', msg: j.msg };
   try { const q = await fetch(MUNDO_HTTP + '/tribu', { method: 'POST', body: JSON.stringify({ pase: j.pase, meta: { k, s } }) }); return await q.json(); } catch (e) { return { error: 'red' }; }
+}
+/* el testimonio de una misión suma al contador general (si hay cuenta; si no, queda solo en el aparato) */
+async function testimonioContar(mis) {
+  const id = amId(); if (!id || !id.perfil) return;
+  try { const r = await (await fetch(MUNDO_API, { method: 'POST', headers: { 'Content-Type': 'text/plain', 'x-habitat-auth': await mundoToken() }, body: JSON.stringify({ k: 'testimonio', perfil: id.perfil, mis }) })).json(); if (r.aviso) await fetch(MUNDO_HTTP + '/testimonio', { method: 'POST', body: r.aviso }); } catch (e) { }
 }
 /* invitar, servir y orar: elegir cómo y marcar que se hizo de verdad */
 function metaForm(body, k, t) {
