@@ -9,7 +9,13 @@ export const ENVIO_CERCA = 10000; // repartidor de Uber (CABA y alrededores)
 export const ALIAS = "habitatcfm";
 export const WA = "5491171637995";
 const marco = (k: string, t: string, c: string) => marco0(k, t, c, `<a href="${WEB}/libro.html" style="color:#b8904f">habitat-cfm.org/libro</a>`);
-export const mandar = (to: string, asunto: string, html: string, remitente: string) => mandar0(to, asunto, html, remitente, "Habitat CFM · Libro Asombro");
+// «to» puede llevar varios mails separados por coma (los avisos internos van a más de una casilla)
+export const mandar = async (to: string, asunto: string, html: string, remitente: string) => {
+  const L = String(to || "").split(/[,;\s]+/).filter(Boolean);
+  const rs = [];
+  for (const t of L) rs.push(await mandar0(t, asunto, html, remitente, "Habitat CFM · Libro Asombro"));
+  return rs.find((r) => r.ok) || rs[0] || { ok: false };
+};
 
 export type Pedido = {
   _id: string; title?: string; nombre?: string; apellido?: string; email?: string; telefono?: string; dni?: string;
@@ -77,8 +83,9 @@ export function mailAviso(x: Pedido) {
 export const linkComprobante = (x: Pedido) => WEB + "/libro.html?p=" + encodeURIComponent(x._id) + "&k=" + encodeURIComponent(x.clave || "") + "#comprobante";
 const nrm = (t: unknown) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
 const limpio = (x: Record<string, unknown>) => { const { _createdDate, _updatedDate, _owner, ...r } = x; return r; };
-// los avisos internos del libro (pedido nuevo, comprobante, pago) llegan al mail de Habitat
-export const AVISOS_A = "info@habitat-cfm.org";
+// los avisos internos del libro (pedido nuevo, comprobante, pago) llegan al mail de Habitat y al de Gui
+// (si solo van a info@, que es también el remitente, la casilla los esconde como enviados por uno mismo)
+export const AVISOS_A = "info@habitat-cfm.org,galessandrodale.93@gmail.com";
 async function remitente() {
   const r = (await q("TutConfig").eq("_id", "remitente").limit(1).find()).items[0] as { valor?: string } | undefined;
   return (r && r.valor) || "info@habitat-cfm.org";
@@ -106,13 +113,17 @@ export async function marcarPagado(x: Pedido, de: { id?: string; quien?: string;
 
 // Cada pago nuevo de Mercado Pago (transferencias al alias habitatcfm) se cruza con los pedidos del libro sin pagar.
 // Coincide el monto y el mail o el nombre: se marca solo. Si solo coincide el monto con un único pedido: avisamos para confirmar.
-type Ing = { _id: string; title?: string; email?: string; monto: number; fecha: string; tipo: string };
+type Ing = { _id: string; title?: string; email?: string; monto: number; fecha: string; tipo: string; alumnoId?: string };
 export async function libroDesdeIngreso(it: Ing) {
   if (!it || !(it.monto > 0) || !/Por clasificar|Libros|Cuota de alumno/.test(it.tipo)) return null;
   const L = ((await q("LibPedidos").eq("estado", "Nuevo").limit(500).find()).items as Pedido[]).filter((x) => Math.round(x.total || 0) === Math.round(it.monto) && !x.pagoId);
   if (!L.length) return null;
-  const em = String(it.email || "").toLowerCase(), pn = nrm(it.title).split(" ");
-  const fuerte = L.filter((x) => (em && String(x.email || "").toLowerCase() === em) || (nrm(x.apellido).split(" ").filter((t) => t.length > 2).some((t) => pn.includes(t)) && nrm(x.nombre).split(" ").filter(Boolean).slice(0, 1).every((t) => pn.includes(t))));
+  const em = String(it.email || "").toLowerCase(), loc = em.split("@")[0];
+  // nombre de quien pagó; si Mercado Pago no lo trae pero el pagador es un alumno conocido, el de su ficha
+  let quien = it.title || "";
+  if (it.alumnoId) { const a = (await q("TutAlumnos").eq("_id", it.alumnoId).limit(1).find()).items[0] as { title?: string } | undefined; if (a && a.title) quien += " " + a.title; }
+  const pn = nrm(quien).split(" ");
+  const fuerte = L.filter((x) => { const xe = String(x.email || "").toLowerCase(); return (em && xe === em) || (loc.length > 4 && xe.split("@")[0] === loc) || (nrm(x.apellido).split(" ").filter((t) => t.length > 2).some((t) => pn.includes(t)) && nrm(x.nombre).split(" ").filter(Boolean).slice(0, 1).every((t) => pn.includes(t))); });
   if (fuerte.length === 1) { const x = await marcarPagado(fuerte[0], { id: it._id, quien: it.title, fecha: it.fecha }); return { pedido: x._id, auto: true }; }
   if (L.length === 1 || fuerte.length > 1) {
     const C = fuerte.length ? fuerte : L;
