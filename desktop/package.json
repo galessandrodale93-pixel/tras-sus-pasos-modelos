@@ -62,7 +62,7 @@
           ]
         }
       ],
-      "identity": "-",
+      "identity": null,
       "hardenedRuntime": false,
       "gatekeeperAssess": false,
       "darkModeSupport": true,
@@ -90,6 +90,7 @@
           "path": "/Applications"
         }
       ]
-    }
+    },
+    "afterPack": "firmar-mac.js"
   }
 }
