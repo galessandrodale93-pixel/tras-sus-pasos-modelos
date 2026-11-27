@@ -1,0 +1,42 @@
+{
+  "name": "kids-and-hero",
+  "productName": "Kids & Hero",
+  "version": "1.0.0",
+  "description": "Kids & Hero · Habitat CFM",
+  "author": "Habitat CFM",
+  "homepage": "https://www.habitat-cfm.org/kids-hero.html",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis portable --publish never"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "org.habitat-cfm.kidshero",
+    "productName": "Kids & Hero",
+    "copyright": "Habitat CFM",
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": ["main.js", "preload.js", "offline.html", "build/icon.png"],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": ["nsis", "portable"],
+      "artifactName": "Kids-and-Hero-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Kids & Hero",
+      "artifactName": "Kids-and-Hero-Instalar-${version}.${ext}",
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": {
+      "artifactName": "Kids-and-Hero-Portable-${version}.${ext}"
+    }
+  }
+}

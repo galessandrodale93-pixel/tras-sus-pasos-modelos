@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Kids & Hero</title>
+<style>
+  html,body{margin:0;height:100%;background:radial-gradient(ellipse at 50% 35%,#2A2140 0%,#0E0C08 70%);color:#F3EAD6;font-family:"Segoe UI",system-ui,sans-serif}
+  .c{height:100%;display:grid;place-items:center;text-align:center;padding:24px;box-sizing:border-box}
+  img{width:180px;height:180px;border-radius:28px;box-shadow:0 18px 48px rgba(0,0,0,.45)}
+  h1{font-size:22px;margin:26px 0 8px;font-weight:700}
+  p{margin:0 0 24px;opacity:.8;font-size:15px;line-height:1.5;max-width:420px}
+  button{border:0;border-radius:999px;padding:12px 28px;font:800 15px "Segoe UI",system-ui,sans-serif;color:#2B1D00;background:linear-gradient(180deg,#FFE79A,#F2A93B);cursor:pointer;box-shadow:0 8px 22px rgba(242,169,59,.35)}
+  button:hover{filter:brightness(1.06)}
+</style>
+</head>
+<body>
+<div class="c"><div>
+  <img src="build/icon.png" alt="Kids & Hero">
+  <h1 id="t">No hay conexión a internet</h1>
+  <p id="x">Kids &amp; Hero necesita internet para jugar y guardar tu progreso. Revisá la conexión y probá de nuevo.</p>
+  <button id="b" onclick="location.href='https://www.habitat-cfm.org/jugar.html?app=win'">Reintentar</button>
+</div></div>
+<script>
+  /* el mismo idioma que eligió en el juego */
+  var L = ''; try { L = localStorage.getItem('tsp:lang') || ''; } catch (e) {}
+  var T = { en: ['No internet connection', 'Kids & Hero needs internet to play and save your progress. Check the connection and try again.', 'Try again'],
+            pt: ['Sem conexão com a internet', 'Kids & Hero precisa de internet para jogar e salvar seu progresso. Confira a conexão e tente de novo.', 'Tentar de novo'] }[L];
+  if (T) { document.getElementById('t').textContent = T[0]; document.getElementById('x').textContent = T[1]; document.getElementById('b').textContent = T[2]; }
+  window.addEventListener('online', function () { document.getElementById('b').click(); });
+</script>
+</body>
+</html>

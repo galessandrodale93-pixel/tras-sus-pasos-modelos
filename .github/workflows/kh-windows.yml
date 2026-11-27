@@ -1,0 +1,33 @@
+name: Kids & Hero para Windows (kh-windows)
+# Arma el instalador (.exe) y la versión portátil del programa de escritorio (carpeta desktop/).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["desktop/**", ".github/workflows/kh-windows.yml"]
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            desktop
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Instalar
+        run: npm install --no-audit --no-fund
+      - name: Armar el instalador
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npm run dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kids-and-hero-windows
+          path: |
+            desktop/dist/*.exe
+          retention-days: 30
