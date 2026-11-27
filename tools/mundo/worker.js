@@ -1,5 +1,5 @@
 // Tras sus pasos · Worker «tsp-mundo» (Cloudflare): el servidor del multijugador de Hero.
-// Cada «mundo» es un Durable Object con hasta 30 jugadores; cuando uno se llena, se abre el siguiente.
+// Cada «mundo» es un Durable Object con hasta 100 jugadores; cuando uno se llena, se abre el siguiente.
 // Seguridad (son chicos y adolescentes):
 //  · Solo entra quien trae un pase firmado por habitat-cfm.org/api/kh-mundo (cuenta real, personaje propio de Hero,
 //    nivel mínimo y sin suspensión). El pase dura 15 minutos; el nombre sale del pase, no de lo que mande el juego.
@@ -12,7 +12,7 @@ const ORIGINS = [/^https:\/\/([\w-]+\.)?habitat-cfm\.org$/, /^https:\/\/headless
 const okOrigin = o => !!o && ORIGINS.some(r => r.test(o));
 const cors = o => ({ 'Access-Control-Allow-Origin': okOrigin(o) ? o : 'null', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type', 'Vary': 'Origin' });
 let PUB_URL = 'https://www.habitat-cfm.org/api/kh-mundo?pub=1';
-const CUPO = 30, MUNDOS = 12;
+const CUPO = 100, MUNDOS = 12;
 const RATE = new Map();
 function limited(ip, what, max, perMs) {
   const k = what + ip, now = Date.now(); let r = RATE.get(k); if (!r || now - r.t > perMs) { r = { t: now, n: 0 }; RATE.set(k, r); }

@@ -1847,6 +1847,9 @@ body[data-branch="ados"] .v3kday{display:none!important}
 .lb2 .lb-modo b{white-space:nowrap}
 /* con los modos, en pantallas de hasta 820 de alto las tarjetas de cómo se juega dejan lugar */
 @media (max-height:820px){.lb2 .lb-cards{display:none!important}.lb2 .lb-vs p{font-size:15px}}
-@media (max-height:700px){.lb2 .lb-amg-n{display:none}.lb2 .lb-vs{display:none}}
+@media (max-height:700px){.lb2 .lb-vs{display:none}}@media (max-height:520px){.lb2 .lb-amg-n{display:none}}
 .lb2 .lb-modo,.lb2 .lb-amg{width:100%}
 .mu-acts{float:right;display:inline-flex;gap:6px;margin-left:8px}.r-list li:after{content:"";display:block;clear:both}
+.lb2 .lb-amg.solo-nota>:not(.lb-amg-n){display:none}
+.lb2 .lb-amg.solo-nota{margin-top:-6px}
+.lb2 .lb-modo b{letter-spacing:.06em;font-size:11.5px}.lb2.kid .lb-modo b{font-size:14px;letter-spacing:0}

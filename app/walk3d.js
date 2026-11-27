@@ -1355,13 +1355,14 @@ function modoHTML(kid) {
   let pend = ''; try { pend = sessionStorage.getItem('tsp:join') || ''; } catch (e) {}
   if (pend) { MODO.k = 'amigos'; MODO.code = pend; }
   return `<div class="lb-modo" role="radiogroup" aria-label="Cómo querés jugar">${MODOS(kid).map(([k, ic, n, sub, lock]) => `<button type="button" role="radio" data-m="${k}" class="${MODO.k === k ? 'on' : ''}${lock ? ' lock' : ''}" aria-checked="${MODO.k === k}"><i aria-hidden="true">${lock ? '🔒' : ic}</i><b>${n}</b><small>${sub}</small></button>`).join('')}</div>
-      <div class="lb-amg"${MODO.k === 'amigos' ? '' : ' hidden'}><button type="button" class="lb-crear${MODO.crear ? ' on' : ''}">✨ Crear una sala</button><span>o</span><input class="lb-code" maxlength="6" placeholder="CÓDIGO" value="${esc3(MODO.code)}" autocapitalize="characters" autocomplete="off" spellcheck="false" aria-label="Código de la sala"><small class="lb-amg-n"></small></div>`;
+      <div class="lb-amg${MODO.k === 'amigos' ? '' : ' solo-nota'}"><button type="button" class="lb-crear${MODO.crear ? ' on' : ''}">✨ Crear una sala</button><span>o</span><input class="lb-code" maxlength="6" placeholder="CÓDIGO" value="${esc3(MODO.code)}" autocapitalize="characters" autocomplete="off" spellcheck="false" aria-label="Código de la sala"><small class="lb-amg-n"></small></div>`;
 }
 function modoWire(ov) {
   const row = ov.querySelector('.lb-modo'), amg = ov.querySelector('.lb-amg'); if (!row) return;
   const crear = amg.querySelector('.lb-crear'), code = amg.querySelector('.lb-code'), nota = amg.querySelector('.lb-amg-n');
-  const pinta = () => { row.querySelectorAll('[data-m]').forEach(b => { const on = b.dataset.m === MODO.k; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); }); amg.hidden = MODO.k !== 'amigos'; crear.classList.toggle('on', MODO.crear);
-    nota.textContent = MODO.k !== 'amigos' ? '' : MODO.code.length === 6 ? 'Al entrar al mundo te sumás a esa sala.' : MODO.crear ? 'Al entrar al mundo se crea tu sala y te damos el código para invitar.' : 'Creá una sala o escribí el código que te pasaron.'; };
+  const pinta = () => { row.querySelectorAll('[data-m]').forEach(b => { const on = b.dataset.m === MODO.k; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); }); amg.hidden = false; amg.classList.toggle('solo-nota', MODO.k !== 'amigos'); crear.classList.toggle('on', MODO.crear);
+    const casas = { solo: 'Tu mundo: lo que construís queda guardado y solo lo ves vos.', amigos: 'Se juega en el mundo de quien crea la sala: los demás ven sus casas y le pueden aportar materiales. Tus casas quedan guardadas en tu mundo.', multi: 'Un mundo para todos, con jugadores de Hero de todos lados (desde el nivel 5). Acá no se construye: tu casa te espera en tu mundo.' }[MODO.k] || '';
+    nota.textContent = MODO.k !== 'amigos' ? casas : (MODO.code.length === 6 ? 'Al entrar al mundo te sumás a esa sala. ' : MODO.crear ? 'Al entrar al mundo se crea tu sala y te damos el código para invitar. ' : 'Creá una sala o escribí el código que te pasaron. ') + casas; };
   row.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { if (b.classList.contains('lock')) { G().toast('El multijugador abre muy pronto: un mundo para encontrarte con jugadores de Hero de todos lados.'); return; } MODO.k = b.dataset.m; if (MODO.k === 'amigos' && !MODO.code) MODO.crear = true; pinta(); });
   crear.onclick = () => { MODO.crear = true; MODO.code = ''; code.value = ''; pinta(); };
   code.oninput = () => { code.value = code.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6); MODO.code = code.value; MODO.crear = !MODO.code; pinta(); };
@@ -4414,7 +4415,7 @@ function mpClean(m, c, cap) {
   if (c) { const now = performance.now(), q = c._rl || (c._rl = { t: now, n: 0 }); if (now - q.t > 1000) { q.t = now; q.n = 0; } if (++q.n > 40) return null; }
   if (m.id != null && !ID_OK(m.id)) return null; if (m.to != null && !ID_OK(m.to)) return null;
   if (m.info) m.info = infoOk(m.info);
-  if (m.t === 'list') { if (!Array.isArray(m.players)) return null; m.players = m.players.slice(0, MP.mundo ? 40 : 5).filter(p => p && ID_OK(p.id)).map(p => ({ id: p.id, info: infoOk(p.info) })); }
+  if (m.t === 'list') { if (!Array.isArray(m.players)) return null; m.players = m.players.slice(0, MP.mundo ? 120 : 5).filter(p => p && ID_OK(p.id)).map(p => ({ id: p.id, info: infoOk(p.info) })); }
   if (m.t === 'st') { if (!Array.isArray(m.s)) return null; const s = m.s; m.s = [numOk(s[0], -5e3, 5e3), numOk(s[1], -500, 2e3), numOk(s[2], -5e3, 5e3), numOk(s[3], -50, 50), s[4] ? 1 : 0, typeof s[5] === 'string' ? strOk(s[5], 16) : null, s[6] ? 1 : 0, numOk(s[7], -10, 50)]; }
   if (m.t === 'say') m.k = Math.floor(numOk(m.k, 0, 99));
   if (m.t === 'x' && m.k === 'obraL') { if (!Array.isArray(m.l)) return null; m.l = m.l.slice(0, 160).map(obraPieza).filter(Boolean); m.s = Math.floor(numOk(m.s, 0, 1e9)); m.n = Math.floor(numOk(m.n, 1, 8)); m.i = Math.floor(numOk(m.i, 0, m.n - 1)); }
@@ -4470,8 +4471,8 @@ async function mpJoin(code) {
    Cada jugador puede reportar (3 reportes de personas distintas lo sacan 30 minutos) o silenciar a alguien. */
 const MUNDO_WS = 'wss://tsp-mundo.galessandrodale-93.workers.dev/mundo', MUNDO_API = 'https://www.habitat-cfm.org/api/kh-mundo';
 const MUNDO_MOT = ['Se comporta mal', 'Molesta o persigue a otros', 'Nombre o aspecto inapropiado', 'Hace trampa'];
-/* por ahora abierto para el equipo de prueba; el día que se abre para todos, se cambia acá */
-const mundoAbierto = () => { try { return localStorage.getItem('tsp:tester') === '1' || localStorage.getItem('tsp:mundo') === '1'; } catch (e) { return false; } };
+/* abierto: quién entra lo decide el servidor (cuenta, personaje de Hero, nivel 5 y sin suspensión). Para cerrarlo, devolver false. */
+const mundoAbierto = () => true;
 async function mundoToken() { try { const base = window.TSP_WIX || location.origin + '/js/wix'; const c = await import(base + '/client.js'); return await c.accessToken(); } catch (e) { return ''; } }
 async function mpMundo() {
   if (!S || !S.hx) { G().toast('El multijugador es de Hero.'); return; }
@@ -4487,8 +4488,8 @@ async function mpMundo() {
   ws.onmessage = ev => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
     if (m.t === 'pase') { MP.peer.id = ID_OK(m.id) ? m.id : ''; MP.mundo = Math.floor(numOk(m.mundo, 1, 99)) || 1; MP.ultMundo = MP.mundo; conn.open = true; conn.send({ t: 'hi', info: meInfo() }); return; }
     if (m.t === 'fuera') { MP.fuera = m.por; return; }
-    m = mpClean(m, null, m.t === 'list' ? 160000 : 12000); if (!m) return; /* el servidor ya revisa y limita; acá se vuelve a revisar todo */
-    if (m.t === 'list') { dentro = true; m.players.forEach(p => { if (p.id !== MP.peer.id) mpAdd(p.id, p.info); }); misPop('🌍 Multijugador · Mundo ' + MP.mundo, 'Estás con jugadores de Hero de todos lados. Saludá con las frases rápidas desde 👥. Si alguien se porta mal, podés reportarlo o silenciarlo.'); mpUI(); return; }
+    m = mpClean(m, null, m.t === 'list' ? 400000 : 12000); if (!m) return; /* el servidor ya revisa y limita; acá se vuelve a revisar todo */
+    if (m.t === 'list') { dentro = true; m.players.forEach(p => { if (p.id !== MP.peer.id) mpAdd(p.id, p.info); }); misPop('🌍 Multijugador · Mundo ' + MP.mundo, 'Estás con jugadores de Hero de todos lados. Saludá con las frases rápidas desde 👥. Acá no se construye: tu casa te espera en tu mundo. Si alguien se porta mal, podés reportarlo o silenciarlo.'); mpUI(); return; }
     if (m.t === 'hi') { mpAdd(m.id, m.info); mpUI(); return; }
     if (m.t === 'bye') { mpDel(m.id); mpUI(); return; }
     if (m.t === 'st' || m.t === 'say' || m.t === 'look' || m.t === 'leg') mpOn(m); };
@@ -4505,8 +4506,8 @@ function mundoVer(now) {
   Object.values(MP.players).map(p => [p, p.av.position.distanceTo(me)]).sort((a, b) => a[1] - b[1]).forEach(([p, d], i) => { p.av.visible = i < 14 && d < 90; });
 }
 function mundoPanel(el, close) {
-  const ps = Object.entries(MP.players).sort((a, b) => a[1].av.position.distanceTo(S.av.position) - b[1].av.position.distanceTo(S.av.position)).slice(0, 30);
-  el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>🌍 Multijugador · Mundo ${MP.mundo}</b><span>${1 + Object.keys(MP.players).length} jugadores</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
+  const ps = Object.entries(MP.players).sort((a, b) => a[1].av.position.distanceTo(S.av.position) - b[1].av.position.distanceTo(S.av.position)).slice(0, 25);
+  el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>🌍 Multijugador · Mundo ${MP.mundo}</b><span>${1 + Object.keys(MP.players).length} jugadores · se ven los más cercanos</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
     <div class="r-micbox"><b>💬 Frases rápidas</b><div class="r-phr2">${PHR.map((p, i) => `<button data-k="${i}">${p}</button>`).join('')}</div></div>
     <ul class="r-list">${ps.length ? ps.map(([id, p]) => `<li>${esc(p.info.name)} <span class="mu-acts"><button class="am-sm mu-mute" data-id="${esc(id)}">${MP.mute[id] ? '🔈 Escuchar' : '🔇 Silenciar'}</button><button class="am-sm mu-rep" data-id="${esc(id)}">🚩 Reportar</button></span></li>`).join('') : '<li><small>Todavía no hay nadie cerca. ¡Explorá el mapa!</small></li>'}</ul>
     <div class="mis-btns"><button class="mis-no r-leave">Salir del multijugador</button></div>
