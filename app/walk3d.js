@@ -1668,6 +1668,7 @@ function fanAll() {
   L.push(['🎁', 'Amigos, regalos y equipo', () => amOpen(), 'amigos', 'acc']);
   L.push(['🏘️', 'Los pueblos', () => pueOpen(), 'pueblos', 'acc']);
   L.push(['🧭', 'Tus caminos', () => camRecap(!!G().P().camFin), 'caminos', 'acc']);
+  L.push(['🛟', 'Soporte: avisar un problema', () => soporteOpen(), 'soporte', 'ayu']);
   L.push(['⭐', 'Mi progreso', () => { const h = document.getElementById('hudLv'); if (h) h.click(); }, 'prog', 'ayu']);
   L.push(['☰', 'Menú y ajustes', () => { const m = document.getElementById('menuBtn'); if (m) m.click(); }, 'menu', 'ayu']);
   return L;
@@ -1678,6 +1679,41 @@ function fanItems() {
   all.forEach(f => { if (main.length < 4 && !main.includes(f)) main.push(f); });
   main.push(['<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="5" cy="12" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="19" cy="12" r="2.2" fill="currentColor"/></svg>', 'Más opciones', () => moreOpen(), 'more', '']);
   return main;
+}
+/* ---------- SOPORTE: avisar un problema o una idea desde adentro del juego ----------
+   Llega al panel del juego (Reportes) y por mail al equipo, con una captura de la pantalla (si la deja) y los datos del
+   aparato y del lugar del mapa, así no hace falta preguntarle nada a nadie. */
+const SOP_T = [['error', '🐞', 'Algo no anda'], ['trabado', '🧱', 'Me trabé y no puedo seguir'], ['cuenta', '💳', 'Pagos o mi cuenta'], ['idea', '💡', 'Una idea'], ['otra', '💬', 'Otra cosa']];
+function soporteFoto() {
+  try { const r = S.renderer, cam = S.camera; r.render(S.scene, cam); const src = r.domElement, k = Math.min(1, 960 / src.width), c = document.createElement('canvas'); c.width = Math.round(src.width * k); c.height = Math.round(src.height * k); c.getContext('2d').drawImage(src, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', .72); } catch (e) { return ''; }
+}
+function soporteOpen() {
+  const el = document.getElementById('v3sheet'); if (!el || !S) return; S.joy.x = 0; S.joy.y = 0; const foto = soporteFoto(); let tipo = 'error';
+  el.innerHTML = `<div class="bag-in mis-in sop"><div class="bag-h"><b>🛟 Soporte</b><span>Le llega al equipo de Habitat</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
+    <p class="mis-ask">¿Qué pasó?</p><div class="sop-t">${SOP_T.map(([k, ic, n]) => `<button data-k="${k}" class="${k === tipo ? 'on' : ''}">${ic} ${n}</button>`).join('')}</div>
+    <textarea class="sop-x" maxlength="2000" rows="4" placeholder="Contanos con tus palabras: qué estabas haciendo y qué pasó."></textarea>
+    ${foto ? `<label class="cap-chk sop-f"><input type="checkbox" class="sop-cf" checked> Mandar también esta captura de la pantalla<img src="${foto}" alt="Captura"></label>` : ''}
+    <input class="sop-c" maxlength="120" placeholder="Tu mail o WhatsApp, si querés que te respondan (opcional)">
+    <p class="cap-err" hidden></p><div class="mis-btns"><button class="mis-yes sop-go">Enviar</button></div>
+    <p class="cap-note">También mandamos solos el tipo de aparato y el lugar del mapa donde estás, para encontrar el problema más rápido.</p></div>`;
+  el.hidden = false; const close = () => { el.hidden = true; }; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
+  el.querySelectorAll('.sop-t button').forEach(b => b.onclick = () => { tipo = b.dataset.k; el.querySelectorAll('.sop-t button').forEach(x => x.classList.toggle('on', x === b)); });
+  const err = el.querySelector('.cap-err');
+  el.querySelector('.sop-go').onclick = async () => {
+    const tx = el.querySelector('.sop-x').value.trim(); if (tx.length < 5) { err.hidden = false; err.textContent = 'Contanos qué pasó, aunque sea en pocas palabras.'; return; }
+    let last = 0; try { last = +localStorage.getItem('kh:sop:t') || 0; } catch (e) {} if (Date.now() - last < 60000) { err.hidden = false; err.textContent = 'Recién mandaste uno. Esperá un minuto para mandar otro.'; return; }
+    const bt = el.querySelector('.sop-go'); bt.disabled = true; bt.textContent = 'Enviando…';
+    const p = G().P(), a = S.av.position, T0 = SOP_T.find(x => x[0] === tipo), id = amId() || {};
+    let fps = ''; try { fps = QUAL && QUAL.ema ? Math.round(1000 / QUAL.ema) + ' fps' : ''; } catch (e) {}
+    const disp = [navigator.userAgent.slice(0, 160), innerWidth + 'x' + innerHeight + '@' + (devicePixelRatio || 1), 'calidad ' + ((QUAL && QUAL.mode) || '?'), fps, window.KH_DESKTOP ? 'programa de compu' : 'navegador', 'perfil ' + (id.perfil || p.id || '?')].filter(Boolean).join(' · ');
+    const donde = (MP.mundo ? 'Multijugador · ' : MP.code ? 'Sala con amigos · ' : '') + 'x ' + Math.round(a.x) + ', z ' + Math.round(a.z) + ' · nivel ' + ((document.getElementById('lvN') || {}).textContent || '?');
+    const body = { nombre: p.name || '', rama: G().branch === 'ados' ? 'hero' : 'kids', donde, texto: '[' + T0[2] + '] ' + tx, contacto: el.querySelector('.sop-c').value.trim(), captura: foto && el.querySelector('.sop-cf') && el.querySelector('.sop-cf').checked ? foto : '', disp, web: '' };
+    try { const r = await fetch('https://www.habitat-cfm.org/api/kh-reporte', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body) }); const j = await r.json().catch(() => ({})); if (!r.ok || !j.ok) throw new Error(j.error || ''); }
+    catch (e) { bt.disabled = false; bt.textContent = 'Enviar'; err.hidden = false; err.textContent = 'No se pudo enviar. Revisá la conexión y probá de nuevo.'; return; }
+    try { localStorage.setItem('kh:sop:t', String(Date.now())); } catch (e) {}
+    el.innerHTML = `<div class="bag-in mis-in sop sop-ok"><div class="mu-ic">🙌</div><b class="mu-t">¡Gracias!</b><p class="mis-ask">Le llegó al equipo de Habitat. Cada aviso nos ayuda a que el juego ande mejor para todos.</p><div class="mis-btns"><button class="mis-yes sop-fin">Seguir jugando</button></div></div>`;
+    el.querySelector('.sop-fin').onclick = close;
+  };
 }
 function moreOpen() {
   fanSet(false); let el = document.getElementById('v3more'); if (!el) { el = document.createElement('div'); el.id = 'v3more'; el.className = 'v3more'; document.body.appendChild(el); el.onclick = e => { if (e.target === el) moreClose(); }; }
@@ -4512,16 +4548,16 @@ async function mpMundo() {
 const TRIBU = {
   ruben: { n: 'Rubén', e: '🌊', c: '#2F6FB0', l: 'El primero: fuerte como el agua.' },
   simeon: { n: 'Simeón', e: '🏰', c: '#5A6068', l: 'Firmes como una muralla.' },
-  levi: { n: 'Leví', e: '🕎', c: '#8E2B5E', l: 'Los que sirven en la casa de Dios.' },
-  juda: { n: 'Judá', e: '🦁', c: '#B8312A', l: 'El león: de su tribu viene Jesús.' },
+  levi: { n: 'Leví', e: '📜', c: '#8E2B5E', l: 'Sirven en la casa de Dios y enseñan su ley.' },
+  juda: { n: 'Judá', e: '👑', c: '#B8312A', l: 'La corona: de su tribu viene Jesús, el Rey.' },
   zabulon: { n: 'Zabulón', e: '⛵', c: '#1F8A8A', l: 'Gente del mar y de los puertos.' },
-  isacar: { n: 'Isacar', e: '🫏', c: '#7A6040', l: 'Trabajadores que entienden los tiempos.' },
+  isacar: { n: 'Isacar', e: '🌗', c: '#7A6040', l: 'Entienden los tiempos y saben qué hacer.' },
   dan: { n: 'Dan', e: '⚖️', c: '#4B3F8F', l: 'Los que juzgan con justicia.' },
   gad: { n: 'Gad', e: '⛺', c: '#3F6E35', l: 'Valientes del campamento.' },
   aser: { n: 'Aser', e: '🫒', c: '#7E8E22', l: 'Pan rico y aceite de oliva.' },
-  neftali: { n: 'Neftalí', e: '🦌', c: '#A0783A', l: 'Ágiles como la cierva, con palabras lindas.' },
+  neftali: { n: 'Neftalí', e: '📜', c: '#A0783A', l: 'Dicen palabras hermosas.' },
   jose: { n: 'José', e: '🌾', c: '#C25A1F', l: 'Rama que da fruto junto a la fuente.' },
-  benjamin: { n: 'Benjamín', e: '🐺', c: '#3A3A4A', l: 'El menor, amado y protegido.' }
+  benjamin: { n: 'Benjamín', e: '🛡️', c: '#3A3A4A', l: 'El menor, amado y protegido por Dios.' }
 };
 /* las insignias dibujadas a mano (app/tribus/*.svg): iguales en todos los aparatos */
 const tribuSrc = t => new URL('./tribus/' + t + '.svg', import.meta.url).href;

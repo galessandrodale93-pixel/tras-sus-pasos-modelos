@@ -1912,3 +1912,12 @@ body[data-branch="ados"] .v3kday{display:none!important}
 .tr-c .tr-img.tr-e{width:56px;height:56px;margin-bottom:2px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.45))}
 .tr-mini{display:inline-block!important;width:20px;height:20px;vertical-align:-5px}
 .tr-rank .tr-mini{width:22px;height:22px}
+/* ===== Soporte desde el juego ===== */
+.sop-t{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+.sop-t button{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:inherit;border-radius:99px;padding:7px 11px;font:800 12.5px Nunito,sans-serif;cursor:pointer}
+.sop-t button.on{background:#E9C37A;color:#2A1904;border-color:#FFE3A0}
+.sop-x,.sop-c{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.25);color:inherit;padding:10px 12px;font:700 14px Nunito,sans-serif;margin-bottom:8px}
+.sop-x{resize:vertical;min-height:90px}
+.sop-f{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px}
+.sop-f img{grid-column:1/-1;width:100%;max-height:140px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.15)}
+.sop-ok{text-align:center}

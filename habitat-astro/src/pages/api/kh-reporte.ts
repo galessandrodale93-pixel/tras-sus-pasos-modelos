@@ -10,6 +10,10 @@ const COL = "KhReportes";
 const DEF_A = ["gui", "cristian-castriota"];
 const DEF_ACCESO = ["cristian-castriota"];
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
+/* el juego también manda reportes desde adentro (botón 🛟 Soporte): puede venir de otro dominio (sitio de prueba, programa de compu) */
+const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" };
+const jsonC = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...CORS } });
+export const OPTIONS: APIRoute = async () => new Response(null, { status: 204, headers: CORS });
 const s = (v: unknown, max = 200) => (typeof v === "string" ? v : v == null ? "" : String(v)).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "").trim().slice(0, max);
 const hoyISO = () => new Date().toISOString();
 
@@ -41,23 +45,23 @@ async function avisar(r: Rep) {
   const [rmt, tut] = await Promise.all([cfg("remitente"), Promise.all(ids.map((id) => q("TutTutores").eq("_id", id).limit(1).find().then((x) => x.items[0] as { email?: string } | undefined).catch(() => undefined)))]);
   const to = tut.map((t) => String((t && t.email) || "").split(/[,;\s]+/)[0]).filter(Boolean);
   if (!to.length || !rmt) return 0;
-  const html = marco("Kids & Hero · Testers", "Llegó un reporte nuevo 🛠️",
+  const html = marco("Kids & Hero · Reportes", "Llegó un reporte nuevo 🛠️",
     p(`<b>${esc(r.title || "Sin nombre")}</b> · ${esc(r.rama === "hero" ? "Hero" : r.rama === "kids" ? "Kids" : "Sin rama")}${r.donde ? " · " + esc(r.donde) : ""}`) +
     p(esc(r.texto || "").replace(/\n/g, "<br>")) +
     (r.contacto ? p(`Contacto: ${esc(r.contacto)}`) : "") +
     p(`<span style="color:#5d6b64;font-size:14px">${esc(r.disp || "")}${r.captura ? " · trae captura" : ""}</span>`) +
     p(`<a href="https://www.habitat-cfm.org/juego.html#reportes" style="color:#b8904f">Ver todos los reportes en el panel</a>`),
     `<a href="https://www.habitat-cfm.org/juego.html#reportes" style="color:#b8904f">habitat-cfm.org/juego</a>`);
-  const res = await Promise.all(to.map((m) => mandar(m, "Reporte de tester: " + s(r.texto, 60), html, rmt, "Habitat CFM · Kids & Hero").catch(() => ({ ok: false }))));
+  const res = await Promise.all(to.map((m) => mandar(m, "Reporte del juego: " + s(r.texto, 60), html, rmt, "Habitat CFM · Kids & Hero").catch(() => ({ ok: false }))));
   return res.filter((x) => x.ok).length;
 }
 
 export const POST: APIRoute = async ({ request }) => {
   let x: Record<string, unknown> = {};
-  try { x = JSON.parse((await request.text()).slice(0, 700000)); } catch { return json({ error: "No pudimos leer el reporte." }, 400); }
-  if (s(x.web, 10)) return json({ ok: true }); // campo trampa: lo completan solo los robots
+  try { x = JSON.parse((await request.text()).slice(0, 700000)); } catch { return jsonC({ error: "No pudimos leer el reporte." }, 400); }
+  if (s(x.web, 10)) return jsonC({ ok: true }); // campo trampa: lo completan solo los robots
   const texto = s(x.texto, 3000);
-  if (texto.length < 5) return json({ error: "Contanos qué pasó." }, 400);
+  if (texto.length < 5) return jsonC({ error: "Contanos qué pasó." }, 400);
   let captura = s(x.captura, 600000);
   if (captura && !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(captura)) captura = "";
   const r: Rep = {
@@ -66,9 +70,9 @@ export const POST: APIRoute = async ({ request }) => {
     contacto: s(x.contacto, 120), disp: s(x.disp, 300), captura, estado: "Pendiente", fecha: hoyISO(),
   };
   try { await guardar(COL, r); }
-  catch (e) { console.error("kh-reporte guardar", e); return json({ error: "No pudimos guardar el reporte. Probá de nuevo." }, 500); }
+  catch (e) { console.error("kh-reporte guardar", e); return jsonC({ error: "No pudimos guardar el reporte. Probá de nuevo." }, 500); }
   try { await avisar(r); } catch (e) { console.error("kh-reporte mail", e); }
-  return json({ ok: true });
+  return jsonC({ ok: true });
 };
 
 export const GET: APIRoute = async ({ request }) => {
