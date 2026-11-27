@@ -1849,3 +1849,4 @@ body[data-branch="ados"] .v3kday{display:none!important}
 @media (max-height:820px){.lb2 .lb-cards{display:none!important}.lb2 .lb-vs p{font-size:15px}}
 @media (max-height:700px){.lb2 .lb-amg-n{display:none}.lb2 .lb-vs{display:none}}
 .lb2 .lb-modo,.lb2 .lb-amg{width:100%}
+.mu-acts{float:right;display:inline-flex;gap:6px;margin-left:8px}.r-list li:after{content:"";display:block;clear:both}

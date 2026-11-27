@@ -1,0 +1,27 @@
+name: Servidor del multijugador (tsp-mundo)
+# Despliega tools/mundo/worker.js: el servidor del multijugador de Hero (Cloudflare, Durable Objects).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["tools/mundo/**", ".github/workflows/tsp-mundo.yml"]
+jobs:
+  desplegar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: tools/mundo
+      - name: Revisar el código
+        run: node --check tools/mundo/worker.js
+      - name: Desplegar
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -e
+          cd tools/mundo
+          npx -y wrangler@4 deploy
+          sleep 5
+          echo "salud: $(curl -s https://tsp-mundo.galessandrodale-93.workers.dev/salud)"
+          echo "sin pase (tiene que dar 401/403): $(curl -s -o /dev/null -w '%{http_code}' -H 'Origin: https://www.habitat-cfm.org' -H 'Upgrade: websocket' 'https://tsp-mundo.galessandrodale-93.workers.dev/mundo?pase=x.y')"

@@ -114,9 +114,39 @@
   }
   $$('#krF button').forEach(function (b) { b.onclick = function () { $$('#krF button').forEach(function (x) { x.classList.toggle('on', x === b); }); RF = b.dataset.f; renderRep(); }; });
 
+
+  /* moderación del multijugador de Hero: reportes de jugadores y suspensiones */
+  function toast(t) { var e = $('#ttToast'); if (!e) return; e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { e.classList.remove('on'); }, 3000); }
+  function renderMod(D) {
+    var R = D.reportados || [], B = D.suspendidos || [], nuevos = R.filter(function (r) { return r.sinVer; }).length;
+    $('#kmN').textContent = nuevos ? nuevos + ' sin revisar' : '';
+    var susp = {}; B.forEach(function (b) { susp[b.socio] = b; });
+    var out = R.length ? '<div class="km-l">' + R.map(function (r) {
+      var s = susp[r.socio], mot = Object.keys(r.motivos || {}).map(function (k) { return esc(k) + (r.motivos[k] > 1 ? ' (' + r.motivos[k] + ')' : ''); }).join(' · ');
+      return '<article class="km-it' + (r.sinVer ? ' nuevo' : '') + '"><div class="km-h"><b>' + esc(r.nombre || 'Jugador') + '</b><span class="km-tag">' + r.n + (r.n === 1 ? ' reporte' : ' reportes') + '</span>' + (s ? '<span class="km-tag gris">Suspendido ' + (s.hasta === 'siempre' ? 'para siempre' : 'hasta el ' + new Date(s.hasta).toLocaleDateString('es-AR')) + '</span>' : '') + '<span class="km-m">Último: ' + esc(fdate(r.ultimo)) + '</span></div>' +
+        '<div class="km-m">' + mot + '</div><div class="km-m">Lo reportaron: ' + esc((r.quienes || []).join(', ')) + '</div>' +
+        '<div class="km-b">' + (r.sinVer ? '<button data-k="visto" data-s="' + esc(r.socio) + '">✓ Revisado, no pasa nada</button>' : '') +
+        (s ? '<button data-k="levantar" data-s="' + esc(r.socio) + '">Levantar la suspensión</button>' : '<button class="mal" data-k="suspender" data-d="7" data-s="' + esc(r.socio) + '" data-n="' + esc(r.nombre) + '">Suspender 7 días</button><button class="mal" data-k="suspender" data-d="30" data-s="' + esc(r.socio) + '" data-n="' + esc(r.nombre) + '">30 días</button><button class="mal" data-k="suspender" data-d="0" data-s="' + esc(r.socio) + '" data-n="' + esc(r.nombre) + '">Para siempre</button>') + '</div></article>';
+    }).join('') + '</div>' : '<p class="tt-empty">Nadie fue reportado en el multijugador. 🙌</p>';
+    var sinRep = B.filter(function (b) { return !R.some(function (r) { return r.socio === b.socio; }); });
+    if (sinRep.length) out += '<div class="km-sus"><h3>Otras suspensiones</h3><div class="km-l">' + sinRep.map(function (b) { return '<article class="km-it"><div class="km-h"><b>' + esc(b.nombre) + '</b><span class="km-tag gris">' + (b.hasta === 'siempre' ? 'Para siempre' : 'Hasta el ' + new Date(b.hasta).toLocaleDateString('es-AR')) + '</span></div><div class="km-b"><button data-k="levantar" data-s="' + esc(b.socio) + '">Levantar la suspensión</button></div></article>'; }).join('') + '</div></div>';
+    $('#kmOut').innerHTML = out;
+    $$('#kmOut .km-b button').forEach(function (b) { b.onclick = async function () {
+      var k = b.dataset.k, body = { k: k, socio: b.dataset.s };
+      if (k === 'suspender') { var d = +b.dataset.d; if (!confirm('¿Suspender a ' + b.dataset.n + ' en el multijugador ' + (d ? 'por ' + d + ' días' : 'para siempre') + '? Sale del mundo al instante. Su progreso en el juego no se toca.')) return; body.dias = d; body.nombre = b.dataset.n; body.motivo = 'Reportes de otros jugadores'; }
+      b.disabled = true;
+      try { var r = await fetch('/api/kh-mundo', { method: 'POST', headers: { 'Content-Type': 'text/plain', 'x-habitat-auth': await token() }, body: JSON.stringify(body) }); if (!r.ok) throw new Error(); toast(k === 'suspender' ? 'Suspendido. Ya salió del multijugador.' : k === 'levantar' ? 'Suspensión levantada.' : 'Marcado como revisado.'); loadMod(); }
+      catch (e) { b.disabled = false; toast('No se guardó. Probá de nuevo.'); }
+    }; });
+  }
+  async function loadMod() {
+    $('#moderacion').hidden = false;
+    try { var r = await fetch('/api/kh-mundo?k=panel', { headers: { 'x-habitat-auth': await token() } }); var j = await r.json(); if (!r.ok) throw new Error(j.error || 'No se pudo cargar.'); renderMod(j); }
+    catch (e) { $('#kmOut').innerHTML = '<p class="tt-empty">' + esc(e.message) + '</p>'; }
+  }
   (async function init() {
     if (!A.loggedIn()) { try { sessionStorage.setItem('habitat:ret', '/juego.html'); } catch (e) {} location.replace('/ingresar.html'); return; }
-    try { await load(); loadRep(); if (location.hash === '#reportes') setTimeout(function () { $('#reportes').scrollIntoView({ behavior: 'smooth' }); }, 300); }
+    try { await load(); loadRep(); loadMod(); if (location.hash === '#reportes') setTimeout(function () { $('#reportes').scrollIntoView({ behavior: 'smooth' }); }, 300); }
     catch (e) { $('#ttHola').textContent = e.status === 403 ? 'Este panel es de la dirección' : 'No se pudo cargar el panel'; $('#ttWho').textContent = e.status === 403 ? 'Las estadísticas del juego las ven los directores de Habitat.' : 'Revisá tu conexión y recargá la página.'; $('.tt-main').innerHTML = ''; return; }
     var h = new Date().getHours();
     $('#ttHola').textContent = (h < 12 ? 'Buen día' : h < 20 ? 'Buenas tardes' : 'Buenas noches') + ', ' + String((ME && ME.title) || '').split(' ')[0];

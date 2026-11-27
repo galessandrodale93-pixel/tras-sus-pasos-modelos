@@ -1350,7 +1350,7 @@ function foamWord(c, txt) {
 }
 /* ---------- cómo jugar: Individual, Con amigos o Multijugador (solo Hero), elegido en la sala de espera ---------- */
 const MODO = { k: 'solo', code: '', crear: false };
-const MODOS = kid => [['solo', '👤', 'Individual', kid ? 'Tu mundo, a tu ritmo' : 'Tu mundo y tus casas'], ['amigos', '👥', 'Con amigos', kid ? 'Con tu código, hasta 5' : 'Sala privada de hasta 5']].concat(kid ? [] : [['multi', '🌍', 'Multijugador', 'Muy pronto', 1]]);
+const MODOS = kid => [['solo', '👤', 'Individual', kid ? 'Tu mundo, a tu ritmo' : 'Tu mundo y tus casas'], ['amigos', '👥', 'Con amigos', kid ? 'Con tu código, hasta 5' : 'Sala privada de hasta 5']].concat(kid ? [] : [['multi', '🌍', 'Multijugador', mundoAbierto() ? 'Jugadores de todos lados' : 'Muy pronto', mundoAbierto() ? 0 : 1]]);
 function modoHTML(kid) {
   let pend = ''; try { pend = sessionStorage.getItem('tsp:join') || ''; } catch (e) {}
   if (pend) { MODO.k = 'amigos'; MODO.code = pend; }
@@ -1369,6 +1369,7 @@ function modoWire(ov) {
 }
 /* al terminar de armar el mundo: crear la sala o entrar con el código */
 function modoAplicar() {
+  if (MODO.k === 'multi') { setTimeout(() => mpMundo(), 900); return; }
   if (MODO.k !== 'amigos') return; let pend = ''; try { pend = sessionStorage.getItem('tsp:join') || ''; } catch (e) {}
   if (MODO.code.length === 6) { if (pend !== MODO.code) setTimeout(() => mpJoin(MODO.code), 900); } /* si vino por link, mpAuto ya se ocupa */
   else if (MODO.crear) setTimeout(() => mpCreate(), 900);
@@ -4407,13 +4408,13 @@ const numOk = (v, a, b) => { v = +v; return Number.isFinite(v) ? Math.max(a, Mat
 const strOk = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f<>]/g, '').slice(0, n);
 const resOk = o => { const r = {}; if (o && typeof o === 'object') for (const k of XRES) if (Object.prototype.hasOwnProperty.call(o, k)) { const n = Math.floor(numOk(o[k], 0, 99)); if (n > 0) r[k] = n; } return r; };
 const infoOk = i => { i = i && typeof i === 'object' ? i : {}; return { name: strOk(i.name, 16) || 'Invitado', avatar: i.avatar && typeof i.avatar === 'object' && !Array.isArray(i.avatar) ? i.avatar : {}, branch: strOk(i.branch, 12), hum: numOk(i.hum, 0, 999), pid: typeof i.pid === 'string' && /^[a-zA-Z0-9-]{8,60}$/.test(i.pid) ? i.pid : '' }; };
-function mpClean(m, c) {
+function mpClean(m, c, cap) {
   if (!m || typeof m !== 'object' || typeof m.t !== 'string') return null;
-  try { if (JSON.stringify(m).length > 12000) return null; } catch (e) { return null; }
+  try { if (JSON.stringify(m).length > (cap || 12000)) return null; } catch (e) { return null; }
   if (c) { const now = performance.now(), q = c._rl || (c._rl = { t: now, n: 0 }); if (now - q.t > 1000) { q.t = now; q.n = 0; } if (++q.n > 40) return null; }
   if (m.id != null && !ID_OK(m.id)) return null; if (m.to != null && !ID_OK(m.to)) return null;
   if (m.info) m.info = infoOk(m.info);
-  if (m.t === 'list') { if (!Array.isArray(m.players)) return null; m.players = m.players.slice(0, 5).filter(p => p && ID_OK(p.id)).map(p => ({ id: p.id, info: infoOk(p.info) })); }
+  if (m.t === 'list') { if (!Array.isArray(m.players)) return null; m.players = m.players.slice(0, MP.mundo ? 40 : 5).filter(p => p && ID_OK(p.id)).map(p => ({ id: p.id, info: infoOk(p.info) })); }
   if (m.t === 'st') { if (!Array.isArray(m.s)) return null; const s = m.s; m.s = [numOk(s[0], -5e3, 5e3), numOk(s[1], -500, 2e3), numOk(s[2], -5e3, 5e3), numOk(s[3], -50, 50), s[4] ? 1 : 0, typeof s[5] === 'string' ? strOk(s[5], 16) : null, s[6] ? 1 : 0, numOk(s[7], -10, 50)]; }
   if (m.t === 'say') m.k = Math.floor(numOk(m.k, 0, 99));
   if (m.t === 'x' && m.k === 'obraL') { if (!Array.isArray(m.l)) return null; m.l = m.l.slice(0, 160).map(obraPieza).filter(Boolean); m.s = Math.floor(numOk(m.s, 0, 1e9)); m.n = Math.floor(numOk(m.n, 1, 8)); m.i = Math.floor(numOk(m.i, 0, m.n - 1)); }
@@ -4463,6 +4464,71 @@ async function mpJoin(code) {
   MP.peer.on('error', e => { G().toast(e.type === 'peer-unavailable' ? 'No encontramos esa sala. Revisá el código o pedí el link de nuevo.' : 'Hubo un problema con la sala. Probá de nuevo.'); mpLeave(); });
 }
 
+/* ---------- MULTIJUGADOR DE HERO: un mundo compartido con jugadores de todos lados ----------
+   Servidor propio (tsp-mundo, Cloudflare). Para entrar hace falta un pase que firma Habitat: cuenta real, personaje de
+   Hero propio, nivel 5 o más y sin suspensión. Sin chat libre ni micrófono: solo frases armadas y festejos.
+   Cada jugador puede reportar (3 reportes de personas distintas lo sacan 30 minutos) o silenciar a alguien. */
+const MUNDO_WS = 'wss://tsp-mundo.galessandrodale-93.workers.dev/mundo', MUNDO_API = 'https://www.habitat-cfm.org/api/kh-mundo';
+const MUNDO_MOT = ['Se comporta mal', 'Molesta o persigue a otros', 'Nombre o aspecto inapropiado', 'Hace trampa'];
+/* por ahora abierto para el equipo de prueba; el día que se abre para todos, se cambia acá */
+const mundoAbierto = () => { try { return localStorage.getItem('tsp:tester') === '1' || localStorage.getItem('tsp:mundo') === '1'; } catch (e) { return false; } };
+async function mundoToken() { try { const base = window.TSP_WIX || location.origin + '/js/wix'; const c = await import(base + '/client.js'); return await c.accessToken(); } catch (e) { return ''; } }
+async function mpMundo() {
+  if (!S || !S.hx) { G().toast('El multijugador es de Hero.'); return; }
+  const id = amId(); if (!id) { G().toast('Para entrar al multijugador hace falta iniciar sesión con tu cuenta.'); return; }
+  mpLeave(true); G().toast('Entrando al multijugador…');
+  let j = {}; try { const r = await fetch(MUNDO_API, { method: 'POST', headers: { 'Content-Type': 'text/plain', 'x-habitat-auth': await mundoToken() }, body: JSON.stringify({ k: 'pase', perfil: id.perfil }) }); j = await r.json(); } catch (e) { G().toast('No se pudo entrar al multijugador. Revisá la conexión.'); return; }
+  if (!j.pase) { if (j.error === 'nivel') misPop('El multijugador se abre en el nivel ' + j.min, 'Seguí jugando en tu mundo: cuando llegues al nivel ' + j.min + ' vas a poder encontrarte con jugadores de todos lados.'); else G().toast(j.msg || 'No se pudo entrar al multijugador.'); return; }
+  let ws; try { ws = new WebSocket(MUNDO_WS + '?pase=' + encodeURIComponent(j.pase) + (MP.ultMundo ? '&n=' + MP.ultMundo : '')); } catch (e) { G().toast('No se pudo entrar al multijugador.'); return; }
+  /* un «conector» con la misma forma que el de las salas, así el resto del juego no cambia */
+  const H = {}, conn = { open: false, send: o => { try { if (ws.readyState === 1) ws.send(JSON.stringify(o)); } catch (e) {} }, close: () => { try { ws.close(); } catch (e) {} }, on: (k, f) => { H[k] = f; } };
+  MP.conn = conn; MP.code = 'MUNDO'; MP.host = false; MP.mundo = 1; MP.mute = {}; MP.peer = { id: '', destroy() {} };
+  let dentro = false;
+  ws.onmessage = ev => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+    if (m.t === 'pase') { MP.peer.id = ID_OK(m.id) ? m.id : ''; MP.mundo = Math.floor(numOk(m.mundo, 1, 99)) || 1; MP.ultMundo = MP.mundo; conn.open = true; conn.send({ t: 'hi', info: meInfo() }); return; }
+    if (m.t === 'fuera') { MP.fuera = m.por; return; }
+    m = mpClean(m, null, m.t === 'list' ? 160000 : 12000); if (!m) return; /* el servidor ya revisa y limita; acá se vuelve a revisar todo */
+    if (m.t === 'list') { dentro = true; m.players.forEach(p => { if (p.id !== MP.peer.id) mpAdd(p.id, p.info); }); misPop('🌍 Multijugador · Mundo ' + MP.mundo, 'Estás con jugadores de Hero de todos lados. Saludá con las frases rápidas desde 👥. Si alguien se porta mal, podés reportarlo o silenciarlo.'); mpUI(); return; }
+    if (m.t === 'hi') { mpAdd(m.id, m.info); mpUI(); return; }
+    if (m.t === 'bye') { mpDel(m.id); mpUI(); return; }
+    if (m.t === 'st' || m.t === 'say' || m.t === 'look' || m.t === 'leg') mpOn(m); };
+  ws.onclose = ev => { if (MP.conn !== conn) return; const por = MP.fuera; MP.fuera = null; mpLeave();
+    if (por === 'suspendido') misPop('Saliste del multijugador', 'El equipo de Habitat suspendió tu cuenta en el multijugador. Tu mundo y tu progreso siguen igual.');
+    else if (por === 'reportes') misPop('Saliste del multijugador por un rato', 'Varios jugadores te reportaron. Podés volver en 30 minutos. Acordate de tratar bien a todos.');
+    else if (por === 'otra') G().toast('Entraste al multijugador desde otro aparato.');
+    else if (ev.code === 1006 && !dentro) G().toast('No se pudo entrar al multijugador. Probá en un rato.');
+    else G().toast('Saliste del multijugador.'); };
+}
+/* con muchos jugadores, se dibujan los 14 más cercanos */
+function mundoVer(now) {
+  if (now - (MP.verT || 0) < 900) return; MP.verT = now; const me = S.av.position;
+  Object.values(MP.players).map(p => [p, p.av.position.distanceTo(me)]).sort((a, b) => a[1] - b[1]).forEach(([p, d], i) => { p.av.visible = i < 14 && d < 90; });
+}
+function mundoPanel(el, close) {
+  const ps = Object.entries(MP.players).sort((a, b) => a[1].av.position.distanceTo(S.av.position) - b[1].av.position.distanceTo(S.av.position)).slice(0, 30);
+  el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>🌍 Multijugador · Mundo ${MP.mundo}</b><span>${1 + Object.keys(MP.players).length} jugadores</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
+    <div class="r-micbox"><b>💬 Frases rápidas</b><div class="r-phr2">${PHR.map((p, i) => `<button data-k="${i}">${p}</button>`).join('')}</div></div>
+    <ul class="r-list">${ps.length ? ps.map(([id, p]) => `<li>${esc(p.info.name)} <span class="mu-acts"><button class="am-sm mu-mute" data-id="${esc(id)}">${MP.mute[id] ? '🔈 Escuchar' : '🔇 Silenciar'}</button><button class="am-sm mu-rep" data-id="${esc(id)}">🚩 Reportar</button></span></li>`).join('') : '<li><small>Todavía no hay nadie cerca. ¡Explorá el mapa!</small></li>'}</ul>
+    <div class="mis-btns"><button class="mis-no r-leave">Salir del multijugador</button></div>
+    <p class="cap-note">Acá no hay chat libre ni micrófono: solo frases rápidas y festejos. Si alguien se porta mal, reportalo: el equipo de Habitat lo revisa.</p></div>`;
+  el.hidden = false; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
+  el.querySelectorAll('.r-phr2 button').forEach(b => b.onclick = () => { mpSay(+b.dataset.k); close(); });
+  el.querySelector('.r-leave').onclick = () => { close(); mpLeave(); };
+  el.querySelectorAll('.mu-mute').forEach(b => b.onclick = () => { const id = b.dataset.id; MP.mute[id] = !MP.mute[id]; const p = MP.players[id]; if (p && p.bubble && MP.mute[id]) p.bT = .01; mundoPanel(el, close); });
+  el.querySelectorAll('.mu-rep').forEach(b => b.onclick = () => mundoReportar(b.dataset.id, el, close));
+}
+function mundoReportar(id, el, close) {
+  const p = MP.players[id]; if (!p) return;
+  el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>Reportar a ${esc(p.info.name)}</b><button class="bag-x" aria-label="Cerrar">✕</button></div>
+    <p class="mis-ask">¿Qué pasó? El equipo de Habitat revisa cada reporte.</p><div class="x-acts">${MUNDO_MOT.map((t, i) => `<button data-k="${i}">${t}</button>`).join('')}</div>
+    <div class="mis-btns"><button class="mis-no mu-back">Volver</button></div></div>`;
+  el.querySelector('.bag-x').onclick = close; el.querySelector('.mu-back').onclick = () => mundoPanel(el, close);
+  el.querySelectorAll('.x-acts button').forEach(b => b.onclick = async () => {
+    const k = +b.dataset.k; MP.conn && MP.conn.send({ t: 'rep', to: id, k }); MP.mute[id] = true;
+    const me = amId(); if (me && p.info.pid) { try { fetch(MUNDO_API, { method: 'POST', headers: { 'Content-Type': 'text/plain', 'x-habitat-auth': await mundoToken() }, body: JSON.stringify({ k: 'reporte', perfil: me.perfil, contra: p.info.pid, motivo: k }) }); } catch (e) {} }
+    close(); G().toast('Gracias por avisar. Lo silenciamos para vos y el equipo lo va a revisar.');
+  });
+}
 /* micrófono: se habla solo mientras se mantiene apretado (tecla T o el botón) */
 const TALK = { stream: null, calls: {}, aus: {}, on: false, want: false, open: false };
 function talkPeer(peer) {
@@ -4488,7 +4554,7 @@ function talkOpen(on) { TALK.open = !!on; if (on) talkStart(); else talkStop(); 
 function mpLeave(silent) {
   talkEnd();
   try { for (const id in MP.conns) MP.conns[id].close(); if (MP.conn) MP.conn.close(); if (MP.peer) MP.peer.destroy(); } catch (e) {}
-  for (const id in MP.players) mpDel(id); MP.peer = null; MP.conn = null; MP.conns = {}; MP.code = null; MP.host = false; MP.hostId = null; obraVolver(); if (!silent) mpUI();
+  for (const id in MP.players) mpDel(id); MP.peer = null; MP.conn = null; MP.conns = {}; MP.code = null; MP.host = false; MP.hostId = null; MP.mundo = 0; MP.mute = {}; obraVolver(); if (!silent) mpUI();
 }
 function mpAdd(id, info) {
   if (!S || MP.players[id]) return; const hx = S.hx, rig = hx || H3.ok, av = rig ? buildHeroAvatar(info.avatar || {}) : buildAvatar(info.avatar || {}, false); av.traverse(o => { if (o.isPointLight) o.intensity = 2; if (o.isMesh && rig) o.castShadow = true; });
@@ -4500,7 +4566,7 @@ function mpDel(id) { if (MP.pend && MP.pend[id]) { try { Object.entries(MP.pend[
 function mpOn(m) {
   const p = MP.players[m.id]; if (!p) return;
   if (m.t === 'st') { const [x, y, z, yaw, mv, pose, wv, jy] = m.s; p.tgt = { x, y, z, yaw }; p.moving = !!mv; if (pose !== p.st.pose) { p.st.pose = pose; p.st.prayT = 0; } if (wv && !(p.st.waveT > 0)) p.st.waveT = 2.2; p.st.jy = jy; }
-  if (m.t === 'say') mpBubble(p, PHR[m.k] || '');
+  if (m.t === 'say') { if (!(MP.mute && MP.mute[m.id])) mpBubble(p, PHR[m.k] || ''); }
   if (m.t === 'leg') { legAnnounce(p, GBY[m.g]); return; }
   if (m.t === 'look' && m.avatar) { p.info.avatar = m.avatar; const pos = p.av.position.clone(), rot = p.av.rotation.y, info = p.info; S.scene.remove(p.av); delete MP.players[m.id]; mpAdd(m.id, info); const q = MP.players[m.id]; q.av.position.copy(pos); q.av.rotation.y = rot; q.tgt = p.tgt; return; }
   if (m.t === 'talk') { if (m.on) { mpBubble(p, '🎙️'); p.bT = 600; } else if (p.bubble) p.bT = .01; }
@@ -4513,31 +4579,34 @@ function mpTick(t, dt) {
   if (!MP.code) return;
   for (const id in MP.players) { const p = MP.players[id], a = p.av.position, k = Math.min(1, dt * 8); a.x += (p.tgt.x - a.x) * k; a.z += (p.tgt.z - a.z) * k; a.y += (p.tgt.y - a.y) * k; let d = p.tgt.yaw - p.av.rotation.y; while (d > Math.PI) d -= 6.283; while (d < -Math.PI) d += 6.283; p.av.rotation.y += d * k;
     animAvatar(p.av, t, p.moving && !(p.st.jy > .02), dt); applyPose(p.av, t, dt, p.st); if (p.bT > 0) { p.bT -= dt; if (p.bT <= 0 && p.bubble) { p.av.remove(p.bubble); p.bubble = null; } } }
-  const now = performance.now(); if (now - MP.last > 110) { const a = S.av.position, s = [+a.x.toFixed(2), +a.y.toFixed(2), +a.z.toFixed(2), +S.yaw.toFixed(2), (S.moving || S.freeMoving) ? 1 : 0, S.pose || null, S.waveT > 1.8 ? 1 : 0, +(S.jy || 0).toFixed(2)], sig = JSON.stringify(s); if (sig !== MP.sig || now - MP.last > 1500) { MP.sig = sig; MP.last = now; mpSend({ t: 'st', id: MP.peer && MP.peer.id, s }); } }
+  const now = performance.now(); if (MP.mundo) mundoVer(now); if (now - MP.last > (MP.mundo ? 200 : 110)) { const a = S.av.position, s = [+a.x.toFixed(2), +a.y.toFixed(2), +a.z.toFixed(2), +S.yaw.toFixed(2), (S.moving || S.freeMoving) ? 1 : 0, S.pose || null, S.waveT > 1.8 ? 1 : 0, +(S.jy || 0).toFixed(2)], sig = JSON.stringify(s); if (sig !== MP.sig || now - MP.last > 1500) { MP.sig = sig; MP.last = now; mpSend({ t: 'st', id: MP.peer && MP.peer.id, s }); } }
 }
 function mpUI() {
   const old = document.getElementById('v3room'); if (old) old.remove();
   let m = document.querySelector('.v3mic'); if (!m) { m = document.createElement('button'); m.type = 'button'; m.className = 'v3mic'; document.body.appendChild(m);
     m.addEventListener('pointerdown', e => { e.preventDefault(); if (TALK.open) { if (TALK.on) talkStop(); else talkStart(); return; } try { m.setPointerCapture(e.pointerId); } catch (x) {} talkStart(); });
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => m.addEventListener(ev, () => { if (!TALK.open) talkStop(); })); m.addEventListener('contextmenu', e => e.preventDefault()); }
-  m.hidden = !MP.code; talkUI(); micPlace();
+  m.hidden = !MP.code || !!MP.mundo; talkUI(); micPlace();
   const b = document.querySelector('#v3acts [data-a="room"]'); if (b) b.classList.toggle('on', !!MP.code);
 }
 /* el micrófono queda pegado arriba del botón de amigos */
 function micPlace() { const m = document.querySelector('.v3mic'), b = document.querySelector('#v3acts [data-a="room"]'); if (!m || m.hidden) return; const r = b && b.getBoundingClientRect(); if (!r || !r.width) { m.style.right = '18px'; m.style.left = 'auto'; m.style.bottom = '150px'; return; } m.style.left = (r.left + r.width / 2) + 'px'; m.style.right = 'auto'; m.style.bottom = (innerHeight - r.top + 10) + 'px'; }
 function mpPanel() {
   const el = document.getElementById('v3sheet'); if (!el) return; S.joy.x = 0; S.joy.y = 0; const close = () => { el.hidden = true; };
+  if (MP.mundo) { mundoPanel(el, close); return; }
   if (!MP.code) {
     el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>Jugar con amigos</b><span>Salas privadas de hasta 5 personas</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
       <p class="mis-ask">Cada uno juega con su propio perfil y conserva su nivel. Se juega en el mundo de quien crea la sala: los demás ven sus construcciones y pueden aportarle materiales.</p>
       <div class="mis-btns"><button class="mis-yes r-new">Crear una sala</button></div>
       <button type="button" class="gd-how r-amg">🎁 Amigos, regalos y equipo</button>
+      ${S.hx ? `<button type="button" class="gd-how r-mundo">🌍 Multijugador${mundoAbierto() ? '' : ' · muy pronto'}</button>` : ''}
       <p class="cap-note" style="margin-top:16px">¿Te pasaron un código?</p><div class="r-join"><input class="r-code" maxlength="6" placeholder="CÓDIGO" autocapitalize="characters" autocomplete="off" spellcheck="false"><button class="mis-no r-go">Entrar</button></div>
       <p class="cap-note">Solo entra quien tenga el código o el link. Adentro pueden hablar manteniendo apretado 🎙️ (o la tecla T en la compu) y usar frases rápidas.</p></div>`;
     el.hidden = false; el.querySelector('.bag-x').onclick = close; el.onclick = e => { if (e.target === el) close(); };
     el.querySelector('.r-new').onclick = () => { el.querySelector('.r-new').textContent = 'Creando…'; mpCreate(); };
     el.querySelector('.r-go').onclick = () => { close(); mpJoin(el.querySelector('.r-code').value); };
     el.querySelector('.r-amg').onclick = () => amOpen();
+    const rm = el.querySelector('.r-mundo'); if (rm) rm.onclick = () => { if (!mundoAbierto()) { G().toast('El multijugador abre muy pronto: un mundo para encontrarte con jugadores de Hero de todos lados.'); return; } close(); mpMundo(); };
     return;
   }
   const list = [`<li>${esc(meInfo().name)} <small>(vos${MP.host ? ', creaste la sala' : ''})</small></li>`].concat(Object.entries(MP.players).map(([id, p]) => `<li>${esc(p.info.name)}${p.info.pid && amId() ? (amEsAmigo(p.info.pid) ? ' <small>· amigo del camino</small>' : ` <button class="am-sm am-ok r-am" data-id="${esc(id)}">🤝 Ser amigos</button>`) : ''}</li>`)).join('');
@@ -10027,7 +10096,7 @@ function bldMilestone() {
 function bldMsg(t, bad) { const m = document.getElementById('v3bldmsg'); if (m) { m.textContent = t; m.className = bad ? 'no' : 'ok'; clearTimeout(bldMsg.T); bldMsg.T = setTimeout(() => { if (m) m.textContent = ''; }, 3200); } else G().toast(t); }
 function bldStart(t) {
   try { window.tspMark && tspMark('construir:' + (t || BLD.t)); } catch (e) {}
-  if (!BLD.parts) return; if (BLD.ajeno) { obraAportar(); return; } const el = document.getElementById('v3sheet'); if (el) el.hidden = true; if (t) BLD.t = t; BLD.on = true; BLD.del = false; BLD.dy = 0; BLD.sx = 0; BLD.pin = null;
+  if (!BLD.parts) return; if (MP.mundo) { G().toast('En el multijugador no se construye: tu casa te espera en tu mundo.'); return; } if (BLD.ajeno) { obraAportar(); return; } const el = document.getElementById('v3sheet'); if (el) el.hidden = true; if (t) BLD.t = t; BLD.on = true; BLD.del = false; BLD.dy = 0; BLD.sx = 0; BLD.pin = null;
   BLD.cam = [S.camDist, S.camPitch]; S.camDist = Math.max(S.camDist, 6.5); S.camPitch = Math.max(S.camPitch ?? .4, .62); bldGhost(BLD.t); bldHud();
   const p = G().P(); if (!p.bldTip) { p.bldTip = 1; setTimeout(() => bldMsg('Tocá el piso donde va la pieza y después «Poner». Los cercos siguen solos en fila. Con ⬆ subís para hacer techos.'), 300); }
 }
@@ -10481,7 +10550,7 @@ function invAttr(body) {
 const HUM = { DAYMAX: 3 };
 function myId() { return MP.peer && MP.peer.id; }
 function pName(id) { return id === myId() ? meInfo().name : (MP.players[id] ? MP.players[id].info.name : 'Alguien'); }
-function xSend(m) { m.t = 'x'; m.id = myId(); if (MP.host) { if (m.to) { if (MP.conns[m.to] && MP.conns[m.to].open) MP.conns[m.to].send(m); } else mpSend(m); } else if (MP.conn && MP.conn.open) MP.conn.send(m); }
+function xSend(m) { if (MP.mundo) return; m.t = 'x'; m.id = myId(); if (MP.host) { if (m.to) { if (MP.conns[m.to] && MP.conns[m.to].open) MP.conns[m.to].send(m); } else mpSend(m); } else if (MP.conn && MP.conn.open) MP.conn.send(m); }
 function xRelay(c, m) { m.id = c.peer; if (!m.to || m.to === myId()) { mpX(m); if (!m.to) mpSend(m, c.peer); } else if (MP.conns[m.to] && MP.conns[m.to].open) MP.conns[m.to].send(m); }
 function mpX(m) {
   if (m.k === 'offer') return xOfferIn(m);

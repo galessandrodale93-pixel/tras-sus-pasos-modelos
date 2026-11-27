@@ -1,0 +1,13 @@
+name = "tsp-mundo"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+workers_dev = true
+keep_vars = true
+
+[[durable_objects.bindings]]
+name = "MUNDO"
+class_name = "Mundo"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Mundo"]
