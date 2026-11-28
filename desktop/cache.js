@@ -90,7 +90,8 @@ function guardar(k, b, ct, sha) {
   IDX.e[k] = { s: b.length, ct: ct || '', sha: sha || (IDX.e[k] && IDX.e[k].sha) || '' }; saveIdx();
 }
 function respuesta(b, ct, u) {
-  return new Response(b, { status: 200, headers: { 'Content-Type': ct || CT[ext(u)] || 'application/octet-stream', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache', 'Content-Length': String(b.length) } });
+  /* el tipo sale de la extensión: GitHub entrega el código como «text/plain», y el navegador no carga código con ese tipo (el juego quedaba en blanco) */
+  return new Response(b, { status: 200, headers: { 'Content-Type': CT[ext(u)] || ct || 'application/octet-stream', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache', 'Content-Length': String(b.length) } });
 }
 
 /* entregar un archivo al juego: del disco si está; si no, bajarlo y guardarlo */
@@ -118,10 +119,12 @@ function iniciar() {
   DL = session.fromPartition('persist:kh-descargas');
   /* el servidor de los modelos responde como a la web de Habitat */
   DL.webRequest.onBeforeSendHeaders({ urls: [ABASE + '*', R2 + '*'] }, (d, cb) => { d.requestHeaders.Origin = SITE; d.requestHeaders.Referer = SITE + '/'; cb({ requestHeaders: d.requestHeaders }); });
-  protocol.handle('khc', req => servir(decodeURIComponent(new URL(req.url).pathname.slice(1))));
+  /* khc://host/camino ⇄ https://host/camino: la dirección interna conserva la estructura, así los «import './x.js'» del juego
+     (relativos a su propio archivo) siguen funcionando */
+  protocol.handle('khc', req => { const u = new URL(req.url); return servir('https://' + u.host + u.pathname + u.search); });
   session.defaultSession.webRequest.onBeforeRequest({ urls: FILTRO }, (d, cb) => {
     if (d.method !== 'GET' || !keyOf(d.url)) return cb({});
-    cb({ redirectURL: 'khc://a/' + encodeURIComponent(d.url) });
+    cb({ redirectURL: 'khc://' + d.url.slice(8) });
   });
 }
 
