@@ -5056,16 +5056,16 @@ function mmoOveja(m) {
 const E2 = { e: null, dt: 0, campo: null, cv: null, pil: null, yoMs: 0, yoL: 0, cosT: 0, g: 0 };
 function mmoOk(x, z) { const W0 = S.W; if (!W0) return false; if (Math.abs(x) > Math.min(XB * .9, (W0.X1 || XB) - 6)) return false; if (waterWet(x, z, null) > .04) return false; for (const B of WATER.basins) if (Math.hypot(x - B.x, z - B.z) < B.r * 1.4 + 2) return false; const sl = Math.hypot(W0.hAt(x + 1, z) - W0.hAt(x - 1, z), W0.hAt(x, z + 1) - W0.hAt(x, z - 1)) / 2; if (sl > .38) return false; for (let k = 0; k < 8; k++) { const an = k / 8 * 6.283; if (blockedAt(x + Math.cos(an) * 1.2, z + Math.sin(an) * 1.2)) return false; } return true; }
 const mmoPoiCerca = (x, z) => (S.pois || []).filter(q => q.name && q.k !== 'river' && q.k !== 'lake').sort((a, b) => Math.hypot(a.x - x, a.z - z) - Math.hypot(b.x - x, b.z - z))[0];
-function mmoBuscar(sx, sz, cond, paso) { for (let t = 0; t < 200; t++) { const an = t * 2.399, r = Math.sqrt(t) * (paso || 5), x = sx + Math.cos(an) * r, z = sz + Math.sin(an) * r; if (cond(x, z)) return [x, z]; } return null; }
+function mmoBuscar(sx, sz, cond, paso) { for (let t = 0; t < 320; t++) { const an = t * 2.399, r = Math.sqrt(t) * (paso || 5), x = sx + Math.cos(an) * r, z = sz + Math.sin(an) * r; if (cond(x, z)) return [x, z]; } return null; }
 function e2Semilla(m) {
   const sx = numOk(m.sx, -5e3, 5e3), sz = numOk(m.sz, -5e3, 5e3), me = S.av.position; let out = null;
-  if (m.tipo === 'cosecha') { const c = mmoBuscar(sx, sz, (x, z) => Math.hypot(x - me.x, z - me.z) > 32 && mmoOk(x, z) && [0, 1, 2, 3, 4, 5].every(k => mmoOk(x + Math.cos(k * 1.047) * 9, z + Math.sin(k * 1.047) * 9))); if (c) { const p = mmoPoiCerca(c[0], c[1]); out = { x: Math.round(c[0]), z: Math.round(c[1]), lugar: p ? p.name : '' }; } }
+  if (m.tipo === 'cosecha') { const c = mmoBuscar(sx, sz, (x, z) => Math.hypot(x - me.x, z - me.z) > 32 && mmoOk(x, z) && [0, 1, 2, 3, 4, 5, 6, 7].filter(k => mmoOk(x + Math.cos(k * .785) * 7, z + Math.sin(k * .785) * 7)).length >= 6, 7); if (c) { const p = mmoPoiCerca(c[0], c[1]); out = { x: Math.round(c[0]), z: Math.round(c[1]), lugar: p ? p.name : '' }; } }
   else { const a = mmoBuscar(sx, sz, mmoOk); if (!a) return;
     const dest = (S.pois || []).filter(q => q.name && q.k !== 'river' && q.k !== 'lake').map(q => ({ q, d: Math.hypot(q.x - a[0], q.z - a[1]) })).filter(o => o.d > 190 && o.d < 380).sort((x, y) => x.d - y.d)[0]; if (!dest) return;
     const ruta = [[Math.round(a[0]), Math.round(a[1])]], n = Math.ceil(dest.d / 55);
     for (let i = 1; i <= n; i++) { const k = i / n, x = a[0] + (dest.q.x - a[0]) * k, z = a[1] + (dest.q.z - a[1]) * k, p = mmoBuscar(x, z, mmoOk, 2.5); if (!p) return; const L = ruta[ruta.length - 1]; if (Math.hypot(p[0] - L[0], p[1] - L[1]) > 125) return; ruta.push([Math.round(p[0]), Math.round(p[1])]); }
     out = { ruta, lugar: dest.q.name }; }
-  if (out && MP.conn) MP.conn.send({ t: 'evPos', ev: String(m.ev || '').slice(0, 24), ...out });
+  if (out && MP.conn) MP.conn.send({ t: 'evPos', ev: String(m.ev || '').slice(0, 24), ...out }); else console.warn('mmo: sin lugar para', m.tipo);
 }
 function e2Fuera() { if (E2.campo) { S.scene.remove(E2.campo); E2.campo.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); E2.campo = null; } if (E2.cv) { S.scene.remove(E2.cv); E2.cv = null; } if (E2.pil) { mmoPilarFuera(E2.pil); E2.pil = null; } E2.e = null; const b = document.getElementById('v3cob'); if (b) b.remove(); }
 function e2Campo(E) { /* un campo dorado con gavillas: van desapareciendo a medida que se cosecha */
@@ -5191,7 +5191,7 @@ function mpTick(t, dt) {
   if (!MP.code) return;
   for (const id in MP.players) { const p = MP.players[id], a = p.av.position, k = Math.min(1, dt * 8); a.x += (p.tgt.x - a.x) * k; a.z += (p.tgt.z - a.z) * k; a.y += (p.tgt.y - a.y) * k; let d = p.tgt.yaw - p.av.rotation.y; while (d > Math.PI) d -= 6.283; while (d < -Math.PI) d += 6.283; p.av.rotation.y += d * k;
     animAvatar(p.av, t, p.moving && !(p.st.jy > .02), dt); applyPose(p.av, t, dt, p.st); if (p.bT > 0) { p.bT -= dt; if (p.bT <= 0 && p.bubble) { p.av.remove(p.bubble); p.bubble = null; } } }
-  const now = performance.now(); if (MP.mundo) { mundoVer(now); try { mmoTick(t); } catch (e) { } } if (now - MP.last > (MP.mundo ? 200 : 110)) { const a = S.av.position, s = [+a.x.toFixed(2), +a.y.toFixed(2), +a.z.toFixed(2), +S.yaw.toFixed(2), (S.moving || S.freeMoving) ? 1 : 0, S.pose || null, S.waveT > 1.8 ? 1 : 0, +(S.jy || 0).toFixed(2), S.poseK || null], sig = JSON.stringify(s); if (sig !== MP.sig || now - MP.last > 1500) { MP.sig = sig; MP.last = now; mpSend({ t: 'st', id: MP.peer && MP.peer.id, s }); } }
+  const now = performance.now(); if (MP.mundo) { mundoVer(now); try { mmoTick(t); } catch (e) { if (!MMO.errT) { MMO.errT = 1; console.warn('mmo tick', e); } } } if (now - MP.last > (MP.mundo ? 200 : 110)) { const a = S.av.position, s = [+a.x.toFixed(2), +a.y.toFixed(2), +a.z.toFixed(2), +S.yaw.toFixed(2), (S.moving || S.freeMoving) ? 1 : 0, S.pose || null, S.waveT > 1.8 ? 1 : 0, +(S.jy || 0).toFixed(2), S.poseK || null], sig = JSON.stringify(s); if (sig !== MP.sig || now - MP.last > 1500) { MP.sig = sig; MP.last = now; mpSend({ t: 'st', id: MP.peer && MP.peer.id, s }); } }
 }
 function mpUI() {
   const old = document.getElementById('v3room'); if (old) old.remove();

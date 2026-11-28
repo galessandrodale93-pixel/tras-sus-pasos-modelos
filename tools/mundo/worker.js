@@ -241,10 +241,10 @@ export class Mundo {
     if (m.t === 'evPos') {
       const E = this.ev; if (!E || E.fase !== 'semilla' || !E.tipo || E.tipo === 'oveja' || m.ev !== E.id || a.x == null) return; const now = Date.now();
       if (E.tipo === 'cosecha') { const x = num(m.x, -5e3, 5e3), z = num(m.z, -5e3, 5e3); if (Math.hypot(x - E.sx, z - E.sz) > 260 || Math.hypot(x - a.x, z - a.z) < 30) return;
-        const n = this.socks().filter(w => this.att(w).in).length; Object.assign(E, { fase: 'activa', x, z, lugar: str(m.lugar, 40), meta: Math.max(20, Math.min(150, n * 10)), hecho: 0, part: {}, fin: now + 8 * 60e3 }); }
+        const n = this.socks().filter(w => this.att(w).in).length; Object.assign(E, { fase: 'activa', x, z, lugar: str(m.lugar, 40), meta: Math.max(20, Math.min(150, n * 10)), hecho: 0, part: {}, fin: now + (this.env_.EV_PRUEBA ? 45 : 8) * 60e3 }); }
       else { const R = Array.isArray(m.ruta) ? m.ruta.slice(0, 10).map(q => [num(q && q[0], -5e3, 5e3), num(q && q[1], -5e3, 5e3)]) : [];
         if (R.length < 3 || Math.hypot(R[0][0] - E.sx, R[0][1] - E.sz) > 260) return; let L = 0; for (let i = 1; i < R.length; i++) { const d = Math.hypot(R[i][0] - R[i - 1][0], R[i][1] - R[i - 1][1]); if (d > 130) return; L += d; } if (L < 160 || L > 460) return;
-        const t0 = now + 25e3; Object.assign(E, { fase: 'activa', ruta: R, largo: L, vel: 1.6, t0, lugar: str(m.lugar, 40), part: {}, fin: t0 + Math.round(L / 1.6 * 1000) }); }
+        const t0 = now + (this.env_.EV_PRUEBA ? 240e3 : 25e3); Object.assign(E, { fase: 'activa', ruta: R, largo: L, vel: 1.6, t0, lugar: str(m.lugar, 40), part: {}, fin: t0 + Math.round(L / 1.6 * 1000) }); }
       await this.state.storage.put('ev', E); this.a_todos(this.evMsg(), null); await this.state.storage.setAlarm(E.fin); return;
     }
     if (m.t === 'cosechar') {
@@ -293,7 +293,7 @@ export class Mundo {
   cvPos(E, t) { const R = E.ruta; let d = Math.max(0, (t - E.t0) / 1000 * E.vel); for (let i = 1; i < R.length; i++) { const s = Math.hypot(R[i][0] - R[i - 1][0], R[i][1] - R[i - 1][1]); if (d <= s) { const k = d / s; return [R[i - 1][0] + (R[i][0] - R[i - 1][0]) * k, R[i - 1][1] + (R[i][1] - R[i - 1][1]) * k]; } d -= s; } return R[R.length - 1]; }
   /* el que camina cerca de la caravana (22 m) va sumando tiempo */
   cvAndar(a) { const E = this.ev, now = Date.now(); if (!E || E.tipo !== 'caravana' || E.fase !== 'activa' || now < E.t0 || a.x == null) return; const [x, z] = this.cvPos(E, now);
-    if (Math.hypot(a.x - x, a.z - z) > 22) { if (E.part[a.id]) E.part[a.id].l = 0; return; } const P = E.part[a.id] || (E.part[a.id] = { p: a.p, n: a.n, tribu: a.tribu || '', ms: 0, l: 0 }); if (P.l) P.ms += Math.min(3000, now - P.l); P.l = now; }
+    if (Math.hypot(a.x - x, a.z - z) > 22) { if (E.part[a.id]) E.part[a.id].l = 0; return; } const P = E.part[a.id] || (E.part[a.id] = { p: a.p, n: a.n, tribu: a.tribu || '', ms: 0, l: 0 }); if (P.l) P.ms += Math.min(6000, now - P.l); P.l = now; } /* hasta 6 s entre avisos: un celular lento igual suma */
   /* termina la cosecha o la caravana: premio para los que participaron (3 gavillas, o la mitad del camino) */
   async evFin(ok) {
     const E = this.ev; if (!E || !E.tipo || E.tipo === 'oveja') return; const now = Date.now(), dur = E.tipo === 'caravana' ? E.fin - E.t0 : 0;
