@@ -17,7 +17,7 @@ function lits(src) {
 }
 const codey = f => /^[\w.#:\[\]\/\\-]+$/.test(f) && !/^[A-ZÁÉÍÓÚÑ¡¿]/.test(f) && !/[áéíóúñ]/.test(f) || /;(?! [a-záéíóúñ])|[{}]|=>|\b(px|rgba?|var\(|function|return|const|let)\b|\.(js|png|jpg|glb|mp3|json|webp)\b|^#|^\.|--|=\"|&&|\|\|/.test(f);
 // Páginas públicas y del Campus de alumnos (los paneles del equipo quedan en español)
-const PAGES = ['index','formacion','institucional','curso','clase','campus','ingresar','perfil','biblia','diario','intercesion','juego','kids-hero','libro','reportar','sembradores','testimonio','ubicacion','voluntarios','examen'];
+const PAGES = ['index','formacion','institucional','curso','clase','campus','ingresar','perfil','biblia','diario','intercesion','juego','kids-hero','libro','reportar','sembradores','testimonio','ubicacion','privacidad','voluntarios','examen'];
 const JS = ['site.js','auth.js','campus-data.js','campus-extra.js','form.js','opina.js','juego.js','kh-home.js','kh-portal.js','kh-hero.js','bloqueo.js','intercesion.js','i18n-web.js'];
 const add = frag => {
   frag = frag.replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, ' ').trim();
