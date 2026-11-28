@@ -28,6 +28,9 @@ jobs:
           node-version: 20
       - name: Instalar
         run: npm install --no-audit --no-fund
+      - name: Número de versión (cada instalador nuevo, uno más: así el programa sabe que hay que actualizarse)
+        shell: bash
+        run: npm pkg set version=1.3.${{ github.run_number }}
       - name: Armar el instalador
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
@@ -35,7 +38,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: kids-and-hero-windows
-          path: desktop/dist/Kids-and-Hero-Windows.exe
+          path: |
+            desktop/dist/Kids-and-Hero-Windows.exe
+            desktop/dist/latest.yml
           retention-days: 30
       - name: Publicar en el link fijo de descarga
         if: ${{ inputs.publicar }}
@@ -45,4 +50,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release view escritorio -R ${{ github.repository }} >/dev/null 2>&1 || gh release create escritorio -R ${{ github.repository }} --target main --title "Kids & Hero para compu" --notes "Instaladores de Kids & Hero para Windows y Mac. Se descargan desde habitat-cfm.org/kids-hero.html" || sleep 15
-          gh release upload escritorio desktop/dist/Kids-and-Hero-Windows.exe -R ${{ github.repository }} --clobber
+          gh release upload escritorio desktop/dist/Kids-and-Hero-Windows.exe desktop/dist/Kids-and-Hero-Windows.exe.blockmap desktop/dist/latest.yml -R ${{ github.repository }} --clobber
