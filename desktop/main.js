@@ -81,7 +81,8 @@ async function sincronizar() {
    (En Mac no se puede sin firmar el programa: ahí sigue igual.) */
 let progRevisado = false;
 function actualizarPrograma() {
-  if (progRevisado || !app.isPackaged || MAC || process.env.KH_START) return Promise.resolve(false); progRevisado = true;
+  /* la versión de la Microsoft Store la actualiza Windows: el programa no se baja instaladores por su cuenta */
+  if (progRevisado || !app.isPackaged || MAC || process.windowsStore || process.env.KH_START) return Promise.resolve(false); progRevisado = true;
   let AU; try { AU = require('electron-updater').autoUpdater; } catch (e) { return Promise.resolve(false); }
   AU.autoDownload = false; AU.autoInstallOnAppQuit = true; AU.logger = null;
   return new Promise(res => {

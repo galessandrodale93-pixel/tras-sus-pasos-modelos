@@ -1,0 +1,53 @@
+name: Kids & Hero para la Microsoft Store (kh-store)
+# Arma el paquete .appx para subir a la Microsoft Store (Partner Center). La Store lo firma y lo actualiza sola.
+# Los datos de identidad salen de Partner Center (Administración del producto → Identidad del producto) y se cargan
+# como variables del repo (Settings → Secrets and variables → Actions → Variables):
+#   STORE_IDENTITY_NAME (Package/Identity/Name), STORE_PUBLISHER (Package/Identity/Publisher, empieza con CN=)
+#   y STORE_PUBLISHER_NAME (Package/Properties/PublisherDisplayName).
+# Sin esas variables arma un paquete de prueba, que sirve para revisar que todo compile pero la Store no lo acepta.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  store:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            desktop
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Instalar
+        run: npm install --no-audit --no-fund
+      - name: Número de versión (la Store pide que cada paquete nuevo tenga un número mayor)
+        shell: bash
+        run: npm pkg set version=1.3.${{ github.run_number }}
+      - name: Armar el paquete de la Store
+        shell: bash
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          ID_NAME: ${{ vars.STORE_IDENTITY_NAME }}
+          ID_PUB: ${{ vars.STORE_PUBLISHER }}
+          ID_PUBNAME: ${{ vars.STORE_PUBLISHER_NAME }}
+        run: |
+          ARGS=()
+          if [ -n "$ID_NAME" ] && [ -n "$ID_PUB" ]; then
+            ARGS+=("-c.appx.identityName=$ID_NAME" "-c.appx.publisher=$ID_PUB")
+            [ -n "$ID_PUBNAME" ] && ARGS+=("-c.appx.publisherDisplayName=$ID_PUBNAME")
+            echo "Paquete con la identidad de Partner Center: $ID_NAME"
+          else
+            echo "::warning::Faltan las variables STORE_IDENTITY_NAME y STORE_PUBLISHER: es un paquete de prueba, la Store no lo va a aceptar."
+          fi
+          npx electron-builder --win appx --publish never "${ARGS[@]}"
+          ls -la dist/*.appx
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kids-and-hero-store
+          path: desktop/dist/*.appx
+          retention-days: 30
