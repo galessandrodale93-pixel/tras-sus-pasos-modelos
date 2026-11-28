@@ -106,6 +106,15 @@
       ],
       "multiLanguageInstaller": true,
       "deleteAppDataOnUninstall": false
-    }
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://github.com/galessandrodale93-pixel/tras-sus-pasos-modelos/releases/download/escritorio"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
   }
 }

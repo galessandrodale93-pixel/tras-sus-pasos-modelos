@@ -70,9 +70,33 @@ const prog = d => { try { if (lan && !lan.isDestroyed()) lan.webContents.send('k
 async function sincronizar() {
   if (corriendo || !lan) return; corriendo = true; enJuego = false;
   await lan.loadFile(path.join(__dirname, 'descarga.html'), { query: { l: cache.idioma() } });
+  if (await actualizarPrograma()) return; /* hay un programa nuevo: se instala y vuelve a abrir solo */
   const r = await cache.sincronizar(prog); corriendo = false;
   if ((r && r.offline) || fallo) { fallo = false; prog({ fase: 'offline' }); return; }
   setTimeout(entrar, r && r.nada ? 1600 : 2200);
+}
+
+/* el programa se actualiza solo (Windows), como un lanzador: antes de bajar el juego, mira si hay una versión nueva del programa;
+   si la hay, la baja con su barra, se instala sola en silencio y vuelve a abrir. Sin conexión o sin respuesta en 10 s, sigue al juego.
+   (En Mac no se puede sin firmar el programa: ahí sigue igual.) */
+let progRevisado = false;
+function actualizarPrograma() {
+  if (progRevisado || !app.isPackaged || MAC || process.env.KH_START) return Promise.resolve(false); progRevisado = true;
+  let AU; try { AU = require('electron-updater').autoUpdater; } catch (e) { return Promise.resolve(false); }
+  AU.autoDownload = false; AU.autoInstallOnAppQuit = true; AU.logger = null;
+  return new Promise(res => {
+    let fin = false, t2 = null; const listo = v => { if (fin) return; fin = true; clearTimeout(to); clearTimeout(t2); res(v); };
+    const to = setTimeout(() => listo(false), 10000);
+    AU.on('error', () => listo(false));
+    AU.once('update-not-available', () => listo(false));
+    AU.once('update-available', () => {
+      clearTimeout(to); prog({ fase: 'programa', pct: 0 }); t2 = setTimeout(() => listo(false), 240000);
+      AU.on('download-progress', p => { if (!fin) prog({ fase: 'programa', pct: Math.round(p.percent || 0) }); });
+      AU.once('update-downloaded', () => { if (fin) return; prog({ fase: 'programa', pct: 100 }); listo(true); setTimeout(() => { try { AU.quitAndInstall(true, true); } catch (e) { app.quit(); } }, 1200); });
+      AU.downloadUpdate().catch(() => listo(false));
+    });
+    AU.checkForUpdates().catch(() => listo(false));
+  });
 }
 
 function entrar() {
@@ -112,6 +136,7 @@ function entrar() {
 function volver() { fallo = true; const w = win; win = null; enJuego = false; if (!lan) lanzador(); else sincronizar(); if (w) { w.removeAllListeners('close'); w.destroy(); } }
 
 ipcMain.on('kh-jugar', entrar);
+ipcMain.on('kh-ver', e => { e.returnValue = app.getVersion(); });
 ipcMain.on('kh-reintentar', () => { fallo = false; if (lan) sincronizar(); });
 let langPend = '';
 ipcMain.on('kh-lang', (e, l) => { if (!/^(es|en|pt)$/.test(l || '')) return; cache.idioma(l); if (lan && e.sender === lan.webContents) langPend = l; });
