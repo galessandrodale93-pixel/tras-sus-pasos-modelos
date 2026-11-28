@@ -1968,3 +1968,6 @@ body:has(#v3sheet:not([hidden])) #v3grupo,body:not(.v3on) #v3grupo{display:none}
 /* los avisos largos (explicaciones) tienen ✕ para cerrarlos */
 .toast .toast-x{pointer-events:auto;flex:none;align-self:flex-start;width:34px;height:34px;margin:-2px -6px -2px 2px;border-radius:50%;border:1px solid rgba(233,195,122,.5);background:rgba(233,195,122,.16);color:inherit;font:900 15px/1 "Nunito",sans-serif;display:grid;place-items:center;cursor:pointer}
 .toast:not(.on) .toast-x{pointer-events:none}
+#v3cob{position:fixed;z-index:7;left:50%;transform:translateX(-50%);bottom:calc(120px + env(safe-area-inset-bottom,0px));padding:12px 22px;border-radius:99px;border:0;background:linear-gradient(180deg,#FFE79A,#E2B84E);color:#2B1D00;font:900 16px "Nunito",sans-serif;box-shadow:0 0 24px rgba(226,184,78,.6);cursor:pointer;touch-action:manipulation}
+#v3cob:active{transform:translateX(-50%) scale(.95)}
+#v3grupo .gr-bar{display:block;height:7px;margin-top:5px;border-radius:99px;background:rgba(0,0,0,.35);overflow:hidden}#v3grupo .gr-bar i{display:block;height:100%;background:linear-gradient(90deg,#E2B84E,#FFE79A)}

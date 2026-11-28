@@ -4545,7 +4545,7 @@ async function mpMundo() {
     if (m.t === 'fuera') { MP.fuera = m.por; return; }
     if (m.t === 'amigos' || m.t === 'llamar' || m.t === 'colgar' || m.t === 'no' || m.t === 'convInv' || m.t === 'convLista' || m.t === 'convSale') { vozMsg(m); return; }
     if (m.t === 'juntos') { tribuJuntos(m); return; }
-    if (/^(grupo|gInv|gAviso|gSen|gPista|oveja)$/.test(m.t)) { try { mmoMsg(m); } catch (e) { console.warn('mmo', e); } return; }
+    if (/^(grupo|gInv|gAviso|gSen|gPista|oveja|evento)$/.test(m.t)) { try { mmoMsg(m); } catch (e) { console.warn('mmo', e); } return; }
     if (m.t === 'logro') { if (m.tribu && m.tribu === MP.tribu && Array.isArray(m.logros)) tribuLogro(m.logros); return; }
     if (m.t === 'tribu') { if (m.id === MP.peer.id) { MP.tribu = TRIBU[m.tribu] ? m.tribu : ''; tribuAuraYo(); } else { const p = MP.players[m.id]; if (p && TRIBU[m.tribu]) { const info = { ...p.info, tribu: m.tribu, tlv: Math.floor(numOk(m.tlv, 0, 9)) }; const pos = p.av.position.clone(); mpDel(m.id); mpAdd(m.id, info); MP.players[m.id].av.position.copy(pos); } } return; }
     m = mpClean(m, null, m.t === 'list' ? 400000 : 12000); if (!m) return; /* el servidor ya revisa y limita; acá se vuelve a revisar todo */
@@ -4586,6 +4586,7 @@ const TRIBU_LOG = [['fam1', '👨‍👩‍👧', 'Una familia que crece', '10 m
   ['ora1', '🙏', 'Oran juntos', '10 oraciones en grupo', 'ora', 10], ['ora2', '🕯️', 'Casa de oración', '100 oraciones en grupo', 'ora', 100], ['ora3', '🔥', 'Fuego que no se apaga', '1000 oraciones en grupo', 'ora', 1000],
   ['fes1', '🎉', 'Festejan juntos', '10 festejos en grupo', 'festejo', 10], ['fes2', '🥁', 'Panderos y danzas', '100 festejos en grupo', 'festejo', 100], ['fes3', '🎺', 'Alegría de todo el pueblo', '1000 festejos en grupo', 'festejo', 1000],
   ['pes1', '🎣', 'Pescadores de hombres', '10 veces compartieron de Jesús', 'comp', 10], ['sal1', '🧂', 'Sal de la tierra', '20 amigos invitados', 'inv', 20], ['luz1', '🪔', 'Luz del mundo', '30 veces sirvieron a otros', 'serv', 30], ['int1', '🕊️', 'Intercesores', '50 oraciones por otros', 'orv', 50],
+  ['cos1', '🌾', 'Obreros de la cosecha', '10 cosechas juntos', 'cosecha', 10], ['cos2', '🧺', 'Graneros llenos', '100 cosechas juntos', 'cosecha', 100], ['car1', '🐪', 'Vamos a la casa del Señor', '10 viajes en caravana', 'caravana', 10], ['car2', '🏛️', 'Peregrinos fieles', '100 viajes en caravana', 'caravana', 100],
   ['ove1', '🐑', 'La oveja perdida', 'Encontrar una oveja perdida', 'oveja', 1], ['ove2', '🧺', 'Pastores del pueblo', '25 ovejas encontradas', 'oveja', 25], ['ove3', '🌄', 'Ninguna se pierde', '100 ovejas encontradas', 'oveja', 100],
   ['met1', '🎯', 'Meta cumplida', 'Cumplir una meta de la semana', 'metas', 1], ['met2', '🗓️', 'Un mes entero', '4 metas de la semana', 'metas', 4], ['met3', '🌱', 'Fieles en lo poco', '12 metas de la semana', 'metas', 12]];
 const TRIBU_PRONTO = [['🏗️', 'Levantan la casa de la tribu'], ['🏁', 'Ganan los Juegos de la fiesta'], ['🐫', 'Llegan juntos a Jerusalén'], ['🕳️', 'Terminan una expedición']];
@@ -4635,7 +4636,7 @@ function mundoIntro() {
   const el = document.getElementById('v3sheet'); if (!el) return; let i = 0;
   const C = [['🌍', 'El mundo de todos', 'Acá se encuentran jugadores de Hero de todos lados, hasta 100 por mundo. Los que ves cerca son personas de verdad.'],
     ['🏳️', 'Tu tribu', 'Vas a elegir una de las 12 tribus de Israel. Todo lo que hagan juntos hace brillar a la tribu: es el Resplandor de la tribu, y sus logros los ves en tu mochila, en Tribu.'],
-    ['🙏', 'Juntos suman', 'Si 3 o más de tu tribu oran juntos, o hacen el mismo festejo cerca, la tribu suma. Desde 👥 armás un grupo de hasta 5, cada uno con su rol: cada tanto se pierde una oveja y el grupo sale a buscarla. Muy pronto: la casa de la tribu, los Juegos de la fiesta y la caravana a Jerusalén.'],
+    ['🙏', 'Juntos suman', 'Si 3 o más de tu tribu oran juntos, o hacen el mismo festejo cerca, la tribu suma. Desde 👥 armás un grupo de hasta 5, cada uno con su rol: cada tanto se pierde una oveja y el grupo sale a buscarla, hay cosecha entre todos o sale una caravana de peregrinos. Muy pronto: la casa de la tribu y los Juegos de la fiesta.'],
     ['🎯', 'La meta de la semana', 'Cada semana tu tribu tiene una meta, y se llena con lo que hacés en tu vida: compartir de Jesús con un amigo, invitar, servir y orar por otros. Lo sumás desde tu mochila, en Tribu.'],
     ['🛡️', 'Nos cuidamos', 'No hay chat libre ni micrófono: se saluda con frases rápidas desde 👥. Si alguien se porta mal, reportalo o silencialo ahí mismo. Acá no se construye: tu casa te espera en tu mundo.']];
   const draw = () => { const c = C[i];
@@ -4921,7 +4922,7 @@ function mundoPanel(el, close) {
   const ps = Object.entries(MP.players).sort((a, b) => a[1].av.position.distanceTo(S.av.position) - b[1].av.position.distanceTo(S.av.position)).slice(0, 25);
   el.innerHTML = `<div class="bag-in mis-in"><div class="bag-h"><b>🌍 Multijugador · Mundo ${MP.mundo}</b><span>${1 + Object.keys(MP.players).length} jugadores · se ven los más cercanos</span><button class="bag-x" aria-label="Cerrar">✕</button></div>
     <div class="r-micbox"><b>💬 Frases rápidas</b><div class="r-phr2">${PHR.map((p, i) => `<button data-k="${i}">${p}</button>`).join('')}</div></div>
-    <div class="r-micbox mu-que"><b>🧭 Qué se puede hacer acá</b><div class="mu-q"><span>🙏 Orar juntos con tu tribu</span><span>🎉 Festejar juntos (desde ✦)</span><span>👋 Saludar con frases rápidas</span><span>👥 Grupos de 5 con roles</span><span>🐑 La oveja perdida (cada tanto)</span><span class="pr">🕳️ Expediciones · muy pronto</span><span class="pr">🏗️ Casa de la tribu · muy pronto</span><span class="pr">🏁 Juegos de la fiesta · muy pronto</span><span class="pr">🐫 Caravana a Jerusalén · muy pronto</span><span class="pr">🛒 Mercado · muy pronto</span></div>${MP.tribu ? `<button class="gd-how mu-tr">${tribuImg(MP.tribu, 22, 'tr-mini')} Mi tribu: ${TRIBU[MP.tribu].n}</button>` : '<button class="gd-how mu-tr">🏳️ Elegir mi tribu</button>'}</div>
+    <div class="r-micbox mu-que"><b>🧭 Qué se puede hacer acá</b><div class="mu-q"><span>🙏 Orar juntos con tu tribu</span><span>🎉 Festejar juntos (desde ✦)</span><span>👋 Saludar con frases rápidas</span><span>👥 Grupos de 5 con roles</span><span>🐑 La oveja perdida, 🌾 la cosecha y 🐪 la caravana (cada tanto)</span><span class="pr">🕳️ Expediciones · muy pronto</span><span class="pr">🏗️ Casa de la tribu · muy pronto</span><span class="pr">🏁 Juegos de la fiesta · muy pronto</span><span class="pr">🐫 Caravana a Jerusalén · muy pronto</span><span class="pr">🛒 Mercado · muy pronto</span></div>${MP.tribu ? `<button class="gd-how mu-tr">${tribuImg(MP.tribu, 22, 'tr-mini')} Mi tribu: ${TRIBU[MP.tribu].n}</button>` : '<button class="gd-how mu-tr">🏳️ Elegir mi tribu</button>'}</div>
     ${vozSeccion()}
     <ul class="r-list">${ps.length ? ps.map(([id, p]) => `<li>${p.info.tribu ? tribuImg(p.info.tribu, 20, 'tr-mini') + ' ' : ''}${esc(p.info.name)} <span class="mu-acts">${MMO.l.some(x => x.id === id) ? '<em class="mu-yag">👥 En tu grupo</em>' : MMO.l.length < 5 ? `<button class="am-sm mu-ginv" data-id="${esc(id)}">👥 Invitar</button>` : ''}<button class="am-sm mu-mute" data-id="${esc(id)}">${MP.mute[id] ? '🔈 Escuchar' : '🔇 Silenciar'}</button><button class="am-sm mu-rep" data-id="${esc(id)}">🚩 Reportar</button></span></li>`).join('') : '<li><small>Todavía no hay nadie cerca. ¡Explorá el mapa!</small></li>'}</ul>
     <div class="mis-btns"><button class="mis-no r-leave">Salir del multijugador</button></div>
@@ -4969,15 +4970,19 @@ function mmoMsg(m) {
   if (m.t === 'gSen') { const x = numOk(m.x, -5e3, 5e3), z = numOk(m.z, -5e3, 5e3); mmoPilar(x, z, '#FFD25E', 30); if (m.id !== mmoYo()) G().toast('🎺 ' + String(m.n || '').slice(0, 16) + ' tocó el shofar: ¡júntense donde está la luz!'); try { tone3d(); } catch (e) {} return; }
   if (m.t === 'gPista') { MMO.arrowT = performance.now() + 15000; G().toast('🙏 ' + String(m.n || '').slice(0, 16) + ' oró por la oveja: seguí la flecha.'); return; }
   if (m.t === 'oveja') mmoOveja(m);
+  if (m.t === 'evento') mmoEvento(m);
 }
 /* ---- el grupo en pantalla ---- */
 function mmoHud() {
-  let el = document.getElementById('v3grupo'); if (!MP.mundo || (!MMO.g && !(MMO.ev && MMO.ev.fase !== 'nada'))) { if (el) el.remove(); return; }
+  let el = document.getElementById('v3grupo'); if (!MP.mundo || (!MMO.g && !(MMO.ev && MMO.ev.fase !== 'nada') && !E2.e)) { if (el) el.remove(); return; }
   if (!el) { el = document.createElement('div'); el.id = 'v3grupo'; document.body.appendChild(el); }
   const me = S.av.position, E = MMO.ev, fin = E && E.fin ? Math.max(0, Math.round((E.fin - Date.now()) / 1000)) : 0;
   const ev = E && (E.fase === 'perdida' || E.fase === 'cargada') ? `<div class="gr-ev"><b>🐑 La oveja perdida</b><small>${E.fase === 'cargada' ? (E.carga === mmoYo() ? 'La llevás vos: ¡al redil, donde está la luz!' : esc(E.cn) + ' la lleva al redil') : 'Cerca de ' + esc(E.lugar || 'acá') + ' · ' + Math.floor(fin / 60) + ':' + String(fin % 60).padStart(2, '0')}</small></div>` : '';
   const gr = MMO.g ? `<div class="gr-h"><b>👥 Mi grupo</b><span><button class="gr-rol" type="button">Roles</button><button class="gr-sal" type="button" aria-label="Salir del grupo">Salir</button></span></div><ul>${MMO.l.map(x => { const p = x.id === mmoYo() ? null : MP.players[x.id], d = p ? Math.round(p.av.position.distanceTo(me)) : 0; return `<li class="${x.id === mmoYo() ? 'yo' : ''}"><span class="gr-ic">${x.rol ? ROLES[x.rol].ic : '·'}</span>${x.tribu ? tribuImg(x.tribu, 16, 'tr-mini') : ''}<b>${esc(x.n)}</b><small>${x.id === mmoYo() ? 'vos' : p ? d + ' m' : 'lejos'}</small></li>`; }).join('')}</ul>${mmoRol() === 'heraldo' ? '<button class="gr-sho" type="button">🎺 Tocar el shofar</button>' : ''}${!mmoRol() ? '<p class="gr-tip">Elegí tu rol en «Roles».</p>' : ''}` : '';
-  el.innerHTML = ev + gr;
+  const X = E2.e, ahora = Date.now() + E2.dt, seg = X ? Math.max(0, Math.round(((X.tipo === 'caravana' && ahora < X.t0 ? X.t0 : X.fin) - ahora) / 1000)) : 0, mm = Math.floor(seg / 60) + ':' + String(seg % 60).padStart(2, '0');
+  const ev2 = !X ? '' : X.tipo === 'cosecha' ? `<div class="gr-ev"><b>🌾 La cosecha</b><small>${X.hecho} de ${X.meta} gavillas · ${mm}</small><i class="gr-bar"><i style="width:${Math.round(X.hecho / X.meta * 100)}%"></i></i></div>`
+    : `<div class="gr-ev"><b>🐪 Caravana a ${esc(X.lugar || 'la fiesta')}</b><small>${ahora < X.t0 ? 'Sale en ' + seg + ' s: andá a la luz dorada' : 'Caminá a su lado · llevás ' + Math.min(100, Math.round(E2.yoMs / Math.max(1, X.fin - X.t0) * 100)) + '% del viaje · ' + mm}</small></div>`;
+  el.innerHTML = ev + ev2 + gr;
   const q = s => el.querySelector(s); if (q('.gr-rol')) q('.gr-rol').onclick = () => mmoRoles(); if (q('.gr-sal')) q('.gr-sal').onclick = () => { MP.conn && MP.conn.send({ t: 'gSal' }); };
   if (q('.gr-sho')) q('.gr-sho').onclick = () => { MP.conn && MP.conn.send({ t: 'gSen' }); };
 }
@@ -5047,6 +5052,70 @@ function mmoOveja(m) {
     setTimeout(() => { try { cardShow({ t: '¡Encontramos la oveja perdida!', ref: 'Lucas 15:6', lines: ['«Alégrense conmigo porque encontré mi oveja perdida.»', nom.length > 1 ? 'En equipo: ' + nom.join(', ') : ''] }); } catch (e) {} }, d); return; }
   if (fase === 'fin') { if (MMO.ev) G().toast('🐑 Esta vez nadie llegó a tiempo. Pronto se va a perder otra: ¡armen un grupo!'); MMO.ev = null; mmoOvejaFuera(); mmoHud(); }
 }
+/* ---- la cosecha y la caravana (eventos que se turnan con la oveja) ---- */
+const E2 = { e: null, dt: 0, campo: null, cv: null, pil: null, yoMs: 0, yoL: 0, cosT: 0, g: 0 };
+function mmoOk(x, z) { const W0 = S.W; if (!W0) return false; if (Math.abs(x) > Math.min(XB * .9, (W0.X1 || XB) - 6)) return false; if (waterWet(x, z, null) > .04) return false; for (const B of WATER.basins) if (Math.hypot(x - B.x, z - B.z) < B.r * 1.4 + 2) return false; const sl = Math.hypot(W0.hAt(x + 1, z) - W0.hAt(x - 1, z), W0.hAt(x, z + 1) - W0.hAt(x, z - 1)) / 2; if (sl > .38) return false; for (let k = 0; k < 8; k++) { const an = k / 8 * 6.283; if (blockedAt(x + Math.cos(an) * 1.2, z + Math.sin(an) * 1.2)) return false; } return true; }
+const mmoPoiCerca = (x, z) => (S.pois || []).filter(q => q.name && q.k !== 'river' && q.k !== 'lake').sort((a, b) => Math.hypot(a.x - x, a.z - z) - Math.hypot(b.x - x, b.z - z))[0];
+function mmoBuscar(sx, sz, cond, paso) { for (let t = 0; t < 200; t++) { const an = t * 2.399, r = Math.sqrt(t) * (paso || 5), x = sx + Math.cos(an) * r, z = sz + Math.sin(an) * r; if (cond(x, z)) return [x, z]; } return null; }
+function e2Semilla(m) {
+  const sx = numOk(m.sx, -5e3, 5e3), sz = numOk(m.sz, -5e3, 5e3), me = S.av.position; let out = null;
+  if (m.tipo === 'cosecha') { const c = mmoBuscar(sx, sz, (x, z) => Math.hypot(x - me.x, z - me.z) > 32 && mmoOk(x, z) && [0, 1, 2, 3, 4, 5].every(k => mmoOk(x + Math.cos(k * 1.047) * 9, z + Math.sin(k * 1.047) * 9))); if (c) { const p = mmoPoiCerca(c[0], c[1]); out = { x: Math.round(c[0]), z: Math.round(c[1]), lugar: p ? p.name : '' }; } }
+  else { const a = mmoBuscar(sx, sz, mmoOk); if (!a) return;
+    const dest = (S.pois || []).filter(q => q.name && q.k !== 'river' && q.k !== 'lake').map(q => ({ q, d: Math.hypot(q.x - a[0], q.z - a[1]) })).filter(o => o.d > 190 && o.d < 380).sort((x, y) => x.d - y.d)[0]; if (!dest) return;
+    const ruta = [[Math.round(a[0]), Math.round(a[1])]], n = Math.ceil(dest.d / 55);
+    for (let i = 1; i <= n; i++) { const k = i / n, x = a[0] + (dest.q.x - a[0]) * k, z = a[1] + (dest.q.z - a[1]) * k, p = mmoBuscar(x, z, mmoOk, 2.5); if (!p) return; const L = ruta[ruta.length - 1]; if (Math.hypot(p[0] - L[0], p[1] - L[1]) > 125) return; ruta.push([Math.round(p[0]), Math.round(p[1])]); }
+    out = { ruta, lugar: dest.q.name }; }
+  if (out && MP.conn) MP.conn.send({ t: 'evPos', ev: String(m.ev || '').slice(0, 24), ...out });
+}
+function e2Fuera() { if (E2.campo) { S.scene.remove(E2.campo); E2.campo.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); E2.campo = null; } if (E2.cv) { S.scene.remove(E2.cv); E2.cv = null; } if (E2.pil) { mmoPilarFuera(E2.pil); E2.pil = null; } E2.e = null; const b = document.getElementById('v3cob'); if (b) b.remove(); }
+function e2Campo(E) { /* un campo dorado con gavillas: van desapareciendo a medida que se cosecha */
+  const g = new THREE.Group(), y = S.W.hAt(E.x, E.z), R = rng(E.x * 31 + E.z * 17);
+  const d = new THREE.Mesh(new THREE.CircleGeometry(13, 40), new THREE.MeshStandardMaterial({ color: '#D9B45A', roughness: 1, transparent: true, opacity: .55, polygonOffset: true, polygonOffsetFactor: -2 })); d.rotation.x = -Math.PI / 2; d.position.set(E.x, y + .06, E.z); g.add(d);
+  const geo = new THREE.ConeGeometry(.34, 1.25, 7); geo.translate(0, .62, 0); const N = 48, im = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ color: '#E2B84E', roughness: .85 }), N), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3();
+  for (let i = 0; i < N; i++) { const an = R() * 6.283, r = Math.sqrt(R()) * 11.5, x = E.x + Math.cos(an) * r, z = E.z + Math.sin(an) * r; Q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), R() * 6); M4.compose(V.set(x, S.W.hAt(x, z), z), Q, new THREE.Vector3(1, .8 + R() * .5, 1)); im.setMatrixAt(i, M4); }
+  im.userData.N = N; g.add(im); g.userData.im = im; S.scene.add(g); return g;
+}
+function e2Carro() { /* la caravana: un carro con toldo y un cartel */
+  const g = new THREE.Group(), M = c => new THREE.MeshStandardMaterial({ color: c, roughness: .85 });
+  const caja = new THREE.Mesh(new THREE.BoxGeometry(1.6, .7, 2.6), M('#7A5332')); caja.position.y = .95; g.add(caja);
+  const tol = new THREE.Mesh(new THREE.CylinderGeometry(.85, .85, 2.5, 14, 1, true, 0, Math.PI), M('#E8DCC0')); tol.rotation.z = Math.PI / 2; tol.rotation.y = Math.PI / 2; tol.position.y = 1.3; tol.material.side = THREE.DoubleSide; g.add(tol);
+  for (const sx of [-.85, .85]) for (const sz of [-.8, .8]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(.42, .42, .12, 14), M('#4A321E')); w.rotation.z = Math.PI / 2; w.position.set(sx, .42, sz); g.add(w); }
+  const s = textSprite('🐪 Caravana', S.hx); s.scale.multiplyScalar(.5); s.position.y = 3.1; g.add(s); S.scene.add(g); return g;
+}
+const e2Pos = (E, t) => { const R = E.ruta; let d = Math.max(0, (t - E.t0) / 1000 * E.vel); for (let i = 1; i < R.length; i++) { const s = Math.hypot(R[i][0] - R[i - 1][0], R[i][1] - R[i - 1][1]); if (d <= s) { const k = d / s; return [R[i - 1][0] + (R[i][0] - R[i - 1][0]) * k, R[i - 1][1] + (R[i][1] - R[i - 1][1]) * k, Math.atan2(R[i][0] - R[i - 1][0], R[i][1] - R[i - 1][1])]; } d -= s; } const L = R[R.length - 1], P = R[R.length - 2]; return [L[0], L[1], Math.atan2(L[0] - P[0], L[1] - P[1])]; };
+function mmoEvento(m) {
+  const tipo = m.tipo === 'cosecha' ? 'cosecha' : m.tipo === 'caravana' ? 'caravana' : ''; if (!tipo) return; const fase = String(m.fase || ''), ev = String(m.ev || '').slice(0, 24);
+  if (fase === 'semilla') { e2Semilla(m); return; }
+  if (fase === 'activa') { const nueva = !E2.e || E2.e.id !== ev; if (nueva) e2Fuera(); E2.dt = numOk(m.ahora, 0, 9e15) - Date.now();
+    const E = E2.e = { id: ev, tipo, lugar: String(m.lugar || '').slice(0, 40), fin: numOk(m.fin, 0, 9e15) };
+    if (tipo === 'cosecha') { E.x = numOk(m.x, -5e3, 5e3); E.z = numOk(m.z, -5e3, 5e3); E.meta = Math.floor(numOk(m.meta, 1, 999)); E.hecho = Math.floor(numOk(m.hecho, 0, 999)); E2.campo = e2Campo(E); E2.g = 0;
+      if (nueva) misPop('🌾 ¡Llegó la cosecha!', 'Hay un campo listo cerca de ' + (E.lugar || 'acá') + '. Entre todos hay que juntar ' + E.meta + ' gavillas. «La cosecha es grande, pero los obreros son pocos.» (Mateo 9:37)'); }
+    else { E.ruta = (Array.isArray(m.ruta) ? m.ruta : []).slice(0, 10).map(q => [numOk(q && q[0], -5e3, 5e3), numOk(q && q[1], -5e3, 5e3)]); if (E.ruta.length < 2) { E2.e = null; return; } E.t0 = numOk(m.t0, 0, 9e15); E.vel = numOk(m.vel, .5, 4); E2.cv = e2Carro(); E2.yoMs = 0; E2.yoL = 0;
+      E2.pil = mmoPilar(E.ruta[0][0], E.ruta[0][1], '#FFD25E', 0);
+      if (nueva) misPop('🐪 ¡Sale una caravana a ' + (E.lugar || 'la fiesta') + '!', 'Juntate con ella donde está la luz y caminá a su lado todo el viaje. «Me alegré cuando me dijeron: “Vamos a la casa del Señor”.» (Salmo 122:1)'); }
+    e2Mostrar(); mmoHud(); return; }
+  if (fase === 'avance' && E2.e && E2.e.id === ev) { E2.e.hecho = Math.floor(numOk(m.hecho, 0, 999)); e2Mostrar(); return; }
+  if (fase === 'lograda' || fase === 'terminada' || fase === 'fin') { const E = E2.e, lugar = E ? E.lugar : ''; e2Fuera(); mmoHud(); const n = Math.floor(numOk(m.n, 0, 999));
+    if (fase === 'fin') { G().toast(tipo === 'cosecha' ? '🌾 Esta vez no se llegó a juntar todo. Pronto va a haber otra cosecha.' : '🐪 La caravana llegó.'); return; }
+    if (fase === 'terminada') { G().toast(tipo === 'cosecha' ? '🌾 ¡Cosecha completa! Trabajaron ' + n + ' obreros. Para sumar, juntá al menos 3 gavillas.' : '🐪 La caravana llegó a ' + (lugar || 'destino') + ' con ' + n + ' peregrinos. La próxima, ¡acompañala todo el viaje!'); return; }
+    const T0 = TRIBU[MP.tribu]; if (m.tlv && T0) { MP.tribuLv = Math.floor(numOk(m.tlv, 0, 9)); tribuAuraYo(); } const pts = Math.floor(numOk(m.pts, 0, 99));
+    if (tipo === 'cosecha') misPop('🌾 ¡Cosecha completa!', 'Juntaste ' + Math.floor(numOk(m.g, 0, 999)) + ' gavillas, entre ' + n + ' obreros. «La cosecha es grande, pero los obreros son pocos.» (Mateo 9:37)' + (T0 ? ' ' + T0.n + ' suma +' + pts + '.' : ''));
+    else misPop('🐪 ¡Llegaron a ' + (lugar || 'destino') + '!', 'Caminaste con la caravana, entre ' + n + ' peregrinos. «Me alegré cuando me dijeron: “Vamos a la casa del Señor”.» (Salmo 122:1)' + (T0 ? ' ' + T0.n + ' suma +' + pts + '.' : ''));
+    let d = 3400; if (Array.isArray(m.logros) && m.logros.length) { setTimeout(() => tribuLogro(m.logros), d); d += 3400; }
+    setTimeout(() => { try { cardShow(tipo === 'cosecha' ? { t: '¡Cosecha completa!', ref: 'Mateo 9:37', lines: ['«La cosecha es grande, pero los obreros son pocos.»', 'Juntamos la cosecha entre ' + n + '.'] } : { t: '¡Llegamos a ' + (lugar || 'la fiesta') + '!', ref: 'Salmo 122:1', lines: ['«Me alegré cuando me dijeron: “Vamos a la casa del Señor”.»', 'Peregrinos: ' + n + '.'] }); } catch (e) {} }, d); }
+}
+function e2Mostrar() { const E = E2.e; if (!E || E.tipo !== 'cosecha' || !E2.campo) return; const im = E2.campo.userData.im; im.count = Math.max(0, Math.round(im.userData.N * (1 - Math.min(1, E.hecho / E.meta)))); }
+function e2Tick(t) {
+  const E = E2.e; if (!E) return null; const me = S.av.position, now = Date.now();
+  if (E.tipo === 'caravana' && E2.cv) { const [x, z, yaw] = e2Pos(E, now + E2.dt); E2.cv.position.set(x, S.W.hAt(x, z), z); E2.cv.rotation.y = yaw; const d = Math.hypot(x - me.x, z - me.z);
+    if (now + E2.dt >= E.t0) { if (E2.pil) { mmoPilarFuera(E2.pil); E2.pil = null; } if (d <= 22) { if (E2.yoL) E2.yoMs += Math.min(3000, now - E2.yoL); E2.yoL = now; } else E2.yoL = 0; }
+    return d > 22 ? [x, z, 'La caravana'] : null; }
+  if (E.tipo === 'cosecha') { const d = Math.hypot(E.x - me.x, E.z - me.z); let b = document.getElementById('v3cob');
+    if (d < 13 && !sheetUp()) { if (!b) { b = document.createElement('button'); b.id = 'v3cob'; b.type = 'button'; b.onclick = () => { const n = performance.now(); if (n - E2.cosT < 1150) return; E2.cosT = n; E2.g++; b.textContent = '🌾 Cosechar · ' + E2.g; MP.conn && MP.conn.send({ t: 'cosechar' }); }; document.body.appendChild(b); } b.textContent = '🌾 Cosechar' + (E2.g ? ' · ' + E2.g : ''); }
+    else if (b) b.remove();
+    return d >= 13 ? [E.x, E.z, '🌾 La cosecha'] : null; }
+  return null;
+}
 /* cada cuadro: flecha (rastreador e intercesor), ver la oveja, botón de cargar, luces que se apagan */
 function mmoTick(t) {
   if (!MP.mundo || !S || !S.av) return; const now = performance.now(), me = S.av.position, E = MMO.ev;
@@ -5055,20 +5124,22 @@ function mmoTick(t) {
     if (d < 7 && E && MMO.viSent !== E.id) { MMO.viSent = E.id; MP.conn && MP.conn.send({ t: 'ovejaVi' }); G().toast('🐑 ¡La encontraste! ' + (mmoRol() === 'pastor' ? 'Cargala con el botón.' : 'Avisale al pastor de tu grupo.')); } }
   /* el intercesor ora (arrodillado 2 s) durante la búsqueda: pista para todo el grupo */
   if (E && E.fase === 'perdida' && mmoRol() === 'intercesor' && S.pose === 'pray') { MMO.prayT += 1; if (MMO.prayT === 120 && now - (MMO.pisT || 0) > 45000) { MMO.pisT = now; MP.conn && MP.conn.send({ t: 'gPista' }); } } else MMO.prayT = 0;
+  if (E2.e && E2.e.tipo === 'caravana' && E2.cv) { const [x, z, yaw] = e2Pos(E2.e, Date.now() + E2.dt); E2.cv.position.set(x, S.W.hAt(x, z), z); E2.cv.rotation.y = yaw; }
   if (now - MMO.t < 200) return; MMO.t = now;
   let el = document.getElementById('v3ovc'), btn = document.getElementById('v3ovb');
-  const tgt = E && E.fase === 'perdida' ? [E.x, E.z] : E && E.fase === 'cargada' && E.carga === mmoYo() ? [E.rx, E.rz] : null;
-  const dd = tgt ? Math.hypot(tgt[0] - me.x, tgt[1] - me.z) : 1e9, ver = tgt && !sheetUp() && (E.fase === 'cargada' || now < MMO.arrowT || (mmoRol() === 'rastreador' && dd < 70));
+  const t2 = e2Tick(t); let tgt = E && E.fase === 'perdida' ? [E.x, E.z] : E && E.fase === 'cargada' && E.carga === mmoYo() ? [E.rx, E.rz] : null;
+  let dd = tgt ? Math.hypot(tgt[0] - me.x, tgt[1] - me.z) : 1e9, ver = tgt && !sheetUp() && (E.fase === 'cargada' || now < MMO.arrowT || (mmoRol() === 'rastreador' && dd < 70));
+  if (!ver && t2 && !sheetUp()) { tgt = t2; dd = Math.hypot(t2[0] - me.x, t2[1] - me.z); ver = true; } /* la cosecha y la caravana: flecha para cualquiera que esté lejos */
   if (ver) { if (!el) { el = document.createElement('div'); el.id = 'v3ovc'; el.className = 'v3comp'; el.innerHTML = '<i><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3l6 15-6-3.5L6 18Z" fill="currentColor"/></svg></i><span></span>'; document.body.appendChild(el); }
     const dx = tgt[0] - me.x, dz = tgt[1] - me.z, C = S.yaw + S.camYaw, th = Math.atan2(dx * -Math.cos(C) + dz * Math.sin(C), dx * Math.sin(C) + dz * Math.cos(C));
-    el.hidden = false; el.firstChild.style.transform = `rotate(${th}rad)`; el.lastChild.textContent = (E.fase === 'cargada' ? 'El redil' : '🐑 La oveja') + ' · ' + Math.round(dd) + ' m'; }
+    el.hidden = false; el.firstChild.style.transform = `rotate(${th}rad)`; el.lastChild.textContent = (tgt[2] || (E && E.fase === 'cargada' ? 'El redil' : '🐑 La oveja')) + ' · ' + Math.round(dd) + ' m'; }
   else if (el) el.hidden = true;
   const puede = E && E.fase === 'perdida' && mmoRol() === 'pastor' && MMO.g && dd < 7;
   if (puede && !btn) { btn = document.createElement('button'); btn.id = 'v3ovb'; btn.type = 'button'; btn.textContent = '🐑 Cargar la oveja'; btn.onclick = () => { MP.conn && MP.conn.send({ t: 'ovejaCargar' }); btn.remove(); }; document.body.appendChild(btn); }
   else if (!puede && btn) btn.remove();
   if (now - (MMO.hudT || 0) > 1000) { MMO.hudT = now; mmoHud(); }
 }
-function mmoFuera() { mmoOvejaFuera(); for (const P of MMO.pil.slice()) mmoPilarFuera(P); MMO.g = ''; MMO.l = []; MMO.ev = null; ['v3grupo', 'v3ginv', 'v3ovc', 'v3ovb'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); }); }
+function mmoFuera() { try { e2Fuera(); } catch (e) { } mmoOvejaFuera(); for (const P of MMO.pil.slice()) mmoPilarFuera(P); MMO.g = ''; MMO.l = []; MMO.ev = null; ['v3grupo', 'v3ginv', 'v3ovc', 'v3ovb'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); }); }
 /* micrófono: se habla solo mientras se mantiene apretado (tecla T o el botón) */
 const TALK = { stream: null, calls: {}, aus: {}, on: false, want: false, open: false };
 function talkPeer(peer) {

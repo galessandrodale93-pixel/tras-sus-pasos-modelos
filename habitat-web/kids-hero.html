@@ -1034,7 +1034,30 @@ body{margin:0;font-family:Nunito,system-ui,sans-serif;-webkit-font-smoothing:ant
 
 .hbx-courses .why-k,.hbx-gal .why-k{display:block;font:800 12px/1 Nunito,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#FFD25E;margin-bottom:4px}
 
-/* Descargar el juego para la compu (Windows / Mac): el sistema de la compu primero; en celular no se muestra */
+/* «¿Cómo querés jugar?»: se abre desde cualquier botón de jugar */
+.kp-ov{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:16px;background:rgba(6,6,14,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity .25s}
+.kp-ov.on{opacity:1}.kp-ov[hidden]{display:none}
+.kp{position:relative;width:min(520px,100%);max-height:calc(100dvh - 32px);overflow:auto;border-radius:22px;padding:22px 20px 18px;background:linear-gradient(170deg,#1B1730,#0F0D1A 70%);border:1px solid rgba(255,255,255,.14);box-shadow:0 30px 80px rgba(0,0,0,.55);color:#F3EEE4;font-family:Nunito,system-ui,sans-serif;transform:translateY(12px) scale(.98);transition:transform .25s}
+.kp-ov.on .kp{transform:none}
+.kp-x{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:inherit;font:800 16px/1 Nunito,sans-serif;cursor:pointer}
+.kp h3{margin:0 40px 4px 0;font:800 22px/1.2 Nunito,sans-serif}.kp .kp-sub{margin:0 0 14px;color:rgba(243,238,228,.7);font-size:14px}
+.kp-lock{margin:0 0 14px;padding:9px 12px;border-radius:12px;background:rgba(255,210,94,.12);border:1px solid rgba(255,210,94,.35);color:#FFE3A0;font:800 13.5px Nunito,sans-serif}
+.kp-op{display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:inherit;text-decoration:none;text-align:left;cursor:pointer;font-family:inherit;transition:transform .15s,background .15s,border-color .15s}
+.kp-op:hover{transform:translateY(-1px);background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.3)}
+.kp-op svg{width:30px;height:30px;flex:none}.kp-op span{display:grid;gap:2px}.kp-op b{font:800 16px/1.2 Nunito,sans-serif}.kp-op small{font:700 12.5px/1.35 Nunito,sans-serif;color:rgba(243,238,228,.68)}
+.kp-op.main{background:linear-gradient(180deg,#FFE79A,#F2A93B);color:#2B1D00;border-color:transparent;box-shadow:0 10px 26px rgba(242,169,59,.3)}.kp-op.main small{color:rgba(43,29,0,.72)}
+.kp-op[aria-disabled="true"]{cursor:default}
+.kp-h{margin:18px 0 8px;font:900 11px Nunito,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#FFD25E}
+.kp-dl{display:grid;grid-template-columns:1fr 1fr;gap:8px}.kp-dl .kp-op{padding:12px}.kp-dl .kp-op b{font-size:14.5px}
+.kp-note{margin:8px 0 0;color:rgba(243,238,228,.62);font-size:12.5px;line-height:1.45}
+.kp-tabs{display:flex;gap:6px;margin-bottom:10px}.kp-tabs button{flex:1;padding:9px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);color:inherit;font:800 14px Nunito,sans-serif;cursor:pointer;display:flex;gap:7px;align-items:center;justify-content:center}
+.kp-tabs button svg{width:17px;height:17px}.kp-tabs button[aria-selected="true"]{background:#F3EEE4;color:#1B1730;border-color:transparent}
+.kp-steps{margin:0;padding:0;list-style:none;display:grid;gap:8px;counter-reset:p}.kp-steps[hidden]{display:none}
+.kp-steps li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;font-size:14.5px;line-height:1.45;counter-increment:p}
+.kp-steps li:before{content:counter(p);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:rgba(255,210,94,.16);color:#FFD25E;font-weight:900;font-size:13px}
+.kp-steps b{color:#FFE3A0}.kp-steps .ic{display:inline-block;vertical-align:-3px;width:17px;height:17px}
+@media (max-width:420px){.kp-dl{grid-template-columns:1fr}}
+/* (antes había botones de descarga sueltos; ahora están adentro de «¿Cómo querés jugar?») */
 .kh-dl{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:16px}
 .kh-dl[hidden]{display:none}
 .kh-dl a{display:inline-flex;align-items:center;gap:11px;padding:10px 18px 10px 14px;border-radius:14px;text-decoration:none;color:#F6EEDD;background:rgba(14,12,22,.55);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:transform .15s,background .15s,border-color .15s;cursor:pointer}
@@ -1067,7 +1090,6 @@ body{margin:0;font-family:Nunito,system-ui,sans-serif;-webkit-font-smoothing:ant
       <h1>Conocé el plan de Dios y cuál es <em>tu propósito</em> dentro de él</h1>
       <p>Entrenamiento bíblico jugando, para niños y adolescentes de 6 a 18 años.</p>
 <div class="hbx-cta"><button class="hbx-soon" type="button" data-soon><span>🔒 Jugar</span><small>Desde el 12 de diciembre</small></button></div>
-<div class="kh-dl" data-v="hub"></div>
     </section>
     <section class="hbx-why"><div class="why">
       <span class="why-k">Por qué hacemos esto</span>
@@ -1161,7 +1183,6 @@ body{margin:0;font-family:Nunito,system-ui,sans-serif;-webkit-font-smoothing:ant
       <h1 class="epic"><em>Kids</em></h1>
       <p class="tag">La Biblia como nunca la jugaste. Creá tu personaje, recorré los caminos de Galilea y viví cada historia desde adentro.</p>
       <div class="hero-cta"><button class="btn-epic" id="heroGo" data-play="kids">🔒 Empezar la aventura</button></div>
-      <div class="kh-dl" data-v="kids"></div>
       <div class="session glass"><span>🔒 Desde el 12 de diciembre · Estamos terminando el primer curso</span></div>
     </div>
     <span class="scroll-cue" aria-hidden="true"></span>
@@ -1200,7 +1221,6 @@ body{margin:0;font-family:Nunito,system-ui,sans-serif;-webkit-font-smoothing:ant
       <p class="hx-line">Hay un tesoro escondido. Te toca encontrarlo.</p>
       <p class="hx-sub">Cada libro de la Biblia es una expedición a lugares reales. Pruebas que te exigen, códigos para descifrar y un ranking con tu grupo de Habitat. De 12 a 18 años.</p>
       <div class="hx-cta"><button class="hx-btn" data-play="ados">🔒 Comenzar la expedición</button><button class="hx-ghost" data-scroll="hxExp">Ver el mapa</button></div>
-      <div class="kh-dl" data-v="hero"></div>
       <div class="session"><span>🔒 Desde el 12 de diciembre · Estamos terminando el primer curso</span></div>
     </div>
   </section>
@@ -1239,7 +1259,6 @@ body{margin:0;font-family:Nunito,system-ui,sans-serif;-webkit-font-smoothing:ant
     <h2>El camino empieza acá</h2>
     <p>Creá tu personaje y entrá a la primera expedición.</p>
     <button class="hx-btn" data-play="ados">🔒 Comenzar la expedición</button>
-    <div class="kh-dl" data-v="hero"></div>
   </section>
   <footer class="hx-foot">Un espacio de <a href="/index.html"><b>Habitat CFM</b></a> · Citas bíblicas: Nueva Traducción Viviente (NTV)</footer>
 </main>
@@ -1248,7 +1267,7 @@ body{margin:0;font-family:Nunito,system-ui,sans-serif;-webkit-font-smoothing:ant
 (function(){
 var t=document.querySelector('.hbx-toast'),tm;
 function soon(e){if(e)e.preventDefault();t.innerHTML='<b>¡Ya casi!</b> Estamos preparando el lanzamiento de Kids &amp; Hero. Desde el sábado 12 de diciembre vas a poder jugar desde acá.';t.classList.add('on');clearTimeout(tm);tm=setTimeout(function(){t.classList.remove('on')},4200);}
-document.addEventListener('click',function(e){if(e.target.closest('[data-soon],[data-play]'))soon(e);},true);
+/* los botones de jugar abren «¿Cómo querés jugar?» (más abajo) */ void soon;
 var V={hub:document.getElementById('hubView'),kids:document.getElementById('homeView'),hero:document.getElementById('adosView')};
 function show(k,top){if(!V[k])k='hub';Object.keys(V).forEach(function(x){if(V[x])V[x].hidden=x!==k;});if(top!==false)window.scrollTo(0,0);}
 function fromHash(){var k=location.hash.replace('#','');show(V[k]?k:'hub');}
@@ -1260,18 +1279,44 @@ document.querySelectorAll('.learn-g article').forEach(function(a){a.tabIndex=0;a
 document.addEventListener('click',function(e){if(!e.target.closest('.learn-g article'))document.querySelectorAll('.learn-g article.open').forEach(function(x){x.classList.remove('open')});});
 })();
 
-/* descargar para la compu: Windows o Mac según la compu; antes del lanzamiento, candado como el resto de la página */
+/* «¿Cómo querés jugar?»: en la compu, el navegador o el programa para Windows/Mac (mejor experiencia); en el celular, jugar y el paso a paso para tenerlo en la pantalla de inicio */
 (function(){
 var ABRE=new Date('2026-12-12T00:00:00-03:00').getTime(),abierto=Date.now()>=ABRE;
 var REL='https://github.com/galessandrodale93-pixel/tras-sus-pasos-modelos/releases/download/escritorio/';
 var ua=navigator.userAgent,movil=/Android|iPhone|iPad|iPod|Mobile/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-var mac=/Mac/i.test(navigator.platform||ua);
-var PC='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8.5 20h7M12 16v4" stroke-linecap="round"/></svg>';
-var LAP='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="5" y="5" width="14" height="10" rx="1.6"/><path d="M2.5 18.5h19" stroke-linecap="round"/></svg>';
-var W={f:'Kids-and-Hero-Windows.exe',b:'Descargar para Windows',s:'Windows 10 y 11 · gratis',ic:PC},M={f:'Kids-and-Hero-Mac.dmg',b:'Descargar para Mac',s:'macOS 11 o más nuevo · gratis',ic:LAP};
-var a=mac?M:W,o=mac?W:M,lock=abierto?'':' data-soon';
-function btn(x,cl){return '<a class="'+cl+'"'+(abierto?' href="'+REL+x.f+'" download':' href="#" role="button"')+lock+'>'+x.ic+'<span><b>'+(abierto?'':'🔒 ')+x.b+'</b><small>'+(cl==='alt'?'':(abierto?x.s:'Desde el 12 de diciembre'))+'</small></span></a>';}
-document.querySelectorAll('.kh-dl').forEach(function(d){if(movil){d.hidden=true;return;}d.innerHTML=btn(a,'main')+btn(o,'alt');});
+var ios=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),mac=!movil&&/Mac/i.test(navigator.platform||ua);
+var WIN='<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M3 5.1 10.4 4v7.3H3zM11.4 3.9 21 2.5v8.8h-9.6zM3 12.3h7.4v7.3L3 18.5zM11.4 12.3H21v8.8l-9.6-1.4z"/></svg>';
+var APL='<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.5 2-3.6-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.8-3.5.8-.7 0-1.8-.8-3-.8-1.6 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.6s-2.5-1-2.5-3.6zM14.1 5.6c.6-.8 1.1-1.9 1-3-.9 0-2.1.6-2.7 1.4-.6.7-1.1 1.8-1 2.9 1 .1 2.1-.5 2.7-1.3z"/></svg>';
+var AND='<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17.5 9.2 19 6.6a.4.4 0 0 0-.7-.4l-1.5 2.6A9 9 0 0 0 12 7.8c-1.7 0-3.3.4-4.8 1L5.7 6.2a.4.4 0 0 0-.7.4l1.5 2.6A8.4 8.4 0 0 0 2 16h20a8.4 8.4 0 0 0-4.5-6.8zM7.5 13.3a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm9 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>';
+var NAV='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 2.6 15.3 0 18M12 3c-2.6 2.7-2.6 15.3 0 18"/></svg>';
+var PLAY='<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
+var SHR='<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11v9h12v-9"/></svg>';
+var ov=document.createElement('div');ov.className='kp-ov';ov.hidden=true;ov.innerHTML='<div class="kp" role="dialog" aria-modal="true" aria-labelledby="kpT"></div>';document.body.appendChild(ov);var box=ov.firstChild,ult=null;
+function op(cl,href,ic,b,s,extra){return (abierto&&href?'<a class="kp-op '+cl+'" href="'+href+'"'+(extra||'')+'>':'<a class="kp-op '+cl+'" role="button" aria-disabled="true" tabindex="0">')+ic+'<span><b>'+(abierto?'':'🔒 ')+b+'</b><small>'+s+'</small></span></a>';}
+function pasos(sis){return sis==='ios'
+  ?'<ol class="kp-steps" data-s="ios"><li><span>Abrí el juego en <b>Safari</b> con «Jugar ahora».</span></li><li><span>Tocá el botón <b>Compartir</b> '+SHR+' (abajo en el iPhone, arriba en el iPad).</span></li><li><span>Bajá y elegí <b>«Agregar a inicio»</b>.</span></li><li><span>Tocá <b>«Agregar»</b>: el ícono de Kids &amp; Hero queda en tu pantalla, como una app.</span></li></ol>'
+  :'<ol class="kp-steps" data-s="and"><li><span>Abrí el juego en <b>Chrome</b> con «Jugar ahora».</span></li><li><span>Tocá los <b>tres puntitos ⋮</b> arriba a la derecha.</span></li><li><span>Elegí <b>«Agregar a la pantalla principal»</b> (en algunos teléfonos dice <b>«Instalar app»</b>).</span></li><li><span>Confirmá con <b>«Agregar»</b> o <b>«Instalar»</b>: el ícono queda en tu pantalla, como una app.</span></li></ol>';}
+function abrir(v){
+  var nom=v==='kids'?'Kids':v==='ados'||v==='hero'?'Hero':'Kids &amp; Hero',jug='/jugar.html'+(v==='kids'?'?v=kids':v==='ados'||v==='hero'?'?v=hero':''),h;
+  h='<button class="kp-x" type="button" aria-label="Cerrar">✕</button><h3 id="kpT">¿Cómo querés jugar '+nom+'?</h3><p class="kp-sub">'+(movil?'Desde el celular se juega en el navegador, con el teléfono acostado.':'Se puede jugar en el navegador, sin instalar nada. Para una mejor experiencia en la compu, descargá el programa.')+'</p>'+(abierto?'':'<p class="kp-lock">🔒 Se abre el sábado 12 de diciembre. Ya podés ir viendo cómo vas a jugar.</p>');
+  if(!movil){
+    h+=op('main',jug,NAV,'Jugar en el navegador','Sin instalar nada, desde esta misma página')
+     +'<p class="kp-h">Mejor experiencia en la compu</p><div class="kp-dl">'
+     +[mac?['Kids-and-Hero-Mac.dmg',APL,'Descargar para Mac','macOS 11 o más nuevo']:['Kids-and-Hero-Windows.exe',WIN,'Descargar para Windows','Windows 10 y 11'],mac?['Kids-and-Hero-Windows.exe',WIN,'Descargar para Windows','Windows 10 y 11']:['Kids-and-Hero-Mac.dmg',APL,'Descargar para Mac','macOS 11 o más nuevo']].map(function(x){return op('',REL+x[0],x[1],x[2],x[3],' download');}).join('')
+     +'</div><p class="kp-note">El programa abre en pantalla completa, baja el mundo una sola vez y después anda más fluido. Es gratis; se entra con la misma cuenta.</p>';
+  } else {
+    h+=op('main',jug,PLAY,'Jugar ahora','En el navegador, sin instalar nada')
+     +'<p class="kp-h">Tenelo en tu pantalla de inicio</p><div class="kp-tabs" role="tablist"><button type="button" role="tab" data-s="ios" aria-selected="'+(ios?'true':'false')+'">'+APL+'iPhone</button><button type="button" role="tab" data-s="and" aria-selected="'+(ios?'false':'true')+'">'+AND+'Android</button></div>'+pasos('ios')+pasos('and')
+     +'<p class="kp-note">Así se abre en pantalla completa con un toque, como cualquier app.</p>';
+  }
+  box.innerHTML=h;var tabs=box.querySelectorAll('.kp-tabs button');function tab(s){tabs.forEach(function(b){b.setAttribute('aria-selected',b.dataset.s===s?'true':'false');});box.querySelectorAll('.kp-steps').forEach(function(o){o.hidden=o.dataset.s!==s;});}
+  if(tabs.length){tabs.forEach(function(b){b.addEventListener('click',function(){tab(b.dataset.s);});});tab(ios?'ios':'and');}
+  box.querySelector('.kp-x').addEventListener('click',cerrar);
+  ult=document.activeElement;ov.hidden=false;requestAnimationFrame(function(){ov.classList.add('on');});box.querySelector('.kp-x').focus();
+}
+function cerrar(){ov.classList.remove('on');setTimeout(function(){ov.hidden=true;},220);if(ult&&ult.focus)ult.focus();}
+ov.addEventListener('click',function(e){if(e.target===ov)cerrar();});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!ov.hidden)cerrar();});
+document.addEventListener('click',function(e){var b=e.target.closest('[data-soon],[data-play]');if(!b||b.closest('.kp'))return;e.preventDefault();e.stopPropagation();var v=b.dataset.play||(b.closest('#homeView')?'kids':b.closest('#adosView')?'hero':'');abrir(v);},true);
 })();
 </script>
 <script src="/assets/kh-home.js"></script>

@@ -22,9 +22,10 @@ const LOGROS = [['fam1', 'miembros', 10, 50], ['fam2', 'miembros', 50, 150], ['f
   ['ora1', 'ora', 10, 50], ['ora2', 'ora', 100, 150], ['ora3', 'ora', 1000, 500],
   ['fes1', 'festejo', 10, 50], ['fes2', 'festejo', 100, 150], ['fes3', 'festejo', 1000, 500],
   ['pes1', 'comp', 10, 150], ['sal1', 'inv', 20, 150], ['luz1', 'serv', 30, 150], ['int1', 'orv', 50, 150],
+  ['cos1', 'cosecha', 10, 100], ['cos2', 'cosecha', 100, 300], ['car1', 'caravana', 10, 100], ['car2', 'caravana', 100, 300],
   ['ove1', 'oveja', 1, 100], ['ove2', 'oveja', 25, 300], ['ove3', 'oveja', 100, 600],
   ['met1', 'metas', 1, 100], ['met2', 'metas', 4, 300], ['met3', 'metas', 12, 600]];
-const PTS = { ora: 3, festejo: 2, comp: 15, inv: 6, serv: 5, orv: 2, oveja: 20 };
+const PTS = { ora: 3, festejo: 2, comp: 15, inv: 6, serv: 5, orv: 2, oveja: 20, cosecha: 8, caravana: 10 };
 /* la meta de la semana: lo que cada uno hace fuera del juego (compartir de Jesús, invitar, servir, orar).
    Topes por persona y por semana (orar: una vez por día), para que cuente lo hecho de verdad y no el apuro. */
 const META_K = { comp: 3, inv: 3, serv: 5, orv: 7 };
@@ -168,7 +169,7 @@ export class Mundo {
       this.env(ws, { t: 'list', host: 'srv', players, mundo: a.mundo });
       this.a_todos({ t: 'hi', id, info: a.info }, ws);
       await this.amg('/on', { p: a.p, n: a.n, mundo: a.mundo });
-      await this.evArmar(); if (this.ev && this.ev.fase && this.ev.fase !== 'nada' && this.ev.fase !== 'semilla') this.env(ws, this.evMsg()); return;
+      await this.evArmar(); if (this.ev && this.ev.fase && this.ev.fase !== 'nada' && this.ev.fase !== 'semilla') this.env(ws, this.evMsg()); return; /* lo que está pasando en el mundo */
     }
     if (m.t === 'voz') { const peer = str(m.peer, 64); if (/^[\w-]{6,64}$/.test(peer)) await this.amg('/peer', { p: a.p, peer }); return; }
     if (!a.in) return;
@@ -179,6 +180,7 @@ export class Mundo {
       const act = v[5] === 'pray' ? 'ora' : v[8] && /^D_/.test(v[8]) ? 'fes:' + v[8] : '';
       const nx = Math.round(v[0]), nz = Math.round(v[2]); if (a.x !== nx || a.z !== nz || a.act !== act) { a.x = nx; a.z = nz; a.act = act; ws.serializeAttachment(a); }
       if (act && a.tribu) await this.juntos(ws, a);
+      if (this.ev && this.ev.tipo === 'caravana') this.cvAndar(a);
       if (this.ev && this.ev.fase === 'cargada' && this.ev.carga === a.id && Math.hypot(nx - this.ev.rx, nz - this.ev.rz) <= 8) await this.evLogrado(ws, a);
       this.a_todos({ t: 'st', id, s: v }, ws, [v[0], v[2]]); return;
     }
@@ -235,8 +237,25 @@ export class Mundo {
       for (const [w] of this.grupo(a.g)) this.env(w, { t: 'gPista', n: a.n }); return;
     }
     /* ---- la oveja perdida ---- */
+    /* ---- la cosecha y la caravana: el lugar lo elige el primer juego que responde (como con la oveja) ---- */
+    if (m.t === 'evPos') {
+      const E = this.ev; if (!E || E.fase !== 'semilla' || !E.tipo || E.tipo === 'oveja' || m.ev !== E.id || a.x == null) return; const now = Date.now();
+      if (E.tipo === 'cosecha') { const x = num(m.x, -5e3, 5e3), z = num(m.z, -5e3, 5e3); if (Math.hypot(x - E.sx, z - E.sz) > 260 || Math.hypot(x - a.x, z - a.z) < 30) return;
+        const n = this.socks().filter(w => this.att(w).in).length; Object.assign(E, { fase: 'activa', x, z, lugar: str(m.lugar, 40), meta: Math.max(20, Math.min(150, n * 10)), hecho: 0, part: {}, fin: now + 8 * 60e3 }); }
+      else { const R = Array.isArray(m.ruta) ? m.ruta.slice(0, 10).map(q => [num(q && q[0], -5e3, 5e3), num(q && q[1], -5e3, 5e3)]) : [];
+        if (R.length < 3 || Math.hypot(R[0][0] - E.sx, R[0][1] - E.sz) > 260) return; let L = 0; for (let i = 1; i < R.length; i++) { const d = Math.hypot(R[i][0] - R[i - 1][0], R[i][1] - R[i - 1][1]); if (d > 130) return; L += d; } if (L < 160 || L > 460) return;
+        const t0 = now + 25e3; Object.assign(E, { fase: 'activa', ruta: R, largo: L, vel: 1.6, t0, lugar: str(m.lugar, 40), part: {}, fin: t0 + Math.round(L / 1.6 * 1000) }); }
+      await this.state.storage.put('ev', E); this.a_todos(this.evMsg(), null); await this.state.storage.setAlarm(E.fin); return;
+    }
+    if (m.t === 'cosechar') {
+      const E = this.ev, now = Date.now(); if (!E || E.tipo !== 'cosecha' || E.fase !== 'activa' || a.x == null || Math.hypot(a.x - E.x, a.z - E.z) > 15 || now - (a.cosT || 0) < 1100) return; a.cosT = now; ws.serializeAttachment(a);
+      const P = E.part[a.id] || (E.part[a.id] = { p: a.p, n: a.n, tribu: a.tribu || '', g: 0 }); P.g++; E.hecho++;
+      if (E.hecho >= E.meta) { await this.evFin(true); return; }
+      if (E.hecho % 5 === 0) await this.state.storage.put('ev', E);
+      this.a_todos({ t: 'evento', tipo: 'cosecha', fase: 'avance', ev: E.id, hecho: E.hecho, meta: E.meta }, null); return;
+    }
     if (m.t === 'ovejaPos') { /* el primer juego que responde elige dónde (lejos de quien la elige) */
-      const E = this.ev; if (!E || E.fase !== 'semilla' || m.ev !== E.id || a.x == null) return;
+      const E = this.ev; if (!E || E.fase !== 'semilla' || (E.tipo && E.tipo !== 'oveja') || m.ev !== E.id || a.x == null) return;
       const x = num(m.x, -5e3, 5e3), z = num(m.z, -5e3, 5e3), rx = num(m.rx, -5e3, 5e3), rz = num(m.rz, -5e3, 5e3);
       if (Math.hypot(x - a.x, z - a.z) < 60 || Math.hypot(x - E.sx, z - E.sz) > 260 || Math.hypot(rx - x, rz - z) < 40) return;
       Object.assign(E, { fase: 'perdida', x, z, rx, rz, lugar: str(m.lugar, 40), fin: Date.now() + 12 * 60e3 }); await this.state.storage.put('ev', E);
@@ -270,7 +289,26 @@ export class Mundo {
   /* si el que lleva la oveja se va o sale del grupo, la oveja queda donde estaba */
   soltar(a) { const E = this.ev; if (!E || E.fase !== 'cargada' || E.carga !== a.id) return; Object.assign(E, { fase: 'perdida', carga: '', g: '', x: a.x != null ? a.x : E.x, z: a.z != null ? a.z : E.z, vista: '' }); this.state.storage.put('ev', E); this.a_todos(this.evMsg(), null); }
   /* ---- eventos del mundo: la oveja perdida (Lucas 15). Cada 15 minutos, si hay 2 o más jugadores ---- */
-  evMsg() { const E = this.ev || {}; return { t: 'oveja', fase: E.fase || 'nada', ev: E.id, x: E.x, z: E.z, rx: E.rx, rz: E.rz, sx: E.sx, sz: E.sz, lugar: E.lugar || '', fin: E.fin || 0, carga: E.carga || '', cn: E.cn || '' }; }
+  /* dónde va la caravana en cada momento (el juego hace la misma cuenta para dibujarla) */
+  cvPos(E, t) { const R = E.ruta; let d = Math.max(0, (t - E.t0) / 1000 * E.vel); for (let i = 1; i < R.length; i++) { const s = Math.hypot(R[i][0] - R[i - 1][0], R[i][1] - R[i - 1][1]); if (d <= s) { const k = d / s; return [R[i - 1][0] + (R[i][0] - R[i - 1][0]) * k, R[i - 1][1] + (R[i][1] - R[i - 1][1]) * k]; } d -= s; } return R[R.length - 1]; }
+  /* el que camina cerca de la caravana (22 m) va sumando tiempo */
+  cvAndar(a) { const E = this.ev, now = Date.now(); if (!E || E.tipo !== 'caravana' || E.fase !== 'activa' || now < E.t0 || a.x == null) return; const [x, z] = this.cvPos(E, now);
+    if (Math.hypot(a.x - x, a.z - z) > 22) { if (E.part[a.id]) E.part[a.id].l = 0; return; } const P = E.part[a.id] || (E.part[a.id] = { p: a.p, n: a.n, tribu: a.tribu || '', ms: 0, l: 0 }); if (P.l) P.ms += Math.min(3000, now - P.l); P.l = now; }
+  /* termina la cosecha o la caravana: premio para los que participaron (3 gavillas, o la mitad del camino) */
+  async evFin(ok) {
+    const E = this.ev; if (!E || !E.tipo || E.tipo === 'oveja') return; const now = Date.now(), dur = E.tipo === 'caravana' ? E.fin - E.t0 : 0;
+    const gan = Object.entries(E.part || {}).filter(([id, P]) => E.tipo === 'cosecha' ? ok && P.g >= 3 : P.ms >= dur * .5), tribus = {}; gan.forEach(([id, P]) => { if (P.tribu) tribus[P.tribu] = (tribus[P.tribu] || 0) + 1; });
+    this.ev = { fase: 'nada', id: E.id }; await this.state.storage.put('ev', this.ev); await this.state.storage.setAlarm(now + 15 * 60e3);
+    const TRo = this.env_.TRIBUS.get(this.env_.TRIBUS.idFromName('tribus')), res = {};
+    for (const t in tribus) { try { res[t] = await (await TRo.fetch('https://t/evento', { method: 'POST', body: JSON.stringify({ t, k: E.tipo, n: tribus[t] }) })).json(); } catch (e) { } }
+    const ids = new Set(gan.map(([id]) => id)), socks = this.socks(), nombres = gan.map(([id, P]) => P.n).slice(0, 30);
+    for (const w of socks) { const b = this.att(w); if (!b.in) continue; const P = (E.part || {})[b.id];
+      this.env(w, { t: 'evento', tipo: E.tipo, fase: ids.has(b.id) ? 'lograda' : ok || E.tipo === 'caravana' ? 'terminada' : 'fin', ev: E.id, yo: ids.has(b.id) ? 1 : 0, n: gan.length, nombres, pts: PTS[E.tipo], g: P ? P.g || 0 : 0, logros: ids.has(b.id) ? ((res[b.tribu] || {}).nuevos || []) : [], tlv: (res[b.tribu] || {}).lv || 0 }); }
+  }
+  evMsg() { const E = this.ev || {};
+    if (E.tipo === 'cosecha') return { t: 'evento', tipo: 'cosecha', fase: E.fase, ev: E.id, x: E.x, z: E.z, lugar: E.lugar || '', meta: E.meta, hecho: E.hecho, fin: E.fin, ahora: Date.now() };
+    if (E.tipo === 'caravana') return { t: 'evento', tipo: 'caravana', fase: E.fase, ev: E.id, ruta: E.ruta, t0: E.t0, vel: E.vel, fin: E.fin, lugar: E.lugar || '', ahora: Date.now() };
+    return { t: 'oveja', fase: E.fase || 'nada', ev: E.id, x: E.x, z: E.z, rx: E.rx, rz: E.rz, sx: E.sx, sz: E.sz, lugar: E.lugar || '', fin: E.fin || 0, carga: E.carga || '', cn: E.cn || '' }; }
   async evArmar() {
     if (this.ev === undefined) this.ev = (await this.state.storage.get('ev')) || null;
     const al = await this.state.storage.getAlarm(); if (!al) await this.state.storage.setAlarm(Date.now() + (this.ev && this.ev.fin > Date.now() ? this.ev.fin - Date.now() : this.env_.EV_PRUEBA ? 3000 : 4 * 60e3)); /* EV_PRUEBA: solo en pruebas locales */
@@ -279,11 +317,13 @@ export class Mundo {
     if (this.ev === undefined) this.ev = (await this.state.storage.get('ev')) || null;
     const now = Date.now(), E = this.ev, ps = this.socks().map(w => this.att(w)).filter(b => b.in && b.x != null);
     if (E && E.fase !== 'nada' && E.fin && now < E.fin) { await this.state.storage.setAlarm(E.fin); return; }
-    if (E && (E.fase === 'perdida' || E.fase === 'cargada' || E.fase === 'semilla')) { this.ev = { fase: 'nada', id: E.id }; await this.state.storage.put('ev', this.ev); this.a_todos({ t: 'oveja', fase: 'fin', ev: E.id }, null); }
-    if (ps.length >= 2) { /* una oveja nueva: el lugar lo elige el primer juego que responde, cerca de alguien al azar */
-      const b = ps[Math.floor(Math.random() * ps.length)], an = Math.random() * 6.283, r = 110 + Math.random() * 90;
-      this.ev = { id: 'o' + now.toString(36), fase: 'semilla', sx: Math.round(b.x + Math.cos(an) * r), sz: Math.round(b.z + Math.sin(an) * r), fin: now + 60e3 }; await this.state.storage.put('ev', this.ev);
-      this.a_todos({ t: 'oveja', fase: 'semilla', ev: this.ev.id, sx: this.ev.sx, sz: this.ev.sz }, null);
+    if (E && E.tipo && E.tipo !== 'oveja' && E.fase === 'activa') { await this.evFin(E.tipo === 'caravana'); return; } /* la caravana llegó; la cosecha no se completó a tiempo */
+    if (E && (E.fase === 'perdida' || E.fase === 'cargada' || E.fase === 'semilla')) { this.ev = { fase: 'nada', id: E.id }; await this.state.storage.put('ev', this.ev); this.a_todos({ t: E.tipo && E.tipo !== 'oveja' ? 'evento' : 'oveja', tipo: E.tipo, fase: 'fin', ev: E.id }, null); }
+    if (ps.length >= 2) { /* un evento nuevo, por turno: la oveja perdida, la cosecha, la caravana. El lugar lo elige el primer juego que responde */
+      const n = (await this.state.storage.get('evN')) || 0, tipo = this.env_.EV_TIPO || ['oveja', 'cosecha', 'caravana'][n % 3]; await this.state.storage.put('evN', n + 1);
+      const b = ps[Math.floor(Math.random() * ps.length)], an = Math.random() * 6.283, r = tipo === 'oveja' ? 110 + Math.random() * 90 : 50 + Math.random() * 70;
+      this.ev = { id: tipo[0] + now.toString(36), tipo, fase: 'semilla', sx: Math.round(b.x + Math.cos(an) * r), sz: Math.round(b.z + Math.sin(an) * r), fin: now + 60e3 }; await this.state.storage.put('ev', this.ev);
+      this.a_todos(tipo === 'oveja' ? { t: 'oveja', fase: 'semilla', ev: this.ev.id, sx: this.ev.sx, sz: this.ev.sz } : { t: 'evento', tipo, fase: 'semilla', ev: this.ev.id, sx: this.ev.sx, sz: this.ev.sz }, null);
       await this.state.storage.setAlarm(now + 60e3); return;
     }
     if (this.socks().length) await this.state.storage.setAlarm(now + (ps.length ? 5 : 15) * 60e3); /* sin nadie, no se programa nada: se arma de nuevo cuando alguien entra */
