@@ -28,7 +28,7 @@ jobs:
           node-version: 20
       - name: Instalar
         run: npm install --no-audit --no-fund
-      - name: Número de versión (cada instalador nuevo, uno más: así el programa sabe que hay que actualizarse)
+      - name: Número de versión (cada instalador nuevo suma uno, así el programa sabe que hay que actualizarse)
         shell: bash
         run: npm pkg set version=1.3.${{ github.run_number }}
       - name: Armar el instalador
