@@ -9,13 +9,12 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win squirrel --publish never",
+    "dist": "electron-builder --win nsis --publish never",
     "dist:mac": "electron-builder --mac dmg --universal --publish never"
   },
   "devDependencies": {
     "electron": "^33.2.1",
     "electron-builder": "^25.1.8",
-    "electron-builder-squirrel-windows": "^25.1.8",
     "@electron/fuses": "^1.8.0"
   },
   "build": {
@@ -37,16 +36,14 @@
     "win": {
       "icon": "build/icon.ico",
       "target": [
-        "squirrel"
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
-      "artifactName": "Kids-and-Hero-${version}-${arch}.${ext}"
-    },
-    "squirrelWindows": {
-      "name": "KidsAndHero",
-      "loadingGif": "build/instalando.gif",
-      "iconUrl": "https://raw.githubusercontent.com/galessandrodale93-pixel/tras-sus-pasos-modelos/main/desktop/build/icon.ico",
-      "artifactName": "Kids-and-Hero-Windows.${ext}",
-      "msi": false
+      "artifactName": "Kids-and-Hero-Windows.${ext}"
     },
     "mac": {
       "icon": "build/icon.png",
@@ -89,6 +86,26 @@
       ]
     },
     "afterPack": "despues-de-armar.js",
-    "asar": true
+    "asar": true,
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowElevation": false,
+      "runAfterFinish": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Kids & Hero",
+      "uninstallDisplayName": "Kids & Hero",
+      "artifactName": "Kids-and-Hero-Windows.${ext}",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerLanguages": [
+        "es_ES",
+        "en_US",
+        "pt_BR"
+      ],
+      "multiLanguageInstaller": true,
+      "deleteAppDataOnUninstall": false
+    }
   }
 }
