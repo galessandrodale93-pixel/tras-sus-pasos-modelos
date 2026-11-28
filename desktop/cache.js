@@ -168,6 +168,8 @@ async function sync(prog) {
   prog({ fase: 'listo', primera, tot, got, n: hechos, N: tareas.length, fallas });
   return { ok: true, hash, fallas, bajados: hechos };
 }
-const idioma = l => { if (l && l !== IDX.lang) { IDX.lang = l; saveIdx(); } return IDX.lang || 'es'; };
+/* el idioma: el que eligió en el juego; la primera vez, el de la compu */
+const idiomaSis = () => { const l = String((app.getLocale && app.getLocale()) || '').slice(0, 2).toLowerCase(); return l === 'pt' ? 'pt' : l === 'en' ? 'en' : 'es'; };
+const idioma = l => { if (l && l !== IDX.lang) { IDX.lang = l; saveIdx(); } return IDX.lang || idiomaSis(); };
 const listo = () => IDX.done;
 module.exports = { preparar, iniciar, sincronizar, idioma, listo };

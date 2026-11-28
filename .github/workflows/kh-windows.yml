@@ -1,5 +1,5 @@
 name: Kids & Hero para Windows (kh-windows)
-# Arma el instalador (.exe) y la versión portátil del programa de escritorio (carpeta desktop/).
+# Arma el instalador (.exe, NSIS: se instala solo en el idioma de la compu y abre el programa) del programa de escritorio (carpeta desktop/).
 on:
   workflow_dispatch:
     inputs:
@@ -35,7 +35,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: kids-and-hero-windows
-          path: desktop/dist/squirrel-windows/Kids-and-Hero-Windows.exe
+          path: desktop/dist/Kids-and-Hero-Windows.exe
           retention-days: 30
       - name: Publicar en el link fijo de descarga
         if: ${{ inputs.publicar }}
@@ -45,4 +45,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release view escritorio -R ${{ github.repository }} >/dev/null 2>&1 || gh release create escritorio -R ${{ github.repository }} --target main --title "Kids & Hero para compu" --notes "Instaladores de Kids & Hero para Windows y Mac. Se descargan desde habitat-cfm.org/kids-hero.html" || sleep 15
-          gh release upload escritorio desktop/dist/squirrel-windows/Kids-and-Hero-Windows.exe -R ${{ github.repository }} --clobber
+          gh release upload escritorio desktop/dist/Kids-and-Hero-Windows.exe -R ${{ github.repository }} --clobber

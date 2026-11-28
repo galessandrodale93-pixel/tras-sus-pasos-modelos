@@ -28,6 +28,7 @@
   .bar .mk img{width:22px;height:22px;border-radius:6px;box-shadow:0 0 0 1px rgba(233,201,138,.4)}
   .bar .mk small{font:700 9.5px Nunito,sans-serif;letter-spacing:.12em;color:rgba(244,226,184,.45)}
   .bar .sp{flex:1}
+  .lg[hidden]{display:none}
   .lg{display:flex;gap:2px;padding:3px;border-radius:99px;background:rgba(10,7,4,.55);box-shadow:inset 0 0 0 1px rgba(233,201,138,.25);-webkit-app-region:no-drag}
   .lg button{padding:4px 10px;border-radius:99px;font:800 10.5px Nunito,sans-serif;letter-spacing:.1em;color:rgba(244,226,184,.6);transition:background .2s,color .2s}
   .lg button:hover{color:#FBF1DC}
@@ -101,7 +102,7 @@
 <div class="bar">
   <div class="mk"><img src="build/icon.png" alt="">KIDS &amp; HERO <small id="ver"></small></div>
   <div class="sp"></div>
-  <div class="lg" id="lg"><button data-l="es">ES</button><button data-l="en">EN</button><button data-l="pt">PT</button></div>
+  <div class="lg" id="lg" hidden><button data-l="es">ES</button><button data-l="en">EN</button><button data-l="pt">PT</button></div><!-- el idioma sigue al del juego (la primera vez, el de la compu) -->
   <div class="wb">
     <button id="min" aria-label="Minimizar"><svg viewBox="0 0 10 10"><path d="M0 5.5h10"/></svg></button>
     <button id="cerrar" class="x" aria-label="Cerrar"><svg viewBox="0 0 10 10"><path d="M0 0l10 10M10 0L0 10"/></svg></button>
@@ -130,7 +131,7 @@
       act: 'Actualizando el juego', actx: 'Hay una versión nueva: bajamos solo lo que cambió.', listo: '¡Listo! Todo guardado en tu compu', entrar: 'Entrar al juego', entrando: 'Entrando…', de: 'de', faltan: 'faltan', min: 'min', s: 's',
       jugar: 'Jugar mientras se descarga', off: 'No hay conexión a internet', offx: 'Kids & Hero necesita internet para entrar con tu cuenta y guardar tu progreso. Revisá la conexión y probá de nuevo.', re: 'Reintentar', fs: 'F11 sale y vuelve a la pantalla completa', fsm: 'Control + Comando + F sale y vuelve a la pantalla completa',
       cap: [['Mar de Galilea', 'Donde Jesús llamó a los pescadores'], ['Templo de Jerusalén', 'La casa de su Padre'], ['La colina de los cinco mil', 'Cinco panes y dos peces'], ['El Gólgota', 'Donde dio su vida'], ['Desierto de Judea', 'Cuarenta días en el desierto']],
-      vs: [['Yo soy la luz del mundo: el que me sigue, no andará en tinieblas, mas tendrá la lumbre de la vida.', 'Juan 8:12'], ['Venid a mí todos los que estáis trabajados y cargados, que yo os haré descansar.', 'Mateo 11:28'], ['Yo soy el camino, y la verdad, y la vida: nadie viene al Padre, sino por mí.', 'Juan 14:6'], ['Lámpara es a mis pies tu palabra, y lumbrera a mi camino.', 'Salmos 119:105'], ['Venid en pos de mí, y os haré pescadores de hombres.', 'Mateo 4:19'], ['Yo soy el buen pastor: el buen pastor su vida da por las ovejas.', 'Juan 10:11'], ['Nosotros le amamos a él, porque él nos amó primero.', '1 Juan 4:19']] },
+      vs: [['Yo soy la luz del mundo. Si ustedes me siguen, no tendrán que andar en la oscuridad porque tendrán la luz que lleva a la vida.', 'Juan 8:12'], ['Vengan a mí todos los que están cansados y llevan cargas pesadas, y yo les daré descanso.', 'Mateo 11:28'], ['Yo soy el camino, la verdad y la vida. Nadie puede ir al Padre si no es por medio de mí.', 'Juan 14:6'], ['Tu palabra es una lámpara que guía mis pies y una luz para mi camino.', 'Salmo 119:105'], ['Vengan, síganme, ¡y yo les enseñaré cómo pescar personas!', 'Mateo 4:19'], ['Yo soy el buen pastor. El buen pastor sacrifica su vida por las ovejas.', 'Juan 10:11'], ['Nosotros le amamos a él, porque él nos amó primero.', '1 Juan 4:19']] },
     en: { tt: 'In His Steps', prep: 'Getting the game ready', lista: 'Looking for the latest version…', prim: 'Downloading the full game', primx: 'We’re downloading the whole world to your computer: models, landscapes, music and voices. This happens only once; after that the game loads instantly and only new things are downloaded.',
       act: 'Updating the game', actx: 'There’s a new version: we’re downloading only what changed.', listo: 'Done! Everything is saved on your computer', entrar: 'Enter the game', entrando: 'Entering…', de: 'of', faltan: 'left', min: 'min', s: 's',
       jugar: 'Play while it downloads', off: 'No internet connection', offx: 'Kids & Hero needs internet to sign in with your account and save your progress. Check the connection and try again.', re: 'Try again', fs: 'F11 leaves and returns to full screen', fsm: 'Control + Command + F leaves and returns to full screen',
