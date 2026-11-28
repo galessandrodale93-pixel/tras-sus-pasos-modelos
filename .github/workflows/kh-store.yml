@@ -44,7 +44,9 @@ jobs:
           else
             echo "::warning::Faltan las variables STORE_IDENTITY_NAME y STORE_PUBLISHER: es un paquete de prueba, la Store no lo va a aceptar."
           fi
-          npx electron-builder --win appx --publish never "${ARGS[@]}"
+          # el manifiesto de la Store no admite "&" en el nombre del archivo del programa: en el paquete se llama
+          # «Kids and Hero.exe» (el nombre que ve la gente sigue siendo «Kids & Hero»)
+          npx electron-builder --win appx --publish never -c.productName="Kids and Hero" "${ARGS[@]}"
           ls -la dist/*.appx
       - uses: actions/upload-artifact@v4
         with:

@@ -116,7 +116,7 @@
     ],
     "appx": {
       "applicationId": "KidsAndHero",
-      "displayName": "Kids & Hero",
+      "displayName": "Kids &amp; Hero",
       "identityName": "HabitatCFM.KidsHero",
       "publisher": "CN=00000000-0000-0000-0000-000000000000",
       "publisherDisplayName": "Habitat CFM",
